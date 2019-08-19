@@ -1,0 +1,7 @@
+https://inventwithpython.com/blog/2014/12/20/translate-your-python-3-program-with-the-gettext-module/
+
+./server/loc_test.py
+./server/worker.py
+
+
+python ~/pygettext.py -d foobar ./server/worker.py ./server/loc_test.py

@@ -1,0 +1,30 @@
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# IDE Files
+.DS_STORE
+.vscode
+.idea
+
+# python
+*.pyc
+
+#keyrings
+/keyrings/live/pubring.gpg~
+/keyrings/live/pubring.kbx~
+/keyrings/live/secring.gpg
+
+
+# Server Stuff
+app/node_modules
+app/npm-debug.log
+app/server/static/javascript/bundle.*
+
+#Config
+/config_files/*
+
+# Misc
+/random_files/
+ngrok

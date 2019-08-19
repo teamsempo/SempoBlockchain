@@ -1,0 +1,111 @@
+{
+  "name": "data-app-boilerplate",
+  "version": "0.1.0",
+  "description": "Boilerplate for data-driven web apps using Python-Flask and React",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "dev": "NODE_ENV=dev && webpack -d --watch",
+    "build": "NODE_ENV=prod && webpack -p",
+    "analyze": "source-map-explorer server/static/javascript/dist/main.bundle.*",
+    "bundle-report": "webpack-bundle-analyzer --port 4200 server/static/javascript/dist/stats.json"
+  },
+  "jest": {
+    "snapshotSerializers": [
+      "enzyme-to-json/serializer"
+    ],
+    "moduleNameMapper": {
+      "^.+\\.(css|scss)$": "identity-obj-proxy"
+    },
+    "setupTestFrameworkScriptFile": "<rootDir>/client/__tests__/setup/setupEnzyme.js",
+    "testPathIgnorePatterns": [
+      "<rootDir>/client/__tests__/setup/"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/enjeyw/data-app-boilerplate.git"
+  },
+  "keywords": [
+    "data",
+    "python",
+    "react",
+    "flask",
+    "boilerplate"
+  ],
+  "author": "Nick Williams",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "@types/jest": "^23.3.0",
+    "@webpack-cli/migrate": "^0.1.5",
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.4.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-transform-export-extensions": "^6.22.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "clean-webpack-plugin": "^0.1.19",
+    "compression-webpack-plugin": "^2.0.0",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
+    "enzyme-to-json": "^3.3.4",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^23.4.1",
+    "jest-cli": "^23.4.1",
+    "jest-enzyme": "^6.0.2",
+    "moment-locales-webpack-plugin": "^1.0.7",
+    "react-test-renderer": "^16.4.1",
+    "redux-mock-store": "^1.5.3",
+    "ts-jest": "^23.0.0",
+    "typescript": "^2.9.2",
+    "uglifyjs-webpack-plugin": "^2.0.1",
+    "webpack": "^4.20.2",
+    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-cli": "^3.1.2"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0",
+    "@sentry/browser": "^4.2.3",
+    "chart.js": "^2.7.2",
+    "deck.gl": "^5.1.4",
+    "deepmerge": "^2.2.1",
+    "history": "^4.7.2",
+    "lodash": "^4.17.11",
+    "match-sorter": "^2.2.3",
+    "moment": "^2.22.2",
+    "normalizr": "^3.3.0",
+    "prop-types": "^15.6.2",
+    "pusher": "^1.5.1",
+    "pusher-redux": "^0.3.9",
+    "qrcode.react": "^0.9.3",
+    "react": "^16.8.6",
+    "react-chartjs-2": "^2.7.0",
+    "react-country-region-selector": "^1.4.3",
+    "react-dates": "^18.1.0",
+    "react-dom": "^16.6.3",
+    "react-keydown": "^1.9.7",
+    "react-map-gl": "^3.2.5",
+    "react-moment-proptypes": "^1.6.0",
+    "react-password-strength": "^2.4.0",
+    "react-places-autocomplete": "^7.2.0",
+    "react-qr-reader": "^2.2.1",
+    "react-redux": "^5.0.6",
+    "react-responsive": "^5.0.0",
+    "react-router": "^5.0.0",
+    "react-router-dom": "^5.0.0",
+    "react-table": "^6.8.0",
+    "react-update": "^0.4.4",
+    "react-with-direction": "^1.3.0",
+    "redux": "^3.7.2",
+    "redux-saga": "^0.16.0",
+    "source-map-explorer": "^1.6.0",
+    "styled-components": "^2.2.3"
+  }
+}

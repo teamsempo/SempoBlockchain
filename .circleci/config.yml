@@ -1,0 +1,143 @@
+version: 2.0
+jobs:
+  build:
+    filters:
+      branches:
+        only:
+          - master
+    working_directory: ~/project
+    docker:
+      - image: enjeyw/sempo-circleci-prebuild:0.0.1
+        environment:
+          CONTAINER_MODE: TEST
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Setup AWS
+          command: |
+            mkdir ./.elasticbeanstalk
+
+            printf "branch-defaults:
+              default:
+               environment: blockchain-app-dev
+            global:
+             application_name: blockchain-app
+             default_ec2_keyname: aws-eb
+             default_platform: Multi-container Docker 18.03.1-ce (Generic)
+             default_region: ap-southeast-2
+             include_git_submodules: true
+             workspace_type: Application" > ./.elasticbeanstalk/config.yml
+             
+            sudo pip install awscli
+            sudo pip install awsebcli
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
+
+      - run:
+          name: Setup npm
+          command: |
+            cd app
+            npm install
+
+      - save_cache:
+          paths:
+            - ~/project/app/node_modules
+          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+
+      - run:
+          name: Recover Previous 3 Builds
+          command: |
+            expr $CIRCLE_BUILD_NUM - 1 > BuildMinus1.txt
+            expr $CIRCLE_BUILD_NUM - 2 > BuildMinus2.txt
+            expr $CIRCLE_BUILD_NUM - 3 > BuildMinus3.txt
+
+      - restore_cache:
+          keys:
+            - v5-{{ .Branch }}-{{ checksum "BuildMinus1.txt" }}
+            - v5-{{ .Branch }}-{{ checksum "BuildMinus2.txt" }}
+            - v5-{{ .Branch }}-{{ checksum "BuildMinus3.txt" }}
+
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            set +o pipefail
+            if [ -f ~/project/caches/server.tar.gz ]; then gunzip -c ~/project/caches/server.tar.gz | docker load; docker images; fi
+            echo server
+            if [ -f ~/project/caches/worker.tar.gz ]; then gunzip -c ~/project/caches/worker.tar.gz | docker load; docker images; fi
+            echo worker
+            if [ -f ~/project/caches/proxy.tar.gz ]; then gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images; fi
+            echo proxy
+
+      - run:
+          name: Build application Docker images
+          command: |
+            cd ./app
+            npm run build
+            cd ../
+            docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1
+            docker build -t worker . -f ./worker/Dockerfile
+            docker build -t proxy ./proxy
+
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            GIT_HASH=$(git rev-parse HEAD)
+            sudo mkdir -p ~/project/caches
+            sudo chmod 777 -R ~/project/caches
+            # See here: https://github.com/mozmeao/snippets-service/pull/208/files
+            # and here: https://stackoverflow.com/q/49965396
+            # The build commands here will be completely cached, and so very quick
+            #
+            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
+            docker build -t worker . -f ./worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/worker_layers.txt
+            docker build -t proxy ./proxy| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
+
+            docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
+            docker save $(cat /tmp/worker_layers.txt) | gzip > ~/project/caches/worker.tar.gz
+            docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
+
+            sudo chmod 777 -R ~/project/caches
+
+      - run:
+          name: Create Current Build Number
+          command: |
+            expr $CIRCLE_BUILD_NUM > CurrBuildNum.txt
+
+      - save_cache:
+          key: v5-{{ .Branch }}-{{ checksum "CurrBuildNum.txt" }}
+          paths:
+            - ~/project/caches
+
+      - run:
+          name: Run Docker Tests
+          command: |
+            docker-compose up --exit-code-from app
+      - run:
+          name: Push Docker Image
+          command: |
+            REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
+
+            eval $(aws ecr get-login --no-include-email --region ap-southeast-2);
+            docker tag server:latest $REPOSITORY_URI:server
+            docker push $REPOSITORY_URI:server
+            docker tag proxy:latest $REPOSITORY_URI:proxy
+            docker push $REPOSITORY_URI:proxy
+            docker tag worker:latest $REPOSITORY_URI:worker
+            docker push $REPOSITORY_URI:worker
+
+      - run:
+          name: Deploy app to AWS Server via Docker
+          command: |
+            eb deploy blockchain-app-dev
+
+workflows:
+  version: 2
+  main_workflow:
+    jobs:
+      - build

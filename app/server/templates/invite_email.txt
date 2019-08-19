@@ -1,0 +1,7 @@
+Hello,
+
+You have been invited to join {{ deployment }} deployment.
+
+Please sign up for an account: {{ host }}login/sign-up?r=true&u={{ email }}
+
+If you did not ask for a Sempo invite, please ignore this message.

@@ -1,0 +1,122 @@
+version: '3'
+services:
+  app:
+    build: app/server
+    image: server
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      LOCATION: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "APP"
+      CONTAINER_MODE: ${CONTAINER_MODE}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+#    env_file:
+#     - ~/ebkeys.env
+    depends_on:
+    - postgres
+
+  worker:
+    build:
+      context: app/server
+      dockerfile: worker/Dockerfile
+    image: worker
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      LOCATION: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "WORKER"
+      PYTHONUNBUFFERED: 0
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+#    env_file:
+#     - ~/ebkeys.env
+    depends_on:
+    - redis
+  proxy:
+    build: proxy
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      LOCATION: "LOCAL_DOCKER"
+#    env_file:
+#     - ~/ebkeys.env
+    ports:
+     - "80:80"
+    depends_on:
+     - app
+#  beat:
+#    build:
+#      context: app/server
+#      dockerfile: worker/Dockerfile
+#    image: worker
+#    environment:
+#      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+#      LOCATION: "LOCAL_DOCKER"
+#      CONTAINER_TYPE: "BEAT"
+#      PYTHONUNBUFFERED: 0
+#    env_file:
+#      - ~/ebkeys.env
+#    depends_on:
+#      - redis
+#  filter:
+#    build:
+#      context: app/server
+#      dockerfile: worker/Dockerfile
+#    image: worker
+#    environment:
+#      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+#      LOCATION: "LOCAL_DOCKER"
+#      CONTAINER_TYPE: "FILTER"
+#      PYTHONUNBUFFERED: 0
+#    env_file:
+#      - ~/ebkeys.env
+#    depends_on:
+#      - redis
+#  flower:
+#    build: flower
+#    environment:
+#      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+#      LOCATION: "LOCAL_DOCKER"
+#    env_file:
+#      - ~/ebkeys.env
+#    depends_on:
+#      - app
+  postgres:
+    image: "postgres"
+    restart: always
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      LOCATION: "LOCAL_DOCKER"
+      POSTGRES_DB: "sempo_docker"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+#    volumes:
+#      - db-data:/var/lib/postgresql/data
+#    ports:
+#      - 5431:5432
+
+  redis:
+    image: "redis:alpine"
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      LOCATION: "LOCAL_DOCKER"
+#    ports:
+#    - "6379:6379"
+
+  #  whatsapp:
+  #    build: ./whatsApp
+  #    environment:
+  #      LOCATION: "LOCAL_DOCKER"
+  #      PYTHONUNBUFFERED: 0
+  #    shm_size: 1g
+  #    env_file:
+  #     - ~/ebkeys.env
+  #    volumes:
+  #     - /tmp:/tmp
+  #    depends_on:
+  #    - redis
+
+volumes:
+  db-data:
+
+
+
+

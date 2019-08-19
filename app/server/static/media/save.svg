@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="49px" height="49px" viewBox="0 0 49 49" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 51.2 (57519) - http://www.bohemiancoding.com/sketch -->
+    <title>save</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="save" fill="#6a7680" fill-rule="nonzero">
+            <rect id="Rectangle-path" x="27.5" y="5" width="6" height="10"></rect>
+            <path d="M39.914,0 L0.5,0 L0.5,49 L48.5,49 L48.5,8.586 L39.914,0 Z M10.5,2 L36.5,2 L36.5,18 L10.5,18 L10.5,2 Z M39.5,47 L8.5,47 L8.5,26 L39.5,26 L39.5,47 Z" id="Shape"></path>
+            <path d="M13.5,32 L20.5,32 C21.053,32 21.5,31.553 21.5,31 C21.5,30.447 21.053,30 20.5,30 L13.5,30 C12.947,30 12.5,30.447 12.5,31 C12.5,31.553 12.947,32 13.5,32 Z" id="Shape"></path>
+            <path d="M13.5,36 L23.5,36 C24.053,36 24.5,35.553 24.5,35 C24.5,34.447 24.053,34 23.5,34 L13.5,34 C12.947,34 12.5,34.447 12.5,35 C12.5,35.553 12.947,36 13.5,36 Z" id="Shape"></path>
+            <path d="M26.5,36 C26.77,36 27.02,35.89 27.21,35.71 C27.39,35.52 27.5,35.26 27.5,35 C27.5,34.74 27.39,34.479 27.21,34.29 C26.84,33.92 26.17,33.92 25.8,34.29 C25.61,34.479 25.5,34.729 25.5,35 C25.5,35.27 25.609,35.52 25.79,35.71 C25.979,35.89 26.229,36 26.5,36 Z" id="Shape"></path>
+        </g>
+    </g>
+</svg>

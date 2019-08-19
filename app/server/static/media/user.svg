@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="46px" height="46px" viewBox="0 0 46 46" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 49.2 (51160) - http://www.bohemiancoding.com/sketch -->
+    <title>User</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <circle id="path-1" cx="23" cy="23" r="23"></circle>
+    </defs>
+    <g id="Sempo-Dashboard" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Desktop-HD" transform="translate(-992.000000, -189.000000)">
+            <g id="Beneficaries" transform="translate(928.000000, 121.000000)">
+                <g id="Beneficiary" transform="translate(64.000000, 68.000000)">
+                    <g id="User">
+                        <g id="Oval">
+                            <mask id="mask-2" fill="white">
+                                <use xlink:href="#path-1"></use>
+                            </mask>
+                            <use id="Mask" fill="#EEF2F6" xlink:href="#path-1"></use>
+                            <circle fill="#FFFFFF" mask="url(#mask-2)" cx="22.5" cy="47.5" r="18.5"></circle>
+                        </g>
+                        <circle id="Oval-2" fill="#FFFFFF" cx="23" cy="18" r="8"></circle>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

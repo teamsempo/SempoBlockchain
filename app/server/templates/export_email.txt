@@ -1,0 +1,9 @@
+Hello,
+
+You recently requested an XLSX export from {{ deployment }}.
+
+To download your file, please click on the following link:
+
+{{ file_url }}
+
+Your link expires in 24 hours.

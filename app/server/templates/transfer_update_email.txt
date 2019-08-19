@@ -1,0 +1,17 @@
+Hello,
+
+You requested to fund your Sempo wallet with {{ amount }}{{ currency }}. Transfer ID: {{ transfer_id }}.
+
+{{ instructions }}
+
+Wire Details
+Account Number: {{ account_number }}
+Routing Number: {{ routing_number }}
+SWIFT Code: {{ swift_code }}
+Account Type: {{ account_type }}
+Bank Address: {{ bank_address }}
+Beneficiary: {{ beneficiary }}
+
+Payments are processed by our partner Wyre. Wyre Payments, Inc. is a registered money service business (NMLS ID: 1574869).
+
+If this message is an error, or you need assistance please contact team@sempo.ai.

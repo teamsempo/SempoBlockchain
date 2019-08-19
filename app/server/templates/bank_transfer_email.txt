@@ -1,0 +1,9 @@
+Hello,
+
+You requested to fund your Sempo wallet with {{ amount }}{{ currency }}. Transfer ID: {{ transfer_id }}.
+
+Transfer Status: {{ status }}
+
+Payments are processed by our partner Wyre. Wyre Payments, Inc. is a registered money service business (NMLS ID: 1574869).
+
+If this message is an error, or you need assistance please contact team@sempo.ai.
