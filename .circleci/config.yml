@@ -15,15 +15,18 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
 
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - run:
+          name: Set Python chown
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - restore_cache:  # ensure this step occurs *before* installing dependencies
           key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/Pipfile.lock" }}
       - run:
           name: Setup Python Env
           command: |
             sudo pip install pipenv
-            pipenv install
+            pipenv install -r ~/project/.circleci/Pipfile.lock
       - save_cache:
           key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/Pipfile.lock" }}
           paths:
