@@ -7,7 +7,7 @@ jobs:
           - master
     working_directory: ~/project
     docker:
-      - image: enjeyw/sempo-circleci-prebuild:0.0.1
+      - image: circleci/python:3.6-node
         environment:
           CONTAINER_MODE: TEST
     steps:
@@ -15,11 +15,21 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
 
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - restore_cache:  # ensure this step occurs *before* installing dependencies
+          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/Pipfile.lock" }}
       - run:
-          name: Deploy app to AWS Server via Docker
+          name: Setup Python Env
           command: |
-            eb deploy blockchain-app-dev
-            
+            sudo pip install pipenv
+            pipenv install
+      - save_cache:
+          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
       - run:
           name: Setup AWS
           command: |
@@ -35,9 +45,7 @@ jobs:
              default_region: ap-southeast-2
              include_git_submodules: true
              workspace_type: Application" > ./.elasticbeanstalk/config.yml
-             
-            sudo pip install awscli
-            sudo pip install awsebcli
+
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
