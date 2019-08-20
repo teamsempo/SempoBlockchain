@@ -14,6 +14,12 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
+
+      - run:
+          name: Deploy app to AWS Server via Docker
+          command: |
+            eb deploy blockchain-app-dev
+            
       - run:
           name: Setup AWS
           command: |
