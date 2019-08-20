@@ -53,10 +53,9 @@ jobs:
       - run:
           name: Recover Previous 3 Builds
           command: |
-            expr $CIRCLE_BUILD_NUM - 1 > BuildMinus1.txt
-            expr $CIRCLE_BUILD_NUM - 2 > BuildMinus2.txt
-            expr $CIRCLE_BUILD_NUM - 3 > BuildMinus3.txt
-
+            if [ "$CIRCLE_BUILD_NUM" -gt 1 ]; expr $CIRCLE_BUILD_NUM - 1 > BuildMinus1.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 2 ]; expr $CIRCLE_BUILD_NUM - 2 > BuildMinus2.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 3 ]; expr $CIRCLE_BUILD_NUM - 3 > BuildMinus3.txt; fi
       - restore_cache:
           keys:
             - v5-{{ .Branch }}-{{ checksum "BuildMinus1.txt" }}
@@ -66,7 +65,7 @@ jobs:
       - run:
           name: Load Docker image layer cache
           command: |
-            set +o pipefail
+            set -o pipefail
             if [ -f ~/project/caches/server.tar.gz ]; then gunzip -c ~/project/caches/server.tar.gz | docker load; docker images; fi
             echo server
             if [ -f ~/project/caches/worker.tar.gz ]; then gunzip -c ~/project/caches/worker.tar.gz | docker load; docker images; fi
