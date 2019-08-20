@@ -21,14 +21,14 @@ jobs:
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - restore_cache:  # ensure this step occurs *before* installing dependencies
-          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/Pipfile.lock" }}
+          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
       - run:
           name: Setup Python Env
           command: |
             sudo pip install pipenv
             pipenv install -r ~/project/.circleci/requirements.txt
       - save_cache:
-          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/Pipfile.lock" }}
+          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
