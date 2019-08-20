@@ -49,6 +49,10 @@ if DEPLOYMENT_LOCATION == "PROD" or os.environ.get('AWS_ACCESS_KEY_ID'):
     common_parser.read_string(common_read_result)
 
 else:
+    if not (os.path.isfile('config_files/common_config.ini')
+            and os.path.isfile('config_files/' + CONFIG_FILENAME)):
+        raise Exception("Missing Config Files")
+
     common_parser.read(os.path.join(CONFIG_DIR, 'config_files/common_config.ini'))
     specific_parser.read(os.path.join(CONFIG_DIR, 'config_files/' + CONFIG_FILENAME))
 
@@ -137,7 +141,7 @@ GOOGLE_GEOCODE_KEY = common_parser['GOOGLE']['geocode_key']
 CHROMEDRIVER_LOCATION = specific_parser['GOOGLE']['chromedriver_location']
 GOOGLE_ANALYTICS_ID = common_parser['GOOGLE']['google_analytics_id']
 
-HEAP_ANALYTICS_ID = specific_parser['HEAP']['ID']
+HEAP_ANALYTICS_ID = specific_parser['HEAP']['id']
 
 MAPBOX_TOKEN = common_parser['MAPBOX']['token']
 

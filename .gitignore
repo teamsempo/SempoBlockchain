@@ -28,3 +28,4 @@ app/server/static/javascript/bundle.*
 # Misc
 /random_files/
 ngrok
+.ideabackup
