@@ -9,7 +9,6 @@ services:
       CONTAINER_TYPE: "APP"
       CONTAINER_MODE: ${CONTAINER_MODE}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 #    env_file:
 #     - ~/ebkeys.env
     depends_on:
@@ -26,7 +25,6 @@ services:
       CONTAINER_TYPE: "WORKER"
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 #    env_file:
 #     - ~/ebkeys.env
     depends_on:

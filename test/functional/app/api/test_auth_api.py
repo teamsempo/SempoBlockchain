@@ -6,6 +6,9 @@ of the auth blueprint.
 """
 import pytest, json, config, base64
 
+from server import db
+
+
 # todo- permissions api, reset password, request reset password
 
 
@@ -42,6 +45,7 @@ def test_request_api_token(test_client, create_admin_user, email, password, stat
     THEN check response as a admin user (email, password)
     """
     create_admin_user.is_activated = True
+
     response = test_client.post('/api/auth/request_api_token/',
                                 data=json.dumps(dict(email=email, password=password)),
                                 content_type='application/json', follow_redirects=True)
@@ -213,7 +217,6 @@ def test_get_tfa_url(test_client, create_admin_user):
     assert json.loads(response.data)['data']['tfa_url'] == create_admin_user.tfa_url
 
 
-@pytest.mark.xfail(raises=AssertionError)  # todo: BUG. sometimes the TFA passes when it is meant to fail.
 @pytest.mark.parametrize("otp,status_code", [
     (None, 200),
     ('1230924579324', 400),
@@ -231,6 +234,7 @@ def test_request_tfa_token(test_client, create_admin_user, otp, status_code):
 
     if otp is None:
         otp = pyotp.TOTP(create_admin_user._get_TFA_secret()).now()
+
     otp_expiry_interval = 1
     response = test_client.post('/api/auth/tfa/',
                                 headers=dict(Authorization=auth_token, Accept='application/json'),

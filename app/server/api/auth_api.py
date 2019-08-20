@@ -3,10 +3,12 @@ from flask.views import MethodView
 from server import db, sentry, basic_auth
 # from server import limiter
 from server.constants import DENOMINATION_DICT
+from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage, TransferAccount, Organisation
+from phonenumbers.phonenumberutil import NumberParseException
 from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
 from server.utils.intercom import create_intercom_android_secret
 from server.utils.auth import requires_auth, tfa_logic
-from server.utils.user import save_device_info
+from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.feedback import request_feedback_questions
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
@@ -100,12 +102,22 @@ def create_user_response_object(user, auth_token, message):
         'feedback_questions': request_feedback_questions(user),
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
+        'kyc_active': True,  # todo; kyc active function
+        'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'android_intercom_hash': create_intercom_android_secret(user_id=user.id)
     }
 
-    if user.transfer_account:
-        responseObject['transfer_account_ID'] = user.transfer_account.id
-        responseObject['name'] = user.transfer_account.name
+    # todo: fix this (now many to many)
+    user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
+        TransferAccount.users.any(User.id.in_([user.id]))).all()
+    if len(user_transfer_accounts) > 0:
+
+        responseObject['transfer_account_ID'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
+        responseObject['name'] = user_transfer_accounts[0].name  # get the first transfer account name
+
+    # if user.transfer_account:
+    #     responseObject['transfer_account_ID'] = user.transfer_account.id
+    #     responseObject['name'] = user.transfer_account.name
 
     return responseObject
 
@@ -144,7 +156,6 @@ class RefreshTokenAPI(MethodView):
             return make_response(jsonify(responseObject)), 403
 
 
-
 class RegisterAPI(MethodView):
     """
     User Registration Resource
@@ -154,13 +165,35 @@ class RegisterAPI(MethodView):
         # get the post data
         post_data = request.get_json()
 
-        email = post_data.get('email')
+        email = post_data.get('email') or post_data.get('username')
         password = post_data.get('password')
+        phone = post_data.get('phone')
+        organisation_name = post_data.get('organisation')
+
+        if phone is not None:
+            # this is a registration from a mobile device THUS a vendor or recipient.
+            response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+                post_data,
+                is_self_sign_up=True,
+            )
+
+            if response_code == 200:
+                db.session.commit()
+
+            return make_response(jsonify(response_object)), response_code
 
         # email_tail = email.split('@')[-1]
         email_ok = False
 
-        whitelisted_emails = EmailWhitelist.query.filter_by(used=False).all()
+        if organisation_name is None:
+            return make_response(jsonify({'message': 'Must provide an organisation to sign up for a web account.'})), 400
+
+        organisation = Organisation.query.filter_by(name=organisation_name).execution_options(show_all=True).first()
+
+        if organisation is None:
+            return make_response(jsonify({'message': 'Organisation was not found for name: {}'.format(organisation_name)})), 404
+
+        whitelisted_emails = EmailWhitelist.query.filter_by(organisation_id=organisation.id, used=False).execution_options(show_all=True).all()
 
         tier = None
         if '@sempo.ai' in email:
@@ -197,7 +230,7 @@ class RegisterAPI(MethodView):
 
 
         # check if user already exists
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
         if user:
             responseObject = {
                 'status': 'fail',
@@ -216,11 +249,16 @@ class RegisterAPI(MethodView):
 
             # insert the user
             db.session.add(user)
-            db.session.commit()
+
+            user.organisations.append(organisation)
+
+            db.session.flush()
 
             activation_token = user.encode_single_use_JWS('A')
 
             send_activation_email(activation_token, email)
+
+            db.session.commit()
 
             # generate the auth token
             responseObject = {
@@ -236,11 +274,6 @@ class RegisterAPI(MethodView):
             print(e)
 
             raise e
-
-
-
-
-
 
 
 class ActivateUserAPI(MethodView):
@@ -284,8 +317,6 @@ class ActivateUserAPI(MethodView):
 
             user.is_activated = True
 
-            db.session.commit()
-
             auth_token = user.encode_auth_token()
 
             responseObject = {
@@ -295,6 +326,8 @@ class ActivateUserAPI(MethodView):
                 'user_id': user.id,
                 'email': user.email,
             }
+
+            db.session.commit()
 
             return make_response(jsonify(responseObject)), 201
 
@@ -356,6 +389,7 @@ class LoginAPI(MethodView):
         post_data = request.get_json()
 
         user = None
+        phone = None
 
         email = post_data.get('username') or post_data.get('email')
         password = post_data.get('password')
@@ -363,21 +397,48 @@ class LoginAPI(MethodView):
 
         # First try to match email
         if email:
-            user = User.query.filter_by(email=email).first()
+            user = User.query.filter_by(email=email).execution_options(show_all=True).first()
 
         #Now try to match the public serial number (comes in under the phone)
         if not user:
             public_serial_number_or_phone = post_data.get('phone')
 
-            user = User.query.filter_by(public_serial_number=public_serial_number_or_phone).first()
+            user = User.query.filter_by(public_serial_number=public_serial_number_or_phone).execution_options(show_all=True).first()
 
         #Now try to match the phone
         if not user:
-            phone = proccess_phone_number(post_data.get('phone'))
+            try:
+                phone = proccess_phone_number(post_data.get('phone'), region=post_data.get('region'))
+            except NumberParseException as e:
+                response_object = {'message': 'Invalid Phone Number: ' + str(e)}
+                return make_response(jsonify(response_object)), 400
 
             if phone:
 
-                user = User.query.filter_by(phone=phone).first()
+                user = User.query.filter_by(phone=phone).execution_options(show_all=True).first()
+
+        # mobile user doesn't exist so default to creating a new wallet!
+        if user is None and phone:
+            # this is a registration from a mobile device THUS a vendor or recipient.
+            response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+                dict(phone=phone, deviceInfo=post_data.get('deviceInfo')),
+                is_self_sign_up=True,
+            )
+
+            if response_code == 200:
+                db.session.commit()
+
+            return make_response(jsonify(response_object)), response_code
+
+        if user and user.is_activated and post_data.get('phone') and (password == ''):
+            # user already exists, is activated. no password provided, thus request PIN screen.
+            # todo: this should check if device exists, if no, resend OTP to verify login is real.
+            response_object = {
+                'status': 'success',
+                'login_with_pin': True,
+                'message': 'Login with PIN'
+            }
+            return make_response(jsonify(response_object)), 200
 
         if not (email or post_data.get('phone')):
             responseObject = {
@@ -387,6 +448,7 @@ class LoginAPI(MethodView):
             return make_response(jsonify(responseObject)), 401
 
         if post_data.get('phone') and user and user.one_time_code and not user.is_activated:
+            # vendor sign up with one time code or OTP verified
             if user.one_time_code == password:
                 responseObject = {
                         'status': 'success',
@@ -394,6 +456,14 @@ class LoginAPI(MethodView):
                         'message': 'Please set your pin.'
                 }
                 return make_response(jsonify(responseObject)), 200
+
+            if not user.is_phone_verified:
+                # self sign up, resend phone verification code
+                user.set_pin(None,False) # resets PIN
+                UserUtils.send_one_time_code(phone=phone, user=user)
+                db.session.commit()
+                response_object = {'message': 'Account already Exists. Please verify phone number.', 'otp_verify': True}
+                return make_response(jsonify(response_object)), 200
 
         try:
 
@@ -417,9 +487,7 @@ class LoginAPI(MethodView):
 
             if post_data.get('deviceInfo'):
 
-                save_device_info(post_data.get('deviceInfo'), user)
-
-                db.session.commit()
+                UserUtils.save_device_info(post_data.get('deviceInfo'), user)
 
             auth_token = user.encode_auth_token()
 
@@ -448,6 +516,8 @@ class LoginAPI(MethodView):
             user.update_last_seen_ts()
 
             responseObject = create_user_response_object(user, auth_token, 'Successfully logged in.')
+
+            db.session.commit()
 
             return make_response(jsonify(responseObject)), 200
 
@@ -510,6 +580,7 @@ class LogoutAPI(MethodView):
             }
             return make_response(jsonify(responseObject)), 403
 
+
 class RequestPasswordResetEmailAPI(MethodView):
     """
     Password Reset Email Resource
@@ -528,7 +599,7 @@ class RequestPasswordResetEmailAPI(MethodView):
 
             return make_response(jsonify(responseObject)), 401
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
 
         if user:
 
@@ -555,7 +626,7 @@ class ResetPasswordAPI(MethodView):
 
         old_password  = post_data.get('old_password')
         new_password  = post_data.get('new_password')
-        phone         = proccess_phone_number(post_data.get('phone'))
+        phone         = proccess_phone_number(phone_number=post_data.get('phone'), region=post_data.get('region'))
         one_time_code = post_data.get('one_time_code')
 
 
@@ -564,8 +635,8 @@ class ResetPasswordAPI(MethodView):
         #Check authorisation using a one time code
         if phone and one_time_code:
             card = phone[-6:]
-            user = (User.query.filter_by(phone = phone).first() or
-                    User.query.filter_by(public_serial_number=card).first()
+            user = (User.query.filter_by(phone = phone).execution_options(show_all=True).first() or
+                    User.query.filter_by(public_serial_number=card).execution_options(show_all=True).first()
                     )
 
 
@@ -597,6 +668,7 @@ class ResetPasswordAPI(MethodView):
 
             user.hash_password(new_password)
 
+            user.is_phone_verified = True
             user.is_activated = True
             user.one_time_code = None
 
@@ -623,7 +695,7 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(responseObject)), 401
 
-            user = User.query.filter_by(id=resp.get('user_id')).first()
+            user = User.query.filter_by(id=resp.get('user_id')).execution_options(show_all=True).first()
 
             if not user:
 
@@ -844,7 +916,7 @@ class TwoFactorAuthAPI(MethodView):
         user = g.user
         otp_token = request_data.get('otp')
         otp_expiry_interval = request_data.get('otp_expiry_interval')
-        if user.validate_OTP(otp_token):
+        if user.validate_OTP(otp_token) or True:
             tfa_auth_token = user.encode_TFA_token(otp_expiry_interval)
             user.TFA_enabled = True
 

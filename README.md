@@ -53,7 +53,36 @@ https://www.twilio.com/login
 In terminal run:
 ```
 redis-server
-````
+```
+
+Start celery:
+```
+celery -A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet
+```
+
+### Database Migration: Alembic
+
+First, setup your database `sempo_blockchain_local`, using the username and password from the local config file.
+
+Next, to update your database to the latest migration file:
+
+```
+python manage.py db upgrade
+```
+
+To create a migrations file (remember to commit the file!):
+
+```
+python manage.py db migrate
+```
+
+Sometimes, branches split and you will have multiple heads:
+
+```
+python manage.py db merge heads
+```
+
+For more commands, see Alembic documentation: https://alembic.sqlalchemy.org/en/latest/
 
 ### Vendor App
 - Pull the below repo and follow steps

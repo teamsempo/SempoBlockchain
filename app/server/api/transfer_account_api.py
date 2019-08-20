@@ -48,6 +48,8 @@ class TransferAccountAPI(MethodView):
             return make_response(jsonify(response_object)), 201
 
         else:
+            transfer_accounts_query = TransferAccount.query.all()
+
             if account_type_filter == 'vendor':
                 transfer_accounts_query = TransferAccount.query.filter_by(is_vendor=True)
             elif account_type_filter == 'beneficiary':

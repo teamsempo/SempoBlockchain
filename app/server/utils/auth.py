@@ -2,6 +2,16 @@ from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import models, db
 
+def show_all(f):
+    """
+    Decorator for endpoints to tell SQLAlchemy not to filter any query by organisation ID
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        g.show_all = True
+        return f(*args, **kwargs)
+    return wrapper
+
 def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requirement = False):
     if f is None:
         return partial(requires_auth, required_roles=required_roles, allowed_roles=allowed_roles, ignore_tfa_requirement = ignore_tfa_requirement)
@@ -53,7 +63,7 @@ def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requ
 
             if not isinstance(resp, str):
 
-                    user = models.User.query.filter_by(id=resp['user_id']).first()
+                    user = models.User.query.filter_by(id=resp['user_id']).execution_options(show_all=True).first()
 
                     if not user:
                         responseObject = {
@@ -62,6 +72,12 @@ def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requ
                         }
                         return make_response(jsonify(responseObject)), 401
 
+                    g.user = user
+                    # g.member_organisations = [org.id for org in user.organisations]
+                    try:
+                        g.primary_organisation = user.get_primary_admin_organisation().id
+                    except NotImplementedError:
+                        g.primary_organisation = None
 
                     if not user.is_activated:
                         responseObject = {
@@ -107,14 +123,13 @@ def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requ
                             }
                             return make_response(jsonify(responseObject)), 401
 
-                    g.user = user
 
                     proxies = request.headers.getlist("X-Forwarded-For")
                     check_ip(proxies, user, num_proxy=1)
 
                     # updates the validated user last seen timestamp
                     user.update_last_seen_ts()
-                    db.session.commit()
+                    # db.session.commit() todo: fix this. can't commit here as means we lose context
 
                     #This is the point where you've made it through ok and you can return the top method
                     return f(*args, **kwargs)

@@ -2,18 +2,15 @@ import { handleResponse, storeSessionToken, removeSessionToken, getToken, getTFA
 import { startConfiguration } from 'pusher-redux';
 
 //Auth API Call
-export const requestApiToken = (email, password) => {
+export const requestApiToken = ({body}) => {
+  body['tfa_token'] = getTFAToken();
   return fetch('/api/auth/request_api_token/' , {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
     method: 'post',
-    body: JSON.stringify({
-      'email': email,
-      'password': password,
-      'tfa_token': getTFAToken()
-      })
+    body: JSON.stringify(body)
     })
     .then(response => {
       return response.json();
@@ -40,17 +37,14 @@ export const refreshApiToken = () => {
     })
 };
 
-export const registerAPI = (email, password) => {
+export const registerAPI = ({body}) => {
   return fetch('/api/auth/register/' , {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
     method: 'post',
-    body: JSON.stringify({
-      'email': email,
-      'password': password
-      })
+    body: JSON.stringify(body)
     })
     .then(response => {
       return response.json();

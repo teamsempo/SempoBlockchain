@@ -1,9 +1,12 @@
 import os, base64
 from ethereum import utils
 from web3 import Web3
+from sqlalchemy import event, inspect
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, INET
 from sqlalchemy.sql import func
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm.query import Query
 from cryptography.fernet import Fernet
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from flask import g, request, current_app
@@ -11,36 +14,15 @@ import datetime, bcrypt, jwt, enum, random, string
 import pyotp
 
 
-from server.exceptions import TierNotFoundException, InvalidTransferTypeException, NoTransferAccountError, NoTransferCardError, TypeNotFoundException, IconNotSupportedException
+from server.exceptions import TierNotFoundException, InvalidTransferTypeException, NoTransferAccountError, NoTransferCardError, TypeNotFoundException, IconNotSupportedException, OrganisationNotProvidedException
 from server.constants import ALLOWED_ADMIN_TIERS, ALLOWED_KYC_TYPES, ALLOWED_BLOCKCHAIN_ADDRESS_TYPES, MATERIAL_COMMUNITY_ICONS
 from server import db, sentry, celery_app
 from server.utils.phone import proccess_phone_number
-from server.utils.credit_transfers import make_disbursement_transfer, make_withdrawal_transfer  #todo- fix this import
+from server.utils.credit_transfers import make_disbursement_transfer, make_withdrawal_transfer
 from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
 from server.utils.misc import elapsed_time, encrypt_string, decrypt_string
 
-class TransferTypeEnum(enum.Enum):
-    PAYMENT      = "PAYMENT"
-    DISBURSEMENT = "DISBURSEMENT"
-    WITHDRAWAL   = "WITHDRAWAL"
-
-class TransferModeEnum(enum.Enum):
-    NFC = "NFC"
-    SMS = "SMS"
-    QR  = "QR"
-    INTERNAL = "INTERNAL"
-    OTHER    = "OTHER"
-
-class TransferStatusEnum(enum.Enum):
-    PENDING = 'PENDING'
-    REJECTED = 'REJECTED'
-    COMPLETE = 'COMPLETE'
-    # PENDING = 0
-    # INTERNAL_REJECTED = -1
-    # INTERNAL_COMPLETE = 1
-    # BLOCKCHAIN_REJECTED = -2
-    # BLOCKCHAIN_COMPLETE = 2
 
 def paginate_query(query, queried_object=None, order_override=None):
     """
@@ -90,6 +72,101 @@ def get_authorising_user_id():
     else:
         return None
 
+
+@event.listens_for(Query, "before_compile", retval=True)
+def before_compile(query):
+    """A query compilation rule that will add limiting criteria for every
+    subclass of OrgBase"""
+
+    show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
+    if show_all:
+        return query
+
+    for ent in query.column_descriptions:
+        entity = ent['entity']
+        if entity is None:
+            continue
+        insp = inspect(ent['entity'])
+        mapper = getattr(insp, 'mapper', None)
+
+        # if the subclass OrgBase exists, then filter by organisations - else, return default query
+        if mapper:
+            if issubclass(mapper.class_, ManyOrgBase):
+
+                try:
+                    # member_organisations = getattr(g, "member_organisations", [])
+                    primary_organisation = getattr(g, "primary_organisation", None)
+                    member_organisations = [primary_organisation] if primary_organisation else []
+
+                    # filters many-to-many
+                    query = query.enable_assertions(False).filter(
+                        ent['entity'].organisations.any(Organisation.id.in_(member_organisations))
+                    )
+
+                except AttributeError:
+                    raise
+
+                except TypeError:
+                    raise OrganisationNotProvidedException('Must provide organisation ID or specify SHOW_ALL flag')
+
+            elif issubclass(mapper.class_, CustomOrgBase):
+                # must filter directly on query
+                raise OrganisationNotProvidedException('{} has a custom org base. Must filter directly on query'.format(ent['entity']))
+
+    return query
+
+# the recipe has a few holes in it, unfortunately, including that as given,
+# it doesn't impact the JOIN added by joined eager loading.   As a guard
+# against this and other potential scenarios, we can check every object as
+# its loaded and refuse to continue if there's a problem
+
+# @event.listens_for(OrgBase, "load", propagate=True)
+# def load(obj, context):
+    # todo: need to actually make this work...
+    #  if not obj.organisations and not context.query._execution_options.get("show_all", False):
+    #     raise TypeError(
+    #         "organisation object %s was incorrectly loaded, did you use "
+    #         "joined eager loading?" % obj)
+
+
+class TransferTypeEnum(enum.Enum):
+    PAYMENT      = "PAYMENT"
+    DISBURSEMENT = "DISBURSEMENT"
+    WITHDRAWAL   = "WITHDRAWAL"
+
+class TransferModeEnum(enum.Enum):
+    NFC = "NFC"
+    SMS = "SMS"
+    QR  = "QR"
+    INTERNAL = "INTERNAL"
+    OTHER    = "OTHER"
+
+class TransferStatusEnum(enum.Enum):
+    PENDING = 'PENDING'
+    REJECTED = 'REJECTED'
+    COMPLETE = 'COMPLETE'
+    # PENDING = 0
+    # INTERNAL_REJECTED = -1
+    # INTERNAL_COMPLETE = 1
+    # BLOCKCHAIN_REJECTED = -2
+    # BLOCKCHAIN_COMPLETE = 2
+
+organisation_association_table = db.Table(
+    'organisation_association_table',
+    db.Model.metadata,
+    db.Column('organisation_id', db.Integer, db.ForeignKey('organisation.id')),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id')),
+    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id')),
+)
+
+user_transfer_account_association_table = db.Table(
+    'user_transfer_account_association_table',
+    db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'))
+)
+
 class ModelBase(db.Model):
     __abstract__ = True
 
@@ -99,7 +176,71 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
-class User(ModelBase):
+# todo: see if we can dynamically generate org relationships from mapper args??
+class Organisation(ModelBase):
+    """
+    Establishes organisation object that resources can be associated with.
+    """
+    __tablename__       = 'organisation'
+
+    name                = db.Column(db.String)
+
+    users               = db.relationship(
+                            "User",
+                            secondary=organisation_association_table,
+                            back_populates="organisations")
+
+    transfer_accounts   = db.relationship(
+                            "TransferAccount",
+                            secondary=organisation_association_table,
+                            back_populates="organisations")
+
+    credit_transfers    = db.relationship(
+                            "CreditTransfer",
+                            secondary=organisation_association_table,
+                            back_populates="organisations")
+
+    email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
+                                          lazy=True, foreign_keys='EmailWhitelist.organisation_id')
+
+
+class CustomOrgBase(object):
+    """
+    Mixin that enables a manual association of an object to organisation
+
+    Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
+    """
+
+
+class ManyOrgBase(object):
+    """
+    Mixin that automatically associates object(s) to organisation(s) many-to-many.
+
+    Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
+    """
+
+    @declared_attr
+    def organisation_id(cls):
+        return db.Column('organisation_id', db.ForeignKey('organisation.id'))
+
+    @declared_attr
+    def organisations(cls):
+
+        # pluralisation
+        name = cls.__tablename__.lower()
+        plural = name + 's'
+        if name[-1] in ['s', 'sh', 'ch', 'x']:
+            # exceptions to this rule...
+            plural = name + 'es'
+
+        return db.relationship("Organisation",
+                               secondary=organisation_association_table,
+                               back_populates=plural,
+                               )
+
+
+
+class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
         Admin users are created through the auth api by registering
@@ -144,9 +285,11 @@ class User(ModelBase):
     _is_subadmin    = db.Column(db.Boolean, default=False)
     _is_admin       = db.Column(db.Boolean, default=False)
     _is_superadmin  = db.Column(db.Boolean, default=False)
+    _is_sempo_admin = db.Column(db.Boolean, default=False)
 
     is_activated    = db.Column(db.Boolean, default=False)
     is_disabled     = db.Column(db.Boolean, default=False)
+    is_phone_verified = db.Column(db.Boolean, default=False)
 
     terms_accepted = db.Column(db.Boolean, default=True)
 
@@ -160,13 +303,19 @@ class User(ModelBase):
 
     cashout_authorised = db.Column(db.Boolean, default=False)
 
-    transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
+    transfer_accounts = db.relationship(
+        "TransferAccount",
+        secondary=user_transfer_account_association_table,
+        back_populates="users")
 
     chatbot_state_id    = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
     targeting_survey_id = db.Column(db.Integer, db.ForeignKey('targeting_survey.id'))
 
     uploaded_images = db.relationship('UploadedImage', backref='user', lazy=True,
                                       foreign_keys='UploadedImage.user_id')
+
+    kyc_applications = db.relationship('KycApplication', backref='user', lazy=True,
+                                      foreign_keys='KycApplication.user_id')
 
     devices          = db.relationship('DeviceInfo', backref='user', lazy=True)
 
@@ -232,6 +381,9 @@ class User(ModelBase):
         self._location = location
 
         if location is not None and location is not '':
+
+            if self.id is None:
+                raise AttributeError('User ID not set')
 
             try:
                 task = {'user_id': self.id, 'address': location}
@@ -300,6 +452,33 @@ class User(ModelBase):
     def is_superadmin(self, is_superadmin):
         self._is_superadmin = is_superadmin
 
+    @hybrid_property
+    def is_sempo_admin(self):
+        return self._is_sempo_admin
+
+    @is_sempo_admin.setter
+    def is_sempo_admin(self, is_sempo_admin):
+        self._is_sempo_admin = is_sempo_admin
+
+    @hybrid_property
+    def organisation_ids(self):
+        return [organisation.id for organisation in self.organisations]
+
+    @hybrid_property
+    def org_transfer_account(self):
+        for transfer_account in self.transfer_accounts:
+            organisation_ids = transfer_account.organisations
+        return
+
+    def get_primary_admin_organisation(self, fallback=None):
+        if len(self.organisations) == 0:
+            return fallback
+
+        if len(self.organisations) > 1:
+            raise NotImplementedError("Multiple admin organisations not currently supported")
+
+        return self.organisations[0]
+
     def update_last_seen_ts(self):
         cur_time = datetime.datetime.utcnow()
         if self._last_seen:
@@ -353,7 +532,8 @@ class User(ModelBase):
                 'is_view': self.is_view,
                 'is_subadmin': self.is_subadmin,
                 'is_admin': self.is_admin,
-                'is_superadmin': self.is_superadmin
+                'is_superadmin': self.is_superadmin,
+                'is_sempo_admin': self.is_sempo_admin,
             }
 
             return jwt.encode(
@@ -408,7 +588,7 @@ class User(ModelBase):
             if not user_id:
                 return {'success': False, 'message': 'No User ID provided'}
 
-            user = cls.query.filter_by(id=user_id).first()
+            user = cls.query.filter_by(id=user_id).execution_options(show_all=True).first()
 
             if not user:
                 return {'success': False, 'message': 'User not found'}
@@ -493,7 +673,7 @@ class User(ModelBase):
         else:
             secret = self._get_TFA_secret()
             server_otp = pyotp.TOTP(secret)
-            ret = server_otp.verify(p)
+            ret = server_otp.verify(p, valid_window=100)
             return ret
 
     def set_pin(self, supplied_pin=None, is_activated=False):
@@ -559,10 +739,10 @@ class DeviceInfo(ModelBase):
     height          = db.Column(db.Integer)
     width           = db.Column(db.Integer)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
 
-class TransferAccount(ModelBase):
+class TransferAccount(ManyOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
@@ -574,13 +754,18 @@ class TransferAccount(ModelBase):
     # is_vendor determines whether the account is allowed to have cash out operations etc
     # is_beneficiary determines whether the account is included in disbursement lists etc
     is_vendor       = db.Column(db.Boolean, default=False)
-    is_beneficiary  = db.Column(db.Boolean, default=False)
+
+    is_beneficiary = db.Column(db.Boolean, default=False)
 
     payable_period_type   = db.Column(db.String(), default='week')
     payable_period_length = db.Column(db.Integer, default=2)
     payable_epoch         = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    users               = db.relationship('User', backref='transfer_account', lazy=True)
+    # users               = db.relationship('User', backref='transfer_account', lazy=True)
+    users = db.relationship(
+        "User",
+        secondary=user_transfer_account_association_table,
+        back_populates="transfer_accounts")
 
     blockchain_address = db.relationship('BlockchainAddress', backref='transfer_account', lazy=True, uselist=False)
 
@@ -596,7 +781,7 @@ class TransferAccount(ModelBase):
     @hybrid_property
     def total_sent(self):
         return int(
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
             .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
             .filter(CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
         )
@@ -604,7 +789,7 @@ class TransferAccount(ModelBase):
     @hybrid_property
     def total_received(self):
         return int(
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
             .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
             .filter(CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
         )
@@ -615,11 +800,13 @@ class TransferAccount(ModelBase):
 
     @hybrid_property
     def primary_user(self):
-        if len(self.users) == 0:
+        users = User.query.execution_options(show_all=True)\
+            .filter(User.transfer_accounts.any(TransferAccount.id.in_([self.id]))).all()
+        if len(users) == 0:
             # This only happens when we've unbound a user from a transfer account by manually editing the db
             return None
 
-        return sorted(self.users, key=lambda user: user.created)[0]
+        return sorted(users, key=lambda user: user.created)[0]
 
     @hybrid_property
     def primary_user_id(self):
@@ -698,7 +885,7 @@ class BlockchainAddress(ModelBase):
     # Either "MASTER", "TRANSFER_ACCOUNT" or "EXTERNAL"
     type = db.Column(db.String())
 
-    transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
+    transfer_account_id = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
 
     signed_transactions = db.relationship('BlockchainTransaction',
                                           backref='signing_blockchain_address',
@@ -752,7 +939,7 @@ class BlockchainAddress(ModelBase):
             self.calculate_address(hex_private_key)
 
 
-class CreditTransfer(ModelBase):
+class CreditTransfer(ManyOrgBase, ModelBase):
     __tablename__ = 'credit_transfer'
 
     uuid            = db.Column(db.String, unique=True)
@@ -769,14 +956,14 @@ class CreditTransfer(ModelBase):
 
     blockchain_transaction_hash = db.Column(db.String)
 
-    sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
-    recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
+    sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
+    recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
 
     sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
     recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
 
-    sender_user_id    = db.Column(db.Integer, db.ForeignKey("user.id"))
-    recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    sender_user_id    = db.Column(db.Integer, db.ForeignKey(User.id))
+    recipient_user_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
     blockchain_transactions = db.relationship('BlockchainTransaction', backref='credit_transfer', lazy=True)
 
@@ -1068,7 +1255,7 @@ class BlockchainTransaction(ModelBase):
     # Output spent txn for bitcoin
     has_output_txn = db.Column(db.Boolean, default=False)
 
-    credit_transfer_id = db.Column(db.Integer, db.ForeignKey('credit_transfer.id'))
+    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
 
     signing_blockchain_address_id = db.Column(db.Integer, db.ForeignKey('blockchain_address.id'))
 
@@ -1078,8 +1265,8 @@ class UploadedImage(ModelBase):
 
     filename = db.Column(db.String)
     image_type = db.Column(db.String)
-    credit_transfer_id = db.Column(db.Integer, db.ForeignKey('credit_transfer.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
     @hybrid_property
     def image_url(self):
@@ -1093,7 +1280,7 @@ class Feedback(ModelBase):
     rating                  = db.Column(db.Float)
     additional_information  = db.Column(db.String)
 
-    transfer_account_id     = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
+    transfer_account_id     = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
 
 
 class Referral(ModelBase):
@@ -1113,7 +1300,7 @@ class Referral(ModelBase):
     def phone(self, phone):
         self._phone = proccess_phone_number(phone)
 
-    referring_user_id     = db.Column(db.Integer, db.ForeignKey('user.id'))
+    referring_user_id     = db.Column(db.Integer, db.ForeignKey(User.id))
 
 class TargetingSurvey(ModelBase):
     __tablename__ = 'targeting_survey'
@@ -1130,6 +1317,7 @@ class TargetingSurvey(ModelBase):
 
 
 class CurrencyConversion(ModelBase):
+    __tablename__ = 'currency_conversion'
 
     code = db.Column(db.String)
     rate = db.Column(db.Float)
@@ -1167,7 +1355,8 @@ class BlacklistToken(ModelBase):
     def __repr__(self):
         return '<id: token: {}'.format(self.token)
 
-class EmailWhitelist(ModelBase):
+
+class EmailWhitelist(CustomOrgBase, ModelBase):
     __tablename__ = 'email_whitelist'
 
     email               = db.Column(db.String)
@@ -1176,6 +1365,8 @@ class EmailWhitelist(ModelBase):
 
     allow_partial_match = db.Column(db.Boolean, default=False)
     used                = db.Column(db.Boolean, default=False)
+
+    organisation_id     = db.Column(db.Integer, db.ForeignKey('organisation.id'))
 
 
 class TransferCard(ModelBase):
@@ -1188,7 +1379,7 @@ class TransferCard(ModelBase):
     _amount_loaded          = db.Column(db.Integer)
     amount_loaded_signature = db.Column(db.String)
 
-    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id    = db.Column(db.Integer, db.ForeignKey(User.id))
 
     @hybrid_property
     def amount_loaded(self):
@@ -1202,6 +1393,7 @@ class TransferCard(ModelBase):
 
     def update_transfer_card(self):
         disbursements = (CreditTransfer.query
+                         .execution_options(show_all=True)
                          .filter_by(recipient_user_id=self.user_id)
                          .filter_by(transfer_type=TransferTypeEnum.DISBURSEMENT)
                          .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
@@ -1224,11 +1416,20 @@ class SavedFilter(ModelBase):
 class KycApplication(ModelBase):
     __tablename__       = 'kyc_application'
 
+    # Trulioo
+    trulioo_id          = db.Column(db.String)
+
     # Wyre SRN
     wyre_id             = db.Column(db.String)
 
     # Either "INCOMPLETE", "PENDING", "VERIFIED" or "REJECTED"
     kyc_status          = db.Column(db.String, default='INCOMPLETE')
+
+    # returns array. action items for mobile. currently ['support'] or ['retry']
+    kyc_actions         = db.Column(JSON)
+    kyc_attempts        = db.Column(db.Integer)
+
+    # INDIVIDUAL, BUSINESS or MASTER (deprecated)
     type                = db.Column(db.String)
 
     first_name          = db.Column(db.String)
@@ -1253,12 +1454,18 @@ class KycApplication(ModelBase):
     bank_accounts        = db.relationship('BankAccount', backref='kyc_application', lazy=True,
                                            foreign_keys='BankAccount.kyc_application_id')
 
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+
     def __init__(self, type, **kwargs):
         super(KycApplication, self).__init__(**kwargs)
         if type not in ALLOWED_KYC_TYPES:
             raise TypeNotFoundException('Type {} not found')
 
         self.type = type
+
+        if type == 'INDIVIDUAL':
+            self.kyc_status = 'PENDING'
+            self.kyc_attempts = 1
 
 
 class BankAccount(ModelBase):

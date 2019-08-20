@@ -65,15 +65,13 @@ def create_app():
     except OSError:
         pass
 
-    register_blueprints(app)
     register_extensions(app)
+    register_blueprints(app)
 
     return app
 
 
 def register_extensions(app):
-    from ethereum import utils
-
     db.init_app(app)
 
     basic_auth.init_app(app)
@@ -128,6 +126,7 @@ def register_blueprints(app):
     from server.api.transfer_usage_api import transfer_usage_blueprint
     from server.api.transfer_card_api import transfer_cards_blueprint
     from server.api.blockchain_address_api import blockchain_address_blueprint
+    from server.api.organisation_api import organisation_blueprint
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix='/api/me')
@@ -150,6 +149,7 @@ def register_blueprints(app):
     app.register_blueprint(transfer_usage_blueprint, url_prefix='/api')
     app.register_blueprint(transfer_cards_blueprint, url_prefix='/api')
     app.register_blueprint(blockchain_address_blueprint, url_prefix='/api')
+    app.register_blueprint(organisation_blueprint, url_prefix='/api')
 
     # 404 handled in react
     @app.errorhandler(404)

@@ -86,6 +86,7 @@ export class TFAValidator extends React.Component {
              value={this.state.otp}
              onChange={(e) => this.onCodeKeyPress(e)}
              onKeyUp={(e) => this.onKeyup(e)}
+             style={{letterSpacing: "0.2em"}}
              placeholder="Your Code"
       />
 

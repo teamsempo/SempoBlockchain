@@ -72,9 +72,9 @@ function createLoginSuccessObject(token) {
   }
 }
 
-function* requestToken({username, password}) {
+function* requestToken({payload}) {
   try {
-    const token_response = yield call(requestApiToken, username, password);
+    const token_response = yield call(requestApiToken, payload);
 
     console.log("token response is", token_response)
 
@@ -147,9 +147,9 @@ function* watchLogoutRequest() {
 
 
 // Create Account Saga
-function* register({ username, password }) {
+function* register({payload}) {
   try {
-    const registered_account = yield call(registerAPI, username, password);
+    const registered_account = yield call(registerAPI, payload);
     if (registered_account.status === 'success') {
       yield put({type: REGISTER_SUCCESS, registered_account});
     } else {

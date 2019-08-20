@@ -4,14 +4,29 @@ from twilio.twiml.messaging_response import MessagingResponse
 
 from server import twilio_client, messagebird_client
 
+
 def make_sms_respone(message):
     resp = MessagingResponse()
     resp.message(message)
     return str(resp)
 
-def proccess_phone_number(phone_number):
+
+def proccess_phone_number(phone_number, region=None, ignore_region=False):
+    """
+    Parse any given phone number.
+    :param phone_number: int
+    :param region: ISO 3166-1 alpha-2 codes
+    :param ignore_region: Boolean. True returns original phone
+    :return:
+    """
     if phone_number is None:
         return None
+
+    if ignore_region:
+        return phone_number
+
+    if region is None:
+        region = current_app.config['DEFAULT_COUNTRY']
 
     if not isinstance(phone_number, str):
         try:
@@ -20,11 +35,18 @@ def proccess_phone_number(phone_number):
         except ValueError:
             pass
 
-    phone_number_object = phonenumbers.parse(phone_number, current_app.config['DEFAULT_COUNTRY'])
+    phone_number_object = phonenumbers.parse(phone_number, region)
 
     parsed_phone_number = phonenumbers.format_number(phone_number_object, phonenumbers.PhoneNumberFormat.E164)
 
     return parsed_phone_number
+
+
+def send_phone_verification_message(to_phone, one_time_code):
+    if to_phone:
+        reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
+
+        send_generic_message(to_phone, reciever_message)
 
 
 def send_onboarding_message(to_phone, first_name, credits, one_time_code):

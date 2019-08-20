@@ -12,6 +12,7 @@ from worker.ABIs import standard_erc20_abi, ccv_abi, mintable_abi, dai_abi
 from worker import rekognition
 from worker import geolocation
 from worker import ip_location
+from worker import trulioo
 
 from celery.exceptions import MaxRetriesExceededError
 
@@ -337,3 +338,15 @@ def check_for_duplicate_person(image_name, image_id):
                                              config.BASIC_AUTH_PASSWORD)
                           )
 
+
+@celery_app.task()
+def trulioo_verification(trulioo_task):
+    app_host = config.APP_HOST
+
+    trulioo_result = trulioo.trulioo_task(trulioo_task)
+
+    if trulioo_result:
+        r = requests.put(app_host, '/api/kyc_application/',
+                          json=trulioo_result,
+                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
+                                             config.BASIC_AUTH_PASSWORD))

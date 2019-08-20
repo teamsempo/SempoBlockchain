@@ -4,6 +4,30 @@ This file (test_models.py) contains the unit tests for the models.py file.
 import pytest
 from server.exceptions import IconNotSupportedException
 
+""" ----- Organisation Model ----- """
+#
+#
+# def test_create_organisation(create_organisation):
+#     """
+#     GIVEN an Organisation model
+#     WHEN a new Organisation is created in DB
+#     THEN check id, name exist AND users, transfer_accounts and credit_transfers is None
+#     """
+#     assert isinstance(create_organisation.id, int)
+#     assert create_organisation.name == 'Sempo'
+#
+#     assert create_organisation.users is None
+#     assert create_organisation.transfer_accounts is None
+#     assert create_organisation.credit_transfers is None
+#
+#
+# def test_create_organisation_with_associations(create_organisation, new_admin_user):
+#     """
+#     GIVEN an Organisation and User Model
+#     WHEN a user is
+#     """
+#
+
 """ ----- User Model ----- """
 
 

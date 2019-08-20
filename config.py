@@ -24,10 +24,7 @@ common_parser = configparser.ConfigParser()
 specific_parser = configparser.ConfigParser()
 
 if DEPLOYMENT_LOCATION == "PROD" or os.environ.get('AWS_ACCESS_KEY_ID'):
-    print("Key len is {}".format(len(os.environ.get('AWS_ACCESS_KEY_ID'))))
     if os.environ.get('AWS_ACCESS_KEY_ID'):
-        if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
-            raise Exception("Missing AWS_SECRET_ACCESS_KEY")
         session = boto3.Session(
             aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
             aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
@@ -82,6 +79,10 @@ ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
 
+# TODO: NICK NICK NICK NICK
+HEAP_ANALYTICS_ID = '2461187681'  # <-- PROD KEY. 1362095942 DEV KEY.
+GOOGLE_ANALYTICS_ID = 'UA-91625165-6'  # FOR ALL SEMPO BLOCKCHAIN DOMAINS
+
 SECRET_KEY          = specific_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(specific_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
 APP_HOST            = specific_parser['APP']['APP_HOST']
@@ -135,9 +136,6 @@ else:
 
 GOOGLE_GEOCODE_KEY = common_parser['GOOGLE']['geocode_key']
 CHROMEDRIVER_LOCATION = specific_parser['GOOGLE']['chromedriver_location']
-GOOGLE_ANALYTICS_ID = common_parser['GOOGLE']['google_analytics_id']
-
-HEAP_ANALYTICS_ID = specific_parser['HEAP']['ID']
 
 MAPBOX_TOKEN = common_parser['MAPBOX']['token']
 
@@ -228,5 +226,9 @@ WYRE_HOST = specific_parser['WYRE']['host']
 WYRE_HOST_V2 = specific_parser['WYRE']['host_v2']
 
 IPIFY_API_KEY = common_parser['IPIFY']['api_key']
+
+TRULIOO_HOST    = specific_parser['TRULIOO']['host']
+TRULIOO_USER    = common_parser['TRULIOO']['user']
+TRULIOO_PASS    = common_parser['TRULIOO']['pass']
 
 INTERCOM_ANDROID_SECRET = common_parser['INTERCOM']['android_secret']

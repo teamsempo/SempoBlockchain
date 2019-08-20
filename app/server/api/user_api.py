@@ -6,6 +6,9 @@ from server.models import paginate_query, User, TransferAccount
 from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils import user as UserUtils
+from server.utils.misc import AttributeDictProccessor
+from server.constants import CREATE_USER_SETTINGS
+
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -120,11 +123,18 @@ class UserAPI(MethodView):
 
         post_data = request.get_json()
 
-        response_object, response_code = UserUtils.proccess_attribute_dict(
+        # Data supplied to the API via integrations such as KoboToolbox can be messy, so clean the data first
+        dict_processor = AttributeDictProccessor(post_data)
+        dict_processor.force_attribute_dict_keys_to_lowercase()
+        dict_processor.strip_kobo_preslashes()
+        dict_processor.attempt_to_truthy_dict_values()
+        dict_processor.strip_weirdspace_characters()
+        dict_processor.insert_settings_from_databse(CREATE_USER_SETTINGS)
+        post_data = dict_processor.attribute_dict
+
+        response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
-            force_dict_keys_lowercase=True,
-            # TODO: This should probably be shifted back inside the dict
-            require_transfer_card_exists=post_data.get('require_transfer_card_exists', True)
+            organisation=g.user.get_primary_admin_organisation()
         )
 
         if response_code == 200:

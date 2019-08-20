@@ -1,3 +1,9 @@
+class OrganisationNotProvidedException(Exception):
+    """
+    Raise if trying to query database without providing an organisation ID or SHOW_ALL flag.
+    """
+    pass
+
 class IconNotSupportedException(Exception):
     """
     Raise if trying to set TransferUsage to an icon not supported on mobile (currently only MaterialCommunityIcons)
@@ -59,4 +65,8 @@ class BlockchainError(Exception):
 
 
 class NoTransferCardError(Exception):
+    pass
+
+
+class PhoneVerificationError(Exception):
     pass

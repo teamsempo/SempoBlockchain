@@ -251,8 +251,10 @@ class KycApplicationSchema(Schema):
     id                  = fields.Int(dump_only=True)
     created             = fields.DateTime(dump_only=True)
 
+    trulioo_id          = fields.Str()
     wyre_id             = fields.Str()
     kyc_status          = fields.Str()
+    kyc_actions         = fields.Method('get_kyc_actions_json')
 
     first_name          = fields.Str()
     last_name           = fields.Str()
@@ -275,6 +277,20 @@ class KycApplicationSchema(Schema):
 
     def get_beneficial_owners_json(self, obj):
         return obj.beneficial_owners
+
+    def get_kyc_actions_json(self, obj):
+        return obj.kyc_actions
+
+
+class OrganisationSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+    created             = fields.DateTime(dump_only=True)
+
+    name                = fields.Str()
+
+    users               = fields.Nested('server.schemas.UserSchema', many=True)
+    transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
+    credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
 
 old_user_schema = UserSchema(exclude=("transfer_account.users",))
@@ -343,7 +359,7 @@ filter_schema = SavedFilterSchema()
 filters_schema = SavedFilterSchema(many=True)
 
 kyc_application_schema = KycApplicationSchema()
-kyc_application_state_schema = KycApplicationSchema(exclude=("wyre_id", "first_name", "last_name", "phone",
+kyc_application_state_schema = KycApplicationSchema(exclude=("trulioo_id","wyre_id", "first_name", "last_name", "phone",
                                                                          "business_legal_name", "business_type",
                                                                          "tax_id", "website", "date_established",
                                                                          "country", "street_address", "street_address_2"
@@ -351,3 +367,5 @@ kyc_application_state_schema = KycApplicationSchema(exclude=("wyre_id", "first_n
                                                                          "beneficial_owners", "bank_accounts",
                                                                          "documents"
                                                                          ))
+organisation_schema = OrganisationSchema()
+organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))

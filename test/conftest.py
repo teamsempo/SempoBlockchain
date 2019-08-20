@@ -14,6 +14,13 @@ def requires_auth(test_client):
     return requires_auth
 
 
+@pytest.fixture(scope='module')
+def create_organisation(test_client, init_database):
+    from server.models import Organisation
+    organisation = Organisation(name='Sempo')
+    return organisation
+
+
 @pytest.fixture(scope='function')
 def new_admin_user():
     from server.models import User

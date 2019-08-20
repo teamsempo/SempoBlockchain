@@ -80,7 +80,7 @@ class RegisterFormContainer extends React.Component {
       return
     }
 
-    this.props.registerRequest({username: this.state.username, password: this.state.password})
+    this.props.registerRequest({body:{username: this.state.username, password: this.state.password, organisation: this.props.organisation}})
   }
 
   onUserFieldKeyPress(e) {
