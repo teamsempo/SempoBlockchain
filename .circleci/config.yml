@@ -16,23 +16,29 @@ jobs:
           docker_layer_caching: true
 
       - run:
-          name: Set Python chown
+          name: Prepare for pyth venv install
           command: |
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+            cp ~/project/.circleci/Pipefile.lock ~/project
       - restore_cache:  # ensure this step occurs *before* installing dependencies
-          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
       - run:
           name: Setup Python Env
           command: |
-            sudo pip install pipenv
-            pipenv install -r ~/project/.circleci/requirements.txt
+            pip install -r ~/project/.circleci/requirements.txt
       - save_cache:
-          key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python3.6/site-packages"
+
+      - run:
+          name: Deploy app to AWS Server via Docker
+          command: |
+            eb deploy blockchain-app-dev
+
       - run:
           name: Setup AWS
           command: |
