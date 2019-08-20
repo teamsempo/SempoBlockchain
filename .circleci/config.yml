@@ -26,7 +26,7 @@ jobs:
           name: Setup Python Env
           command: |
             sudo pip install pipenv
-            pipenv install ~/project/.circleci/Pipfile.lock
+            pipenv install -r ~/project/.circleci/requirements.txt
       - save_cache:
           key: pydeps-v1-{{ .Branch }}-{{ checksum "~/project/.circleci/Pipfile.lock" }}
           paths:
