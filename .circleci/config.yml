@@ -53,9 +53,9 @@ jobs:
       - run:
           name: Recover Previous 3 Builds
           command: |
-            if [ "$CIRCLE_BUILD_NUM" -gt 1 ]; expr $CIRCLE_BUILD_NUM - 1 > BuildMinus1.txt; fi
-            if [ "$CIRCLE_BUILD_NUM" -gt 2 ]; expr $CIRCLE_BUILD_NUM - 2 > BuildMinus2.txt; fi
-            if [ "$CIRCLE_BUILD_NUM" -gt 3 ]; expr $CIRCLE_BUILD_NUM - 3 > BuildMinus3.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 1 ]; then expr $CIRCLE_BUILD_NUM - 1 > BuildMinus1.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 2 ]; then expr $CIRCLE_BUILD_NUM - 2 > BuildMinus2.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 3 ]; then expr $CIRCLE_BUILD_NUM - 3 > BuildMinus3.txt; fi
       - restore_cache:
           keys:
             - v5-{{ .Branch }}-{{ checksum "BuildMinus1.txt" }}
