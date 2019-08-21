@@ -125,6 +125,10 @@ jobs:
           key: v5-{{ .Branch }}-{{ checksum "CurrBuildNum.txt" }}
           paths:
             - ~/project/caches
+      - persist_to_workspace:
+          root: ~/project/caches
+          paths:
+            - *.tar.gz
   test:
     working_directory: ~/project
     docker:
@@ -134,6 +138,14 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - attach_workspace:
+          at:  ~/project/caches
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            gunzip -c ~/project/caches/server.tar.gz | docker load; docker images
+            gunzip -c ~/project/caches/worker.tar.gz | docker load; docker images
+            gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images
       - run:
           name: Run Docker Tests
           command: |
