@@ -1,6 +1,6 @@
 bit==0.4.3
 boto3==1.7.33
-cryptography==2.2.2
+cryptography==2.3
 celery==4.2.1
 ethereum==2.3.1
 eventlet==0.24.1
