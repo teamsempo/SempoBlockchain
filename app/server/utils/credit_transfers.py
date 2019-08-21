@@ -241,19 +241,6 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
 
     return None
 
-def create_and_commit_transfer(transfer_amount, send_account = None, receive_account = None, uuid=None):
-    try:
-        transfer = models.CreditTransfer(transfer_amount, sender=send_account, recipient=receive_account, uuid=uuid)
-
-        # We need this commit to prevent a race condition with the async blockchain task
-        db.session.commit()
-
-    except IntegrityError:
-        raise Exception("Transfer Integrity Error")
-
-    return transfer
-
-
 def handle_transfer_to_blockchain_address(
     transfer_amount, sender_user, recipient_blockchain_address, transfer_use, uuid=None):
 
@@ -384,10 +371,7 @@ def make_payment_transfer(transfer_amount,
                           automatically_resolve_complete=True,
                           uuid=None):
 
-    transfer = create_and_commit_transfer(transfer_amount,
-                                          send_account=send_account,
-                                          receive_account=receive_account,
-                                          uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, sender=send_account, recipient=receive_account, uuid=uuid)
 
     make_cashout_incentive_transaction = False
 
@@ -451,7 +435,7 @@ def make_withdrawal_transfer(transfer_amount,
                              automatically_resolve_complete=True,
                              uuid=None):
 
-    transfer = create_and_commit_transfer(transfer_amount, send_account=send_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, sender=send_account, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
@@ -486,25 +470,18 @@ def make_disbursement_transfer(transfer_amount,
             message = "Master Wallet has insufficient funds"
             raise InsufficientBalanceError(message)
 
-    elapsed_time('4.1: Retrieved Master Balance')
-
     if current_app.config['IS_USING_BITCOIN']:
         if transfer_amount < 1000 * 100:
             raise Exception("Minimum Transfer Amount is 1000 sat")
 
-    transfer = create_and_commit_transfer(transfer_amount, receive_account=receive_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, recipient=receive_account, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
-    elapsed_time('4.3: Created and commited')
-
     if automatically_resolve_complete:
         transfer.resolve_as_completed()
-        elapsed_time('4.4: Resolved as complete')
 
         pusher.push_admin_credit_transfer(transfer)
-
-        elapsed_time('4.5: Pusher complete')
 
     return transfer
 

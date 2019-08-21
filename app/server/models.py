@@ -91,17 +91,22 @@ def before_compile(query):
 
         # if the subclass OrgBase exists, then filter by organisations - else, return default query
         if mapper:
-            if issubclass(mapper.class_, ManyOrgBase):
+            if issubclass(mapper.class_, ManyOrgBase) or issubclass(mapper.class_, OneOrgBase):
 
                 try:
                     # member_organisations = getattr(g, "member_organisations", [])
                     primary_organisation = getattr(g, "primary_organisation", None)
                     member_organisations = [primary_organisation] if primary_organisation else []
 
-                    # filters many-to-many
-                    query = query.enable_assertions(False).filter(
-                        ent['entity'].organisations.any(Organisation.id.in_(member_organisations))
-                    )
+                    if issubclass(mapper.class_, ManyOrgBase):
+                        # filters many-to-many
+                        query = query.enable_assertions(False).filter(
+                            ent['entity'].organisations.any(Organisation.id.in_(member_organisations))
+                        )
+                    else:
+                        query = query.enable_assertions(False).filter(
+                            ent['entity'].organisation_id == primary_organisation
+                        )
 
                 except AttributeError:
                     raise
@@ -109,7 +114,7 @@ def before_compile(query):
                 except TypeError:
                     raise OrganisationNotProvidedException('Must provide organisation ID or specify SHOW_ALL flag')
 
-            elif issubclass(mapper.class_, CustomOrgBase):
+            elif issubclass(mapper.class_, OneOrgBase):
                 # must filter directly on query
                 raise OrganisationNotProvidedException('{} has a custom org base. Must filter directly on query'.format(ent['entity']))
 
@@ -190,26 +195,30 @@ class Organisation(ModelBase):
                             secondary=organisation_association_table,
                             back_populates="organisations")
 
-    transfer_accounts   = db.relationship(
-                            "TransferAccount",
-                            secondary=organisation_association_table,
-                            back_populates="organisations")
-
     credit_transfers    = db.relationship(
                             "CreditTransfer",
                             secondary=organisation_association_table,
                             back_populates="organisations")
 
+    transfer_accounts   = db.relationship('TransferAccount', backref='organisation',
+                                          lazy=True, foreign_keys='TransferAccount.organisation_id')
+
+
+
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
 
 
-class CustomOrgBase(object):
+class OneOrgBase(object):
     """
-    Mixin that enables a manual association of an object to organisation
+    Mixin that automatically associates object(s) to organisation(s) many-to-one.
 
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
+
+    @declared_attr
+    def organisation_id(cls):
+        return db.Column('organisation_id', db.ForeignKey('organisation.id'))
 
 
 class ManyOrgBase(object):
@@ -218,10 +227,6 @@ class ManyOrgBase(object):
 
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
-
-    @declared_attr
-    def organisation_id(cls):
-        return db.Column('organisation_id', db.ForeignKey('organisation.id'))
 
     @declared_attr
     def organisations(cls):
@@ -465,10 +470,12 @@ class User(ManyOrgBase, ModelBase):
         return [organisation.id for organisation in self.organisations]
 
     @hybrid_property
-    def org_transfer_account(self):
+    def transfer_account(self):
+        target_organisation_id = g.primary_organisation
         for transfer_account in self.transfer_accounts:
-            organisation_ids = transfer_account.organisations
-        return
+            if transfer_account.organisation_id == target_organisation_id:
+                return transfer_account
+        return None
 
     def get_primary_admin_organisation(self, fallback=None):
         if len(self.organisations) == 0:
@@ -742,7 +749,7 @@ class DeviceInfo(ModelBase):
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
 
-class TransferAccount(ManyOrgBase, ModelBase):
+class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
@@ -869,14 +876,18 @@ class TransferAccount(ManyOrgBase, ModelBase):
                                               automatically_resolve_complete=False)
         return withdrawal
 
-    def __init__(self, blockchain_address=None):
+    def __init__(self, blockchain_address=None, organisation=None):
 
         blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
         db.session.add(blockchain_address_obj)
 
         self.blockchain_address = blockchain_address_obj
 
-class BlockchainAddress(ModelBase):
+        if organisation:
+            self.organisation = organisation
+            self.blockchain_address.organisation = organisation
+
+class BlockchainAddress(OneOrgBase, ModelBase):
     __tablename__ = 'blockchain_address'
 
     address             = db.Column(db.String())
@@ -1140,15 +1151,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
             raise InvalidTransferTypeException("Invalid Transfer Type")
 
         if not is_retry or len(blockchain_payload['uncompleted_tasks']) > 0:
-            try:
-                blockchain_task = celery_app.signature('worker.celery_tasks.make_blockchain_transaction', kwargs={'blockchain_payload': blockchain_payload})
-                blockchain_task.delay()
-
-            except Exception as e:
-                print(e)
-                sentry.captureException()
-                pass
-
+            blockchain_task = celery_app.signature('worker.celery_tasks.make_blockchain_transaction', kwargs={'blockchain_payload': blockchain_payload})
+            g.celery_tasks.append(blockchain_task)
 
     def resolve_as_completed(self, existing_blockchain_txn=None):
         self.resolved_date = datetime.datetime.utcnow()
@@ -1156,8 +1160,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         # self.delta_transfer_account_balance(self.sender_transfer_account, -self.transfer_amount)
         # self.delta_transfer_account_balance(self.recipient_transfer_account, self.transfer_amount)
-
-        elapsed_time('4.3.1: Delta')
 
         if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -1356,7 +1358,7 @@ class BlacklistToken(ModelBase):
         return '<id: token: {}'.format(self.token)
 
 
-class EmailWhitelist(CustomOrgBase, ModelBase):
+class EmailWhitelist(OneOrgBase, ModelBase):
     __tablename__ = 'email_whitelist'
 
     email               = db.Column(db.String)

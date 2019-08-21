@@ -186,15 +186,12 @@ def create_transfer_account_user(first_name=None, last_name=None,
         user.transfer_accounts.append(existing_transfer_account)
     else:
 
-        transfer_account = models.TransferAccount(blockchain_address=blockchain_address)
+        transfer_account = models.TransferAccount(blockchain_address=blockchain_address, organisation=organisation)
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
 
         user.transfer_accounts.append(transfer_account)
-
-        if organisation:
-            transfer_account.organisations.append(organisation)
 
     if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
         transfer_account.approve()
@@ -477,11 +474,7 @@ def proccess_create_or_modify_user_request(attribute_dict,
         save_device_info(device_info=attribute_dict.get('deviceinfo'), user=user)
 
     if custom_initial_disbursement:
-        try:
-            disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, user)
-        except Exception as e:
-            response_object = {'message': str(e)}
-            return response_object, 400
+        disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, user)
 
     # Location fires an async task that needs to know user ID
     db.session.flush()

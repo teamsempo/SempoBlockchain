@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template, make_response, jsonify
+from flask import Flask, request, redirect, render_template, make_response, jsonify, g
 from flask_cors import CORS
 
 from flask_sqlalchemy import SQLAlchemy
@@ -93,6 +93,9 @@ def register_extensions(app):
 def register_blueprints(app):
     @app.before_request
     def before_request():
+        # Celery task list. Tasks are added here so that they can be completed after db commit
+        g.celery_tasks = []
+
         if request.url.startswith('http://') and '.sempo.ai' in request.url:
             url = request.url.replace('http://', 'https://', 1)
             code = 301
@@ -103,6 +106,17 @@ def register_blueprints(app):
         #
         #     if not uwsgi.is_connected(uwsgi.connection_fd()):
         #         return make_response(jsonify({'message': 'Connection Aborted'})), 401
+
+    @app.after_request
+    def after_request(response):
+            # Execute any async celery tasks
+        for task in g.celery_tasks:
+            try:
+                task.delay()
+            except Exception as e:
+                sentry.captureException()
+
+        return response
 
     from .views.index import index_view
     from server.api.auth_api import auth_blueprint
