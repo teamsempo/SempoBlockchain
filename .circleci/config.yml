@@ -139,7 +139,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - attach_workspace:
-          at:  ~/project/caches
+          at:  ~/project
       - run:
           name: Load Docker image layer cache
           command: |
