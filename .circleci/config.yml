@@ -1,10 +1,6 @@
 version: 2.0
 jobs:
   build:
-    filters:
-      branches:
-        only:
-          - master
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -98,7 +94,6 @@ jobs:
             docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1
             docker build -t worker . -f ./worker/Dockerfile
             docker build -t proxy ./proxy
-
       - run:
           name: Save Docker image layer cache
           command: |
@@ -118,7 +113,6 @@ jobs:
             docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
 
             sudo chmod 777 -R ~/project/caches
-
       - run:
           name: Create Current Build Number
           command: |
@@ -128,11 +122,22 @@ jobs:
           key: v5-{{ .Branch }}-{{ checksum "CurrBuildNum.txt" }}
           paths:
             - ~/project/caches
-
+  test:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+        environment:
+          CONTAINER_MODE: TEST
+    steps:
       - run:
           name: Run Docker Tests
           command: |
             docker-compose up --exit-code-from app
+  deploy:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
       - run:
           name: Push Docker Image
           command: |
@@ -156,3 +161,9 @@ workflows:
   main_workflow:
     jobs:
       - build
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
