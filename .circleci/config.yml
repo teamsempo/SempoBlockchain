@@ -126,9 +126,9 @@ jobs:
           paths:
             - ~/project/caches
       - persist_to_workspace:
-          root: ~/project/caches
+          root: ~/project
           paths:
-            - *tar.gz
+            - caches
   test:
     working_directory: ~/project
     docker:
