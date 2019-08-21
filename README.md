@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=svg&circle-token=6b52b66ec99befc82f2182eddc0e117f7bba9005)](https://circleci.com/gh/teamsempo/SempoBlockchain)
+[![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=svg)](https://circleci.com/gh/teamsempo/SempoBlockchain)
 
 # Sempo
 

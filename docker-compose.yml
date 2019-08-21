@@ -9,8 +9,7 @@ services:
       CONTAINER_TYPE: "APP"
       CONTAINER_MODE: ${CONTAINER_MODE}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-#    env_file:
-#     - ~/ebkeys.env
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
     - postgres
 
@@ -25,8 +24,7 @@ services:
       CONTAINER_TYPE: "WORKER"
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-#    env_file:
-#     - ~/ebkeys.env
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
     - redis
   proxy:
@@ -34,8 +32,6 @@ services:
     environment:
       DEPLOYMENT_NAME: "LOCAL_DOCKER"
       LOCATION: "LOCAL_DOCKER"
-#    env_file:
-#     - ~/ebkeys.env
     ports:
      - "80:80"
     depends_on:
