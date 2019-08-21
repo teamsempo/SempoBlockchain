@@ -123,9 +123,9 @@ jobs:
       - run:
           name: Load Docker image layer cache
           command: |
-            gunzip -c ~/project/caches/server.tar.gz | docker load; docker images
-            gunzip -c ~/project/caches/worker.tar.gz | docker load; docker images
-            gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images
+            gunzip -c ~/project/imagecaches/server.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/worker.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
       - run:
           name: Run Docker Tests
           command: |
@@ -142,9 +142,9 @@ jobs:
       - run:
           name: Load Docker image layer cache
           command: |
-            gunzip -c ~/project/caches/server.tar.gz | docker load; docker images
-            gunzip -c ~/project/caches/worker.tar.gz | docker load; docker images
-            gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images
+            gunzip -c ~/project/imagecaches/server.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/worker.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
       - run:
           name: Prepare for pyth venv install
           command: |
