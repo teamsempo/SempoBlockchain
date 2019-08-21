@@ -9,46 +9,12 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Prepare for pyth venv install
-          command: |
-            sudo chown -R circleci:circleci /usr/local/bin
-            sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-      - restore_cache:
-          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
-      - run:
-          name: Setup Python Env
-          command: |
-            pip install -r ~/project/.circleci/requirements.txt
-      - save_cache:
-          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
-      - run:
-          name: Setup AWS
-          command: |
-            mkdir ./.elasticbeanstalk
-
-            printf "branch-defaults:
-              default:
-               environment: blockchain-app-dev
-            global:
-             application_name: blockchain-app
-             default_ec2_keyname: aws-eb
-             default_platform: Multi-container Docker 18.03.1-ce (Generic)
-             default_region: ap-southeast-2
-             include_git_submodules: true
-             workspace_type: Application" > ./.elasticbeanstalk/config.yml
-
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
             - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
             - node-v1-{{ .Branch }}-
             - node-v1-
-
       - run:
           name: Setup npm
           command: |
@@ -87,20 +53,21 @@ jobs:
             echo worker
             if [ -f ~/project/caches/proxy.tar.gz ]; then gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images; fi
             echo proxy
-
       - run:
-          name: Build application Docker images
+          name: Build Node
           command: |
             cd ./app
             npm run build
             cd ../
+      - run:
+          name: Build application Docker images
+          command: |
             docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1
             docker build -t worker . -f ./worker/Dockerfile
             docker build -t proxy ./proxy
       - run:
           name: Save Docker image layer cache
           command: |
-            GIT_HASH=$(git rev-parse HEAD)
             sudo mkdir -p ~/project/caches
             sudo chmod 777 -R ~/project/caches
 
@@ -109,18 +76,6 @@ jobs:
             docker save proxy:latest | gzip > ~/project/caches/proxy.tar.gz
 
             sudo chmod 777 -R ~/project/caches
-
-#           See here: https://github.com/mozmeao/snippets-service/pull/208/files
-#             and here: https://stackoverflow.com/q/49965396
-#             The build commands here will be completely cached, and so very quick
-#
-#            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
-#            docker build -t worker . -f ./worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/worker_layers.txt
-#            docker build -t proxy ./proxy| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
-#
-#            docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
-#            docker save $(cat /tmp/worker_layers.txt) | gzip > ~/project/caches/worker.tar.gz
-#            docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
       - run:
           name: Create Current Build Number
           command: |
@@ -162,6 +117,46 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - attach_workspace:
+          at:  ~/project
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            gunzip -c ~/project/caches/server.tar.gz | docker load; docker images
+            gunzip -c ~/project/caches/worker.tar.gz | docker load; docker images
+            gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images
+      - run:
+          name: Prepare for pyth venv install
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - restore_cache:
+          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+      - run:
+          name: Setup AWS CLI
+          command: |
+            pip install -r ~/project/.circleci/requirements.txt
+      - save_cache:
+          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
+      - run:
+          name: Setup AWS EB Config
+          command: |
+            mkdir ./.elasticbeanstalk
+
+            printf "branch-defaults:
+              default:
+               environment: blockchain-app-dev
+            global:
+             application_name: blockchain-app
+             default_ec2_keyname: aws-eb
+             default_platform: Multi-container Docker 18.03.1-ce (Generic)
+             default_region: ap-southeast-2
+             include_git_submodules: true
+             workspace_type: Application" > ./.elasticbeanstalk/config.yml
       - run:
           name: Push Docker Image
           command: |
