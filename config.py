@@ -24,6 +24,7 @@ common_parser = configparser.ConfigParser()
 specific_parser = configparser.ConfigParser()
 
 if DEPLOYMENT_LOCATION == "PROD" or os.environ.get('AWS_ACCESS_KEY_ID'):
+    # Load config from S3 Bucket
     print("Key len is {}".format(len(os.environ.get('AWS_ACCESS_KEY_ID'))))
     if os.environ.get('AWS_ACCESS_KEY_ID'):
         if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
@@ -49,12 +50,19 @@ if DEPLOYMENT_LOCATION == "PROD" or os.environ.get('AWS_ACCESS_KEY_ID'):
     common_parser.read_string(common_read_result)
 
 else:
-    if not (os.path.isfile('config_files/common_config.ini')
-            and os.path.isfile('config_files/' + CONFIG_FILENAME)):
-        raise Exception("Missing Config Files")
+    # Load config from local folder
 
-    common_parser.read(os.path.join(CONFIG_DIR, 'config_files/common_config.ini'))
-    specific_parser.read(os.path.join(CONFIG_DIR, 'config_files/' + CONFIG_FILENAME))
+    common_path = os.path.join(CONFIG_DIR, 'config_files/common_config.ini')
+    specific_path = os.path.join(CONFIG_DIR, 'config_files/' + CONFIG_FILENAME)
+
+    if not (os.path.isfile(common_path)):
+        raise Exception("Missing Common Config File")
+
+    if not os.path.isfile(specific_path):
+        raise Exception("Missing Config Files: {}".format(CONFIG_FILENAME))
+
+    common_parser.read(common_path)
+    specific_parser.read(specific_path)
 
 DEPLOYMENT_NAME     = specific_parser['APP']['DEPLOYMENT_NAME']
 
@@ -233,8 +241,8 @@ WYRE_HOST_V2 = specific_parser['WYRE']['host_v2']
 
 IPIFY_API_KEY = common_parser['IPIFY']['api_key']
 
-TRULIOO_HOST    = specific_parser['TRULIOO']['host']
-TRULIOO_USER    = common_parser['TRULIOO']['user']
-TRULIOO_PASS    = common_parser['TRULIOO']['pass']
+TRULIOO_HOST    = specific_parser['TRULIOO'].get('host')
+TRULIOO_USER    = common_parser['TRULIOO'].get('user')
+TRULIOO_PASS    = common_parser['TRULIOO'].get('pass')
 
 INTERCOM_ANDROID_SECRET = common_parser['INTERCOM']['android_secret']
