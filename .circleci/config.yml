@@ -8,9 +8,7 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-
+      - setup_remote_docker
       - run:
           name: Prepare for pyth venv install
           command: |
@@ -129,6 +127,8 @@ jobs:
         environment:
           CONTAINER_MODE: TEST
     steps:
+      - checkout
+      - setup_remote_docker
       - run:
           name: Run Docker Tests
           command: |
@@ -138,6 +138,8 @@ jobs:
     docker:
       - image: circleci/python:3.6-node
     steps:
+      - checkout
+      - setup_remote_docker
       - run:
           name: Push Docker Image
           command: |
