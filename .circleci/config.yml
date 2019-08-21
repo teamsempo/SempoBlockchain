@@ -33,12 +33,6 @@ jobs:
             - ".venv"
             - "/usr/local/bin"
             - "/usr/local/lib/python3.6/site-packages"
-
-      - run:
-          name: Deploy app to AWS Server via Docker
-          command: |
-            eb deploy blockchain-app-dev
-
       - run:
           name: Setup AWS
           command: |
