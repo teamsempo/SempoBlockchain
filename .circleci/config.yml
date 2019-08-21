@@ -103,11 +103,24 @@ jobs:
             GIT_HASH=$(git rev-parse HEAD)
             sudo mkdir -p ~/project/caches
             sudo chmod 777 -R ~/project/caches
+
             docker save server:latest | gzip > ~/project/caches/server.tar.gz
-            docker save worker:latest | gzip > ~/project/caches/server.tar.gz
-            docker save proxy:latest | gzip > ~/project/caches/server.tar.gz
+            docker save worker:latest | gzip > ~/project/caches/worker.tar.gz
+            docker save proxy:latest | gzip > ~/project/caches/proxy.tar.gz
 
             sudo chmod 777 -R ~/project/caches
+
+#           See here: https://github.com/mozmeao/snippets-service/pull/208/files
+#             and here: https://stackoverflow.com/q/49965396
+#             The build commands here will be completely cached, and so very quick
+#
+#            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
+#            docker build -t worker . -f ./worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/worker_layers.txt
+#            docker build -t proxy ./proxy| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
+#
+#            docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
+#            docker save $(cat /tmp/worker_layers.txt) | gzip > ~/project/caches/worker.tar.gz
+#            docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
       - run:
           name: Create Current Build Number
           command: |
