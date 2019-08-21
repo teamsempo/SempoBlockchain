@@ -61,17 +61,22 @@ jobs:
           key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
       - run:
-          name: Recover Previous 3 Builds
+          name: Recover Previous 6 Builds
           command: |
             if [ "$CIRCLE_BUILD_NUM" -gt 1 ]; then expr $CIRCLE_BUILD_NUM - 1 > BuildMinus1.txt; fi
             if [ "$CIRCLE_BUILD_NUM" -gt 2 ]; then expr $CIRCLE_BUILD_NUM - 2 > BuildMinus2.txt; fi
             if [ "$CIRCLE_BUILD_NUM" -gt 3 ]; then expr $CIRCLE_BUILD_NUM - 3 > BuildMinus3.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 4 ]; then expr $CIRCLE_BUILD_NUM - 4 > BuildMinus4.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 5 ]; then expr $CIRCLE_BUILD_NUM - 5 > BuildMinus5.txt; fi
+            if [ "$CIRCLE_BUILD_NUM" -gt 6 ]; then expr $CIRCLE_BUILD_NUM - 6 > BuildMinus6.txt; fi
       - restore_cache:
           keys:
             - v5-{{ .Branch }}-{{ checksum "BuildMinus1.txt" }}
             - v5-{{ .Branch }}-{{ checksum "BuildMinus2.txt" }}
             - v5-{{ .Branch }}-{{ checksum "BuildMinus3.txt" }}
-
+            - v5-{{ .Branch }}-{{ checksum "BuildMinus4.txt" }}
+            - v5-{{ .Branch }}-{{ checksum "BuildMinus5.txt" }}
+            - v5-{{ .Branch }}-{{ checksum "BuildMinus6.txt" }}
       - run:
           name: Load Docker image layer cache
           command: |
