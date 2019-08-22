@@ -3,7 +3,8 @@ from flask.views import MethodView
 from server import db, sentry, basic_auth
 # from server import limiter
 from server.constants import DENOMINATION_DICT
-from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage, TransferAccount, Organisation
+from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage, TransferAccount, \
+    Organisation
 from phonenumbers.phonenumberutil import NumberParseException
 from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
 from server.utils.intercom import create_intercom_android_secret
@@ -15,7 +16,6 @@ from server.utils.amazon_ses import send_reset_email, send_activation_email, sen
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
 from sqlalchemy import and_, or_
 
-
 from datetime import datetime
 import time, random
 
@@ -25,6 +25,7 @@ auth_blueprint = Blueprint('auth', __name__)
 def get_denominations():
     currency_name = current_app.config['CURRENCY_NAME']
     return DENOMINATION_DICT.get(currency_name, {})
+
 
 def get_highest_admin_tier(user):
     if user.is_superadmin:
@@ -40,7 +41,6 @@ def get_highest_admin_tier(user):
 
 
 def create_user_response_object(user, auth_token, message):
-
     if current_app.config['IS_USING_BITCOIN']:
         try:
             usd_to_satoshi_rate = get_usd_to_satoshi_rate()
@@ -56,7 +56,7 @@ def create_user_response_object(user, auth_token, message):
     conversion_rate = 1
     currency_name = current_app.config['CURRENCY_NAME']
     if user.default_currency:
-        conversion = CurrencyConversion.query.filter_by(code = user.default_currency).first()
+        conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
         if conversion is not None:
             conversion_rate = conversion.rate
             currency_name = user.default_currency
@@ -98,7 +98,7 @@ def create_user_response_object(user, auth_token, message):
         'terms_accepted': user.terms_accepted,
         'request_feedback_questions': request_feedback_questions(user),
         'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
-        #This is here to stop the old release from dying
+        # This is here to stop the old release from dying
         'feedback_questions': request_feedback_questions(user),
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
@@ -111,7 +111,6 @@ def create_user_response_object(user, auth_token, message):
     user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
         TransferAccount.users.any(User.id.in_([user.id]))).all()
     if len(user_transfer_accounts) > 0:
-
         responseObject['transfer_account_ID'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
         responseObject['name'] = user_transfer_accounts[0].name  # get the first transfer account name
 
@@ -121,28 +120,30 @@ def create_user_response_object(user, auth_token, message):
 
     return responseObject
 
+
 class CheckBasicAuth(MethodView):
 
     @basic_auth.required
     def get(self):
-
         responseObject = {
             'status': 'success',
         }
 
         return make_response(jsonify(responseObject)), 201
 
+
 class RefreshTokenAPI(MethodView):
     """
     User Refresh Token Resource
     """
+
     @requires_auth
     def get(self):
         try:
 
             auth_token = g.user.encode_auth_token()
 
-            responseObject = create_user_response_object(g.user,auth_token,'Token refreshed successfully.')
+            responseObject = create_user_response_object(g.user, auth_token, 'Token refreshed successfully.')
 
             return make_response(jsonify(responseObject)), 201
 
@@ -168,7 +169,7 @@ class RegisterAPI(MethodView):
         email = post_data.get('email') or post_data.get('username')
         password = post_data.get('password')
         phone = post_data.get('phone')
-        organisation_name = post_data.get('organisation')
+        referral_code = post_data.get('referral_code')
 
         if phone is not None:
             # this is a registration from a mobile device THUS a vendor or recipient.
@@ -185,34 +186,33 @@ class RegisterAPI(MethodView):
         # email_tail = email.split('@')[-1]
         email_ok = False
 
-        if organisation_name is None:
-            return make_response(jsonify({'message': 'Must provide an organisation to sign up for a web account.'})), 400
+        whitelisted_emails = EmailWhitelist.query\
+            .filter_by(email=email, referral_code=referral_code, used=False) \
+            .execution_options(show_all=True).all()
 
-        organisation = Organisation.query.filter_by(name=organisation_name).execution_options(show_all=True).first()
+        selected_whitelist_item = None
+        exact_match = False
 
-        if organisation is None:
-            return make_response(jsonify({'message': 'Organisation was not found for name: {}'.format(organisation_name)})), 404
-
-        whitelisted_emails = EmailWhitelist.query.filter_by(organisation_id=organisation.id, used=False).execution_options(show_all=True).all()
-
-        tier = None
-        if '@sempo.ai' in email:
-            email_ok = True
-            tier = 'superadmin'
+        # tier = None
+        # if '@sempo.ai' in email:
+        #     email_ok = True
+        #     tier = 'sempo_admin'
 
         for whitelisted in whitelisted_emails:
             if whitelisted.allow_partial_match and whitelisted.email in email:
                 email_ok = True
                 tier = whitelisted.tier
+                selected_whitelist_item = whitelisted
+                exact_match = False
                 continue
             elif whitelisted.email == email:
                 email_ok = True
 
                 whitelisted.used = True
                 tier = whitelisted.tier
+                selected_whitelist_item = whitelisted
+                exact_match = True
                 continue
-
-        db.session.commit()
 
         if not email_ok:
             responseObject = {
@@ -228,7 +228,6 @@ class RegisterAPI(MethodView):
             }
             return make_response(jsonify(responseObject)), 403
 
-
         # check if user already exists
         user = User.query.filter_by(email=email).execution_options(show_all=True).first()
         if user:
@@ -239,41 +238,49 @@ class RegisterAPI(MethodView):
             return make_response(jsonify(responseObject)), 403
 
 
-        try:
+        if tier is None:
+            tier = 'subadmin'
 
-            if tier is None:
-                tier = 'subadmin'
+        user = User()
+        user.create_admin_auth(email, password, tier)
 
-            user = User()
-            user.create_admin_auth(email, password, tier)
+        # insert the user
+        db.session.add(user)
 
-            # insert the user
-            db.session.add(user)
+        user.organisations.append(selected_whitelist_item)
+        db.session.flush()
 
-            user.organisations.append(organisation)
+        if exact_match:
+            user.is_activated = True
 
-            db.session.flush()
+            auth_token = user.encode_auth_token()
 
-            activation_token = user.encode_single_use_JWS('A')
-
-            send_activation_email(activation_token, email)
+            responseObject = {
+                'status': 'success',
+                'message': 'Successfully activated.',
+                'auth_token': auth_token.decode(),
+                'user_id': user.id,
+                'email': user.email,
+            }
 
             db.session.commit()
 
-            # generate the auth token
-            responseObject = {
-                'status': 'success',
-                'message': 'Successfully registered.',
-            }
-
             return make_response(jsonify(responseObject)), 201
 
-        except Exception as e:
+        activation_token = user.encode_single_use_JWS('A')
 
-            print('Error at: ' + str(datetime.utcnow()))
-            print(e)
+        send_activation_email(activation_token, email)
 
-            raise e
+        db.session.commit()
+
+        # generate the auth token
+        responseObject = {
+            'status': 'success',
+            'message': 'Successfully registered.',
+        }
+
+        return make_response(jsonify(responseObject)), 201
+
 
 
 class ActivateUserAPI(MethodView):
@@ -293,10 +300,9 @@ class ActivateUserAPI(MethodView):
             auth_token = ''
         if auth_token:
 
-            validity_check =  User.decode_single_use_JWS(activation_token, 'A')
+            validity_check = User.decode_single_use_JWS(activation_token, 'A')
 
             if not validity_check['success']:
-
                 responseObject = {
                     'status': 'fail',
                     'message': validity_check['message']
@@ -313,7 +319,6 @@ class ActivateUserAPI(MethodView):
                 }
 
                 return make_response(jsonify(responseObject)), 401
-
 
             user.is_activated = True
 
@@ -339,7 +344,6 @@ class ActivateUserAPI(MethodView):
             return make_response(jsonify(responseObject)), 401
 
 
-
 class LoginAPI(MethodView):
     """
     User Login Resource
@@ -350,13 +354,15 @@ class LoginAPI(MethodView):
         print("process started")
 
         challenges = [
-            ('Why don’t they play poker in the jungle?','Too many cheetahs.'),
+            ('Why don’t they play poker in the jungle?', 'Too many cheetahs.'),
             ('What did the Buddhist say to the hot dog vendor?', 'Make me one with everything.'),
             ('What does a zombie vegetarian eat?', 'Graaaaaaaains!'),
             ('My new thesaurus is terrible.', 'Not only that, but it’s also terrible.'),
             ('Why didn’t the astronaut come home to his wife?', 'He needed his space.'),
-            ('I got fired from my job at the bank today.', 'An old lady came in and asked me to check her balance, so I pushed her over.'),
-            ('I like to spend every day as if it’s my last', 'Staying in bed and calling for a nurse to bring me more pudding.')
+            ('I got fired from my job at the bank today.',
+             'An old lady came in and asked me to check her balance, so I pushed her over.'),
+            ('I like to spend every day as if it’s my last',
+             'Staying in bed and calling for a nurse to bring me more pudding.')
         ]
 
         challenge = random.choice(challenges)
@@ -399,13 +405,14 @@ class LoginAPI(MethodView):
         if email:
             user = User.query.filter_by(email=email).execution_options(show_all=True).first()
 
-        #Now try to match the public serial number (comes in under the phone)
+        # Now try to match the public serial number (comes in under the phone)
         if not user:
             public_serial_number_or_phone = post_data.get('phone')
 
-            user = User.query.filter_by(public_serial_number=public_serial_number_or_phone).execution_options(show_all=True).first()
+            user = User.query.filter_by(public_serial_number=public_serial_number_or_phone).execution_options(
+                show_all=True).first()
 
-        #Now try to match the phone
+        # Now try to match the phone
         if not user:
             try:
                 phone = proccess_phone_number(post_data.get('phone'), region=post_data.get('region'))
@@ -414,7 +421,6 @@ class LoginAPI(MethodView):
                 return make_response(jsonify(response_object)), 401
 
             if phone:
-
                 user = User.query.filter_by(phone=phone).execution_options(show_all=True).first()
 
         # mobile user doesn't exist so default to creating a new wallet!
@@ -451,15 +457,15 @@ class LoginAPI(MethodView):
             # vendor sign up with one time code or OTP verified
             if user.one_time_code == password:
                 responseObject = {
-                        'status': 'success',
-                        'pin_must_be_set': True,
-                        'message': 'Please set your pin.'
+                    'status': 'success',
+                    'pin_must_be_set': True,
+                    'message': 'Please set your pin.'
                 }
                 return make_response(jsonify(responseObject)), 200
 
             if not user.is_phone_verified:
                 # self sign up, resend phone verification code
-                user.set_pin(None,False) # resets PIN
+                user.set_pin(None, False)  # resets PIN
                 UserUtils.send_one_time_code(phone=phone, user=user)
                 db.session.commit()
                 response_object = {'message': 'Account already Exists. Please verify phone number.', 'otp_verify': True}
@@ -468,7 +474,6 @@ class LoginAPI(MethodView):
         try:
 
             if not user or not user.verify_password(post_data.get('password')):
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
@@ -477,7 +482,6 @@ class LoginAPI(MethodView):
                 return make_response(jsonify(responseObject)), 401
 
             if not user.is_activated:
-
                 responseObject = {
                     'status': 'fail',
                     'is_activated': False,
@@ -486,13 +490,11 @@ class LoginAPI(MethodView):
                 return make_response(jsonify(responseObject)), 401
 
             if post_data.get('deviceInfo'):
-
                 UserUtils.save_device_info(post_data.get('deviceInfo'), user)
 
             auth_token = user.encode_auth_token()
 
             if not auth_token:
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
@@ -507,12 +509,11 @@ class LoginAPI(MethodView):
 
             tfa_response_oject = tfa_logic(user, tfa_token)
             if tfa_response_oject:
-
                 tfa_response_oject['auth_token'] = auth_token.decode()
 
                 return make_response(jsonify(tfa_response_oject)), 401
 
-            #Update the last_seen TS for this user
+            # Update the last_seen TS for this user
             user.update_last_seen_ts()
 
             responseObject = create_user_response_object(user, auth_token, 'Successfully logged in.')
@@ -539,6 +540,7 @@ class LogoutAPI(MethodView):
     """
     Logout Resource
     """
+
     def post(self):
         # get auth token
         auth_header = request.headers.get('Authorization')
@@ -585,6 +587,7 @@ class RequestPasswordResetEmailAPI(MethodView):
     """
     Password Reset Email Resource
     """
+
     def post(self):
         # get the post data
         post_data = request.get_json()
@@ -602,10 +605,9 @@ class RequestPasswordResetEmailAPI(MethodView):
         user = User.query.filter_by(email=email).execution_options(show_all=True).first()
 
         if user:
-
             password_reset_token = user.encode_single_use_JWS('R')
 
-            send_reset_email(password_reset_token,email)
+            send_reset_email(password_reset_token, email)
 
         responseObject = {
             'status': 'success',
@@ -619,29 +621,27 @@ class ResetPasswordAPI(MethodView):
     """
     Password Reset Resource
     """
+
     def post(self):
 
         # get the post data
         post_data = request.get_json()
 
-        old_password  = post_data.get('old_password')
-        new_password  = post_data.get('new_password')
-        phone         = proccess_phone_number(phone_number=post_data.get('phone'), region=post_data.get('region'))
+        old_password = post_data.get('old_password')
+        new_password = post_data.get('new_password')
+        phone = proccess_phone_number(phone_number=post_data.get('phone'), region=post_data.get('region'))
         one_time_code = post_data.get('one_time_code')
-
 
         auth_header = request.headers.get('Authorization')
 
-        #Check authorisation using a one time code
+        # Check authorisation using a one time code
         if phone and one_time_code:
             card = phone[-6:]
-            user = (User.query.filter_by(phone = phone).execution_options(show_all=True).first() or
+            user = (User.query.filter_by(phone=phone).execution_options(show_all=True).first() or
                     User.query.filter_by(public_serial_number=card).execution_options(show_all=True).first()
                     )
 
-
             if not user:
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'User not found'
@@ -658,7 +658,6 @@ class ResetPasswordAPI(MethodView):
                 return make_response(jsonify(responseObject)), 401
 
             if str(one_time_code) != user.one_time_code:
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'One time code not valid'
@@ -687,7 +686,6 @@ class ResetPasswordAPI(MethodView):
             resp = User.decode_auth_token(auth_token)
 
             if isinstance(resp, str):
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'Invalid auth token'
@@ -698,7 +696,6 @@ class ResetPasswordAPI(MethodView):
             user = User.query.filter_by(id=resp.get('user_id')).execution_options(show_all=True).first()
 
             if not user:
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'User not found'
@@ -707,7 +704,6 @@ class ResetPasswordAPI(MethodView):
                 return make_response(jsonify(responseObject)), 401
 
             if not user.verify_password(old_password):
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'invalid password'
@@ -721,7 +717,6 @@ class ResetPasswordAPI(MethodView):
             reset_password_token = post_data.get('reset_password_token')
 
             if not reset_password_token:
-
                 responseObject = {
                     'status': 'fail',
                     'message': 'Missing token.'
@@ -760,6 +755,7 @@ class ResetPasswordAPI(MethodView):
         }
 
         return make_response(jsonify(responseObject)), 200
+
 
 class PermissionsAPI(MethodView):
 
@@ -812,12 +808,21 @@ class PermissionsAPI(MethodView):
 
         email = post_data.get('email')
         tier = post_data.get('tier')
-
         organisation_id = post_data.get('organisation_id', None)
+
         if organisation_id and not g.user.is_sempo_admin:
             response_object = {'message': 'Not Authorised to set organisation ID'}
             return make_response(jsonify(response_object)), 401
 
+        target_organisation_id = organisation_id or g.primary_organisation
+        if not target_organisation_id:
+            response_object = {'message': 'Must provide an organisation to bind user to'}
+            return make_response(jsonify(response_object)), 400
+
+        organisation = Organisation.query.get(target_organisation_id)
+        if not organisation:
+            response_object = {'message': 'Organisation Not Found'}
+            return make_response(jsonify(response_object)), 404
 
         email_exists = EmailWhitelist.query.filter_by(email=email).first()
 
@@ -829,23 +834,22 @@ class PermissionsAPI(MethodView):
             response_object = {'message': 'No email or tier provided'}
             return make_response(jsonify(response_object)), 400
 
-        user = EmailWhitelist(email=email,
-                              tier=tier,
-                              organisation_id= organisation_id or g.primary_organisation.id)
+        invite = EmailWhitelist(email=email,
+                                tier=tier,
+                                organisation_id=target_organisation_id)
 
-        db.session.add(user)
+        db.session.add(invite)
 
-
-        send_invite_email(email)
+        send_invite_email(invite, organisation)
 
         db.session.commit()
 
         responseObject = {
             'message': 'An invite has been sent!',
+            'referral_code': invite.referral_code
         }
 
         return make_response(jsonify(responseObject)), 200
-
 
     @requires_auth(allowed_roles=['is_superadmin'])
     def put(self):
@@ -886,7 +890,6 @@ class BlockchainKeyAPI(MethodView):
 
     @requires_auth(allowed_roles=['is_superadmin'])
     def get(self):
-
         responseObject = {
             'status': 'success',
             'message': 'Key loaded',
@@ -901,7 +904,6 @@ class KoboCredentialsAPI(MethodView):
 
     @requires_auth(allowed_roles=['is_admin'])
     def get(self):
-
         response_object = {
             'username': current_app.config['KOBO_AUTH_USERNAME'],
             'password': current_app.config['KOBO_AUTH_PASSWORD']
@@ -909,23 +911,24 @@ class KoboCredentialsAPI(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
+
 class TwoFactorAuthAPI(MethodView):
     @requires_auth
     def get(self):
         tfa_url = g.user.tfa_url
         responseObject = {
-           'data': {"tfa_url": tfa_url}
+            'data': {"tfa_url": tfa_url}
         }
 
         return make_response(jsonify(responseObject)), 200
 
-    @requires_auth(ignore_tfa_requirement = True)
+    @requires_auth(ignore_tfa_requirement=True)
     def post(self):
         request_data = request.get_json()
         user = g.user
         otp_token = request_data.get('otp')
         otp_expiry_interval = request_data.get('otp_expiry_interval')
-        if user.validate_OTP(otp_token) or True:
+        if user.validate_OTP(otp_token):
             tfa_auth_token = user.encode_TFA_token(otp_expiry_interval)
             user.TFA_enabled = True
 
@@ -941,9 +944,9 @@ class TwoFactorAuthAPI(MethodView):
                 return make_response(jsonify(responseObject)), 200
 
         responseObject = {
-                            'status': "Failed",
-                            'message': "Validation failed. Please try again."
-                        }
+            'status': "Failed",
+            'message': "Validation failed. Please try again."
+        }
 
         return make_response(jsonify(responseObject)), 400
 
@@ -1019,5 +1022,5 @@ auth_blueprint.add_url_rule(
 auth_blueprint.add_url_rule(
     '/auth/tfa/',
     view_func=TwoFactorAuthAPI.as_view('tfa_view'),
-    methods=['GET','POST']
+    methods=['GET', 'POST']
 )

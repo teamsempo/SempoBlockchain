@@ -1,7 +1,9 @@
 Hello,
 
-You have been invited to join {{ deployment }} deployment.
+You have been invited to join {{ organisation_name }} on Sempo.
 
-Please sign up for an account: {{ host }}login/sign-up?r=true&u={{ email }}
+Sign up using the link below to get started!
 
-If you did not ask for a Sempo invite, please ignore this message.
+{{ host }}login/sign-up?r=true&u={{ email }}&c={{ referral_code }}
+
+If you are not expecting an invitation, please ignore this message.

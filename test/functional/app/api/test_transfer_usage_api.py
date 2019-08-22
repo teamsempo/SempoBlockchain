@@ -12,17 +12,17 @@ import json, pytest
     (None, None, None, 400),
     ('Food', 'bananaaaas', None, 400)
 ])
-def test_transfer_usage_api(test_client, create_admin_user,name,icon,translations,status_code):
+def test_transfer_usage_api(test_client, create_sempo_admin_user,name,icon,translations,status_code):
     """
     GIVEN a Flask application
     WHEN the '/api/transfer_usage/' page is requested (POST)
     THEN check the response is valid
     """
-    create_admin_user.is_activated = True
-    create_admin_user.TFA_enabled = True
-    create_admin_user.set_admin_role_using_tier_string('admin')
-    auth_token = create_admin_user.encode_auth_token().decode()
-    tfa_token = create_admin_user.encode_TFA_token(9999).decode()
+    create_sempo_admin_user.is_activated = True
+    create_sempo_admin_user.TFA_enabled = True
+    create_sempo_admin_user.set_admin_role_using_tier_string('admin')
+    auth_token = create_sempo_admin_user.encode_auth_token().decode()
+    tfa_token = create_sempo_admin_user.encode_TFA_token(9999).decode()
 
     response = test_client.post('/api/transfer_usage/',
                                 headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),

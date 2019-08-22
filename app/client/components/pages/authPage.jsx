@@ -8,8 +8,6 @@ import {activateAccount, logout} from '../../reducers/authReducer'
 import LoginForm from '../auth/loginForm.jsx'
 import RegisterForm from '../auth/registerForm.jsx'
 import RequestResetEmailForm from '../auth/requestResetEmailForm.jsx'
-import OrganisationForm from "../auth/OrganisationForm.jsx";
-
 
 const mapStateToProps = (state) => {
   return {
@@ -30,13 +28,11 @@ export class authPage extends React.Component {
     this.state = {
       redirectToReferrer: false,
       email: null,
-      organisation: null,
+      referralCode: null,
     };
   }
 
   componentDidMount() {
-    // i.e. true if oxfam.sempo.ai else redirect to organisation form
-    window.location.host.split('.') > 2 ? this.setState({organisation: window.location.host[0]}) : this.setState({organisation: null}, () => this.props.history.push('/login/organisation/'));
 
     const parsed = this.parseQuery(location.search);
 
@@ -48,7 +44,8 @@ export class authPage extends React.Component {
     if (parsed.r && parsed.u) {
       this.setState({
         login: (!parsed.r === 'true'),
-        email: parsed.u
+        email: parsed.u,
+        referralCode: parsed.c
       })
     }
   }
@@ -69,10 +66,6 @@ export class authPage extends React.Component {
     return query;
   }
 
-  setOrganisation(org) {
-    this.setState({organisation: org}, () => this.props.history.push('/login/'))
-  }
-
   render() {
     let deploymentName = window.DEPLOYMENT_NAME;
       const { from } = this.props.location.state || { from: { pathname: "/" } };
@@ -88,10 +81,10 @@ export class authPage extends React.Component {
                   <SempoLogoSVG src="/static/media/sempo_logo.svg"/>
                 </div>
                 <Switch>
-                  <Route path={this.props.match.url + '/organisation/'} component={() => <OrganisationForm setOrganisationURL={(organisation) => this.setOrganisation(organisation)}/>} />
                   <Route path={this.props.match.url + '/forgot/'} component={forgotPassword} />
-                  <Route path={this.props.match.url + '/sign-up/'} render={()=><Signup email={this.state.email} organisation={this.state.organisation}/>} />
-                  <Route render={() => <LoginForm organisation={this.state.organisation}/>} />
+                  <Route path={this.props.match.url + '/sign-up/'}
+                         render={()=><Signup email={this.state.email} referralCode={this.state.referralCode}/>}/>
+                  <Route component={LoginForm} />
                 </Switch>
               </LoginModuleBox>
               <DeploymentNameText>sempo | {deploymentName}</DeploymentNameText>
@@ -120,10 +113,10 @@ const forgotPassword = () => (
   </div>
 )
 
-const Signup = ({email, organisation}) => (
+const Signup = ({email, referralCode}) => (
   <div>
    <div className="form" style={{position: 'relative'}}>
-    <RegisterForm email={email} organisation={organisation}/>
+    <RegisterForm email={email} referralCode={referralCode}/>
    </div>
     <Footer>
       <FooterText>

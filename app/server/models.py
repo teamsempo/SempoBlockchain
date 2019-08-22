@@ -103,7 +103,7 @@ def before_compile(query):
 
                 try:
                     # member_organisations = getattr(g, "member_organisations", [])
-                    primary_organisation = getattr(g, "primary_organisation", None)
+                    primary_organisation = getattr(g, "primary_organisation_id", None)
                     member_organisations = [primary_organisation] if primary_organisation else []
 
                     if issubclass(mapper.class_, ManyOrgBase):
@@ -479,10 +479,11 @@ class User(ManyOrgBase, ModelBase):
 
     @hybrid_property
     def transfer_account(self):
-        target_organisation_id = g.primary_organisation
-        for transfer_account in self.transfer_accounts:
-            if transfer_account.organisation_id == target_organisation_id:
-                return transfer_account
+        target_organisation_id = g.get('primary_organisation',None)
+        if target_organisation_id:
+            for transfer_account in self.transfer_accounts:
+                if transfer_account.organisation_id == target_organisation_id:
+                    return transfer_account
         return None
 
     def get_primary_admin_organisation(self, fallback=None):
@@ -567,7 +568,7 @@ class User(ManyOrgBase, ModelBase):
         :return: integer|string
         """
         try:
-            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'))
+            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'), algorithm='HS256')
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
@@ -1372,9 +1373,16 @@ class EmailWhitelist(OneOrgBase, ModelBase):
     email               = db.Column(db.String)
 
     tier                = db.Column(db.String, default='view')
+    referral_code       = db.Column(db.String)
 
     allow_partial_match = db.Column(db.Boolean, default=False)
     used                = db.Column(db.Boolean, default=False)
+
+
+
+    def __init__(self, **kwargs):
+        super(EmailWhitelist, self).__init__(**kwargs)
+        self.referral_code = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
 class TransferCard(ModelBase):
     __tablename__ = 'transfer_card'

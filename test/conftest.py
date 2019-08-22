@@ -17,11 +17,13 @@ def requires_auth(test_client):
 def create_organisation(test_client, init_database):
     from server.models import Organisation
     organisation = Organisation(name='Sempo')
+    db.session.add(organisation)
+    db.session.commit()
     return organisation
 
 
 @pytest.fixture(scope='function')
-def new_admin_user():
+def new_sempo_admin_user():
     from server.models import User
     user = User()
     user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword')
@@ -29,18 +31,19 @@ def new_admin_user():
 
 
 @pytest.fixture(scope='function')
-def create_admin_user(test_client, init_database, new_admin_user):
-    db.session.add(new_admin_user)
+def create_sempo_admin_user(test_client, init_database, new_sempo_admin_user, create_organisation):
+    db.session.add(new_sempo_admin_user)
+    new_sempo_admin_user.organisations.append(create_organisation)
 
     # Commit the changes for the users
     db.session.commit()
 
-    return new_admin_user
+    return new_sempo_admin_user
 
 @pytest.fixture(scope='module')
 def create_transfer_account_user(test_client, init_database):
     from server.utils.user import create_transfer_account_user
-    user = create_transfer_account_user(first_name='Tristan', last_name='Cole', phone='0401391419')
+    user = create_transfer_account_user(first_name='Tristan', last_name='Cole', phone='0400000000')
     db.session.commit()
     return user
 
@@ -107,9 +110,9 @@ def save_device_info(test_client, init_database, create_transfer_account_user):
 
 
 @pytest.fixture(scope='function')
-def create_blacklisted_token(create_admin_user):
+def create_blacklisted_token(create_sempo_admin_user):
     from server.models import BlacklistToken
-    auth_token = create_admin_user.encode_auth_token().decode()
+    auth_token = create_sempo_admin_user.encode_auth_token().decode()
     blacklist_token = BlacklistToken(token=auth_token)
     db.session.add(blacklist_token)
     db.session.commit()
@@ -127,10 +130,10 @@ def create_transfer_usage(test_client, init_database):
 
 
 @pytest.fixture(scope='function')
-def create_ip_address(create_admin_user):
+def create_ip_address(create_sempo_admin_user):
     from server.models import IpAddress
     ip_address = IpAddress(ip="210.18.192.196")
-    ip_address.user = create_admin_user
+    ip_address.user = create_sempo_admin_user
     db.session.add(ip_address)
     db.session.commit()
     return ip_address

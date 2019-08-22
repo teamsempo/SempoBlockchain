@@ -150,13 +150,16 @@ function* watchLogoutRequest() {
 function* register({payload}) {
   try {
     const registered_account = yield call(registerAPI, payload);
-    if (registered_account.status === 'success') {
-      yield put({type: REGISTER_SUCCESS, registered_account});
-    } else {
-      yield put({type: REGISTER_FAILURE, error: registered_account.message})
+    if (registered_account.auth_token) {
+      yield put(createLoginSuccessObject(registered_account));
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield call (authenticatePusher);
     }
-  } catch (error) {
-    yield put({type: REGISTER_FAILURE, error: error.statusText})
+    yield put({type: REGISTER_SUCCESS, registered_account});
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put({type: REGISTER_FAILURE, error: error.message})
   }
 }
 

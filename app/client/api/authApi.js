@@ -47,7 +47,7 @@ export const registerAPI = ({body}) => {
     body: JSON.stringify(body)
     })
     .then(response => {
-      return response.json();
+      return handleResponse(response)
     })
     .catch(error => {
       throw error;

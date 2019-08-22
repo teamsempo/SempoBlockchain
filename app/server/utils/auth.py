@@ -75,9 +75,13 @@ def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requ
                     g.user = user
                     # g.member_organisations = [org.id for org in user.organisations]
                     try:
-                        g.primary_organisation = user.get_primary_admin_organisation().id
+                        primary_admin_organisation = user.get_primary_admin_organisation()
+                        if primary_admin_organisation is not None:
+                            g.primary_organisation_id = primary_admin_organisation.id
+                        else:
+                            g.primary_organisation_id = None
                     except NotImplementedError:
-                        g.primary_organisation = None
+                        g.primary_organisation_id = None
 
                     if not user.is_activated:
                         responseObject = {

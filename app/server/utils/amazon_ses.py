@@ -59,14 +59,17 @@ def send_bank_transfer_email(email_address, charge_info):
 
     ses_email_handler(email_address, 'Sempo: Fund your wallet', textbody, htmlbody)
 
-def send_invite_email(email_address):
+def send_invite_email(invite, organisation):
 
     TEMPLATE_FILE = 'invite_email.txt'
     template = get_email_template(TEMPLATE_FILE)
-    email = parse.quote(email_address, safe='')
-    body = template.render(host=request.url_root, deployment=current_app.config['DEPLOYMENT_NAME'], email=email)
+    email = parse.quote(invite.email, safe='')
+    body = template.render(host=request.url_root,
+                           organisation_name=organisation.name,
+                           referral_code=invite.referral_code,
+                           email=email)
 
-    ses_email_handler(email_address, 'Sempo: Invite to Join!', body)
+    ses_email_handler(invite.email, 'Sempo: Invite to Join!', body)
 
 def send_export_email(file_url, email_address):
 
