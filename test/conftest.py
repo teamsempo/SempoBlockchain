@@ -1,12 +1,11 @@
 import pytest
 
 from flask import current_app
-from server import create_app, db
+from server import create_app, db, models
 # from app.manage import manager
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
-
 
 @pytest.fixture(scope='function')
 def requires_auth(test_client):
@@ -35,8 +34,8 @@ def create_admin_user(test_client, init_database, new_admin_user):
 
     # Commit the changes for the users
     db.session.commit()
-    return new_admin_user
 
+    return new_admin_user
 
 @pytest.fixture(scope='module')
 def create_transfer_account_user(test_client, init_database):

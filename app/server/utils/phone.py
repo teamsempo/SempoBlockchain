@@ -98,8 +98,9 @@ def send_secondary_disbursement_message(to_phone, increment_credits, balance):
 
 def send_generic_message(to_phone, message):
     # todo- add active SMS provider/fallback.
-    send_twilio_message(to_phone, message)
-    # send_messagebird_message(to_phone, message)
+    if not current_app.config['IS_TEST']:
+        send_twilio_message(to_phone, message)
+        # send_messagebird_message(to_phone, message)
 
 def send_twilio_message(to_phone, message):
 
@@ -111,6 +112,5 @@ def send_twilio_message(to_phone, message):
 
 
 def send_messagebird_message(to_phone, message):
-
     if to_phone:
         msg = messagebird_client.message_create(current_app.config['MESSAGEBIRD_PHONE'], to_phone, message)

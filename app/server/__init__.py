@@ -25,7 +25,7 @@ import sys, os
 
 sys.path.append('../')
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
 basic_auth = BasicAuth()
 sentry = Sentry()
 

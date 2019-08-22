@@ -44,7 +44,9 @@ def test_request_api_token(test_client, create_admin_user, email, password, stat
     WHEN the '/api/auth/request_api_token/' api is posted to (POST)
     THEN check response as a admin user (email, password)
     """
+
     create_admin_user.is_activated = True
+    db.session.commit()
 
     response = test_client.post('/api/auth/request_api_token/',
                                 data=json.dumps(dict(email=email, password=password)),
@@ -56,7 +58,8 @@ def test_request_api_token(test_client, create_admin_user, email, password, stat
     (None, 'No username supplied', False, 401),
     ('0401391419', 'Please set your pin.', False, 200),
     ('0401391419', 'Successfully logged in.', True, 200),
-    ('123123123', 'Invalid username or password', True, 401)
+    ('12312111111111113123', 'Invalid Phone Number: (4) The string supplied is too long to be a phone number.',
+     True, 401)
 ])
 def test_request_api_token_phone(test_client, create_transfer_account_user, phone, message, is_activated, status_code):
     """
@@ -64,6 +67,7 @@ def test_request_api_token_phone(test_client, create_transfer_account_user, phon
     WHEN the '/api/auth/request_api_token/' api is posted to (POST) as a mobile app user (phone, pin)
     THEN check a valid response as a mobile app user (phone, pin)
     """
+
     create_transfer_account_user.is_activated = is_activated
     one_time_code = create_transfer_account_user.one_time_code
     create_transfer_account_user.hash_password(one_time_code)  # set the one time code as password for easy check

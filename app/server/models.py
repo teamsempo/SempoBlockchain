@@ -1,4 +1,5 @@
 import os, base64
+from contextlib import contextmanager
 from ethereum import utils
 from web3 import Web3
 from sqlalchemy import event, inspect
@@ -23,6 +24,13 @@ from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
 from server.utils.misc import elapsed_time, encrypt_string, decrypt_string
 
+
+@contextmanager
+def no_expire():
+    s = db.session()
+    s.expire_on_commit = False
+    yield
+    s.expire_on_commit = True
 
 def paginate_query(query, queried_object=None, order_override=None):
     """
@@ -1367,9 +1375,6 @@ class EmailWhitelist(OneOrgBase, ModelBase):
 
     allow_partial_match = db.Column(db.Boolean, default=False)
     used                = db.Column(db.Boolean, default=False)
-
-    organisation_id     = db.Column(db.Integer, db.ForeignKey('organisation.id'))
-
 
 class TransferCard(ModelBase):
     __tablename__ = 'transfer_card'

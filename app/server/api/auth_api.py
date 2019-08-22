@@ -411,7 +411,7 @@ class LoginAPI(MethodView):
                 phone = proccess_phone_number(post_data.get('phone'), region=post_data.get('region'))
             except NumberParseException as e:
                 response_object = {'message': 'Invalid Phone Number: ' + str(e)}
-                return make_response(jsonify(response_object)), 400
+                return make_response(jsonify(response_object)), 401
 
             if phone:
 
@@ -813,6 +813,12 @@ class PermissionsAPI(MethodView):
         email = post_data.get('email')
         tier = post_data.get('tier')
 
+        organisation_id = post_data.get('organisation_id', None)
+        if organisation_id and not g.user.is_sempo_admin:
+            response_object = {'message': 'Not Authorised to set organisation ID'}
+            return make_response(jsonify(response_object)), 401
+
+
         email_exists = EmailWhitelist.query.filter_by(email=email).first()
 
         if email_exists:
@@ -824,12 +830,15 @@ class PermissionsAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         user = EmailWhitelist(email=email,
-                              tier=tier)
+                              tier=tier,
+                              organisation_id= organisation_id or g.primary_organisation.id)
 
         db.session.add(user)
-        db.session.commit()
+
 
         send_invite_email(email)
+
+        db.session.commit()
 
         responseObject = {
             'message': 'An invite has been sent!',

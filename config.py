@@ -72,6 +72,8 @@ if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
                                                                                             DEPLOYMENT_NAME.lower()))
     raise RuntimeError
 
+IS_TEST = specific_parser['APP'].getboolean('IS_TEST', False)
+
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
 CURRENCY_DECIMALS   = int(specific_parser['APP']['CURRENCY_DECIMALS'])
