@@ -24,7 +24,6 @@ common_parser = configparser.ConfigParser()
 specific_parser = configparser.ConfigParser()
 
 if DEPLOYMENT_LOCATION == "PROD" or os.environ.get('AWS_ACCESS_KEY_ID'):
-    print("Key len is {}".format(len(os.environ.get('AWS_ACCESS_KEY_ID'))))
     if os.environ.get('AWS_ACCESS_KEY_ID'):
         if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
             raise Exception("Missing AWS_SECRET_ACCESS_KEY")
