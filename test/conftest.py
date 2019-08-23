@@ -41,9 +41,12 @@ def create_sempo_admin_user(test_client, init_database, new_sempo_admin_user, cr
     return new_sempo_admin_user
 
 @pytest.fixture(scope='module')
-def create_transfer_account_user(test_client, init_database):
+def create_transfer_account_user(test_client, init_database, create_organisation):
     from server.utils.user import create_transfer_account_user
-    user = create_transfer_account_user(first_name='Tristan', last_name='Cole', phone='0400000000')
+    user = create_transfer_account_user(first_name='Transfer',
+                                        last_name='User',
+                                        phone='0400000000',
+                                        organisation=create_organisation)
     db.session.commit()
     return user
 
@@ -51,8 +54,8 @@ def create_transfer_account_user(test_client, init_database):
 @pytest.fixture(scope='module')
 def create_user_with_existing_transfer_account(test_client, init_database, create_transfer_account):
     from server.utils.user import create_transfer_account_user
-    user = create_transfer_account_user(first_name='Tristan', last_name='Cole',
-                                        phone='0401391419', existing_transfer_account=create_transfer_account)
+    user = create_transfer_account_user(first_name='Existing Transfer', last_name='User',
+                                        phone='0400000000', existing_transfer_account=create_transfer_account)
     db.session.commit()
     return user
 

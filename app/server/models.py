@@ -568,7 +568,7 @@ class User(ManyOrgBase, ModelBase):
         :return: integer|string
         """
         try:
-            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'), algorithm='HS256')
+            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'), algorithms='HS256')
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
