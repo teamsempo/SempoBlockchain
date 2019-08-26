@@ -34,6 +34,7 @@ def new_sempo_admin_user():
 def create_sempo_admin_user(test_client, init_database, new_sempo_admin_user, create_organisation):
     db.session.add(new_sempo_admin_user)
     new_sempo_admin_user.organisations.append(create_organisation)
+    new_sempo_admin_user.is_activated = True
 
     # Commit the changes for the users
     db.session.commit()

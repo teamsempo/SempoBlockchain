@@ -15,8 +15,23 @@ import datetime, bcrypt, jwt, enum, random, string
 import pyotp
 
 
-from server.exceptions import TierNotFoundException, InvalidTransferTypeException, NoTransferAccountError, NoTransferCardError, TypeNotFoundException, IconNotSupportedException, OrganisationNotProvidedException
-from server.constants import ALLOWED_ADMIN_TIERS, ALLOWED_KYC_TYPES, ALLOWED_BLOCKCHAIN_ADDRESS_TYPES, MATERIAL_COMMUNITY_ICONS
+from server.exceptions import (
+    TierNotFoundException,
+    InvalidTransferTypeException,
+    NoTransferAccountError,
+    NoTransferCardError,
+    TypeNotFoundException,
+    IconNotSupportedException,
+    OrganisationNotProvidedException
+)
+
+from server.constants import (
+    RANKED_ADMIN_TIERS,
+    RANKED_VENDOR_TIERS,
+    ALLOWED_KYC_TYPES,
+    ALLOWED_BLOCKCHAIN_ADDRESS_TYPES,
+    MATERIAL_COMMUNITY_ICONS
+)
 from server import db, sentry, celery_app
 from server.utils.phone import proccess_phone_number
 from server.utils.credit_transfers import make_disbursement_transfer, make_withdrawal_transfer
@@ -300,6 +315,9 @@ class User(ManyOrgBase, ModelBase):
     _is_superadmin  = db.Column(db.Boolean, default=False)
     _is_sempo_admin = db.Column(db.Boolean, default=False)
 
+    _admin_tier_string = db.Column(db.String, default=False)
+    _vendor_tier_string = db.Column(db.String, default=False)
+
     is_activated    = db.Column(db.Boolean, default=False)
     is_disabled     = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
@@ -408,6 +426,63 @@ class User(ManyOrgBase, ModelBase):
                 print(e)
                 sentry.captureException()
                 pass
+
+    @hybrid_property
+    def admin_tier_string(self)-> str:
+        return self._admin_tier_string
+
+    @admin_tier_string.setter
+    def admin_tier_string(self, tier_string: str):
+        if tier_string not in RANKED_ADMIN_TIERS:
+            raise TierNotFoundException("Tier {} not recognised".format(tier_string))
+
+        self._admin_tier_string = tier_string
+
+    @hybrid_property
+    def vendor_tier_string(self) -> str:
+        return self._vendor_tier_string
+
+    @vendor_tier_string.setter
+    def vendor_tier_string(self, tier_string: str):
+        if tier_string not in RANKED_VENDOR_TIERS:
+            raise TierNotFoundException("Tier {} not recognised".format(tier_string))
+
+        self._vendor_tier_string = tier_string
+
+    def has_sufficient_admin_tier(self, required_admin_tier: str) -> bool:
+
+        return self._held_tier_meets_required_tier(self._admin_tier_string,
+                                                   required_admin_tier,
+                                                   RANKED_ADMIN_TIERS)
+
+    def has_sufficient_vendor_tier(self, required_vendor_tier: str) -> bool:
+
+        return self._held_tier_meets_required_tier(self._vendor_tier_string,
+                                                   required_vendor_tier,
+                                                   RANKED_VENDOR_TIERS)
+
+    def _held_tier_meets_required_tier(
+            self,
+            held_tier: str,
+            required_tier: str,
+            role_list: list
+    ) -> bool:
+
+        if held_tier is None:
+            return False
+
+        try:
+            held_rank = role_list.index(held_tier)
+        except ValueError:
+            raise TierNotFoundException("Held tier {} not recognised".format(held_tier))
+
+        try:
+            required_rank = role_list.index(required_tier)
+        except ValueError:
+            raise TierNotFoundException("Required tier {} not recognised".format(required_tier))
+
+        # SMALLER ranks are more senior
+        return held_rank <= required_rank
 
     @hybrid_property
     def has_any_admin_role(self):
@@ -632,7 +707,7 @@ class User(ManyOrgBase, ModelBase):
     def set_admin_role_using_tier_string(self, tier):
 
         tier = tier.lower()
-        if tier not in ALLOWED_ADMIN_TIERS:
+        if tier not in RANKED_ADMIN_TIERS:
             raise TierNotFoundException('tier {} not found')
 
         self.is_view = self.is_subadmin = self.is_admin = self.is_superadmin = False
@@ -658,7 +733,7 @@ class User(ManyOrgBase, ModelBase):
             user_role = 'subadmin'
         elif self.is_view:
             user_role = 'view'
-        if user_role in ALLOWED_ADMIN_TIERS:
+        if user_role in RANKED_ADMIN_TIERS:
             return user_role
         else:
             return ""
@@ -757,6 +832,18 @@ class DeviceInfo(ModelBase):
 
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
+class Token(ModelBase):
+    __tablename__ = 'token'
+
+    address = db.Column(db.String, index=True, unique=True, nullable=False)
+    name    = db.Column(db.String)
+    symbol  = db.Column(db.String)
+
+    transfer_accounts = db.relationship('TransferAccount', backref='token', lazy=True,
+                                         foreign_keys='TransferAccount.token_id')
+
+    credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
+                                        foreign_keys='CreditTransfer.token_id')
 
 class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
@@ -776,6 +863,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     payable_period_type   = db.Column(db.String(), default='week')
     payable_period_length = db.Column(db.Integer, default=2)
     payable_epoch         = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
     # users               = db.relationship('User', backref='transfer_account', lazy=True)
     users = db.relationship(
@@ -972,9 +1061,12 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     transfer_mode   = db.Column(db.Enum(TransferModeEnum))
     transfer_use    = db.Column(JSON)
 
+
     resolution_message = db.Column(db.String())
 
     blockchain_transaction_hash = db.Column(db.String)
+
+    token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
     sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
     recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
@@ -1214,24 +1306,24 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     def check_recipient_is_approved(self):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
-    def __init__(self, amount, sender=None, recipient=None, transfer_type=None, uuid=None):
+    def find_user_transfer_account_with_matching_token(self, user, token):
+        for transfer_account in user.transfer_accounts:
+            if transfer_account.token == token:
+                return transfer_account
+        raise NoTransferAccountError("No transfer account for user {}".format(user))
+
+    def __init__(self, amount, token, sender=None, recipient=None, transfer_type=None, uuid=None):
 
         if uuid is not None:
             self.uuid = uuid
 
         if sender is not None:
             self.sender_user = sender
-            self.sender_transfer_account = sender.transfer_account
-
-            if self.sender_transfer_account is None:
-                raise NoTransferAccountError("No transfer account for user {}".format(sender))
+            self.sender_transfer_account = self.find_user_transfer_account_with_matching_token(sender, token)
 
         if recipient is not None:
             self.recipient_user = recipient
-            self.recipient_transfer_account = recipient.transfer_account
-
-            if self.recipient_transfer_account is None:
-                raise NoTransferAccountError("No transfer account for user {}".format(recipient))
+            self.recipient_transfer_account = self.find_user_transfer_account_with_matching_token(recipient, token)
 
         if self.sender_transfer_account and self.recipient_transfer_account:
             self.transfer_type = TransferTypeEnum.PAYMENT
@@ -1248,6 +1340,9 @@ class CreditTransfer(ManyOrgBase, ModelBase):
             raise InvalidTransferTypeException("Invalid transfer type")
 
         self.transfer_amount = amount
+
+
+
 
 class BlockchainTransaction(ModelBase):
     __tablename__ = 'blockchain_transaction'

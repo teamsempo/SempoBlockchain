@@ -4,7 +4,9 @@ ALLOWED_FILE_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
 
 ALLOWED_SPREADSHEET_EXTENSIONS = {'xlsx', 'csv'}
 
-ALLOWED_ADMIN_TIERS = ['superadmin', 'admin', 'subadmin', 'view']
+RANKED_ADMIN_TIERS = ['sempoadmin', 'superadmin', 'admin', 'subadmin', 'view']
+
+RANKED_VENDOR_TIERS = ['supervendor', 'vendor', 'cashier']
 
 ALLOWED_BLOCKCHAIN_ADDRESS_TYPES = ["TRANSFER_ACCOUNT", "MASTER", "BITCOIN_MASTER", "EXTERNAL"]
 

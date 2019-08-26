@@ -45,9 +45,6 @@ def test_request_api_token(test_client, create_sempo_admin_user, email, password
     THEN check response as a admin user (email, password)
     """
 
-    create_sempo_admin_user.is_activated = True
-    db.session.commit()
-
     response = test_client.post('/api/auth/request_api_token/',
                                 data=json.dumps(dict(email=email, password=password)),
                                 content_type='application/json', follow_redirects=True)
