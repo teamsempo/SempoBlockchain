@@ -1,6 +1,102 @@
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import models, db
+from sqlalchemy import func
+
+from server.constants import ACCESS_ROLES
+
+from server.exceptions import (
+    TierNotFoundException,
+    RoleNotFoundException
+)
+
+class AccessControl(object):
+
+    @staticmethod
+    def has_suffient_role(held_roles: dict, allowed_roles: dict) -> bool:
+        for role in allowed_roles:
+            try:
+                required_tier = allowed_roles[role]
+            except TypeError:
+                raise Exception(
+                    'Allowed roles must be a dictionary with roles as keys and required tier ranks as values, not {}'
+                        .format(allowed_roles)
+                )
+
+            if AccessControl.has_sufficient_tier(held_roles, role, required_tier):
+                return True
+
+        return False
+
+    @staticmethod
+    def _get_tier_from_role_list(role_list, role):
+        for role_obj in role_list:
+            if role_obj.name == role and not role_obj.revoked:
+                return role_obj.tier
+
+
+    @staticmethod
+    def has_exact_role(held_roles: dict, required_role: str, required_tier: str) -> bool:
+        if required_role not in ACCESS_ROLES:
+            raise RoleNotFoundException("Role '{}' not valid".format(required_role))
+        if required_tier not in ACCESS_ROLES[required_role]:
+            raise TierNotFoundException("Required tier {} not recognised".format(required_tier))
+
+        if isinstance(held_roles,dict):
+            return held_roles.get(required_role) == required_tier
+        else:
+            return AccessControl._get_tier_from_role_list(held_roles, required_role) == required_tier
+
+    @staticmethod
+    def has_sufficient_tier(held_roles: dict, required_role: str, required_tier: str) -> bool:
+
+        if required_role not in ACCESS_ROLES:
+            raise RoleNotFoundException("Role '{}' not valid".format(required_role))
+
+        if required_role in held_roles:
+            held_tier = held_roles[required_role]
+            ranked_tiers = ACCESS_ROLES[required_role]
+
+            if required_tier == 'any':
+                return True
+
+            if required_tier not in ranked_tiers:
+                raise TierNotFoundException("Required tier {} not recognised for role {}"
+                                            .format(required_tier, required_role))
+
+            has_sufficient = AccessControl._held_tier_meets_required_tier(
+                held_tier,
+                required_tier,
+                ranked_tiers
+            )
+
+            if has_sufficient:
+                return True
+
+        return False
+
+    @staticmethod
+    def has_any_tier(held_roles: dict, role: str):
+        return AccessControl.has_sufficient_tier(held_roles, role, 'any')
+
+    @staticmethod
+    def _held_tier_meets_required_tier(held_tier: str, required_tier: str, tier_list: list) -> bool:
+        if held_tier is None:
+            return False
+
+        try:
+            held_rank = tier_list.index(held_tier)
+        except ValueError:
+            raise TierNotFoundException("Held tier {} not recognised".format(held_tier))
+        try:
+            required_rank = tier_list.index(required_tier)
+        except ValueError:
+            raise TierNotFoundException("Required tier {} not recognised".format(required_tier))
+
+        # SMALLER ranks are more senior
+        return held_rank <= required_rank
+
+
 
 def show_all(f):
     """
@@ -12,35 +108,42 @@ def show_all(f):
         return f(*args, **kwargs)
     return wrapper
 
-def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requirement = False):
+def requires_auth(f = None,
+                  allowed_roles: dict={},
+                  allowed_basic_auth_types: tuple=(), #['external', 'internal']
+                  ignore_tfa_requirement=False):
     if f is None:
-        return partial(requires_auth, required_roles=required_roles, allowed_roles=allowed_roles, ignore_tfa_requirement = ignore_tfa_requirement)
+        return partial(requires_auth,
+                       allowed_roles=allowed_roles,
+                       allowed_basic_auth_types=allowed_basic_auth_types,
+                       ignore_tfa_requirement = ignore_tfa_requirement)
 
     @wraps(f)
     def wrapper(*args, **kwargs):
 
         auth = request.authorization
-        if auth and auth.type == 'basic':
 
-            if (
-                (len(allowed_roles) > 0 and 'basic_auth' not in allowed_roles)
-                or (len(required_roles) > 0 and 'basic_auth' not in required_roles)
-            ):
+        if auth and auth.type == 'basic':
+            (password, type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(auth.username, (None, None))
+            if password is None or password != auth.password:
                 responseObject = {
-                    'status': 'fail',
+                    'message': 'invalid basic auth username or password'
+                }
+                return make_response(jsonify(responseObject)), 401
+
+            if len(allowed_basic_auth_types) == 0:
+                response_object = {
                     'message': 'basic auth not allowed'
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
-            password = current_app.config['BASIC_AUTH_CREDENTIALS'].get(auth.username)
-            if password and password == auth.password:
-                return f(*args, **kwargs)
-            else:
+            if type not in allowed_basic_auth_types:
                 responseObject = {
-                    'status': 'fail',
-                    'message': 'user not found'
+                    'message': 'Basic Auth type is {}. Must be: {}'.format(type, allowed_basic_auth_types)
                 }
                 return make_response(jsonify(responseObject)), 401
+
+            return f(*args, **kwargs)
 
         auth_header = request.headers.get('Authorization')
 
@@ -63,7 +166,7 @@ def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requ
 
             if not isinstance(resp, str):
 
-                    user = models.User.query.filter_by(id=resp['user_id']).execution_options(show_all=True).first()
+                    user = models.User.query.filter_by(id=resp['id']).execution_options(show_all=True).first()
 
                     if not user:
                         responseObject = {
@@ -103,29 +206,13 @@ def requires_auth(f = None, required_roles=(), allowed_roles=(), ignore_tfa_requ
                     if tfa_response_object:
                         return make_response(jsonify(tfa_response_object)), 401
 
-                    for required_role in required_roles:
-
-                        if resp.get(required_role) != True:
-                            responseObject = {
-                                'status': 'fail',
-                                'message': 'user does required role: ' + required_role,
-                            }
-                            return make_response(jsonify(responseObject)), 401
-
                     if len(allowed_roles) > 0:
-                        has_an_allowed_role = False
-
-                        for allowed_role in allowed_roles:
-
-                            if resp.get(allowed_role) == True:
-                                has_an_allowed_role = True
-
-                        if has_an_allowed_role == False:
-                            responseObject = {
-                                'status': 'fail',
+                        held_roles = resp.get('roles', {})
+                        if not AccessControl.has_suffient_role(held_roles, allowed_roles):
+                            response_object = {
                                 'message': 'user does not have any of the allowed roles: ' + str(allowed_roles),
                             }
-                            return make_response(jsonify(responseObject)), 401
+                            return make_response(jsonify(response_object)), 401
 
 
                     proxies = request.headers.getlist("X-Forwarded-For")
@@ -160,7 +247,6 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
             # Go down this path if user is yet to set up TFA
             tfa_url = user.tfa_url
             responseObject = {
-                'status': 'fail',
                 'tfa_url': tfa_url,
                 'message': 'User must setup two factor authentication'
             }
@@ -168,11 +254,17 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
             return responseObject
 
         # Otherwise, check TFA
-        tfa_response = models.User.decode_auth_token(tfa_token)
+        if tfa_token is None:
+            responseObject = {
+                'tfa_failure': True,
+                'message': 'TFA token required, none supplied'
+            }
+            return responseObject
+
+        tfa_response = models.User.decode_auth_token(tfa_token, 'TFA')
         if isinstance(tfa_response, str):
             # User doesn't have valid TFA token
             responseObject = {
-                'status': 'fail',
                 'tfa_failure': True,
                 'message': tfa_response
             }
@@ -181,7 +273,6 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
         if tfa_response.get("user_id") != user.id:
             # User doesn't has valid TFA token BUT it's not theirs
             responseObject = {
-                'status': 'fail',
                 'message': 'Invalid User ID in TFA response'
             }
 

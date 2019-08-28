@@ -19,7 +19,7 @@ def test_create_token(test_client, create_sempo_admin_user, status_code):
     """
     auth_token = create_sempo_admin_user.encode_auth_token()
 
-    response = test_client.get('/api/token/',
+    response = test_client.post('/api/token/',
                                headers=dict(Authorization=auth_token.decode(), Accept='application/json'),
                                json={'address': '0xc4375b7de8af5a38a93548eb8453a498222c4ff2',
                                      'name': 'FOO Token',

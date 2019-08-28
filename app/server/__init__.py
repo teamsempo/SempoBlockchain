@@ -58,6 +58,7 @@ def create_app():
 
     app.config.from_object('config')
     app.config['BASEDIR'] = os.path.abspath(os.path.dirname(__file__))
+    # app.config["SQLALCHEMY_ECHO"] = True
 
     # ensure the instance folder exists
     try:

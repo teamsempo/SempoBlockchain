@@ -19,7 +19,7 @@ wyre_blueprint = Blueprint('wyre_blueprint', __name__)
 
 # need to manually create a wyre account on their website from the kyc application details provided.
 class WyreAccountAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
 
         # we only support MASTER (ngo) KYC application currently
@@ -49,7 +49,7 @@ class WyreAccountAPI(MethodView):
 
 
 class WyreTransferAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
         post_data = request.get_json()
 
@@ -107,7 +107,7 @@ class WyreTransferAPI(MethodView):
 
 
 class WyreExchangeAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
         try:
             # default to DIVISOR format

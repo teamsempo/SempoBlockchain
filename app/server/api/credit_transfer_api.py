@@ -6,7 +6,7 @@ from sqlalchemy import or_
 from server import db
 from server.models import paginate_query, CreditTransfer, TransferTypeEnum, BlockchainAddress, BlockchainTransaction
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, AccessControl
 
 from server.utils.credit_transfers import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
 from server.utils.credit_transfers import (
@@ -24,7 +24,7 @@ credit_transfer_blueprint = Blueprint('credit_transfer', __name__)
 
 class CreditTransferAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin', 'is_view'])
+    @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, credit_transfer_id):
 
         transfer_account_ids = request.args.get('transfer_account_ids')
@@ -40,9 +40,9 @@ class CreditTransferAPI(MethodView):
 
             credit_transfer = CreditTransfer.query.get(credit_transfer_id)
 
-            if g.user.is_admin:
+            if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump([credit_transfer]).data
-            elif g.user.is_view:
+            elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
                 transfer_list = view_credit_transfers_schema.dump([credit_transfer]).data
 
             transfer_stats = []
@@ -98,9 +98,9 @@ class CreditTransferAPI(MethodView):
             else:
                 transfer_stats = None
 
-            if g.user.is_admin:
+            if g.user.roles:
                 transfer_list = credit_transfers_schema.dump(transfers).data
-            elif g.user.is_view:
+            elif g.user.has_admin_role:
                 transfer_list = view_credit_transfers_schema.dump(transfers).data
 
             response_object = {
@@ -116,7 +116,7 @@ class CreditTransferAPI(MethodView):
 
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, credit_transfer_id):
 
         put_data = request.get_json()
@@ -162,7 +162,7 @@ class CreditTransferAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self, credit_transfer_id):
 
         post_data = request.get_json()
@@ -325,7 +325,7 @@ class CreditTransferAPI(MethodView):
 
 class ConfirmWithdrawalAPI(MethodView):
 
-    @requires_auth(required_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
         post_data = request.get_json()

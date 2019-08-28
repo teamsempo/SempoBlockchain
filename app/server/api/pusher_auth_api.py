@@ -32,7 +32,7 @@ class PusherAuthAPI(MethodView):
 
 class PusherSuperAdminAuthAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
         auth = pusher_client.authenticate(
             channel=request.form['channel_name'],

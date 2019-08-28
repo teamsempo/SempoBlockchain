@@ -86,13 +86,13 @@ class UserAPI(MethodView):
 
         else:
             if account_type_filter == 'beneficiary':
-                user_query = User.query.filter(User.is_beneficiary)
+                user_query = User.query.filter(User.has_beneficiary_role)
 
             elif account_type_filter == 'vendor':
-                user_query = User.query.filter(User.is_vendor)
+                user_query = User.query.filter(User.has_vendor_role)
 
             elif account_type_filter == 'admin':
-                user_query = User.query.filter(User.is_subadmin).order_by(User.created.desc())
+                user_query = User.query.filter(User.has_admin_role).order_by(User.created.desc())
 
             else:
                 user_query = User.query
@@ -118,7 +118,7 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_subadmin', 'basic_auth'])
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()
@@ -142,7 +142,7 @@ class UserAPI(MethodView):
 
         return make_response(jsonify(response_object)), response_code
 
-    @requires_auth(allowed_roles=['is_subadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'})
     def put(self, user_id):
         put_data = request.get_json()
 

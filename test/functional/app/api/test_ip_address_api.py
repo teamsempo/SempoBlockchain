@@ -19,7 +19,7 @@ def test_ip_address_api(test_client, create_ip_address, ip_address_id,country,st
     THEN check the response is valid
     """
 
-    basic_auth = 'Basic ' + base64.b64encode(bytes(config.BASIC_AUTH_USERNAME + ":" + config.BASIC_AUTH_PASSWORD, 'ascii')).decode('ascii')
+    basic_auth = 'Basic ' + base64.b64encode(bytes(config.INTERNAL_AUTH_USERNAME + ":" + config.INTERNAL_AUTH_PASSWORD, 'ascii')).decode('ascii')
 
     response = test_client.post('/api/ip_address_location/',
                                 headers=dict(Authorization=basic_auth, Accept='application/json'),

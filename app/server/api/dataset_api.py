@@ -17,7 +17,7 @@ dataset_blueprint = Blueprint('dataset', __name__)
 
 class SpreadsheetUploadAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
         if 'spreadsheet' not in request.files:
@@ -54,7 +54,7 @@ class DatasetAPI(MethodView):
         print(diagnostic)
         self.diagnostics.append(diagnostic)
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         # get the post data
         post_data = request.get_json()

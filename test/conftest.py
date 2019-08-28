@@ -22,24 +22,31 @@ def create_organisation(test_client, init_database):
     return organisation
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='module')
 def new_sempo_admin_user():
     from server.models import User
     user = User()
-    user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword')
+    user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
     return user
 
 
-@pytest.fixture(scope='function')
-def create_sempo_admin_user(test_client, init_database, new_sempo_admin_user, create_organisation):
+@pytest.fixture(scope='module')
+def create_unactivated_sempo_admin_user(test_client, init_database, new_sempo_admin_user, create_organisation):
     db.session.add(new_sempo_admin_user)
     new_sempo_admin_user.organisations.append(create_organisation)
-    new_sempo_admin_user.is_activated = True
 
     # Commit the changes for the users
     db.session.commit()
 
     return new_sempo_admin_user
+
+@pytest.fixture(scope='module')
+def create_sempo_admin_user(create_unactivated_sempo_admin_user):
+    create_unactivated_sempo_admin_user.is_activated = True
+    # Commit the changes for the users
+    db.session.commit()
+
+    return create_unactivated_sempo_admin_user
 
 @pytest.fixture(scope='module')
 def create_transfer_account_user(test_client, init_database, create_organisation):

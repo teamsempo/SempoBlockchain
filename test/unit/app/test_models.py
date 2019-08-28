@@ -3,6 +3,7 @@ This file (test_models.py) contains the unit tests for the models.py file.
 """
 import pytest
 from server.exceptions import IconNotSupportedException
+from server.utils.auth import AccessControl
 
 """ ----- Organisation Model ----- """
 #
@@ -41,7 +42,7 @@ def test_new_sempo_admin_user(new_sempo_admin_user):
     assert new_sempo_admin_user.password_hash is not None
     assert new_sempo_admin_user.password_hash != 'TestPassword'
     assert not new_sempo_admin_user.is_activated
-    assert new_sempo_admin_user.is_view
+    assert AccessControl.has_any_tier(new_sempo_admin_user.roles, 'ADMIN')
 
 
 def test_create_sempo_admin_user(create_sempo_admin_user):
@@ -61,19 +62,18 @@ def test_update_admin_user_tier(new_sempo_admin_user):
     WHEN a user tier is updated to superadmin
     THEN check that all lower tiers are True
     """
-    assert new_sempo_admin_user.is_view
-    assert not new_sempo_admin_user.is_subadmin
-    assert not new_sempo_admin_user.is_admin
-    assert not new_sempo_admin_user.is_superadmin
+    assert AccessControl.has_any_tier(new_sempo_admin_user.roles, 'ADMIN')
+    assert not AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'subadmin')
+    assert not AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'admin')
+    assert not AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'superadmin')
 
     # update user tier to super admin
-    new_sempo_admin_user.set_admin_role_using_tier_string(tier='superadmin')
+    new_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
 
-    assert new_sempo_admin_user.is_view
-    assert new_sempo_admin_user.is_subadmin
-    assert new_sempo_admin_user.is_admin
-    assert new_sempo_admin_user.is_superadmin
-
+    assert AccessControl.has_any_tier(new_sempo_admin_user.roles, 'ADMIN')
+    assert AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'subadmin')
+    assert AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'admin')
+    assert AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'superadmin')
 
 def test_update_password(new_sempo_admin_user):
     """
@@ -124,7 +124,7 @@ def test_tfa_required(create_sempo_admin_user):
     tiers = config.TFA_REQUIRED_ROLES
     assert create_sempo_admin_user.is_TFA_required() is False  # defaults to view, this shouldn't need TFA
     for tier in tiers:
-        create_sempo_admin_user.set_admin_role_using_tier_string(tier)
+        create_sempo_admin_user.set_held_role('ADMIN', tier)
         assert create_sempo_admin_user.is_TFA_required() is True
 
 

@@ -11,9 +11,8 @@ from server import db
 
 # todo- permissions api, reset password, request reset password
 
-
 @pytest.mark.parametrize("username,password,status_code", [
-    (config.BASIC_AUTH_USERNAME, config.BASIC_AUTH_PASSWORD, 201),
+    (config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD, 201),
     ("fake_username", "fake_password", 401)
 ])
 def test_basic_auth(test_client, username, password, status_code):
@@ -32,6 +31,76 @@ def test_basic_auth(test_client, username, password, status_code):
 
     assert response.status_code == status_code
 
+@pytest.mark.parametrize("activation_token", [
+    "alsdfjkadsljflk",
+    None,
+])
+def test_invalid_activate_api(test_client, create_unactivated_sempo_admin_user, activation_token):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/activate/' api is posted to (POST)
+    THEN check the response is invalid when activation_token is incorrect or None
+    """
+    assert not create_unactivated_sempo_admin_user.is_activated
+    response = test_client.post('/api/auth/activate/',
+                                data=json.dumps(dict(activation_token=activation_token)),
+                                content_type='application/json', follow_redirects=True)
+    assert response.status_code == 401
+    assert not create_unactivated_sempo_admin_user.is_activated
+
+def test_valid_activate_api(test_client, create_unactivated_sempo_admin_user):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/activate/' api is posted to (POST)
+    THEN check the response is valid when correct activation_token
+    """
+    assert not create_unactivated_sempo_admin_user.is_activated
+    activation_token = create_unactivated_sempo_admin_user.encode_single_use_JWS('A')
+    response = test_client.post('/api/auth/activate/',
+                                data=json.dumps(dict(activation_token=activation_token)),
+                                content_type='application/json', follow_redirects=True)
+    assert response.status_code == 201
+    assert create_unactivated_sempo_admin_user.is_activated
+
+
+def test_get_tfa_url(test_client, create_sempo_admin_user):
+    """
+    GIVEN a Flask Application
+    WHEN '/api/auth/tfa/' is requested (GET)
+    THEN check tfa url is valid
+    """
+    create_sempo_admin_user.set_held_role('ADMIN', 'subadmin')
+    auth_token = create_sempo_admin_user.encode_auth_token().decode()
+    response = test_client.get('/api/auth/tfa/',
+                               headers=dict(Authorization=auth_token, Accept='application/json'),
+                               content_type='application/json', follow_redirects=True)
+    assert response.status_code == 200
+    assert json.loads(response.data)['data']['tfa_url'] == create_sempo_admin_user.tfa_url
+    create_sempo_admin_user.set_held_role('ADMIN', 'sempoadmin')
+
+@pytest.mark.parametrize("otp,status_code", [
+    (None, 200),
+    ('1230924579324', 400),
+])
+def test_request_tfa_token(test_client, create_sempo_admin_user, otp, status_code):
+    """
+    GIVEN a Flask Application
+    WHEN '/api/auth/tfa/' is requested (POST)
+    THEN check a tfa token is only returned when OTP is valid
+    """
+    import pyotp
+    create_sempo_admin_user.tfa_url  # this needs to be called to generate a tfa secret and save it to user object
+    auth_token = create_sempo_admin_user.encode_auth_token().decode()
+
+    if otp is None:
+        otp = pyotp.TOTP(create_sempo_admin_user._get_TFA_secret()).now()
+
+    otp_expiry_interval = 1
+    response = test_client.post('/api/auth/tfa/',
+                                headers=dict(Authorization=auth_token, Accept='application/json'),
+                                data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
+                                content_type='application/json', follow_redirects=True)
+    assert response.status_code == status_code
 
 @pytest.mark.parametrize("email,password,status_code", [
     ("tristan@sempo.ai", "TestPassword", 200),
@@ -45,9 +114,11 @@ def test_request_api_token(test_client, create_sempo_admin_user, email, password
     THEN check response as a admin user (email, password)
     """
 
+    tfa_token = create_sempo_admin_user.encode_TFA_token(9999).decode()
     response = test_client.post('/api/auth/request_api_token/',
-                                data=json.dumps(dict(email=email, password=password)),
+                                data=json.dumps(dict(email=email, password=password, tfa_token=tfa_token)),
                                 content_type='application/json', follow_redirects=True)
+
     assert response.status_code == status_code
 
 
@@ -127,40 +198,6 @@ def test_logout_api(test_client, create_sempo_admin_user):
 #                                 content_type='application/json', follow_redirects=True)
 #     assert register_response.status_code == status_code
 
-
-def test_valid_activate_api(test_client, create_sempo_admin_user):
-    """
-    GIVEN a Flask application
-    WHEN the '/api/auth/activate/' api is posted to (POST)
-    THEN check the response is valid when correct activation_token
-    """
-    assert not create_sempo_admin_user.is_activated
-    activation_token = create_sempo_admin_user.encode_single_use_JWS('A')
-    response = test_client.post('/api/auth/activate/',
-                                data=json.dumps(dict(activation_token=activation_token)), 
-                                content_type='application/json', follow_redirects=True)
-    assert response.status_code == 201
-    assert create_sempo_admin_user.is_activated
-
-
-@pytest.mark.parametrize("activation_token", [
-    "alsdfjkadsljflk",
-    None,
-])
-def test_invalid_activate_api(test_client, create_sempo_admin_user, activation_token):
-    """
-    GIVEN a Flask application
-    WHEN the '/api/auth/activate/' api is posted to (POST)
-    THEN check the response is invalid when activation_token is incorrect or None
-    """
-    assert not create_sempo_admin_user.is_activated
-    response = test_client.post('/api/auth/activate/',
-                                data=json.dumps(dict(activation_token=activation_token)),
-                                content_type='application/json', follow_redirects=True)
-    assert response.status_code == 401
-    assert not create_sempo_admin_user.is_activated
-
-
 @pytest.mark.parametrize("tier,status_code", [
     ('admin', 401),
     ('superadmin', 200),
@@ -174,7 +211,7 @@ def test_blockchain_key_api(test_client, create_sempo_admin_user, tier, status_c
 
     create_sempo_admin_user.is_activated = True
     create_sempo_admin_user.TFA_enabled = True
-    create_sempo_admin_user.set_admin_role_using_tier_string(tier)
+    create_sempo_admin_user.set_held_role('ADMIN',tier)
     auth_token = create_sempo_admin_user.encode_auth_token().decode()
     tfa_token = create_sempo_admin_user.encode_TFA_token(9999).decode()
     response = test_client.get('/api/auth/blockchain/',
@@ -191,7 +228,7 @@ def test_get_permissions_api(test_client, create_sempo_admin_user):
     """
     create_sempo_admin_user.is_activated = True
     create_sempo_admin_user.TFA_enabled = True
-    create_sempo_admin_user.set_admin_role_using_tier_string('admin')
+    create_sempo_admin_user.set_held_role('ADMIN', 'admin')
     auth_token = create_sempo_admin_user.encode_auth_token().decode()
     tfa_token = create_sempo_admin_user.encode_TFA_token(9999).decode()
     response = test_client.get('/api/auth/permissions/',
@@ -209,54 +246,12 @@ def test_get_kobo_credentials_api(test_client, create_sempo_admin_user):
     """
     create_sempo_admin_user.is_activated = True
     create_sempo_admin_user.TFA_enabled = True
-    create_sempo_admin_user.set_admin_role_using_tier_string('admin')
+    create_sempo_admin_user.set_held_role('ADMIN', 'admin')
     auth_token = create_sempo_admin_user.encode_auth_token().decode()
     tfa_token = create_sempo_admin_user.encode_TFA_token(9999).decode()
     response = test_client.get('/api/auth/kobo/',
                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert json.loads(response.data)['username'] == config.KOBO_AUTH_USERNAME
-    assert json.loads(response.data)['password'] == config.KOBO_AUTH_PASSWORD
-
-
-def test_get_tfa_url(test_client, create_sempo_admin_user):
-    """
-    GIVEN a Flask Application
-    WHEN '/api/auth/tfa/' is requested (GET)
-    THEN check tfa url is valid
-    """
-    create_sempo_admin_user.is_activated = True
-    create_sempo_admin_user.set_admin_role_using_tier_string('subadmin')
-    auth_token = create_sempo_admin_user.encode_auth_token().decode()
-    response = test_client.get('/api/auth/tfa/',
-                               headers=dict(Authorization=auth_token, Accept='application/json'),
-                               content_type='application/json', follow_redirects=True)
-    assert response.status_code == 200
-    assert json.loads(response.data)['data']['tfa_url'] == create_sempo_admin_user.tfa_url
-
-
-@pytest.mark.parametrize("otp,status_code", [
-    (None, 200),
-    ('1230924579324', 400),
-])
-def test_request_tfa_token(test_client, create_sempo_admin_user, otp, status_code):
-    """
-    GIVEN a Flask Application
-    WHEN '/api/auth/tfa/' is requested (POST)
-    THEN check a tfa token is only returned when OTP is valid
-    """
-    import pyotp
-    create_sempo_admin_user.is_activated = True
-    create_sempo_admin_user.tfa_url  # this needs to be called to generate a tfa secret and save it to user object
-    auth_token = create_sempo_admin_user.encode_auth_token().decode()
-
-    if otp is None:
-        otp = pyotp.TOTP(create_sempo_admin_user._get_TFA_secret()).now()
-
-    otp_expiry_interval = 1
-    response = test_client.post('/api/auth/tfa/',
-                                headers=dict(Authorization=auth_token, Accept='application/json'),
-                                data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
-                                content_type='application/json', follow_redirects=True)
-    assert response.status_code == status_code
+    assert json.loads(response.data)['username'] == config.EXTERNAL_AUTH_USERNAME
+    assert json.loads(response.data)['password'] == config.EXTERNAL_AUTH_PASSWORD

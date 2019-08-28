@@ -363,7 +363,7 @@ def allowed_file(filename):
 
 
 class DocumentUploadAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
         reference = None
         kyc_application_id = None
@@ -419,7 +419,7 @@ class DocumentUploadAPI(MethodView):
 
 
 class BankAccountAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self, bank_account_id):
         post_data = request.get_json()
 
@@ -469,7 +469,7 @@ class BankAccountAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, bank_account_id):
 
         put_data = request.get_json()

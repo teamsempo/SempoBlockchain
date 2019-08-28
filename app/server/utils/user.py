@@ -126,11 +126,15 @@ def update_transfer_account_user(user,
 
         user.set_pin(transfer_card.PIN)
 
-    is_supervendor = True if is_vendor and not existing_transfer_account else False
+    if not is_vendor:
+        vendor_tier = None
+    elif existing_transfer_account:
+        vendor_tier = 'vendor'
+    else:
+        vendor_tier = 'supervendor'
 
-    user.is_vendor = is_vendor
+    user.set_held_role('VENDOR', vendor_tier)
     user.is_beneficiary = is_beneficiary
-    user.is_supervendor = is_supervendor
 
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
@@ -171,11 +175,14 @@ def create_transfer_account_user(first_name=None, last_name=None,
 
     user.set_pin(precreated_pin, is_activated)
 
-    is_supervendor = True if is_vendor and not existing_transfer_account else False
+    if not is_vendor:
+        vendor_tier = None
+    elif existing_transfer_account:
+        vendor_tier = 'vendor'
+    else:
+        vendor_tier = 'supervendor'
 
-    user.is_vendor = is_vendor
-    user.is_beneficiary = is_beneficiary
-    user.is_supervendor = is_supervendor
+    user.set_held_role('VENDOR', vendor_tier)
 
     if organisation:
         user.organisations.append(organisation)

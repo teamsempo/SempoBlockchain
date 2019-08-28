@@ -10,7 +10,7 @@ blockchain_transaction_blueprint = Blueprint('make_blockchain_transaction', __na
 
 class BlockchainTransactionAPI(MethodView):
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def get(self):
         """
         :return: list of bitcoin transactions with outputs that have not yet been identified as spent
@@ -39,7 +39,7 @@ class BlockchainTransactionAPI(MethodView):
         return make_response(jsonify({'transactions': txn_dict})), 201
 
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
 
         post_data = request.get_json()
@@ -59,7 +59,7 @@ class BlockchainTransactionAPI(MethodView):
         return response, status_code
 
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def put(self):
         put_data = request.get_json()
 

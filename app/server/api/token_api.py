@@ -9,7 +9,7 @@ token_blueprint = Blueprint('token', __name__)
 
 class TokenAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_sempo_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
         post_data = request.get_json()
 
@@ -17,7 +17,7 @@ class TokenAPI(MethodView):
         name = post_data['name']
         symbol = post_data['symbol']
 
-        token = Token.query.get(address)
+        token = Token.query.filter_by(address=address).first()
 
         if token:
             response_object = {

@@ -16,7 +16,7 @@ from server.utils.amazon_ses import send_export_email
 export_blueprint = Blueprint('export', __name__)
 
 class ExportAPI(MethodView):
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
         post_data = request.get_json()
@@ -84,10 +84,10 @@ class ExportAPI(MethodView):
 
         # filter user accounts
         if user_type == 'beneficiary':
-            user_filter = User.is_beneficiary
+            user_filter = User.has_beneficiary_role
 
         if user_type == 'vendor':
-            user_filter = User.is_vendor
+            user_filter = User.has_vendor_role
 
         if date_range == 'all':
             end_date = datetime.utcnow()

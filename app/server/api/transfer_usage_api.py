@@ -10,7 +10,7 @@ transfer_usage_blueprint = Blueprint('transfer_usage', __name__)
 
 class TransferUsageAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
 

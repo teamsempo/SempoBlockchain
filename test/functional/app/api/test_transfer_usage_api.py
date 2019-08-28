@@ -20,7 +20,7 @@ def test_transfer_usage_api(test_client, create_sempo_admin_user,name,icon,trans
     """
     create_sempo_admin_user.is_activated = True
     create_sempo_admin_user.TFA_enabled = True
-    create_sempo_admin_user.set_admin_role_using_tier_string('admin')
+    create_sempo_admin_user.set_held_role('ADMIN', 'admin')
     auth_token = create_sempo_admin_user.encode_auth_token().decode()
     tfa_token = create_sempo_admin_user.encode_TFA_token(9999).decode()
 

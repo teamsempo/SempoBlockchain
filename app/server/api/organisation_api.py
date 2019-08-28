@@ -11,7 +11,7 @@ organisation_blueprint = Blueprint('organisation', __name__)
 
 # only allow Sempo Admins to interact with Organisation API
 class OrganisationAPI(MethodView):
-    @requires_auth(allowed_roles=['is_sempo_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def get(self, organisation_id):
 
         if organisation_id:
@@ -46,7 +46,7 @@ class OrganisationAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles=['is_sempo_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self, organisation_id):
         post_data = request.get_json()
 
@@ -72,7 +72,7 @@ class OrganisationAPI(MethodView):
 
 
 class OrganisationUserAPI(MethodView):
-    @requires_auth(allowed_roles=['is_sempo_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def put(self, organisation_id):
         put_data = request.get_json()
 

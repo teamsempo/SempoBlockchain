@@ -8,13 +8,13 @@ from server import db
 from server.models import paginate_query, TransferAccount
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, AccessControl
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
 
 class TransferAccountAPI(MethodView):
-    @requires_auth(allowed_roles=['is_admin', 'is_view'])
+    @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, transfer_account_id):
 
         # can_see_full_details = role in ['is_admin', 'is_view']
@@ -36,9 +36,9 @@ class TransferAccountAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 400
 
-            if g.user.is_admin:
+            if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 result = transfer_account_schema.dump(transfer_account)
-            elif g.user.is_view:
+            elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
                 result = view_transfer_account_schema.dump(transfer_account)
 
             response_object = {
@@ -66,9 +66,9 @@ class TransferAccountAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 400
 
-            if g.user.is_admin:
+            if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 result = transfer_accounts_schema.dump(transfer_accounts)
-            elif g.user.is_view:
+            elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
                 result = view_transfer_accounts_schema.dump(transfer_accounts)
 
             response_object = {
@@ -79,7 +79,7 @@ class TransferAccountAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, transfer_account_id):
         put_data = request.get_json()
 

@@ -2,13 +2,14 @@ from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
 from server import basic_auth, db, models
+from server.utils.auth import requires_auth
 
 ip_address_blueprint = Blueprint('ip_address', __name__)
 
 
 class IpAddressLocationAPI(MethodView):
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
         post_data = request.get_json()
 

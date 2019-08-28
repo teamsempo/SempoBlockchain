@@ -3,12 +3,13 @@ from flask.views import MethodView
 
 from server import basic_auth, db, models
 from server.models import CreditTransfer
+from server.utils.auth import requires_auth
 
 geolocation_blueprint = Blueprint('geolocation', __name__)
 
 class AddAddressLatLng(MethodView):
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
         post_data = request.get_json()
 

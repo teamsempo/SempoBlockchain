@@ -1,10 +1,11 @@
 import os, base64
+from typing import Union
 from contextlib import contextmanager
 from ethereum import utils
 from web3 import Web3
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.dialects.postgresql import JSON, INET
+from sqlalchemy.dialects.postgresql import JSON, INET, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.query import Query
@@ -14,8 +15,8 @@ from flask import g, request, current_app
 import datetime, bcrypt, jwt, enum, random, string
 import pyotp
 
-
 from server.exceptions import (
+    RoleNotFoundException,
     TierNotFoundException,
     InvalidTransferTypeException,
     NoTransferAccountError,
@@ -26,6 +27,7 @@ from server.exceptions import (
 )
 
 from server.constants import (
+    ACCESS_ROLES,
     RANKED_ADMIN_TIERS,
     RANKED_VENDOR_TIERS,
     ALLOWED_KYC_TYPES,
@@ -38,6 +40,7 @@ from server.utils.credit_transfers import make_disbursement_transfer, make_withd
 from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
 from server.utils.misc import elapsed_time, encrypt_string, decrypt_string
+from server.utils.auth import AccessControl
 
 
 @contextmanager
@@ -266,8 +269,6 @@ class ManyOrgBase(object):
                                back_populates=plural,
                                )
 
-
-
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
@@ -306,17 +307,7 @@ class User(ManyOrgBase, ModelBase):
 
     is_beneficiary  = db.Column(db.Boolean, default=False)
 
-    _is_vendor      = db.Column(db.Boolean, default=False)
-    _is_supervendor = db.Column(db.Boolean, default=False)
-
-    _is_view        = db.Column(db.Boolean, default=False)
-    _is_subadmin    = db.Column(db.Boolean, default=False)
-    _is_admin       = db.Column(db.Boolean, default=False)
-    _is_superadmin  = db.Column(db.Boolean, default=False)
-    _is_sempo_admin = db.Column(db.Boolean, default=False)
-
-    _admin_tier_string = db.Column(db.String, default=False)
-    _vendor_tier_string = db.Column(db.String, default=False)
+    _held_roles = db.Column(JSONB)
 
     is_activated    = db.Column(db.Boolean, default=False)
     is_disabled     = db.Column(db.Boolean, default=False)
@@ -332,6 +323,7 @@ class User(ManyOrgBase, ModelBase):
     ap_paypal_id   = db.Column(db.String())
     kyc_state      = db.Column(db.String())
 
+
     cashout_authorised = db.Column(db.Boolean, default=False)
 
     transfer_accounts = db.relationship(
@@ -341,6 +333,9 @@ class User(ManyOrgBase, ModelBase):
 
     chatbot_state_id    = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
     targeting_survey_id = db.Column(db.Integer, db.ForeignKey('targeting_survey.id'))
+
+    # roles = db.relationship('UserRole', backref='user', lazy=True,
+    #                              foreign_keys='UserRole.user_id')
 
     uploaded_images = db.relationship('UploadedImage', backref='user', lazy=True,
                                       foreign_keys='UploadedImage.user_id')
@@ -428,125 +423,66 @@ class User(ManyOrgBase, ModelBase):
                 pass
 
     @hybrid_property
-    def admin_tier_string(self)-> str:
-        return self._admin_tier_string
+    def roles(self):
+        if self._held_roles is None:
+            return {}
+        return self._held_roles
 
-    @admin_tier_string.setter
-    def admin_tier_string(self, tier_string: str):
-        if tier_string not in RANKED_ADMIN_TIERS:
-            raise TierNotFoundException("Tier {} not recognised".format(tier_string))
+    def set_held_role(self, role: str, tier: Union[str, None]):
+        if role not in ACCESS_ROLES:
+            raise RoleNotFoundException("Role '{}' not valid".format(role))
+        allowed_tiers = ACCESS_ROLES[role]
+        if tier is not None and tier not in allowed_tiers:
+             raise TierNotFoundException("Tier {} not recognised for role {}".format(tier, role))
 
-        self._admin_tier_string = tier_string
-
-    @hybrid_property
-    def vendor_tier_string(self) -> str:
-        return self._vendor_tier_string
-
-    @vendor_tier_string.setter
-    def vendor_tier_string(self, tier_string: str):
-        if tier_string not in RANKED_VENDOR_TIERS:
-            raise TierNotFoundException("Tier {} not recognised".format(tier_string))
-
-        self._vendor_tier_string = tier_string
-
-    def has_sufficient_admin_tier(self, required_admin_tier: str) -> bool:
-
-        return self._held_tier_meets_required_tier(self._admin_tier_string,
-                                                   required_admin_tier,
-                                                   RANKED_ADMIN_TIERS)
-
-    def has_sufficient_vendor_tier(self, required_vendor_tier: str) -> bool:
-
-        return self._held_tier_meets_required_tier(self._vendor_tier_string,
-                                                   required_vendor_tier,
-                                                   RANKED_VENDOR_TIERS)
-
-    def _held_tier_meets_required_tier(
-            self,
-            held_tier: str,
-            required_tier: str,
-            role_list: list
-    ) -> bool:
-
-        if held_tier is None:
-            return False
-
-        try:
-            held_rank = role_list.index(held_tier)
-        except ValueError:
-            raise TierNotFoundException("Held tier {} not recognised".format(held_tier))
-
-        try:
-            required_rank = role_list.index(required_tier)
-        except ValueError:
-            raise TierNotFoundException("Required tier {} not recognised".format(required_tier))
-
-        # SMALLER ranks are more senior
-        return held_rank <= required_rank
+        if self._held_roles is None:
+            self._held_roles = {}
+        if tier is None:
+            self._held_roles.pop(role, None)
+        else:
+            self._held_roles[role] = tier
 
     @hybrid_property
-    def has_any_admin_role(self):
-        return self._is_view or self._is_subadmin or self._is_admin or self._is_superadmin
+    def has_admin_role(self):
+        return AccessControl.has_any_tier(self.roles, 'ADMIN')
+
+    @has_admin_role.expression
+    def has_admin_role(cls):
+        return cls._held_roles.has_key('ADMIN')
 
     @hybrid_property
-    def has_any_vendor_role(self):
-        return self._is_vendor or self._is_supervendor
+    def has_vendor_role(self):
+        return AccessControl.has_any_tier(self.roles, 'VENDOR')
 
+    @has_vendor_role.expression
+    def has_vendor_role(cls):
+        return cls._held_roles.has_key('VENDOR')
+
+    @hybrid_property
+    def has_beneficiary_role(self):
+        return AccessControl.has_any_tier(self.roles, 'BENEFICIARY')
+
+    @has_beneficiary_role.expression
+    def has_beneficiary_role(cls):
+        return cls._held_roles.has_key('BENEFICIARY')
+
+    @hybrid_property
+    def admin_tier(self):
+        return self._held_roles.get('ADMIN', None)
+
+    @hybrid_property
+    def vendor_tier(self):
+        return self._held_roles.get('VENDOR', None)
+
+
+    # These two are here to interface with the mobile API
     @hybrid_property
     def is_vendor(self):
-        return self._is_vendor or self._is_supervendor
-
-    @is_vendor.setter
-    def is_vendor(self, is_vendor):
-        self._is_vendor = is_vendor
+        return AccessControl.has_sufficient_tier(self.roles, 'VENDOR', 'vendor')
 
     @hybrid_property
     def is_supervendor(self):
-        return self._is_supervendor
-
-    @is_supervendor.setter
-    def is_supervendor(self, is_supervendor):
-        self._is_supervendor = is_supervendor
-
-    @hybrid_property
-    def is_view(self):
-        return self._is_view or self._is_subadmin or self._is_admin or self._is_superadmin
-
-    @is_view.setter
-    def is_view(self, is_view):
-        self._is_view = is_view
-
-    @hybrid_property
-    def is_subadmin(self):
-        return self._is_subadmin or self._is_admin or self._is_superadmin
-
-    @is_subadmin.setter
-    def is_subadmin(self, is_subadmin):
-        self._is_subadmin = is_subadmin
-
-    @hybrid_property
-    def is_admin(self):
-        return self._is_admin or self._is_superadmin
-
-    @is_admin.setter
-    def is_admin(self, is_admin):
-        self._is_admin = is_admin
-
-    @hybrid_property
-    def is_superadmin(self):
-        return self._is_superadmin
-
-    @is_superadmin.setter
-    def is_superadmin(self, is_superadmin):
-        self._is_superadmin = is_superadmin
-
-    @hybrid_property
-    def is_sempo_admin(self):
-        return self._is_sempo_admin
-
-    @is_sempo_admin.setter
-    def is_sempo_admin(self, is_sempo_admin):
-        self._is_sempo_admin = is_sempo_admin
+        return AccessControl.has_sufficient_tier(self.roles, 'VENDOR', 'supervendor')
 
     @hybrid_property
     def organisation_ids(self):
@@ -596,7 +532,6 @@ class User(ManyOrgBase, ModelBase):
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=valid_days, seconds=30),
                 'iat': datetime.datetime.utcnow(),
                 'user_id': self.id
-
             }
 
             return jwt.encode(
@@ -617,14 +552,8 @@ class User(ManyOrgBase, ModelBase):
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7, seconds=0),
                 'iat': datetime.datetime.utcnow(),
-                'user_id': self.id,
-                'is_vendor': self.is_vendor,
-                'is_supervendor': self.is_supervendor,
-                'is_view': self.is_view,
-                'is_subadmin': self.is_subadmin,
-                'is_admin': self.is_admin,
-                'is_superadmin': self.is_superadmin,
-                'is_sempo_admin': self.is_sempo_admin,
+                'id': self.id,
+                'roles': self.roles
             }
 
             return jwt.encode(
@@ -636,7 +565,7 @@ class User(ManyOrgBase, ModelBase):
             return e
 
     @staticmethod
-    def decode_auth_token(auth_token):
+    def decode_auth_token(auth_token, token_type='Auth'):
         """
         Validates the auth token
         :param auth_token:
@@ -651,9 +580,9 @@ class User(ManyOrgBase, ModelBase):
                 return payload
 
         except jwt.ExpiredSignatureError:
-            return 'Signature expired.'
+            return '{} Token Signature expired.'.format(token_type)
         except jwt.InvalidTokenError:
-            return 'Invalid token.'
+            return 'Invalid {} Token.'.format(token_type)
 
     def encode_single_use_JWS(self, token_type):
 
@@ -701,47 +630,11 @@ class User(ManyOrgBase, ModelBase):
     def create_admin_auth(self, email, password, tier='view'):
         self.email = email
         self.hash_password(password)
-        self.set_admin_role_using_tier_string(tier)
-
-
-    def set_admin_role_using_tier_string(self, tier):
-
-        tier = tier.lower()
-        if tier not in RANKED_ADMIN_TIERS:
-            raise TierNotFoundException('tier {} not found')
-
-        self.is_view = self.is_subadmin = self.is_admin = self.is_superadmin = False
-        if tier == 'superadmin':
-            self.is_superadmin = True
-        elif tier == 'admin':
-            self.is_admin = True
-        elif tier == 'subadmin':
-            self.is_subadmin = True
-        elif tier == 'view':
-            self.is_view = True
-
-        if self.is_admin:
-            return 'admin'
-
-    def convert_user_role_to_string(self):
-        user_role = ""
-        if self.is_superadmin:
-            user_role = 'superadmin'
-        elif self.is_admin:
-            user_role = 'admin'
-        elif self.is_subadmin:
-            user_role = 'subadmin'
-        elif self.is_view:
-            user_role = 'view'
-        if user_role in RANKED_ADMIN_TIERS:
-            return user_role
-        else:
-            return ""
-
+        self.set_held_role('ADMIN', tier)
 
     def is_TFA_required(self):
-        for role in current_app.config['TFA_REQUIRED_ROLES']:
-            if self.convert_user_role_to_string() == role:
+        for tier in current_app.config['TFA_REQUIRED_ROLES']:
+            if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
                 return True
         else:
             return False
@@ -785,25 +678,26 @@ class User(ManyOrgBase, ModelBase):
 
         self.hash_password(pin)
 
-    def set_non_admin_auth(self, is_beneficiary=False, is_vendor=False, is_supervendor=False):
-
-        self.is_vendor = is_vendor
-        self.is_supervendor = is_supervendor
-        self.is_beneficiary = is_beneficiary
-
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         self.secret = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
     def __repr__(self):
-        if self.is_view:
+        if self.has_admin_role:
             return '<Admin {} {}>'.format(self.id, self.email)
-        elif self.is_vendor:
+        elif self.has_vendor_role:
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
-            return '<Beneficiary {} {}>'.format(self.id, self.phone)
-
+            return '<User {} {}>'.format(self.id, self.phone)
+#
+# class UserRole(ModelBase):
+#     __tablename__ = 'user_role'
+#
+#     name              = db.Column(db.String)
+#     tier              = db.Column(db.String)
+#     user_id           = db.Column(db.Integer, db.ForeignKey(User.id))
+#     revoked           = db.Column(db.Boolean, default=False)
 
 class ChatbotState(ModelBase):
     __tablename__ = 'chatbot_state'

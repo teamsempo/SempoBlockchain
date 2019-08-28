@@ -8,7 +8,7 @@ from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversi
 from phonenumbers.phonenumberutil import NumberParseException
 from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
 from server.utils.intercom import create_intercom_android_secret
-from server.utils.auth import requires_auth, tfa_logic
+from server.utils.auth import requires_auth, tfa_logic, AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.feedback import request_feedback_questions
@@ -21,24 +21,9 @@ import time, random
 
 auth_blueprint = Blueprint('auth', __name__)
 
-
 def get_denominations():
     currency_name = current_app.config['CURRENCY_NAME']
     return DENOMINATION_DICT.get(currency_name, {})
-
-
-def get_highest_admin_tier(user):
-    if user.is_superadmin:
-        return 'superadmin'
-    elif user.is_admin:
-        return 'admin'
-    elif user.is_subadmin:
-        return 'subadmin'
-    elif user.is_view:
-        return 'view'
-    else:
-        return None
-
 
 def create_user_response_object(user, auth_token, message):
     if current_app.config['IS_USING_BITCOIN']:
@@ -79,7 +64,7 @@ def create_user_response_object(user, auth_token, message):
         'auth_token': auth_token.decode(),
         'user_id': user.id,
         'email': user.email,
-        'admin_tier': get_highest_admin_tier(user),
+        'admin_tier': user.admin_tier,
         'is_vendor': user.is_vendor,
         'is_supervendor': user.is_supervendor,
         'server_time': int(time.time() * 1000),
@@ -123,7 +108,7 @@ def create_user_response_object(user, auth_token, message):
 
 class CheckBasicAuth(MethodView):
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def get(self):
         responseObject = {
             'status': 'success',
@@ -193,10 +178,10 @@ class RegisterAPI(MethodView):
         selected_whitelist_item = None
         exact_match = False
 
-        # tier = None
-        # if '@sempo.ai' in email:
-        #     email_ok = True
-        #     tier = 'sempo_admin'
+        tier = None
+        if '@sempo.ai' in email:
+            email_ok = True
+            tier = 'sempoadmin'
 
         for whitelisted in whitelisted_emails:
             if whitelisted.allow_partial_match and whitelisted.email in email:
@@ -759,30 +744,15 @@ class ResetPasswordAPI(MethodView):
 
 class PermissionsAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
 
-        admins = User.query.filter(or_(
-            User.is_subadmin == True,
-            User.is_admin == True,
-            User.is_superadmin == True,
-            User.is_view == True,
-        )
-        ).all()
+        admins = User.query.filter_by(has_admin_role=True).all()
 
         admin_list = []
         for admin in admins:
 
-            tier = None
-
-            if admin.is_superadmin:
-                tier = 'superadmin'
-            elif admin.is_admin:
-                tier = 'admin'
-            elif admin.is_subadmin:
-                tier = 'subadmin'
-            else:
-                tier = 'view'
+            tier = admin.admin_tier
 
             admin_list.append({
                 'id': admin.id,
@@ -801,7 +771,7 @@ class PermissionsAPI(MethodView):
 
         return make_response(jsonify(responseObject)), 200
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
 
         post_data = request.get_json()
@@ -810,7 +780,7 @@ class PermissionsAPI(MethodView):
         tier = post_data.get('tier')
         organisation_id = post_data.get('organisation_id', None)
 
-        if organisation_id and not g.user.is_sempo_admin:
+        if organisation_id and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
             response_object = {'message': 'Not Authorised to set organisation ID'}
             return make_response(jsonify(response_object)), 401
 
@@ -851,7 +821,7 @@ class PermissionsAPI(MethodView):
 
         return make_response(jsonify(responseObject)), 200
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self):
 
         post_data = request.get_json()
@@ -871,7 +841,7 @@ class PermissionsAPI(MethodView):
             return make_response(jsonify(responseObject)), 401
 
         if admin_tier:
-            user.set_admin_role_using_tier_string(admin_tier)
+            user.set_held_role('ADMIN',admin_tier)
 
         if deactivated is not None:
             user.is_disabled = deactivated
@@ -888,7 +858,7 @@ class PermissionsAPI(MethodView):
 
 class BlockchainKeyAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
         responseObject = {
             'status': 'success',
@@ -902,11 +872,11 @@ class BlockchainKeyAPI(MethodView):
 
 class KoboCredentialsAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
         response_object = {
-            'username': current_app.config['KOBO_AUTH_USERNAME'],
-            'password': current_app.config['KOBO_AUTH_PASSWORD']
+            'username': current_app.config['EXTERNAL_AUTH_USERNAME'],
+            'password': current_app.config['EXTERNAL_AUTH_PASSWORD']
         }
 
         return make_response(jsonify(response_object)), 200

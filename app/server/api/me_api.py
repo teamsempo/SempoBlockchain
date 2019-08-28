@@ -14,7 +14,7 @@ from server.schemas import (
     old_user_schema,
     referrals_schema,
     referral_schema)
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, AccessControl
 from server.utils.pusher import push_user_transfer_confirmation
 from server.utils.credit_transfers import (
     make_payment_transfer,
@@ -57,7 +57,7 @@ class MeAPI(MethodView):
 
         user = g.user
 
-        if user.is_subadmin or user.is_supervendor:
+        if AccessControl.has_suffient_role(user.roles, {'ADMIN': 'subadmin', 'VENDOR': 'supervendor'}):
             # admins and supervendors see all transfers for that transfer account
             transfer_account = user.transfer_account
 
@@ -92,7 +92,7 @@ class MeCreditTransferAPI(MethodView):
 
         user = g.user
 
-        if user.is_subadmin or user.is_supervendor:
+        if AccessControl.has_suffient_role(user.roles, {'ADMIN': 'subadmin', 'VENDOR': 'supervendor'}):
             # admins and supervendors see all transfers for that transfer account
             transfer_account = user.transfer_account
 
