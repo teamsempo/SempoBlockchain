@@ -34,14 +34,12 @@ from server.constants import (
     ALLOWED_BLOCKCHAIN_ADDRESS_TYPES,
     MATERIAL_COMMUNITY_ICONS
 )
-from server import db, sentry, celery_app
+from server import db, sentry, celery_app, utils
 from server.utils.phone import proccess_phone_number
 from server.utils.credit_transfers import make_disbursement_transfer, make_withdrawal_transfer
 from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
 from server.utils.misc import elapsed_time, encrypt_string, decrypt_string
-from server.utils.auth import AccessControl
-
 
 @contextmanager
 def no_expire():
@@ -444,7 +442,7 @@ class User(ManyOrgBase, ModelBase):
 
     @hybrid_property
     def has_admin_role(self):
-        return AccessControl.has_any_tier(self.roles, 'ADMIN')
+        return utils.AccessControl.has_any_tier(self.roles, 'ADMIN')
 
     @has_admin_role.expression
     def has_admin_role(cls):
@@ -452,7 +450,7 @@ class User(ManyOrgBase, ModelBase):
 
     @hybrid_property
     def has_vendor_role(self):
-        return AccessControl.has_any_tier(self.roles, 'VENDOR')
+        return utils.AccessControl.has_any_tier(self.roles, 'VENDOR')
 
     @has_vendor_role.expression
     def has_vendor_role(cls):
@@ -460,7 +458,7 @@ class User(ManyOrgBase, ModelBase):
 
     @hybrid_property
     def has_beneficiary_role(self):
-        return AccessControl.has_any_tier(self.roles, 'BENEFICIARY')
+        return utils.AccessControl.has_any_tier(self.roles, 'BENEFICIARY')
 
     @has_beneficiary_role.expression
     def has_beneficiary_role(cls):
@@ -478,11 +476,11 @@ class User(ManyOrgBase, ModelBase):
     # These two are here to interface with the mobile API
     @hybrid_property
     def is_vendor(self):
-        return AccessControl.has_sufficient_tier(self.roles, 'VENDOR', 'vendor')
+        return utils.AccessControl.has_sufficient_tier(self.roles, 'VENDOR', 'vendor')
 
     @hybrid_property
     def is_supervendor(self):
-        return AccessControl.has_sufficient_tier(self.roles, 'VENDOR', 'supervendor')
+        return utilsAccessControl.has_sufficient_tier(self.roles, 'VENDOR', 'supervendor')
 
     @hybrid_property
     def organisation_ids(self):
@@ -634,7 +632,7 @@ class User(ManyOrgBase, ModelBase):
 
     def is_TFA_required(self):
         for tier in current_app.config['TFA_REQUIRED_ROLES']:
-            if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
+            if utils.AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
                 return True
         else:
             return False

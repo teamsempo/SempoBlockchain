@@ -458,7 +458,7 @@ class LoginAPI(MethodView):
 
         try:
 
-            if not user or not user.verify_password(post_data.get('password')):
+            if not user or not user.verify_password(password):
                 responseObject = {
                     'status': 'fail',
                     'message': 'Invalid username or password'

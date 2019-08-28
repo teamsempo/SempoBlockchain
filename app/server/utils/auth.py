@@ -1,7 +1,7 @@
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
-from server import models, db
-from sqlalchemy import func
+from server import db, models
+
 
 from server.constants import ACCESS_ROLES
 
