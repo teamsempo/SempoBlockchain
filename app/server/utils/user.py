@@ -145,6 +145,7 @@ def update_transfer_account_user(user,
 def create_transfer_account_user(first_name=None, last_name=None,
                                  phone=None, email=None, public_serial_number=None,
                                  organisation=None,
+                                 token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
                                  location=None,
@@ -197,8 +198,10 @@ def create_transfer_account_user(first_name=None, last_name=None,
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
-
         user.transfer_accounts.append(transfer_account)
+
+        if token:
+            transfer_account.token = token
 
     if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
         transfer_account.approve()

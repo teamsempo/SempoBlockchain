@@ -14,7 +14,7 @@ from server.schemas import (
     old_user_schema,
     referrals_schema,
     referral_schema)
-from server.utils.auth import requires_auth, AccessControl
+from server.utils.auth import requires_auth, AccessControl, show_all
 from server.utils.pusher import push_user_transfer_confirmation
 from server.utils.credit_transfers import (
     make_payment_transfer,
@@ -38,6 +38,7 @@ me_blueprint = Blueprint('me', __name__)
 
 class MeAPI(MethodView):
     @requires_auth
+    @show_all
     def get(self):
 
         version = request.args.get('version', 1)

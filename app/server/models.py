@@ -220,6 +220,8 @@ class Organisation(ModelBase):
                             secondary=organisation_association_table,
                             back_populates="organisations")
 
+    token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
+
     credit_transfers    = db.relationship(
                             "CreditTransfer",
                             secondary=organisation_association_table,
@@ -732,6 +734,9 @@ class Token(ModelBase):
     name    = db.Column(db.String)
     symbol  = db.Column(db.String)
 
+    organisations = db.relationship('Organisation', backref='token', lazy=True,
+                                        foreign_keys='Organisation.token_id')
+
     transfer_accounts = db.relationship('TransferAccount', backref='token', lazy=True,
                                          foreign_keys='TransferAccount.token_id')
 
@@ -877,6 +882,7 @@ class TransferAccount(OneOrgBase, ModelBase):
         if organisation:
             self.organisation = organisation
             self.blockchain_address.organisation = organisation
+            self.token = organisation.token
 
 class BlockchainAddress(OneOrgBase, ModelBase):
     __tablename__ = 'blockchain_address'
@@ -1203,7 +1209,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         for transfer_account in user.transfer_accounts:
             if transfer_account.token == token:
                 return transfer_account
-        raise NoTransferAccountError("No transfer account for user {}".format(user))
+        raise NoTransferAccountError("No transfer account for user {} and token".format(user, token))
 
     def __init__(self, amount, token, sender=None, recipient=None, transfer_type=None, uuid=None):
 

@@ -12,15 +12,25 @@ def requires_auth(test_client):
     from server.utils.auth import requires_auth
     return requires_auth
 
+@pytest.fixture(scope='module')
+def create_blockchain_token(test_client, init_database):
+    from server.models import Token
+    token = Token(address='0xc1275b7de8af5a38a93548eb8453a498222c4ff2',
+                  name='BAR Token',
+                  symbol='BAR')
+
+    db.session.add(token)
+    db.session.commit()
+
+    return token
 
 @pytest.fixture(scope='module')
-def create_organisation(test_client, init_database):
+def create_organisation(test_client, init_database, create_blockchain_token):
     from server.models import Organisation
-    organisation = Organisation(name='Sempo')
+    organisation = Organisation(name='Sempo', token=create_blockchain_token)
     db.session.add(organisation)
     db.session.commit()
     return organisation
-
 
 @pytest.fixture(scope='module')
 def new_sempo_admin_user():
@@ -67,12 +77,10 @@ def create_user_with_existing_transfer_account(test_client, init_database, creat
     db.session.commit()
     return user
 
-
 @pytest.fixture(scope='module')
 def new_transfer_account():
     from server.models import TransferAccount
     return TransferAccount()
-
 
 @pytest.fixture(scope='module')
 def create_transfer_account(new_transfer_account):
@@ -87,19 +95,15 @@ def new_disbursement(create_transfer_account_user):
     return disbursement
 
 @pytest.fixture(scope='function')
-def new_credit_transfer(create_transfer_account_user):
+def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
     from server.models import CreditTransfer
     credit_transfer = CreditTransfer(
-        amount=100, sender=create_transfer_account_user, recipient=create_transfer_account_user)
+        amount=100,
+        token=create_blockchain_token,
+        sender=create_transfer_account_user,
+        recipient=create_transfer_account_user
+    )
     return credit_transfer
-
-@pytest.fixture(scope='function')
-def new_credit_transfer(create_transfer_account_user):
-    from server.models import CreditTransfer
-    credit_transfer = CreditTransfer(
-        amount=100, sender=create_transfer_account_user, recipient=create_transfer_account_user)
-    return credit_transfer
-
 
 @pytest.fixture(scope='function')
 def create_credit_transfer(new_credit_transfer):

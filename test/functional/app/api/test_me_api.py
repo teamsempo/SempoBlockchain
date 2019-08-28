@@ -20,7 +20,7 @@ def test_me_api(test_client, create_transfer_account_user):
                                headers=dict(Authorization=auth_token.decode(), Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 201
-    assert json.loads(response.data)['data']['user'] is not None
+    assert response.json['data']['user'] is not None
 
 
 def test_get_me_credit_transfer_api(test_client, create_credit_transfer, create_transfer_account_user):
@@ -36,7 +36,7 @@ def test_get_me_credit_transfer_api(test_client, create_credit_transfer, create_
                                headers=dict(Authorization=auth_token.decode(), Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 201
-    assert json.loads(response.data)['data']['credit_transfers'][0]['id'] is create_credit_transfer.id
+    assert response.json['data']['credit_transfers'][0]['id'] is create_credit_transfer.id
 
 
 # @pytest.mark.parametrize('transfer_account_id,nfc_id,public_identifier,is_sending', [
