@@ -5,8 +5,8 @@ import pytest
 
 
 @pytest.mark.parametrize("phone,expected", [
-    ("0401391419", "+961401391419"),
-    ("+61401391419", "+61401391419"),
+    ("0401391419", "+61401391419"),
+    ("+961401391419", "+961401391419"),
 ])
 def test_proccess_phone_number(proccess_phone_number, phone, expected):
     """

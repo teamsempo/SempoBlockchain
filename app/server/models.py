@@ -489,13 +489,16 @@ class User(ManyOrgBase, ModelBase):
     def organisation_ids(self):
         return [organisation.id for organisation in self.organisations]
 
-    @hybrid_property
+    @property
     def transfer_account(self):
-        target_organisation_id = g.get('primary_organisation',None)
+        target_organisation_id = g.get('primary_organisation', None)
         if target_organisation_id:
             for transfer_account in self.transfer_accounts:
                 if transfer_account.organisation_id == target_organisation_id:
                     return transfer_account
+        # TODO: This should have a better concept of a default
+        if len(self.transfer_accounts) == 1:
+            return self.transfer_accounts[0]
         return None
 
     def get_primary_admin_organisation(self, fallback=None):
@@ -532,7 +535,7 @@ class User(ManyOrgBase, ModelBase):
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=valid_days, seconds=30),
                 'iat': datetime.datetime.utcnow(),
-                'user_id': self.id
+                'id': self.id
             }
 
             return jwt.encode(

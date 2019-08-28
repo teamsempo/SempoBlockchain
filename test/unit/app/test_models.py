@@ -62,6 +62,8 @@ def test_update_admin_user_tier(new_sempo_admin_user):
     WHEN a user tier is updated to superadmin
     THEN check that all lower tiers are True
     """
+    new_sempo_admin_user.set_held_role('ADMIN', 'view')
+
     assert AccessControl.has_any_tier(new_sempo_admin_user.roles, 'ADMIN')
     assert not AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'subadmin')
     assert not AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'admin')
@@ -111,7 +113,9 @@ def test_valid_auth_token(create_sempo_admin_user):
     assert auth_token is not None
     resp = create_sempo_admin_user.decode_auth_token(auth_token.decode())  # todo- patch .decode()
     assert not isinstance(auth_token, str)
-    assert create_sempo_admin_user.query.filter_by(id=resp['user_id']).first() is not None
+    assert (create_sempo_admin_user.query.execution_options(show_all=True)
+            .filter_by(id=resp['id']).first()
+            is not None)
 
 
 def test_tfa_required(create_sempo_admin_user):
@@ -122,7 +126,8 @@ def test_tfa_required(create_sempo_admin_user):
     """
     import config
     tiers = config.TFA_REQUIRED_ROLES
-    assert create_sempo_admin_user.is_TFA_required() is False  # defaults to view, this shouldn't need TFA
+    create_sempo_admin_user.set_held_role('ADMIN', 'view')
+    assert create_sempo_admin_user.is_TFA_required() is False
     for tier in tiers:
         create_sempo_admin_user.set_held_role('ADMIN', tier)
         assert create_sempo_admin_user.is_TFA_required() is True
@@ -149,7 +154,9 @@ def test_valid_tfa_token(create_sempo_admin_user):
     assert tfa_token is not None
     resp = create_sempo_admin_user.decode_auth_token(tfa_token.decode())
     assert not isinstance(tfa_token, str)
-    assert create_sempo_admin_user.query.filter_by(id=resp['user_id']).first() is not None
+    assert (create_sempo_admin_user.query.execution_options(show_all=True)
+            .filter_by(id=resp['id']).first()
+            is not None)
 
 
 """ ----- Transfer Account Model ----- """
@@ -201,10 +208,11 @@ def test_new_credit_transfer_complete(create_credit_transfer):
     THEN check transfer status is PENDING, then resolve as complete
     """
     from server.models import TransferStatusEnum
+    from flask import g
+    g.celery_tasks = []
     assert isinstance(create_credit_transfer.transfer_amount, int)
     assert create_credit_transfer.transfer_amount == 100
     assert create_credit_transfer.transfer_status is TransferStatusEnum.PENDING
-
     create_credit_transfer.resolve_as_completed()  # complete credit transfer
     assert create_credit_transfer.transfer_status is TransferStatusEnum.COMPLETE
 

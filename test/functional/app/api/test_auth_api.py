@@ -75,7 +75,7 @@ def test_get_tfa_url(test_client, create_sempo_admin_user):
                                headers=dict(Authorization=auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert json.loads(response.data)['data']['tfa_url'] == create_sempo_admin_user.tfa_url
+    assert response.json['data']['tfa_url'] == create_sempo_admin_user.tfa_url
     create_sempo_admin_user.set_held_role('ADMIN', 'sempoadmin')
 
 @pytest.mark.parametrize("otp,status_code", [
@@ -100,6 +100,7 @@ def test_request_tfa_token(test_client, create_sempo_admin_user, otp, status_cod
                                 headers=dict(Authorization=auth_token, Accept='application/json'),
                                 data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
                                 content_type='application/json', follow_redirects=True)
+
     assert response.status_code == status_code
 
 @pytest.mark.parametrize("email,password,status_code", [
@@ -144,7 +145,7 @@ def test_request_api_token_phone(test_client, create_transfer_account_user, phon
                                 data=json.dumps(dict(phone=phone, password=one_time_code)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
-    assert json.loads(response.data)['message'] == message
+    assert response.json['message'] == message
 
 
 def test_logout_api(test_client, create_sempo_admin_user):
@@ -235,7 +236,7 @@ def test_get_permissions_api(test_client, create_sempo_admin_user):
                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert json.loads(response.data)['admin_list'] is not None
+    assert response.json['admin_list'] is not None
 
 
 def test_get_kobo_credentials_api(test_client, create_sempo_admin_user):
@@ -253,5 +254,5 @@ def test_get_kobo_credentials_api(test_client, create_sempo_admin_user):
                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert json.loads(response.data)['username'] == config.EXTERNAL_AUTH_USERNAME
-    assert json.loads(response.data)['password'] == config.EXTERNAL_AUTH_PASSWORD
+    assert response.json['username'] == config.EXTERNAL_AUTH_USERNAME
+    assert response.json['password'] == config.EXTERNAL_AUTH_PASSWORD

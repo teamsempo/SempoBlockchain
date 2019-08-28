@@ -76,7 +76,9 @@ def register_extensions(app):
     db.init_app(app)
 
     basic_auth.init_app(app)
-    sentry.init_app(app, dsn=app.config['SENTRY_SERVER_DSN'])
+
+    if not config.IS_TEST:
+        sentry.init_app(app, dsn=app.config['SENTRY_SERVER_DSN'])
     # limiter.init_app(app)
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
