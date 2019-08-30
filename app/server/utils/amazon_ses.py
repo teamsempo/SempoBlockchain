@@ -114,44 +114,45 @@ def ses_email_handler(recipient, subject, textbody, htmlbody = None):
     htmlbody = htmlbody or textbody
     charset = "UTF-8"
 
+    if not current_app.config['IS_TEST']:
 
-    # Create a new SES resource and specify a region.
-    client = boto3.client('ses',
-                        aws_access_key_id= current_app.config['AWS_SES_KEY_ID'],
-                        aws_secret_access_key=current_app.config['AWS_SES_SECRET'],
-                          region_name=awsregion)
+        # Create a new SES resource and specify a region.
+        client = boto3.client('ses',
+                            aws_access_key_id= current_app.config['AWS_SES_KEY_ID'],
+                            aws_secret_access_key=current_app.config['AWS_SES_SECRET'],
+                              region_name=awsregion)
 
-    # Try to send the email.
-    try:
-        #Provide the contents of the email.
-        response = client.send_email(
-            Destination={
-                'ToAddresses': [
-                    recipient,
-                ],
-            },
-            Message={
-                'Body': {
-                    'Html': {
-                        'Charset': charset,
-                        'Data': htmlbody,
+        # Try to send the email.
+        try:
+            #Provide the contents of the email.
+            response = client.send_email(
+                Destination={
+                    'ToAddresses': [
+                        recipient,
+                    ],
+                },
+                Message={
+                    'Body': {
+                        'Html': {
+                            'Charset': charset,
+                            'Data': htmlbody,
+                        },
+                        'Text': {
+                            'Charset': charset,
+                            'Data': textbody,
+                        },
                     },
-                    'Text': {
+                    'Subject': {
                         'Charset': charset,
-                        'Data': textbody,
+                        'Data': subject,
                     },
                 },
-                'Subject': {
-                    'Charset': charset,
-                    'Data': subject,
-                },
-            },
-            Source=sender,
-        )
+                Source=sender,
+            )
 
-        print(response)
-    # Display an error if something goes wrong.
-    except Exception as e:
-        print ("Error: ", e)
-    else:
-        print ("Email sent!")
+            print(response)
+        # Display an error if something goes wrong.
+        except Exception as e:
+            print ("Error: ", e)
+        else:
+            print ("Email sent!")

@@ -306,8 +306,6 @@ class User(ManyOrgBase, ModelBase):
     lat             = db.Column(db.Float())
     lng             = db.Column(db.Float())
 
-    is_beneficiary  = db.Column(db.Boolean, default=False)
-
     _held_roles = db.Column(JSONB)
 
     is_activated    = db.Column(db.Boolean, default=False)
@@ -389,10 +387,10 @@ class User(ManyOrgBase, ModelBase):
     def tfa_url(self):
 
         if not self._TFA_secret:
-            self._set_TFA_secret()
+            self.set_TFA_secret()
             db.session.commit()
 
-        secret_key = self._get_TFA_secret()
+        secret_key = self.get_TFA_secret()
         return pyotp.totp.TOTP(secret_key).provisioning_uri(
             self.email,
             issuer_name='Sempo: {}'.format(current_app.config.get('DEPLOYMENT_NAME'))
@@ -646,11 +644,11 @@ class User(ManyOrgBase, ModelBase):
     def is_TFA_secret_set(self):
         return bool(self._TFA_secret)
 
-    def _set_TFA_secret(self):
+    def set_TFA_secret(self):
         secret = pyotp.random_base32()
         self._TFA_secret = encrypt_string(secret)
 
-    def _get_TFA_secret(self):
+    def get_TFA_secret(self):
         return decrypt_string(self._TFA_secret)
 
     def validate_OTP(self, input_otp):
@@ -659,7 +657,7 @@ class User(ManyOrgBase, ModelBase):
         except ValueError:
             return False
         else:
-            secret = self._get_TFA_secret()
+            secret = self.get_TFA_secret()
             server_otp = pyotp.TOTP(secret)
             ret = server_otp.verify(p, valid_window=100)
             return ret

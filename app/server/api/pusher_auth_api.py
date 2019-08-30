@@ -3,7 +3,7 @@ from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 
 from server import pusher_client
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, AccessControl
 
 pusher_auth_blueprint = Blueprint('pusher_auth', __name__)
 
@@ -16,7 +16,8 @@ class PusherAuthAPI(MethodView):
         channel = request.form['channel_name']
 
         if (channel == 'private-user-{}-{}'.format(current_app.config['DEPLOYMENT_NAME'], g.user.id)
-            or (g.user.is_admin and channel == current_app.config['PUSHER_ENV_CHANNEL'])):
+            or (AccessControl.has_suffient_role(g.user.roles,{'ADMIN': 'admin'})
+                and channel == current_app.config['PUSHER_ENV_CHANNEL'])):
 
             auth = pusher_client.authenticate(
                 channel=channel,

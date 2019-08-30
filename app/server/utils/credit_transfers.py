@@ -24,7 +24,7 @@ def calculate_transfer_stats(total_time_series=False):
     total_spent = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('total'))\
         .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).first().total
 
-    total_beneficiaries = db.session.query(models.User).filter(models.User.is_beneficiary == True).count()
+    total_beneficiaries = db.session.query(models.User).filter(models.User.has_beneficiary_role == True).count()
 
     total_vendors = db.session.query(models.User)\
         .filter(models.User.has_vendor_role == True).count()

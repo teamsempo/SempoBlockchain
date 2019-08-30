@@ -22,6 +22,11 @@ class TokenAPI(MethodView):
         if token:
             response_object = {
                 'message': 'Token already exists',
+                'data': {
+                    'token': {
+                        'id': token.id
+                    }
+                }
             }
 
             return make_response(jsonify(response_object)), 400
@@ -33,6 +38,11 @@ class TokenAPI(MethodView):
 
         response_object = {
             'message': 'success',
+            'data': {
+                'token': {
+                    'id': token.id
+                }
+            }
         }
 
         return make_response(jsonify(response_object)), 201

@@ -14,7 +14,7 @@ def request_feedback_questions(user):
     user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
         TransferAccount.users.any(User.id.in_([user.id]))).all()
 
-    if user.is_beneficiary and (len(user_transfer_accounts) > 0):
+    if user.has_beneficiary_role and (len(user_transfer_accounts) > 0):
         # transfer_account = TransferAccount.query.get(user.transfer_account_id)
         transfer_account = user_transfer_accounts[0]  # get the first transfer account. todo: fix this for many-to-many
 

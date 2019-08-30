@@ -2,7 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
 from server import db
-from server.models import paginate_query, Organisation, User
+from server.models import paginate_query, Organisation, User, Token
 from server.schemas import organisation_schema, organisations_schema
 from server.utils.auth import requires_auth
 
@@ -51,23 +51,33 @@ class OrganisationAPI(MethodView):
         post_data = request.get_json()
 
         name = post_data.get('name')
+        token_id = post_data.get('token_id')
+
         if name is None:
             return make_response(jsonify({'message': 'Must provide name to create organisation.'})), 401
 
-        if Organisation.query.filter_by(name=name).execution_options(show_all=True).first() is not None:
-            return make_response(jsonify({'message': 'Must be unique name. Organisation already exists for name: {}'.format(name)})), 400
+        existing_organisation = Organisation.query.filter_by(name=name).execution_options(show_all=True).first()
+        if existing_organisation is not None:
+            return make_response(
+                jsonify({
+                    'message': 'Must be unique name. Organisation already exists for name: {}'.format(name),
+                    'data': {'organisation': organisation_schema.dump(existing_organisation).data}
+                })), 400
 
-        new_organisation = Organisation(name=name)
+        token = Token.query.get(token_id)
+        if token is None:
+            return make_response(jsonify({'message': 'Token not found'})), 404
+
+        new_organisation = Organisation(name=name, token=token)
 
         db.session.add(new_organisation)
         db.session.commit()
 
-        g.allow_undefined_orgs = True
         response_object = {
             'message': 'Created Organisation',
             'data': {'organisation': organisation_schema.dump(new_organisation).data},
         }
-        g.allow_undefined_orgs = False
+
         return make_response(jsonify(response_object)), 201
 
 
@@ -84,7 +94,7 @@ class OrganisationUserAPI(MethodView):
         if organisation_id is None:
             return make_response(jsonify({'message': 'Must provide organisation ID'})), 401
 
-        organisation = Organisation.query.get(organisation_id).execution_options(show_all=True).first()
+        organisation = Organisation.query.execution_options(show_all=True).get(organisation_id)
 
         if organisation is None:
             return make_response(jsonify({'message': 'No organisation found for ID: {}'.format(organisation_id)}))

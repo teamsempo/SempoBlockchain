@@ -134,7 +134,9 @@ def update_transfer_account_user(user,
         vendor_tier = 'supervendor'
 
     user.set_held_role('VENDOR', vendor_tier)
-    user.is_beneficiary = is_beneficiary
+
+    if is_beneficiary:
+        user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
@@ -184,6 +186,9 @@ def create_transfer_account_user(first_name=None, last_name=None,
         vendor_tier = 'supervendor'
 
     user.set_held_role('VENDOR', vendor_tier)
+
+    if is_beneficiary:
+        user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if organisation:
         user.organisations.append(organisation)

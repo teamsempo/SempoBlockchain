@@ -35,7 +35,7 @@ def create_user_response_object(user, auth_token, message):
         usd_to_satoshi_rate = None
 
     must_answer_targeting_survey = False
-    if user.is_beneficiary and current_app.config['REQUIRE_TARGETING_SURVEY'] and not user.targeting_survey_id:
+    if user.has_beneficiary_role and current_app.config['REQUIRE_TARGETING_SURVEY'] and not user.targeting_survey_id:
         must_answer_targeting_survey = True
 
     conversion_rate = 1
@@ -232,7 +232,8 @@ class RegisterAPI(MethodView):
         # insert the user
         db.session.add(user)
 
-        user.organisations.append(selected_whitelist_item)
+        if selected_whitelist_item:
+            user.organisations.append(selected_whitelist_item.organisation)
         db.session.flush()
 
         if exact_match:
@@ -800,7 +801,7 @@ class PermissionsAPI(MethodView):
             response_object = {'message': 'Email already on whitelist.'}
             return make_response(jsonify(response_object)), 400
 
-        if not (email or tier):
+        if not (email and tier):
             response_object = {'message': 'No email or tier provided'}
             return make_response(jsonify(response_object)), 400
 

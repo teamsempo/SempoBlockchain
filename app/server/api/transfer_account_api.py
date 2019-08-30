@@ -51,9 +51,9 @@ class TransferAccountAPI(MethodView):
             transfer_accounts_query = TransferAccount.query.all()
 
             if account_type_filter == 'vendor':
-                transfer_accounts_query = TransferAccount.query.filter_by(is_vendor=True)
+                transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=True)
             elif account_type_filter == 'beneficiary':
-                transfer_accounts_query = TransferAccount.query.filter_by(is_vendor=False)
+                transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=False)
             else:
                 transfer_accounts_query = TransferAccount.query
 

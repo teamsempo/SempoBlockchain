@@ -171,6 +171,7 @@ class TransferAccountList extends React.Component {
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
 
     var filteredData = this.props.item_list !== undefined ? this.props.item_list : null;
+
     if (this.state.account_type !== 'ALL') {
       // a vendor/recipient filter is applied
       if (this.state.account_type === 'VENDORS') {
@@ -243,7 +244,12 @@ class TransferAccountList extends React.Component {
       )
     }
 
+    console.log('Outer', filteredData)
+
 	  if (this.props.transferAccounts.loadStatus.success && filteredData !== null && filteredData !== undefined) {
+
+      console.log('Innter', filteredData)
+
 	    const tableLength = filteredData.length;
 
 	    return (

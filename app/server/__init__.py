@@ -87,12 +87,6 @@ def register_extensions(app):
 
     print('celery joined on {} at {}'.format(app.config['REDIS_URL'], datetime.utcnow()))
 
-
-# from server.utils.migration import add_user_id_to_credit_transfer_column
-# add_user_id_to_credit_transfer_column()
-# db.session.commit()
-
-
 def register_blueprints(app):
     @app.before_request
     def before_request():

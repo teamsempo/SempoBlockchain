@@ -19,11 +19,11 @@ class BlockchainAddressAPI(MethodView):
         filter = request.args.get('filter','')
 
         if filter.lower() == 'vendor':
-            users = User.query.filter_by(is_vendor=True).all()
+            users = User.query.filter_by(has_vendor_role=True).all()
             address_objects = [user.transfer_account.blockchain_address for user in users]
 
         elif filter.lower() == 'beneficiary':
-            users = User.query.filter_by(is_beneficiary=True).all()
+            users = User.query.filter_by(has_beneficiary_role=True).all()
             address_objects = [user.transfer_account.blockchain_address for user in users]
 
         else:

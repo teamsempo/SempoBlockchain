@@ -45,15 +45,15 @@ def test_new_sempo_admin_user(new_sempo_admin_user):
     assert AccessControl.has_any_tier(new_sempo_admin_user.roles, 'ADMIN')
 
 
-def test_create_sempo_admin_user(create_sempo_admin_user):
+def test_authed_sempo_admin_user(authed_sempo_admin_user):
     """
     GIVEN a User model
     WHEN a new User is created in DB
     THEN check id, secret, has any admin role, created
     """
-    assert isinstance(create_sempo_admin_user.id, int)
-    assert isinstance(create_sempo_admin_user.secret, str)
-    assert isinstance(create_sempo_admin_user.created, object)
+    assert isinstance(authed_sempo_admin_user.id, int)
+    assert isinstance(authed_sempo_admin_user.secret, str)
+    assert isinstance(authed_sempo_admin_user.created, object)
 
 
 def test_update_admin_user_tier(new_sempo_admin_user):
@@ -89,36 +89,36 @@ def test_update_password(new_sempo_admin_user):
     assert new_sempo_admin_user.verify_password(new_password)
 
 
-def test_valid_activation_token(create_sempo_admin_user):
+def test_valid_activation_token(authed_sempo_admin_user):
     """
     GIVEN a User model
     WHEN a activation token is created
     THEN check token is valid
     """
-    activation_token = create_sempo_admin_user.encode_single_use_JWS('A')
+    activation_token = authed_sempo_admin_user.encode_single_use_JWS('A')
     assert activation_token is not None
-    validity_check = create_sempo_admin_user.decode_single_use_JWS(activation_token, 'A')
+    validity_check = authed_sempo_admin_user.decode_single_use_JWS(activation_token, 'A')
     assert validity_check['success']
-    create_sempo_admin_user.is_activated = True
-    assert create_sempo_admin_user.is_activated
+    authed_sempo_admin_user.is_activated = True
+    assert authed_sempo_admin_user.is_activated
 
 
-def test_valid_auth_token(create_sempo_admin_user):
+def test_valid_auth_token(authed_sempo_admin_user):
     """
     GIVEN A User Model
     WHEN a auth token is created
     THEN check it is a valid auth token
     """
-    auth_token = create_sempo_admin_user.encode_auth_token()
+    auth_token = authed_sempo_admin_user.encode_auth_token()
     assert auth_token is not None
-    resp = create_sempo_admin_user.decode_auth_token(auth_token.decode())  # todo- patch .decode()
+    resp = authed_sempo_admin_user.decode_auth_token(auth_token.decode())  # todo- patch .decode()
     assert not isinstance(auth_token, str)
-    assert (create_sempo_admin_user.query.execution_options(show_all=True)
+    assert (authed_sempo_admin_user.query.execution_options(show_all=True)
             .filter_by(id=resp['id']).first()
             is not None)
 
 
-def test_tfa_required(create_sempo_admin_user):
+def test_tfa_required(authed_sempo_admin_user):
     """
     GIVEN a User Model
     WHEN is_TFA_required is called
@@ -126,35 +126,35 @@ def test_tfa_required(create_sempo_admin_user):
     """
     import config
     tiers = config.TFA_REQUIRED_ROLES
-    create_sempo_admin_user.set_held_role('ADMIN', 'view')
-    assert create_sempo_admin_user.is_TFA_required() is False
+    authed_sempo_admin_user.set_held_role('ADMIN', 'view')
+    assert authed_sempo_admin_user.is_TFA_required() is False
     for tier in tiers:
-        create_sempo_admin_user.set_held_role('ADMIN', tier)
-        assert create_sempo_admin_user.is_TFA_required() is True
+        authed_sempo_admin_user.set_held_role('ADMIN', tier)
+        assert authed_sempo_admin_user.is_TFA_required() is True
 
 
-def test_tfa_url(create_sempo_admin_user):
+def test_tfa_url(authed_sempo_admin_user):
     """
     GIVEN a User Model
     WHEN a tfa_url is created
     THEN check it has the correct email and secret
     """
     from urllib.parse import quote
-    assert quote(create_sempo_admin_user.email) in create_sempo_admin_user.tfa_url
-    assert quote(create_sempo_admin_user._get_TFA_secret()) in create_sempo_admin_user.tfa_url
+    assert quote(authed_sempo_admin_user.email) in authed_sempo_admin_user.tfa_url
+    assert quote(authed_sempo_admin_user.get_TFA_secret()) in authed_sempo_admin_user.tfa_url
 
 
-def test_valid_tfa_token(create_sempo_admin_user):
+def test_valid_tfa_token(authed_sempo_admin_user):
     """
     GIVEN A User Model
     WHEN a tfa token is created
     THEN check it is a valid tfa token
     """
-    tfa_token = create_sempo_admin_user.encode_TFA_token()
+    tfa_token = authed_sempo_admin_user.encode_TFA_token()
     assert tfa_token is not None
-    resp = create_sempo_admin_user.decode_auth_token(tfa_token.decode())
+    resp = authed_sempo_admin_user.decode_auth_token(tfa_token.decode())
     assert not isinstance(tfa_token, str)
-    assert (create_sempo_admin_user.query.execution_options(show_all=True)
+    assert (authed_sempo_admin_user.query.execution_options(show_all=True)
             .filter_by(id=resp['id']).first()
             is not None)
 
@@ -238,7 +238,7 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
 """ ----- Blacklisted Token Model ----- """
 
 
-def test_create_blacklisted_token(create_blacklisted_token, create_sempo_admin_user):
+def test_create_blacklisted_token(create_blacklisted_token, authed_sempo_admin_user):
     """
     GIVEN a BlacklistToken Model
     WHEN a new blacklisted token is created
@@ -250,7 +250,7 @@ def test_create_blacklisted_token(create_blacklisted_token, create_sempo_admin_u
     assert datetime.datetime.now() - create_blacklisted_token.blacklisted_on <= datetime.timedelta(seconds=5)
 
     assert create_blacklisted_token.check_blacklist(create_blacklisted_token.token)
-    assert not create_blacklisted_token.check_blacklist(create_sempo_admin_user.encode_auth_token())
+    assert not create_blacklisted_token.check_blacklist(authed_sempo_admin_user.encode_auth_token())
 
 
 """ ----- Transfer Usage Model ----- """
@@ -283,7 +283,7 @@ def test_create_transfer_usage_exception(create_transfer_usage):
 """ ----- IP Address Model ----- """
 
 
-def test_create_ip_address(create_ip_address, create_sempo_admin_user):
+def test_create_ip_address(create_ip_address, authed_sempo_admin_user):
     """
     GIVEN a IpAddress Model
     WHEN a new Ip Address is created
@@ -294,7 +294,7 @@ def test_create_ip_address(create_ip_address, create_sempo_admin_user):
     assert isinstance(create_ip_address.created, object)
 
     assert create_ip_address.ip == '210.18.192.196'
-    assert create_ip_address.user_id == create_sempo_admin_user.id
+    assert create_ip_address.user_id == authed_sempo_admin_user.id
 
-    assert create_ip_address.check_user_ips(create_sempo_admin_user, '210.18.192.196')
-    assert not create_ip_address.check_user_ips(create_sempo_admin_user, '123.12.123.123')
+    assert create_ip_address.check_user_ips(authed_sempo_admin_user, '210.18.192.196')
+    assert not create_ip_address.check_user_ips(authed_sempo_admin_user, '123.12.123.123')

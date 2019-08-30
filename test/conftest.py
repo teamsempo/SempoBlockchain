@@ -2,7 +2,9 @@ import pytest
 
 from flask import current_app
 from server import create_app, db, models
+from server.utils.auth import get_complete_auth_token
 # from app.manage import manager
+
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
@@ -51,12 +53,40 @@ def create_unactivated_sempo_admin_user(test_client, init_database, new_sempo_ad
     return new_sempo_admin_user
 
 @pytest.fixture(scope='module')
-def create_sempo_admin_user(create_unactivated_sempo_admin_user):
+def activated_sempo_admin_user(create_unactivated_sempo_admin_user):
+    """
+    Returns a sempo admin user that is activated but does NOT have TFA set up
+    """
+    import pyotp
+
     create_unactivated_sempo_admin_user.is_activated = True
     # Commit the changes for the users
     db.session.commit()
 
     return create_unactivated_sempo_admin_user
+
+
+@pytest.fixture(scope='module')
+def authed_sempo_admin_user(create_unactivated_sempo_admin_user):
+    """
+    Returns a sempo admin user that is activated and has TFA set up
+    """
+    import pyotp
+
+    create_unactivated_sempo_admin_user.is_activated = True
+    create_unactivated_sempo_admin_user.set_TFA_secret()
+    create_unactivated_sempo_admin_user.TFA_enabled = True
+
+    # Commit the changes for the users
+    db.session.commit()
+
+    return create_unactivated_sempo_admin_user
+
+
+@pytest.fixture(scope='function')
+def complete_auth_token(authed_sempo_admin_user):
+    return get_complete_auth_token(authed_sempo_admin_user)
+
 
 @pytest.fixture(scope='module')
 def create_transfer_account_user(test_client, init_database, create_organisation):
@@ -125,9 +155,9 @@ def save_device_info(test_client, init_database, create_transfer_account_user):
 
 
 @pytest.fixture(scope='function')
-def create_blacklisted_token(create_sempo_admin_user):
+def create_blacklisted_token(authed_sempo_admin_user):
     from server.models import BlacklistToken
-    auth_token = create_sempo_admin_user.encode_auth_token().decode()
+    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
     blacklist_token = BlacklistToken(token=auth_token)
     db.session.add(blacklist_token)
     db.session.commit()
@@ -145,10 +175,10 @@ def create_transfer_usage(test_client, init_database):
 
 
 @pytest.fixture(scope='function')
-def create_ip_address(create_sempo_admin_user):
+def create_ip_address(authed_sempo_admin_user):
     from server.models import IpAddress
     ip_address = IpAddress(ip="210.18.192.196")
-    ip_address.user = create_sempo_admin_user
+    ip_address.user = authed_sempo_admin_user
     db.session.add(ip_address)
     db.session.commit()
     return ip_address

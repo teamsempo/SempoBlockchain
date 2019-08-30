@@ -26,8 +26,8 @@ class UserSchema(Schema):
     is_activated            = fields.Boolean()
     is_disabled             = fields.Boolean()
 
-    is_beneficiary          = fields.Boolean()
-    is_vendor               = fields.Boolean()
+    is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
+    is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_any_admin            = fields.Boolean(attribute='is_any_admin')
 
     ap_user_id              = fields.Str()
