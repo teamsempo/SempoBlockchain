@@ -230,7 +230,8 @@ class Organisation(ModelBase):
     transfer_accounts   = db.relationship('TransferAccount', backref='organisation',
                                           lazy=True, foreign_keys='TransferAccount.organisation_id')
 
-
+    blockchain_addresses = db.relationship('BlockchainAddress', backref='organisation',
+                                        lazy=True, foreign_keys='BlockchainAddress.organisation_id')
 
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')

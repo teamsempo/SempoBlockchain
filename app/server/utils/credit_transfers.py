@@ -299,6 +299,7 @@ def create_address_object_if_required(address):
 
 def make_blockchain_transfer(transfer_amount,
                              send_address,
+                             token,
                              receive_address,
                              transfer_use=None,
                              transfer_mode=None,
@@ -324,6 +325,7 @@ def make_blockchain_transfer(transfer_amount,
 
     require_recipient_approved = False
     transfer = make_payment_transfer(transfer_amount,
+                                     token,
                                      sender_user,
                                      recipient_user,
                                      transfer_use,
@@ -361,6 +363,7 @@ def make_blockchain_transfer(transfer_amount,
     return transfer
 
 def make_payment_transfer(transfer_amount,
+                          token,
                           send_account,
                           receive_account,
                           transfer_use=None,
@@ -371,7 +374,7 @@ def make_payment_transfer(transfer_amount,
                           automatically_resolve_complete=True,
                           uuid=None):
 
-    transfer = models.CreditTransfer(transfer_amount, sender=send_account, recipient=receive_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, token, sender=send_account, recipient=receive_account, uuid=uuid)
 
     make_cashout_incentive_transaction = False
 
@@ -428,6 +431,7 @@ def make_payment_transfer(transfer_amount,
     return transfer
 
 def make_withdrawal_transfer(transfer_amount,
+                             token,
                              send_account,
                              transfer_mode=None,
                              require_sender_approved=True,
@@ -435,7 +439,7 @@ def make_withdrawal_transfer(transfer_amount,
                              automatically_resolve_complete=True,
                              uuid=None):
 
-    transfer = models.CreditTransfer(transfer_amount, sender=send_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, token, sender=send_account, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
@@ -457,6 +461,7 @@ def make_withdrawal_transfer(transfer_amount,
 
 
 def make_disbursement_transfer(transfer_amount,
+                               token,
                                receive_account,
                                transfer_mode=None,
                                automatically_resolve_complete=True,
@@ -474,7 +479,7 @@ def make_disbursement_transfer(transfer_amount,
         if transfer_amount < 1000 * 100:
             raise Exception("Minimum Transfer Amount is 1000 sat")
 
-    transfer = models.CreditTransfer(transfer_amount, recipient=receive_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, token, recipient=receive_account, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
@@ -536,7 +541,7 @@ def transfer_credit_via_phone(send_phone, receive_phone, transfer_amount):
     if send_user.transfer_account.balance < transfer_amount:
         return {'status': 'Fail', 'message': "Insufficient Funds"}
 
-    transfer = make_payment_transfer(transfer_amount, send_user, receive_user)
+    transfer = make_payment_transfer(transfer_amount, token, send_user, receive_user)
 
     return {
         'status': 'Success',

@@ -39,8 +39,8 @@ class BaseERC20Processor(ABC):
         r = requests.post(config.APP_HOST + '/api/blockchain_transaction/',
                          json={'signing_address': signing_address,
                                'network_nonce': network_nonce},
-                         auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                            config.BASIC_AUTH_PASSWORD))
+                         auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                            config.INTERNAL_AUTH_PASSWORD))
 
         json = r.json()
 

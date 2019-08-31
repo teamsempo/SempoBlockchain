@@ -244,11 +244,7 @@ class TransferAccountList extends React.Component {
       )
     }
 
-    console.log('Outer', filteredData)
-
 	  if (this.props.transferAccounts.loadStatus.success && filteredData !== null && filteredData !== undefined) {
-
-      console.log('Innter', filteredData)
 
 	    const tableLength = filteredData.length;
 

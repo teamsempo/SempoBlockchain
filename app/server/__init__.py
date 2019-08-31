@@ -107,6 +107,10 @@ def register_blueprints(app):
     @app.after_request
     def after_request(response):
             # Execute any async celery tasks
+
+        if response.status_code < 300 and response.status_code >= 200:
+            db.session.commit()
+
         for task in g.celery_tasks:
             try:
                 task.delay()

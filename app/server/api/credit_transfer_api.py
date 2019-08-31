@@ -4,7 +4,14 @@ from flask.views import MethodView
 from sqlalchemy import or_
 
 from server import db
-from server.models import paginate_query, CreditTransfer, TransferTypeEnum, BlockchainAddress, BlockchainTransaction
+from server.models import (
+    paginate_query,
+    CreditTransfer,
+    TransferTypeEnum,
+    BlockchainAddress,
+    BlockchainTransaction,
+    Token
+)
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth, AccessControl
 
@@ -171,6 +178,7 @@ class CreditTransferAPI(MethodView):
 
         transfer_type = post_data.get('transfer_type')
         transfer_amount = abs(round(float(post_data.get('transfer_amount') or 0),6))
+        token_id = post_data.get('token_id')
         target_balance = post_data.get('target_balance')
 
         transfer_use = post_data.get('transfer_use')
@@ -261,21 +269,39 @@ class CreditTransferAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 400
 
+        if token_id:
+            token = Token.query.get(token_id)
+            if not token:
+                response_object = {
+                    'message': 'Token not found'
+                }
+                return make_response(jsonify(response_object)), 404
+        else:
+            primary_organisation = g.user.get_primary_admin_organisation()
+            if primary_organisation is None:
+                response_object = {
+                    'message': 'Must provide token_id'
+                }
+                return make_response(jsonify(response_object)), 400
+            else:
+                token = primary_organisation.token
+
+
         for sender_user, recipient_user in transfer_user_list:
 
             try:
                 if transfer_type == 'PAYMENT':
                     transfer = make_payment_transfer(
-                        transfer_amount, sender_user, recipient_user, transfer_use, uuid=uuid)
+                        transfer_amount, token, sender_user, recipient_user, transfer_use, uuid=uuid)
 
                 elif transfer_type == 'WITHDRAWAL':
-                    transfer = make_withdrawal_transfer(transfer_amount, sender_user, uuid=uuid)
+                    transfer = make_withdrawal_transfer(transfer_amount, token,  sender_user, uuid=uuid)
 
                 elif transfer_type == 'DISBURSEMENT':
-                    transfer = make_disbursement_transfer(transfer_amount, recipient_user, uuid=uuid)
+                    transfer = make_disbursement_transfer(transfer_amount, token,  recipient_user, uuid=uuid)
 
                 elif transfer_type == 'BALANCE':
-                    transfer = make_target_balance_transfer(target_balance, recipient_user, uuid=uuid)
+                    transfer = make_target_balance_transfer(target_balance, token,  recipient_user, uuid=uuid)
 
             except (InsufficientBalanceError,
                     AccountNotApprovedError,
@@ -294,14 +320,13 @@ class CreditTransferAPI(MethodView):
             else:
                 if is_bulk:
                     credit_transfers.append(transfer)
-                    db.session.commit()
 
                     response_list.append({'status': 200, 'message': 'Transfer Successful'})
 
                 else:
 
-                    db.session.commit()
                     credit_transfer = credit_transfer_schema.dump(transfer).data
+
 
                     response_object = {
                         'message': 'Transfer Successful',
@@ -309,6 +334,8 @@ class CreditTransferAPI(MethodView):
                             'credit_transfer': credit_transfer,
                         }
                     }
+                    db.session.commit()
+
                     return make_response(jsonify(response_object)), 201
 
         db.session.commit()
@@ -320,6 +347,7 @@ class CreditTransferAPI(MethodView):
                 'credit_transfers': credit_transfers_schema.dump(credit_transfers).data
             }
         }
+
         return make_response(jsonify(response_object)), 201
 
 
