@@ -7,6 +7,7 @@ import datetime
 import random
 import time
 
+
 def add_full_transaction_details(details_dict, method='POST', force_transaction_creation=False):
 
     transaction_id = details_dict.get('transaction_id')

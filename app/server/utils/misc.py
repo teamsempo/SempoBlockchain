@@ -8,6 +8,12 @@ from server import models
 
 last_marker = datetime.datetime.utcnow()
 
+from eth_keys import keys
+
+def hex_private_key_to_address(hex_private_key: str) -> str:
+    bytes_key = bytearray.fromhex(hex_private_key.strip('0x'))
+    return keys.PrivateKey(bytes_key).public_key.to_checksum_address()
+
 
 def elapsed_time(print_statement = None):
     global last_marker
