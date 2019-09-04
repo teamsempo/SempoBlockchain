@@ -1,7 +1,9 @@
 import os, configparser, boto3, hashlib
 from bit import PrivateKeyTestnet, PrivateKey
 from botocore.exceptions import EndpointConnectionError
-from ethereum import utils
+from eth_keys import keys
+from eth_utils import keccak
+
 from web3 import Web3
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -207,9 +209,11 @@ if unchecksummed_withdraw_to_address:
 else:
     WITHDRAW_TO_ADDRESS = None
 
-master_wallet_private_key = utils.sha3(SECRET_KEY + DEPLOYMENT_NAME)
+
+master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
 MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
-MASTER_WALLET_ADDRESS = Web3.toChecksumAddress(utils.privtoaddr(master_wallet_private_key))
+
+MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
 
 ETH_CONTRACT_TYPE       = specific_parser['ETHEREUM'].get('contract_type', 'standard').lower()
 ETH_CONTRACT_ADDRESS    = specific_parser['ETHEREUM'].get('contract_address')

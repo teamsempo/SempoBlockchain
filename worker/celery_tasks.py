@@ -9,10 +9,10 @@ from worker.bitcoin_processor import BitcoinProcessor
 from worker.ethereum_processor import MintableERC20Processor, UnmintableERC20Processor, PreBlockchainError
 from worker import celery_app
 from worker.ABIs import standard_erc20_abi, ccv_abi, mintable_abi, dai_abi
-from worker import rekognition
-from worker import geolocation
-from worker import ip_location
-from worker import trulioo
+# from worker import rekognition
+# from worker import geolocation
+# from worker import ip_location
+# from worker import trulioo
 
 from celery.exceptions import MaxRetriesExceededError
 
@@ -42,7 +42,7 @@ elif config.ETH_CONTRACT_TYPE == 'mintable':
     expected_contract_name = config.ETH_CONTRACT_NAME
 
     blockchain_processor = MintableERC20Processor(**ERC20_config)
-    blockchain_processor.check_for_correct_contract(expected_contract_name)
+    blockchain_processor.check_contract_name(expected_contract_name)
 
 elif config.ETH_CONTRACT_TYPE == 'ccv':
     print('~~~USING CCV~~~')
@@ -63,7 +63,7 @@ else:
 
     blockchain_processor = UnmintableERC20Processor(**ERC20_config)
 
-rekogniser = rekognition.Rekogniser()
+# rekogniser = rekognition.Rekogniser()
 
 
 # def attempt_atomic_celery_task(self, task, *args, **kwargs):
@@ -283,70 +283,70 @@ def find_new_ouputs():
 @celery_app.task()
 def find_new_external_inbounds():
     blockchain_processor.find_new_external_inbounds()
-
-@celery_app.task()
-def geolocate_address(geo_task):
-    app_host = config.APP_HOST
-
-    geo_result = geolocation.parse_geo_task(geo_task)
-
-    if geo_result.get('status') == 'success':
-        r = requests.post(app_host + '/api/geolocation/',
-                          json={'user_id': geo_result.get('user_id'),
-                                'lat': geo_result.get('lat'),
-                                'lng': geo_result.get('lng')
-                                },
-                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                             config.BASIC_AUTH_PASSWORD))
-
-
-@celery_app.task()
-def ip_location(ip_task):
-    app_host = config.APP_HOST
-
-    ip_result = ip_location.ip_location_task(ip_task)
-
-    if ip_result.get('status') == 'success':
-        r = requests.post(app_host, '/api/ip_address_location/',
-                          json={'ip_address_id': ip_result.get('ip_address_id'),
-                                'country': ip_result.get('country'),
-                                },
-                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                             config.BASIC_AUTH_PASSWORD))
-
-
-@celery_app.task()
-def check_for_duplicate_person(image_name, image_id):
-
-    app_host = config.APP_HOST
-
-    rekognised_faces = rekogniser.facial_recognition(image_name)
-
-    if len(rekognised_faces) > 0:
-        r = requests.put(app_host + '/api/recognised_face/',
-                         json={'image_id': image_id, 'recognised_faces': rekognised_faces},
-                         auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                            config.BASIC_AUTH_PASSWORD)
-                         )
-
-    upload_resp = rekogniser.upload_face(image_name, image_id)
-
-    if upload_resp['success']:
-        r = requests.post(app_host + '/api/recognised_face/',
-                          json={'image_id': image_id, 'roll': upload_resp['roll']},
-                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                             config.BASIC_AUTH_PASSWORD)
-                          )
-
-
-@celery_app.task()
-def trulioo_verification(trulioo_task):
-    app_host = config.APP_HOST
-
-    trulioo_result = trulioo.trulioo_task(trulioo_task)
-
-    if trulioo_result:
-        r = requests.put(app_host, '/api/kyc_application/',
-                          json=trulioo_result,
-                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                             config.BASIC_AUTH_PASSWORD))
+#
+# @celery_app.task()
+# def geolocate_address(geo_task):
+#     app_host = config.APP_HOST
+#
+#     geo_result = geolocation.parse_geo_task(geo_task)
+#
+#     if geo_result.get('status') == 'success':
+#         r = requests.post(app_host + '/api/geolocation/',
+#                           json={'user_id': geo_result.get('user_id'),
+#                                 'lat': geo_result.get('lat'),
+#                                 'lng': geo_result.get('lng')
+#                                 },
+#                           auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
+#                                              config.BASIC_AUTH_PASSWORD))
+#
+#
+# @celery_app.task()
+# def ip_location(ip_task):
+#     app_host = config.APP_HOST
+#
+#     ip_result = ip_location.ip_location_task(ip_task)
+#
+#     if ip_result.get('status') == 'success':
+#         r = requests.post(app_host, '/api/ip_address_location/',
+#                           json={'ip_address_id': ip_result.get('ip_address_id'),
+#                                 'country': ip_result.get('country'),
+#                                 },
+#                           auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
+#                                              config.BASIC_AUTH_PASSWORD))
+#
+#
+# @celery_app.task()
+# def check_for_duplicate_person(image_name, image_id):
+#
+#     app_host = config.APP_HOST
+#
+#     rekognised_faces = rekogniser.facial_recognition(image_name)
+#
+#     if len(rekognised_faces) > 0:
+#         r = requests.put(app_host + '/api/recognised_face/',
+#                          json={'image_id': image_id, 'recognised_faces': rekognised_faces},
+#                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
+#                                             config.BASIC_AUTH_PASSWORD)
+#                          )
+#
+#     upload_resp = rekogniser.upload_face(image_name, image_id)
+#
+#     if upload_resp['success']:
+#         r = requests.post(app_host + '/api/recognised_face/',
+#                           json={'image_id': image_id, 'roll': upload_resp['roll']},
+#                           auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
+#                                              config.BASIC_AUTH_PASSWORD)
+#                           )
+# #
+# #
+# # @celery_app.task()
+# # def trulioo_verification(trulioo_task):
+# #     app_host = config.APP_HOST
+# #
+# #     trulioo_result = trulioo.trulioo_task(trulioo_task)
+# #
+# #     if trulioo_result:
+# #         r = requests.put(app_host, '/api/kyc_application/',
+# #                           json=trulioo_result,
+# #                           auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
+# #                                              config.BASIC_AUTH_PASSWORD))

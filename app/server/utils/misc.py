@@ -1,8 +1,8 @@
 import datetime
 import base64
 import re
-from ethereum import utils
 from flask import current_app
+from eth_utils import keccak
 from cryptography.fernet import Fernet
 from server import models
 
@@ -21,14 +21,14 @@ def elapsed_time(print_statement = None):
 
 def decrypt_string(encryped_string):
 
-    fernet_encryption_key = base64.b64encode(utils.sha3(current_app.config['SECRET_KEY']))
+    fernet_encryption_key = base64.b64encode(keccak(text=current_app.config['SECRET_KEY']))
     cipher_suite = Fernet(fernet_encryption_key)
 
     return cipher_suite.decrypt(encryped_string.encode('utf-8')).decode('utf-8')
 
 def encrypt_string(raw_string):
 
-    fernet_encryption_key = base64.b64encode(utils.sha3(current_app.config['SECRET_KEY']))
+    fernet_encryption_key = base64.b64encode(keccak(text=current_app.config['SECRET_KEY']))
     cipher_suite = Fernet(fernet_encryption_key)
 
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')

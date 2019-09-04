@@ -1,7 +1,9 @@
 import os, base64
 from typing import Union
 from contextlib import contextmanager
-from ethereum import utils
+from eth_utils import keccak
+from eth_keys import keys
+
 from web3 import Web3
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -911,21 +913,20 @@ class BlockchainAddress(OneOrgBase, ModelBase):
     @hybrid_property
     def decrypted_private_key(self):
 
-        fernet_encryption_key = base64.b64encode(utils.sha3(current_app.config['SECRET_KEY']))
+        fernet_encryption_key = base64.b64encode(keccak(text=current_app.config['SECRET_KEY']))
         cipher_suite = Fernet(fernet_encryption_key)
 
         return cipher_suite.decrypt(self.encoded_private_key.encode('utf-8')).decode('utf-8')
 
     def encrypt_private_key(self, unencoded_private_key):
 
-        fernet_encryption_key = base64.b64encode(utils.sha3(current_app.config['SECRET_KEY']))
+        fernet_encryption_key = base64.b64encode(keccak(text=current_app.config['SECRET_KEY']))
         cipher_suite = Fernet(fernet_encryption_key)
 
         return cipher_suite.encrypt(unencoded_private_key.encode('utf-8')).decode('utf-8')
 
     def calculate_address(self, private_key):
-        raw_address = utils.privtoaddr(private_key)
-        self.address = utils.checksum_encode(raw_address)
+        self.address = keys.PrivateKey(private_key).public_key.to_checksum_address()
 
     def allowed_types(self):
         return ALLOWED_BLOCKCHAIN_ADDRESS_TYPES
@@ -942,7 +943,7 @@ class BlockchainAddress(OneOrgBase, ModelBase):
 
         if self.type == "TRANSFER_ACCOUNT" and not blockchain_address:
 
-            hex_private_key = Web3.toHex(utils.sha3(os.urandom(4096)))
+            hex_private_key = Web3.toHex(keccak(os.urandom(4096)))
 
             self.encoded_private_key = self.encrypt_private_key(hex_private_key)
 

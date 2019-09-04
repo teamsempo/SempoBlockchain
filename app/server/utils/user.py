@@ -3,6 +3,7 @@ from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app
+from eth_utils import to_checksum_address
 
 from server import db, models
 from server.schemas import user_schema
@@ -13,8 +14,6 @@ from server.utils import credit_transfers as CreditTransferUtils
 from server.utils.phone import proccess_phone_number, send_onboarding_message, send_phone_verification_message
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.misc import elapsed_time, AttributeDictProccessor
-
-from ethereum import utils
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -74,7 +73,7 @@ def find_user_from_public_identifier(*public_identifiers):
             continue
 
         try:
-            checksummed = utils.checksum_encode(public_identifier)
+            checksummed = to_checksum_address(public_identifier)
             blockchain_address = models.BlockchainAddress.query.filter_by(address=checksummed).first()
 
             if blockchain_address and blockchain_address.transfer_account:
@@ -339,7 +338,7 @@ def proccess_create_or_modify_user_request(attribute_dict,
     if not blockchain_address and provided_public_serial_number:
 
         try:
-            blockchain_address = utils.checksum_encode(provided_public_serial_number)
+            blockchain_address = to_checksum_address(provided_public_serial_number)
 
             # Since it's actually an ethereum address set the provided public serial number to None
             # so it doesn't get used as a transfer card

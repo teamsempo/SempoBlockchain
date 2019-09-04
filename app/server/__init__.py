@@ -41,6 +41,14 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 
+blockchain_task = celery_app.signature('eth_worker.celery_tasks.complete_blockchain_task',
+                                       kwargs={
+                                           'contract': 'Dai Stablecoin v1.0',
+                                           'function': 'approve'
+                                       })
+
+blockchain_task.delay()
+
 red = redis.Redis.from_url(config.REDIS_URL)
 
 pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
