@@ -14,6 +14,7 @@ import messagebird
 from datetime import datetime
 import redis
 import config
+from eth_utils import to_checksum_address
 
 import sys, os
 
@@ -41,13 +42,31 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 
-blockchain_task = celery_app.signature('eth_worker.celery_tasks.complete_blockchain_task',
-                                       kwargs={
-                                           'contract': 'Dai Stablecoin v1.0',
-                                           'function': 'approve'
-                                       })
+def encrypt_string(raw_string):
 
-blockchain_task.delay()
+    import base64
+    from cryptography.fernet import Fernet
+    from eth_utils import keccak
+
+    fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
+    cipher_suite = Fernet(fernet_encryption_key)
+
+    return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
+encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
+
+for i in range(0,100):
+    blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.process_task',
+                                           kwargs={
+                                               'encrypted_private_key': encrypted_private_key,
+                                               'contract': 'Dai Stablecoin v1.0',
+                                               'function': 'transfer',
+                                               'args': [
+                                                   '0x68D3ce90D84B4DD8936908Afd4079797057996bB',
+                                                   1
+                                               ]
+                                           })
+
+    blockchain_task.delay()
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
