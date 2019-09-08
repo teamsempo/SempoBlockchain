@@ -88,7 +88,6 @@ def create_user_response_object(user, auth_token, message):
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'kyc_active': True,  # todo; kyc active function
-        'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'android_intercom_hash': create_intercom_android_secret(user_id=user.id)
     }
 

@@ -283,7 +283,7 @@ def find_new_ouputs():
 @celery_app.task()
 def find_new_external_inbounds():
     blockchain_processor.find_new_external_inbounds()
-#
+
 # @celery_app.task()
 # def geolocate_address(geo_task):
 #     app_host = config.APP_HOST

@@ -12,6 +12,7 @@ Flask-Migrate==2.1.1
 Flask-RESTful==0.3.6
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.3.2
+slackclient==2.1.0
 SQLAlchemy==1.3.8
 marshmallow==2.15.6
 messagebird==1.2.1

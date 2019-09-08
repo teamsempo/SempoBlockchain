@@ -259,6 +259,7 @@ class KycApplicationSchema(Schema):
     first_name          = fields.Str()
     last_name           = fields.Str()
     phone               = fields.Str()
+    dob                 = fields.Str()
     business_legal_name = fields.Str()
     business_type       = fields.Str()
     tax_id              = fields.Str()
@@ -365,7 +366,7 @@ kyc_application_state_schema = KycApplicationSchema(exclude=("trulioo_id","wyre_
                                                                          "country", "street_address", "street_address_2"
                                                                          "city", "region", "postal_code",
                                                                          "beneficial_owners", "bank_accounts",
-                                                                         "documents"
+                                                                         "documents", "dob"
                                                                          ))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))

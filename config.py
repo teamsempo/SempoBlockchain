@@ -252,3 +252,6 @@ TRULIOO_USER    = common_parser['TRULIOO'].get('user')
 TRULIOO_PASS    = common_parser['TRULIOO'].get('pass')
 
 INTERCOM_ANDROID_SECRET = common_parser['INTERCOM']['android_secret']
+
+SLACK_HOST      = specific_parser['SLACK']['host']
+SLACK_API_TOKEN = common_parser['SLACK']['token']

@@ -1,14 +1,17 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
-from server import db, celery_app, sentry
+from server import db, sentry
 from server.models import KycApplication, BankAccount, UploadedDocument
-from server.utils.auth import requires_auth
-from server.utils import trulioo as TruliooUtils
+from server.utils.auth import requires_auth, AccessControl
 from server.schemas import kyc_application_schema, kyc_application_state_schema
 from server.constants import ALLOWED_FILE_EXTENSIONS
-from server.utils.amazon_s3 import save_to_s3_from_document, generate_new_filename
+from server.utils.amazon_s3 import save_to_s3_from_document, generate_new_filename, save_to_s3_from_image_base64
+from server.utils.slack_controller import post_verification_message
 
 kyc_application_blueprint = Blueprint('kyc_application', __name__)
+
+supported_countries = ['AU', 'TO', 'VU', 'NZ']
+supported_documents = {'AU': ['Passport', 'DrivingLicence'], 'TO': ['Passport'], 'VU': ['Passport', 'DrivingLicence'], 'NZ': ['Passport', 'DrivingLicence', 'IdentityCard']}
 
 
 class KycApplicationAPI(MethodView):
@@ -20,14 +23,14 @@ class KycApplicationAPI(MethodView):
         country = request.args.get('country', None)
 
         if trulioo_countries:
-            trulioo_countries = TruliooUtils.get_trulioo_countries()
+            trulioo_countries = supported_countries
             return make_response(jsonify({'message': 'Trulioo Countries', 'data': {'kyc_application': {'trulioo_countries': trulioo_countries}}})), 200
 
         if trulioo_documents:
-            trulioo_documents = TruliooUtils.get_trulioo_country_documents(country)
+            trulioo_documents = {country: supported_documents[country]}
             return make_response(jsonify({'message': 'Trulioo Countries', 'data': {'kyc_application': {'trulioo_documents': trulioo_documents}}})), 200
 
-        if g.user.is_superadmin or g.user.is_admin or g.user.is_subadmin:
+        if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'subadmin'}):
             # business account
 
             # todo: fix this for multi-tenant
@@ -41,7 +44,7 @@ class KycApplicationAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 404
 
-            if g.user.is_superadmin:
+            if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
                 response_object = {
                     'message': 'Successfully loaded business verification details',
                     'data': {'kyc_application': kyc_application_schema.dump(kyc_details).data}
@@ -98,24 +101,7 @@ class KycApplicationAPI(MethodView):
 
         kyc_details = None
 
-        if kyc_application_id and transaction_id:
-            # its a request from our worker returning trulioo response.
-
-            kyc_application = KycApplication.query.get(kyc_application_id)
-            if kyc_application is None:
-                return make_response(jsonify({'message': 'No record found for ID: {}'.format(kyc_application_id)}))
-
-            kyc_application.trulioo_id = transaction_id
-
-            response = TruliooUtils.handle_trulioo_response(put_data, kyc_application)
-
-            db.session.commit()
-
-            return make_response(jsonify({'message': 'Trulioo data handled.', 'data': response})), 200
-
         if type == 'INDIVIDUAL':
-            country = document_country  # we need to save the user country in KYC object
-
             if document_type is None or document_country is None or document_front_base64 is None or selfie_base64 is None:
                 return make_response(jsonify({'message': 'Must provide correct parameters'})), 400
 
@@ -131,33 +117,31 @@ class KycApplicationAPI(MethodView):
                 db.session.commit()
                 return make_response(jsonify({'message': 'KYC attempts exceeded. Contact Support.'})), 400
 
-            try:
-                # todo: build this, need to pass countries, required fields to mobile.
-                task = {'kyc_application_id': kyc_details.id, 'body': {
-                    'AcceptTruliooTermsAndConditions': True,
-                    "CallBackUrl": TruliooUtils.get_callback_url(),
-                    'CountryCode': document_country,
-                    'ConsentForDataSources': TruliooUtils.get_trulioo_consents(country),
-                    'DataFields': {
-                        'PersonInfo': {
-                        },
-                        'Location': {
-                        },
-                        'Document': {
-                            'DocumentFrontImage': document_front_base64,
-                            'DocumentBackImage': document_back_base64,
-                            "LivePhoto": selfie_base64,
-                            "DocumentType": document_type
-                        }
-                    }
-                }}
-                trulioo_verification_task = celery_app.signature('worker.celery_tasks.trulioo_verification', args=(task,))
+            for (key, value) in put_data.items():
+                if set([key]).intersection(set(['document_front_base64', 'document_back_base64', 'selfie_base64'])) and value is not None:
+                    try:
+                        new_filename = generate_new_filename(original_filename="{}-{}.jpg".format(key, document_country))
+                        save_to_s3_from_image_base64(image_base64=value, new_filename=new_filename)
+                        uploaded_document = UploadedDocument(filename=new_filename, reference=document_type,
+                                                             user_filename=key)
+                        db.session.add(uploaded_document)
+                        # tie document to kyc application
+                        uploaded_document.kyc_application_id = kyc_details.id
+                    except Exception as e:
+                        print(e)
+                        sentry.captureException()
+                        pass
 
-                trulioo_verification_task.delay()
-            except Exception as e:
-                print(e)
-                sentry.captureException()
-                pass
+            kyc_details.kyc_status = 'PENDING'
+
+            response_object = {
+                'message': 'Successfully Updated KYC Application.',
+                'data': {
+                    'kyc_application': kyc_application_schema.dump(kyc_details).data
+                }
+            }
+
+            return make_response(jsonify(response_object)), 200
 
         if type == 'BUSINESS':
             if g.user.is_superadmin is False:
@@ -216,8 +200,6 @@ class KycApplicationAPI(MethodView):
             if beneficial_owners:
                 kyc_details.beneficial_owners = beneficial_owners
 
-        db.session.commit()
-
         response_object = {
             'message': 'Successfully Updated KYC Application.',
             'data': {
@@ -257,7 +239,6 @@ class KycApplicationAPI(MethodView):
         selfie_base64 = post_data.get('selfie_base64')  # image
 
         if type == 'INDIVIDUAL':
-            country = document_country  # we need to save the user country in KYC object
 
             # creation logic is handled after kyc object creation.
             kyc_details = KycApplication.query.filter_by(user_id=g.user.id).first()
@@ -286,16 +267,16 @@ class KycApplicationAPI(MethodView):
                 # filter empty beneficial owners
                 beneficial_owners = [owner for owner in beneficial_owners if(owner['full_name'].strip(' ',) != '')]
 
-            if g.user.is_superadmin:
+            if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
                 type = 'MASTER' # todo: we probably don't need this with multi-tenant
 
         create_kyc_application = KycApplication(
             type=type,
-            first_name=first_name, last_name=last_name,
-            phone=phone, business_legal_name=business_legal_name,
+            first_name=first_name or g.user.first_name, last_name=last_name or g.user.last_name,
+            phone=phone or g.user.phone, business_legal_name=business_legal_name,
             business_type=business_type, tax_id=tax_id,
             website=website, date_established=date_established,
-            country=country, street_address=street_address,
+            country=country or document_country, street_address=street_address,
             street_address_2=street_address_2, city=city,
             region=region, postal_code=postal_code,
             beneficial_owners=beneficial_owners,
@@ -303,58 +284,33 @@ class KycApplicationAPI(MethodView):
 
         create_kyc_application.user = g.user
         db.session.add(create_kyc_application)
+        db.session.flush()  # need this to create an ID
 
         if type == 'INDIVIDUAL':
-            try:
-                task = {'kyc_application_id': create_kyc_application.id, 'body': {
-                    'AcceptTruliooTermsAndConditions': True,
-                    "CallBackUrl": TruliooUtils.get_callback_url(),
-                    'CountryCode': document_country,
-                    'DataFields': {
-                        'Document': {
-                            'DocumentFrontImage': document_front_base64,
-                            'DocumentBackImage': document_back_base64,
-                            "LivePhoto": selfie_base64,
-                            "DocumentType": document_type
-                        }
-                    }
-                }}
-                trulioo_verification_task = celery_app.signature('worker.celery_tasks.trulioo_verification', args=(task,))
+            for (key, value) in post_data.items():
+                if set([key]).intersection(set(['document_front_base64', 'document_back_base64', 'selfie_base64'])) and value is not None:
+                    try:
+                        new_filename = generate_new_filename(original_filename="{}-{}.jpg".format(key, document_country))
+                        save_to_s3_from_image_base64(image_base64=value, new_filename=new_filename)
+                        uploaded_document = UploadedDocument(filename=new_filename, reference=document_type,
+                                                             user_filename=key)
+                        db.session.add(uploaded_document)
+                        # tie document to kyc application
+                        uploaded_document.kyc_application_id = create_kyc_application.id
+                    except Exception as e:
+                        print(e)
+                        sentry.captureException()
+                        pass
 
-                trulioo_verification_task.delay()
-            except Exception as e:
-                print(e)
-                sentry.captureException()
-                pass
+            # Post verification message to slack
+            post_verification_message(user=g.user)
 
-        db.session.commit()
         response_object = {
             'message': 'KYC Application created',
             'data': {'kyc_application': kyc_application_state_schema.dump(create_kyc_application).data}
         }
 
         return make_response(jsonify(response_object)), 201
-
-
-class TruliooAsyncAPI(MethodView):
-    def post(self):
-        post_data = request.get_json()
-
-        transaction_id = post_data.get('TransactionID')
-
-        if transaction_id:
-            kyc_application = KycApplication.query.filter_by(trulioo_id=transaction_id).first()
-
-            if kyc_application:
-                result = TruliooUtils.get_trulioo_transaction(transaction_id)
-                response = TruliooUtils.handle_trulioo_response(result, kyc_application)
-
-                db.session.commit()
-                return make_response(jsonify({'message': 'Trulioo data handled.', 'data': response})), 200
-
-            return make_response(jsonify({'message': 'No KYC object for transaction ID: {}'.format(transaction_id)})), 400
-
-        return make_response(jsonify({'message': 'No transaction ID provided'})), 400
 
 
 def allowed_file(filename):
@@ -407,8 +363,6 @@ class DocumentUploadAPI(MethodView):
 
         # tie document to kyc application
         uploaded_document.kyc_application_id = business_details.id
-
-        db.session.commit()
 
         response_object = {
             'message': 'Document uploaded',
@@ -501,8 +455,6 @@ class BankAccountAPI(MethodView):
             bank_account.account_number = account_number
             bank_account.currency = currency
 
-        db.session.commit()
-
         response_object = {
             'message': 'Bank account edited',
             'data': {'kyc_application': kyc_application_schema.dump(business_profile).data}
@@ -522,12 +474,6 @@ kyc_application_blueprint.add_url_rule(
     '/kyc_application/<int:kyc_application_id>/',
     view_func=KycApplicationAPI.as_view('single_kyc_application_view'),
     methods=['GET', 'PUT']
-)
-
-kyc_application_blueprint.add_url_rule(
-    '/trulioo_async/',
-    view_func=TruliooAsyncAPI.as_view('trulioo_async_view'),
-    methods=['POST']
 )
 
 kyc_application_blueprint.add_url_rule(

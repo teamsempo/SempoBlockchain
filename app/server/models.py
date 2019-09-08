@@ -320,12 +320,6 @@ class User(ManyOrgBase, ModelBase):
     custom_attributes = db.Column(JSON)
     matched_profile_pictures = db.Column(JSON)
 
-    ap_user_id     = db.Column(db.String())
-    ap_bank_id     = db.Column(db.String())
-    ap_paypal_id   = db.Column(db.String())
-    kyc_state      = db.Column(db.String())
-
-
     cashout_authorised = db.Column(db.Boolean, default=False)
 
     transfer_accounts = db.relationship(
@@ -1437,7 +1431,7 @@ class KycApplication(ModelBase):
     # Either "INCOMPLETE", "PENDING", "VERIFIED" or "REJECTED"
     kyc_status          = db.Column(db.String, default='INCOMPLETE')
 
-    # returns array. action items for mobile. currently ['support'] or ['retry']
+    # returns array. action items for mobile and internal use. ['non_valid','id_blurry','no_match_selfie']
     kyc_actions         = db.Column(JSON)
     kyc_attempts        = db.Column(db.Integer)
 
@@ -1447,6 +1441,7 @@ class KycApplication(ModelBase):
     first_name          = db.Column(db.String)
     last_name           = db.Column(db.String)
     phone               = db.Column(db.String)
+    dob                 = db.Column(db.String)
     business_legal_name = db.Column(db.String)
     business_type       = db.Column(db.String)
     tax_id              = db.Column(db.String)
