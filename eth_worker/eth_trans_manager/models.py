@@ -5,7 +5,11 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import select, func, case
-import datetime
+import datetime, base64, os
+from cryptography.fernet import Fernet
+from eth_utils import keccak
+from eth_keys import keys
+from web3 import Web3
 
 import config
 
@@ -24,10 +28,68 @@ class ModelBase(Base):
     created = Column(DateTime, default=datetime.datetime.utcnow)
     updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
+class BlockchainAddress(ModelBase):
+    __tablename__ = 'blockchain_address'
+
+    address = Column(String())
+    _encrypted_private_key = Column(String())
+
+    tasks = relationship('BlockchainTask',
+                         backref='signing_address',
+                         lazy=True,
+                         foreign_keys='BlockchainTask.signing_address_id')
+
+    transactions = relationship('BlockchainTransaction',
+                                backref='signing_address',
+                                lazy=True,
+                                foreign_keys='BlockchainTransaction.signing_address_id')
+
+    @hybrid_property
+    def encrypted_private_key(self):
+        return self._encrypted_private_key
+
+    @encrypted_private_key.setter
+    def encrypted_private_key(self, value):
+        self._encrypted_private_key = value
+        private_key = self._decrypt_private_key(value)
+        self._set_address_from_private_key(private_key)
+
+    @hybrid_property
+    def private_key(self):
+        return self._decrypt_private_key(self._encrypted_private_key)
+
+    @private_key.setter
+    def private_key(self, value):
+        self.encrypted_private_key = self._encrypt_private_key(value)
+        self._set_address_from_private_key(value)
+
+    def _encrypt_private_key(self, private_key):
+        return self._cipher_suite()\
+            .encrypt(private_key.encode('utf-8')).decode('utf-8')
+
+    def _decrypt_private_key(self, encrypted_private_key):
+        return self._cipher_suite() \
+            .decrypt(encrypted_private_key.encode('utf-8')).decode('utf-8')
+
+    def _cipher_suite(self):
+        fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
+        return Fernet(fernet_encryption_key)
+
+    def _set_address_from_private_key(self, private_key):
+        if isinstance(private_key, str):
+            private_key = bytearray.fromhex(private_key.replace('0x', ''))
+
+        self.address = keys.PrivateKey(private_key).public_key.to_checksum_address()
+
+    def __init__(self, encrypted_private_key=None):
+
+        if encrypted_private_key:
+            self.encrypted_private_key = encrypted_private_key
+        else:
+            self.private_key = Web3.toHex(keccak(os.urandom(4096)))
+
 class BlockchainTask(ModelBase):
     __tablename__ = 'blockchain_task'
-
-    signing_address = Column(String)
 
     contract = Column(String)
     function = Column(String)
@@ -37,6 +99,8 @@ class BlockchainTask(ModelBase):
     transactions = relationship('BlockchainTransaction',
                                 backref='blockchain_task',
                                 lazy=True)
+
+    signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
 
     @hybrid_property
     def status(self):
@@ -60,8 +124,6 @@ class BlockchainTask(ModelBase):
 class BlockchainTransaction(ModelBase):
     __tablename__ = 'blockchain_transaction'
 
-    signing_address = Column(String)
-
     _status = Column(String, default='PENDING')  # PENDING, SUCCESS, FAILED
     error = Column(String)
     message = Column(String)
@@ -72,6 +134,8 @@ class BlockchainTransaction(ModelBase):
     nonce = Column(Integer)
     nonce_consumed = Column(Boolean, default=False)
 
+    signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
+
     blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id))
 
     @hybrid_property
@@ -79,12 +143,12 @@ class BlockchainTransaction(ModelBase):
         return self._status
 
     @status.setter
-    def status(self, status):
+    def status(self, value):
 
-        if status not in STATUS_STRING_TO_INT:
-            raise ValueError('Status {} not allowed. (Must be {}'.format(status, STATUS_STRING_TO_INT))
+        if value not in STATUS_STRING_TO_INT:
+            raise ValueError('Status {} not allowed. (Must be {}'.format(value, STATUS_STRING_TO_INT))
 
-        self._status = status
+        self._status = value
 
     @hybrid_property
     def status_code(self):

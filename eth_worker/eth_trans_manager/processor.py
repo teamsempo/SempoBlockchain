@@ -13,9 +13,7 @@ from web3 import (
 )
 
 from eth_keys import keys
-from eth_utils import keccak, to_checksum_address
-
-from cryptography.fernet import Fernet
+from eth_utils import to_checksum_address
 
 from celery import chain, Celery, signature
 
@@ -24,7 +22,7 @@ from requests.auth import HTTPBasicAuth
 
 import config
 from eth_trans_manager.exceptions import WrongContractNameError, PreBlockchainError
-from eth_trans_manager.models import BlockchainTransaction, BlockchainTask, session
+from eth_trans_manager.models import BlockchainTransaction, BlockchainTask, BlockchainAddress, session
 
 class SQLAlchemyDataStore(object):
 
@@ -40,7 +38,7 @@ class SQLAlchemyDataStore(object):
                   BlockchainTransaction.error: 'Timeout Error'},
                  synchronize_session=False))
 
-    def _calculate_nonce(self, singing_address, transaction_id, starting_nonce=0):
+    def _calculate_nonce(self, singing_address_obj, transaction_id, starting_nonce=0):
 
         self._fail_expired_transactions()
 
@@ -49,7 +47,7 @@ class SQLAlchemyDataStore(object):
 
         likely_consumed_nonces = (
             session.query(BlockchainTransaction)
-                .filter(BlockchainTransaction.signing_address == singing_address)
+                .filter(BlockchainTransaction.signing_address == singing_address_obj)
                 .filter(
                     and_(
                         or_(BlockchainTransaction.nonce_consumed == True,
@@ -77,7 +75,7 @@ class SQLAlchemyDataStore(object):
         if highest_valid_id is None:
             highest_valid_txn = (
                 session.query(BlockchainTransaction)
-                    .filter(BlockchainTransaction.signing_address == singing_address)
+                    .filter(BlockchainTransaction.signing_address == singing_address_obj)
                     .filter(
                         and_(
                             or_(BlockchainTransaction.nonce_consumed == True,
@@ -87,17 +85,16 @@ class SQLAlchemyDataStore(object):
                     )
                     .order_by(BlockchainTransaction.id.desc())
                     .first())
-            highest_valid_id = highest_valid_txn.id
+            highest_valid_id = getattr(highest_valid_txn,'id',0)
 
         # Now find all transactions that are from the same address
         # and have a txn ID bound by the top consumed nonce and the current txn.
         # These txns are in a similar state to the current will be allocated nonces very shortly
         # Because they have lower IDs, they get precendent over the nonces
 
-
         live_txns_from_same_address = (
             session.query(BlockchainTransaction)
-                .filter(BlockchainTransaction.signing_address == singing_address)
+                .filter(BlockchainTransaction.signing_address == singing_address_obj)
                 .filter(BlockchainTransaction.status == 'PENDING')
                 .filter(and_(BlockchainTransaction.id > highest_valid_id,
                              BlockchainTransaction.id < transaction_id))
@@ -105,15 +102,15 @@ class SQLAlchemyDataStore(object):
 
         return next_nonce + len(live_txns_from_same_address)
 
-    def claim_transaction_nonce(self, signing_address, transaction_id):
+    def claim_transaction_nonce(self, signing_address_obj, transaction_id):
 
-        network_nonce = self.w3.eth.getTransactionCount(signing_address, block_identifier='pending')
+        network_nonce = self.w3.eth.getTransactionCount(signing_address_obj.address, block_identifier='pending')
 
         blockchain_transaction = session.query(BlockchainTransaction).get(transaction_id)
 
-        calculated_nonce = self._calculate_nonce(signing_address, transaction_id, network_nonce)
+        calculated_nonce = self._calculate_nonce(signing_address_obj, transaction_id, network_nonce)
 
-        blockchain_transaction.signing_address = signing_address
+        blockchain_transaction.signing_address = signing_address_obj
         blockchain_transaction.nonce = calculated_nonce
         blockchain_transaction.status = 'PENDING'
 
@@ -128,7 +125,7 @@ class SQLAlchemyDataStore(object):
 
             nonce_clash_txns = (session.query(BlockchainTransaction)
                               .filter(BlockchainTransaction.id != transaction_id)
-                              .filter(BlockchainTransaction.signing_address == signing_address)
+                              .filter(BlockchainTransaction.signing_address == signing_address_obj)
                               .filter(BlockchainTransaction.status == 'PENDING')
                               .filter(BlockchainTransaction.nonce == blockchain_transaction.nonce)
                               .all())
@@ -172,9 +169,11 @@ class SQLAlchemyDataStore(object):
 
         session.commit()
 
-    def create_blockchain_transaction(self, signing_address, task=None):
+    def create_blockchain_transaction(self, task_id):
 
-        blockchain_transaction = BlockchainTransaction(signing_address=signing_address)
+        task = session.query(BlockchainTask).get(task_id)
+
+        blockchain_transaction = BlockchainTransaction(signing_address=task.signing_address)
 
         session.add(blockchain_transaction)
 
@@ -190,8 +189,15 @@ class SQLAlchemyDataStore(object):
 
         return transaction.hash
 
-    def create_transaction_task(self, signing_address, contract, function, args=None, kwargs=None):
-        task = BlockchainTask(signing_address=signing_address,
+    def create_transaction_task(self, encrypted_private_key, contract, function, args=None, kwargs=None):
+
+        address_obj = session.query(BlockchainAddress).filter(
+            BlockchainAddress.encrypted_private_key == encrypted_private_key).first()
+
+        if not address_obj:
+            address_obj = BlockchainAddress(encrypted_private_key=encrypted_private_key)
+
+        task = BlockchainTask(signing_address=address_obj,
                               contract=contract,
                               function=function,
                               args=args,
@@ -202,6 +208,12 @@ class SQLAlchemyDataStore(object):
         session.commit()
 
         return task
+
+    def get_transaction_signing_address(self, transaction_id):
+
+        transaction = session.query(BlockchainTransaction).get(transaction_id)
+
+        return transaction.signing_address
 
     def __init__(self, w3, PENDING_TRANSACTION_EXPIRY_SECONDS=300):
 
@@ -250,12 +262,6 @@ class ContractRegistry(object):
 
 class TransactionProcessor(object):
 
-    def decrypt_private_key(self, encrypted_private_key):
-        fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
-        cipher_suite = Fernet(fernet_encryption_key)
-
-        return cipher_suite.decrypt(encrypted_private_key.encode('utf-8')).decode('utf-8')
-
     def private_key_to_address(self, private_key):
 
         if isinstance(private_key, str):
@@ -281,7 +287,7 @@ class TransactionProcessor(object):
 
         return gas_price
 
-    def process_function_transaction(self, transaction_id, encrypted_private_key,
+    def process_function_transaction(self, transaction_id,
                                      contract_name, function_name, args=None, kwargs=None):
 
         args = args or tuple()
@@ -294,21 +300,19 @@ class TransactionProcessor(object):
 
         bound_function = function(*args, **kwargs)
 
-        return self.process_transaction(transaction_id, encrypted_private_key, bound_function)
+        return self.process_transaction(transaction_id, bound_function)
 
     def process_transaction(self,
                             transaction_id,
-                            encrypted_private_key,
                             function=None,
                             partial_txn_dict=None,
                             gas_limit_override=None,
                             gas_price_override=None):
 
-        signing_private_key = self.decrypt_private_key(encrypted_private_key)
+        singing_address_obj = self.persistence_model.get_transaction_signing_address(transaction_id)
 
-        signing_address = self.private_key_to_address(signing_private_key)
-
-        nonce, transaction_id = self.persistence_model.claim_transaction_nonce(signing_address, transaction_id)
+        nonce, transaction_id = self.persistence_model\
+            .claim_transaction_nonce(singing_address_obj, transaction_id)
 
 
         txn = {
@@ -323,7 +327,7 @@ class TransactionProcessor(object):
         else:
             txn = {**txn, **partial_txn_dict}
 
-        signed_txn = self.w3.eth.account.signTransaction(txn, private_key=signing_private_key)
+        signed_txn = self.w3.eth.account.signTransaction(txn, private_key=singing_address_obj.private_key)
 
 
         try:
@@ -369,7 +373,7 @@ class TransactionProcessor(object):
         if tx_receipt is None:
             return print_and_return({'status': 'PENDING'})
 
-        added_date = str(datetime.datetime.utcnow())
+        mined_date = str(datetime.datetime.utcnow())
 
         if tx_receipt.blockNumber is None:
             return print_and_return({'status': 'PENDING', 'message': 'Next Block'})
@@ -378,38 +382,25 @@ class TransactionProcessor(object):
 
             return print_and_return({'status': 'SUCCESS',
                                       'block': tx_receipt.blockNumber,
-                                      'added_date': added_date})
+                                      'mined_date': mined_date})
 
         else:
            return print_and_return({'status': 'FAILED',
                                     'error': 'Blockchain Error',
                                     'block': tx_receipt.blockNumber,
-                                    'added_date': added_date})
+                                    'mined_date': mined_date})
 
-    def process_task(self, encrypted_private_key, contract_name, function_name, args=None, kwargs=None):
+    def attempt_transaction(self, task_id, contract_name, function_name, args=None, kwargs=None):
 
-        private_key = self.decrypt_private_key(encrypted_private_key)
-        address = self.private_key_to_address(private_key)
-
-        task = self.persistence_model.create_transaction_task(address, contract_name, function_name, args, kwargs)
-
-        # Create this so we can bind immediately to a task
-        transaction_obj = self.persistence_model.create_blockchain_transaction(address, task)
-        transaction_id = transaction_obj.id
-
-        self.attempt_transaction(transaction_id, encrypted_private_key, contract_name, function_name, args, kwargs)
-
-
-    def attempt_transaction(self, transaction_id, encrypted_private_key,
-                            contract_name, function_name, args=None, kwargs=None):
+        transaction_obj = self.persistence_model.create_blockchain_transaction(task_id)
 
 
         chain1 = signature('eth_trans_manager.celery_tasks._process_function_transaction',
-                          args=(transaction_id, encrypted_private_key, contract_name, function_name, args, kwargs))
+                          args=(transaction_obj.id, contract_name, function_name, args, kwargs))
 
         chain2 = signature('eth_trans_manager.celery_tasks._create_transaction_response')
 
-        error_callback = signature('eth_trans_manager.celery_tasks._log_error', args=(transaction_id,))
+        error_callback = signature('eth_trans_manager.celery_tasks._log_error', args=(transaction_obj.id,))
 
         return chain([chain1, chain2]).on_error(error_callback).delay()
 
@@ -421,6 +412,30 @@ class TransactionProcessor(object):
         }
 
         self.persistence_model.update_transaction_data(transaction_id, data)
+
+    def transact_with_contract_function(self, encrypted_private_key, contract_name, function_name, args=None,
+                                        kwargs=None):
+        """
+        The main entrypoint for the transaction processor. This task completes quiet quickly,
+        so can be called synchronously in order to retrieve a task ID
+
+        :param encrypted_private_key: private key of the account making the transaction, encrypted using key from settings
+        :param contract_name: name of the contract for the function
+        :param function_name: name of the function being called
+        :param args: arguments for the function being called
+        :param kwargs: keyword arguments for the function being called
+        :return: task_id
+        """
+
+        task = self.persistence_model.create_transaction_task(encrypted_private_key,
+                                                              contract_name, function_name, args, kwargs)
+
+        # Create Async Task
+        signature('eth_trans_manager.celery_tasks._attempt_transaction',
+                  args=(task.id, contract_name, function_name, args, kwargs)).delay()
+
+        # Immediately return task ID
+        return task.id
 
     def __init__(self,
                  ethereum_chain_id,

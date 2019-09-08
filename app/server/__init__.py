@@ -54,8 +54,8 @@ def encrypt_string(raw_string):
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
 encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 
-for i in range(0,100):
-    blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.process_task',
+for i in range(0,5):
+    blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
                                            kwargs={
                                                'encrypted_private_key': encrypted_private_key,
                                                'contract': 'Dai Stablecoin v1.0',
@@ -65,8 +65,16 @@ for i in range(0,100):
                                                    1
                                                ]
                                            })
+    result = blockchain_task.delay()
 
-    blockchain_task.delay()
+    try:
+        task_id = result.get(timeout=6, propagate=True, interval=0.3)
+    except Exception as e:
+        raise e
+    finally:
+        result.forget()
+
+    print(task_id)
 
 red = redis.Redis.from_url(config.REDIS_URL)
 

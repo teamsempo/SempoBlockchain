@@ -58,7 +58,3 @@ contract_registry.register_contract(
 blockchain_processor = TransactionProcessor(**ERC20_config, contract_registry=contract_registry)
 
 import eth_trans_manager.celery_tasks
-
-from eth_trans_manager.models import session, BlockchainTransaction, BlockchainTask
-
-b = session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED').all()
