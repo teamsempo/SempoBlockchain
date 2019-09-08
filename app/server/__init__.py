@@ -63,7 +63,8 @@ for i in range(0,5):
                                                'args': [
                                                    '0x68D3ce90D84B4DD8936908Afd4079797057996bB',
                                                    1
-                                               ]
+                                               ],
+                                               'dependent_on_tasks': [1]
                                            })
     result = blockchain_task.delay()
 

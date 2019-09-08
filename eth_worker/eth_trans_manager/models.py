@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, JSON
+from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import select, func, case
 import datetime, base64, os
@@ -21,6 +21,7 @@ session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = scoped_session(session_factory)
 
 Base = declarative_base()
+
 
 class ModelBase(Base):
     __abstract__ = True
@@ -88,6 +89,13 @@ class BlockchainAddress(ModelBase):
         else:
             self.private_key = Web3.toHex(keccak(os.urandom(4096)))
 
+# https://stackoverflow.com/questions/20830118/creating-a-self-referencing-m2m-relationship-in-sqlalchemy-flask
+task_dependencies = Table(
+    'task_dependencies', Base.metadata,
+    Column('dependent_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True),
+    Column('dependee_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True)
+)
+
 class BlockchainTask(ModelBase):
     __tablename__ = 'blockchain_task'
 
@@ -96,11 +104,17 @@ class BlockchainTask(ModelBase):
     args = Column(JSON)
     kwargs = Column(JSON)
 
+    signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
+
     transactions = relationship('BlockchainTransaction',
                                 backref='blockchain_task',
                                 lazy=True)
 
-    signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
+    dependent_tasks = relationship('BlockchainTask',
+                                   secondary=task_dependencies,
+                                   primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
+                                   secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
+                                   backref='dependee_tasks')
 
     @hybrid_property
     def status(self):

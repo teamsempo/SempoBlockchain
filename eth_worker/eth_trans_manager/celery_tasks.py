@@ -12,8 +12,8 @@ class SqlAlchemyTask(celery.Task):
         session.remove()
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
-def transact_with_contract_function(self, encrypted_private_key, contract, function, args=None, kwargs=None):
-    return blockchain_processor.transact_with_contract_function(encrypted_private_key, contract, function, args, kwargs)
+def transact_with_contract_function(self, encrypted_private_key, contract, function, args=None, kwargs=None, dependent_on_tasks=None):
+    return blockchain_processor.transact_with_contract_function(encrypted_private_key, contract, function, args, kwargs, dependent_on_tasks)
 
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)

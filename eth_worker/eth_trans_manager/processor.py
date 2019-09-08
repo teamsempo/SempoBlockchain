@@ -1,15 +1,10 @@
+from typing import List, Optional, NewType
+
 import json, base64, ssl, datetime, random, time
 
 from sqlalchemy import (
     or_,
     and_
-)
-
-from web3 import (
-    Web3,
-    HTTPProvider,
-    WebsocketProvider,
-    eth
 )
 
 from eth_keys import keys
@@ -18,11 +13,14 @@ from eth_utils import to_checksum_address
 from celery import chain, Celery, signature
 
 import requests
-from requests.auth import HTTPBasicAuth
 
 import config
 from eth_trans_manager.exceptions import WrongContractNameError, PreBlockchainError
 from eth_trans_manager.models import BlockchainTransaction, BlockchainTask, BlockchainAddress, session
+
+
+Id = NewType("Id", int)
+IdList = List[Id]
 
 class SQLAlchemyDataStore(object):
 
@@ -189,7 +187,16 @@ class SQLAlchemyDataStore(object):
 
         return transaction.hash
 
-    def create_transaction_task(self, encrypted_private_key, contract, function, args=None, kwargs=None):
+    def get_transaction_signing_address(self, transaction_id):
+
+        transaction = session.query(BlockchainTransaction).get(transaction_id)
+
+        return transaction.signing_address
+
+
+    def create_transaction_task(self, encrypted_private_key, contract,
+                                function, args=None, kwargs=None,
+                                dependent_on_tasks=None):
 
         address_obj = session.query(BlockchainAddress).filter(
             BlockchainAddress.encrypted_private_key == encrypted_private_key).first()
@@ -205,15 +212,14 @@ class SQLAlchemyDataStore(object):
 
         session.add(task)
 
+        for task_id in dependent_on_tasks:
+            dependee_task = session.query(BlockchainTask).get(task_id)
+
+            task.dependent_tasks.append(dependee_task)
+
         session.commit()
 
         return task
-
-    def get_transaction_signing_address(self, transaction_id):
-
-        transaction = session.query(BlockchainTransaction).get(transaction_id)
-
-        return transaction.signing_address
 
     def __init__(self, w3, PENDING_TRANSACTION_EXPIRY_SECONDS=300):
 
@@ -413,8 +419,9 @@ class TransactionProcessor(object):
 
         self.persistence_model.update_transaction_data(transaction_id, data)
 
-    def transact_with_contract_function(self, encrypted_private_key, contract_name, function_name, args=None,
-                                        kwargs=None):
+    def transact_with_contract_function(self, encrypted_private_key: str, contract_name: str,
+                                        function_name: str, args: tuple = None, kwargs: dict = None,
+                                        dependent_on_tasks: Optional[IdList] = None) -> int:
         """
         The main entrypoint for the transaction processor. This task completes quiet quickly,
         so can be called synchronously in order to retrieve a task ID
@@ -424,11 +431,13 @@ class TransactionProcessor(object):
         :param function_name: name of the function being called
         :param args: arguments for the function being called
         :param kwargs: keyword arguments for the function being called
+        :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
         :return: task_id
         """
 
         task = self.persistence_model.create_transaction_task(encrypted_private_key,
-                                                              contract_name, function_name, args, kwargs)
+                                                              contract_name, function_name, args, kwargs,
+                                                              dependent_on_tasks)
 
         # Create Async Task
         signature('eth_trans_manager.celery_tasks._attempt_transaction',
@@ -455,4 +464,3 @@ class TransactionProcessor(object):
             self.transaction_max_value = self.gas_price * self.gas_limit
 
             self.persistence_model = persistence_model(self.w3)
-
