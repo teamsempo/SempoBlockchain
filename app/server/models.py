@@ -1421,8 +1421,9 @@ class SavedFilter(ModelBase):
 class KycApplication(ModelBase):
     __tablename__       = 'kyc_application'
 
-    # Trulioo
+    # compliance
     trulioo_id          = db.Column(db.String)
+    namescan_scan_id    = db.Column(db.String)
 
     # Wyre SRN
     wyre_id             = db.Column(db.String)

@@ -1,7 +1,7 @@
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import db, models
-import config, hmac, hashlib
+import config, hmac, hashlib, json
 
 from server.constants import ACCESS_ROLES
 
@@ -309,15 +309,17 @@ def verify_slack_requests(f=None):
     def wrapper(*args, **kwargs):
         timestamp = request.headers['X-Slack-Request-Timestamp']
 
-        req = str.encode('v0:' + str(timestamp) + ':') + request.get_data()
-        my_signature = 'v0=' + hmac.new(
+        req = 'v0:' + str(timestamp) + ':' + request.form['payload']
+        request_hash = 'v0=' + hmac.new(
             config.SLACK_SECRET,
-            req, hashlib.sha256
+            str(req).encode('utf-8'), hashlib.sha256
         ).hexdigest()
 
         slack_signature = request.headers['X-Slack-Signature']
-        if hmac.compare_digest(my_signature, slack_signature):
+        if hmac.compare_digest(request_hash, slack_signature):
             # hooray, the request came from Slack!
             return f(*args, **kwargs)
 
-        return wrapper
+        return make_response(jsonify({'message': 'Invalid auth'})), 401
+
+    return wrapper

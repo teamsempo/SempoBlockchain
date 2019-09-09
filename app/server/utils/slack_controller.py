@@ -2,6 +2,7 @@ from flask import make_response
 from server import db
 from server.models import KycApplication, User
 from server.utils.phone import send_generic_message
+from server.utils.namescan import run_namescam_aml_check
 
 import config, slack
 
@@ -21,6 +22,18 @@ def generate_deny_button(user_id):
             },
         "style": "danger",
         "value": "deny-{}".format(user_id)
+        }
+
+
+def generate_approve_button(user_id):
+    return {
+        "type": "button",
+        "text": {
+            "type": "plain_text",
+            "text": "Approve"
+            },
+        "style": "primary",
+        "value": "approve-{}".format(user_id)
         }
 
 
@@ -148,6 +161,25 @@ def get_user_from_id(user_id, payload):
     return user
 
 
+def approve_user(message_blocks, username, message_ts, phone):
+    new_message_blocks = message_blocks[:len(message_blocks) - 1]
+    new_message_blocks.append(dict(type='context', elements=[
+        {"type": 'mrkdwn',
+         "text": ':white_check_mark: *@{}* Completed a verification!'.format(username)}]))
+
+    client.chat_update(
+        channel=CHANNEL_ID,
+        ts=message_ts,
+        blocks=new_message_blocks
+    )
+
+    if phone:
+        send_generic_message(to_phone=phone,
+                             message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
+
+    return make_response("", 200)
+
+
 def slack_controller(payload):
     # Parse the request payload
 
@@ -236,21 +268,7 @@ def slack_controller(payload):
 
             # Update the message to show we've verified a user
             message_blocks = payload['message']['blocks']
-            new_message_blocks = message_blocks[:len(message_blocks) - 1]
-            new_message_blocks.append(dict(type='context', elements=[
-                {"type": 'mrkdwn', "text": ':white_check_mark: *@{}* Completed a verification!'.format(payload['user']['username'])}]))
-
-            client.chat_update(
-                channel=CHANNEL_ID,
-                ts=payload["message"]["ts"],
-                blocks=new_message_blocks
-            )
-
-            if user.phone:
-                send_generic_message(to_phone=user.phone,
-                                     message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
-
-            return make_response("", 200)
+            return approve_user(message_blocks, username=payload['user']['username'], message_ts=payload["message"]["ts"], phone=user.phone)
 
         elif "deny" in payload['actions'][0]['value']:
             user_id = payload['actions'][0]['value'].split('-')[1]
@@ -301,7 +319,39 @@ def slack_controller(payload):
             new_message_blocks.append(dict(type='context', elements=[
                 {"type": 'mrkdwn', "text": ':female-detective: Running AML checks...'}]))
 
-            # todo: run async AML check, webhook back to slack
+            client.chat_update(
+                channel=CHANNEL_ID,
+                ts=payload["state"],
+                blocks=new_message_blocks
+            )
+
+            result = run_namescam_aml_check(
+                first_name=kyc.first_name,
+                last_name=kyc.last_name,
+                dob=kyc.dob,
+                country=kyc.country
+            )
+
+            match_rate = [x['match_rate'] for x in result['persons']]
+            if result['number_of_matches'] == 0 or (sum(match_rate)/len(match_rate)) < 50:
+                # Instant Approval
+                kyc.kyc_status = 'VERIFIED'
+                return approve_user(new_message_blocks, username=payload['user']['username'], message_ts=payload["state"], phone=user.phone)
+
+            else:
+                # Manual Review Required
+                # todo: generate message or PDF from json
+                new_message_blocks.append(dict(type='context', elements=[{"type": 'mrkdwn', "text": ':pencil: *@{}* started verifying...'.format(payload['user']['username'])}]))
+                action_blocks = generate_actions(generate_approve_button(user_id), generate_deny_button(user_id))
+                new_message_blocks.append(action_blocks)
+
+                client.chat_update(
+                    channel=CHANNEL_ID,
+                    ts=payload["state"],
+                    blocks=new_message_blocks
+                )
+
+                return make_response("", 200)
 
         else:
             # Update the message to indicate failed ID check.
@@ -318,13 +368,11 @@ def slack_controller(payload):
 
             db.session.flush()
 
-        client.chat_update(
-            channel=CHANNEL_ID,
-            ts=payload["state"],
-            blocks=new_message_blocks
-        )
-
-        return make_response("", 200)
+            client.chat_update(
+                channel=CHANNEL_ID,
+                ts=payload["state"],
+                blocks=new_message_blocks
+            )
 
     return make_response("", 200)
 
