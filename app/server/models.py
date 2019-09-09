@@ -1267,19 +1267,6 @@ class BlockchainTransaction(ModelBase):
     signing_blockchain_address_id = db.Column(db.Integer, db.ForeignKey('blockchain_address.id'))
 
 
-class UploadedImage(ModelBase):
-    __tablename__ = 'uploaded_image'
-
-    filename = db.Column(db.String)
-    image_type = db.Column(db.String)
-    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
-
-    @hybrid_property
-    def image_url(self):
-        return get_file_url(self.filename)
-
-
 class Feedback(ModelBase):
     __tablename__ = 'feedback'
 
@@ -1491,6 +1478,19 @@ class BankAccount(ModelBase):
     routing_number      = db.Column(db.String)
     account_number      = db.Column(db.String)
     currency            = db.Column(db.String)
+
+
+class UploadedImage(ModelBase):
+    __tablename__ = 'uploaded_image'
+
+    filename = db.Column(db.String)
+    image_type = db.Column(db.String)
+    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+
+    @hybrid_property
+    def image_url(self):
+        return get_file_url(self.filename)
 
 
 class UploadedDocument(ModelBase):

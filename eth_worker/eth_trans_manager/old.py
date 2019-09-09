@@ -28,7 +28,7 @@ class UnmintableERC20Processor(BaseERC20Processor):
         if not is_retry or 'disbursement' in uncompleted_tasks:
             chain_list.extend([
                 celery_tasks.disburse_funds.si(transfer_amount, recipient_address, credit_transfer_id),
-                celery_tasks.create_transaction_response.s(credit_transfer_id)
+                celery_tasks.check_transaction_response.s(credit_transfer_id)
             ])
 
 
@@ -39,7 +39,7 @@ class UnmintableERC20Processor(BaseERC20Processor):
 
                 chain_list.extend([
                     celery_tasks.load_ether.si(recipient_address, forced_amount_wei, 1),
-                    celery_tasks.create_transaction_response.s(credit_transfer_id)
+                    celery_tasks.check_transaction_response.s(credit_transfer_id)
                 ])
 
         chain(chain_list).on_error(celery_tasks.log_error.s(credit_transfer_id)).delay()
@@ -72,7 +72,7 @@ class UnmintableERC20Processor(BaseERC20Processor):
         if not is_retry or 'transfer' in uncompleted_tasks:
             chain_list.extend([
                 celery_tasks.transfer_credit.si(transfer_amount, sender_address, recipient_address, credit_transfer_id),
-                celery_tasks.create_transaction_response.s(credit_transfer_id),
+                celery_tasks.check_transaction_response.s(credit_transfer_id),
             ])
 
         chain(chain_list).on_error(celery_tasks.log_error.s(credit_transfer_id)).delay()
@@ -106,7 +106,7 @@ class UnmintableERC20Processor(BaseERC20Processor):
 
             chain_list.extend([
                 celery_tasks.make_withdrawal.si(transfer_amount, sender_address, recipient_address, credit_transfer_id),
-                celery_tasks.create_transaction_response.s(credit_transfer_id),
+                celery_tasks.check_transaction_response.s(credit_transfer_id),
             ])
 
         chain(chain_list).on_error(celery_tasks.log_error.s(credit_transfer_id)).delay()
@@ -121,9 +121,9 @@ class UnmintableERC20Processor(BaseERC20Processor):
 
         return [
             celery_tasks.load_ether.si(address, gas_required, gas_price),
-            celery_tasks.create_transaction_response.s(credit_transfer_id),
+            celery_tasks.check_transaction_response.s(credit_transfer_id),
             celery_tasks.approve_master_for_transfers.si(account_to_approve_encoded_pk, gas_required, gas_price),
-            celery_tasks.create_transaction_response.s(credit_transfer_id)
+            celery_tasks.check_transaction_response.s(credit_transfer_id)
         ]
 
     def determine_if_master_wallet_approval_required(self, master_wallet_approval_status, uncompleted_tasks, is_retry):

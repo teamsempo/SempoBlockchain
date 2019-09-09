@@ -18,7 +18,6 @@ import config
 from eth_trans_manager.exceptions import WrongContractNameError, PreBlockchainError
 from eth_trans_manager.models import BlockchainTransaction, BlockchainTask, BlockchainAddress, session
 
-
 Id = NewType("Id", int)
 IdList = List[Id]
 
@@ -157,7 +156,6 @@ class SQLAlchemyDataStore(object):
 
         return calculated_nonce, blockchain_transaction.id
 
-
     def update_transaction_data(self, transaction_id, transaction_data):
 
         transaction = session.query(BlockchainTransaction).get(transaction_id)
@@ -176,7 +174,7 @@ class SQLAlchemyDataStore(object):
         session.add(blockchain_transaction)
 
         if task:
-            blockchain_transaction.blockchain_task = task
+            blockchain_transaction.task = task
 
         session.commit()
 
@@ -193,10 +191,32 @@ class SQLAlchemyDataStore(object):
 
         return transaction.signing_address
 
+    def get_unstarted_dependents(self, transaction_id):
+        transaction = session.query(BlockchainTransaction).get(transaction_id)
+
+        unstarted_dependents = []
+        for dependent_task in transaction.task.dependents:
+            if dependent_task.status == 'UNSTARTED':
+                unstarted_dependents.append(dependent_task)
+
+        return unstarted_dependents
+
+    def unstatisfied_task_dependencies(self, task_id):
+        task = session.query(BlockchainTask).get(task_id)
+
+        unsatisfied = []
+        for dependee in task.dependees:
+            if dependee.status != 'SUCCESS':
+                unsatisfied.append(dependee)
+
+        return unsatisfied
 
     def create_transaction_task(self, encrypted_private_key, contract,
                                 function, args=None, kwargs=None,
                                 dependent_on_tasks=None):
+
+        if dependent_on_tasks is None:
+            dependent_on_tasks = []
 
         address_obj = session.query(BlockchainAddress).filter(
             BlockchainAddress.encrypted_private_key == encrypted_private_key).first()
@@ -214,8 +234,7 @@ class SQLAlchemyDataStore(object):
 
         for task_id in dependent_on_tasks:
             dependee_task = session.query(BlockchainTask).get(task_id)
-
-            task.dependent_tasks.append(dependee_task)
+            task.dependees.append(dependee_task)
 
         session.commit()
 
@@ -358,13 +377,25 @@ class TransactionProcessor(object):
 
         return transaction_id
 
-    def create_transaction_response(self, transaction_id):
+    def check_transaction_response(self, transaction_id):
 
         transaction_hash = self.persistence_model.get_transaction_hash_from_id(transaction_id)
 
         result = self.check_transaction_hash(transaction_hash)
 
         self.persistence_model.update_transaction_data(transaction_id, result)
+
+        if result.get('status') == 'SUCCESS':
+            unstarted_dependents = self.persistence_model.get_unstarted_dependents(transaction_id)
+
+            for task in unstarted_dependents:
+                print('Starting dependent task: {}'.format(task.id))
+                signature('eth_trans_manager.celery_tasks._attempt_transaction',
+                          args=(task.id, task.contract, task.function, task.args, task.kwargs)).delay()
+
+            return True
+
+        return False
 
     def check_transaction_hash(self, tx_hash):
 
@@ -398,13 +429,17 @@ class TransactionProcessor(object):
 
     def attempt_transaction(self, task_id, contract_name, function_name, args=None, kwargs=None):
 
-        transaction_obj = self.persistence_model.create_blockchain_transaction(task_id)
+        unsatisfied_dependee_tasks = self.persistence_model.unstatisfied_task_dependencies(task_id)
+        if len(unsatisfied_dependee_tasks) > 0:
+            print('Skipping: dependee tasks {} unsatisfied'.format([task.id for task in unsatisfied_dependee_tasks]))
+            return
 
+        transaction_obj = self.persistence_model.create_blockchain_transaction(task_id)
 
         chain1 = signature('eth_trans_manager.celery_tasks._process_function_transaction',
                           args=(transaction_obj.id, contract_name, function_name, args, kwargs))
 
-        chain2 = signature('eth_trans_manager.celery_tasks._create_transaction_response')
+        chain2 = signature('eth_trans_manager.celery_tasks._check_transaction_response')
 
         error_callback = signature('eth_trans_manager.celery_tasks._log_error', args=(transaction_obj.id,))
 
@@ -419,8 +454,9 @@ class TransactionProcessor(object):
 
         self.persistence_model.update_transaction_data(transaction_id, data)
 
-    def transact_with_contract_function(self, encrypted_private_key: str, contract_name: str,
-                                        function_name: str, args: tuple = None, kwargs: dict = None,
+    def transact_with_contract_function(self, encrypted_private_key: str,
+                                        contract_name: str, function_name: str,
+                                        args: Optional[tuple] = None, kwargs: Optional[dict] = None,
                                         dependent_on_tasks: Optional[IdList] = None) -> int:
         """
         The main entrypoint for the transaction processor. This task completes quiet quickly,

@@ -25,7 +25,7 @@ def _process_function_transaction(self, transaction_id, contract, function, args
     return blockchain_processor.process_function_transaction(transaction_id, contract, function, args, kwargs)
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
-def _create_transaction_response(self, transaction_id):
+def _check_transaction_response(self, transaction_id):
     ETH_CHECK_TRANSACTION_BASE_TIME = 2
     ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
 
@@ -45,7 +45,12 @@ def _create_transaction_response(self, transaction_id):
         return t(self.request.retries)
 
     try:
-        blockchain_processor.create_transaction_response(transaction_id)
+        success = blockchain_processor.check_transaction_response(transaction_id)
+
+        if not success:
+            # We only get here from a next block condition, so reset the retry counter
+            self.request.retries = 0
+            self.retry(countdown=transaction_response_countdown())
 
     except Exception as e:
         print(e)

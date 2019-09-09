@@ -13,7 +13,7 @@ from web3 import Web3
 
 import config
 
-STATUS_STRING_TO_INT = {'SUCCESS': 1, 'PENDING': 2, 'FAILED': 3, 'UNKNOWN': 99}
+STATUS_STRING_TO_INT = {'SUCCESS': 1, 'PENDING': 2, 'UNSTARTED': 3, 'FAILED': 4, 'UNKNOWN': 99}
 STATUS_INT_TO_STRING = {v: k for k, v in STATUS_STRING_TO_INT.items()}
 
 engine = create_engine(config.ETH_DATABASE_URI, pool_size=40, max_overflow=100)
@@ -107,19 +107,19 @@ class BlockchainTask(ModelBase):
     signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
 
     transactions = relationship('BlockchainTransaction',
-                                backref='blockchain_task',
+                                backref='task',
                                 lazy=True)
 
-    dependent_tasks = relationship('BlockchainTask',
-                                   secondary=task_dependencies,
-                                   primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
-                                   secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
-                                   backref='dependee_tasks')
+    dependees = relationship('BlockchainTask',
+                             secondary=task_dependencies,
+                             primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
+                             secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
+                             backref='dependents')
 
     @hybrid_property
     def status(self):
-        lowest_status_code = min(set(t.status_code for t in self.transactions))
-        return STATUS_INT_TO_STRING.get(lowest_status_code, 'UNKNOWN')
+        lowest_status_code = min(set(t.status_code for t in self.transactions) or [3])
+        return STATUS_INT_TO_STRING.get(lowest_status_code, 'UNSTARTED')
 
     @status.expression
     def status(cls):
@@ -131,7 +131,7 @@ class BlockchainTask(ModelBase):
                         .where(BlockchainTransaction.blockchain_task_id == cls.id)
                         .label('lowest_status')
                 ),
-                else_='UNKNOWN'
+                else_='UNSTARTED'
             )
         )
 
