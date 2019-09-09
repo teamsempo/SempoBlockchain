@@ -123,18 +123,26 @@ DATABASE_USER = specific_parser['DATABASE'].get('user') \
 DATABASE_NAME = specific_parser['DATABASE'].get('database') \
                 or common_parser['DATABASE']['database']
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
-                                                               specific_parser['DATABASE']['password'],
-                                                               specific_parser['DATABASE']['host'],
-                                                               common_parser['DATABASE']['port'],
-                                                               DATABASE_NAME)
+ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
+                    or common_parser['DATABASE']['eth_database']
 
-CENSORED_URI            = 'postgresql://{}:*******@{}:{}/{}'.format(DATABASE_USER,
-                                                                    specific_parser['DATABASE']['host'],
-                                                                    common_parser['DATABASE']['port'],
-                                                                    DATABASE_NAME)
+def get_database_uri(name, censored=True):
+    return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
+                                                '*******' if censored else specific_parser['DATABASE']['password'],
+                                                specific_parser['DATABASE']['host'],
+                                                common_parser['DATABASE']['port'],
+                                                name)
 
-print('Loading database URI: ' + CENSORED_URI)
+
+SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, censored=False)
+CENSORED_URI            = get_database_uri(DATABASE_NAME, censored=True)
+
+ETH_DATABASE_URI     = get_database_uri(ETH_DATABASE_NAME, censored=False)
+CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, censored=True)
+
+print('Main database URI: ' + CENSORED_URI)
+print('Eth database URI: ' + CENSORED_ETH_URI)
+
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 

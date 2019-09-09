@@ -2,7 +2,6 @@ import os, base64
 from typing import Union
 from contextlib import contextmanager
 from eth_utils import keccak
-from eth_keys import keys
 
 from web3 import Web3
 from sqlalchemy import event, inspect
@@ -41,7 +40,7 @@ from server.utils.phone import proccess_phone_number
 from server.utils.credit_transfers import make_disbursement_transfer, make_withdrawal_transfer
 from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
-from server.utils.misc import elapsed_time, encrypt_string, decrypt_string
+from server.utils.misc import elapsed_time, encrypt_string, decrypt_string, hex_private_key_to_address
 from server.utils import auth
 
 @contextmanager
@@ -920,7 +919,7 @@ class BlockchainAddress(OneOrgBase, ModelBase):
         return cipher_suite.encrypt(unencoded_private_key.encode('utf-8')).decode('utf-8')
 
     def calculate_address(self, private_key):
-        self.address = keys.PrivateKey(private_key).public_key.to_checksum_address()
+        self.address = hex_private_key_to_address(private_key)
 
     def allowed_types(self):
         return ALLOWED_BLOCKCHAIN_ADDRESS_TYPES
