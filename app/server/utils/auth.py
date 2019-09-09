@@ -1,7 +1,7 @@
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import db, models
-
+import config, hmac, hashlib
 
 from server.constants import ACCESS_ROLES
 
@@ -298,3 +298,26 @@ def check_ip(proxies, user, num_proxy=0):
             new_ip = models.IpAddress(ip=real_ip_address)
             new_ip.user = user
             db.session.add(new_ip)
+
+
+def verify_slack_requests(f=None):
+    """
+    Verify the request signature of the request sent from Slack
+    Generate a new hash using the app's signing secret and request data
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        timestamp = request.headers['X-Slack-Request-Timestamp']
+
+        req = str.encode('v0:' + str(timestamp) + ':') + request.get_data()
+        my_signature = 'v0=' + hmac.new(
+            config.SLACK_SECRET,
+            req, hashlib.sha256
+        ).hexdigest()
+
+        slack_signature = request.headers['X-Slack-Signature']
+        if hmac.compare_digest(my_signature, slack_signature):
+            # hooray, the request came from Slack!
+            return f(*args, **kwargs)
+
+        return wrapper

@@ -1,8 +1,9 @@
-from flask import Flask, request, make_response, Response, jsonify
+from flask import make_response
 from server import db
 from server.models import KycApplication, User
+from server.utils.phone import send_generic_message
 
-import os, json, config, slack, requests
+import config, slack
 
 # Slack client for Web API requests
 client = slack.WebClient(token=config.SLACK_API_TOKEN)
@@ -134,6 +135,19 @@ def post_verification_message(user=None):
     return result
 
 
+def get_user_from_id(user_id, payload):
+    user = User.query.filter_by(id=user_id).first()
+
+    if user is None or len(user.kyc_applications) > 0:
+        client.chat_update(
+            channel=CHANNEL_ID,
+            ts=payload["state"],
+            text="Oh damn, we've had a bad error on our server. @nick and @tristan to fix."
+        )
+        return make_response("", 200)
+    return user
+
+
 def slack_controller(payload):
     # Parse the request payload
 
@@ -143,7 +157,7 @@ def slack_controller(payload):
         if "start" in payload['actions'][0]['value']:
             # Show the user details dialog to the user
             user_id = payload['actions'][0]['value'].split('-')[1]
-            open_dialog = client.dialog_open(
+            client.dialog_open(
                 trigger_id=payload["trigger_id"],
                 dialog={
                     "title": "Verify User",
@@ -216,29 +230,61 @@ def slack_controller(payload):
             )
 
         elif "approve" in payload['actions'][0]['value']:
-            # approve the user
-            return
+            user_id = payload['actions'][0]['value'].split('-')[1]
+            user = get_user_from_id(user_id, payload)
+            user.kyc_applications[0].kyc_status = 'VERIFIED'
+
+            # Update the message to show we've verified a user
+            message_blocks = payload['message']['blocks']
+            new_message_blocks = message_blocks[:len(message_blocks) - 1]
+            new_message_blocks.append(dict(type='context', elements=[
+                {"type": 'mrkdwn', "text": ':white_check_mark: *@{}* Completed a verification!'.format(payload['user']['username'])}]))
+
+            client.chat_update(
+                channel=CHANNEL_ID,
+                ts=payload["message"]["ts"],
+                blocks=new_message_blocks
+            )
+
+            if user.phone:
+                send_generic_message(to_phone=user.phone,
+                                     message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
+
+            return make_response("", 200)
 
         elif "deny" in payload['actions'][0]['value']:
-            # deny the user
-            return
+            user_id = payload['actions'][0]['value'].split('-')[1]
+            user = get_user_from_id(user_id, payload)
+            kyc = user.kyc_applications[0]
+            kyc.kyc_status = 'REJECTED'
+
+            # Update the message to show we've verified a user
+            message_blocks = payload['message']['blocks']
+            new_message_blocks = message_blocks[:len(message_blocks) - 1]
+            new_message_blocks.append(dict(type='context', elements=[
+                {"type": 'mrkdwn',
+                 "text": ':x: *@{}* Rejected a verification or deferred to support.'.format(payload['user']['username'])}]))
+
+            client.chat_update(
+                channel=CHANNEL_ID,
+                ts=payload["message"]["ts"],
+                blocks=new_message_blocks
+            )
+
+            if user.phone:
+                send_generic_message(to_phone=user.phone,
+                                     message="Unfortunately, we couldn't verify your identity with the documents provided. Please open the Sempo app to retry or contact our customer support.")
+
+            return make_response("", 200)
 
     elif payload["type"] == "dialog_submission":
         # The user has submitted the dialog
 
         user_id = payload['callback_id'].split('-')[1]
-        user = User.query.filter_by(id=user_id).first()
-
-        if user is None or len(user.kyc_applications) > 0:
-            client.chat_update(
-                channel=CHANNEL_ID,
-                ts=payload["state"],
-                text="Oh damn, we've had a bad error on our server. @nick and @tristan to fix."
-            )
-            return make_response("", 200)
+        user = get_user_from_id(user_id, payload)
 
         submission = payload['submission']
-        kyc = user.kyc_applications
+        kyc = user.kyc_applications[0]  # most recent
 
         kyc.first_name = submission['first_name']
         kyc.last_name = submission['last_name']
@@ -255,7 +301,7 @@ def slack_controller(payload):
             new_message_blocks.append(dict(type='context', elements=[
                 {"type": 'mrkdwn', "text": ':female-detective: Running AML checks...'}]))
 
-            # todo: app SUCCESS logic (AML etc.)
+            # todo: run async AML check, webhook back to slack
 
         else:
             # Update the message to indicate failed ID check.

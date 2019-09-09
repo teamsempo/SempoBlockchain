@@ -3,13 +3,14 @@ from flask.views import MethodView
 
 import json
 
+from server.utils.auth import verify_slack_requests
 from server.utils.slack_controller import slack_controller
 
 slack_blueprint = Blueprint('slack', __name__)
 
 
 class ProcessSlackAPI(MethodView):
-    # todo: slack verify
+    @verify_slack_requests
     def post(self):
         post_data = json.loads(request.form['payload'])
 

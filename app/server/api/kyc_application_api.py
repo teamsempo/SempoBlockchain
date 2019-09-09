@@ -14,6 +14,23 @@ supported_countries = ['AU', 'TO', 'VU', 'NZ']
 supported_documents = {'AU': ['Passport', 'DrivingLicence'], 'TO': ['Passport'], 'VU': ['Passport', 'DrivingLicence'], 'NZ': ['Passport', 'DrivingLicence', 'IdentityCard']}
 
 
+def handle_kyc_documents(data=None,document_country=None,document_type=None,kyc_details=None):
+    for (key, value) in data.items():
+        if set([key]).intersection(set(['document_front_base64', 'document_back_base64', 'selfie_base64'])) and value is not None:
+            try:
+                new_filename = generate_new_filename(original_filename="{}-{}.jpg".format(key, document_country), file_type='jpg')
+                save_to_s3_from_image_base64(image_base64=value, new_filename=new_filename)
+                uploaded_document = UploadedDocument(filename=new_filename, reference=document_type,
+                                                     user_filename=key)
+                db.session.add(uploaded_document)
+                # tie document to kyc application
+                uploaded_document.kyc_application_id = kyc_details.id
+            except Exception as e:
+                print(e)
+                sentry.captureException()
+                pass
+
+
 class KycApplicationAPI(MethodView):
     @requires_auth
     def get(self, kyc_application_id):
@@ -117,20 +134,8 @@ class KycApplicationAPI(MethodView):
                 db.session.commit()
                 return make_response(jsonify({'message': 'KYC attempts exceeded. Contact Support.'})), 400
 
-            for (key, value) in put_data.items():
-                if set([key]).intersection(set(['document_front_base64', 'document_back_base64', 'selfie_base64'])) and value is not None:
-                    try:
-                        new_filename = generate_new_filename(original_filename="{}-{}.jpg".format(key, document_country))
-                        save_to_s3_from_image_base64(image_base64=value, new_filename=new_filename)
-                        uploaded_document = UploadedDocument(filename=new_filename, reference=document_type,
-                                                             user_filename=key)
-                        db.session.add(uploaded_document)
-                        # tie document to kyc application
-                        uploaded_document.kyc_application_id = kyc_details.id
-                    except Exception as e:
-                        print(e)
-                        sentry.captureException()
-                        pass
+            # handle document upload to s3
+            handle_kyc_documents(data=put_data,document_country=document_country,document_type=document_type,kyc_details=kyc_details)
 
             kyc_details.kyc_status = 'PENDING'
 
@@ -287,20 +292,9 @@ class KycApplicationAPI(MethodView):
         db.session.flush()  # need this to create an ID
 
         if type == 'INDIVIDUAL':
-            for (key, value) in post_data.items():
-                if set([key]).intersection(set(['document_front_base64', 'document_back_base64', 'selfie_base64'])) and value is not None:
-                    try:
-                        new_filename = generate_new_filename(original_filename="{}-{}.jpg".format(key, document_country))
-                        save_to_s3_from_image_base64(image_base64=value, new_filename=new_filename)
-                        uploaded_document = UploadedDocument(filename=new_filename, reference=document_type,
-                                                             user_filename=key)
-                        db.session.add(uploaded_document)
-                        # tie document to kyc application
-                        uploaded_document.kyc_application_id = create_kyc_application.id
-                    except Exception as e:
-                        print(e)
-                        sentry.captureException()
-                        pass
+            # handle document upload to s3
+            handle_kyc_documents(data=post_data, document_country=document_country, document_type=document_type,
+                                 kyc_details=create_kyc_application)
 
             # Post verification message to slack
             post_verification_message(user=g.user)
