@@ -1,7 +1,7 @@
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import db, models
-import config, hmac, hashlib, json
+import config, hmac, hashlib, json, urllib
 
 from server.constants import ACCESS_ROLES
 
@@ -308,6 +308,8 @@ def verify_slack_requests(f=None):
     @wraps(f)
     def wrapper(*args, **kwargs):
         timestamp = request.headers['X-Slack-Request-Timestamp']
+
+        req = urllib.parse.quote_plus(str(json.loads(request.form["payload"])).encode('utf-8'))
 
         req = 'v0:' + str(timestamp) + ':' + request.form['payload']
         request_hash = 'v0=' + hmac.new(

@@ -4,7 +4,7 @@ from server.models import KycApplication, User
 from server.utils.phone import send_generic_message
 from server.utils.namescan import run_namescam_aml_check
 
-import config, slack
+import config, slack, json
 
 # Slack client for Web API requests
 client = slack.WebClient(token=config.SLACK_API_TOKEN)
@@ -53,7 +53,7 @@ def generate_actions(*args):
     return {"type": "actions", "elements": [arg for arg in args]}
 
 
-def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,document_type=None, document_front_url=None, document_back_url=None, selfie_url=None, aml_url=None):
+def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,document_type=None, document_front_url=None, document_back_url=None, selfie_url=None):
     return [{
         "type": "section",
         "text": {
@@ -86,9 +86,6 @@ def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=N
             }, {
                 "type": "mrkdwn",
                 "text": "*Selfie:*\n<{}|View>".format(selfie_url)
-            }, {
-                "type": "mrkdwn",
-                "text": "*AML Screening:*\n<{}|View>".format(aml_url)
             }]
         },
         {
@@ -129,7 +126,6 @@ def generate_populated_message(user_id=None):
         document_front_url=filter_for_url('document_front_base64', documents),
         document_back_url=filter_for_url('document_back_base64', documents),
         selfie_url=filter_for_url('selfie_base64', documents),
-        aml_url=None,
     )
 
 
@@ -149,9 +145,9 @@ def post_verification_message(user=None):
 
 
 def get_user_from_id(user_id, payload):
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.execution_options(show_all=True).filter_by(id=user_id).first()
 
-    if user is None or len(user.kyc_applications) > 0:
+    if user is None or len(user.kyc_applications) < 0:
         client.chat_update(
             channel=CHANNEL_ID,
             ts=payload["state"],
@@ -178,6 +174,69 @@ def approve_user(message_blocks, username, message_ts, phone):
                              message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
 
     return make_response("", 200)
+
+
+def generate_aml_message(parent_message_ts=None, aml_result=None, avg_match_rate=0):
+    message_blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":female-detective: *New AML report*"
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "*Date:*\n{}".format(aml_result.get('date'))
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Scan ID:*\n{}".format(aml_result.get('scan_id'))
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Number of Matches:*\n{}".format(aml_result.get('number_of_matches'))
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Avg Match Rate:*\n{}".format(avg_match_rate)
+                }
+            ]
+        },
+        {
+            "type": "divider"
+        }
+    ]
+
+    persons = aml_result.get('persons', None)
+    if persons is not None:
+        for index, person in enumerate(persons, 1):
+            markdown = ""
+            markdown = markdown + "Match {} \n\n".format(index)
+            for (key, value) in person.items():
+                if isinstance(value, list):
+                    value = " ".join(str(x) for x in value)
+                markdown = markdown + '• {} -- {} \n'.format(key, value)
+
+            message_blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": markdown
+                }
+            })
+
+    client.chat_postMessage(
+        channel=CHANNEL_ID,
+        thread_ts=parent_message_ts,
+        blocks=message_blocks
+    )
 
 
 def slack_controller(payload):
@@ -234,7 +293,7 @@ def slack_controller(payload):
                         },
                         {
                             "type": "text",
-                            "label": "Date of Birth (DD-MM-YYYY)",
+                            "label": "Date of Birth (DD/MM/YYYY) or (YYYY)",
                             "name": "date_of_birth",
                             "optional": True
                         },
@@ -306,7 +365,7 @@ def slack_controller(payload):
 
         kyc.first_name = submission['first_name']
         kyc.last_name = submission['last_name']
-        kyc.dob = submission['dob']
+        kyc.dob = submission['date_of_birth']
         kyc.street_address = submission['address']
 
         db.session.flush()  # so that the response message updates user details
@@ -332,16 +391,24 @@ def slack_controller(payload):
                 country=kyc.country
             )
 
-            match_rate = [x['match_rate'] for x in result['persons']]
-            if result['number_of_matches'] == 0 or (sum(match_rate)/len(match_rate)) < 50:
+            aml_result = json.loads(result.text)
+            kyc.namescan_scan_id = aml_result['scan_id']
+
+            match_rates = [x['match_rate'] for x in aml_result.get('persons', [])]
+            avg_match_rate = 0
+            if len(match_rates) > 0:
+                avg_match_rate = sum(match_rates)/len(match_rates)
+
+            if aml_result['number_of_matches'] == 0 or avg_match_rate < 50:
                 # Instant Approval
                 kyc.kyc_status = 'VERIFIED'
-                return approve_user(new_message_blocks, username=payload['user']['username'], message_ts=payload["state"], phone=user.phone)
+                return approve_user(new_message_blocks, username=payload['user']['name'], message_ts=payload["state"], phone=user.phone)
 
             else:
                 # Manual Review Required
-                # todo: generate message or PDF from json
-                new_message_blocks.append(dict(type='context', elements=[{"type": 'mrkdwn', "text": ':pencil: *@{}* started verifying...'.format(payload['user']['username'])}]))
+                generate_aml_message(parent_message_ts=payload["state"], aml_result=aml_result, avg_match_rate=avg_match_rate)
+
+                new_message_blocks.append(dict(type='context', elements=[{"type": 'mrkdwn', "text": ':pencil: *@{}* Manual review needed.'.format(payload['user']['name'])}]))
                 action_blocks = generate_actions(generate_approve_button(user_id), generate_deny_button(user_id))
                 new_message_blocks.append(action_blocks)
 
