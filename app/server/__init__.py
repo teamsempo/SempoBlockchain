@@ -41,45 +41,44 @@ celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
                     backend=config.REDIS_URL,
                     task_serializer='json')
-
-def encrypt_string(raw_string):
-
-    import base64
-    from cryptography.fernet import Fernet
-    from eth_utils import keccak
-
-    fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
-    cipher_suite = Fernet(fernet_encryption_key)
-
-    return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
-
-encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
-
-dependent_on_tasks = None
-for i in range(0,20):
-    blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
-                                           kwargs={
-                                               'encrypted_private_key': encrypted_private_key,
-                                               'contract': 'Dai Stablecoin v1.0',
-                                               'function': 'transfer',
-                                               'args': [
-                                                   '0x68D3ce90D84B4DD8936908Afd4079797057996bB',
-                                                   1
-                                               ],
-                                               'dependent_on_tasks': dependent_on_tasks
-                                           })
-    result = blockchain_task.delay()
-
-    try:
-        task_id = result.get(timeout=3, propagate=True, interval=0.3)
-    except Exception as e:
-        raise e
-    finally:
-        result.forget()
-
-    # if not dependent_on_tasks:
-    dependent_on_tasks = [task_id]
-    print(task_id)
+#
+# def encrypt_string(raw_string):
+#
+#     import base64
+#     from cryptography.fernet import Fernet
+#     from eth_utils import keccak
+#
+#     fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
+#     cipher_suite = Fernet(fernet_encryption_key)
+#
+#     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
+#
+# encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
+# dependent_on_tasks = None
+# for i in range(0,20):
+#     blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
+#                                            kwargs={
+#                                                'encrypted_private_key': encrypted_private_key,
+#                                                'contract': 'Dai Stablecoin v1.0',
+#                                                'function': 'transfer',
+#                                                'args': [
+#                                                    '0x68D3ce90D84B4DD8936908Afd4079797057996bB',
+#                                                    1
+#                                                ],
+#                                                'dependent_on_tasks': dependent_on_tasks
+#                                            })
+#     result = blockchain_task.delay()
+#
+#     try:
+#         task_id = result.get(timeout=3, propagate=True, interval=0.3)
+#     except Exception as e:
+#         raise e
+#     finally:
+#         result.forget()
+#
+#     # if not dependent_on_tasks:
+#     dependent_on_tasks = [task_id]
+#     print(task_id)
 
 red = redis.Redis.from_url(config.REDIS_URL)
 

@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import time
 
-from flask import make_response, jsonify, current_app
+from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
 import datetime, json
@@ -14,6 +14,7 @@ from server import models
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
+from server.utils.blockchain_tasks import get_wallet_balance
 from server.utils.misc import elapsed_time
 
 def calculate_transfer_stats(total_time_series=False):
@@ -108,7 +109,6 @@ def master_wallet_funds_available(allowed_cache_age_seconds=60):
     :return: amount of funds available
     """
 
-
     refresh_cache = False
     funds_available_cache = red.get('funds_available_cache')
 
@@ -127,20 +127,7 @@ def master_wallet_funds_available(allowed_cache_age_seconds=60):
 
     if refresh_cache:
 
-        blockchain_task = celery_app.signature('worker.celery_tasks.get_master_balance')
-
-        result = blockchain_task.apply_async()
-
-        try:
-            master_wallet_balance = result.wait(timeout=6, propagate=True, interval=0.5)
-
-        except Exception as e:
-            print(e)
-            sentry.captureException()
-            raise BlockchainError("Blockchain Error")
-
-        finally:
-            result.forget()
+        master_wallet_balance = get_wallet_balance()
 
         highest_transfer_id_checked = 0
         required_blockchain_statuses = ['PENDING', 'UNKNOWN']
@@ -469,7 +456,9 @@ def make_disbursement_transfer(transfer_amount,
 
     if current_app.config['USING_EXTERNAL_ERC20']:
 
-        master_wallet_balance = master_wallet_funds_available()
+        outbound_transfer_account = g.active_organisation.org_level_transfer_account
+
+        master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address.address, token)
 
         if transfer_amount > master_wallet_balance:
             message = "Master Wallet has insufficient funds"

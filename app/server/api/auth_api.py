@@ -234,6 +234,7 @@ class RegisterAPI(MethodView):
 
         if selected_whitelist_item:
             user.organisations.append(selected_whitelist_item.organisation)
+
         db.session.flush()
 
         if exact_match:
@@ -785,7 +786,7 @@ class PermissionsAPI(MethodView):
             response_object = {'message': 'Not Authorised to set organisation ID'}
             return make_response(jsonify(response_object)), 401
 
-        target_organisation_id = organisation_id or g.primary_organisation
+        target_organisation_id = organisation_id or g.active_organisation
         if not target_organisation_id:
             response_object = {'message': 'Must provide an organisation to bind user to'}
             return make_response(jsonify(response_object)), 400

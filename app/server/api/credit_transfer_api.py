@@ -258,17 +258,6 @@ class CreditTransferAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 400
 
-            if not CreditTransfer.check_has_correct_users_for_transfer_type(
-                    transfer_type, individual_sender_user, individual_recipient_user):
-
-                response_object = {
-                    'message': 'For transfer type {}, wrong  users of {} and {}'.format(
-                        transfer_type,
-                        individual_sender_user,
-                        individual_recipient_user)
-                }
-                return make_response(jsonify(response_object)), 400
-
         if token_id:
             token = Token.query.get(token_id)
             if not token:
@@ -277,14 +266,14 @@ class CreditTransferAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 404
         else:
-            primary_organisation = g.user.get_primary_admin_organisation()
-            if primary_organisation is None:
+            active_organisation = g.user.get_active_organisation()
+            if active_organisation is None:
                 response_object = {
                     'message': 'Must provide token_id'
                 }
                 return make_response(jsonify(response_object)), 400
             else:
-                token = primary_organisation.token
+                token = active_organisation.token
 
 
         for sender_user, recipient_user in transfer_user_list:

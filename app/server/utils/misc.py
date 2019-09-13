@@ -12,7 +12,7 @@ from eth_keys import keys
 
 def hex_private_key_to_address(private_key) -> str:
 
-    if isinstance(str, private_key):
+    if isinstance(private_key, str):
         private_key = bytearray.fromhex(private_key.replace('0x', ''))
 
     return keys.PrivateKey(private_key).public_key.to_checksum_address()

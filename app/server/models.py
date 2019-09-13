@@ -121,8 +121,8 @@ def before_compile(query):
 
                 try:
                     # member_organisations = getattr(g, "member_organisations", [])
-                    primary_organisation = getattr(g, "primary_organisation_id", None)
-                    member_organisations = [primary_organisation] if primary_organisation else []
+                    active_organisation = getattr(g, "active_organisation_id", None)
+                    member_organisations = [active_organisation] if active_organisation else []
 
                     if issubclass(mapper.class_, ManyOrgBase):
                         # filters many-to-many
@@ -131,7 +131,7 @@ def before_compile(query):
                         )
                     else:
                         query = query.enable_assertions(False).filter(
-                            ent['entity'].organisation_id == primary_organisation
+                            ent['entity'].organisation_id == active_organisation
                         )
 
                 except AttributeError:
@@ -207,7 +207,6 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
-# todo: see if we can dynamically generate org relationships from mapper args??
 class Organisation(ModelBase):
     """
     Establishes organisation object that resources can be associated with.
@@ -223,6 +222,14 @@ class Organisation(ModelBase):
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
+
+    org_level_transfer_account_id    = db.Column(db.Integer, db.ForeignKey('transfer_account.id', name="fk_org_level_account"))
+    # We use this weird join pattern because SQLAlchemy
+    # doesn't play nice when doing multiple joins of the same table over different declerative bases
+    org_level_transfer_account       = db.relationship("TransferAccount",
+                                                       primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
+                                                       uselist=False)
+
     credit_transfers    = db.relationship(
                             "CreditTransfer",
                             secondary=organisation_association_table,
@@ -231,11 +238,16 @@ class Organisation(ModelBase):
     transfer_accounts   = db.relationship('TransferAccount', backref='organisation',
                                           lazy=True, foreign_keys='TransferAccount.organisation_id')
 
+
     blockchain_addresses = db.relationship('BlockchainAddress', backref='organisation',
                                         lazy=True, foreign_keys='BlockchainAddress.organisation_id')
 
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
+
+    def __init__(self, **kwargs):
+        super(Organisation, self).__init__(**kwargs)
+
 
 
 class OneOrgBase(object):
@@ -288,6 +300,7 @@ class User(ManyOrgBase, ModelBase):
     first_name      = db.Column(db.String())
     last_name       = db.Column(db.String())
 
+
     _last_seen       = db.Column(db.DateTime)
 
     email                   = db.Column(db.String())
@@ -324,7 +337,6 @@ class User(ManyOrgBase, ModelBase):
     ap_paypal_id   = db.Column(db.String())
     kyc_state      = db.Column(db.String())
 
-
     cashout_authorised = db.Column(db.Boolean, default=False)
 
     transfer_accounts = db.relationship(
@@ -334,6 +346,12 @@ class User(ManyOrgBase, ModelBase):
 
     chatbot_state_id    = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
     targeting_survey_id = db.Column(db.Integer, db.ForeignKey('targeting_survey.id'))
+
+    default_organisation_id = db.Column(db.Integer, db.ForeignKey('organisation.id'))
+    default_organisation    = db.relationship('Organisation',
+                                              primaryjoin=Organisation.id==default_organisation_id,
+                                              lazy=True,
+                                              uselist=False)
 
     # roles = db.relationship('UserRole', backref='user', lazy=True,
     #                              foreign_keys='UserRole.user_id')
@@ -491,22 +509,21 @@ class User(ManyOrgBase, ModelBase):
 
     @property
     def transfer_account(self):
-        target_organisation_id = g.get('primary_organisation', None)
-        if target_organisation_id:
-            for transfer_account in self.transfer_accounts:
-                if transfer_account.organisation_id == target_organisation_id:
-                    return transfer_account
+        active_organisation = self.get_active_organisation()
+        if active_organisation:
+            return active_organisation.org_level_transfer_account
+
         # TODO: This should have a better concept of a default
         if len(self.transfer_accounts) == 1:
             return self.transfer_accounts[0]
         return None
 
-    def get_primary_admin_organisation(self, fallback=None):
+    def get_active_organisation(self, fallback=None):
         if len(self.organisations) == 0:
             return fallback
 
         if len(self.organisations) > 1:
-            raise NotImplementedError("Multiple admin organisations not currently supported")
+            return self.default_organisation
 
         return self.organisations[0]
 
@@ -675,7 +692,7 @@ class User(ManyOrgBase, ModelBase):
             else:
                 self.one_time_code = supplied_pin
 
-            pin = str(random.randint(0, 9999999999999)).zfill(4)
+            pin = str(random.randint(0, 9999)).zfill(4)
 
         else:
             pin = supplied_pin
@@ -694,14 +711,6 @@ class User(ManyOrgBase, ModelBase):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
-#
-# class UserRole(ModelBase):
-#     __tablename__ = 'user_role'
-#
-#     name              = db.Column(db.String)
-#     tier              = db.Column(db.String)
-#     user_id           = db.Column(db.Integer, db.ForeignKey(User.id))
-#     revoked           = db.Column(db.Boolean, default=False)
 
 class ChatbotState(ModelBase):
     __tablename__ = 'chatbot_state'
@@ -772,6 +781,11 @@ class TransferAccount(OneOrgBase, ModelBase):
         "User",
         secondary=user_transfer_account_association_table,
         back_populates="transfer_accounts")
+
+    # owning_organisation_id = db.Column(db.Integer, db.ForeignKey(Organisation.id))
+
+    # owning_organisation = db.relationship("Organsisation", backref='org_level_transfer_account',
+    #                                       lazy='dynamic', foreign_keys=Organisation.org_level_transfer_account_id)
 
     blockchain_address = db.relationship('BlockchainAddress', backref='transfer_account', lazy=True, uselist=False)
 
@@ -1234,11 +1248,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
             self.transfer_type = TransferTypeEnum.WITHDRAWAL
         else:
             raise ValueError("Neither sender nor recipient transfer accounts found")
-
-        # Optional check to enforce correct transfer type
-        if transfer_type and not self.check_has_correct_users_for_transfer_type(
-                self.transfer_type, self.sender_user, self.recipient_user):
-            raise InvalidTransferTypeException("Invalid transfer type")
 
         self.transfer_amount = amount
 

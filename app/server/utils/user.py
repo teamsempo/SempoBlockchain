@@ -488,7 +488,7 @@ def proccess_create_or_modify_user_request(attribute_dict,
         save_device_info(device_info=attribute_dict.get('deviceinfo'), user=user)
 
     if custom_initial_disbursement:
-        disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, user)
+        disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, organisation.token, user)
 
     # Location fires an async task that needs to know user ID
     db.session.flush()

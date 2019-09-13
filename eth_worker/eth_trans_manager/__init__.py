@@ -27,17 +27,6 @@ ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = config.ETH_CHECK_TRANSACTION_RETRIES_
 ETH_CHECK_TRANSACTION_BASE_TIME = config.ETH_CHECK_TRANSACTION_BASE_TIME
 
 
-# ERC20_config['contract_abi_string'] = dai_abi.abi
-# ERC20_config['contract_address'] = config.ETH_CONTRACT_ADDRESS
-
-# ERC20_config['master_wallet_private_key'] = config.MASTER_WALLET_PRIVATE_KEY
-# ERC20_config['force_eth_disbursement_amount'] = config.FORCE_ETH_DISBURSEMENT_AMOUNT
-# ERC20_config['withdraw_to_address'] = config.WITHDRAW_TO_ADDRESS
-
-
-# client = Client(config.SENTRY_SERVER_DSN)
-
-
 celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
                     backend=config.REDIS_URL,
@@ -45,16 +34,18 @@ celery_app = Celery('tasks',
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
-
-
-contract_registry = ContractRegistry(w3=ERC20_config['w3'])
-
-contract_registry.register_contract(
-    config.ETH_CONTRACT_ADDRESS,
-    dai_abi.abi,
-    'Dai Stablecoin v1.0'
-)
-
-blockchain_processor = TransactionProcessor(**ERC20_config, contract_registry=contract_registry)
+blockchain_processor = TransactionProcessor(**ERC20_config)
 
 import eth_trans_manager.celery_tasks
+
+blockchain_processor.registry.register_contract(
+    config.ETH_CONTRACT_ADDRESS,
+    dai_abi.abi,
+    contract_name='Dai Stablecoin v1.0'
+)
+
+from eth_trans_manager.utils import register_contracts_from_app
+
+register_contracts_from_app(config.APP_HOST, config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD)
+
+

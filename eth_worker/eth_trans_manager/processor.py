@@ -1,4 +1,4 @@
-from typing import List, Optional, NewType
+from typing import List, Optional, NewType, Any
 
 import json, base64, ssl, datetime, random, time
 
@@ -211,18 +211,12 @@ class SQLAlchemyDataStore(object):
 
         return unsatisfied
 
-    def create_transaction_task(self, encrypted_private_key, contract,
+    def create_transaction_task(self, address_obj, contract,
                                 function, args=None, kwargs=None,
                                 dependent_on_tasks=None):
 
         if dependent_on_tasks is None:
             dependent_on_tasks = []
-
-        address_obj = session.query(BlockchainAddress).filter(
-            BlockchainAddress.encrypted_private_key == encrypted_private_key).first()
-
-        if not address_obj:
-            address_obj = BlockchainAddress(encrypted_private_key=encrypted_private_key)
 
         task = BlockchainTask(signing_address=address_obj,
                               contract=contract,
@@ -239,6 +233,26 @@ class SQLAlchemyDataStore(object):
         session.commit()
 
         return task
+
+    def create_account(self, encrypted_private_key=None):
+
+        if session.query(BlockchainAddress).filter_by(encrypted_private_key=encrypted_private_key):
+            raise Exception("Account for provided private key already exists")
+
+        account = BlockchainAddress(encrypted_private_key=encrypted_private_key)
+
+        session.add(account)
+
+        session.commit()
+
+        return account
+
+    def get_account_by_address(self, address):
+        return session.query(BlockchainAddress).filter(BlockchainAddress.address == address).first()
+
+    def get_account_by_encrypted_private_key(self, encrypted_private_key):
+         return session.query(BlockchainAddress).filter(
+             BlockchainAddress.encrypted_private_key == encrypted_private_key).first()
 
     def __init__(self, w3, PENDING_TRANSACTION_EXPIRY_SECONDS=300):
 
@@ -260,29 +274,42 @@ class ContractRegistry(object):
         if contract_name != expected_name:
             raise WrongContractNameError
 
-    def register_contract(self, contract_address, abi, contract_name=None, require_name_matches_contract = False):
+    def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
         checksum_address = to_checksum_address(contract_address)
 
         contract = self.w3.eth.contract(address=checksum_address, abi=abi)
 
         found_contract_name = self._get_contract_name(contract)
 
-        if require_name_matches_contract:
+        if require_name_matches:
             self._check_contract_name(found_contract_name, contract_name)
 
-        if contract_name in self.contracts:
+        if contract_name in self.contracts_by_name:
             raise Exception("Contract with name {} already registered".format(contract_name))
 
-        self.contracts[contract_name] = contract
+        if contract_name:
+            self.contracts_by_name[contract_name] = contract
 
-    def get_contract_function(self, contract_name, function_name):
-        contract = self.contracts[contract_name]
+        self.contracts_by_address[contract_address] = contract
+
+    def get_contract(self, contract_name_or_address):
+        contract = self.contracts_by_address.get(contract_name_or_address)\
+                   or self.contracts_by_name.get(contract_name_or_address)
+
+        if not contract:
+            raise Exception('Contract not found for name or address: {}'.format(contract_name_or_address))
+
+        return contract
+
+    def get_contract_function(self, contract_name_or_address, function_name):
+        contract = self.get_contract(contract_name_or_address)
         return getattr(contract.functions, function_name)
 
     def __init__(self, w3):
 
         self.w3 = w3
-        self.contracts = {}
+        self.contracts_by_address = {}
+        self.contracts_by_name = {}
 
 
 class TransactionProcessor(object):
@@ -321,7 +348,7 @@ class TransactionProcessor(object):
 
         kwargs = kwargs or dict()
 
-        function = self.contract_registry.get_contract_function(contract_name, function_name)\
+        function = self.registry.get_contract_function(contract_name, function_name)\
 
         bound_function = function(*args, **kwargs)
 
@@ -454,30 +481,74 @@ class TransactionProcessor(object):
 
         self.persistence_model.update_transaction_data(transaction_id, data)
 
-    def transact_with_contract_function(self, encrypted_private_key: str,
-                                        contract_name: str, function_name: str,
-                                        args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-                                        dependent_on_tasks: Optional[IdList] = None) -> int:
+    def call_contract_function(self, contract_name: str, function_name: str,
+                               args: Optional[tuple] = None, kwargs: Optional[dict] = None) -> Any:
         """
-        The main entrypoint for the transaction processor. This task completes quiet quickly,
-        so can be called synchronously in order to retrieve a task ID
+        The main call entrypoint for the transaction. This task completes quickly,
+        so can be called synchronously.
 
         :param encrypted_private_key: private key of the account making the transaction, encrypted using key from settings
         :param contract_name: name of the contract for the function
-        :param function_name: name of the function being called
-        :param args: arguments for the function being called
-        :param kwargs: keyword arguments for the function being called
+        :param function_name: name of the function
+        :param args: arguments for the function
+        :param kwargs: keyword arguments for the function
+        :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
+        :return: the result of the contract call
+        """
+
+        args = args or tuple()
+        if not isinstance(args, (list, tuple)):
+            args = [args]
+
+        kwargs = kwargs or dict()
+
+        function = self.registry.get_contract_function(contract_name, function_name)(*args, **kwargs)
+
+        return function.call()
+
+
+    def transact_with_contract_function(self,
+                                        contract_name_or_address: str, function_name: str,
+                                        args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+                                        address: Optional[str]=None, encrypted_private_key: Optional[str]=None,
+                                        dependent_on_tasks: Optional[IdList] = None) -> int:
+        """
+        The main transaction entrypoint for the processor. This task completes quickly,
+        so can be called synchronously in order to retrieve a task ID
+
+        :param contract_name_or_address: name or address of the contract for the function
+        :param function_name: name of the function
+        :param args: arguments for the function
+        :param kwargs: keyword arguments for the function
+        :param address: address of the account signing the txn
+        :param encrypted_private_key: private key of the account making the transaction, encrypted using key from settings
         :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
         :return: task_id
         """
 
-        task = self.persistence_model.create_transaction_task(encrypted_private_key,
-                                                              contract_name, function_name, args, kwargs,
+        if address:
+
+            address_obj = self.persistence_model.get_account_by_address(address)
+
+            if address_obj is None:
+                raise Exception('Private key for address {} not found'.format(address))
+
+        elif encrypted_private_key:
+
+            address_obj = self.persistence_model.get_account_by_encrypted_private_key(encrypted_private_key)
+
+            if not address_obj:
+                address_obj = self.persistence_model.create_account(encrypted_private_key=encrypted_private_key)
+        else:
+            raise Exception("Must provide either address or encrypted private key")
+
+        task = self.persistence_model.create_transaction_task(address_obj,
+                                                              contract_name_or_address, function_name, args, kwargs,
                                                               dependent_on_tasks)
 
         # Create Async Task
         signature('eth_trans_manager.celery_tasks._attempt_transaction',
-                  args=(task.id, contract_name, function_name, args, kwargs)).delay()
+                  args=(task.id, contract_name_or_address, function_name, args, kwargs)).delay()
 
         # Immediately return task ID
         return task.id
@@ -487,10 +558,9 @@ class TransactionProcessor(object):
                  w3,
                  gas_price_gwei,
                  gas_limit,
-                 contract_registry,
                  persistence_model=SQLAlchemyDataStore):
 
-            self.contract_registry = contract_registry
+            self.registry = ContractRegistry(w3)
 
             self.ethereum_chain_id = int(ethereum_chain_id)
             self.w3 = w3

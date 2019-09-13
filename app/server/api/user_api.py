@@ -130,7 +130,7 @@ class UserAPI(MethodView):
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
-            organisation=g.user.get_primary_admin_organisation()
+            organisation=g.user.get_active_organisation()
         )
 
         if response_code == 200:

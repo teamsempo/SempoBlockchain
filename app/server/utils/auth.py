@@ -1,7 +1,7 @@
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import db, models
-
+from typing import Optional, List, Dict
 
 from server.constants import ACCESS_ROLES
 
@@ -112,9 +112,13 @@ def show_all(f):
     return wrapper
 
 def requires_auth(f = None,
-                  allowed_roles: dict={},
-                  allowed_basic_auth_types: tuple=(), #['external', 'internal']
-                  ignore_tfa_requirement=False):
+                  allowed_roles: Optional[Dict]=None,
+                  allowed_basic_auth_types: Optional[List]=None,  # currently 'external' or 'internal'
+                  ignore_tfa_requirement: bool=False):
+
+    allowed_roles = allowed_roles or {}
+    allowed_basic_auth_types = allowed_basic_auth_types or []
+
     if f is None:
         return partial(requires_auth,
                        allowed_roles=allowed_roles,
@@ -181,13 +185,16 @@ def requires_auth(f = None,
                     g.user = user
                     # g.member_organisations = [org.id for org in user.organisations]
                     try:
-                        primary_admin_organisation = user.get_primary_admin_organisation()
-                        if primary_admin_organisation is not None:
-                            g.primary_organisation_id = primary_admin_organisation.id
+                        active_organisation = user.get_active_organisation()
+                        if active_organisation is not None:
+                            g.active_organisation_id = active_organisation.id
+                            g.active_organisation = active_organisation
                         else:
-                            g.primary_organisation_id = None
+                            g.active_organisation_id = None
+                            g.active_organisation = None
                     except NotImplementedError:
-                        g.primary_organisation_id = None
+                        g.active_organisation_id = None
+                        g.active_organisation = None
 
                     if not user.is_activated:
                         responseObject = {

@@ -4,10 +4,26 @@ from flask.views import MethodView
 from server import basic_auth, db
 from server.utils.auth import requires_auth
 from server.models import Token
+from server.schemas import token_schema, tokens_schema
 
 token_blueprint = Blueprint('token', __name__)
 
 class TokenAPI(MethodView):
+
+    @requires_auth(allowed_basic_auth_types=['internal'])
+    def get(self):
+
+        tokens = Token.query.all()
+
+        response_object = {
+            'message': 'success',
+            'data': {
+                'tokens': tokens_schema.dump(tokens).data
+            }
+        }
+
+        return make_response(jsonify(response_object)), 201
+
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
@@ -23,9 +39,7 @@ class TokenAPI(MethodView):
             response_object = {
                 'message': 'Token already exists',
                 'data': {
-                    'token': {
-                        'id': token.id
-                    }
+                    'token': token_schema.dump(token).data
                 }
             }
 
@@ -50,5 +64,5 @@ class TokenAPI(MethodView):
 token_blueprint.add_url_rule(
     '/token/',
     view_func=TokenAPI.as_view('token_view'),
-    methods=['POST']
+    methods=['POST', 'GET']
 )

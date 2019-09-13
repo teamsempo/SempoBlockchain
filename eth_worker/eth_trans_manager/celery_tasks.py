@@ -12,9 +12,23 @@ class SqlAlchemyTask(celery.Task):
         session.remove()
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
+def create_account(self):
+    account = blockchain_processor.persistence_model.create_account()
+    return account.address
+
+@celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
+def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
+    blockchain_processor.registry.register_contract(
+        contract_address, abi, contract_name, require_name_matches
+    )
+
+@celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
+def call_contract_function(self, contract, function, args=None, kwargs=None):
+    return blockchain_processor.call_contract_function(contract, function, args, kwargs)
+
+@celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
 def transact_with_contract_function(self, encrypted_private_key, contract, function, args=None, kwargs=None, dependent_on_tasks=None):
     return blockchain_processor.transact_with_contract_function(encrypted_private_key, contract, function, args, kwargs, dependent_on_tasks)
-
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
 def _attempt_transaction(self, transaction_id, contract, function, args=None, kwargs=None):

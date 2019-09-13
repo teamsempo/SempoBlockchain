@@ -32,7 +32,7 @@ class ModelBase(Base):
 class BlockchainAddress(ModelBase):
     __tablename__ = 'blockchain_address'
 
-    address = Column(String())
+    address = Column(String(), index=True, unique=True, nullable=False)
     _encrypted_private_key = Column(String())
 
     tasks = relationship('BlockchainTask',

@@ -4,7 +4,6 @@ from server.utils.amazon_s3 import get_file_url
 from server import models
 
 class UserSchema(Schema):
-
     id      = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
 
@@ -293,6 +292,17 @@ class OrganisationSchema(Schema):
     credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
 
+class TokenSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+    created             = fields.DateTime(dump_only=True)
+
+    address             = fields.Str()
+    symbol              = fields.Str()
+    name                = fields.Str()
+
+
+
+
 old_user_schema = UserSchema(exclude=("transfer_account.users",))
 user_schema = UserSchema(exclude=("transfer_account.users",
                                   "transfer_account.credit_sends",
@@ -369,3 +379,6 @@ kyc_application_state_schema = KycApplicationSchema(exclude=("trulioo_id","wyre_
                                                                          ))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
+
+token_schema = TokenSchema()
+tokens_schema = TokenSchema(many=True)
