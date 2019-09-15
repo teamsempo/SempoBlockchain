@@ -236,7 +236,7 @@ class SQLAlchemyDataStore(object):
 
     def create_account(self, encrypted_private_key=None):
 
-        if session.query(BlockchainAddress).filter_by(encrypted_private_key=encrypted_private_key):
+        if session.query(BlockchainAddress).filter_by(encrypted_private_key=encrypted_private_key).first():
             raise Exception("Account for provided private key already exists")
 
         account = BlockchainAddress(encrypted_private_key=encrypted_private_key)
@@ -508,9 +508,10 @@ class TransactionProcessor(object):
 
 
     def transact_with_contract_function(self,
+                                        encrypted_private_key: str,
                                         contract_name_or_address: str, function_name: str,
                                         args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-                                        address: Optional[str]=None, encrypted_private_key: Optional[str]=None,
+                                        # address: Optional[str]=None, encrypted_private_key: Optional[str]=None,
                                         dependent_on_tasks: Optional[IdList] = None) -> int:
         """
         The main transaction entrypoint for the processor. This task completes quickly,
@@ -526,21 +527,21 @@ class TransactionProcessor(object):
         :return: task_id
         """
 
-        if address:
+        # if address:
+        #
+        #     address_obj = self.persistence_model.get_account_by_address(address)
+        #
+        #     if address_obj is None:
+        #         raise Exception('Private key for address {} not found'.format(address))
 
-            address_obj = self.persistence_model.get_account_by_address(address)
-
-            if address_obj is None:
-                raise Exception('Private key for address {} not found'.format(address))
-
-        elif encrypted_private_key:
+        if encrypted_private_key:
 
             address_obj = self.persistence_model.get_account_by_encrypted_private_key(encrypted_private_key)
 
             if not address_obj:
                 address_obj = self.persistence_model.create_account(encrypted_private_key=encrypted_private_key)
         else:
-            raise Exception("Must provide either address or encrypted private key")
+            raise Exception("Must provide encrypted private key")
 
         task = self.persistence_model.create_transaction_task(address_obj,
                                                               contract_name_or_address, function_name, args, kwargs,

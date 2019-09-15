@@ -525,6 +525,4 @@ def proccess_create_or_modify_user_request(attribute_dict,
         }
     }
 
-    elapsed_time('6.0 Complete')
-
     return response_object, 200

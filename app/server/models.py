@@ -21,6 +21,7 @@ from server.exceptions import (
     TierNotFoundException,
     InvalidTransferTypeException,
     NoTransferAccountError,
+    UserNotFoundError,
     NoTransferCardError,
     TypeNotFoundException,
     IconNotSupportedException,
@@ -41,6 +42,7 @@ from server.utils.credit_transfers import make_disbursement_transfer, make_withd
 from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
 from server.utils.misc import elapsed_time, encrypt_string, decrypt_string, hex_private_key_to_address
+from server.utils.blockchain_tasks import get_token_decimals, make_token_transfer_signature
 from server.utils import auth
 
 @contextmanager
@@ -745,6 +747,7 @@ class Token(ModelBase):
     address = db.Column(db.String, index=True, unique=True, nullable=False)
     name    = db.Column(db.String)
     symbol  = db.Column(db.String)
+    _decimals = db.Column(db.Integer)
 
     organisations = db.relationship('Organisation', backref='token', lazy=True,
                                         foreign_keys='Organisation.token_id')
@@ -755,11 +758,30 @@ class Token(ModelBase):
     credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
                                         foreign_keys='CreditTransfer.token_id')
 
+    @property
+    def decimals(self):
+        if self._decimals:
+            return self._decimals
+
+        decimals_from_contract_definition = get_token_decimals(self)
+
+        if decimals_from_contract_definition:
+            return decimals_from_contract_definition
+
+        raise Exception("Decimals not defined in either database or contract")
+
+    def token_amount_to_system(self, token_amount):
+        return token_amount * 100 / 10**self.decimals
+
+    def system_amount_to_token(self, system_amount):
+        return system_amount / 100 * 10**self.decimals
+
+
 class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    # balance         = db.Column(db.BigInteger, default=0)
+    balance         = db.Column(db.BigInteger, default=0)
 
     is_approved     = db.Column(db.Boolean, default=False)
 
@@ -798,6 +820,16 @@ class TransferAccount(OneOrgBase, ModelBase):
     feedback            = db.relationship('Feedback', backref='transfer_account',
                                           lazy='dynamic', foreign_keys='Feedback.transfer_account_id')
 
+    spend_approvals_given = db.relationship('CreditTransfer', backref='giving_transfer_account',
+                                                lazy='dynamic', foreign_keys='SpendApprovals.giving_transfer_account_id')
+
+    def get_approval(self, receiving_address):
+        for approval in self.spend_approvals_given:
+            if approval.receiving_address == receiving_address:
+                return approval
+        return None
+
+
     @hybrid_property
     def total_sent(self):
         return int(
@@ -814,9 +846,9 @@ class TransferAccount(OneOrgBase, ModelBase):
             .filter(CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
         )
 
-    @hybrid_property
-    def balance(self):
-        return self.total_received - self.total_sent
+    # @hybrid_property
+    # def balance(self):
+    #     return self.total_received - self.total_sent
 
     @hybrid_property
     def primary_user(self):
@@ -962,6 +994,15 @@ class BlockchainAddress(OneOrgBase, ModelBase):
 
             self.calculate_address(hex_private_key)
 
+class SpendApprovals(ModelBase):
+    __tablename__ = 'spend_approvals'
+
+    eth_send_task_id = db.Column(db.Integer)
+    approval_task_id = db.Column(db.Integer)
+    receiving_address = db.Column(db.String)
+
+    token_id                      = db.Column(db.Integer, db.ForeignKey(Token.id))
+    giving_transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
 
 class CreditTransfer(ManyOrgBase, ModelBase):
     __tablename__ = 'credit_transfer'
@@ -975,7 +1016,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     transfer_status = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode   = db.Column(db.Enum(TransferModeEnum))
     transfer_use    = db.Column(JSON)
-
 
     resolution_message = db.Column(db.String())
 
@@ -1081,12 +1121,15 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                 completed_task_set.add(transaction.transaction_type)
         return completed_task_set
 
-    def delta_transfer_account_balance(self, transfer_account, delta):
+    def send_blockchain_payload_to_worker(self, system_wallet_address, is_retry=False):
+        approval = self.sender_transfer_account.get_approval(system_wallet_address)
 
-            if transfer_account:
-                transfer_account.balance += delta
+        if not approval:
 
-    def send_blockchain_payload_to_worker(self, is_retry=False):
+
+
+    def old_send_blockchain_payload_to_worker(self, is_retry=False):
+
         if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
 
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -1094,8 +1137,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                 self.recipient_user.transfer_card.update_transfer_card()
 
             master_wallet_approval_status = self.recipient_transfer_account.master_wallet_approval_status
-
-            elapsed_time('4.3.2: Approval Status calculated')
 
             if master_wallet_approval_status in ['NO_REQUEST', 'FAILED']:
                 account_to_approve_pk = self.recipient_transfer_account.blockchain_address.encoded_private_key
@@ -1111,8 +1152,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                                   'uncompleted_tasks': list(self.uncompleted_blockchain_tasks),
                                   'is_retry': is_retry
                                   }
-
-            elapsed_time('4.3.3: Payload made')
 
         elif self.transfer_type == TransferTypeEnum.PAYMENT:
 
@@ -1174,8 +1213,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
-        # self.delta_transfer_account_balance(self.sender_transfer_account, -self.transfer_amount)
-        # self.delta_transfer_account_balance(self.recipient_transfer_account, self.transfer_amount)
+        self.sender_transfer_account.balance -= self.transfer_amount
+        self.recipient_transfer_account.balance += self.transfer_amount
 
         if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -1183,8 +1222,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         if not existing_blockchain_txn:
             self.send_blockchain_payload_to_worker()
-
-        elapsed_time('4.3.3: Payload sent')
 
     def resolve_as_rejected(self, message=None):
         self.resolved_date = datetime.datetime.utcnow()
@@ -1221,35 +1258,47 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     def check_recipient_is_approved(self):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
-    def find_user_transfer_account_with_matching_token(self, user, token):
+    def find_user_transfer_accounts_with_matching_token(self, user, token):
+        matching_transfer_accounts = []
         for transfer_account in user.transfer_accounts:
             if transfer_account.token == token:
-                return transfer_account
-        raise NoTransferAccountError("No transfer account for user {} and token".format(user, token))
+                matching_transfer_accounts.append(transfer_account)
+        if len(matching_transfer_accounts) == 0:
+            raise NoTransferAccountError("No transfer account for user {} and token".format(user, token))
+        if len(matching_transfer_accounts) > 1:
+            raise Exception(f"User has multiple transfer accounts for token {token}")
 
-    def __init__(self, amount, token, sender=None, recipient=None, transfer_type=None, uuid=None):
+        return matching_transfer_accounts[0]
+
+    def _select_transfer_account(self, supplied_transfer_account, user, token):
+        if supplied_transfer_account:
+            if user is not None and user not in supplied_transfer_account.users:
+                raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
+            return supplied_transfer_account
+
+        return self.find_user_transfer_accounts_with_matching_token(user, token)
+
+    def __init__(self, amount, token,
+                 sender_user=None, recipient_user=None,
+                 sender_transfer_account=None, recipient_transfer_account=None,
+                 transfer_type=None, uuid=None):
+
+        self.transfer_amount = amount
+        self.token = token
+
+        self.sender_user = sender_user
+        self.recipient_user = recipient_user
+
+        self.sender_transfer_account = self._select_transfer_account(
+            sender_transfer_account, sender_user, token)
+
+        self.recipient_transfer_account = self._select_transfer_account(
+            recipient_transfer_account, recipient_user, token)
+
+        self.transfer_type = transfer_type
 
         if uuid is not None:
             self.uuid = uuid
-
-        if sender is not None:
-            self.sender_user = sender
-            self.sender_transfer_account = self.find_user_transfer_account_with_matching_token(sender, token)
-
-        if recipient is not None:
-            self.recipient_user = recipient
-            self.recipient_transfer_account = self.find_user_transfer_account_with_matching_token(recipient, token)
-
-        if self.sender_transfer_account and self.recipient_transfer_account:
-            self.transfer_type = TransferTypeEnum.PAYMENT
-        elif self.recipient_transfer_account:
-            self.transfer_type = TransferTypeEnum.DISBURSEMENT
-        elif self.sender_transfer_account:
-            self.transfer_type = TransferTypeEnum.WITHDRAWAL
-        else:
-            raise ValueError("Neither sender nor recipient transfer accounts found")
-
-        self.transfer_amount = amount
 
 
 

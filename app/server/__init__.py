@@ -77,7 +77,7 @@ celery_app = Celery('tasks',
 #         result.forget()
 #
 #     # if not dependent_on_tasks:
-#     dependent_on_tasks = [task_id]
+#     # dependent_on_tasks = [task_id]
 #     print(task_id)
 
 red = redis.Redis.from_url(config.REDIS_URL)

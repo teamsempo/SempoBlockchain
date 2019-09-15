@@ -20,7 +20,7 @@ ERC20_config['ethereum_chain_id'] = config.ETH_CHAIN_ID
 # ERC20_config['http_provider'] = config.ETH_HTTP_PROVIDER
 ERC20_config['gas_price_gwei'] = config.ETH_GAS_PRICE
 ERC20_config['gas_limit'] = config.ETH_GAS_LIMIT
-ERC20_config['w3'] = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+ERC20_config['w3'] = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
 ETH_CHECK_TRANSACTION_RETRIES = config.ETH_CHECK_TRANSACTION_RETRIES
 ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = config.ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT
@@ -46,6 +46,6 @@ blockchain_processor.registry.register_contract(
 
 from eth_trans_manager.utils import register_contracts_from_app
 
-register_contracts_from_app(config.APP_HOST, config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD)
+# register_contracts_from_app(config.APP_HOST, config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD)
 
 

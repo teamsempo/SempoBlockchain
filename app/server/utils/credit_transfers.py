@@ -56,7 +56,7 @@ def calculate_transfer_stats(total_time_series=False):
         .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT).all()
 
     try:
-        master_wallet_balance = master_wallet_funds_available()
+        master_wallet_balance = cached_funds_available()
     except BlockchainError:
         master_wallet_balance = 0
 
@@ -98,13 +98,16 @@ def calculate_transfer_stats(total_time_series=False):
     return data
 
 
-def master_wallet_funds_available(allowed_cache_age_seconds=60):
+def cached_funds_available(allowed_cache_age_seconds=60):
     """
     IF refreshing cash THEN:
         return: [current blockchain balance] - [all transfers with blockchain state pending or unknown]
-        save to cache: [funds available at last cache], [ID of highest transfer used in cache], [cache creation datetime]
+        save to cache: [funds available], [ID of highest transfer used in cache], [cache creation datetime]
     ELSE
-        return: [funds available at last cache] - [all non-failed transfers since cache created]
+        return: [funds available at last cache] - [all non-failed transfers since last cache]
+
+    Max Txn ID is a simple way to determine whether txn was used in cache or not, and thus needs to be accounted for
+
     :param allowed_cache_age_seconds: how long between checking the blockchain for external funds added or removed
     :return: amount of funds available
     """
@@ -361,7 +364,7 @@ def make_payment_transfer(transfer_amount,
                           automatically_resolve_complete=True,
                           uuid=None):
 
-    transfer = models.CreditTransfer(transfer_amount, token, sender=send_account, recipient=receive_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, token, sender_user=send_account, recipient_user=receive_account, uuid=uuid)
 
     make_cashout_incentive_transaction = False
 
@@ -426,7 +429,7 @@ def make_withdrawal_transfer(transfer_amount,
                              automatically_resolve_complete=True,
                              uuid=None):
 
-    transfer = models.CreditTransfer(transfer_amount, token, sender=send_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, token, sender_user=send_account, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
@@ -454,21 +457,18 @@ def make_disbursement_transfer(transfer_amount,
                                automatically_resolve_complete=True,
                                uuid=None):
 
-    if current_app.config['USING_EXTERNAL_ERC20']:
+    outbound_transfer_account = g.active_organisation.org_level_transfer_account
 
-        outbound_transfer_account = g.active_organisation.org_level_transfer_account
+    master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address.address, token)
 
-        master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address.address, token)
+    if transfer_amount > master_wallet_balance:
+        message = "Master Wallet has insufficient funds"
+        raise InsufficientBalanceError(message)
 
-        if transfer_amount > master_wallet_balance:
-            message = "Master Wallet has insufficient funds"
-            raise InsufficientBalanceError(message)
-
-    if current_app.config['IS_USING_BITCOIN']:
-        if transfer_amount < 1000 * 100:
-            raise Exception("Minimum Transfer Amount is 1000 sat")
-
-    transfer = models.CreditTransfer(transfer_amount, token, recipient=receive_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount, token,
+                                     sender_transfer_account=outbound_transfer_account,
+                                     recipient_user=receive_account,
+                                     transfer_type=models.TransferTypeEnum.DISBURSEMENT, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
