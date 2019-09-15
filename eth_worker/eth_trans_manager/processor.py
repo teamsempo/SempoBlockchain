@@ -211,14 +211,38 @@ class SQLAlchemyDataStore(object):
 
         return unsatisfied
 
-    def create_transaction_task(self, address_obj, contract,
-                                function, args=None, kwargs=None,
-                                dependent_on_tasks=None):
-
+    def add_dependent_on_tasks(self, task, dependent_on_tasks):
         if dependent_on_tasks is None:
             dependent_on_tasks = []
 
-        task = BlockchainTask(signing_address=address_obj,
+        for task_id in dependent_on_tasks:
+            dependee_task = session.query(BlockchainTask).get(task_id)
+            task.dependees.append(dependee_task)
+
+
+    def create_send_eth_task(self, signing_address_obj,
+                             recipient_address, amount,
+                             dependent_on_tasks=None):
+
+        task = BlockchainTask(signing_address=signing_address_obj,
+                              is_send_eth=True,
+                              recipient_address=recipient_address,
+                              amount=amount)
+
+        session.add(task)
+
+        self.add_dependent_on_tasks(task, dependent_on_tasks)
+
+        session.commit()
+
+        return task
+
+    def create_function_task(self, signing_address_obj, contract,
+                             function, args=None, kwargs=None,
+                             dependent_on_tasks=None):
+
+
+        task = BlockchainTask(signing_address=signing_address_obj,
                               contract=contract,
                               function=function,
                               args=args,
@@ -226,26 +250,28 @@ class SQLAlchemyDataStore(object):
 
         session.add(task)
 
-        for task_id in dependent_on_tasks:
-            dependee_task = session.query(BlockchainTask).get(task_id)
-            task.dependees.append(dependee_task)
+        self.add_dependent_on_tasks(task, dependent_on_tasks)
 
         session.commit()
 
         return task
 
-    def create_account(self, encrypted_private_key=None):
+    def get_task_from_id(self, task_id):
+        return session.query(BlockchainTask).get(task_id)
 
-        if session.query(BlockchainAddress).filter_by(encrypted_private_key=encrypted_private_key).first():
+    def create_blockchain_wallet(self, encrypted_private_key=None):
+
+        private_key = BlockchainAddress.decrypt_private_key(encrypted_private_key)
+        if session.query(BlockchainAddress).filter_by(private_key=private_key).first():
             raise Exception("Account for provided private key already exists")
 
-        account = BlockchainAddress(encrypted_private_key=encrypted_private_key)
+        wallet = BlockchainAddress(encrypted_private_key=encrypted_private_key)
 
-        session.add(account)
+        session.add(wallet)
 
         session.commit()
 
-        return account
+        return wallet
 
     def get_account_by_address(self, address):
         return session.query(BlockchainAddress).filter(BlockchainAddress.address == address).first()
@@ -338,6 +364,17 @@ class TransactionProcessor(object):
             gas_price = self.gas_price
 
         return gas_price
+
+    def process_send_eth_transaction(self, transaction_id,
+                                     recipient_address, amount):
+
+        partial_txn_dict = {
+            'to': recipient_address,
+            'value': amount
+        }
+
+        return self.process_transaction(transaction_id, partial_txn_dict=partial_txn_dict)
+
 
     def process_function_transaction(self, transaction_id,
                                      contract_name, function_name, args=None, kwargs=None):
@@ -454,7 +491,7 @@ class TransactionProcessor(object):
                                     'block': tx_receipt.blockNumber,
                                     'mined_date': mined_date})
 
-    def attempt_transaction(self, task_id, contract_name, function_name, args=None, kwargs=None):
+    def attempt_transaction(self, task_id):
 
         unsatisfied_dependee_tasks = self.persistence_model.unstatisfied_task_dependencies(task_id)
         if len(unsatisfied_dependee_tasks) > 0:
@@ -463,14 +500,45 @@ class TransactionProcessor(object):
 
         transaction_obj = self.persistence_model.create_blockchain_transaction(task_id)
 
-        chain1 = signature('eth_trans_manager.celery_tasks._process_function_transaction',
-                          args=(transaction_obj.id, contract_name, function_name, args, kwargs))
+        task_object = self.persistence_model.get_task_from_id(task_id)
+
+        if task_object.is_send_eth:
+            chain1 = signature('eth_trans_manager.celery_tasks._process_send_eth_transaction',
+                          args=(transaction_obj.id,
+                                task_object.recipient_address,
+                                task_object.amount))
+        else:
+            chain1 = signature('eth_trans_manager.celery_tasks._process_function_transaction',
+                               args=(transaction_obj.id,
+                                     task_object.contract,
+                                     task_object.function,
+                                     task_object.args,
+                                     task_object.kwargs))
 
         chain2 = signature('eth_trans_manager.celery_tasks._check_transaction_response')
 
         error_callback = signature('eth_trans_manager.celery_tasks._log_error', args=(transaction_obj.id,))
 
         return chain([chain1, chain2]).on_error(error_callback).delay()
+
+    def get_singing_address_object(self, signing_address, encrypted_private_key):
+        if signing_address:
+
+            singing_address_obj = self.persistence_model.get_account_by_address(signing_address)
+
+            if singing_address_obj is None:
+                raise Exception('Private key for address {} not found'.format(signing_address))
+
+        elif encrypted_private_key:
+
+            singing_address_obj = self.persistence_model.get_account_by_encrypted_private_key(encrypted_private_key)
+
+            if not singing_address_obj:
+                singing_address_obj = self.persistence_model.create_account(encrypted_private_key=encrypted_private_key)
+        else:
+            raise Exception("Must provide encrypted private key")
+
+        return singing_address_obj
 
     def log_error(self, request, exc, traceback, transaction_id):
         data = {
@@ -508,10 +576,9 @@ class TransactionProcessor(object):
 
 
     def transact_with_contract_function(self,
-                                        encrypted_private_key: str,
                                         contract_name_or_address: str, function_name: str,
                                         args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-                                        # address: Optional[str]=None, encrypted_private_key: Optional[str]=None,
+                                        signing_address: Optional[str]=None, encrypted_private_key: Optional[str]=None,
                                         dependent_on_tasks: Optional[IdList] = None) -> int:
         """
         The main transaction entrypoint for the processor. This task completes quickly,
@@ -521,35 +588,49 @@ class TransactionProcessor(object):
         :param function_name: name of the function
         :param args: arguments for the function
         :param kwargs: keyword arguments for the function
-        :param address: address of the account signing the txn
+        :param singing_address: address of the account signing the txn
         :param encrypted_private_key: private key of the account making the transaction, encrypted using key from settings
         :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
         :return: task_id
         """
 
-        # if address:
-        #
-        #     address_obj = self.persistence_model.get_account_by_address(address)
-        #
-        #     if address_obj is None:
-        #         raise Exception('Private key for address {} not found'.format(address))
+        signing_address_obj = self.get_singing_address_object(signing_address, encrypted_private_key)
 
-        if encrypted_private_key:
+        task = self.persistence_model.create_function_task(signing_address_obj,
+                                                           contract_name_or_address, function_name, args, kwargs,
+                                                           dependent_on_tasks)
 
-            address_obj = self.persistence_model.get_account_by_encrypted_private_key(encrypted_private_key)
+        # Attempt Create Async Transaction
+        signature('eth_trans_manager.celery_tasks._attempt_transaction', args=(task.id,)).delay()
 
-            if not address_obj:
-                address_obj = self.persistence_model.create_account(encrypted_private_key=encrypted_private_key)
-        else:
-            raise Exception("Must provide encrypted private key")
+        # Immediately return task ID
+        return task.id
 
-        task = self.persistence_model.create_transaction_task(address_obj,
-                                                              contract_name_or_address, function_name, args, kwargs,
-                                                              dependent_on_tasks)
+    def send_eth(self,
+                 amount: int,
+                 recipient_address: str,
+                 signing_address: Optional[str] = None, encrypted_private_key: Optional[str] = None,
+                 dependent_on_tasks: Optional[IdList] = None) -> int:
+        """
+        The main entrypoint sending eth. This task completes quickly,
+        so can be called synchronously in order to retrieve a task ID
 
-        # Create Async Task
-        signature('eth_trans_manager.celery_tasks._attempt_transaction',
-                  args=(task.id, contract_name_or_address, function_name, args, kwargs)).delay()
+        :param amount: the amount in WEI to send
+        :param recipient_address: the recipient address
+        :param signing_address: address of the account signing the txn
+        :param encrypted_private_key: private key of the account making the transaction, encrypted using key from settings
+        :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
+        :return: task_id
+        """
+
+        signing_address_obj = self.get_singing_address_object(signing_address, encrypted_private_key)
+
+        task = self.persistence_model.create_send_eth_task(signing_address_obj,
+                                                           recipient_address, amount,
+                                                           dependent_on_tasks)
+
+        # Attempt Create Async Transaction
+        signature('eth_trans_manager.celery_tasks._attempt_transaction', args=(task.id,)).delay()
 
         # Immediately return task ID
         return task.id

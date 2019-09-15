@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, JSON
+from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import select, func, case
 import datetime, base64, os
@@ -32,7 +32,7 @@ class ModelBase(Base):
 class BlockchainAddress(ModelBase):
     __tablename__ = 'blockchain_address'
 
-    address = Column(String(), index=True, unique=True, nullable=False)
+    address = Column(String(), index=True, unique=True)
     _encrypted_private_key = Column(String())
 
     tasks = relationship('BlockchainTask',
@@ -52,27 +52,29 @@ class BlockchainAddress(ModelBase):
     @encrypted_private_key.setter
     def encrypted_private_key(self, value):
         self._encrypted_private_key = value
-        private_key = self._decrypt_private_key(value)
+        private_key = self.decrypt_private_key(value)
         self._set_address_from_private_key(private_key)
 
     @hybrid_property
     def private_key(self):
-        return self._decrypt_private_key(self._encrypted_private_key)
+        return self.decrypt_private_key(self._encrypted_private_key)
 
     @private_key.setter
     def private_key(self, value):
-        self.encrypted_private_key = self._encrypt_private_key(value)
+        self.encrypted_private_key = self.encrypt_private_key(value)
         self._set_address_from_private_key(value)
 
-    def _encrypt_private_key(self, private_key):
-        return self._cipher_suite()\
+    @staticmethod
+    def decrypt_private_key(encrypted_private_key):
+        return BlockchainAddress._cipher_suite() \
+            .decrypt(encrypted_private_key.encode('utf-8')).decode('utf-8')
+    @staticmethod
+    def encrypt_private_key(private_key):
+        return BlockchainAddress._cipher_suite()\
             .encrypt(private_key.encode('utf-8')).decode('utf-8')
 
-    def _decrypt_private_key(self, encrypted_private_key):
-        return self._cipher_suite() \
-            .decrypt(encrypted_private_key.encode('utf-8')).decode('utf-8')
-
-    def _cipher_suite(self):
+    @staticmethod
+    def _cipher_suite():
         fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
         return Fernet(fernet_encryption_key)
 
@@ -103,6 +105,10 @@ class BlockchainTask(ModelBase):
     function = Column(String)
     args = Column(JSON)
     kwargs = Column(JSON)
+
+    is_send_eth = Column(Boolean, default=False)
+    recipient_address = Column(String)
+    amount = Column(BigInteger)
 
     signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
 

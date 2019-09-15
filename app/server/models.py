@@ -42,8 +42,14 @@ from server.utils.credit_transfers import make_disbursement_transfer, make_withd
 from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
 from server.utils.misc import elapsed_time, encrypt_string, decrypt_string, hex_private_key_to_address
-from server.utils.blockchain_tasks import get_token_decimals, make_token_transfer_signature
 from server.utils import auth
+from server.utils.blockchain_tasks import (
+    create_blockchain_wallet,
+    get_token_decimals,
+    send_eth,
+    make_approval
+)
+
 
 @contextmanager
 def no_expire():
@@ -217,6 +223,8 @@ class Organisation(ModelBase):
 
     name                = db.Column(db.String)
 
+    system_blockchain_address = db.Column(db.String)
+
     users               = db.relationship(
                             "User",
                             secondary=organisation_association_table,
@@ -247,9 +255,11 @@ class Organisation(ModelBase):
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
 
+
     def __init__(self, **kwargs):
         super(Organisation, self).__init__(**kwargs)
 
+        self.system_blockchain_address = create_blockchain_wallet()
 
 
 class OneOrgBase(object):
@@ -758,6 +768,9 @@ class Token(ModelBase):
     credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
                                         foreign_keys='CreditTransfer.token_id')
 
+    approvals = db.relationship('SpendApproval', backref='token', lazy=True,
+                                        foreign_keys='SpendApproval.token_id')
+
     @property
     def decimals(self):
         if self._decimals:
@@ -821,7 +834,10 @@ class TransferAccount(OneOrgBase, ModelBase):
                                           lazy='dynamic', foreign_keys='Feedback.transfer_account_id')
 
     spend_approvals_given = db.relationship('CreditTransfer', backref='giving_transfer_account',
-                                                lazy='dynamic', foreign_keys='SpendApprovals.giving_transfer_account_id')
+                                                lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
+
+    def create_approval(self, receiving_address):
+        approval = SpendApproval(self, receiving_address)
 
     def get_approval(self, receiving_address):
         for approval in self.spend_approvals_given:
@@ -994,8 +1010,8 @@ class BlockchainAddress(OneOrgBase, ModelBase):
 
             self.calculate_address(hex_private_key)
 
-class SpendApprovals(ModelBase):
-    __tablename__ = 'spend_approvals'
+class SpendApproval(ModelBase):
+    __tablename__ = 'spend_approval'
 
     eth_send_task_id = db.Column(db.Integer)
     approval_task_id = db.Column(db.Integer)
@@ -1003,6 +1019,20 @@ class SpendApprovals(ModelBase):
 
     token_id                      = db.Column(db.Integer, db.ForeignKey(Token.id))
     giving_transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
+
+    def __init__(self, giving_transfer_account, receiving_address):
+
+        self.giving_transfer_account = giving_transfer_account
+
+        self.token = giving_transfer_account.token
+
+        self.receiving_address = receiving_address
+
+        send_eth(
+            # giving_transfer_account.blockchain_address.address, receiving_address
+        )
+
+
 
 class CreditTransfer(ManyOrgBase, ModelBase):
     __tablename__ = 'credit_transfer'
@@ -1125,6 +1155,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         approval = self.sender_transfer_account.get_approval(system_wallet_address)
 
         if not approval:
+            pass
+            self.sender_transfer_account
 
 
 
