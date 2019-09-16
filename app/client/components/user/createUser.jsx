@@ -131,7 +131,7 @@ class CreateUserForm extends React.Component {
       custom_initial_disbursement
     } = this.state;
 
-    let {one_time_code, has_private_key} = this.props.users.createStatus;
+    let {one_time_code, is_external_wallet} = this.props.users.createStatus;
 
     if (!window.IS_USING_BITCOIN) {
       var unique_indentifier_input = (
@@ -278,7 +278,7 @@ class CreateUserForm extends React.Component {
 
     }
 
-    if (one_time_code !== null && has_private_key === true) {
+    if (one_time_code !== null) {
       return (
           <div>
             <ModuleHeader>One Time Code</ModuleHeader>
@@ -295,7 +295,7 @@ class CreateUserForm extends React.Component {
         )
     }
 
-    if (one_time_code !== null && has_private_key === false) {
+    if (one_time_code !== null && is_external_wallet == true) {
       return (
           <div>
             <ModuleHeader>Successfully Created External Wallet User</ModuleHeader>

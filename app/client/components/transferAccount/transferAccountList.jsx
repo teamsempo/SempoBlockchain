@@ -161,8 +161,8 @@ class TransferAccountList extends React.Component {
   }
 
   _customName(transferAccount) {
-    if (this.props.login.adminTier === 'view' && typeof(transferAccount.blockchain_address.address) !== "undefined") {
-      return transferAccount.blockchain_address.address
+    if (this.props.login.adminTier === 'view' && typeof(transferAccount.blockchain_address) !== "undefined") {
+      return transferAccount.blockchain_address
     }
     return (transferAccount.first_name === null ? '' : transferAccount.first_name) + ' ' + (transferAccount.last_name === null ? '' : transferAccount.last_name)
   }

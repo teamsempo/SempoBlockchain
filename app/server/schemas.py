@@ -86,12 +86,6 @@ class UploadedImageSchema(Schema):
     image_url               = fields.Function(lambda obj: obj.image_url)
     credit_transfer_id      = fields.Int()
 
-class BlockchainAddressSchema(Schema):
-    id = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-    address = fields.Str()
-    has_private_key = fields.Function(lambda obj: bool(obj.encoded_private_key))
-
 class CreditTransferSchema(Schema):
 
     id      = fields.Int(dump_only=True)
@@ -125,9 +119,6 @@ class CreditTransferSchema(Schema):
     sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
     recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
 
-    sender_blockchain_address    = fields.Nested(BlockchainAddressSchema)
-    recipient_blockchain_address = fields.Nested(BlockchainAddressSchema)
-
     attached_images         = fields.Nested(UploadedImageSchema, many=True)
 
     lat               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
@@ -136,8 +127,6 @@ class CreditTransferSchema(Schema):
     is_sender               = fields.Function(lambda obj: obj.sender_transfer_account_id == g.user.transfer_account_id)
 
     blockchain_status = fields.Function(lambda obj: obj.blockchain_status)
-    blockchain_status_breakdown = fields.Function(lambda obj: obj.blockchain_status_breakdown)
-    uncompleted_blockchain_tasks = fields.Function(lambda obj: list(obj.uncompleted_blockchain_tasks))
 
     def get_authorising_user_email(self, obj):
         authorising_user_id = obj.authorising_user_id
@@ -172,7 +161,7 @@ class TransferAccountSchema(Schema):
     payable_epoch           = fields.Str()
     payable_period_epoch    = fields.DateTime()
 
-    blockchain_address = fields.Nested(BlockchainAddressSchema)
+    blockchain_address = fields.Str()
 
     #TODO: Make this plural because it's stupid
     users                   = fields.Nested(UserSchema, attribute='users', many = True, exclude=('transfer_account',))
@@ -309,8 +298,6 @@ user_schema = UserSchema(exclude=("transfer_account.users",
                                   "transfer_account.credit_receives"))
 
 users_schema = UserSchema(many=True, exclude=("transfer_account.users",))
-
-blockchain_address_schema = BlockchainAddressSchema(many=True)
 
 transfer_account_schema = TransferAccountSchema(
     exclude=(

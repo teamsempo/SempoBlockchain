@@ -79,9 +79,9 @@ class AttributeDictProccessor(object):
             return -1
 
     def _convert_yes_no_string_to_bool(self, test_string):
-        if str(test_string).lower() in ["yes", "true", "1"]:
+        if str(test_string).lower() in ["yes", "true"]:
             return True
-        elif str(test_string).lower() in ["no", "false", "0"]:
+        elif str(test_string).lower() in ["no", "false"]:
             return False
         else:
             return test_string

@@ -164,12 +164,12 @@ class TransferAccountManager extends React.Component {
       if (!window.IS_USING_BITCOIN) {
         var tracker_link = (
           'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-          + 'etherscan.io/address/' + this.props.transferAccount.blockchain_address.address
+          + 'etherscan.io/address/' + this.props.transferAccount.blockchain_address
         )
       } else {
         tracker_link = (
           'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-          '/address/' + this.props.transferAccount.blockchain_address.address
+          '/address/' + this.props.transferAccount.blockchain_address
         )
       }
 
@@ -188,7 +188,7 @@ class TransferAccountManager extends React.Component {
                           <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>
                             <a  href={tracker_link}
                                      target="_blank">
-                            {this.props.transferAccount.blockchain_address.address.substring(window.IS_USING_BITCOIN? 0:2,7) + '...'}
+                            {this.props.transferAccount.blockchain_address.substring(2,7) + '...'}
                             </a>
                           </p>
                         </span>

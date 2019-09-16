@@ -36,7 +36,6 @@ class CreditTransferAPI(MethodView):
 
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
-        get_transfer_stats = request.args.get('get_stats', False)
 
         transfer_list = None
 
@@ -100,11 +99,6 @@ class CreditTransferAPI(MethodView):
 
             transfers, total_items, total_pages = paginate_query(query, CreditTransfer)
 
-            if get_transfer_stats:
-                transfer_stats = calculate_transfer_stats(total_time_series=True)
-            else:
-                transfer_stats = None
-
             if g.user.roles:
                 transfer_list = credit_transfers_schema.dump(transfers).data
             elif g.user.has_admin_role:
@@ -117,7 +111,6 @@ class CreditTransferAPI(MethodView):
                 'pages': total_pages,
                 'data': {
                     'credit_transfers': transfer_list,
-                    'transfer_stats': transfer_stats
                 }
             }
 

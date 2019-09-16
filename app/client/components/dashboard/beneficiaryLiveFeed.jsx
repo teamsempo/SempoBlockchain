@@ -42,7 +42,7 @@ class BeneficiaryLiveFeed extends React.Component {
                               var recipient_user_name = recipient_user.first_name + ' ' + recipient_user.last_name
                             } else if (transfer.recipient_blockchain_address !== null) {
                               recipient_user_name = 'Address '
-                                + transfer.recipient_blockchain_address.address.slice(0,8) + '...';
+                                + transfer.recipient_blockchain_address.slice(0,8) + '...';
                             } else {
                                 recipient_user_name = null;
                             }
@@ -52,7 +52,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                 var sender_user_name = sender_user.first_name + ' ' + sender_user.last_name
                             } else if (transfer.sender_blockchain_address !== null) {
                               sender_user_name = 'Address '
-                                + transfer.sender_blockchain_address.address.slice(0,8) + '...';
+                                + transfer.sender_blockchain_address.slice(0,8) + '...';
                             } else {
                                 sender_user_name = null
                             }

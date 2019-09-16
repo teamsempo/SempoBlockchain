@@ -468,7 +468,8 @@ def make_disbursement_transfer(transfer_amount,
         message = "Master Wallet has insufficient funds"
         raise InsufficientBalanceError(message)
 
-    transfer = models.CreditTransfer(transfer_amount, token,
+    transfer = models.CreditTransfer(amount=transfer_amount,
+                                     token=token,
                                      sender_transfer_account=outbound_transfer_account,
                                      recipient_user=receive_account,
                                      transfer_type=models.TransferTypeEnum.DISBURSEMENT, uuid=uuid)

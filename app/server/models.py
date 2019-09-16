@@ -239,6 +239,7 @@ class Organisation(ModelBase):
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
     org_level_transfer_account       = db.relationship("TransferAccount",
+                                                       post_update=True,
                                                        primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
                                                        uselist=False)
 
@@ -247,7 +248,8 @@ class Organisation(ModelBase):
                             secondary=organisation_association_table,
                             back_populates="organisations")
 
-    transfer_accounts   = db.relationship('TransferAccount', backref='organisation',
+    transfer_accounts   = db.relationship('TransferAccount',
+                                          backref='organisation',
                                           lazy=True, foreign_keys='TransferAccount.organisation_id')
 
 
@@ -295,8 +297,7 @@ class ManyOrgBase(object):
 
         return db.relationship("Organisation",
                                secondary=organisation_association_table,
-                               back_populates=plural,
-                               )
+                               back_populates=plural)
 
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
@@ -731,7 +732,7 @@ class ChatbotState(ModelBase):
 
     transfer_initialised = db.Column(db.Boolean, default=False)
     target_user_id = db.Column(db.Integer, default=None)
-    transfer_amount = db.Column(db.Integer, default=None)
+    transfer_amount = db.Column(db.Integer, default=0)
     prev_pin_failures = db.Column(db.Integer, default=0)
     last_accessed = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -761,8 +762,10 @@ class Token(ModelBase):
     symbol  = db.Column(db.String)
     _decimals = db.Column(db.Integer)
 
-    organisations = db.relationship('Organisation', backref='token', lazy=True,
-                                        foreign_keys='Organisation.token_id')
+    organisations = db.relationship('Organisation',
+                                    backref='token',
+                                    lazy=True,
+                                    foreign_keys='Organisation.token_id')
 
     transfer_accounts = db.relationship('TransferAccount', backref='token', lazy=True,
                                          foreign_keys='TransferAccount.token_id')
@@ -1246,6 +1249,10 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         return self.find_user_transfer_accounts_with_matching_token(user, token)
 
+    def append_organisation_if_required(self, organisation):
+        if organisation not in self.organisations:
+            self.organisations.append(organisation)
+
     def __init__(self, amount, token,
                  sender_user=None, recipient_user=None,
                  sender_transfer_account=None, recipient_transfer_account=None,
@@ -1268,7 +1275,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         if uuid is not None:
             self.uuid = uuid
 
-
+        self.append_organisation_if_required(self.recipient_transfer_account.organisation)
+        self.append_organisation_if_required(self.sender_transfer_account.organisation)
 
 
 class BlockchainTransaction(ModelBase):
