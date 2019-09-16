@@ -459,11 +459,11 @@ def make_disbursement_transfer(transfer_amount,
 
     outbound_transfer_account = g.active_organisation.org_level_transfer_account
 
-    master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address.address, token)
+    master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address, token)
 
-    if transfer_amount > master_wallet_balance:
-        message = "Master Wallet has insufficient funds"
-        raise InsufficientBalanceError(message)
+    # if transfer_amount > master_wallet_balance:
+    #     message = "Master Wallet has insufficient funds"
+    #     raise InsufficientBalanceError(message)
 
     transfer = models.CreditTransfer(transfer_amount, token,
                                      sender_transfer_account=outbound_transfer_account,

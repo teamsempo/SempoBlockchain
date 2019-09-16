@@ -105,6 +105,7 @@ class BlockchainTask(ModelBase):
     function = Column(String)
     args = Column(JSON)
     kwargs = Column(JSON)
+    gas_limit = Column(BigInteger)
 
     is_send_eth = Column(Boolean, default=False)
     recipient_address = Column(String)

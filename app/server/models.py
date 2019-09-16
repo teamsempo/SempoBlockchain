@@ -784,10 +784,10 @@ class Token(ModelBase):
         raise Exception("Decimals not defined in either database or contract")
 
     def token_amount_to_system(self, token_amount):
-        return token_amount * 100 / 10**self.decimals
+        return int(token_amount) * 100 / 10**self.decimals
 
     def system_amount_to_token(self, system_amount):
-        return system_amount / 100 * 10**self.decimals
+        return int(float(system_amount) / 100 * 10**self.decimals)
 
 
 class TransferAccount(OneOrgBase, ModelBase):
@@ -795,6 +795,7 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     name            = db.Column(db.String())
     balance         = db.Column(db.BigInteger, default=0)
+    blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
 
@@ -822,7 +823,7 @@ class TransferAccount(OneOrgBase, ModelBase):
     # owning_organisation = db.relationship("Organsisation", backref='org_level_transfer_account',
     #                                       lazy='dynamic', foreign_keys=Organisation.org_level_transfer_account_id)
 
-    blockchain_address = db.relationship('BlockchainAddress', backref='transfer_account', lazy=True, uselist=False)
+    # blockchain_address = db.relationship('BlockchainAddress', backref='transfer_account', lazy=True, uselist=False)
 
     credit_sends       = db.relationship('CreditTransfer', backref='sender_transfer_account',
                                          lazy='dynamic', foreign_keys='CreditTransfer.sender_transfer_account_id')
@@ -833,11 +834,12 @@ class TransferAccount(OneOrgBase, ModelBase):
     feedback            = db.relationship('Feedback', backref='transfer_account',
                                           lazy='dynamic', foreign_keys='Feedback.transfer_account_id')
 
-    spend_approvals_given = db.relationship('CreditTransfer', backref='giving_transfer_account',
-                                                lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
+    spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
+                                            lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
 
-    def create_approval(self, receiving_address):
-        approval = SpendApproval(self, receiving_address)
+    def give_approval_to_address(self, address_getting_approved):
+        approval = SpendApproval(transfer_account_giving_approval=self,
+                                 address_getting_approved=address_getting_approved)
 
     def get_approval(self, receiving_address):
         for approval in self.spend_approvals_given:
@@ -938,15 +940,14 @@ class TransferAccount(OneOrgBase, ModelBase):
         return withdrawal
 
     def __init__(self, blockchain_address=None, organisation=None):
+        #
+        # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
+        # db.session.add(blockchain_address_obj)
 
-        blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
-        db.session.add(blockchain_address_obj)
-
-        self.blockchain_address = blockchain_address_obj
+        self.blockchain_address = blockchain_address or create_blockchain_wallet()
 
         if organisation:
             self.organisation = organisation
-            self.blockchain_address.organisation = organisation
             self.token = organisation.token
 
 class BlockchainAddress(OneOrgBase, ModelBase):
@@ -1020,17 +1021,25 @@ class SpendApproval(ModelBase):
     token_id                      = db.Column(db.Integer, db.ForeignKey(Token.id))
     giving_transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
 
-    def __init__(self, giving_transfer_account, receiving_address):
+    def __init__(self, transfer_account_giving_approval, address_getting_approved):
 
-        self.giving_transfer_account = giving_transfer_account
+        self.giving_transfer_account = transfer_account_giving_approval
 
-        self.token = giving_transfer_account.token
+        self.token = transfer_account_giving_approval.token
 
-        self.receiving_address = receiving_address
+        self.receiving_address = address_getting_approved
 
-        send_eth(
-            # giving_transfer_account.blockchain_address.address, receiving_address
-        )
+        send_eth_task_id = send_eth(signing_address=address_getting_approved,
+                                    recipient_address=transfer_account_giving_approval.blockchain_address,
+                                    amount=0.00184196 * 10**18)
+
+        approval_task_id = make_approval(signing_address=transfer_account_giving_approval.blockchain_address,
+                                         token=self.token,
+                                         spender=address_getting_approved,
+                                         amount=1000000,
+                                         dependent_on_tasks=[send_eth_task_id])
+
+        tt  = 4
 
 
 
@@ -1151,14 +1160,17 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                 completed_task_set.add(transaction.transaction_type)
         return completed_task_set
 
-    def send_blockchain_payload_to_worker(self, system_wallet_address, is_retry=False):
-        approval = self.sender_transfer_account.get_approval(system_wallet_address)
-
-        if not approval:
-            pass
-            self.sender_transfer_account
-
-
+    def send_blockchain_payload_to_worker(self, is_retry=False):
+        self.recipient_transfer_account.give_approval_to_address(
+            self.sender_transfer_account.organisation.system_blockchain_address
+        )
+        #
+        # approval = self.sender_transfer_account.get_approval()
+        #
+        # if not approval:
+        #     pass
+        #
+        #
 
     def old_send_blockchain_payload_to_worker(self, is_retry=False):
 

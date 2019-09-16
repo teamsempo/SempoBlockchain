@@ -29,11 +29,11 @@ def call_contract_function(self, contract, function, args=None, kwargs=None):
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
 def transact_with_contract_function(self, contract, function, args=None, kwargs=None,
                                     signing_address=None, encrypted_private_key=None,
-                                    dependent_on_tasks=None):
+                                    gas_limit=None, dependent_on_tasks=None):
 
     return blockchain_processor.transact_with_contract_function(contract, function, args, kwargs,
                                                                 signing_address, encrypted_private_key,
-                                                                dependent_on_tasks)
+                                                                gas_limit, dependent_on_tasks)
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
 def send_eth(self, amount, recipient_address,
@@ -49,8 +49,8 @@ def _attempt_transaction(self, task_id):
     return blockchain_processor.attempt_transaction(task_id)
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
-def _process_function_transaction(self, transaction_id, contract, function, args=None, kwargs=None):
-    return blockchain_processor.process_function_transaction(transaction_id, contract, function, args, kwargs)
+def _process_function_transaction(self, transaction_id, contract, function, args=None, kwargs=None, gas_limit=None):
+    return blockchain_processor.process_function_transaction(transaction_id, contract, function, args, kwargs, gas_limit)
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
 def _process_send_eth_transaction(self, transaction_id, recipient_address, amount):

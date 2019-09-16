@@ -24,10 +24,8 @@ def send_eth(signing_address, recipient_address, amount, dependent_on_tasks=None
     transfer_sig = celery_app.signature('eth_trans_manager.celery_tasks.send_eth',
                                         kwargs={
                                             'signing_address': signing_address,
-                                            'args': [
-                                                amount,
-                                                recipient_address
-                                            ],
+                                            'amount': amount,
+                                            'recipient_address': recipient_address,
                                             'dependent_on_tasks': dependent_on_tasks
                                         })
 
@@ -66,6 +64,7 @@ def make_approval(signing_address, token,
                                         spender,
                                         token.system_amount_to_token(amount)
                                     ],
+                                    'gas_limit': 46049,
                                     'dependent_on_tasks': dependent_on_tasks
                                 })
 
