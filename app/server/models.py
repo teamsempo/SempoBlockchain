@@ -47,7 +47,8 @@ from server.utils.blockchain_tasks import (
     create_blockchain_wallet,
     get_token_decimals,
     send_eth,
-    make_approval
+    make_approval,
+    make_token_transfer
 )
 
 
@@ -837,16 +838,27 @@ class TransferAccount(OneOrgBase, ModelBase):
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
 
+    def get_or_create_system_transfer_approval(self):
+
+        organisation_blockchain_address = self.organisation.system_blockchain_address
+
+        approval = self.get_approval(organisation_blockchain_address)
+
+        if not approval:
+            approval = self.give_approval_to_address(organisation_blockchain_address)
+
+        return approval
+
     def give_approval_to_address(self, address_getting_approved):
         approval = SpendApproval(transfer_account_giving_approval=self,
                                  address_getting_approved=address_getting_approved)
+        return approval
 
     def get_approval(self, receiving_address):
         for approval in self.spend_approvals_given:
             if approval.receiving_address == receiving_address:
                 return approval
         return None
-
 
     @hybrid_property
     def total_sent(self):
@@ -1029,7 +1041,7 @@ class SpendApproval(ModelBase):
 
         self.receiving_address = address_getting_approved
 
-        send_eth_task_id = send_eth(signing_address=address_getting_approved,
+        eth_send_task_id = send_eth(signing_address=address_getting_approved,
                                     recipient_address=transfer_account_giving_approval.blockchain_address,
                                     amount=0.00184196 * 10**18)
 
@@ -1037,9 +1049,10 @@ class SpendApproval(ModelBase):
                                          token=self.token,
                                          spender=address_getting_approved,
                                          amount=1000000,
-                                         dependent_on_tasks=[send_eth_task_id])
+                                         dependent_on_tasks=[eth_send_task_id])
 
-        tt  = 4
+        self.eth_send_task_id = eth_send_task_id
+        self.approval_task_id = approval_task_id
 
 
 
@@ -1161,97 +1174,20 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         return completed_task_set
 
     def send_blockchain_payload_to_worker(self, is_retry=False):
-        self.recipient_transfer_account.give_approval_to_address(
-            self.sender_transfer_account.organisation.system_blockchain_address
-        )
-        #
-        # approval = self.sender_transfer_account.get_approval()
-        #
-        # if not approval:
-        #     pass
-        #
-        #
 
-    def old_send_blockchain_payload_to_worker(self, is_retry=False):
+        sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
 
-        if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
+        recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
-            if self.recipient_user and self.recipient_user.transfer_card:
-
-                self.recipient_user.transfer_card.update_transfer_card()
-
-            master_wallet_approval_status = self.recipient_transfer_account.master_wallet_approval_status
-
-            if master_wallet_approval_status in ['NO_REQUEST', 'FAILED']:
-                account_to_approve_pk = self.recipient_transfer_account.blockchain_address.encoded_private_key
-            else:
-                account_to_approve_pk = None
-
-            blockchain_payload = {'type': 'DISBURSEMENT',
-                                  'credit_transfer_id': self.id,
-                                  'transfer_amount': self.transfer_amount,
-                                  'recipient': self.recipient_transfer_account.blockchain_address.address,
-                                  'account_to_approve_pk': account_to_approve_pk,
-                                  'master_wallet_approval_status': master_wallet_approval_status,
-                                  'uncompleted_tasks': list(self.uncompleted_blockchain_tasks),
-                                  'is_retry': is_retry
-                                  }
-
-        elif self.transfer_type == TransferTypeEnum.PAYMENT:
-
-            if self.recipient_transfer_account:
-                recipient = self.recipient_transfer_account.blockchain_address.address
-            else:
-                recipient = self.recipient_blockchain_address.address
-
-            try:
-                master_wallet_approval_status = self.recipient_transfer_account.master_wallet_approval_status
-
-            except AttributeError:
-                master_wallet_approval_status = 'NOT_REQUIRED'
-
-            if master_wallet_approval_status in ['NO_REQUEST', 'FAILED']:
-                account_to_approve_pk = self.recipient_transfer_account.blockchain_address.encoded_private_key
-            else:
-                account_to_approve_pk = None
-
-            blockchain_payload = {'type': 'PAYMENT',
-                                  'credit_transfer_id': self.id,
-                                  'transfer_amount': self.transfer_amount,
-                                  'sender': self.sender_transfer_account.blockchain_address.address,
-                                  'recipient': recipient,
-                                  'account_to_approve_pk': account_to_approve_pk,
-                                  'master_wallet_approval_status': master_wallet_approval_status,
-                                  'uncompleted_tasks': list(self.uncompleted_blockchain_tasks),
-                                  'is_retry': is_retry
-                                  }
-
-        elif self.transfer_type == TransferTypeEnum.WITHDRAWAL:
-
-            master_wallet_approval_status = self.sender_transfer_account.master_wallet_approval_status
-
-            if master_wallet_approval_status == 'NO_REQUEST':
-                account_to_approve_pk = self.sender_transfer_account.blockchain_address.encoded_private_key
-            else:
-                account_to_approve_pk = None
-
-            blockchain_payload = {'type': 'WITHDRAWAL',
-                                  'credit_transfer_id': self.id,
-                                  'transfer_amount': self.transfer_amount,
-                                  'sender': self.sender_transfer_account.blockchain_address.address,
-                                  'recipient': current_app.config['ETH_OWNER_ADDRESS'],
-                                  'account_to_approve_pk': account_to_approve_pk,
-                                  'master_wallet_approval_status': master_wallet_approval_status,
-                                  'uncompleted_tasks': list(self.uncompleted_blockchain_tasks),
-                                  'is_retry': is_retry
-                                  }
-
-        else:
-            raise InvalidTransferTypeException("Invalid Transfer Type")
-
-        if not is_retry or len(blockchain_payload['uncompleted_tasks']) > 0:
-            blockchain_task = celery_app.signature('worker.celery_tasks.make_blockchain_transaction', kwargs={'blockchain_payload': blockchain_payload})
-            g.celery_tasks.append(blockchain_task)
+        make_token_transfer(signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
+                            token=self.token,
+                            from_address=self.sender_transfer_account.blockchain_address,
+                            to_address=self.recipient_transfer_account.blockchain_address,
+                            amount=self.transfer_amount,
+                            dependent_on_tasks=[
+                                sender_approval.eth_send_task_id, sender_approval.approval_task_id,
+                                recipient_approval.eth_send_task_id, recipient_approval.approval_task_id
+                            ])
 
     def resolve_as_completed(self, existing_blockchain_txn=None):
         self.resolved_date = datetime.datetime.utcnow()
@@ -1273,25 +1209,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         if message:
             self.resolution_message = message
-
-    @staticmethod
-    def check_has_correct_users_for_transfer_type(transfer_type, sender_user, recipient_user):
-
-        transfer_type = str(transfer_type)
-
-        if transfer_type == 'WITHDRAWAL':
-            if sender_user and not recipient_user:
-                return True
-
-        if transfer_type == 'DISBURSEMENT' or transfer_type == 'BALANCE':
-            if not sender_user and recipient_user:
-                return True
-
-        if transfer_type == 'PAYMENT':
-            if sender_user and recipient_user:
-                return True
-
-        return False
 
     def check_sender_has_sufficient_balance(self):
         return self.sender_user and self.sender_transfer_account.balance - self.transfer_amount >= 0

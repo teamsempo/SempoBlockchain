@@ -20,7 +20,7 @@ ERC20_config['ethereum_chain_id'] = config.ETH_CHAIN_ID
 # ERC20_config['http_provider'] = config.ETH_HTTP_PROVIDER
 ERC20_config['gas_price_gwei'] = config.ETH_GAS_PRICE
 ERC20_config['gas_limit'] = config.ETH_GAS_LIMIT
-ERC20_config['w3'] = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
+ERC20_config['w3'] = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 
 ETH_CHECK_TRANSACTION_RETRIES = config.ETH_CHECK_TRANSACTION_RETRIES
 ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = config.ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT

@@ -459,9 +459,7 @@ class TransactionProcessor(object):
                 signature('eth_trans_manager.celery_tasks._attempt_transaction',
                           args=(task.id, )).delay()
 
-            return True
-
-        return False
+        return result.get('status')
 
     def check_transaction_hash(self, tx_hash):
 

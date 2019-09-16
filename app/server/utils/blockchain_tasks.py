@@ -39,7 +39,7 @@ def make_token_transfer(signing_address, token,
                                 kwargs={
                                     'signing_address': signing_address,
                                     'contract': token.address,
-                                    'function': 'transfer',
+                                    'function': 'transferFrom',
                                     'args': [
                                         from_address,
                                         to_address,
