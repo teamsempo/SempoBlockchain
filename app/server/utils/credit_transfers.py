@@ -112,6 +112,9 @@ def cached_funds_available(allowed_cache_age_seconds=60):
     :return: amount of funds available
     """
 
+    return get_wallet_balance(g.active_organisation.org_level_transfer_account.blockchain_address,
+                       g.active_organisation.org_level_transfer_account.token)
+
     refresh_cache = False
     funds_available_cache = red.get('funds_available_cache')
 

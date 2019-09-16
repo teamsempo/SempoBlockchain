@@ -93,3 +93,10 @@ def get_wallet_balance(address, token):
     balance = _execute_synchronous_task(balance_sig)
 
     return token.token_amount_to_system(balance)
+
+def get_blockchain_task(task_id):
+
+    sig = celery_app.signature('eth_trans_manager.celery_tasks.get_task',
+                               kwargs={'task_id': task_id})
+
+    return _execute_synchronous_task(sig)

@@ -257,6 +257,14 @@ class SQLAlchemyDataStore(object):
 
         return task
 
+    def get_serialised_task_from_id(self, id):
+        task = self.get_task_from_id(id)
+
+        return {
+            'status': task.status,
+            'dependents': [task.id for task in task.dependents]
+        }
+
     def get_task_from_id(self, task_id):
         return session.query(BlockchainTask).get(task_id)
 

@@ -55,6 +55,10 @@ def send_eth(self, amount, recipient_address,
                                          dependent_on_tasks)
 
 @celery_app.task(**task_config)
+def get_task(self, task_id):
+    return blockchain_processor.persistence_model.get_serialised_task_from_id(task_id)
+
+@celery_app.task(**task_config)
 def _attempt_transaction(self, task_id):
     return blockchain_processor.attempt_transaction(task_id)
 
