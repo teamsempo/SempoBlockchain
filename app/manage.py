@@ -2,8 +2,11 @@ from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Command
 import sys
+import os
 
-sys.path.append('../')
+parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
+sys.path.append(parent_dir)
+sys.path.append(os.getcwd())
 
 from server import create_app, db
 from server.models import BlockchainAddress
