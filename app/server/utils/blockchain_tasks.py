@@ -24,10 +24,8 @@ def send_eth(signing_address, recipient_address, amount, dependent_on_tasks=None
     transfer_sig = celery_app.signature('eth_trans_manager.celery_tasks.send_eth',
                                         kwargs={
                                             'signing_address': signing_address,
-                                            'args': [
-                                                amount,
-                                                recipient_address
-                                            ],
+                                            'amount': amount,
+                                            'recipient_address': recipient_address,
                                             'dependent_on_tasks': dependent_on_tasks
                                         })
 
@@ -41,7 +39,7 @@ def make_token_transfer(signing_address, token,
                                 kwargs={
                                     'signing_address': signing_address,
                                     'contract': token.address,
-                                    'function': 'transfer',
+                                    'function': 'transferFrom',
                                     'args': [
                                         from_address,
                                         to_address,
@@ -66,6 +64,7 @@ def make_approval(signing_address, token,
                                         spender,
                                         token.system_amount_to_token(amount)
                                     ],
+                                    'gas_limit': 46049,
                                     'dependent_on_tasks': dependent_on_tasks
                                 })
 
@@ -94,3 +93,10 @@ def get_wallet_balance(address, token):
     balance = _execute_synchronous_task(balance_sig)
 
     return token.token_amount_to_system(balance)
+
+def get_blockchain_task(task_id):
+
+    sig = celery_app.signature('eth_trans_manager.celery_tasks.get_task',
+                               kwargs={'task_id': task_id})
+
+    return _execute_synchronous_task(sig)

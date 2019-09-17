@@ -239,14 +239,15 @@ class SQLAlchemyDataStore(object):
 
     def create_function_task(self, signing_address_obj, contract,
                              function, args=None, kwargs=None,
-                             dependent_on_tasks=None):
+                             gas_limit=None, dependent_on_tasks=None):
 
 
         task = BlockchainTask(signing_address=signing_address_obj,
                               contract=contract,
                               function=function,
                               args=args,
-                              kwargs=kwargs)
+                              kwargs=kwargs,
+                              gas_limit=gas_limit)
 
         session.add(task)
 
@@ -256,14 +257,23 @@ class SQLAlchemyDataStore(object):
 
         return task
 
+    def get_serialised_task_from_id(self, id):
+        task = self.get_task_from_id(id)
+
+        return {
+            'status': task.status,
+            'dependents': [task.id for task in task.dependents]
+        }
+
     def get_task_from_id(self, task_id):
         return session.query(BlockchainTask).get(task_id)
 
     def create_blockchain_wallet(self, encrypted_private_key=None):
 
-        private_key = BlockchainAddress.decrypt_private_key(encrypted_private_key)
-        if session.query(BlockchainAddress).filter_by(private_key=private_key).first():
-            raise Exception("Account for provided private key already exists")
+        if encrypted_private_key:
+            private_key = BlockchainAddress.decrypt_private_key(encrypted_private_key)
+            if session.query(BlockchainAddress).filter_by(private_key=private_key).first():
+                raise Exception("Account for provided private key already exists")
 
         wallet = BlockchainAddress(encrypted_private_key=encrypted_private_key)
 
@@ -377,7 +387,7 @@ class TransactionProcessor(object):
 
 
     def process_function_transaction(self, transaction_id,
-                                     contract_name, function_name, args=None, kwargs=None):
+                                     contract_name, function_name, args=None, kwargs=None, gas_limit=None):
 
         args = args or tuple()
         if not isinstance(args, (list, tuple)):
@@ -389,14 +399,14 @@ class TransactionProcessor(object):
 
         bound_function = function(*args, **kwargs)
 
-        return self.process_transaction(transaction_id, bound_function)
+        return self.process_transaction(transaction_id, bound_function, gas_limit=gas_limit)
 
     def process_transaction(self,
                             transaction_id,
                             function=None,
                             partial_txn_dict=None,
-                            gas_limit_override=None,
-                            gas_price_override=None):
+                            gas_limit=None,
+                            gas_price=None):
 
         singing_address_obj = self.persistence_model.get_transaction_signing_address(transaction_id)
 
@@ -406,8 +416,8 @@ class TransactionProcessor(object):
 
         txn = {
             'chainId': self.ethereum_chain_id,
-            'gas': gas_limit_override or self.gas_limit,
-            'gasPrice': gas_price_override or self.get_gas_price(),
+            'gas': gas_limit or self.gas_limit,
+            'gasPrice': gas_price or self.get_gas_price(),
             'nonce': nonce
         }
 
@@ -424,7 +434,7 @@ class TransactionProcessor(object):
 
         except ValueError as e:
 
-            raise PreBlockchainError(str(e))
+            raise PreBlockchainError(f'Transaction {transaction_id}: {str(e)}')
 
         # If we've made it this far, the nonce will(?) be consumed
         transaction_data = {
@@ -455,11 +465,9 @@ class TransactionProcessor(object):
             for task in unstarted_dependents:
                 print('Starting dependent task: {}'.format(task.id))
                 signature('eth_trans_manager.celery_tasks._attempt_transaction',
-                          args=(task.id, task.contract, task.function, task.args, task.kwargs)).delay()
+                          args=(task.id, )).delay()
 
-            return True
-
-        return False
+        return result.get('status')
 
     def check_transaction_hash(self, tx_hash):
 
@@ -503,17 +511,20 @@ class TransactionProcessor(object):
         task_object = self.persistence_model.get_task_from_id(task_id)
 
         if task_object.is_send_eth:
+            print(f'Starting Send Eth Transaction for {task_id}.')
             chain1 = signature('eth_trans_manager.celery_tasks._process_send_eth_transaction',
                           args=(transaction_obj.id,
                                 task_object.recipient_address,
                                 task_object.amount))
         else:
+            print(f'Starting {task_object.function} Transaction for {task_id}.')
             chain1 = signature('eth_trans_manager.celery_tasks._process_function_transaction',
                                args=(transaction_obj.id,
                                      task_object.contract,
                                      task_object.function,
                                      task_object.args,
-                                     task_object.kwargs))
+                                     task_object.kwargs,
+                                     task_object.gas_limit))
 
         chain2 = signature('eth_trans_manager.celery_tasks._check_transaction_response')
 
@@ -578,7 +589,8 @@ class TransactionProcessor(object):
     def transact_with_contract_function(self,
                                         contract_name_or_address: str, function_name: str,
                                         args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-                                        signing_address: Optional[str]=None, encrypted_private_key: Optional[str]=None,
+                                        signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
+                                        gas_limit: Optional[int] = None,
                                         dependent_on_tasks: Optional[IdList] = None) -> int:
         """
         The main transaction entrypoint for the processor. This task completes quickly,
@@ -590,6 +602,7 @@ class TransactionProcessor(object):
         :param kwargs: keyword arguments for the function
         :param singing_address: address of the account signing the txn
         :param encrypted_private_key: private key of the account making the transaction, encrypted using key from settings
+        :param gas_limit: limit on the amount of gas txn can use. Overrides system default
         :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
         :return: task_id
         """
@@ -598,7 +611,7 @@ class TransactionProcessor(object):
 
         task = self.persistence_model.create_function_task(signing_address_obj,
                                                            contract_name_or_address, function_name, args, kwargs,
-                                                           dependent_on_tasks)
+                                                           gas_limit, dependent_on_tasks)
 
         # Attempt Create Async Transaction
         signature('eth_trans_manager.celery_tasks._attempt_transaction', args=(task.id,)).delay()

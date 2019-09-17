@@ -112,6 +112,9 @@ def cached_funds_available(allowed_cache_age_seconds=60):
     :return: amount of funds available
     """
 
+    return get_wallet_balance(g.active_organisation.org_level_transfer_account.blockchain_address,
+                       g.active_organisation.org_level_transfer_account.token)
+
     refresh_cache = False
     funds_available_cache = red.get('funds_available_cache')
 
@@ -459,13 +462,14 @@ def make_disbursement_transfer(transfer_amount,
 
     outbound_transfer_account = g.active_organisation.org_level_transfer_account
 
-    master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address.address, token)
+    master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address, token)
 
     if transfer_amount > master_wallet_balance:
         message = "Master Wallet has insufficient funds"
         raise InsufficientBalanceError(message)
 
-    transfer = models.CreditTransfer(transfer_amount, token,
+    transfer = models.CreditTransfer(amount=transfer_amount,
+                                     token=token,
                                      sender_transfer_account=outbound_transfer_account,
                                      recipient_user=receive_account,
                                      transfer_type=models.TransferTypeEnum.DISBURSEMENT, uuid=uuid)
