@@ -113,7 +113,7 @@ Next, to update your database to the latest migration file:
 
 ```
 cd eth_worker
-alembic migrate head
+alembic upgrade head
 ```
 
 To create a migrations file (remember to commit the file!):
