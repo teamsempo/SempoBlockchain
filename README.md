@@ -82,7 +82,7 @@ Migrate differs slightly for the main app (uses flask-migrate version of alembic
 
 For more commands, see Alembic documentation: https://alembic.sqlalchemy.org/en/latest/
 
-####For main app:
+**For main app:**
 
 First, setup your database `sempo_blockchain_local`, using the username and password from the local config file.
 
@@ -105,7 +105,7 @@ Sometimes, branches split and you will have multiple heads:
 python manage.py db merge heads
 ```
 
-####For ethereum worker:
+**For ethereum worker:**
 
 First, setup your database `eth_worker`, using the username and password from the local config file.
 
