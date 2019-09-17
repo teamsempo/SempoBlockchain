@@ -72,7 +72,8 @@ redis-server
 
 Start celery:
 ```
-celery -A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet
+cd eth_worker
+celery -A eth_trans_manager worker --loglevel=INFO --concurrency=500 --pool=eventlet
 ```
 
 ### Database Migration: Alembic
