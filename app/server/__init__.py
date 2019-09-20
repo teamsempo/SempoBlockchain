@@ -41,20 +41,21 @@ celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
                     backend=config.REDIS_URL,
                     task_serializer='json')
+
+def encrypt_string(raw_string):
+
+    import base64
+    from cryptography.fernet import Fernet
+    from eth_utils import keccak
+
+    fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
+    cipher_suite = Fernet(fernet_encryption_key)
+
+    return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
+
+encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
+dependent_on_tasks = None
 #
-# def encrypt_string(raw_string):
-#
-#     import base64
-#     from cryptography.fernet import Fernet
-#     from eth_utils import keccak
-#
-#     fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
-#     cipher_suite = Fernet(fernet_encryption_key)
-#
-#     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
-#
-# encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
-# dependent_on_tasks = None
 # for i in range(0,20):
 #     blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
 #                                            kwargs={
@@ -170,7 +171,7 @@ def register_blueprints(app):
     from server.api.credit_transfer_api import credit_transfer_blueprint
     from server.api.sms_api import sms_blueprint
     from server.api.user_api import user_blueprint
-    from server.api.me_api import me_blueprint
+    from server.me_api import me_blueprint
     from server.api.export_api import export_blueprint
     from server.api.image_uploader_api import image_uploader_blueprint
     from server.api.recognised_face_api import recognised_face_blueprint
