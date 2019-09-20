@@ -109,7 +109,7 @@ class OrganisationUserAPI(MethodView):
 
         diagnostics = []
         for user_id in user_ids:
-            user = User.query.get(user_id)
+            user = User.query.execution_options(show_all=True).get(user_id)
 
             if user is None:
                 diagnostics.append({'user': user_id, 'message': 'No user exists'})

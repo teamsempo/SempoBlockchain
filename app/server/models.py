@@ -217,6 +217,7 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
+# todo: see if we can dynamically generate org relationships from mapper args??
 class Organisation(ModelBase):
     """
     Establishes organisation object that resources can be associated with.
@@ -314,7 +315,6 @@ class User(ManyOrgBase, ModelBase):
 
     first_name      = db.Column(db.String())
     last_name       = db.Column(db.String())
-
 
     _last_seen       = db.Column(db.DateTime)
 
@@ -1448,8 +1448,9 @@ class SavedFilter(ModelBase):
 class KycApplication(ModelBase):
     __tablename__       = 'kyc_application'
 
-    # Trulioo
+    # compliance
     trulioo_id          = db.Column(db.String)
+    namescan_scan_id    = db.Column(db.String)
 
     # Wyre SRN
     wyre_id             = db.Column(db.String)
@@ -1457,7 +1458,7 @@ class KycApplication(ModelBase):
     # Either "INCOMPLETE", "PENDING", "VERIFIED" or "REJECTED"
     kyc_status          = db.Column(db.String, default='INCOMPLETE')
 
-    # returns array. action items for mobile. currently ['support'] or ['retry']
+    # returns array. action items for mobile and internal use. ['non_valid','id_blurry','no_match_selfie']
     kyc_actions         = db.Column(JSON)
     kyc_attempts        = db.Column(db.Integer)
 
@@ -1467,6 +1468,7 @@ class KycApplication(ModelBase):
     first_name          = db.Column(db.String)
     last_name           = db.Column(db.String)
     phone               = db.Column(db.String)
+    dob                 = db.Column(db.String)
     business_legal_name = db.Column(db.String)
     business_type       = db.Column(db.String)
     tax_id              = db.Column(db.String)

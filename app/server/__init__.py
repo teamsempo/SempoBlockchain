@@ -182,6 +182,7 @@ def register_blueprints(app):
     from server.api.transfer_card_api import transfer_cards_blueprint
     from server.api.organisation_api import organisation_blueprint
     from server.api.token_api import token_blueprint
+    from server.api.slack_api import slack_blueprint
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix='/api/me')
@@ -205,6 +206,7 @@ def register_blueprints(app):
     app.register_blueprint(transfer_cards_blueprint, url_prefix='/api')
     app.register_blueprint(organisation_blueprint, url_prefix='/api')
     app.register_blueprint(token_blueprint, url_prefix='/api')
+    app.register_blueprint(slack_blueprint, url_prefix='/api')
 
     # 404 handled in react
     @app.errorhandler(404)
