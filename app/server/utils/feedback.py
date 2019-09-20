@@ -18,9 +18,12 @@ def request_feedback_questions(user):
         # transfer_account = TransferAccount.query.get(user.transfer_account_id)
         transfer_account = user_transfer_accounts[0]  # get the first transfer account. todo: fix this for many-to-many
 
-        transfer_number = CreditTransfer.query.filter(or_(CreditTransfer.recipient_transfer_account_id == user.transfer_account_id, CreditTransfer.sender_transfer_account_id == user.transfer_account_id)).count()
+        transfer_number = CreditTransfer.query.filter(or_(
+            CreditTransfer.recipient_user == user,
+            CreditTransfer.sender_user == user
+        )).count()
 
-        feedback = Feedback.query.filter(and_(Feedback.transfer_account_id == user.transfer_account_id,
+        feedback = Feedback.query.filter(and_(Feedback.user == user,
                                               Feedback.question.in_(questions))).first()
 
         if feedback is None and transfer_account.is_approved:

@@ -161,7 +161,8 @@ def create_transfer_account_user(first_name=None, last_name=None,
                        last_name=last_name,
                        phone=phone,
                        email=email,
-                       public_serial_number=public_serial_number)
+                       public_serial_number=public_serial_number,
+                       is_self_sign_up=is_self_sign_up)
 
     precreated_pin = None
     is_activated = False

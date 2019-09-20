@@ -329,7 +329,6 @@ class User(ManyOrgBase, ModelBase):
     _TFA_secret     = db.Column(db.String(128))
     TFA_enabled     = db.Column(db.Boolean, default=False)
 
-
     default_currency = db.Column(db.String())
 
     _location       = db.Column(db.String())
@@ -341,6 +340,7 @@ class User(ManyOrgBase, ModelBase):
     is_activated    = db.Column(db.Boolean, default=False)
     is_disabled     = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
+    is_self_sign_up = db.Column(db.Boolean, default=True)
 
     terms_accepted = db.Column(db.Boolean, default=True)
 
@@ -390,6 +390,9 @@ class User(ManyOrgBase, ModelBase):
                                       lazy='dynamic', foreign_keys='CreditTransfer.recipient_user_id')
 
     ip_addresses     = db.relationship('IpAddress', backref='user', lazy=True)
+
+    feedback            = db.relationship('Feedback', backref='user',
+                                          lazy='dynamic', foreign_keys='Feedback.user_id')
 
     @hybrid_property
     def phone(self):
@@ -696,19 +699,21 @@ class User(ManyOrgBase, ModelBase):
             ret = server_otp.verify(p, valid_window=100)
             return ret
 
+    def set_one_time_code(self, supplied_one_time_code):
+        if supplied_one_time_code is None:
+            self.one_time_code = str(random.randint(0, 9999)).zfill(4)
+        else:
+            self.one_time_code = supplied_one_time_code
+
     def set_pin(self, supplied_pin=None, is_activated=False):
 
         self.is_activated = is_activated
 
         if not is_activated:
             # Use a one time code, either generated or supplied. PIN will be set to random number for now
-            if supplied_pin is None:
-                self.one_time_code = str(random.randint(0, 9999)).zfill(4)
-            else:
-                self.one_time_code = supplied_pin
+            self.set_one_time_code(supplied_one_time_code=supplied_pin)
 
             pin = str(random.randint(0, 9999)).zfill(4)
-
         else:
             pin = supplied_pin
 
@@ -835,9 +840,6 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     credit_receives    = db.relationship('CreditTransfer', backref='recipient_transfer_account',
                                          lazy='dynamic', foreign_keys='CreditTransfer.recipient_transfer_account_id')
-
-    feedback            = db.relationship('Feedback', backref='transfer_account',
-                                          lazy='dynamic', foreign_keys='Feedback.transfer_account_id')
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
@@ -1308,7 +1310,7 @@ class Feedback(ModelBase):
     rating                  = db.Column(db.Float)
     additional_information  = db.Column(db.String)
 
-    transfer_account_id     = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
+    user_id                 = db.Column(db.Integer, db.ForeignKey(User.id))
 
 
 class Referral(ModelBase):

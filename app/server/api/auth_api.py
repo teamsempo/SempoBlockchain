@@ -450,11 +450,12 @@ class LoginAPI(MethodView):
                 return make_response(jsonify(responseObject)), 200
 
             if not user.is_phone_verified:
-                # self sign up, resend phone verification code
-                user.set_pin(None, False)  # resets PIN
-                UserUtils.send_one_time_code(phone=phone, user=user)
+                if user.is_self_sign_up:
+                    # self sign up, resend phone verification code
+                    user.set_pin(None, False)  # resets PIN
+                    UserUtils.send_one_time_code(phone=phone, user=user)
                 db.session.commit()
-                response_object = {'message': 'Account already Exists. Please verify phone number.', 'otp_verify': True}
+                response_object = {'message':  'Please verify phone number.', 'otp_verify': True}
                 return make_response(jsonify(response_object)), 200
 
         try:

@@ -261,4 +261,7 @@ SLACK_HOST      = specific_parser['SLACK']['host']
 SLACK_API_TOKEN = common_parser['SLACK']['token']
 SLACK_SECRET    = common_parser['SLACK']['secret']
 
-NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
+try:
+    NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
+except KeyError:
+    NAMESCAN_KEY = None

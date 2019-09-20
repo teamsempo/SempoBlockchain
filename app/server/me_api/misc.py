@@ -15,8 +15,6 @@ class MeFeedbackAPI(MethodView):
     def post(self):
         post_data = request.get_json()
 
-        transfer_account = g.user.transfer_account
-
         rating = post_data.get('rating')
 
         if rating is None:
@@ -36,7 +34,7 @@ class MeFeedbackAPI(MethodView):
 
         db.session.add(feedback)
 
-        feedback.transfer_account = transfer_account
+        feedback.user = g.user
 
         db.session.commit()
 
