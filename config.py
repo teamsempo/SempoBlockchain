@@ -255,8 +255,10 @@ WYRE_HOST_V2 = specific_parser['WYRE']['host_v2']
 
 IPIFY_API_KEY = common_parser['IPIFY']['api_key']
 
-TRULIOO_HOST    = specific_parser['TRULIOO'].get('host')
-TRULIOO_USER    = common_parser['TRULIOO'].get('user')
-TRULIOO_PASS    = common_parser['TRULIOO'].get('pass')
-
 INTERCOM_ANDROID_SECRET = common_parser['INTERCOM']['android_secret']
+
+SLACK_HOST      = specific_parser['SLACK']['host']
+SLACK_API_TOKEN = common_parser['SLACK']['token']
+SLACK_SECRET    = common_parser['SLACK']['secret']
+
+NAMESCAN_KEY    = common_parser['NAMESCAN']['key']

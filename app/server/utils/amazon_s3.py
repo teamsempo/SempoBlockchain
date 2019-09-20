@@ -7,6 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 from server import s3
 import asyncio
+import base64
 
 class LoadFileException(Exception):
     pass
@@ -41,6 +42,7 @@ def upload_local_file_to_s3(local_file_path, filename):
 
     return file_url
 
+
 def get_file_url(filename):
 
     # generate bucket name unique to this deployment
@@ -71,6 +73,7 @@ def get_local_save_path(new_filename):
     local_save_directory = os.path.join(current_app.config['BASEDIR'], "tmp/")
     return os.path.join(local_save_directory, new_filename)
 
+
 def save_to_s3_from_url(external_url, new_filename):
 
     local_save_path = get_local_save_path(new_filename)
@@ -83,6 +86,23 @@ def save_to_s3_from_url(external_url, new_filename):
 
     else:
         raise LoadFileException("File Could not be loaded")
+
+    s3_url = upload_local_file_to_s3(local_save_path, new_filename)
+
+    os.remove(local_save_path)
+
+    return s3_url
+
+
+def save_to_s3_from_image_base64(image_base64, new_filename):
+    if image_base64 is None:
+        return
+    local_save_path = get_local_save_path(new_filename)
+
+    imgdata = base64.b64decode(image_base64)
+
+    with open(local_save_path, 'wb') as f:
+        f.write(imgdata)
 
     s3_url = upload_local_file_to_s3(local_save_path, new_filename)
 
