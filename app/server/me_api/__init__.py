@@ -1,5 +1,6 @@
 from flask import Blueprint
 
+from server.me_api.transfer_account import MeTransferAccountAPI
 from server.me_api.credit_transfer import MeCreditTransferAPI, RequestWithdrawalAPI
 from server.me_api.me import MeAPI
 from server.me_api.misc import MeFeedbackAPI, TargetingSurveyAPI, ReferralAPI, VersionAPI, AssemblyPaymentsUserAPI, \
@@ -16,7 +17,7 @@ me_blueprint.add_url_rule(
 
 me_blueprint.add_url_rule(
     '/credit_transfer/',
-    view_func=MeCreditTransferAPI.as_view('metransfers'),
+    view_func=MeCreditTransferAPI.as_view('me_transfer_view'),
     methods=['GET', 'POST']
 )
 
@@ -60,4 +61,10 @@ me_blueprint.add_url_rule(
     '/ap_payout_account/',
     view_func=AssemblyPaymentsPayoutAccountAPI.as_view('ap_payout_account_view'),
     methods=['POST']
+)
+
+me_blueprint.add_url_rule(
+    '/transfer_account/',
+    view_func=MeTransferAccountAPI.as_view('me_transfer_account_view'),
+    methods=['GET']
 )

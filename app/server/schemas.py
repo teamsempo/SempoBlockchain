@@ -37,7 +37,9 @@ class UserSchema(Schema):
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
 
-    transfer_account        = fields.Nested('server.schemas.TransferAccountSchema', exclude=('user',))
+    transfer_accounts        = fields.Nested('TransferAccountSchema',
+                                             many=True,
+                                             exclude=('users','credit_sends','credit_receives'))
 
     def get_json_data(self, obj):
         
@@ -112,6 +114,8 @@ class CreditTransferSchema(Schema):
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
+    sender_transfer_account_id = fields.Int()
+    recipient_transfer_account_id = fields.Int()
 
     sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
     recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
@@ -140,6 +144,14 @@ class CreditTransferSchema(Schema):
         return authorising_user.email
 
 
+class TokenSchema(Schema):
+
+    id      = fields.Int(dump_only=True)
+    created = fields.DateTime(dump_only=True)
+
+    address = fields.String()
+    name    = fields.String()
+    symbol  = fields.String()
 
 class TransferAccountSchema(Schema):
 
@@ -163,16 +175,18 @@ class TransferAccountSchema(Schema):
 
     blockchain_address = fields.Str()
 
-    #TODO: Make this plural because it's stupid
-    users                   = fields.Nested(UserSchema, attribute='users', many = True, exclude=('transfer_account',))
+    users                   = fields.Nested(UserSchema, attribute='users', many=True, exclude=('transfer_account',))
 
     credit_sends            = fields.Nested(CreditTransferSchema, many=True)
     credit_receives         = fields.Nested(CreditTransferSchema, many=True)
+
+    token                   = fields.Nested(TokenSchema)
 
     def get_primary_user_id(self, obj):
         users = obj.user
         print(obj)
         return sorted(users, key=lambda user: user.created)[0].id
+
 
 class TransferCardSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -293,12 +307,11 @@ class TokenSchema(Schema):
 
 
 
-old_user_schema = UserSchema(exclude=("transfer_account.users",))
-user_schema = UserSchema(exclude=("transfer_account.users",
-                                  "transfer_account.credit_sends",
-                                  "transfer_account.credit_receives"))
+user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
+                                  "transfer_accounts.credit_receives"))
 
-users_schema = UserSchema(many=True, exclude=("transfer_account.users",))
+users_schema = UserSchema(many=True, exclude=("transfer_accounts.credit_sends",
+                                              "transfer_accounts.credit_receives"))
 
 transfer_account_schema = TransferAccountSchema(
     exclude=(
@@ -332,20 +345,6 @@ credit_transfers_schema = CreditTransferSchema(many=True)
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
-me_credit_transfer_schema = CreditTransferSchema(exclude=("sender_transfer_account",
-                                                          "recipient_transfer_account",
-                                                          "sender_user",
-                                                          "recipient_user",
-                                                          ),
-                                                 context={'filter_rejected': True})
-
-me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_transfer_account",
-                                                                      "recipient_transfer_account",
-                                                                      "sender_user",
-                                                                      "recipient_user",
-                                                                      ),
-                                                  context={'filter_rejected': True})
-
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
 
 uploaded_image_schema = UploadedImageSchema()
@@ -370,3 +369,25 @@ organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
+
+
+# Me Schemas
+
+me_transfer_accounts_schema = TransferAccountSchema(many=True,
+                                                    exclude=("credit_sends",
+                                                             "credit_receives",
+                                                             "users"))
+
+me_credit_transfer_schema = CreditTransferSchema(exclude=("sender_transfer_account",
+                                                          "recipient_transfer_account",
+                                                          "sender_user",
+                                                          "recipient_user",
+                                                          ),
+                                                 context={'filter_rejected': True})
+
+me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_transfer_account",
+                                                                      "recipient_transfer_account",
+                                                                      "sender_user",
+                                                                      "recipient_user",
+                                                                      ),
+                                                  context={'filter_rejected': True})
