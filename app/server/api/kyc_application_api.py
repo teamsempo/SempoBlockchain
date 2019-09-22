@@ -89,7 +89,7 @@ class KycApplicationAPI(MethodView):
 
         # worker. trulioo response
         kyc_application_id = put_data.get('kyc_application_id')
-        transaction_id = put_data.get('TransactionID')
+        transaction_id = put_data.get('TransactionId')
 
         # NEW kyc flow. Trulioo check.
         type = put_data.get('type')

@@ -232,7 +232,7 @@ def save_device_info(device_info, user):
         device = models.DeviceInfo()
 
         device.serial_number    = device_info['serialNumber']
-        device.unique_id        = device_info['uniqueID']
+        device.unique_id        = device_info['uniqueId']
         device.brand            = device_info['brand']
         device.model            = device_info['model']
         device.width            = device_info['width']

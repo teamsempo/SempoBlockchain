@@ -68,8 +68,8 @@ class TransferAccountManager extends React.Component {
   }
 
   updateTransferAccountState() {
-      const transferAccountID = parseInt(this.props.transfer_account_id);
-      const transferAccount = this.props.transferAccounts.byId[transferAccountID];
+      const transferAccountId = parseInt(this.props.transfer_account_id);
+      const transferAccount = this.props.transferAccounts.byId[transferAccountId];
 
       if (transferAccount !== null) {
           this.setState({
