@@ -95,11 +95,11 @@ def create_user_response_object(user, auth_token, message):
     user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
         TransferAccount.users.any(User.id.in_([user.id]))).all()
     if len(user_transfer_accounts) > 0:
-        responseObject['transfer_account_ID'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
+        responseObject['transfer_account_Id'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
         responseObject['name'] = user_transfer_accounts[0].name  # get the first transfer account name
 
     # if user.transfer_account:
-    #     responseObject['transfer_account_ID'] = user.transfer_account.id
+    #     responseObject['transfer_account_Id'] = user.transfer_account.id
     #     responseObject['name'] = user.transfer_account.name
 
     return responseObject
