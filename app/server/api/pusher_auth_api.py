@@ -26,10 +26,10 @@ class PusherAuthAPI(MethodView):
 
             return make_response(jsonify(auth)), 200
         else:
-            responseObject = {
+            response_object = {
                 'message': 'channel {} not authorised'.format(channel)
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
 class PusherSuperAdminAuthAPI(MethodView):
 

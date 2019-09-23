@@ -58,7 +58,7 @@ def create_user_response_object(user, auth_token, message):
                 'translations': usage.translations
             })
 
-    responseObject = {
+    response_object = {
         'status': 'success',
         'message': message,
         'auth_token': auth_token.decode(),
@@ -95,25 +95,25 @@ def create_user_response_object(user, auth_token, message):
     user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
         TransferAccount.users.any(User.id.in_([user.id]))).all()
     if len(user_transfer_accounts) > 0:
-        responseObject['transfer_account_Id'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
-        responseObject['name'] = user_transfer_accounts[0].name  # get the first transfer account name
+        response_object['transfer_account_Id'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
+        response_object['name'] = user_transfer_accounts[0].name  # get the first transfer account name
 
     # if user.transfer_account:
-    #     responseObject['transfer_account_Id'] = user.transfer_account.id
-    #     responseObject['name'] = user.transfer_account.name
+    #     response_object['transfer_account_Id'] = user.transfer_account.id
+    #     response_object['name'] = user.transfer_account.name
 
-    return responseObject
+    return response_object
 
 
 class CheckBasicAuth(MethodView):
 
     @requires_auth(allowed_basic_auth_types=('internal'))
     def get(self):
-        responseObject = {
+        response_object = {
             'status': 'success',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 class RefreshTokenAPI(MethodView):
@@ -127,18 +127,18 @@ class RefreshTokenAPI(MethodView):
 
             auth_token = g.user.encode_auth_token()
 
-            responseObject = create_user_response_object(g.user, auth_token, 'Token refreshed successfully.')
+            response_object = create_user_response_object(g.user, auth_token, 'Token refreshed successfully.')
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         except Exception as e:
 
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Some error occurred. Please try again.'
             }
 
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
 
 
 class RegisterAPI(MethodView):
@@ -199,27 +199,27 @@ class RegisterAPI(MethodView):
                 continue
 
         if not email_ok:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Invalid email domain.',
             }
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
 
         if len(password) < 7:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Password must be at least 6 characters long',
             }
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
 
         # check if user already exists
         user = User.query.filter_by(email=email).execution_options(show_all=True).first()
         if user:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'User already exists. Please Log in.',
             }
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
 
 
         if tier is None:
@@ -241,7 +241,7 @@ class RegisterAPI(MethodView):
 
             auth_token = user.encode_auth_token()
 
-            responseObject = {
+            response_object = {
                 'status': 'success',
                 'message': 'Successfully activated.',
                 'auth_token': auth_token.decode(),
@@ -251,7 +251,7 @@ class RegisterAPI(MethodView):
 
             db.session.commit()
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         activation_token = user.encode_single_use_JWS('A')
 
@@ -260,12 +260,12 @@ class RegisterAPI(MethodView):
         db.session.commit()
 
         # generate the auth token
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Successfully registered.',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 
@@ -289,28 +289,28 @@ class ActivateUserAPI(MethodView):
             validity_check = User.decode_single_use_JWS(activation_token, 'A')
 
             if not validity_check['success']:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': validity_check['message']
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user = validity_check['user']
 
             if user.is_activated:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Already activated.'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user.is_activated = True
 
             auth_token = user.encode_auth_token()
 
-            responseObject = {
+            response_object = {
                 'status': 'success',
                 'message': 'Successfully activated.',
                 'auth_token': auth_token.decode(),
@@ -320,14 +320,14 @@ class ActivateUserAPI(MethodView):
 
             db.session.commit()
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         else:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Provide a valid auth token.'
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
 
 class LoginAPI(MethodView):
@@ -366,13 +366,13 @@ class LoginAPI(MethodView):
         # proxies = request.headers.getlist("X-Forwarded-For")
         # http://esd.io/blog/flask-apps-heroku-real-ip-spoofing.html
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'who_allows_a_get_request_to_their_auth_endpoint': 'We do.',
             challenge[0]: challenge[1],
             # 'metadata': {'user_agent': user_agent, 'ip': ip_address, 'otherip': ip, 'proxies': proxies},
         }
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
     # @limiter.limit("20 per day")
     def post(self):
@@ -433,21 +433,21 @@ class LoginAPI(MethodView):
             return make_response(jsonify(response_object)), 200
 
         if not (email or post_data.get('phone')):
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'No username supplied'
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
         if post_data.get('phone') and user and user.one_time_code and not user.is_activated:
             # vendor sign up with one time code or OTP verified
             if user.one_time_code == password:
-                responseObject = {
+                response_object = {
                     'status': 'success',
                     'pin_must_be_set': True,
                     'message': 'Please set your pin.'
                 }
-                return make_response(jsonify(responseObject)), 200
+                return make_response(jsonify(response_object)), 200
 
             if not user.is_phone_verified:
                 if user.is_self_sign_up:
@@ -461,20 +461,20 @@ class LoginAPI(MethodView):
         try:
 
             if not user or not user.verify_password(password):
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if not user.is_activated:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'is_activated': False,
                     'message': 'Account has not been activated. Please check your emails.'
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if post_data.get('deviceInfo'):
                 UserUtils.save_device_info(post_data.get('deviceInfo'), user)
@@ -482,11 +482,11 @@ class LoginAPI(MethodView):
             auth_token = user.encode_auth_token()
 
             if not auth_token:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             # Possible Outcomes:
             # TFA required, but not set up
@@ -503,11 +503,11 @@ class LoginAPI(MethodView):
             # Update the last_seen TS for this user
             user.update_last_seen_ts()
 
-            responseObject = create_user_response_object(user, auth_token, 'Successfully logged in.')
+            response_object = create_user_response_object(user, auth_token, 'Successfully logged in.')
 
             db.session.commit()
 
-            return make_response(jsonify(responseObject)), 200
+            return make_response(jsonify(response_object)), 200
 
         except Exception as e:
 
@@ -515,12 +515,12 @@ class LoginAPI(MethodView):
 
             raise e
 
-            # responseObject = {
+            # response_object = {
             #     'status': 'fail',
             #     'message': "Unknown Error."
             # }
             #
-            # return make_response(jsonify(responseObject)), 500
+            # return make_response(jsonify(response_object)), 500
 
 
 class LogoutAPI(MethodView):
@@ -544,30 +544,30 @@ class LogoutAPI(MethodView):
                     # insert the token
                     db.session.add(blacklist_token)
                     db.session.commit()
-                    responseObject = {
+                    response_object = {
                         'status': 'success',
                         'message': 'Successfully logged out.'
                     }
-                    return make_response(jsonify(responseObject)), 200
+                    return make_response(jsonify(response_object)), 200
                 except Exception as e:
-                    responseObject = {
+                    response_object = {
                         'status': 'fail',
                         'message': e
                     }
-                    return make_response(jsonify(responseObject)), 200
+                    return make_response(jsonify(response_object)), 200
             else:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': resp
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
         else:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Provide a valid auth token.'
             }
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
 
 
 class RequestPasswordResetEmailAPI(MethodView):
@@ -582,12 +582,12 @@ class RequestPasswordResetEmailAPI(MethodView):
         email = post_data.get('email')
 
         if not email:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'No email supplied'
             }
 
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
         user = User.query.filter_by(email=email).execution_options(show_all=True).first()
 
@@ -596,12 +596,12 @@ class RequestPasswordResetEmailAPI(MethodView):
 
             send_reset_email(password_reset_token, email)
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Reset email sent'
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 
 class ResetPasswordAPI(MethodView):
@@ -629,28 +629,28 @@ class ResetPasswordAPI(MethodView):
                     )
 
             if not user:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'User not found'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if user.is_activated:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Account already activated'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if str(one_time_code) != user.one_time_code:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'One time code not valid'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user.hash_password(new_password)
 
@@ -660,11 +660,11 @@ class ResetPasswordAPI(MethodView):
 
             auth_token = user.encode_auth_token()
 
-            responseObject = create_user_response_object(user, auth_token, 'Successfully set pin')
+            response_object = create_user_response_object(user, auth_token, 'Successfully set pin')
 
             db.session.commit()
 
-            return make_response(jsonify(responseObject)), 200
+            return make_response(jsonify(response_object)), 200
 
         # Check authorisation using regular auth
         elif auth_header and auth_header != 'null' and old_password:
@@ -673,30 +673,30 @@ class ResetPasswordAPI(MethodView):
             resp = User.decode_auth_token(auth_token)
 
             if isinstance(resp, str):
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Invalid auth token'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user = User.query.filter_by(id=resp.get('user_id')).execution_options(show_all=True).first()
 
             if not user:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'User not found'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if not user.verify_password(old_password):
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'invalid password'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
         # Check authorisation using a reset token provided via email
         else:
@@ -704,44 +704,44 @@ class ResetPasswordAPI(MethodView):
             reset_password_token = post_data.get('reset_password_token')
 
             if not reset_password_token:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Missing token.'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             reset_password_token = reset_password_token.split(" ")[0]
 
             validity_check = User.decode_single_use_JWS(reset_password_token, 'R')
 
             if not validity_check['success']:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': validity_check['message']
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user = validity_check['user']
 
         if not new_password or len(new_password) < 6:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Password must be at least 6 characters long'
             }
 
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
         user.hash_password(new_password)
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Password changed, please log in'
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 
 class PermissionsAPI(MethodView):
@@ -765,13 +765,13 @@ class PermissionsAPI(MethodView):
                 'is_disabled': admin.is_disabled
             })
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Admin List Loaded',
             'admin_list': admin_list
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
@@ -816,12 +816,12 @@ class PermissionsAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'message': 'An invite has been sent!',
             'referral_code': invite.referral_code
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self):
@@ -835,12 +835,12 @@ class PermissionsAPI(MethodView):
         user = User.query.get(user_id)
 
         if not user:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'User not found'
             }
 
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
         if admin_tier:
             user.set_held_role('ADMIN',admin_tier)
@@ -850,26 +850,26 @@ class PermissionsAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Account status modified',
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 
 class BlockchainKeyAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Key loaded',
             'private_key': current_app.config['MASTER_WALLET_PRIVATE_KEY'],
             'address': current_app.config['MASTER_WALLET_ADDRESS']
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 
 class KoboCredentialsAPI(MethodView):
@@ -888,11 +888,11 @@ class TwoFactorAuthAPI(MethodView):
     @requires_auth
     def get(self):
         tfa_url = g.user.tfa_url
-        responseObject = {
+        response_object = {
             'data': {"tfa_url": tfa_url}
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
     @requires_auth(ignore_tfa_requirement=True)
     def post(self):
@@ -909,18 +909,18 @@ class TwoFactorAuthAPI(MethodView):
             if tfa_auth_token:
                 auth_token = g.user.encode_auth_token()
 
-                responseObject = create_user_response_object(user, auth_token, 'Successfully logged in.')
+                response_object = create_user_response_object(user, auth_token, 'Successfully logged in.')
 
-                responseObject['tfa_auth_token'] = tfa_auth_token.decode()
+                response_object['tfa_auth_token'] = tfa_auth_token.decode()
 
-                return make_response(jsonify(responseObject)), 200
+                return make_response(jsonify(response_object)), 200
 
-        responseObject = {
+        response_object = {
             'status': "Failed",
             'message': "Validation failed. Please try again."
         }
 
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
 
 # add Rules for API Endpoints

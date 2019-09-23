@@ -1244,6 +1244,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         return matching_transfer_accounts[0]
 
     def _select_transfer_account(self, supplied_transfer_account, user, token):
+        if token is None:
+            raise Exception("Token must be specified")
         if supplied_transfer_account:
             if user is not None and user not in supplied_transfer_account.users:
                 raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
@@ -1255,22 +1257,31 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         if organisation not in self.organisations:
             self.organisations.append(organisation)
 
-    def __init__(self, amount, token,
-                 sender_user=None, recipient_user=None,
-                 sender_transfer_account=None, recipient_transfer_account=None,
+    def __init__(self,
+                 amount,
+                 token=None,
+                 sender_user=None,
+                 recipient_user=None,
+                 sender_transfer_account=None,
+                 recipient_transfer_account=None,
                  transfer_type=None, uuid=None):
 
         self.transfer_amount = amount
-        self.token = token
 
         self.sender_user = sender_user
         self.recipient_user = recipient_user
 
-        self.sender_transfer_account = self._select_transfer_account(
+        self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
             sender_transfer_account, sender_user, token)
 
-        self.recipient_transfer_account = self._select_transfer_account(
-            recipient_transfer_account, recipient_user, token)
+        if not token:
+            self.token = self.sender_transfer_account.token
+
+        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
+            recipient_transfer_account, recipient_user, self.token)
+
+        if self.sender_transfer_account.token != self.recipient_transfer_account.token:
+            raise Exception("Tokens do not match")
 
         self.transfer_type = transfer_type
 

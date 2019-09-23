@@ -6,13 +6,26 @@ from sqlalchemy import or_, func
 from web3 import Web3
 
 from server import db
-from server.exceptions import NoTransferAccountError, UserNotFoundError, AccountNotApprovedError, \
+from server.exceptions import (
+    NoTransferAccountError,
+    UserNotFoundError,
+    AccountNotApprovedError,
     InsufficientBalanceError
-from server.models import CreditTransfer, paginate_query, User
+)
+from server.models import (
+    User,
+    TransferAccount,
+    CreditTransfer,
+    paginate_query
+)
 from server.schemas import me_credit_transfers_schema, me_credit_transfer_schema
-from server.utils.auth import requires_auth, AccessControl
-from server.utils.credit_transfers import check_for_any_valid_hash, find_user_with_transfer_account_from_identifiers, \
-    handle_transfer_to_blockchain_address, make_payment_transfer
+from server.utils.auth import requires_auth, AccessControl, show_all
+from server.utils.credit_transfers import (
+    check_for_any_valid_hash,
+    find_user_with_transfer_account_from_identifiers,
+    handle_transfer_to_blockchain_address,
+    make_payment_transfer
+)
 from server.utils.pusher import push_user_transfer_confirmation
 
 
@@ -40,7 +53,7 @@ class MeCreditTransferAPI(MethodView):
 
         transfer_list = me_credit_transfers_schema.dump(transfers).data
 
-        responseObject = {
+        response_object = {
             'message': 'Successfully Loaded.',
             'items': total_items,
             'pages': total_pages,
@@ -49,8 +62,9 @@ class MeCreditTransferAPI(MethodView):
             }
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
+    @show_all
     @requires_auth
     def post(self):
 
@@ -77,9 +91,15 @@ class MeCreditTransferAPI(MethodView):
         if qr_data is not None:
             qr_data = str(qr_data).strip(" ").strip("\t")
 
+        my_transfer_account_id = post_data.get("my_transfer_account_id")
+
         is_sending = post_data.get('is_sending', False)
 
         authorised = False
+        if transfer_account_id:
+            counterparty_transfer_account = TransferAccount.query.get(transfer_account_id)
+        else:
+            counterparty_transfer_account = None
 
         if uuid:
             existing_transfer = CreditTransfer.query.filter_by(uuid=uuid).first()
@@ -99,39 +119,48 @@ class MeCreditTransferAPI(MethodView):
 
             split_qr_data = qr_data.split('-')
 
-            if len(split_qr_data) == 1:
-                # No hyphen, so assume qr code encode the public serial number
+            transfer_amount = int(split_qr_data[0])
+            transfer_account_id = int(split_qr_data[1])
+            user_id = int(split_qr_data[2])
+            qr_hash = split_qr_data[3]
 
-                counterparty_user = User.query.filter(
-                    func.lower(User.public_serial_number) == func.lower(qr_data)).first()
+            counterparty_user = User.query.get(user_id)
 
-            else:
-                user_id = int(split_qr_data[1])
+            if not counterparty_user:
+                response_object = {
+                    'message': 'No such user for ID {}'.format(user_id),
+                    'feedback': True,
+                }
+                return make_response(jsonify(response_object)), 404
 
-                counterparty_user = User.query.get(user_id)
+            counterparty_transfer_account = TransferAccount.query.get(transfer_account_id)
 
-                if not counterparty_user:
+            if not counterparty_transfer_account:
+                response_object = {
+                    'message': 'No such Transfer Account for ID {}'.format(transfer_account_id),
+                    'feedback': True,
+                }
+                return make_response(jsonify(response_object)), 404
+
+            if counterparty_transfer_account not in counterparty_user.transfer_accounts:
+                if not counterparty_transfer_account:
                     response_object = {
-                        'message': 'No such user for ID {}'.format(user_id),
+                        'message': 'User {} not authorised for Transfer Account {}.'
+                            .format(user_id, transfer_account_id),
                         'feedback': True,
                     }
-                    return make_response(jsonify(response_object)), 400
+                    return make_response(jsonify(response_object)), 401
 
+            user_secret = counterparty_user.secret
 
-                if not is_sending:
-                    transfer_amount = int(split_qr_data[0])
-                    qr_hash = split_qr_data[2]
+            if not check_for_any_valid_hash(transfer_amount, transfer_account_id, user_secret, qr_hash):
+                response_object = {
+                    'message': 'Invalid QR Code',
+                    'feedback': True,
+                }
+                return make_response(jsonify(response_object)), 401
 
-                    user_secret = counterparty_user.secret
-
-                    if not check_for_any_valid_hash(transfer_amount, user_secret, qr_hash):
-                        response_object = {
-                            'message': 'Invalid QR Code',
-                            'feedback': True,
-                        }
-                        return make_response(jsonify(response_object)), 401
-
-                    authorised = True
+            authorised = True
 
         elif nfc_serial_number:
             # We treat NFC serials differently because they're automatically authorised under the current version
@@ -181,63 +210,94 @@ class MeCreditTransferAPI(MethodView):
             authorised = True
 
         if not authorised:
-            responseObject = {
+            response_object = {
                 'message': 'Not Authorised',
                 'feedback': True,
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
+
+        if not my_transfer_account_id:
+            response_object = {
+                'message': 'You must provide your Transfer Account ID',
+            }
+            return make_response(jsonify(response_object)), 400
+
+        my_transfer_account = TransferAccount.query.get(my_transfer_account_id)
+
+        if not my_transfer_account:
+            response_object = {
+                'message': 'Transfer Account not found for my_transfer_account_id {}'.format(my_transfer_account_id)
+            }
+            return make_response(jsonify(response_object)), 400
 
         if is_sending:
             send_user = g.user
+            send_transfer_account = my_transfer_account
             receive_user = counterparty_user
+            receive_transfer_account = counterparty_transfer_account
 
         else:
-            send_user = counterparty_user
-            receive_user = g.user
+            if counterparty_transfer_account is None:
+                response_object = {
+                    'message': 'Counterparty Transfer Account not specified'
+                }
+                return make_response(jsonify(response_object)), 400
 
-        if transfer_amount == 0 or transfer_amount > send_user.transfer_account.balance:
+            send_user = counterparty_user
+            send_transfer_account = counterparty_transfer_account
+            receive_user = g.user
+            receive_transfer_account = my_transfer_account
+
+        if transfer_amount == 0 or transfer_amount > send_transfer_account.balance:
 
             db.session.commit()
 
-            responseObject = {
+            response_object = {
                 'message': 'Insufficient funds',
                 'feedback': True,
             }
-            return make_response(jsonify(responseObject)), 400
+            return make_response(jsonify(response_object)), 400
 
         try:
-            transfer = make_payment_transfer(transfer_amount,send_user,receive_user,transfer_use, uuid=uuid)
+            transfer = make_payment_transfer(transfer_amount,
+                                             send_user,
+                                             send_transfer_account,
+                                             receive_user,
+                                             receive_transfer_account,
+                                             transfer_use,
+                                             uuid=uuid)
+
         except AccountNotApprovedError as e:
             db.session.commit()
 
             if e.is_sender is True:
-                responseObject = {
+                response_object = {
                     'message': "Sender is not approved",
                     'feedback': True,
                 }
-                return make_response(jsonify(responseObject)), 400
+                return make_response(jsonify(response_object)), 400
             elif e.is_sender is False:
-                responseObject = {
+                response_object = {
                     'message': "Recipient is not approved",
                     'feedback': True,
                 }
-                return make_response(jsonify(responseObject)), 400
+                return make_response(jsonify(response_object)), 400
             else:
-                responseObject = {
+                response_object = {
                     'message': "Account is not approved",
                     'feedback': True,
                 }
-                return make_response(jsonify(responseObject)), 400
+                return make_response(jsonify(response_object)), 400
 
 
         except InsufficientBalanceError as e:
             db.session.commit()
 
-            responseObject = {
+            response_object = {
                 'message': "Insufficient balance",
                 'feedback': True,
             }
-            return make_response(jsonify(responseObject)), 400
+            return make_response(jsonify(response_object)), 400
 
         if created:
             try:
@@ -250,7 +310,7 @@ class MeCreditTransferAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'message': 'Payment Successful',
             'first_name': counterparty_user.first_name,
             'last_name': counterparty_user.last_name,
@@ -260,7 +320,7 @@ class MeCreditTransferAPI(MethodView):
             }
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 class RequestWithdrawalAPI(MethodView):
@@ -276,8 +336,8 @@ class RequestWithdrawalAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'message': 'Withdrawal Requested',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201

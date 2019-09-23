@@ -16,19 +16,21 @@ class MeAPI(MethodView):
 
         serialised_data = user_schema.dump(user).data
 
-        new_ta = serialised_data['transfer_accounts'][0]
-        new_ta['id'] = 163
+        import copy
+
+        new_ta = copy.deepcopy(serialised_data['transfer_accounts'][0])
+        new_ta['id'] = new_ta['id'] + 1
         new_ta['balance'] = 99999
         new_ta['token']['id'] = 2
         new_ta['token']['symbol'] = 'GOOP'
 
         serialised_data['transfer_accounts'].append(new_ta)
 
-        responseObject = {
+        response_object = {
             'message': 'Successfully Loaded.',
             'data': {
                 'user': serialised_data
             }
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201

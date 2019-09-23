@@ -238,11 +238,11 @@ def handle_transfer_to_blockchain_address(
     transfer_amount, sender_user, recipient_blockchain_address, transfer_use, uuid=None):
 
     if transfer_amount > sender_user.transfer_account.balance:
-        responseObject = {
+        response_object = {
             'message': 'Insufficient funds',
             'feedback': True,
         }
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
     try:
         transfer = make_blockchain_transfer(transfer_amount,
@@ -255,20 +255,20 @@ def handle_transfer_to_blockchain_address(
         db.session.commit()
 
     except AccountNotApprovedError as e:
-        responseObject = {
+        response_object = {
             'message': "Sender is not approved",
             'feedback': True,
         }
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
     except InsufficientBalanceError as e:
-        responseObject = {
+        response_object = {
             'message': "Insufficient balance",
             'feedback': True,
         }
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
-    responseObject = {
+    response_object = {
         'message': 'Payment Successful',
         'feedback': True,
         'data': {
@@ -276,7 +276,7 @@ def handle_transfer_to_blockchain_address(
         }
     }
 
-    return make_response(jsonify(responseObject)), 201
+    return make_response(jsonify(response_object)), 201
 
 def create_address_object_if_required(address):
     address_obj = models.BlockchainAddress.query.filter_by(address=address).first()
@@ -355,10 +355,12 @@ def make_blockchain_transfer(transfer_amount,
 
     return transfer
 
+
 def make_payment_transfer(transfer_amount,
-                          token,
-                          send_account,
-                          receive_account,
+                          send_user,
+                          send_transfer_account,
+                          receive_user,
+                          receive_transfer_account,
                           transfer_use=None,
                           transfer_mode=None,
                           require_sender_approved=True,
@@ -367,7 +369,12 @@ def make_payment_transfer(transfer_amount,
                           automatically_resolve_complete=True,
                           uuid=None):
 
-    transfer = models.CreditTransfer(transfer_amount, token, sender_user=send_account, recipient_user=receive_account, uuid=uuid)
+    transfer = models.CreditTransfer(transfer_amount,
+                                     sender_user=send_user,
+                                     sender_transfer_account=send_transfer_account,
+                                     recipient_user=receive_user,
+                                     recipient_transfer_account=receive_transfer_account,
+                                     uuid=uuid)
 
     make_cashout_incentive_transaction = False
 
@@ -393,17 +400,17 @@ def make_payment_transfer(transfer_amount,
     transfer.uuid = uuid
 
     if require_sender_approved and not transfer.check_sender_is_approved():
-        message = "Sender {} is not approved".format(send_account)
+        message = "Sender {} is not approved".format(send_transfer_account)
         transfer.resolve_as_rejected(message)
         raise AccountNotApprovedError(message, is_sender=True)
 
     if require_recipient_approved and not transfer.check_recipient_is_approved():
-        message = "Recipient {} is not approved".format(receive_account)
+        message = "Recipient {} is not approved".format(receive_user)
         transfer.resolve_as_rejected(message)
         raise AccountNotApprovedError(message, is_sender=False)
 
     if require_sufficient_balance and not transfer.check_sender_has_sufficient_balance():
-        message = "Sender {} has insufficient balance".format(send_account)
+        message = "Sender {} has insufficient balance".format(send_transfer_account)
         transfer.resolve_as_rejected(message)
         raise InsufficientBalanceError(message)
 
@@ -415,7 +422,7 @@ def make_payment_transfer(transfer_amount,
         try:
             incentive_amount = round(transfer_amount * current_app.config['CASHOUT_INCENTIVE_PERCENT'] / 100)
 
-            make_disbursement_transfer(incentive_amount, receive_account)
+            make_disbursement_transfer(incentive_amount, receive_user)
 
         except Exception as e:
             print(e)
@@ -543,7 +550,7 @@ def transfer_credit_via_phone(send_phone, receive_phone, transfer_amount):
     }
 
 
-def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
+def check_for_any_valid_hash(transfer_amount, transfer_account_id, user_secret, hash_to_check):
     # How many seconds each hash lasts for
     time_interval = 5
     # How far in seconds from current time a valid hash can be
@@ -555,7 +562,7 @@ def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
     while t_backward <= time_tolerance:
         unix_time_to_check = current_unix_time - t_backward * 1000
 
-        valid = check_hash(hash_to_check, transfer_amount, user_secret, unix_time_to_check, time_interval)
+        valid = check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret, unix_time_to_check, time_interval)
 
         if valid:
             return True
@@ -566,7 +573,7 @@ def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
     while t_forward <= time_tolerance:
         unix_time_to_check = current_unix_time + t_forward * 1000
 
-        valid = check_hash(hash_to_check, transfer_amount, user_secret, unix_time_to_check, time_interval)
+        valid = check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret, unix_time_to_check, time_interval)
 
         if valid:
             return True
@@ -576,14 +583,14 @@ def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
     return False
 
 
-def check_hash(hash_to_check, transfer_amount, user_secret, unix_time, time_interval):
+def check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret, unix_time, time_interval):
     hash_size = 6
 
     intervaled_time = int((unix_time - (unix_time % (time_interval * 1000))) / (time_interval * 1000))
 
     valid_hash = valid_hmac = False
 
-    string_to_hash = str(transfer_amount) + str(user_secret or '') + str(intervaled_time)
+    string_to_hash = str(transfer_amount) + str(transfer_account_id) + str(user_secret or '') + str(intervaled_time)
     full_hashed_string = hashlib.sha256(string_to_hash.encode()).hexdigest()
     truncated_hashed_string = full_hashed_string[0: hash_size]
     valid_hash = truncated_hashed_string == hash_to_check

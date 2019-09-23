@@ -128,7 +128,7 @@ class CreditTransferSchema(Schema):
     lat               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
 
-    is_sender               = fields.Function(lambda obj: obj.sender_transfer_account_id == g.user.transfer_account_id)
+    is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
     blockchain_status = fields.Function(lambda obj: obj.blockchain_status)
 

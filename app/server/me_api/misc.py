@@ -19,11 +19,11 @@ class MeFeedbackAPI(MethodView):
 
         if rating is None:
 
-            responseObject = {
+            response_object = {
                 'message': 'No rating provided',
             }
 
-            return make_response(jsonify(responseObject)), 400
+            return make_response(jsonify(response_object)), 400
 
         rating = float(rating)
 
@@ -38,11 +38,11 @@ class MeFeedbackAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'message': 'Feedback Received',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 class TargetingSurveyAPI(MethodView):
@@ -66,11 +66,11 @@ class TargetingSurveyAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'message': 'Survey Created',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 class ReferralAPI(MethodView):
@@ -79,14 +79,14 @@ class ReferralAPI(MethodView):
 
         referrals = Referral.query.filter_by(referring_user_id=g.user.id).all()
 
-        responseObject = {
+        response_object = {
             'message': 'Referrals Loaded',
             'data': {
                 'referrals': referrals_schema.dump(referrals).data
             }
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
     @requires_auth
     def post(self):
@@ -105,14 +105,14 @@ class ReferralAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'message': 'Referral Created',
             'data': {
                 'referral': referral_schema.dump(referral).data
             }
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 class VersionAPI(MethodView):
@@ -121,18 +121,18 @@ class VersionAPI(MethodView):
         version = post_data.get('version')
 
         if version is None:
-            responseObject = {
+            response_object = {
                 'message': 'No version provided',
             }
 
-            return make_response(jsonify(responseObject)), 400
+            return make_response(jsonify(response_object)), 400
 
-        responseObject = {
+        response_object = {
             'version': version,
             'action': check_mobile_version(version)
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 class AssemblyPaymentsUserAPI(MethodView):

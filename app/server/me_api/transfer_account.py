@@ -13,11 +13,11 @@ class MeTransferAccountAPI(MethodView):
 
         serialised = me_transfer_accounts_schema.dump(transfer_accounts).data
 
-        responseObject = {
+        response_object = {
             'message': 'Successfully Loaded.',
             'data': {
                 'transfer_accounts': serialised,
             }
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201

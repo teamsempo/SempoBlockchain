@@ -134,10 +134,10 @@ def requires_auth(f = None,
         if auth and auth.type == 'basic':
             (password, type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(auth.username, (None, None))
             if password is None or password != auth.password:
-                responseObject = {
+                response_object = {
                     'message': 'invalid basic auth username or password'
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if len(allowed_basic_auth_types) == 0:
                 response_object = {
@@ -146,10 +146,10 @@ def requires_auth(f = None,
                 return make_response(jsonify(response_object)), 401
 
             if type not in allowed_basic_auth_types:
-                responseObject = {
+                response_object = {
                     'message': 'Basic Auth type is {}. Must be: {}'.format(type, allowed_basic_auth_types)
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             return f(*args, **kwargs)
 
@@ -177,11 +177,11 @@ def requires_auth(f = None,
                     user = models.User.query.filter_by(id=resp['id']).execution_options(show_all=True).first()
 
                     if not user:
-                        responseObject = {
+                        response_object = {
                             'status': 'fail',
                             'message': 'user not found'
                         }
-                        return make_response(jsonify(responseObject)), 401
+                        return make_response(jsonify(response_object)), 401
 
                     g.user = user
                     # g.member_organisations = [org.id for org in user.organisations]
@@ -198,19 +198,19 @@ def requires_auth(f = None,
                         g.active_organisation = None
 
                     if not user.is_activated:
-                        responseObject = {
+                        response_object = {
                             'status': 'fail',
                             'message': 'user not activated'
                         }
-                        return make_response(jsonify(responseObject)), 401
+                        return make_response(jsonify(response_object)), 401
 
 
                     if user.is_disabled:
-                        responseObject = {
+                        response_object = {
                             'status': 'fail',
                             'message': 'user has been disabled'
                         }
-                        return make_response(jsonify(responseObject)), 401
+                        return make_response(jsonify(response_object)), 401
 
                     tfa_response_object = tfa_logic(user, tfa_token, ignore_tfa_requirement)
 
@@ -236,17 +236,17 @@ def requires_auth(f = None,
                     #This is the point where you've made it through ok and you can return the top method
                     return f(*args, **kwargs)
 
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': resp
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
         else:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Provide a valid auth token.'
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
     return wrapper
 
@@ -257,37 +257,37 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
         if not user.TFA_enabled:
             # Go down this path if user is yet to set up TFA
             tfa_url = user.tfa_url
-            responseObject = {
+            response_object = {
                 'tfa_url': tfa_url,
                 'message': 'User must setup two factor authentication'
             }
 
-            return responseObject
+            return response_object
 
         # Otherwise, check TFA
         if tfa_token is None:
-            responseObject = {
+            response_object = {
                 'tfa_failure': True,
                 'message': 'TFA token required, none supplied'
             }
-            return responseObject
+            return response_object
 
         tfa_response = models.User.decode_auth_token(tfa_token, 'TFA')
         if isinstance(tfa_response, str):
             # User doesn't have valid TFA token
-            responseObject = {
+            response_object = {
                 'tfa_failure': True,
                 'message': tfa_response
             }
-            return responseObject
+            return response_object
 
         if tfa_response.get("id") != user.id:
             # User doesn't has valid TFA token BUT it's not theirs
-            responseObject = {
+            response_object = {
                 'message': 'Invalid User ID in TFA response'
             }
 
-            return responseObject
+            return response_object
 
     return None
 

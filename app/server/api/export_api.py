@@ -261,23 +261,23 @@ class ExportAPI(MethodView):
 
             os.remove(local_save_path)
 
-            responseObject = {
+            response_object = {
                 'status': 'success',
                 'message': 'Export file created.',
                 'file_url': file_url,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         else:
             # return no data
-            responseObject = {
+            response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
                 'file_url': None,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
 
 class MeExportAPI(MethodView):
@@ -369,23 +369,23 @@ class MeExportAPI(MethodView):
 
             os.remove(local_save_path)
 
-            responseObject = {
+            response_object = {
                 'status': 'success',
                 'message': 'Export file created.',
                 'file_url': file_url,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         else:
             # return no data
-            responseObject = {
+            response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
                 'file_url': None,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
 
 # add Rules for API Endpoints

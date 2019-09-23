@@ -17,12 +17,6 @@ class TransferAccountAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, transfer_account_id):
 
-        # can_see_full_details = role in ['is_admin', 'is_view']
-        #
-        # if not (can_see_full_details):
-        #     return less_detail
-
-
         account_type_filter = request.args.get('account_type')
         result = None
 
@@ -48,7 +42,6 @@ class TransferAccountAPI(MethodView):
             return make_response(jsonify(response_object)), 201
 
         else:
-            transfer_accounts_query = TransferAccount.query.all()
 
             if account_type_filter == 'vendor':
                 transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=True)
