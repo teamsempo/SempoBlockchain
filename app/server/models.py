@@ -822,6 +822,8 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
+    transfer_card    = db.relationship('TransferCard', backref='transfer_account', lazy=True, uselist=False)
+
     # users               = db.relationship('User', backref='transfer_account', lazy=True)
     users = db.relationship(
         "User",
@@ -1274,8 +1276,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
             sender_transfer_account, sender_user, token)
 
-        if not token:
-            self.token = self.sender_transfer_account.token
+        self.token = token or self.sender_transfer_account.token
 
         self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
             recipient_transfer_account, recipient_user, self.token)
@@ -1426,6 +1427,9 @@ class TransferCard(ModelBase):
 
     user_id    = db.Column(db.Integer, db.ForeignKey(User.id))
 
+    transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
+
+
     @hybrid_property
     def amount_loaded(self):
         return self._phone
@@ -1433,7 +1437,7 @@ class TransferCard(ModelBase):
     @amount_loaded.setter
     def amount_loaded(self, amount):
         self._amount_loaded = amount
-        message = '{}{}'.format(self.nfc_serial_number, amount)
+        message = '{}{}{}'.format(self.nfc_serial_number, amount, self.transfer_account.token.symbol)
         self.amount_loaded_signature = current_app.config['ECDSA_SIGNING_KEY'].sign(message.encode()).hex()
 
     def update_transfer_card(self):

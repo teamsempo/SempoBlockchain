@@ -15,6 +15,7 @@ from server.exceptions import (
 from server.models import (
     User,
     TransferAccount,
+    TransferCard,
     CreditTransfer,
     paginate_query
 )
@@ -164,15 +165,21 @@ class MeCreditTransferAPI(MethodView):
 
         elif nfc_serial_number:
             # We treat NFC serials differently because they're automatically authorised under the current version
-            counterparty_user = User.query.filter_by(nfc_serial_number=nfc_serial_number).first()
-            authorised = True
+            transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
 
-            if not counterparty_user:
+            if transfer_card:
+                counterparty_user = transfer_card.user
+                counterparty_transfer_account = transfer_card.transfer_account
+
+            if not transfer_card or not counterparty_user or not counterparty_transfer_account:
                 response_object = {
-                    'message': 'No such user for NFC serial number {}'.format(nfc_serial_number),
+                    'message': 'Card not found',
                     'feedback': True
                 }
-                return make_response(jsonify(response_object)), 400
+                return make_response(jsonify(response_object)), 404
+
+            authorised = True
+
 
         else:
             try:

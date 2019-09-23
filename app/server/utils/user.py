@@ -167,8 +167,12 @@ def create_transfer_account_user(first_name=None, last_name=None,
     precreated_pin = None
     is_activated = False
 
-    if use_precreated_pin:
+    try:
         transfer_card = get_transfer_card(public_serial_number)
+    except Exception as e:
+        transfer_card = None
+
+    if use_precreated_pin:
         precreated_pin = transfer_card.PIN
         is_activated = True
 
@@ -204,6 +208,9 @@ def create_transfer_account_user(first_name=None, last_name=None,
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
         user.transfer_accounts.append(transfer_account)
+
+        if transfer_card:
+            transfer_account.transfer_card = transfer_card
 
         if token:
             transfer_account.token = token

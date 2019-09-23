@@ -195,10 +195,18 @@ class TransferCardSchema(Schema):
     public_serial_number = fields.Str()
     nfc_serial_number = fields.Function(lambda obj: obj.nfc_serial_number.upper())
 
+    symbol = fields.Method('get_symbol')
+
     amount_loaded = fields.Function(lambda obj: obj._amount_loaded)
     amount_loaded_signature = fields.Str()
 
     user = fields.Nested(UserSchema, only=('first_name', 'last_name'))
+
+    def get_symbol(self, obj):
+        try:
+            return obj.transfer_account.token.symbol
+        except Exception as e:
+            return None
 
 
 class ReferralSchema(Schema):
