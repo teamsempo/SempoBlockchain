@@ -4,7 +4,7 @@ def _execute_synchronous_task(signature):
     async_result = signature.delay()
 
     try:
-        response = async_result.get(timeout=1, propagate=True, interval=0.3)
+        response = async_result.get(timeout=2, propagate=True, interval=0.3)
     except Exception as e:
         raise e
     finally:
