@@ -15,8 +15,8 @@ Includes:
 ### Install _All_ Python Requirements
 Download and install python 3.6
 ```
-virtualenv venv
-. venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 cd app
 pip install -r slow_requirements.txt
 pip install -r requirements.txt
@@ -72,16 +72,24 @@ redis-server
 
 Start celery:
 ```
-celery -A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet
+cd eth_worker
+celery -A eth_trans_manager worker --loglevel=INFO --concurrency=500 --pool=eventlet
 ```
 
-### Database Migration: Alembic
+### Database Migration:
+
+Migrate differs slightly for the main app (uses flask-migrate version of alembic) versus the ethereum worker (uses pure alembic).
+
+For more commands, see Alembic documentation: https://alembic.sqlalchemy.org/en/latest/
+
+**For main app:**
 
 First, setup your database `sempo_blockchain_local`, using the username and password from the local config file.
 
 Next, to update your database to the latest migration file:
 
 ```
+cd app
 python manage.py db upgrade
 ```
 
@@ -97,7 +105,22 @@ Sometimes, branches split and you will have multiple heads:
 python manage.py db merge heads
 ```
 
-For more commands, see Alembic documentation: https://alembic.sqlalchemy.org/en/latest/
+**For ethereum worker:**
+
+First, setup your database `eth_worker`, using the username and password from the local config file.
+
+Next, to update your database to the latest migration file:
+
+```
+cd eth_worker
+alembic upgrade head
+```
+
+To create a migrations file (remember to commit the file!):
+
+```
+alembic revision --autogenerate
+```
 
 ### Vendor App
 - Pull the below repo and follow steps

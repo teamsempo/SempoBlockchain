@@ -30,3 +30,6 @@ app/server/static/javascript/bundle.*
 ngrok
 .ideabackup
 /whatsApp/chromedriver
+
+/venv/*
+app/server/static/javascript/dist/*

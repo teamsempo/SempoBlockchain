@@ -11,6 +11,12 @@ from web3 import (
     HTTPProvider
 )
 
+import os
+import sys
+parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
+sys.path.append(parent_dir)
+sys.path.append(os.getcwd())
+
 import config
 from eth_trans_manager.ABIs import dai_abi
 from eth_trans_manager.processor import TransactionProcessor, ContractRegistry
