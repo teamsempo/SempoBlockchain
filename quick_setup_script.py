@@ -74,5 +74,6 @@ if __name__ == '__main__':
     org_id = s.create_organisation('Sempo6', token_id)
     bind_response = s.bind_this_user_to_organisation(org_id)
 
+    print(bind_response)
 
     tt = 4
