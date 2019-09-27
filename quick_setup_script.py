@@ -75,5 +75,3 @@ if __name__ == '__main__':
     bind_response = s.bind_this_user_to_organisation(org_id)
 
     print(bind_response)
-
-    tt = 4
