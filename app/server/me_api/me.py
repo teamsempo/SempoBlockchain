@@ -16,15 +16,15 @@ class MeAPI(MethodView):
 
         serialised_data = user_schema.dump(user).data
 
-        import copy
-
-        new_ta = copy.deepcopy(serialised_data['transfer_accounts'][0])
-        new_ta['id'] = new_ta['id'] + 1
-        new_ta['balance'] = 99999
-        new_ta['token']['id'] = 2
-        new_ta['token']['symbol'] = 'GOOP'
-
-        serialised_data['transfer_accounts'].append(new_ta)
+        # TODO: Create a better way of having multiple dummy transfer accounts for testing
+        # import copy
+        # new_ta = copy.deepcopy(serialised_data['transfer_accounts'][0])
+        # new_ta['id'] = new_ta['id'] + 1
+        # new_ta['balance'] = 99999
+        # new_ta['token']['id'] = 2
+        # new_ta['token']['symbol'] = 'GOOP'
+        #
+        # serialised_data['transfer_accounts'].append(new_ta)
 
         response_object = {
             'message': 'Successfully Loaded.',
