@@ -68,7 +68,7 @@ class Setup(object):
 
 if __name__ == '__main__':
 
-    s = Setup(email='nick@sempo.ai', password='Sllqp0ggy!')
+    s = Setup(email='test@sempo.ai', password='password')
 
     token_id = s.create_blockchain_token()
     org_id = s.create_organisation('Sempo8', token_id)
