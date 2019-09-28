@@ -303,6 +303,7 @@ class OrganisationSchema(Schema):
     transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
     credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
+    org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
 
 class TokenSchema(Schema):
     id                  = fields.Int(dump_only=True)

@@ -11,7 +11,7 @@ class Setup(object):
                               'password': password
                           })
 
-        return r.json()['api_token']
+        return r.json()['auth_token']
 
     def create_blockchain_token(self):
         r = requests.post(url=self.api_host + 'token/',
@@ -47,7 +47,7 @@ class Setup(object):
                              'user_ids': [user_id]
                          })
 
-        return r.json()
+        return r.json()['data']['organisation']
 
 
 
@@ -68,10 +68,10 @@ class Setup(object):
 
 if __name__ == '__main__':
 
-    s = Setup(email='test@sempo.ai', password='password')
+    s = Setup(email='nick@sempo.ai', password='Sllqp0ggy!')
 
     token_id = s.create_blockchain_token()
-    org_id = s.create_organisation('Sempo6', token_id)
+    org_id = s.create_organisation('Sempo8', token_id)
     bind_response = s.bind_this_user_to_organisation(org_id)
 
-    print(bind_response)
+    print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))

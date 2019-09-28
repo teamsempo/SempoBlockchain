@@ -47,8 +47,9 @@ function* updateStateFromTransferAccount(data) {
   }
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
-
-  yield put({type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts});
+  if (transfer_accounts) {
+    yield put({type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts});
+  }
 }
 
 // Load Transfer Account List Saga
