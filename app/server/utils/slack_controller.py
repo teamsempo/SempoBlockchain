@@ -466,6 +466,10 @@ def slack_controller(payload):
             kyc.kyc_status = 'INCOMPLETE'
             kyc.kyc_actions = [str(payload['submission']['id_validity'])]
 
+            if user.phone:
+                send_generic_message(to_phone=user.phone,
+                                     message="Unfortunately, we had a problem verifying your identity. Please open the Sempo app to retry or contact our customer support.")
+
             db.session.flush()
 
             client.chat_update(

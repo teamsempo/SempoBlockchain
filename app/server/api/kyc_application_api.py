@@ -87,6 +87,8 @@ class KycApplicationAPI(MethodView):
     def put(self, kyc_application_id):
         put_data = request.get_json()
 
+        is_mobile = put_data.get('is_mobile')
+
         # worker. trulioo response
         kyc_application_id = put_data.get('kyc_application_id')
         transaction_id = put_data.get('TransactionID')
@@ -134,10 +136,15 @@ class KycApplicationAPI(MethodView):
                 db.session.commit()
                 return make_response(jsonify({'message': 'KYC attempts exceeded. Contact Support.'})), 400
 
-            # handle document upload to s3
-            handle_kyc_documents(data=put_data,document_country=document_country,document_type=document_type,kyc_details=kyc_details)
-
             kyc_details.kyc_status = 'PENDING'
+
+            if is_mobile:
+                # handle document upload to s3
+                handle_kyc_documents(data=put_data, document_country=document_country, document_type=document_type,
+                                     kyc_details=kyc_details)
+
+                # Post verification message to slack
+                post_verification_message(user=g.user)
 
             response_object = {
                 'message': 'Successfully Updated KYC Application.',
