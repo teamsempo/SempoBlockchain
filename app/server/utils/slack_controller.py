@@ -53,7 +53,7 @@ def generate_actions(*args):
     return {"type": "actions", "elements": [arg for arg in args]}
 
 
-def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,document_type=None, document_front_url=None, document_back_url=None, selfie_url=None):
+def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,country=None, type=None, document_type=None, document_front_url=None, document_back_url=None, selfie_url=None):
     return [{
         "type": "section",
         "text": {
@@ -77,6 +77,12 @@ def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=N
             }, {
                 "type": "mrkdwn",
                 "text": "*Address:*\n{}".format(address)
+            }, {
+                "type": "mrkdwn",
+                "text": "*Country:*\n{}".format(country)
+            }, {
+                "type": "mrkdwn",
+                "text": "*Type:*\n{}".format(type)
             }, {
                 "type": "mrkdwn",
                 "text": "*{} (front):*\n<{}|View>".format(document_type,document_front_url)
@@ -122,6 +128,8 @@ def generate_populated_message(user_id=None):
         last_name=kyc_details.last_name,
         dob=kyc_details.dob,
         address=kyc_details.street_address,
+        country=kyc_details.country,
+        type=kyc_details.type,
         document_type=documents[0].reference,
         document_front_url=filter_for_url('document_front_base64', documents),
         document_back_url=filter_for_url('document_back_base64', documents),
@@ -266,8 +274,20 @@ def slack_controller(payload):
                                     "value": "valid"
                                 },
                                 {
-                                    "label": ":x: ID is not valid or expired",
-                                    "value": "non_valid"
+                                    "label": ":x: ID document is not valid or expired",
+                                    "value": "id_non_valid"
+                                },
+                                {
+                                    "label": ":x: ID document is partial. Important information is covered.",
+                                    "value": "id_partial"
+                                },
+                                {
+                                    "label": ":x: ID document is damaged. ID is unreadable due to physical damage.",
+                                    "value": "id_damaged"
+                                },
+                                {
+                                    "label": ":x: ID document is not in English.",
+                                    "value": "id_non_english"
                                 },
                                 {
                                     "label": ":x: ID document or selfie is too blurry",
@@ -275,8 +295,16 @@ def slack_controller(payload):
                                 },
                                 {
                                     "label": ":x: ID photo does not match selfie",
-                                    "value": "no_match_selfie"
-                                }
+                                    "value": "selfie_no_match"
+                                },
+                                {
+                                    "label": ":x: ID document is not present in selfie image",
+                                    "value": "selfie_id_non_present"
+                                },
+                                {
+                                    "label": ":x: Part of the face in the selfie image is covered by a hand, ID, etc.",
+                                    "value": "selfie_covered"
+                                },
                             ]
                         },
                         {
@@ -399,7 +427,7 @@ def slack_controller(payload):
             if len(match_rates) > 0:
                 avg_match_rate = sum(match_rates)/len(match_rates)
 
-            if aml_result['number_of_matches'] == 0 or avg_match_rate < 50:
+            if aml_result['number_of_matches'] == 0 or avg_match_rate < 75:
                 # Instant Approval
                 kyc.kyc_status = 'VERIFIED'
                 return approve_user(new_message_blocks, username=payload['user']['name'], message_ts=payload["state"], phone=user.phone)
@@ -421,11 +449,16 @@ def slack_controller(payload):
                 return make_response("", 200)
 
         else:
-            # Update the message to indicate failed ID check.
+            # Update the slack message to indicate failed ID check.
             failure_options = {
-                "non_valid": ":x: ID is not valid",
-                "id_blurry": ":x: ID or selfie is too blurry",
-                "no_match_selfie": ":x: ID does not match selfie"
+                "id_non_valid": ":x: ID document is not valid or expired",
+                "id_partial": ":x: ID document is partial. Important parts (name, DOB, ID number) are covered by fingers, glared, cut off",
+                "id_damaged": ":x: ID document is damaged. ID is unreadable due to physical damage.",
+                "id_non_english": ":x: ID document is not in English.",
+                "id_blurry": ":x: ID document or selfie is too blurry",
+                "selfie_no_match": ":x: ID photo does not match selfie",
+                "selfie_id_non_present": ":x: ID document is not present in selfie image",
+                "selfie_covered": ":x: Part of the face in the selfie image is covered by a hand, ID, anything else"
             }
             new_message_blocks.append(dict(type='context', elements=[
                 {"type": 'mrkdwn', "text": failure_options[payload['submission']['id_validity']]}]))

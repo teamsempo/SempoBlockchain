@@ -307,21 +307,17 @@ def verify_slack_requests(f=None):
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
+        signature = request.headers['X-Slack-Signature']
         timestamp = request.headers['X-Slack-Request-Timestamp']
+        data = request.data.decode('utf-8')
+        # data = urllib.parse.urlencode(urllib.parse.unquote(raw_string))
 
-        req = urllib.parse.quote_plus(str(json.loads(request.form["payload"])).encode('utf-8'))
-
-        req = 'v0:' + str(timestamp) + ':' + request.form['payload']
-        request_hash = 'v0=' + hmac.new(
-            config.SLACK_SECRET,
-            str(req).encode('utf-8'), hashlib.sha256
-        ).hexdigest()
-
-        slack_signature = request.headers['X-Slack-Signature']
-        if hmac.compare_digest(request_hash, slack_signature):
-            # hooray, the request came from Slack!
+        format_req = str.encode(f"v0:{timestamp}:{data}")
+        encoded_secret = str.encode(config.SLACK_SECRET)
+        request_hash = hmac.new(encoded_secret, format_req, hashlib.sha256).hexdigest()
+        calculated_signature = f"v0={request_hash}"
+        if hmac.compare_digest(calculated_signature, signature):
             return f(*args, **kwargs)
 
         return make_response(jsonify({'message': 'Invalid auth'})), 401
-
     return wrapper

@@ -89,6 +89,16 @@ def register_extensions(app):
 
     basic_auth.init_app(app)
 
+    @app.before_request
+    def enable_form_raw_cache():
+        # Workaround to allow unparsed request body to be be read from cache
+        # This is required to validate a signature on webhooks
+        # This MUST go before Sentry integration as sentry triggers form parsing
+        if request.path.startswith('/api/slack/'):
+            if request.content_length > 1024 * 1024:  # 1mb
+                return make_response(jsonify({'message': 'Payload too large'})), 413  # Payload too large
+            request.get_data(parse_form_data=False, cache=True)
+
     if not config.IS_TEST:
         sentry.init_app(app, dsn=app.config['SENTRY_SERVER_DSN'])
     # limiter.init_app(app)
@@ -98,6 +108,7 @@ def register_extensions(app):
     celery_app.conf.update(app.config)
 
     print('celery joined on {} at {}'.format(app.config['REDIS_URL'], datetime.utcnow()))
+
 
 def register_blueprints(app):
     @app.before_request

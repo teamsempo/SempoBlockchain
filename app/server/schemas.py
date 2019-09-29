@@ -251,6 +251,8 @@ class KycApplicationSchema(Schema):
     id                  = fields.Int(dump_only=True)
     created             = fields.DateTime(dump_only=True)
 
+    type                = fields.Str()
+
     trulioo_id          = fields.Str()
     wyre_id             = fields.Str()
     kyc_status          = fields.Str()

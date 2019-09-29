@@ -10,7 +10,7 @@ slack_blueprint = Blueprint('slack', __name__)
 
 
 class ProcessSlackAPI(MethodView):
-    # @verify_slack_requests todo; need urgent fix- security issue.
+    @verify_slack_requests
     def post(self):
         post_data = json.loads(request.form['payload'])
 
