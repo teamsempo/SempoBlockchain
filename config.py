@@ -223,6 +223,9 @@ MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
 
 MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
 
+SYSTEM_WALLET_TARGET_BALANCE = int(specific_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
+SYSTEM_WALLET_TOPUP_THRESHOLD = int(specific_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))
+
 ETH_CONTRACT_TYPE       = specific_parser['ETHEREUM'].get('contract_type', 'standard').lower()
 ETH_CONTRACT_ADDRESS    = specific_parser['ETHEREUM'].get('contract_address')
 USING_EXTERNAL_ERC20    = ETH_CONTRACT_TYPE != 'mintable'

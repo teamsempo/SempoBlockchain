@@ -1,5 +1,9 @@
 from server import celery_app
 
+eth_worker_name = 'eth_manager'
+celery_tasks_name = 'celery_tasks'
+eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+
 def _execute_synchronous_task(signature):
     async_result = signature.delay()
 
@@ -12,19 +16,22 @@ def _execute_synchronous_task(signature):
 
     return response
 
-def create_blockchain_wallet():
+def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
 
-    sig = celery_app.signature('eth_trans_manager.celery_tasks.create_blockchain_wallet')
+    sig = celery_app.signature(eth_endpoint('create_new_blockchain_wallet'),
+                               kwargs={
+                                   'wei_target_balance': wei_target_balance,
+                                   'wei_topup_threshold': wei_topup_threshold,
+                               })
 
     return _execute_synchronous_task(sig)
 
+def send_eth(signing_address, recipient_address, amount_wei, dependent_on_tasks=None):
 
-def send_eth(signing_address, recipient_address, amount, dependent_on_tasks=None):
-
-    transfer_sig = celery_app.signature('eth_trans_manager.celery_tasks.send_eth',
+    transfer_sig = celery_app.signature(eth_endpoint('send_eth'),
                                         kwargs={
                                             'signing_address': signing_address,
-                                            'amount': amount,
+                                            'amount_wei': amount_wei,
                                             'recipient_address': recipient_address,
                                             'dependent_on_tasks': dependent_on_tasks
                                         })
@@ -35,7 +42,7 @@ def make_token_transfer(signing_address, token,
                         from_address, to_address, amount,
                         dependent_on_tasks=None):
 
-    transfer_sig = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
+    transfer_sig = celery_app.signature(eth_endpoint('transact_with_contract_function'),
                                 kwargs={
                                     'signing_address': signing_address,
                                     'contract': token.address,
@@ -55,7 +62,7 @@ def make_approval(signing_address, token,
                   spender, amount,
                   dependent_on_tasks=None):
 
-    transfer_sig = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
+    transfer_sig = celery_app.signature(eth_endpoint('transact_with_contract_function'),
                                 kwargs={
                                     'signing_address': signing_address,
                                     'contract': token.address,
@@ -73,7 +80,7 @@ def make_approval(signing_address, token,
 
 def get_token_decimals(token):
 
-    decimals_sig = celery_app.signature('eth_trans_manager.celery_tasks.call_contract_function',
+    decimals_sig = celery_app.signature(eth_endpoint('call_contract_function'),
                                          kwargs={
                                                       'contract': token.address,
                                                       'function': 'decimals'
@@ -83,7 +90,7 @@ def get_token_decimals(token):
 
 def get_wallet_balance(address, token):
 
-    balance_sig = celery_app.signature('eth_trans_manager.celery_tasks.call_contract_function',
+    balance_sig = celery_app.signature(eth_endpoint('call_contract_function'),
                                         kwargs={
                                                      'contract': token.address,
                                                      'function': 'balanceOf',
@@ -96,7 +103,7 @@ def get_wallet_balance(address, token):
 
 def get_blockchain_task(task_id):
 
-    sig = celery_app.signature('eth_trans_manager.celery_tasks.get_task',
+    sig = celery_app.signature(eth_endpoint('get_task'),
                                kwargs={'task_id': task_id})
 
     return _execute_synchronous_task(sig)

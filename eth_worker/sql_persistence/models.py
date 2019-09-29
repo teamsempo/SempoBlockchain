@@ -29,21 +29,25 @@ class ModelBase(Base):
     created = Column(DateTime, default=datetime.datetime.utcnow)
     updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-class BlockchainAddress(ModelBase):
-    __tablename__ = 'blockchain_address'
+class BlockchainWallet(ModelBase):
+    __tablename__ = 'blockchain_wallet'
 
     address = Column(String(), index=True, unique=True)
     _encrypted_private_key = Column(String())
 
+    wei_target_balance    = Column(BigInteger())
+    wei_topup_threshold   = Column(BigInteger())
+    last_topup_task_id    = Column(Integer())
+
     tasks = relationship('BlockchainTask',
-                         backref='signing_address',
+                         backref='signing_wallet',
                          lazy=True,
-                         foreign_keys='BlockchainTask.signing_address_id')
+                         foreign_keys='BlockchainTask.signing_wallet_id')
 
     transactions = relationship('BlockchainTransaction',
-                                backref='signing_address',
+                                backref='signing_wallet',
                                 lazy=True,
-                                foreign_keys='BlockchainTransaction.signing_address_id')
+                                foreign_keys='BlockchainTransaction.signing_wallet_id')
 
     @hybrid_property
     def encrypted_private_key(self):
@@ -53,7 +57,7 @@ class BlockchainAddress(ModelBase):
     def encrypted_private_key(self, value):
         self._encrypted_private_key = value
         private_key = self.decrypt_private_key(value)
-        self._set_address_from_private_key(private_key)
+        self.address = self.address_from_private_key(private_key)
 
     @hybrid_property
     def private_key(self):
@@ -62,34 +66,46 @@ class BlockchainAddress(ModelBase):
     @private_key.setter
     def private_key(self, value):
         self.encrypted_private_key = self.encrypt_private_key(value)
-        self._set_address_from_private_key(value)
+        self.address = self.address_from_private_key(value)
 
     @staticmethod
     def decrypt_private_key(encrypted_private_key):
-        return BlockchainAddress._cipher_suite() \
-            .decrypt(encrypted_private_key.encode('utf-8')).decode('utf-8')
+        encrypted_private_key_bytes = BlockchainWallet._bytify_if_required(encrypted_private_key)
+
+        return BlockchainWallet._cipher_suite() \
+            .decrypt(encrypted_private_key_bytes).decode('utf-8')
+
     @staticmethod
     def encrypt_private_key(private_key):
-        return BlockchainAddress._cipher_suite()\
-            .encrypt(private_key.encode('utf-8')).decode('utf-8')
+        private_key_bytes = BlockchainWallet._bytify_if_required(private_key)
+
+        return BlockchainWallet._cipher_suite()\
+            .encrypt(private_key_bytes).decode('utf-8')
+
+    @staticmethod
+    def _bytify_if_required(string):
+        return string if isinstance(string, bytes) else string.encode('utf-8')
 
     @staticmethod
     def _cipher_suite():
         fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
         return Fernet(fernet_encryption_key)
 
-    def _set_address_from_private_key(self, private_key):
+    @staticmethod
+    def address_from_private_key(private_key):
         if isinstance(private_key, str):
             private_key = bytearray.fromhex(private_key.replace('0x', ''))
+        return keys.PrivateKey(private_key).public_key.to_checksum_address()
 
-        self.address = keys.PrivateKey(private_key).public_key.to_checksum_address()
+    def __init__(self, private_key=None, wei_target_balance=None, wei_topup_threshold=None):
 
-    def __init__(self, encrypted_private_key=None):
-
-        if encrypted_private_key:
-            self.encrypted_private_key = encrypted_private_key
+        if private_key:
+            self.private_key = private_key
         else:
             self.private_key = Web3.toHex(keccak(os.urandom(4096)))
+
+        self.wei_target_balance = wei_target_balance
+        self.wei_topup_threshold = wei_topup_threshold
 
 # https://stackoverflow.com/questions/20830118/creating-a-self-referencing-m2m-relationship-in-sqlalchemy-flask
 task_dependencies = Table(
@@ -111,7 +127,7 @@ class BlockchainTask(ModelBase):
     recipient_address = Column(String)
     amount = Column(BigInteger)
 
-    signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
+    signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 
     transactions = relationship('BlockchainTransaction',
                                 backref='task',
@@ -155,7 +171,7 @@ class BlockchainTransaction(ModelBase):
     nonce = Column(Integer)
     nonce_consumed = Column(Boolean, default=False)
 
-    signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
+    signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 
     blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id))
 

@@ -63,15 +63,12 @@ class Setup(object):
             raise Exception("Must provide either username and password OR api token")
 
 
-
-
-
 if __name__ == '__main__':
 
-    s = Setup(email='nick@sempo.ai', password='Sllqp0ggy!')
+    s = Setup(email='test@sempo.ai', password='password')
 
     token_id = s.create_blockchain_token()
-    org_id = s.create_organisation('Sempo8', token_id)
+    org_id = s.create_organisation('Sempo14', token_id)
     bind_response = s.bind_this_user_to_organisation(org_id)
 
     print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))

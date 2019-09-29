@@ -1,7 +1,7 @@
 import celery
 import config
-from eth_trans_manager.models import session
-from eth_trans_manager import celery_app, blockchain_processor
+from sql_persistence.models import session
+from eth_manager import celery_app, blockchain_processor, persistence_interface, higher_order_tasks
 from functools import wraps
 
 class SqlAlchemyTask(celery.Task):
@@ -21,10 +21,20 @@ task_config = {
     'retry_backoff': True
 }
 
+
 @celery_app.task(**task_config)
-def create_blockchain_wallet(self):
-    wallet = blockchain_processor.persistence_model.create_blockchain_wallet()
+def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0):
+    wallet = persistence_interface.create_new_blockchain_wallet(wei_target_balance = wei_target_balance,
+                                                                wei_topup_threshold=wei_topup_threshold)
     return wallet.address
+
+@celery_app.task(**task_config)
+def topup_wallets(self):
+    higher_order_tasks.topup_wallets()
+
+@celery_app.task(**task_config)
+def topup_wallet_if_required(self, address, wei_target_balance, wei_topup_threshold):
+    higher_order_tasks.topup_if_required(address, wei_target_balance, wei_topup_threshold)
 
 @celery_app.task(**task_config)
 def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
@@ -46,17 +56,17 @@ def transact_with_contract_function(self, contract, function, args=None, kwargs=
                                                                 gas_limit, dependent_on_tasks)
 
 @celery_app.task(**task_config)
-def send_eth(self, amount, recipient_address,
+def send_eth(self, amount_wei, recipient_address,
              signing_address=None, encrypted_private_key=None,
              dependent_on_tasks=None):
 
-    return blockchain_processor.send_eth(amount, recipient_address,
+    return blockchain_processor.send_eth(amount_wei, recipient_address,
                                          signing_address, encrypted_private_key,
                                          dependent_on_tasks)
 
 @celery_app.task(**task_config)
 def get_task(self, task_id):
-    return blockchain_processor.persistence_model.get_serialised_task_from_id(task_id)
+    return blockchain_processor.get_serialised_task_from_id(task_id)
 
 @celery_app.task(**task_config)
 def _attempt_transaction(self, task_id):

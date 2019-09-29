@@ -264,7 +264,10 @@ class Organisation(ModelBase):
     def __init__(self, **kwargs):
         super(Organisation, self).__init__(**kwargs)
 
-        self.system_blockchain_address = create_blockchain_wallet()
+        self.system_blockchain_address = create_blockchain_wallet(
+            wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
+            wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
+        )
 
 
 class OneOrgBase(object):
@@ -1098,9 +1101,12 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
     @hybrid_property
     def blockchain_status(self):
-        task = get_blockchain_task(self.blockchain_task_id)
+        if self.blockchain_task_id:
+            task = get_blockchain_task(self.blockchain_task_id)
 
-        return task.get('status', 'ERROR')
+            return task.get('status', 'ERROR')
+        else:
+            return 'UNKNOWN'
 
         # if len(self.uncompleted_blockchain_tasks) == 0:
         #     return 'COMPLETE'

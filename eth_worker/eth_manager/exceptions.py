@@ -5,3 +5,5 @@ class PreBlockchainError(Exception):
 class WrongContractNameError(Exception):
     """Unexpected contract name"""
 
+class WalletExistsError(Exception):
+    """Unexpected contract name"""
