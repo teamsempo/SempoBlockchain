@@ -1485,7 +1485,7 @@ class KycApplication(ModelBase):
     kyc_actions         = db.Column(JSON)
     kyc_attempts        = db.Column(db.Integer)
 
-    # INDIVIDUAL, BUSINESS or MASTER (deprecated)
+    # INDIVIDUAL or BUSINESS... MASTER (deprecated)
     type                = db.Column(db.String)
 
     first_name          = db.Column(db.String)
@@ -1519,10 +1519,10 @@ class KycApplication(ModelBase):
             raise TypeNotFoundException('Type {} not found')
 
         self.type = type
+        self.kyc_attempts = 1
 
         if type == 'INDIVIDUAL':
             self.kyc_status = 'PENDING'
-            self.kyc_attempts = 1
 
 
 class BankAccount(ModelBase):

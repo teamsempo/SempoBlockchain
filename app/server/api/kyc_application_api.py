@@ -11,7 +11,7 @@ from server.utils.slack_controller import post_verification_message
 kyc_application_blueprint = Blueprint('kyc_application', __name__)
 
 supported_countries = ['AU', 'TO', 'VU', 'NZ']
-supported_documents = {'AU': ['Passport', 'DrivingLicence'], 'TO': ['Passport'], 'VU': ['Passport', 'DrivingLicence'], 'NZ': ['Passport', 'DrivingLicence', 'IdentityCard']}
+supported_documents = {'AU': ['Passport', 'DrivingLicence'], 'TO': ['Passport', 'DrivingLicence', 'CustomerIdentificationCard', 'GovernmentID', 'GovernmentSuperannuationID', 'StudentUniversityID'], 'VU': ['Passport', 'DrivingLicence'], 'NZ': ['Passport', 'DrivingLicence', 'IdentityCard']}
 
 
 def handle_kyc_documents(data=None,document_country=None,document_type=None,kyc_details=None):
@@ -73,7 +73,7 @@ class KycApplicationAPI(MethodView):
             # must be an individual (mobile) user account
             kyc_details = KycApplication.query.filter_by(user_id=g.user.id).first()
             if kyc_details is None:
-                return make_response(jsonify({'message': 'No KYC object found for user.'}))
+                return make_response(jsonify({'message': 'No KYC object found for user.', 'data': {'kyc_application': {}}}))
 
         # displays kyc_status and kyc_actions state only.
         response_object = {
@@ -86,6 +86,8 @@ class KycApplicationAPI(MethodView):
     @requires_auth
     def put(self, kyc_application_id):
         put_data = request.get_json()
+
+        is_mobile = put_data.get('is_mobile')
 
         # worker. trulioo response
         kyc_application_id = put_data.get('kyc_application_id')
@@ -134,10 +136,15 @@ class KycApplicationAPI(MethodView):
                 db.session.commit()
                 return make_response(jsonify({'message': 'KYC attempts exceeded. Contact Support.'})), 400
 
-            # handle document upload to s3
-            handle_kyc_documents(data=put_data,document_country=document_country,document_type=document_type,kyc_details=kyc_details)
-
             kyc_details.kyc_status = 'PENDING'
+
+            if is_mobile:
+                # handle document upload to s3
+                handle_kyc_documents(data=put_data, document_country=document_country, document_type=document_type,
+                                     kyc_details=kyc_details)
+
+                # Post verification message to slack
+                post_verification_message(user=g.user)
 
             response_object = {
                 'message': 'Successfully Updated KYC Application.',
@@ -218,7 +225,8 @@ class KycApplicationAPI(MethodView):
     def post(self, kyc_application_id):
         post_data = request.get_json()
 
-        # old kyc flow
+        is_mobile = post_data.get('is_mobile')
+
         type = post_data.get('type')
         first_name = post_data.get('first_name')
         last_name = post_data.get('last_name')
@@ -236,14 +244,13 @@ class KycApplicationAPI(MethodView):
         postal_code = post_data.get('postal_code')
         beneficial_owners = post_data.get('beneficial_owners')
 
-        # NEW kyc flow. Trulioo check.
         document_type = post_data.get('document_type')
         document_country = post_data.get('document_country')
         document_front_base64 = post_data.get('document_front_base64')  # image
         document_back_base64 = post_data.get('document_back_base64')  # image
         selfie_base64 = post_data.get('selfie_base64')  # image
 
-        if type == 'INDIVIDUAL':
+        if is_mobile:
 
             # creation logic is handled after kyc object creation.
             kyc_details = KycApplication.query.filter_by(user_id=g.user.id).first()
@@ -253,7 +260,7 @@ class KycApplicationAPI(MethodView):
             if document_type is None or document_country is None or document_front_base64 is None or selfie_base64 is None:
                 return make_response(jsonify({'message': 'Must provide correct parameters'})), 400
 
-        if type == 'BUSINESS':
+        elif type == 'BUSINESS':
 
             if g.user.is_superadmin is not True:
                 return make_response(jsonify({'message': 'Must be superadmin to create business KYC profile'})), 401
@@ -272,9 +279,6 @@ class KycApplicationAPI(MethodView):
                 # filter empty beneficial owners
                 beneficial_owners = [owner for owner in beneficial_owners if(owner['full_name'].strip(' ',) != '')]
 
-            if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
-                type = 'MASTER' # todo: we probably don't need this with multi-tenant
-
         create_kyc_application = KycApplication(
             type=type,
             first_name=first_name or g.user.first_name, last_name=last_name or g.user.last_name,
@@ -291,7 +295,7 @@ class KycApplicationAPI(MethodView):
         db.session.add(create_kyc_application)
         db.session.flush()  # need this to create an ID
 
-        if type == 'INDIVIDUAL':
+        if is_mobile:
             # handle document upload to s3
             handle_kyc_documents(data=post_data, document_country=document_country, document_type=document_type,
                                  kyc_details=create_kyc_application)

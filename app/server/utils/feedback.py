@@ -15,6 +15,7 @@ def request_feedback_questions(user):
         TransferAccount.users.any(User.id.in_([user.id]))).all()
 
     if user.has_beneficiary_role and (len(user_transfer_accounts) > 0):
+        # todo: this will raise an error No 'user.transfer_account_id'. fix.
         # transfer_account = TransferAccount.query.get(user.transfer_account_id)
         transfer_account = user_transfer_accounts[0]  # get the first transfer account. todo: fix this for many-to-many
 
