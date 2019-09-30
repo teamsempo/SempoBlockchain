@@ -105,7 +105,7 @@ APP_HOST            = specific_parser['APP']['APP_HOST']
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 
 INTERNAL_AUTH_USERNAME = common_parser['APP']['BASIC_AUTH_USERNAME'] + '_' + DEPLOYMENT_NAME
-INTERNAL_AUTH_PASSWORD= common_parser['APP']['BASIC_AUTH_PASSWORD']
+INTERNAL_AUTH_PASSWORD = common_parser['APP']['BASIC_AUTH_PASSWORD']
 
 EXTERNAL_AUTH_USERNAME = 'admin_auth_' + DEPLOYMENT_NAME
 EXTERNAL_AUTH_PASSWORD = hashlib.sha256(SECRET_KEY.encode()).hexdigest()[0:8]
@@ -261,4 +261,7 @@ SLACK_HOST      = specific_parser['SLACK']['host']
 SLACK_API_TOKEN = common_parser['SLACK']['token']
 SLACK_SECRET    = common_parser['SLACK']['secret']
 
-NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
+try:
+    NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
+except KeyError:
+    NAMESCAN_KEY = None

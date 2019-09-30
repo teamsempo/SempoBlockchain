@@ -91,13 +91,13 @@ class DatasetAPI(MethodView):
                 else:
                     db.session.flush()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Successfully Saved.',
             'diagnostics': self.diagnostics
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 # add Rules for API Endpoints

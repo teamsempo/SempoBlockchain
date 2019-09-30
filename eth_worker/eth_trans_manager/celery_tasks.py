@@ -2,6 +2,7 @@ import celery
 import config
 from eth_trans_manager.models import session
 from eth_trans_manager import celery_app, blockchain_processor
+from functools import wraps
 
 class SqlAlchemyTask(celery.Task):
     """An abstract Celery Task that ensures that the connection the the
@@ -11,21 +12,66 @@ class SqlAlchemyTask(celery.Task):
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         session.remove()
 
-@celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
-def transact_with_contract_function(self, encrypted_private_key, contract, function, args=None, kwargs=None, dependent_on_tasks=None):
-    return blockchain_processor.transact_with_contract_function(encrypted_private_key, contract, function, args, kwargs, dependent_on_tasks)
+task_config = {
+    'base': SqlAlchemyTask,
+    'bind': True,
+    'autoretry_for': (Exception,),
+    'max_retries': 3,
+    'soft_time_limit': 300,
+    'retry_backoff': True
+}
 
+@celery_app.task(**task_config)
+def create_blockchain_wallet(self):
+    wallet = blockchain_processor.persistence_model.create_blockchain_wallet()
+    return wallet.address
 
-@celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
-def _attempt_transaction(self, transaction_id, contract, function, args=None, kwargs=None):
-    return blockchain_processor.attempt_transaction(transaction_id, contract, function, args, kwargs)
+@celery_app.task(**task_config)
+def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
+    blockchain_processor.registry.register_contract(
+        contract_address, abi, contract_name, require_name_matches
+    )
 
-@celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=3, soft_time_limit=300)
-def _process_function_transaction(self, transaction_id, contract, function, args=None, kwargs=None):
-    return blockchain_processor.process_function_transaction(transaction_id, contract, function, args, kwargs)
+@celery_app.task(**task_config)
+def call_contract_function(self, contract, function, args=None, kwargs=None):
+    return blockchain_processor.call_contract_function(contract, function, args, kwargs)
+
+@celery_app.task(**task_config)
+def transact_with_contract_function(self, contract, function, args=None, kwargs=None,
+                                    signing_address=None, encrypted_private_key=None,
+                                    gas_limit=None, dependent_on_tasks=None):
+
+    return blockchain_processor.transact_with_contract_function(contract, function, args, kwargs,
+                                                                signing_address, encrypted_private_key,
+                                                                gas_limit, dependent_on_tasks)
+
+@celery_app.task(**task_config)
+def send_eth(self, amount, recipient_address,
+             signing_address=None, encrypted_private_key=None,
+             dependent_on_tasks=None):
+
+    return blockchain_processor.send_eth(amount, recipient_address,
+                                         signing_address, encrypted_private_key,
+                                         dependent_on_tasks)
+
+@celery_app.task(**task_config)
+def get_task(self, task_id):
+    return blockchain_processor.persistence_model.get_serialised_task_from_id(task_id)
+
+@celery_app.task(**task_config)
+def _attempt_transaction(self, task_id):
+    return blockchain_processor.attempt_transaction(task_id)
+
+@celery_app.task(**task_config)
+def _process_function_transaction(self, transaction_id, contract, function, args=None, kwargs=None, gas_limit=None):
+    return blockchain_processor.process_function_transaction(transaction_id, contract, function, args, kwargs, gas_limit)
+
+@celery_app.task(**task_config)
+def _process_send_eth_transaction(self, transaction_id, recipient_address, amount):
+    return blockchain_processor.process_send_eth_transaction(transaction_id, recipient_address, amount)
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
-def _create_transaction_response(self, transaction_id):
+def _check_transaction_response(self, transaction_id):
     ETH_CHECK_TRANSACTION_BASE_TIME = 2
     ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
 
@@ -45,7 +91,11 @@ def _create_transaction_response(self, transaction_id):
         return t(self.request.retries)
 
     try:
-        blockchain_processor.create_transaction_response(transaction_id)
+        status = blockchain_processor.check_transaction_response(transaction_id)
+
+        if status == 'PENDING':
+            self.request.retries = 0
+            raise Exception("Need Retry")
 
     except Exception as e:
         print(e)

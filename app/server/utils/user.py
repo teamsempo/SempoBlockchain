@@ -161,13 +161,18 @@ def create_transfer_account_user(first_name=None, last_name=None,
                        last_name=last_name,
                        phone=phone,
                        email=email,
-                       public_serial_number=public_serial_number)
+                       public_serial_number=public_serial_number,
+                       is_self_sign_up=is_self_sign_up)
 
     precreated_pin = None
     is_activated = False
 
-    if use_precreated_pin:
+    try:
         transfer_card = get_transfer_card(public_serial_number)
+    except Exception as e:
+        transfer_card = None
+
+    if use_precreated_pin:
         precreated_pin = transfer_card.PIN
         is_activated = True
 
@@ -204,6 +209,9 @@ def create_transfer_account_user(first_name=None, last_name=None,
         transfer_account.is_vendor = is_vendor
         user.transfer_accounts.append(transfer_account)
 
+        if transfer_card:
+            transfer_account.transfer_card = transfer_card
+
         if token:
             transfer_account.token = token
 
@@ -231,7 +239,7 @@ def save_device_info(device_info, user):
         device = models.DeviceInfo()
 
         device.serial_number    = device_info['serialNumber']
-        device.unique_id        = device_info['uniqueID']
+        device.unique_id        = device_info['uniqueId']
         device.brand            = device_info['brand']
         device.model            = device_info['model']
         device.width            = device_info['width']
@@ -488,7 +496,7 @@ def proccess_create_or_modify_user_request(attribute_dict,
         save_device_info(device_info=attribute_dict.get('deviceinfo'), user=user)
 
     if custom_initial_disbursement:
-        disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, user)
+        disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, organisation.token, user)
 
     # Location fires an async task that needs to know user ID
     db.session.flush()
@@ -524,7 +532,5 @@ def proccess_create_or_modify_user_request(attribute_dict,
             'user': user_schema.dump(user).data
         }
     }
-
-    elapsed_time('6.0 Complete')
 
     return response_object, 200

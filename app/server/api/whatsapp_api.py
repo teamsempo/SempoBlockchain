@@ -20,12 +20,12 @@ class ProcessWhatsAppAPI(MethodView):
 
         reply = processor.process_message()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'reply': reply,
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 whatsapp_blueprint.add_url_rule(

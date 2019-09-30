@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, JSON
+from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import select, func, case
 import datetime, base64, os
@@ -13,7 +13,7 @@ from web3 import Web3
 
 import config
 
-STATUS_STRING_TO_INT = {'SUCCESS': 1, 'PENDING': 2, 'FAILED': 3, 'UNKNOWN': 99}
+STATUS_STRING_TO_INT = {'SUCCESS': 1, 'PENDING': 2, 'UNSTARTED': 3, 'FAILED': 4, 'UNKNOWN': 99}
 STATUS_INT_TO_STRING = {v: k for k, v in STATUS_STRING_TO_INT.items()}
 
 engine = create_engine(config.ETH_DATABASE_URI, pool_size=40, max_overflow=100)
@@ -32,7 +32,7 @@ class ModelBase(Base):
 class BlockchainAddress(ModelBase):
     __tablename__ = 'blockchain_address'
 
-    address = Column(String())
+    address = Column(String(), index=True, unique=True)
     _encrypted_private_key = Column(String())
 
     tasks = relationship('BlockchainTask',
@@ -52,27 +52,29 @@ class BlockchainAddress(ModelBase):
     @encrypted_private_key.setter
     def encrypted_private_key(self, value):
         self._encrypted_private_key = value
-        private_key = self._decrypt_private_key(value)
+        private_key = self.decrypt_private_key(value)
         self._set_address_from_private_key(private_key)
 
     @hybrid_property
     def private_key(self):
-        return self._decrypt_private_key(self._encrypted_private_key)
+        return self.decrypt_private_key(self._encrypted_private_key)
 
     @private_key.setter
     def private_key(self, value):
-        self.encrypted_private_key = self._encrypt_private_key(value)
+        self.encrypted_private_key = self.encrypt_private_key(value)
         self._set_address_from_private_key(value)
 
-    def _encrypt_private_key(self, private_key):
-        return self._cipher_suite()\
+    @staticmethod
+    def decrypt_private_key(encrypted_private_key):
+        return BlockchainAddress._cipher_suite() \
+            .decrypt(encrypted_private_key.encode('utf-8')).decode('utf-8')
+    @staticmethod
+    def encrypt_private_key(private_key):
+        return BlockchainAddress._cipher_suite()\
             .encrypt(private_key.encode('utf-8')).decode('utf-8')
 
-    def _decrypt_private_key(self, encrypted_private_key):
-        return self._cipher_suite() \
-            .decrypt(encrypted_private_key.encode('utf-8')).decode('utf-8')
-
-    def _cipher_suite(self):
+    @staticmethod
+    def _cipher_suite():
         fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
         return Fernet(fernet_encryption_key)
 
@@ -103,23 +105,28 @@ class BlockchainTask(ModelBase):
     function = Column(String)
     args = Column(JSON)
     kwargs = Column(JSON)
+    gas_limit = Column(BigInteger)
+
+    is_send_eth = Column(Boolean, default=False)
+    recipient_address = Column(String)
+    amount = Column(BigInteger)
 
     signing_address_id = Column(Integer, ForeignKey(BlockchainAddress.id))
 
     transactions = relationship('BlockchainTransaction',
-                                backref='blockchain_task',
+                                backref='task',
                                 lazy=True)
 
-    dependent_tasks = relationship('BlockchainTask',
-                                   secondary=task_dependencies,
-                                   primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
-                                   secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
-                                   backref='dependee_tasks')
+    dependees = relationship('BlockchainTask',
+                             secondary=task_dependencies,
+                             primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
+                             secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
+                             backref='dependents')
 
     @hybrid_property
     def status(self):
-        lowest_status_code = min(set(t.status_code for t in self.transactions))
-        return STATUS_INT_TO_STRING.get(lowest_status_code, 'UNKNOWN')
+        lowest_status_code = min(set(t.status_code for t in self.transactions) or [3])
+        return STATUS_INT_TO_STRING.get(lowest_status_code, 'UNSTARTED')
 
     @status.expression
     def status(cls):
@@ -131,7 +138,7 @@ class BlockchainTask(ModelBase):
                         .where(BlockchainTransaction.blockchain_task_id == cls.id)
                         .label('lowest_status')
                 ),
-                else_='UNKNOWN'
+                else_='UNSTARTED'
             )
         )
 

@@ -112,7 +112,7 @@ class BlockchainTransactionRPC(MethodView):
 
                 return make_response(jsonify(response_object)), 404
 
-            blockchain_task = celery_app.signature('worker.celery_tasks.create_transaction_response',
+            blockchain_task = celery_app.signature('worker.celery_tasks.check_transaction_response',
                                                    kwargs={'previous_result': {'transaction_hash': transaction_hash},
                                                            'credit_transfer_id': credit_transfer_id
                                                            })

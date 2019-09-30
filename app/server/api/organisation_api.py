@@ -2,9 +2,9 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
 from server import db
-from server.models import paginate_query, Organisation, User, Token
+from server.models import paginate_query, Organisation, User, Token, TransferAccount
 from server.schemas import organisation_schema, organisations_schema
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, show_all
 
 organisation_blueprint = Blueprint('organisation', __name__)
 
@@ -46,6 +46,8 @@ class OrganisationAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
+
+    @show_all
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self, organisation_id):
         post_data = request.get_json()
@@ -70,7 +72,13 @@ class OrganisationAPI(MethodView):
 
         new_organisation = Organisation(name=name, token=token)
 
-        db.session.add(new_organisation)
+        transfer_account = TransferAccount(organisation=new_organisation)
+
+        db.session.add_all([new_organisation, transfer_account])
+        db.session.commit()
+
+        new_organisation.org_level_transfer_account_id = transfer_account.id
+
         db.session.commit()
 
         response_object = {
@@ -108,6 +116,7 @@ class OrganisationUserAPI(MethodView):
 
             else:
                 user.organisations.append(organisation)
+                user.default_organisation = organisation
                 db.session.commit()
 
         response_object = {

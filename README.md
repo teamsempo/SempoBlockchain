@@ -12,6 +12,20 @@ Includes:
 
 ## To run locally machine:
 
+### Install _All_ Python Requirements
+Download and install python 3.6
+```
+virtualenv venv
+. venv/bin/activate
+cd app
+pip install -r slow_requirements.txt
+pip install -r requirements.txt
+cd ../eth_worker
+pip install -r requirements.txt
+cd ../worker
+pip install -r requirements.txt
+```
+
 ### Install Front-End Requirements
 ```
 cd app
@@ -22,7 +36,8 @@ npm install
 
 ### Run the web app in a Virtual Env
 ```
-run.py
+cd app
+python ./run.py
 ```
 
 ```

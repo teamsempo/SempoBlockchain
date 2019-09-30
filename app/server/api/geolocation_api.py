@@ -24,11 +24,11 @@ class AddAddressLatLng(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 geolocation_blueprint.add_url_rule(
     '/geolocation/',

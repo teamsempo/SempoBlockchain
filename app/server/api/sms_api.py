@@ -62,17 +62,17 @@ class ProcessFBChatAPI(MethodView):
 
                 self.call_send_api(sender_psid,response)
 
-            responseObject = {
+            response_object = {
                 'status': 'success'
             }
 
-            return make_response(jsonify(responseObject)), 200
+            return make_response(jsonify(response_object)), 200
 
-        responseObject = {
+        response_object = {
             'status': 'fail'
         }
 
-        return make_response(jsonify(responseObject)), 404
+        return make_response(jsonify(response_object)), 404
 
     def call_send_api(self,sender_psid,response):
 
@@ -106,11 +106,11 @@ class ProcessFBChatAPI(MethodView):
 
             return make_response(challenge), 201
 
-        responseObject = {
+        response_object = {
             'status': 'fail',
         }
 
-        return make_response(jsonify(responseObject)), 403
+        return make_response(jsonify(response_object)), 403
 
 
 class ProcessMessageBirdConvoAPI(MethodView):
@@ -151,11 +151,11 @@ class ProcessMessageBirdConvoAPI(MethodView):
         direction = body['message']['direction']
 
         if direction == 'sent':
-            responseObject = {
+            response_object = {
                 'status': 'success'
             }
 
-            return make_response(jsonify(responseObject)), 200
+            return make_response(jsonify(response_object)), 200
 
 
         transfer_account = TransferAccount.query.filter_by(facebook_psid = str(contactID)).first()
@@ -172,11 +172,11 @@ class ProcessMessageBirdConvoAPI(MethodView):
 
         self.call_send_messagebird_api(conversation_id,response_text)
 
-        responseObject = {
+        response_object = {
             'status': 'success'
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 class ProcessMessageBirdSMSAPI(MethodView):
 

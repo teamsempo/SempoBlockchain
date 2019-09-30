@@ -21,6 +21,7 @@ from server.exceptions import (
     TierNotFoundException,
     InvalidTransferTypeException,
     NoTransferAccountError,
+    UserNotFoundError,
     NoTransferCardError,
     TypeNotFoundException,
     IconNotSupportedException,
@@ -42,6 +43,15 @@ from server.utils.amazon_s3 import get_file_url
 from server.utils.user import get_transfer_card
 from server.utils.misc import elapsed_time, encrypt_string, decrypt_string, hex_private_key_to_address
 from server.utils import auth
+from server.utils.blockchain_tasks import (
+    create_blockchain_wallet,
+    get_token_decimals,
+    send_eth,
+    make_approval,
+    make_token_transfer,
+    get_blockchain_task
+)
+
 
 @contextmanager
 def no_expire():
@@ -121,8 +131,8 @@ def before_compile(query):
 
                 try:
                     # member_organisations = getattr(g, "member_organisations", [])
-                    primary_organisation = getattr(g, "primary_organisation_id", None)
-                    member_organisations = [primary_organisation] if primary_organisation else []
+                    active_organisation = getattr(g, "active_organisation_id", None)
+                    member_organisations = [active_organisation] if active_organisation else []
 
                     if issubclass(mapper.class_, ManyOrgBase):
                         # filters many-to-many
@@ -131,7 +141,7 @@ def before_compile(query):
                         )
                     else:
                         query = query.enable_assertions(False).filter(
-                            ent['entity'].organisation_id == primary_organisation
+                            ent['entity'].organisation_id == active_organisation
                         )
 
                 except AttributeError:
@@ -216,6 +226,8 @@ class Organisation(ModelBase):
 
     name                = db.Column(db.String)
 
+    system_blockchain_address = db.Column(db.String)
+
     users               = db.relationship(
                             "User",
                             secondary=organisation_association_table,
@@ -223,19 +235,36 @@ class Organisation(ModelBase):
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
+
+    org_level_transfer_account_id    = db.Column(db.Integer, db.ForeignKey('transfer_account.id', name="fk_org_level_account"))
+    # We use this weird join pattern because SQLAlchemy
+    # doesn't play nice when doing multiple joins of the same table over different declerative bases
+    org_level_transfer_account       = db.relationship("TransferAccount",
+                                                       post_update=True,
+                                                       primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
+                                                       uselist=False)
+
     credit_transfers    = db.relationship(
                             "CreditTransfer",
                             secondary=organisation_association_table,
                             back_populates="organisations")
 
-    transfer_accounts   = db.relationship('TransferAccount', backref='organisation',
+    transfer_accounts   = db.relationship('TransferAccount',
+                                          backref='organisation',
                                           lazy=True, foreign_keys='TransferAccount.organisation_id')
+
 
     blockchain_addresses = db.relationship('BlockchainAddress', backref='organisation',
                                         lazy=True, foreign_keys='BlockchainAddress.organisation_id')
 
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
+
+
+    def __init__(self, **kwargs):
+        super(Organisation, self).__init__(**kwargs)
+
+        self.system_blockchain_address = create_blockchain_wallet()
 
 
 class OneOrgBase(object):
@@ -269,8 +298,7 @@ class ManyOrgBase(object):
 
         return db.relationship("Organisation",
                                secondary=organisation_association_table,
-                               back_populates=plural,
-                               )
+                               back_populates=plural)
 
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
@@ -301,7 +329,6 @@ class User(ManyOrgBase, ModelBase):
     _TFA_secret     = db.Column(db.String(128))
     TFA_enabled     = db.Column(db.Boolean, default=False)
 
-
     default_currency = db.Column(db.String())
 
     _location       = db.Column(db.String())
@@ -313,11 +340,17 @@ class User(ManyOrgBase, ModelBase):
     is_activated    = db.Column(db.Boolean, default=False)
     is_disabled     = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
+    is_self_sign_up = db.Column(db.Boolean, default=True)
 
     terms_accepted = db.Column(db.Boolean, default=True)
 
     custom_attributes = db.Column(JSON)
     matched_profile_pictures = db.Column(JSON)
+
+    ap_user_id     = db.Column(db.String())
+    ap_bank_id     = db.Column(db.String())
+    ap_paypal_id   = db.Column(db.String())
+    kyc_state      = db.Column(db.String())
 
     cashout_authorised = db.Column(db.Boolean, default=False)
 
@@ -328,6 +361,12 @@ class User(ManyOrgBase, ModelBase):
 
     chatbot_state_id    = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
     targeting_survey_id = db.Column(db.Integer, db.ForeignKey('targeting_survey.id'))
+
+    default_organisation_id = db.Column(db.Integer, db.ForeignKey('organisation.id'))
+    default_organisation    = db.relationship('Organisation',
+                                              primaryjoin=Organisation.id==default_organisation_id,
+                                              lazy=True,
+                                              uselist=False)
 
     # roles = db.relationship('UserRole', backref='user', lazy=True,
     #                              foreign_keys='UserRole.user_id')
@@ -351,6 +390,9 @@ class User(ManyOrgBase, ModelBase):
                                       lazy='dynamic', foreign_keys='CreditTransfer.recipient_user_id')
 
     ip_addresses     = db.relationship('IpAddress', backref='user', lazy=True)
+
+    feedback            = db.relationship('Feedback', backref='user',
+                                          lazy='dynamic', foreign_keys='Feedback.user_id')
 
     @hybrid_property
     def phone(self):
@@ -485,22 +527,21 @@ class User(ManyOrgBase, ModelBase):
 
     @property
     def transfer_account(self):
-        target_organisation_id = g.get('primary_organisation', None)
-        if target_organisation_id:
-            for transfer_account in self.transfer_accounts:
-                if transfer_account.organisation_id == target_organisation_id:
-                    return transfer_account
+        active_organisation = self.get_active_organisation()
+        if active_organisation:
+            return active_organisation.org_level_transfer_account
+
         # TODO: This should have a better concept of a default
         if len(self.transfer_accounts) == 1:
             return self.transfer_accounts[0]
         return None
 
-    def get_primary_admin_organisation(self, fallback=None):
+    def get_active_organisation(self, fallback=None):
         if len(self.organisations) == 0:
             return fallback
 
         if len(self.organisations) > 1:
-            raise NotImplementedError("Multiple admin organisations not currently supported")
+            return self.default_organisation
 
         return self.organisations[0]
 
@@ -658,19 +699,21 @@ class User(ManyOrgBase, ModelBase):
             ret = server_otp.verify(p, valid_window=100)
             return ret
 
+    def set_one_time_code(self, supplied_one_time_code):
+        if supplied_one_time_code is None:
+            self.one_time_code = str(random.randint(0, 9999)).zfill(4)
+        else:
+            self.one_time_code = supplied_one_time_code
+
     def set_pin(self, supplied_pin=None, is_activated=False):
 
         self.is_activated = is_activated
 
         if not is_activated:
             # Use a one time code, either generated or supplied. PIN will be set to random number for now
-            if supplied_pin is None:
-                self.one_time_code = str(random.randint(0, 9999)).zfill(4)
-            else:
-                self.one_time_code = supplied_pin
+            self.set_one_time_code(supplied_one_time_code=supplied_pin)
 
-            pin = str(random.randint(0, 9999999999999)).zfill(4)
-
+            pin = str(random.randint(0, 9999)).zfill(4)
         else:
             pin = supplied_pin
 
@@ -688,21 +731,13 @@ class User(ManyOrgBase, ModelBase):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
-#
-# class UserRole(ModelBase):
-#     __tablename__ = 'user_role'
-#
-#     name              = db.Column(db.String)
-#     tier              = db.Column(db.String)
-#     user_id           = db.Column(db.Integer, db.ForeignKey(User.id))
-#     revoked           = db.Column(db.Boolean, default=False)
 
 class ChatbotState(ModelBase):
     __tablename__ = 'chatbot_state'
 
     transfer_initialised = db.Column(db.Boolean, default=False)
     target_user_id = db.Column(db.Integer, default=None)
-    transfer_amount = db.Column(db.Integer, default=None)
+    transfer_amount = db.Column(db.Integer, default=0)
     prev_pin_failures = db.Column(db.Integer, default=0)
     last_accessed = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -730,9 +765,12 @@ class Token(ModelBase):
     address = db.Column(db.String, index=True, unique=True, nullable=False)
     name    = db.Column(db.String)
     symbol  = db.Column(db.String)
+    _decimals = db.Column(db.Integer)
 
-    organisations = db.relationship('Organisation', backref='token', lazy=True,
-                                        foreign_keys='Organisation.token_id')
+    organisations = db.relationship('Organisation',
+                                    backref='token',
+                                    lazy=True,
+                                    foreign_keys='Organisation.token_id')
 
     transfer_accounts = db.relationship('TransferAccount', backref='token', lazy=True,
                                          foreign_keys='TransferAccount.token_id')
@@ -740,11 +778,34 @@ class Token(ModelBase):
     credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
                                         foreign_keys='CreditTransfer.token_id')
 
+    approvals = db.relationship('SpendApproval', backref='token', lazy=True,
+                                        foreign_keys='SpendApproval.token_id')
+
+    @property
+    def decimals(self):
+        if self._decimals:
+            return self._decimals
+
+        decimals_from_contract_definition = get_token_decimals(self)
+
+        if decimals_from_contract_definition:
+            return decimals_from_contract_definition
+
+        raise Exception("Decimals not defined in either database or contract")
+
+    def token_amount_to_system(self, token_amount):
+        return int(token_amount) * 100 / 10**self.decimals
+
+    def system_amount_to_token(self, system_amount):
+        return int(float(system_amount) / 100 * 10**self.decimals)
+
+
 class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    # balance         = db.Column(db.BigInteger, default=0)
+    balance         = db.Column(db.BigInteger, default=0)
+    blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
 
@@ -761,13 +822,20 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
+    transfer_card    = db.relationship('TransferCard', backref='transfer_account', lazy=True, uselist=False)
+
     # users               = db.relationship('User', backref='transfer_account', lazy=True)
     users = db.relationship(
         "User",
         secondary=user_transfer_account_association_table,
         back_populates="transfer_accounts")
 
-    blockchain_address = db.relationship('BlockchainAddress', backref='transfer_account', lazy=True, uselist=False)
+    # owning_organisation_id = db.Column(db.Integer, db.ForeignKey(Organisation.id))
+
+    # owning_organisation = db.relationship("Organsisation", backref='org_level_transfer_account',
+    #                                       lazy='dynamic', foreign_keys=Organisation.org_level_transfer_account_id)
+
+    # blockchain_address = db.relationship('BlockchainAddress', backref='transfer_account', lazy=True, uselist=False)
 
     credit_sends       = db.relationship('CreditTransfer', backref='sender_transfer_account',
                                          lazy='dynamic', foreign_keys='CreditTransfer.sender_transfer_account_id')
@@ -775,8 +843,30 @@ class TransferAccount(OneOrgBase, ModelBase):
     credit_receives    = db.relationship('CreditTransfer', backref='recipient_transfer_account',
                                          lazy='dynamic', foreign_keys='CreditTransfer.recipient_transfer_account_id')
 
-    feedback            = db.relationship('Feedback', backref='transfer_account',
-                                          lazy='dynamic', foreign_keys='Feedback.transfer_account_id')
+    spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
+                                            lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
+
+    def get_or_create_system_transfer_approval(self):
+
+        organisation_blockchain_address = self.organisation.system_blockchain_address
+
+        approval = self.get_approval(organisation_blockchain_address)
+
+        if not approval:
+            approval = self.give_approval_to_address(organisation_blockchain_address)
+
+        return approval
+
+    def give_approval_to_address(self, address_getting_approved):
+        approval = SpendApproval(transfer_account_giving_approval=self,
+                                 address_getting_approved=address_getting_approved)
+        return approval
+
+    def get_approval(self, receiving_address):
+        for approval in self.spend_approvals_given:
+            if approval.receiving_address == receiving_address:
+                return approval
+        return None
 
     @hybrid_property
     def total_sent(self):
@@ -794,9 +884,9 @@ class TransferAccount(OneOrgBase, ModelBase):
             .filter(CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
         )
 
-    @hybrid_property
-    def balance(self):
-        return self.total_received - self.total_sent
+    # @hybrid_property
+    # def balance(self):
+    #     return self.total_received - self.total_sent
 
     @hybrid_property
     def primary_user(self):
@@ -870,15 +960,14 @@ class TransferAccount(OneOrgBase, ModelBase):
         return withdrawal
 
     def __init__(self, blockchain_address=None, organisation=None):
+        #
+        # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
+        # db.session.add(blockchain_address_obj)
 
-        blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
-        db.session.add(blockchain_address_obj)
-
-        self.blockchain_address = blockchain_address_obj
+        self.blockchain_address = blockchain_address or create_blockchain_wallet()
 
         if organisation:
             self.organisation = organisation
-            self.blockchain_address.organisation = organisation
             self.token = organisation.token
 
 class BlockchainAddress(OneOrgBase, ModelBase):
@@ -942,6 +1031,38 @@ class BlockchainAddress(OneOrgBase, ModelBase):
 
             self.calculate_address(hex_private_key)
 
+class SpendApproval(ModelBase):
+    __tablename__ = 'spend_approval'
+
+    eth_send_task_id = db.Column(db.Integer)
+    approval_task_id = db.Column(db.Integer)
+    receiving_address = db.Column(db.String)
+
+    token_id                      = db.Column(db.Integer, db.ForeignKey(Token.id))
+    giving_transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
+
+    def __init__(self, transfer_account_giving_approval, address_getting_approved):
+
+        self.giving_transfer_account = transfer_account_giving_approval
+
+        self.token = transfer_account_giving_approval.token
+
+        self.receiving_address = address_getting_approved
+
+        eth_send_task_id = send_eth(signing_address=address_getting_approved,
+                                    recipient_address=transfer_account_giving_approval.blockchain_address,
+                                    amount=0.00184196 * 10**18)
+
+        approval_task_id = make_approval(signing_address=transfer_account_giving_approval.blockchain_address,
+                                         token=self.token,
+                                         spender=address_getting_approved,
+                                         amount=1000000,
+                                         dependent_on_tasks=[eth_send_task_id])
+
+        self.eth_send_task_id = eth_send_task_id
+        self.approval_task_id = approval_task_id
+
+
 
 class CreditTransfer(ManyOrgBase, ModelBase):
     __tablename__ = 'credit_transfer'
@@ -956,10 +1077,9 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     transfer_mode   = db.Column(db.Enum(TransferModeEnum))
     transfer_use    = db.Column(JSON)
 
-
     resolution_message = db.Column(db.String())
 
-    blockchain_transaction_hash = db.Column(db.String)
+    blockchain_task_id = db.Column(db.Integer)
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
@@ -978,16 +1098,20 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
     @hybrid_property
     def blockchain_status(self):
-        if len(self.uncompleted_blockchain_tasks) == 0:
-            return 'COMPLETE'
+        task = get_blockchain_task(self.blockchain_task_id)
 
-        if len(self.pending_blockchain_tasks) > 0:
-            return 'PENDING'
+        return task.get('status', 'ERROR')
 
-        if len(self.failed_blockchain_tasks) > 0:
-            return 'ERROR'
-
-        return 'UNKNOWN'
+        # if len(self.uncompleted_blockchain_tasks) == 0:
+        #     return 'COMPLETE'
+        #
+        # if len(self.pending_blockchain_tasks) > 0:
+        #     return 'PENDING'
+        #
+        # if len(self.failed_blockchain_tasks) > 0:
+        #     return 'ERROR'
+        #
+        # return 'UNKNOWN'
 
 
     @hybrid_property
@@ -1061,101 +1185,30 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                 completed_task_set.add(transaction.transaction_type)
         return completed_task_set
 
-    def delta_transfer_account_balance(self, transfer_account, delta):
-
-            if transfer_account:
-                transfer_account.balance += delta
-
     def send_blockchain_payload_to_worker(self, is_retry=False):
-        if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
 
-            if self.recipient_user and self.recipient_user.transfer_card:
+        sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
 
-                self.recipient_user.transfer_card.update_transfer_card()
+        recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
-            master_wallet_approval_status = self.recipient_transfer_account.master_wallet_approval_status
-
-            elapsed_time('4.3.2: Approval Status calculated')
-
-            if master_wallet_approval_status in ['NO_REQUEST', 'FAILED']:
-                account_to_approve_pk = self.recipient_transfer_account.blockchain_address.encoded_private_key
-            else:
-                account_to_approve_pk = None
-
-            blockchain_payload = {'type': 'DISBURSEMENT',
-                                  'credit_transfer_id': self.id,
-                                  'transfer_amount': self.transfer_amount,
-                                  'recipient': self.recipient_transfer_account.blockchain_address.address,
-                                  'account_to_approve_pk': account_to_approve_pk,
-                                  'master_wallet_approval_status': master_wallet_approval_status,
-                                  'uncompleted_tasks': list(self.uncompleted_blockchain_tasks),
-                                  'is_retry': is_retry
-                                  }
-
-            elapsed_time('4.3.3: Payload made')
-
-        elif self.transfer_type == TransferTypeEnum.PAYMENT:
-
-            if self.recipient_transfer_account:
-                recipient = self.recipient_transfer_account.blockchain_address.address
-            else:
-                recipient = self.recipient_blockchain_address.address
-
-            try:
-                master_wallet_approval_status = self.recipient_transfer_account.master_wallet_approval_status
-
-            except AttributeError:
-                master_wallet_approval_status = 'NOT_REQUIRED'
-
-            if master_wallet_approval_status in ['NO_REQUEST', 'FAILED']:
-                account_to_approve_pk = self.recipient_transfer_account.blockchain_address.encoded_private_key
-            else:
-                account_to_approve_pk = None
-
-            blockchain_payload = {'type': 'PAYMENT',
-                                  'credit_transfer_id': self.id,
-                                  'transfer_amount': self.transfer_amount,
-                                  'sender': self.sender_transfer_account.blockchain_address.address,
-                                  'recipient': recipient,
-                                  'account_to_approve_pk': account_to_approve_pk,
-                                  'master_wallet_approval_status': master_wallet_approval_status,
-                                  'uncompleted_tasks': list(self.uncompleted_blockchain_tasks),
-                                  'is_retry': is_retry
-                                  }
-
-        elif self.transfer_type == TransferTypeEnum.WITHDRAWAL:
-
-            master_wallet_approval_status = self.sender_transfer_account.master_wallet_approval_status
-
-            if master_wallet_approval_status == 'NO_REQUEST':
-                account_to_approve_pk = self.sender_transfer_account.blockchain_address.encoded_private_key
-            else:
-                account_to_approve_pk = None
-
-            blockchain_payload = {'type': 'WITHDRAWAL',
-                                  'credit_transfer_id': self.id,
-                                  'transfer_amount': self.transfer_amount,
-                                  'sender': self.sender_transfer_account.blockchain_address.address,
-                                  'recipient': current_app.config['ETH_OWNER_ADDRESS'],
-                                  'account_to_approve_pk': account_to_approve_pk,
-                                  'master_wallet_approval_status': master_wallet_approval_status,
-                                  'uncompleted_tasks': list(self.uncompleted_blockchain_tasks),
-                                  'is_retry': is_retry
-                                  }
-
-        else:
-            raise InvalidTransferTypeException("Invalid Transfer Type")
-
-        if not is_retry or len(blockchain_payload['uncompleted_tasks']) > 0:
-            blockchain_task = celery_app.signature('worker.celery_tasks.make_blockchain_transaction', kwargs={'blockchain_payload': blockchain_payload})
-            g.celery_tasks.append(blockchain_task)
+        self.blockchain_task_id = make_token_transfer(
+            signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
+            token=self.token,
+            from_address=self.sender_transfer_account.blockchain_address,
+            to_address=self.recipient_transfer_account.blockchain_address,
+            amount=self.transfer_amount,
+            dependent_on_tasks=[
+                sender_approval.eth_send_task_id, sender_approval.approval_task_id,
+                recipient_approval.eth_send_task_id, recipient_approval.approval_task_id
+            ]
+        )
 
     def resolve_as_completed(self, existing_blockchain_txn=None):
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
-        # self.delta_transfer_account_balance(self.sender_transfer_account, -self.transfer_amount)
-        # self.delta_transfer_account_balance(self.recipient_transfer_account, self.transfer_amount)
+        self.sender_transfer_account.balance -= self.transfer_amount
+        self.recipient_transfer_account.balance += self.transfer_amount
 
         if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -1164,33 +1217,12 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         if not existing_blockchain_txn:
             self.send_blockchain_payload_to_worker()
 
-        elapsed_time('4.3.3: Payload sent')
-
     def resolve_as_rejected(self, message=None):
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.REJECTED
 
         if message:
             self.resolution_message = message
-
-    @staticmethod
-    def check_has_correct_users_for_transfer_type(transfer_type, sender_user, recipient_user):
-
-        transfer_type = str(transfer_type)
-
-        if transfer_type == 'WITHDRAWAL':
-            if sender_user and not recipient_user:
-                return True
-
-        if transfer_type == 'DISBURSEMENT' or transfer_type == 'BALANCE':
-            if not sender_user and recipient_user:
-                return True
-
-        if transfer_type == 'PAYMENT':
-            if sender_user and recipient_user:
-                return True
-
-        return False
 
     def check_sender_has_sufficient_balance(self):
         return self.sender_user and self.sender_transfer_account.balance - self.transfer_amount >= 0
@@ -1201,42 +1233,64 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     def check_recipient_is_approved(self):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
-    def find_user_transfer_account_with_matching_token(self, user, token):
+    def find_user_transfer_accounts_with_matching_token(self, user, token):
+        matching_transfer_accounts = []
         for transfer_account in user.transfer_accounts:
             if transfer_account.token == token:
-                return transfer_account
-        raise NoTransferAccountError("No transfer account for user {} and token".format(user, token))
+                matching_transfer_accounts.append(transfer_account)
+        if len(matching_transfer_accounts) == 0:
+            raise NoTransferAccountError("No transfer account for user {} and token".format(user, token))
+        if len(matching_transfer_accounts) > 1:
+            raise Exception(f"User has multiple transfer accounts for token {token}")
 
-    def __init__(self, amount, token, sender=None, recipient=None, transfer_type=None, uuid=None):
+        return matching_transfer_accounts[0]
+
+    def _select_transfer_account(self, supplied_transfer_account, user, token):
+        if token is None:
+            raise Exception("Token must be specified")
+        if supplied_transfer_account:
+            if user is not None and user not in supplied_transfer_account.users:
+                raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
+            return supplied_transfer_account
+
+        return self.find_user_transfer_accounts_with_matching_token(user, token)
+
+    def append_organisation_if_required(self, organisation):
+        if organisation not in self.organisations:
+            self.organisations.append(organisation)
+
+    def __init__(self,
+                 amount,
+                 token=None,
+                 sender_user=None,
+                 recipient_user=None,
+                 sender_transfer_account=None,
+                 recipient_transfer_account=None,
+                 transfer_type=None, uuid=None):
+
+        self.transfer_amount = amount
+
+        self.sender_user = sender_user
+        self.recipient_user = recipient_user
+
+        self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
+            sender_transfer_account, sender_user, token)
+
+        self.token = token or self.sender_transfer_account.token
+
+        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
+            recipient_transfer_account, recipient_user, self.token)
+
+        if self.sender_transfer_account.token != self.recipient_transfer_account.token:
+            raise Exception("Tokens do not match")
+
+        self.transfer_type = transfer_type
 
         if uuid is not None:
             self.uuid = uuid
 
-        if sender is not None:
-            self.sender_user = sender
-            self.sender_transfer_account = self.find_user_transfer_account_with_matching_token(sender, token)
-
-        if recipient is not None:
-            self.recipient_user = recipient
-            self.recipient_transfer_account = self.find_user_transfer_account_with_matching_token(recipient, token)
-
-        if self.sender_transfer_account and self.recipient_transfer_account:
-            self.transfer_type = TransferTypeEnum.PAYMENT
-        elif self.recipient_transfer_account:
-            self.transfer_type = TransferTypeEnum.DISBURSEMENT
-        elif self.sender_transfer_account:
-            self.transfer_type = TransferTypeEnum.WITHDRAWAL
-        else:
-            raise ValueError("Neither sender nor recipient transfer accounts found")
-
-        # Optional check to enforce correct transfer type
-        if transfer_type and not self.check_has_correct_users_for_transfer_type(
-                self.transfer_type, self.sender_user, self.recipient_user):
-            raise InvalidTransferTypeException("Invalid transfer type")
-
-        self.transfer_amount = amount
-
-
+        self.append_organisation_if_required(self.recipient_transfer_account.organisation)
+        self.append_organisation_if_required(self.sender_transfer_account.organisation)
 
 
 class BlockchainTransaction(ModelBase):
@@ -1261,19 +1315,6 @@ class BlockchainTransaction(ModelBase):
     signing_blockchain_address_id = db.Column(db.Integer, db.ForeignKey('blockchain_address.id'))
 
 
-class UploadedImage(ModelBase):
-    __tablename__ = 'uploaded_image'
-
-    filename = db.Column(db.String)
-    image_type = db.Column(db.String)
-    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
-
-    @hybrid_property
-    def image_url(self):
-        return get_file_url(self.filename)
-
-
 class Feedback(ModelBase):
     __tablename__ = 'feedback'
 
@@ -1281,7 +1322,7 @@ class Feedback(ModelBase):
     rating                  = db.Column(db.Float)
     additional_information  = db.Column(db.String)
 
-    transfer_account_id     = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
+    user_id                 = db.Column(db.Integer, db.ForeignKey(User.id))
 
 
 class Referral(ModelBase):
@@ -1386,6 +1427,9 @@ class TransferCard(ModelBase):
 
     user_id    = db.Column(db.Integer, db.ForeignKey(User.id))
 
+    transfer_account_id    = db.Column(db.Integer, db.ForeignKey(TransferAccount.id))
+
+
     @hybrid_property
     def amount_loaded(self):
         return self._phone
@@ -1393,7 +1437,7 @@ class TransferCard(ModelBase):
     @amount_loaded.setter
     def amount_loaded(self, amount):
         self._amount_loaded = amount
-        message = '{}{}'.format(self.nfc_serial_number, amount)
+        message = '{}{}{}'.format(self.nfc_serial_number, amount, self.transfer_account.token.symbol)
         self.amount_loaded_signature = current_app.config['ECDSA_SIGNING_KEY'].sign(message.encode()).hex()
 
     def update_transfer_card(self):
@@ -1487,6 +1531,19 @@ class BankAccount(ModelBase):
     routing_number      = db.Column(db.String)
     account_number      = db.Column(db.String)
     currency            = db.Column(db.String)
+
+
+class UploadedImage(ModelBase):
+    __tablename__ = 'uploaded_image'
+
+    filename = db.Column(db.String)
+    image_type = db.Column(db.String)
+    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+
+    @hybrid_property
+    def image_url(self):
+        return get_file_url(self.filename)
 
 
 class UploadedDocument(ModelBase):

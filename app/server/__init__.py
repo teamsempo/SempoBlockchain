@@ -53,6 +53,34 @@ def encrypt_string(raw_string):
 
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
 
+encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
+dependent_on_tasks = None
+#
+# for i in range(0,20):
+#     blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
+#                                            kwargs={
+#                                                'encrypted_private_key': encrypted_private_key,
+#                                                'contract': 'Dai Stablecoin v1.0',
+#                                                'function': 'transfer',
+#                                                'args': [
+#                                                    '0x68D3ce90D84B4DD8936908Afd4079797057996bB',
+#                                                    1
+#                                                ],
+#                                                'dependent_on_tasks': dependent_on_tasks
+#                                            })
+#     result = blockchain_task.delay()
+#
+#     try:
+#         task_id = result.get(timeout=3, propagate=True, interval=0.3)
+#     except Exception as e:
+#         raise e
+#     finally:
+#         result.forget()
+#
+#     # if not dependent_on_tasks:
+#     # dependent_on_tasks = [task_id]
+#     print(task_id)
+
 red = redis.Redis.from_url(config.REDIS_URL)
 
 pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
@@ -154,7 +182,7 @@ def register_blueprints(app):
     from server.api.credit_transfer_api import credit_transfer_blueprint
     from server.api.sms_api import sms_blueprint
     from server.api.user_api import user_blueprint
-    from server.api.me_api import me_blueprint
+    from server.me_api import me_blueprint
     from server.api.export_api import export_blueprint
     from server.api.image_uploader_api import image_uploader_blueprint
     from server.api.recognised_face_api import recognised_face_blueprint
@@ -163,7 +191,6 @@ def register_blueprints(app):
     from server.api.wyre_api import wyre_blueprint
     from server.api.transfer_usage_api import transfer_usage_blueprint
     from server.api.transfer_card_api import transfer_cards_blueprint
-    from server.api.blockchain_address_api import blockchain_address_blueprint
     from server.api.organisation_api import organisation_blueprint
     from server.api.token_api import token_blueprint
     from server.api.slack_api import slack_blueprint
@@ -188,7 +215,6 @@ def register_blueprints(app):
     app.register_blueprint(wyre_blueprint, url_prefix='/api')
     app.register_blueprint(transfer_usage_blueprint, url_prefix='/api')
     app.register_blueprint(transfer_cards_blueprint, url_prefix='/api')
-    app.register_blueprint(blockchain_address_blueprint, url_prefix='/api')
     app.register_blueprint(organisation_blueprint, url_prefix='/api')
     app.register_blueprint(token_blueprint, url_prefix='/api')
     app.register_blueprint(slack_blueprint, url_prefix='/api')
