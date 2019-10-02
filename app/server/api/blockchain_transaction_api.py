@@ -1,8 +1,8 @@
-from flask import Blueprint, request, make_response, jsonify, g, session
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import basic_auth, db, celery_app
-from server.models import BlockchainTransaction, CreditTransfer
+from server import db, celery_app
+from server.models.models import BlockchainTransaction, CreditTransfer
 from server.utils.blockchain_transaction import add_full_transaction_details, claim_nonce
 from server.utils.auth import requires_auth
 

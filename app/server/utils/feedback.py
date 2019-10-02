@@ -1,6 +1,6 @@
 from flask import current_app
-from sqlalchemy import or_, and_, text
-from server.models import TransferAccount, CreditTransfer, Feedback, User
+from sqlalchemy import or_, and_
+from server.models.models import TransferAccount, CreditTransfer, Feedback, User
 
 
 def request_feedback_questions(user):

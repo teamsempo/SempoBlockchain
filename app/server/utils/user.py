@@ -1,19 +1,19 @@
-import threading, re
+import threading
 from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app
 from eth_utils import to_checksum_address
 
-from server import db, models
+from server import db
+from server.models import models
 from server.schemas import user_schema
-from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES, CREATE_USER_SETTINGS
+from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import NoTransferCardError, PhoneVerificationError
 from server import celery_app, sentry
 from server.utils import credit_transfers as CreditTransferUtils
 from server.utils.phone import proccess_phone_number, send_onboarding_message, send_phone_verification_message
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
-from server.utils.misc import elapsed_time, AttributeDictProccessor
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):

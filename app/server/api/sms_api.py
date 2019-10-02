@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, jsonify, g, session
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from flask import current_app
 
@@ -10,7 +10,7 @@ import hashlib
 from server import db
 from server.utils.chatbot_controller import MessageProcessor, bind_fb_psid_to_account
 from server.utils.phone import make_sms_respone, send_messagebird_message
-from server.models import TransferAccount
+from server.models.models import TransferAccount
 
 sms_blueprint = Blueprint('sms', __name__)
 

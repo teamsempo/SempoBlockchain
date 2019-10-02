@@ -2,7 +2,7 @@ import datetime
 
 from flask import g, make_response, jsonify, request
 from flask.views import MethodView
-from sqlalchemy import or_, func
+from sqlalchemy import or_
 from web3 import Web3
 
 from server import db
@@ -12,7 +12,7 @@ from server.exceptions import (
     AccountNotApprovedError,
     InsufficientBalanceError
 )
-from server.models import (
+from server.models.models import (
     User,
     TransferAccount,
     TransferCard,

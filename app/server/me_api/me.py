@@ -1,10 +1,8 @@
-from flask import request, g, make_response, jsonify
+from flask import g, make_response, jsonify
 from flask.views import MethodView
-from sqlalchemy import or_
 
-from server.models import CreditTransfer, paginate_query
 from server.schemas import user_schema
-from server.utils.auth import requires_auth, show_all, AccessControl
+from server.utils.auth import requires_auth, show_all
 
 
 class MeAPI(MethodView):

@@ -2,7 +2,7 @@ from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models import UploadedImage
+from server.models.models import UploadedImage
 from server.schemas import uploaded_image_schema
 from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import save_to_s3_from_image_object, generate_new_filename

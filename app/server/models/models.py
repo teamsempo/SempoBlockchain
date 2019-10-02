@@ -6,7 +6,7 @@ from eth_utils import keccak
 from web3 import Web3
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.dialects.postgresql import JSON, INET, JSONB
+from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.query import Query
@@ -52,6 +52,7 @@ from server.utils.blockchain_tasks import (
     get_blockchain_task
 )
 
+from server.models.utils import ModelBase
 
 @contextmanager
 def no_expire():
@@ -98,16 +99,6 @@ def paginate_query(query, queried_object=None, order_override=None):
     paginated = query.paginate(page, per_page, error_out=False)
 
     return paginated.items, paginated.total, paginated.pages
-
-
-def get_authorising_user_id():
-    if hasattr(g,'user'):
-        return g.user.id
-    elif hasattr(g,'authorising_user_id'):
-        return g.authorising_user_id
-    else:
-        return None
-
 
 @event.listens_for(Query, "before_compile", retval=True)
 def before_compile(query):
@@ -207,15 +198,6 @@ user_transfer_account_association_table = db.Table(
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'))
 )
-
-class ModelBase(db.Model):
-    __abstract__ = True
-
-    id = db.Column(db.Integer, primary_key=True)
-    authorising_user_id = db.Column(db.Integer, default=get_authorising_user_id)
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-
 
 # todo: see if we can dynamically generate org relationships from mapper args??
 class Organisation(ModelBase):
@@ -1593,40 +1575,3 @@ class CustomAttribute(ModelBase):
     name                        = db.Column(db.String)
 
 
-class IpAddress(ModelBase):
-    __tablename__               = 'ip_address'
-
-    _ip                         = db.Column(INET)
-    country                     = db.Column(db.String)
-
-    user_id                     = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    @staticmethod
-    def check_user_ips(user, ip_address):
-        # check whether ip address is saved for a given user
-        res = IpAddress.query.filter_by(ip=ip_address, user_id=user.id).first()
-        if res:
-            return True
-        else:
-            return False
-
-    @hybrid_property
-    def ip(self):
-        return self._ip
-
-    @ip.setter
-    def ip(self, ip):
-
-        self._ip = ip
-
-        if ip is not None:
-
-            try:
-                task = {'ip_address_id': self.id, 'ip': ip}
-                ip_location_task = celery_app.signature('worker.celery_tasks.ip_location', args=(task,))
-
-                ip_location_task.delay()
-            except Exception as e:
-                print(e)
-                sentry.captureException()
-                pass
