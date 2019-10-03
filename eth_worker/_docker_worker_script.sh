@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 sleep 10
+alembic upgrade head
 if [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
   flower -A worker --port=5555
 elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
