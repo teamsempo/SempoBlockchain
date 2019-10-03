@@ -1,5 +1,4 @@
 import os, configparser, boto3, hashlib
-from bit import PrivateKeyTestnet, PrivateKey
 from botocore.exceptions import EndpointConnectionError
 from eth_keys import keys
 from eth_utils import keccak
@@ -241,14 +240,7 @@ if specific_parser['ETHEREUM'].get('dai_contract_address'):
     # support of old config file syntax
     ETH_CONTRACT_ADDRESS = specific_parser['ETHEREUM'].get('dai_contract_address')
 
-IS_USING_BITCOIN        = specific_parser['BITCOIN'].getboolean('is_using_bitcoin') or False
-IS_BITCOIN_TESTNET      = specific_parser['BITCOIN'].getboolean('is_testnet') or False
-BITCOIN_MASTER_WALLET_WIF       = specific_parser['BITCOIN'].get('master_wallet_wif')
-KeyGenerator = PrivateKeyTestnet if IS_BITCOIN_TESTNET else PrivateKey
-if IS_USING_BITCOIN:
-    BITCOIN_MASTER_WALLET_ADDRESS = KeyGenerator(BITCOIN_MASTER_WALLET_WIF).address
-BITCOIN_CHECK_TRANSACTION_BASE_TIME = 360
-BITCOIN_CHECK_TRANSACTION_RETRIES = 8
+IS_USING_BITCOIN        = False
 
 FACEBOOK_TOKEN = common_parser['FACEBOOK']['token']
 FACEBOOK_VERIFY_TOKEN = common_parser['FACEBOOK']['verify_token']
