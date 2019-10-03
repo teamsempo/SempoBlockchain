@@ -48,8 +48,7 @@ services:
     image: "redis:alpine"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TESTS"
-  volumes:
-    db-data:
+
 #  beat:
 #    build:
 #      context: app/server
