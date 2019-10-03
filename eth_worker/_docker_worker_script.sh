@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-echo different3
 
 if [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
   sleep 10
@@ -9,7 +8,7 @@ elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
 elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
   python ethereum_filter_test.py
 else
-  celery -A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet
+  celery -A eth_manager worker --loglevel=INFO --concurrency=500 --pool=eventlet
 fi
 
 #
