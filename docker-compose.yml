@@ -16,7 +16,7 @@ services:
     build:
       context: app/server
       dockerfile: eth_worker/Dockerfile
-    image: worker
+    image: eth_worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TESTS"
       CONTAINER_TYPE: "WORKER"
