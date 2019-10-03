@@ -133,25 +133,29 @@ REDIS_URL = 'redis://' + specific_parser['REDIS']['URI']
 DATABASE_USER = specific_parser['DATABASE'].get('user') \
                 or '{}_{}'.format(common_parser['DATABASE']['user'],DEPLOYMENT_NAME.replace("-", "_"))
 
+DATABASE_HOST = specific_parser['DATABASE']['host']
+
 DATABASE_NAME = specific_parser['DATABASE'].get('database') \
                 or common_parser['DATABASE']['database']
 
 ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']
 
-def get_database_uri(name, censored=True):
+ETH_DATABASE_HOST = specific_parser['DATABASE']['eth_host']
+
+def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else specific_parser['DATABASE']['password'],
-                                                specific_parser['DATABASE']['host'],
+                                                host,
                                                 common_parser['DATABASE']['port'],
                                                 name)
 
 
-SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, censored=False)
-CENSORED_URI            = get_database_uri(DATABASE_NAME, censored=True)
+SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=False)
+CENSORED_URI            = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=True)
 
-ETH_DATABASE_URI     = get_database_uri(ETH_DATABASE_NAME, censored=False)
-CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, censored=True)
+ETH_DATABASE_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=False)
+CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=True)
 
 print('Main database URI: ' + CENSORED_URI)
 print('Eth database URI: ' + CENSORED_ETH_URI)
