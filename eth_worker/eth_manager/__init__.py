@@ -4,7 +4,9 @@
 from celery import Celery
 from raven import Client
 import redis
+from time import sleep
 
+from requests.exceptions import ConnectionError
 from web3 import (
     Web3,
     WebsocketProvider,
@@ -68,13 +70,23 @@ blockchain_processor.registry.register_contract(
 
 from eth_manager.utils import register_contracts_from_app
 
-register_contracts_from_app(config.APP_HOST,
-                            config.INTERNAL_AUTH_USERNAME,
-                            config.INTERNAL_AUTH_PASSWORD)
-
 # Register the master wallet so we can use it for tasks
-
 try:
     persistence_interface.create_blockchain_wallet_from_private_key(config.MASTER_WALLET_PRIVATE_KEY)
 except WalletExistsError:
     pass
+
+contracts_registered = False
+attempts = 0
+while contracts_registered is False and attempts < 100:
+    try:
+        register_contracts_from_app(config.APP_HOST,
+                                    config.INTERNAL_AUTH_USERNAME,
+                                    config.INTERNAL_AUTH_PASSWORD)
+
+        contracts_registered = True
+
+    except ConnectionError:
+        attempts += 1
+        sleep(1)
+
