@@ -25,7 +25,8 @@ from server.exceptions import (
     NoTransferCardError,
     TypeNotFoundException,
     IconNotSupportedException,
-    OrganisationNotProvidedException
+    OrganisationNotProvidedException,
+    PaymentMethodException
 )
 
 from server.constants import (
@@ -34,7 +35,8 @@ from server.constants import (
     RANKED_VENDOR_TIERS,
     ALLOWED_KYC_TYPES,
     ALLOWED_BLOCKCHAIN_ADDRESS_TYPES,
-    MATERIAL_COMMUNITY_ICONS
+    MATERIAL_COMMUNITY_ICONS,
+    PAYMENT_METHODS
 )
 from server import db, sentry, celery_app
 from server.utils.phone import proccess_phone_number
@@ -192,6 +194,11 @@ class TransferStatusEnum(enum.Enum):
     # BLOCKCHAIN_REJECTED = -2
     # BLOCKCHAIN_COMPLETE = 2
 
+class FiatRampStatusEnum(enum.Enum):
+    PENDING = 'PENDING'
+    FAILED = 'FAILED'
+    COMPLETE = 'COMPLETE'
+
 organisation_association_table = db.Table(
     'organisation_association_table',
     db.Model.metadata,
@@ -217,7 +224,6 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
-# todo: see if we can dynamically generate org relationships from mapper args??
 class Organisation(ModelBase):
     """
     Establishes organisation object that resources can be associated with.
@@ -1516,7 +1522,7 @@ class KycApplication(ModelBase):
     def __init__(self, type, **kwargs):
         super(KycApplication, self).__init__(**kwargs)
         if type not in ALLOWED_KYC_TYPES:
-            raise TypeNotFoundException('Type {} not found')
+            raise TypeNotFoundException('Type {} not found'.format(type))
 
         self.type = type
         self.kyc_attempts = 1
@@ -1583,7 +1589,7 @@ class TransferUsage(ModelBase):
     @icon.setter
     def icon(self, icon):
         if icon not in MATERIAL_COMMUNITY_ICONS:
-            raise IconNotSupportedException('Icon {} not supported or found')
+            raise IconNotSupportedException('Icon {} not supported or found'.format(icon))
         self._icon = icon
 
 
@@ -1630,3 +1636,31 @@ class IpAddress(ModelBase):
                 print(e)
                 sentry.captureException()
                 pass
+
+
+class FiatRamp(ModelBase):
+    """
+    FiatRamp model handles multiple on and off ramps (exchanging fiat for crypto)
+
+    credit_transfer_id: references addition or withdrawal of user funds in the exchange process
+    """
+
+    __tablename__               = 'fiat_ramp'
+
+    _payment_method             = db.Column(db.String)
+    payment_status              = db.Column(db.Enum(FiatRampStatusEnum), default=FiatRampStatusEnum.PENDING)
+
+    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
+
+    payment_metadata            = db.Column(JSON)
+
+    @hybrid_property
+    def payment_method(self):
+        return self._payment_method
+
+    @payment_method.setter
+    def payment_method(self, payment_method):
+        if payment_method not in PAYMENT_METHODS:
+            raise PaymentMethodException('Payment method {} not found'.format(payment_method))
+
+        self._payment_method = payment_method
