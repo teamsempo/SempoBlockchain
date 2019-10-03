@@ -58,10 +58,16 @@ if load_from_s3:
     common_parser.read_string(common_read_result)
 
 else:
-    # Load config from local folder
+    # Load config from local
 
-    common_path = os.path.join(CONFIG_DIR, 'config_files/common_config.ini')
-    specific_path = os.path.join(CONFIG_DIR, 'config_files/' + CONFIG_FILENAME)
+    folder_common_path = os.path.join(CONFIG_DIR, 'config_files/common_config.ini')
+    folder_specific_path = os.path.join(CONFIG_DIR, 'config_files/' + CONFIG_FILENAME)
+
+    raw_common_path = os.path.join(CONFIG_DIR, 'common_config.ini')
+    raw_specific_path = os.path.join(CONFIG_DIR, CONFIG_FILENAME)
+
+    common_path = folder_common_path if os.path.isfile(folder_common_path) else raw_common_path
+    specific_path = folder_specific_path if os.path.isfile(folder_specific_path) else folder_specific_path
 
     if not (os.path.isfile(common_path)):
         raise Exception("Missing Common Config File")
