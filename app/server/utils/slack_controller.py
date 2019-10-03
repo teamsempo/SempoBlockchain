@@ -4,7 +4,7 @@ from server.models import KycApplication, User
 from server.utils.phone import send_generic_message
 from server.utils.namescan import run_namescam_aml_check
 
-import config, slack
+import config, slack, json
 
 # Slack client for Web API requests
 client = slack.WebClient(token=config.SLACK_API_TOKEN)
@@ -53,7 +53,7 @@ def generate_actions(*args):
     return {"type": "actions", "elements": [arg for arg in args]}
 
 
-def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,document_type=None, document_front_url=None, document_back_url=None, selfie_url=None, aml_url=None):
+def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,country=None, type=None, document_type=None, document_front_url=None, document_back_url=None, selfie_url=None):
     return [{
         "type": "section",
         "text": {
@@ -79,6 +79,12 @@ def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=N
                 "text": "*Address:*\n{}".format(address)
             }, {
                 "type": "mrkdwn",
+                "text": "*Country:*\n{}".format(country)
+            }, {
+                "type": "mrkdwn",
+                "text": "*Type:*\n{}".format(type)
+            }, {
+                "type": "mrkdwn",
                 "text": "*{} (front):*\n<{}|View>".format(document_type,document_front_url)
             }, {
                 "type": "mrkdwn",
@@ -86,9 +92,6 @@ def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=N
             }, {
                 "type": "mrkdwn",
                 "text": "*Selfie:*\n<{}|View>".format(selfie_url)
-            }, {
-                "type": "mrkdwn",
-                "text": "*AML Screening:*\n<{}|View>".format(aml_url)
             }]
         },
         {
@@ -125,11 +128,12 @@ def generate_populated_message(user_id=None):
         last_name=kyc_details.last_name,
         dob=kyc_details.dob,
         address=kyc_details.street_address,
+        country=kyc_details.country,
+        type=kyc_details.type,
         document_type=documents[0].reference,
         document_front_url=filter_for_url('document_front_base64', documents),
         document_back_url=filter_for_url('document_back_base64', documents),
         selfie_url=filter_for_url('selfie_base64', documents),
-        aml_url=None,
     )
 
 
@@ -149,9 +153,9 @@ def post_verification_message(user=None):
 
 
 def get_user_from_id(user_id, payload):
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.execution_options(show_all=True).filter_by(id=user_id).first()
 
-    if user is None or len(user.kyc_applications) > 0:
+    if user is None or len(user.kyc_applications) < 0:
         client.chat_update(
             channel=CHANNEL_ID,
             ts=payload["state"],
@@ -178,6 +182,69 @@ def approve_user(message_blocks, username, message_ts, phone):
                              message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
 
     return make_response("", 200)
+
+
+def generate_aml_message(parent_message_ts=None, aml_result=None, avg_match_rate=0):
+    message_blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":female-detective: *New AML report*"
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "*Date:*\n{}".format(aml_result.get('date'))
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Scan ID:*\n{}".format(aml_result.get('scan_id'))
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Number of Matches:*\n{}".format(aml_result.get('number_of_matches'))
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Avg Match Rate:*\n{}".format(avg_match_rate)
+                }
+            ]
+        },
+        {
+            "type": "divider"
+        }
+    ]
+
+    persons = aml_result.get('persons', None)
+    if persons is not None:
+        for index, person in enumerate(persons, 1):
+            markdown = ""
+            markdown = markdown + "Match {} \n\n".format(index)
+            for (key, value) in person.items():
+                if isinstance(value, list):
+                    value = " ".join(str(x) for x in value)
+                markdown = markdown + '• {} -- {} \n'.format(key, value)
+
+            message_blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": markdown
+                }
+            })
+
+    client.chat_postMessage(
+        channel=CHANNEL_ID,
+        thread_ts=parent_message_ts,
+        blocks=message_blocks
+    )
 
 
 def slack_controller(payload):
@@ -207,8 +274,20 @@ def slack_controller(payload):
                                     "value": "valid"
                                 },
                                 {
-                                    "label": ":x: ID is not valid or expired",
-                                    "value": "non_valid"
+                                    "label": ":x: ID document is not valid or expired",
+                                    "value": "id_non_valid"
+                                },
+                                {
+                                    "label": ":x: ID document is partial. Important information is covered.",
+                                    "value": "id_partial"
+                                },
+                                {
+                                    "label": ":x: ID document is damaged. ID is unreadable due to physical damage.",
+                                    "value": "id_damaged"
+                                },
+                                {
+                                    "label": ":x: ID document is not in English.",
+                                    "value": "id_non_english"
                                 },
                                 {
                                     "label": ":x: ID document or selfie is too blurry",
@@ -216,8 +295,16 @@ def slack_controller(payload):
                                 },
                                 {
                                     "label": ":x: ID photo does not match selfie",
-                                    "value": "no_match_selfie"
-                                }
+                                    "value": "selfie_no_match"
+                                },
+                                {
+                                    "label": ":x: ID document is not present in selfie image",
+                                    "value": "selfie_id_non_present"
+                                },
+                                {
+                                    "label": ":x: Part of the face in the selfie image is covered by a hand, ID, etc.",
+                                    "value": "selfie_covered"
+                                },
                             ]
                         },
                         {
@@ -234,7 +321,7 @@ def slack_controller(payload):
                         },
                         {
                             "type": "text",
-                            "label": "Date of Birth (DD-MM-YYYY)",
+                            "label": "Date of Birth (DD/MM/YYYY) or (YYYY)",
                             "name": "date_of_birth",
                             "optional": True
                         },
@@ -306,7 +393,7 @@ def slack_controller(payload):
 
         kyc.first_name = submission['first_name']
         kyc.last_name = submission['last_name']
-        kyc.dob = submission['dob']
+        kyc.dob = submission['date_of_birth']
         kyc.street_address = submission['address']
 
         db.session.flush()  # so that the response message updates user details
@@ -332,16 +419,24 @@ def slack_controller(payload):
                 country=kyc.country
             )
 
-            match_rate = [x['match_rate'] for x in result['persons']]
-            if result['number_of_matches'] == 0 or (sum(match_rate)/len(match_rate)) < 50:
+            aml_result = json.loads(result.text)
+            kyc.namescan_scan_id = aml_result['scan_id']
+
+            match_rates = [x['match_rate'] for x in aml_result.get('persons', [])]
+            avg_match_rate = 0
+            if len(match_rates) > 0:
+                avg_match_rate = sum(match_rates)/len(match_rates)
+
+            if aml_result['number_of_matches'] == 0 or avg_match_rate < 75:
                 # Instant Approval
                 kyc.kyc_status = 'VERIFIED'
-                return approve_user(new_message_blocks, username=payload['user']['username'], message_ts=payload["state"], phone=user.phone)
+                return approve_user(new_message_blocks, username=payload['user']['name'], message_ts=payload["state"], phone=user.phone)
 
             else:
                 # Manual Review Required
-                # todo: generate message or PDF from json
-                new_message_blocks.append(dict(type='context', elements=[{"type": 'mrkdwn', "text": ':pencil: *@{}* started verifying...'.format(payload['user']['username'])}]))
+                generate_aml_message(parent_message_ts=payload["state"], aml_result=aml_result, avg_match_rate=avg_match_rate)
+
+                new_message_blocks.append(dict(type='context', elements=[{"type": 'mrkdwn', "text": ':pencil: *@{}* Manual review needed.'.format(payload['user']['name'])}]))
                 action_blocks = generate_actions(generate_approve_button(user_id), generate_deny_button(user_id))
                 new_message_blocks.append(action_blocks)
 
@@ -354,17 +449,26 @@ def slack_controller(payload):
                 return make_response("", 200)
 
         else:
-            # Update the message to indicate failed ID check.
+            # Update the slack message to indicate failed ID check.
             failure_options = {
-                "non_valid": ":x: ID is not valid",
-                "id_blurry": ":x: ID or selfie is too blurry",
-                "no_match_selfie": ":x: ID does not match selfie"
+                "id_non_valid": ":x: ID document is not valid or expired",
+                "id_partial": ":x: ID document is partial. Important parts (name, DOB, ID number) are covered by fingers, glared, cut off",
+                "id_damaged": ":x: ID document is damaged. ID is unreadable due to physical damage.",
+                "id_non_english": ":x: ID document is not in English.",
+                "id_blurry": ":x: ID document or selfie is too blurry",
+                "selfie_no_match": ":x: ID photo does not match selfie",
+                "selfie_id_non_present": ":x: ID document is not present in selfie image",
+                "selfie_covered": ":x: Part of the face in the selfie image is covered by a hand, ID, anything else"
             }
             new_message_blocks.append(dict(type='context', elements=[
                 {"type": 'mrkdwn', "text": failure_options[payload['submission']['id_validity']]}]))
 
             kyc.kyc_status = 'INCOMPLETE'
             kyc.kyc_actions = [str(payload['submission']['id_validity'])]
+
+            if user.phone:
+                send_generic_message(to_phone=user.phone,
+                                     message="Unfortunately, we had a problem verifying your identity. Please open the Sempo app to retry or contact our customer support.")
 
             db.session.flush()
 
