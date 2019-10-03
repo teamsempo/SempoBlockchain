@@ -174,7 +174,7 @@ jobs:
              application_name: blockchain-app
              default_ec2_keyname: aws-eb
              default_platform: Multi-container Docker 18.03.1-ce (Generic)
-             default_region: ap-southeast-2
+             default_region: eu-west-1
              include_git_submodules: true
              workspace_type: Application" > ./.elasticbeanstalk/config.yml
       - run:

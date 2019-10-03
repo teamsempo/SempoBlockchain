@@ -4,6 +4,7 @@ celery==4.4.0rc3
 eventlet==0.24.1
 flower==0.9.3
 idna==2.6
+psycopg2-binary==2.7.7
 py-evm==0.3.0a5
 raven==6.9.0
 redis==3.2.0
