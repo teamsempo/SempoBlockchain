@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-
+sleep 10
 if [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
-  sleep 10
   flower -A worker --port=5555
 elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
   celery -A worker beat --loglevel=WARNING

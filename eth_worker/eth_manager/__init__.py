@@ -18,7 +18,7 @@ sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 import config
-from eth_worker.sql_persistence.interface import SQLPersistenceInterface
+from sql_persistence.interface import SQLPersistenceInterface
 
 from eth_manager.ABIs import dai_abi
 from eth_manager.processor import TransactionProcessor, ContractRegistry
