@@ -12,10 +12,10 @@ services:
     depends_on:
     - postgres
 
-  worker:
+  eth_worker:
     build:
       context: app/server
-      dockerfile: worker/Dockerfile
+      dockerfile: eth_worker/Dockerfile
     image: worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TESTS"
@@ -41,6 +41,15 @@ services:
     environment:
       DEPLOYMENT_NAME: "DOCKER_TESTS"
       POSTGRES_DB: "sempo_docker"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+
+  eth_postgres:
+    image: "postgres"
+    restart: always
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TESTS"
+      POSTGRES_DB: "sempo_docker_eth"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
 
