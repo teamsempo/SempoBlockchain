@@ -1,8 +1,9 @@
 from flask import g
 from marshmallow import Schema, fields, post_dump
-from server.utils.amazon_s3 import get_file_url
-from server.models import models
 
+from server.models.models import CustomAttribute
+from server.utils.amazon_s3 import get_file_url
+from server.models.user import User
 
 class UserSchema(Schema):
     id      = fields.Int(dump_only=True)
@@ -44,7 +45,7 @@ class UserSchema(Schema):
 
     def get_json_data(self, obj):
         
-        allowed_custom_attributes_objs = models.CustomAttribute.query.all()
+        allowed_custom_attributes_objs = CustomAttribute.query.all()
         allowed_custom_attributes = []
 
         for attribute in allowed_custom_attributes_objs:
@@ -138,7 +139,7 @@ class CreditTransferSchema(Schema):
         if authorising_user_id is None:
             return None
 
-        authorising_user = models.User.query.get(obj.authorising_user_id)
+        authorising_user = User.query.get(obj.authorising_user_id)
         if authorising_user is None:
             return None
 

@@ -2,10 +2,12 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
 from server import db
-from server.models.models import paginate_query, TransferAccount
+from server.models.models import paginate_query
+from server.models.transfer import TransferAccount
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
-from server.utils.auth import requires_auth, AccessControl
+from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 

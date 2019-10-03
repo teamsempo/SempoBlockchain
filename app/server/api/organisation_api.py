@@ -2,7 +2,9 @@ from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models.models import paginate_query, Organisation, User, Token, TransferAccount
+from server.models.models import paginate_query, Organisation, Token
+from server.models.user import User
+from server.models.transfer import TransferAccount
 from server.schemas import organisation_schema, organisations_schema
 from server.utils.auth import requires_auth, show_all
 

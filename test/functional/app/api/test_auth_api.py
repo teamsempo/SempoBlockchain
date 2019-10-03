@@ -194,7 +194,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
 #     WHEN the '/api/auth/register/' api is posted to (POST)
 #     THEN check the response
 #     """
-#     from server.models.models import User
+#     from server.models.user import User
 #     register_response = test_client.post('/api/auth/register/',
 #                                 data=json.dumps(dict(email=email, password='TestPassword')),
 #                                 content_type='application/json', follow_redirects=True)
