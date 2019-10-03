@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 sleep 10
 alembic upgrade head
-if [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
-  flower -A worker --port=5555
+if [ "$CONTAINER_MODE" = 'TEST' ]; then
+  echo pass
 elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
   celery -A worker beat --loglevel=WARNING
 elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then

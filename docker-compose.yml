@@ -4,7 +4,7 @@ services:
     build: app/server
     image: server
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TESTS"
+      DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "APP"
       CONTAINER_MODE: ${CONTAINER_MODE}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
@@ -18,7 +18,7 @@ services:
       dockerfile: eth_worker/Dockerfile
     image: eth_worker
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TESTS"
+      DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "WORKER"
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
@@ -29,7 +29,7 @@ services:
   proxy:
     build: proxy
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TESTS"
+      DEPLOYMENT_NAME: "DOCKER_TEST"
     ports:
      - "80:80"
     depends_on:
@@ -39,7 +39,7 @@ services:
     image: "postgres"
     restart: always
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TESTS"
+      DEPLOYMENT_NAME: "DOCKER_TEST"
       POSTGRES_DB: "sempo_docker"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
@@ -48,7 +48,7 @@ services:
     image: "postgres"
     restart: always
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TESTS"
+      DEPLOYMENT_NAME: "DOCKER_TEST"
       POSTGRES_DB: "sempo_docker_eth"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
@@ -56,7 +56,7 @@ services:
   redis:
     image: "redis:alpine"
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TESTS"
+      DEPLOYMENT_NAME: "DOCKER_TEST"
 
 #  beat:
 #    build:
