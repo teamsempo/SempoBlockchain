@@ -1,5 +1,8 @@
+from flask import current_app
 from server import celery_app
-
+from eth_keys import keys
+from eth_utils import keccak
+import os
 eth_worker_name = 'eth_manager'
 celery_tasks_name = 'celery_tasks'
 eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
@@ -18,13 +21,16 @@ def _execute_synchronous_task(signature):
 
 def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
 
-    sig = celery_app.signature(eth_endpoint('create_new_blockchain_wallet'),
-                               kwargs={
-                                   'wei_target_balance': wei_target_balance,
-                                   'wei_topup_threshold': wei_topup_threshold,
-                               })
+    if not current_app.config['IS_TEST']:
+        sig = celery_app.signature(eth_endpoint('create_new_blockchain_wallet'),
+                                   kwargs={
+                                       'wei_target_balance': wei_target_balance,
+                                       'wei_topup_threshold': wei_topup_threshold,
+                                   })
 
-    return _execute_synchronous_task(sig)
+        return _execute_synchronous_task(sig)
+    else:
+        return keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address()
 
 def send_eth(signing_address, recipient_address, amount_wei, dependent_on_tasks=None):
 

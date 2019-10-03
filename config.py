@@ -141,7 +141,7 @@ DATABASE_NAME = specific_parser['DATABASE'].get('database') \
 ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']
 
-ETH_DATABASE_HOST = specific_parser['DATABASE']['eth_host']
+ETH_DATABASE_HOST = specific_parser['DATABASE'].get('eth_host') or DATABASE_HOST
 
 def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
@@ -236,7 +236,6 @@ else:
 
 master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
 MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
-
 MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
 
 SYSTEM_WALLET_TARGET_BALANCE = int(specific_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
