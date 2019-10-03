@@ -10,14 +10,9 @@ CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
-
-# DEPLOYMENT_LOCATION: should be 'local' or 'aws' 
-DEPLOYMENT_LOCATION = os.environ.get('LOCATION') or 'LOCAL'
-
 BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
 
 print('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
-print('at DEPLOYMENT_LOCATION: ' + DEPLOYMENT_LOCATION)
 print('with BUILD_HASH: ' + BUILD_HASH)
 
 CONFIG_FILENAME = "{}_config.ini".format(ENV_DEPLOYMENT_NAME.lower())
@@ -25,10 +20,21 @@ CONFIG_FILENAME = "{}_config.ini".format(ENV_DEPLOYMENT_NAME.lower())
 common_parser = configparser.ConfigParser()
 specific_parser = configparser.ConfigParser()
 
-if DEPLOYMENT_LOCATION == "PROD" or os.environ.get('AWS_ACCESS_KEY_ID'):
+if os.environ.get('AWS_ACCESS_KEY_ID'):
+    print("ATTEMPT LOAD S3 CONFIG (AWS ACCESS KEY FOUND)")
+    load_from_s3 = True
+elif os.environ.get('SERVER_HAS_S3_AUTH'):
+    print("ATTEMPT LOAD S3 CONFIG (SERVER CLAIMS TO HAVE S3 AUTH)")
+    load_from_s3 = True
+else:
+    print("ATTEMPT LOAD LOCAL CONFIG")
+    load_from_s3 = False
+
+if load_from_s3:
     # Load config from S3 Bucket
-    print("Key len is {}".format(len(os.environ.get('AWS_ACCESS_KEY_ID'))))
+
     if os.environ.get('AWS_ACCESS_KEY_ID'):
+        # S3 Auth is set via access keys
         if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
             raise Exception("Missing AWS_SECRET_ACCESS_KEY")
         session = boto3.Session(
@@ -36,6 +42,7 @@ if DEPLOYMENT_LOCATION == "PROD" or os.environ.get('AWS_ACCESS_KEY_ID'):
             aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
         )
     else:
+        # The server itself has S3 Auth
         session = boto3.Session()
 
     client = session.client('s3')
@@ -66,7 +73,7 @@ else:
     common_parser.read(common_path)
     specific_parser.read(specific_path)
 
-DEPLOYMENT_NAME     = specific_parser['APP']['DEPLOYMENT_NAME']
+DEPLOYMENT_NAME = specific_parser['APP']['DEPLOYMENT_NAME']
 
 # Check that the deployment name specified by the env matches the one in the config file
 if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
@@ -75,6 +82,7 @@ if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
     raise RuntimeError
 
 IS_TEST = specific_parser['APP'].getboolean('IS_TEST', False)
+IS_PRODUCTION = specific_parser['APP'].getboolean('IS_PRODUCTION', True)
 
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
@@ -149,7 +157,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 AWS_SES_KEY_ID = common_parser['AWS']['ses_key_id']
 AWS_SES_SECRET = common_parser['AWS']['ses_secret']
 
-if DEPLOYMENT_LOCATION == "PROD":
+if IS_PRODUCTION:
     SENTRY_SERVER_DSN = common_parser['SENTRY']['server_dsn']
     SENTRY_REACT_DSN = common_parser['SENTRY']['react_dsn']
 else:
@@ -169,8 +177,8 @@ PUSHER_APP_ID   = common_parser['PUSHER']['app_id']
 PUSHER_KEY      = common_parser['PUSHER']['key']
 PUSHER_SECRET   = common_parser['PUSHER']['secret']
 PUSHER_CLUSTER  = common_parser['PUSHER']['cluser']
-PUSHER_ENV_CHANNEL = common_parser['PUSHER']['environment_channel'] + '-' + DEPLOYMENT_NAME + '-' + DEPLOYMENT_LOCATION
-PUSHER_SUPERADMIN_ENV_CHANNEL = common_parser['PUSHER']['superadmin_environment_channel'] + '-' + DEPLOYMENT_NAME + '-' + DEPLOYMENT_LOCATION
+PUSHER_ENV_CHANNEL = common_parser['PUSHER']['environment_channel'] + '-' + DEPLOYMENT_NAME
+PUSHER_SUPERADMIN_ENV_CHANNEL = common_parser['PUSHER']['superadmin_environment_channel'] + '-' + DEPLOYMENT_NAME
 
 TWILIO_SID   = common_parser['TWILIO']['sid']
 TWILIO_TOKEN = common_parser['TWILIO']['token']
@@ -200,7 +208,7 @@ ETH_GAS_PRICE           = int(specific_parser['ETHEREUM']['gas_price_gwei'] or 0
 ETH_GAS_LIMIT           = int(specific_parser['ETHEREUM']['gas_limit'] or 0)
 ETH_TARGET_TRANSACTION_TIME = int(specific_parser['ETHEREUM']['target_transaction_time'] or 120)
 ETH_GAS_PRICE_PROVIDER  = specific_parser['ETHEREUM']['gas_price_provider']
-ETH_CONTRACT_NAME       = 'SempoCredit_{}_{}_v{}'.format(DEPLOYMENT_NAME,DEPLOYMENT_LOCATION,str(ETH_CONTRACT_VERSION))
+ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME,str(ETH_CONTRACT_VERSION))
 
 ETH_CHECK_TRANSACTION_BASE_TIME = 20
 ETH_CHECK_TRANSACTION_RETRIES = int(specific_parser['ETHEREUM']['check_transaction_retries'])
@@ -216,7 +224,6 @@ if unchecksummed_withdraw_to_address:
     WITHDRAW_TO_ADDRESS = Web3.toChecksumAddress(unchecksummed_withdraw_to_address)
 else:
     WITHDRAW_TO_ADDRESS = None
-
 
 master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
 MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
