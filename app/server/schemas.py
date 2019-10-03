@@ -1,7 +1,8 @@
 from flask import g
-from marshmallow import Schema, fields, ValidationError, pre_load, post_dump, pre_dump
+from marshmallow import Schema, fields, post_dump
 from server.utils.amazon_s3 import get_file_url
-from server import models
+from server.models import models
+
 
 class UserSchema(Schema):
     id      = fields.Int(dump_only=True)

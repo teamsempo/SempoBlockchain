@@ -1,12 +1,12 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
-from server import db, sentry, basic_auth
+from server import db, sentry
 # from server import limiter
 from server.constants import DENOMINATION_DICT
-from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage, TransferAccount, \
+from server.models.models import TransferAccount, \
     Organisation
 from phonenumbers.phonenumberutil import NumberParseException
-from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
+from server.models.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
 from server.utils.intercom import create_intercom_android_secret
 from server.utils.auth import requires_auth, tfa_logic, AccessControl
 from server.utils import user as UserUtils
@@ -14,9 +14,7 @@ from server.utils.phone import proccess_phone_number
 from server.utils.feedback import request_feedback_questions
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
-from sqlalchemy import and_, or_
 
-from datetime import datetime
 import time, random
 
 auth_blueprint = Blueprint('auth', __name__)

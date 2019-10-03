@@ -4,18 +4,17 @@ import time
 
 from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func
-from sqlalchemy.exc import IntegrityError
 import datetime, json
 
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
-from server import db, celery_app, sentry, red
-from server import models
+from server import db, sentry, red
+from server.models import models
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.blockchain_tasks import get_wallet_balance
-from server.utils.misc import elapsed_time
+
 
 def calculate_transfer_stats(total_time_series=False):
 
@@ -39,19 +38,20 @@ def calculate_transfer_stats(total_time_series=False):
     # zero_balance_count = db.session.query(func.count(models.TransferAccount.id).label('zero_balance_count'))\
     #     .filter(models.TransferAccount.balance == 0).first().zero_balance_count
 
-    exhausted_balance_count = db.session.query(func.count(func.distinct(models.CreditTransfer.sender_transfer_account_id))
+    exhausted_balance_count = db.session.query(func.count(func.distinct(
+        models.CreditTransfer.sender_transfer_account_id))
         .label('transfer_count')) \
         .join(models.CreditTransfer.sender_transfer_account)\
         .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT) \
         .filter(models.TransferAccount.balance == 0).first().transfer_count
 
     daily_transaction_volume = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('volume'),
-                 func.date_trunc('day', models.CreditTransfer.created).label('date'))\
+                                                func.date_trunc('day', models.CreditTransfer.created).label('date'))\
         .group_by(func.date_trunc('day', models.CreditTransfer.created))\
         .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).all()
 
     daily_disbursement_volume = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', models.CreditTransfer.created).label('date')) \
+                                                 func.date_trunc('day', models.CreditTransfer.created).label('date')) \
         .group_by(func.date_trunc('day', models.CreditTransfer.created)) \
         .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT).all()
 
@@ -146,12 +146,12 @@ def cached_funds_available(allowed_cache_age_seconds=60):
 
 
     new_dibursements     = (models.CreditTransfer.query
-                             .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT)
-                             .filter(models.CreditTransfer.transfer_status == models.TransferStatusEnum.COMPLETE)
-                             .filter(models.CreditTransfer.id > highest_transfer_id_checked)
-                             .filter(models.CreditTransfer.created >
-                                     datetime.datetime.utcnow() - datetime.timedelta(hours=36))
-                             .all())
+                            .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT)
+                            .filter(models.CreditTransfer.transfer_status == models.TransferStatusEnum.COMPLETE)
+                            .filter(models.CreditTransfer.id > highest_transfer_id_checked)
+                            .filter(models.CreditTransfer.created >
+                                    datetime.datetime.utcnow() - datetime.timedelta(hours=36))
+                            .all())
 
 
     local_disbursement_value = 0

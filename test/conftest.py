@@ -1,7 +1,7 @@
 import pytest
 
 from flask import current_app
-from server import create_app, db, models
+from server import create_app, db
 from server.utils.auth import get_complete_auth_token
 # from app.manage import manager
 
@@ -16,7 +16,7 @@ def requires_auth(test_client):
 
 @pytest.fixture(scope='module')
 def create_blockchain_token(test_client, init_database):
-    from server.models import Token
+    from server.models.models import Token
     token = Token(address='0xc1275b7de8af5a38a93548eb8453a498222c4ff2',
                   name='BAR Token',
                   symbol='BAR')
@@ -28,7 +28,7 @@ def create_blockchain_token(test_client, init_database):
 
 @pytest.fixture(scope='module')
 def create_organisation(test_client, init_database, create_blockchain_token):
-    from server.models import Organisation
+    from server.models.models import Organisation
     organisation = Organisation(name='Sempo', token=create_blockchain_token)
     db.session.add(organisation)
     db.session.commit()
@@ -36,7 +36,7 @@ def create_organisation(test_client, init_database, create_blockchain_token):
 
 @pytest.fixture(scope='module')
 def new_sempo_admin_user():
-    from server.models import User
+    from server.models.models import User
     user = User()
     user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
     return user
@@ -57,7 +57,6 @@ def activated_sempo_admin_user(create_unactivated_sempo_admin_user):
     """
     Returns a sempo admin user that is activated but does NOT have TFA set up
     """
-    import pyotp
 
     create_unactivated_sempo_admin_user.is_activated = True
     # Commit the changes for the users
@@ -71,7 +70,6 @@ def authed_sempo_admin_user(create_unactivated_sempo_admin_user):
     """
     Returns a sempo admin user that is activated and has TFA set up
     """
-    import pyotp
 
     create_unactivated_sempo_admin_user.is_activated = True
     create_unactivated_sempo_admin_user.set_TFA_secret()
@@ -109,7 +107,7 @@ def create_user_with_existing_transfer_account(test_client, init_database, creat
 
 @pytest.fixture(scope='module')
 def new_transfer_account():
-    from server.models import TransferAccount
+    from server.models.models import TransferAccount
     return TransferAccount()
 
 @pytest.fixture(scope='module')
@@ -126,7 +124,7 @@ def new_disbursement(create_transfer_account_user):
 
 @pytest.fixture(scope='function')
 def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
-    from server.models import CreditTransfer
+    from server.models.models import CreditTransfer
     credit_transfer = CreditTransfer(
         amount=100,
         token=create_blockchain_token,
@@ -156,7 +154,7 @@ def save_device_info(test_client, init_database, create_transfer_account_user):
 
 @pytest.fixture(scope='function')
 def create_blacklisted_token(authed_sempo_admin_user):
-    from server.models import BlacklistToken
+    from server.models.models import BlacklistToken
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
     blacklist_token = BlacklistToken(token=auth_token)
     db.session.add(blacklist_token)
@@ -166,7 +164,7 @@ def create_blacklisted_token(authed_sempo_admin_user):
 
 @pytest.fixture(scope='function')
 def create_transfer_usage(test_client, init_database):
-    from server.models import TransferUsage
+    from server.models.models import TransferUsage
     transfer_usage = TransferUsage(name='Food', icon='food-apple', translations=dict(en='Food', fr='aliments'))
 
     db.session.add(transfer_usage)
@@ -176,7 +174,7 @@ def create_transfer_usage(test_client, init_database):
 
 @pytest.fixture(scope='function')
 def create_ip_address(authed_sempo_admin_user):
-    from server.models import IpAddress
+    from server.models.ip_address import IpAddress
     ip_address = IpAddress(ip="210.18.192.196")
     ip_address.user = authed_sempo_admin_user
     db.session.add(ip_address)

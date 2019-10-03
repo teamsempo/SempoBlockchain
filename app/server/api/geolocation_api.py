@@ -1,8 +1,8 @@
-from flask import Blueprint, request, make_response, jsonify, g, session
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import basic_auth, db, models
-from server.models import CreditTransfer
+from server import db
+from server.models import models
 from server.utils.auth import requires_auth
 
 geolocation_blueprint = Blueprint('geolocation', __name__)

@@ -1,6 +1,8 @@
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
-from server import db, models
+from server import db
+from server.models import models
+from server.models.ip_address import IpAddress
 import config, hmac, hashlib, json, urllib
 from typing import Optional, List, Dict
 
@@ -301,9 +303,9 @@ def check_ip(proxies, user, num_proxy=0):
 
     if len(proxies) >= correct_ip_index:
         real_ip_address = proxies[-correct_ip_index]  # get the correct referring client ip
-        if real_ip_address is not None and not models.IpAddress.check_user_ips(user, real_ip_address):
+        if real_ip_address is not None and not IpAddress.check_user_ips(user, real_ip_address):
             # IP exists in request and is not already saved
-            new_ip = models.IpAddress(ip=real_ip_address)
+            new_ip = IpAddress(ip=real_ip_address)
             new_ip.user = user
             db.session.add(new_ip)
 

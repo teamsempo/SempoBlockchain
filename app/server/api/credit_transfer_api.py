@@ -4,7 +4,7 @@ from flask.views import MethodView
 from sqlalchemy import or_
 
 from server import db
-from server.models import (
+from server.models.models import (
     paginate_query,
     CreditTransfer,
     TransferTypeEnum,

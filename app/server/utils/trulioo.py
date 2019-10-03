@@ -1,7 +1,7 @@
 import requests, config
 from requests.auth import HTTPBasicAuth
 from server.utils.phone import send_generic_message
-from server import db, models
+from server.models import models
 
 
 def get_callback_url():

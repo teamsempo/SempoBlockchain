@@ -207,7 +207,7 @@ def test_new_credit_transfer_complete(create_credit_transfer):
     WHEN a new credit transfer is created
     THEN check transfer status is PENDING, then resolve as complete
     """
-    from server.models import TransferStatusEnum
+    from server.models.models import TransferStatusEnum
     from flask import g
     g.celery_tasks = []
     assert isinstance(create_credit_transfer.transfer_amount, int)
@@ -224,7 +224,7 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
     THEN check transfer status is PENDING, then resolve as rejected with message,
          check status is REJECTED and message is not NONE
     """
-    from server.models import TransferStatusEnum
+    from server.models.models import TransferStatusEnum
     assert create_credit_transfer.transfer_status is TransferStatusEnum.PENDING
 
     create_credit_transfer.resolve_as_rejected(

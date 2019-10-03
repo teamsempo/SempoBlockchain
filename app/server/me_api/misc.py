@@ -2,7 +2,7 @@ from flask import request, g, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models import Feedback, TargetingSurvey, Referral
+from server.models.models import Feedback, TargetingSurvey, Referral
 from server.schemas import referrals_schema, referral_schema
 from server.utils.assembly_payments import create_ap_user, AssemblyPaymentsError, create_paypal_account, \
     UserIdentifierNotFoundError, create_bank_account, set_user_disbursement_account
