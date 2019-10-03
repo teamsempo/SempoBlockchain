@@ -49,8 +49,8 @@ jobs:
             set -o pipefail
             if [ -f ~/project/caches/server.tar.gz ]; then gunzip -c ~/project/caches/server.tar.gz | docker load; docker images; fi
             echo server
-            if [ -f ~/project/caches/worker.tar.gz ]; then gunzip -c ~/project/caches/worker.tar.gz | docker load; docker images; fi
-            echo worker
+            if [ -f ~/project/caches/eth_worker.tar.gz ]; then gunzip -c ~/project/caches/eth_worker.tar.gz | docker load; docker images; fi
+            echo eth_worker
             if [ -f ~/project/caches/proxy.tar.gz ]; then gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images; fi
             echo proxy
       - run:
@@ -63,7 +63,7 @@ jobs:
           name: Build application Docker images
           command: |
             docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1
-            docker build -t worker . -f ./worker/Dockerfile
+            docker build -t eth_worker . -f ./eth_worker/Dockerfile
             docker build -t proxy ./proxy
       - run:
           name: Save Docker total image caches
@@ -72,7 +72,7 @@ jobs:
             sudo chmod 777 -R ~/project/imagecaches
 
             docker save server:latest | gzip > ~/project/imagecaches/server.tar.gz
-            docker save worker:latest | gzip > ~/project/imagecaches/worker.tar.gz
+            docker save eth_worker:latest | gzip > ~/project/imagecaches/eth_worker.tar.gz
             docker save proxy:latest | gzip > ~/project/imagecaches/proxy.tar.gz
 
             sudo chmod 777 -R ~/project/imagecaches
@@ -88,11 +88,11 @@ jobs:
             # The build commands here will be completely cached, and so very quick
             #
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
-            docker build -t worker . -f ./worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/worker_layers.txt
+            docker build -t eth_worker . -f ./eth_worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/eth_worker_layers.txt
             docker build -t proxy ./proxy| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
 
             docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
-            docker save $(cat /tmp/worker_layers.txt) | gzip > ~/project/caches/worker.tar.gz
+            docker save $(cat /tmp/eth_worker_layers.txt) | gzip > ~/project/caches/eth_worker.tar.gz
             docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
 
             sudo chmod 777 -R ~/project/caches
@@ -124,7 +124,7 @@ jobs:
           name: Load Docker image layer cache
           command: |
             gunzip -c ~/project/imagecaches/server.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/worker.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
             gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
       - run:
           name: Run Docker Tests
@@ -143,7 +143,7 @@ jobs:
           name: Load Docker image layer cache
           command: |
             gunzip -c ~/project/imagecaches/server.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/worker.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
             gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
       - run:
           name: Prepare for pyth venv install
@@ -187,8 +187,8 @@ jobs:
             docker push $REPOSITORY_URI:server
             docker tag proxy:latest $REPOSITORY_URI:proxy
             docker push $REPOSITORY_URI:proxy
-            docker tag worker:latest $REPOSITORY_URI:worker
-            docker push $REPOSITORY_URI:worker
+            docker tag eth_worker:latest $REPOSITORY_URI:eth_worker
+            docker push $REPOSITORY_URI:eth_worker
 
       - run:
           name: Deploy app to AWS Server via Docker

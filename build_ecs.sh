@@ -13,7 +13,8 @@ cd ../
 
 docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$GIT_HASH
 docker build -t proxy ./proxy
-docker build -t worker . -f ./worker/Dockerfile
+docker build -t eth_worker . -f ./eth_worker/Dockerfile
+
 
 eval $(aws ecr get-login --no-include-email --region ap-southeast-2 --profile ECS);
 
@@ -23,5 +24,5 @@ docker push $REPOSITORY_URI:server
 docker tag proxy:latest $REPOSITORY_URI:proxy
 docker push $REPOSITORY_URI:proxy
 
-docker tag worker:latest $REPOSITORY_URI:worker
-docker push $REPOSITORY_URI:worker
+docker tag eth_worker:latest $REPOSITORY_URI:eth_worker
+docker push $REPOSITORY_URI:eth_worker
