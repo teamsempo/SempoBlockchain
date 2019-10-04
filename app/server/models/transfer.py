@@ -246,7 +246,7 @@ class SpendApproval(ModelBase):
 
         eth_send_task_id = send_eth(signing_address=address_getting_approved,
                                     recipient_address=transfer_account_giving_approval.blockchain_address,
-                                    amount=0.00184196 * 10**18)
+                                    amount_wei=0.00184196 * 10**18)
 
         approval_task_id = make_approval(signing_address=transfer_account_giving_approval.blockchain_address,
                                          token=self.token,

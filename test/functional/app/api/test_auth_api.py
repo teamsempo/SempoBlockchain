@@ -286,7 +286,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     WHEN the '/api/auth/logout/' api is posted to (POST)
     THEN check response is 200 and auth_token is added to blacklist
     """
-    from server.models import BlacklistToken
+    from server.models.models import BlacklistToken
     authed_sempo_admin_user.is_activated = True
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
     response = test_client.post('/api/auth/logout/',
