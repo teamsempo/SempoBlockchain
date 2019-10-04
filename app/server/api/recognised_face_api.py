@@ -1,8 +1,8 @@
-from flask import Blueprint, request, make_response, jsonify, g, session
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import basic_auth, db
-from server.models import UploadedImage
+from server import db
+from server.models.upload import UploadedImage
 from server.utils.auth import requires_auth
 
 from sqlalchemy.orm.attributes import flag_modified

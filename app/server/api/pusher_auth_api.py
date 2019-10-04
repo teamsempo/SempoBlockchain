@@ -3,7 +3,8 @@ from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 
 from server import pusher_client
-from server.utils.auth import requires_auth, AccessControl
+from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 
 pusher_auth_blueprint = Blueprint('pusher_auth', __name__)
 

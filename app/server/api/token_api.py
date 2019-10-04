@@ -1,9 +1,9 @@
-from flask import Blueprint, request, make_response, jsonify, g, session
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import basic_auth, db
+from server import db
 from server.utils.auth import requires_auth
-from server.models import Token
+from server.models.models import Token
 from server.schemas import token_schema, tokens_schema
 
 token_blueprint = Blueprint('token', __name__)
