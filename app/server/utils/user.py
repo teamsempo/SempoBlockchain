@@ -6,7 +6,10 @@ from flask import current_app
 from eth_utils import to_checksum_address
 
 from server import db
-from server.models import models
+from server.models.device_info import DeviceInfo
+from server.models.upload import UploadedImage
+from server.models.user import User, get_transfer_card
+from server.models.transfer import TransferCard, TransferAccount, BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import NoTransferCardError, PhoneVerificationError
@@ -53,28 +56,28 @@ def find_user_from_public_identifier(*public_identifiers):
         if public_identifier is None:
             continue
 
-        user = models.User.query.execution_options(show_all=True).filter_by(email=str(public_identifier).lower()).first()
+        user = User.query.execution_options(show_all=True).filter_by(email=str(public_identifier).lower()).first()
         if user:
             continue
 
         try:
-            user = models.User.query.execution_options(show_all=True).filter_by(phone=proccess_phone_number(public_identifier)).first()
+            user = User.query.execution_options(show_all=True).filter_by(phone=proccess_phone_number(public_identifier)).first()
             if user:
                 continue
         except NumberParseException:
             pass
 
-        user = models.User.query.execution_options(show_all=True).filter_by(public_serial_number=str(public_identifier).lower()).first()
+        user = User.query.execution_options(show_all=True).filter_by(public_serial_number=str(public_identifier).lower()).first()
         if user:
             continue
 
-        user = models.User.query.execution_options(show_all=True).filter_by(nfc_serial_number=public_identifier.upper()).first()
+        user = User.query.execution_options(show_all=True).filter_by(nfc_serial_number=public_identifier.upper()).first()
         if user:
             continue
 
         try:
             checksummed = to_checksum_address(public_identifier)
-            blockchain_address = models.BlockchainAddress.query.filter_by(address=checksummed).first()
+            blockchain_address = BlockchainAddress.query.filter_by(address=checksummed).first()
 
             if blockchain_address and blockchain_address.transfer_account:
                 user = blockchain_address.transfer_account.primary_user
@@ -85,18 +88,6 @@ def find_user_from_public_identifier(*public_identifiers):
             pass
 
     return user
-
-
-def get_transfer_card(public_serial_number):
-    transfer_card = models.TransferCard.query.filter_by(
-        public_serial_number=public_serial_number).first()
-
-    if not transfer_card:
-        raise NoTransferCardError("No transfer card found for public serial number {}"
-                                  .format(public_serial_number))
-
-    return transfer_card
-
 
 def update_transfer_account_user(user,
                                  first_name=None, last_name=None,
@@ -157,7 +148,7 @@ def create_transfer_account_user(first_name=None, last_name=None,
                                  is_vendor=False,
                                  is_self_sign_up=False):
 
-    user = models.User(first_name=first_name,
+    user = User(first_name=first_name,
                        last_name=last_name,
                        phone=phone,
                        email=email,
@@ -203,7 +194,7 @@ def create_transfer_account_user(first_name=None, last_name=None,
         user.transfer_accounts.append(existing_transfer_account)
     else:
 
-        transfer_account = models.TransferAccount(blockchain_address=blockchain_address, organisation=organisation)
+        transfer_account = TransferAccount(blockchain_address=blockchain_address, organisation=organisation)
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
@@ -225,10 +216,10 @@ def save_device_info(device_info, user):
 
     add_device = False
 
-    if device_info['serialNumber'] and not models.DeviceInfo.query.filter_by(serial_number=device_info['serialNumber']).first():
+    if device_info['serialNumber'] and not DeviceInfo.query.filter_by(serial_number=device_info['serialNumber']).first():
         # Add the device if the serial number is defined, and isn't already in db
         add_device = True
-    elif not device_info['serialNumber'] and not models.DeviceInfo.query.filter_by(unique_id=device_info['uniqueID']).first():
+    elif not device_info['serialNumber'] and not DeviceInfo.query.filter_by(unique_id=device_info['uniqueID']).first():
         # Otherwise add the device if the serial number is NOT defined unique id isn't already in db.
         # This means that where serial number is defined but unique id is different, we DO NOT add
         # (because unique ids can change under some circumstances, so they say)
@@ -236,7 +227,7 @@ def save_device_info(device_info, user):
 
     if add_device:
 
-        device = models.DeviceInfo()
+        device = DeviceInfo()
 
         device.serial_number    = device_info['serialNumber']
         device.unique_id        = device_info['uniqueId']
@@ -274,7 +265,7 @@ def set_custom_attributes(attribute_dict, user):
 
                 new_filename = generate_new_filename(submitted_filename, type, 'KOBO')
 
-                uploaded_image = models.UploadedImage(filename=new_filename, image_type=type)
+                uploaded_image = UploadedImage(filename=new_filename, image_type=type)
 
                 uploaded_image.user = user
 
@@ -435,7 +426,7 @@ def proccess_create_or_modify_user_request(attribute_dict,
         public_serial_number = str(public_serial_number)
 
         if use_precreated_pin or require_transfer_card_exists:
-            transfer_card = models.TransferCard.query.filter_by(
+            transfer_card = TransferCard.query.filter_by(
                 public_serial_number=public_serial_number).first()
 
             if not transfer_card:

@@ -4,16 +4,11 @@ from flask.views import MethodView
 from sqlalchemy import or_
 
 from server import db
-from server.models.models import (
-    paginate_query,
-    CreditTransfer,
-    TransferTypeEnum,
-    BlockchainAddress,
-    BlockchainTransaction,
-    Token
-)
+from server.models.models import paginate_query, Token
+from server.models.transfer import CreditTransfer, TransferTypeEnum, BlockchainTransaction, BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
-from server.utils.auth import requires_auth, AccessControl
+from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 
 from server.utils.credit_transfers import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
 from server.utils.credit_transfers import (

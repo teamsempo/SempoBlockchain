@@ -1,8 +1,7 @@
 import requests, config
 from requests.auth import HTTPBasicAuth
 from server.utils.phone import send_generic_message
-from server.models import models
-
+from server.models.user import User
 
 def get_callback_url():
     return config.APP_HOST + '/api/trulioo_async/'
@@ -44,7 +43,7 @@ def handle_trulioo_response(response=None, kyc_application=None):
     document_errors = None
     phone = None
 
-    user = models.User.query.get(kyc_application.user_id)
+    user = User.query.get(kyc_application.user_id)
     if user is not None:
         phone = user.phone
 

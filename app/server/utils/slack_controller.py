@@ -1,6 +1,7 @@
 from flask import make_response
 from server import db
-from server.models.models import KycApplication, User
+from server.models.kyc_application import KycApplication
+from server.models.user import User
 from server.utils.phone import send_generic_message
 from server.utils.namescan import run_namescam_aml_check
 

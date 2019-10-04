@@ -36,7 +36,7 @@ def create_organisation(test_client, init_database, create_blockchain_token):
 
 @pytest.fixture(scope='module')
 def new_sempo_admin_user():
-    from server.models.models import User
+    from server.models.user import User
     user = User()
     user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
     return user
@@ -107,7 +107,7 @@ def create_user_with_existing_transfer_account(test_client, init_database, creat
 
 @pytest.fixture(scope='module')
 def new_transfer_account():
-    from server.models.models import TransferAccount
+    from server.models.transfer import TransferAccount
     return TransferAccount()
 
 @pytest.fixture(scope='module')
@@ -124,7 +124,7 @@ def new_disbursement(create_transfer_account_user):
 
 @pytest.fixture(scope='function')
 def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
-    from server.models.models import CreditTransfer
+    from server.models.transfer import CreditTransfer
     credit_transfer = CreditTransfer(
         amount=100,
         token=create_blockchain_token,

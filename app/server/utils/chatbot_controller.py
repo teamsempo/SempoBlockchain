@@ -1,7 +1,8 @@
 import datetime, re
 from flask import current_app
 from server import db
-from server.models.models import User, ChatbotState
+from server.models.models import ChatbotState
+from server.models.user import User
 from server.utils.phone import proccess_phone_number
 from server.utils.credit_transfers import make_payment_transfer
 from server.utils.pusher import push_admin_credit_transfer

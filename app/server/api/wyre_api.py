@@ -2,7 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 import config
 from server.utils.amazon_ses import send_bank_transfer_email, send_transfer_update_email
-from server.models.models import KycApplication
+from server.models.kyc_application import KycApplication
 from server.utils.auth import requires_auth
 from server.utils.wyre import (
     create_transfer,

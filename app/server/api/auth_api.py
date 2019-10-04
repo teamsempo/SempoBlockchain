@@ -3,12 +3,13 @@ from flask.views import MethodView
 from server import db, sentry
 # from server import limiter
 from server.constants import DENOMINATION_DICT
-from server.models.models import TransferAccount, \
-    Organisation
+from server.models.transfer import TransferAccount
+from server.models.user import User
 from phonenumbers.phonenumberutil import NumberParseException
-from server.models.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
+from server.models.models import Organisation, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
 from server.utils.intercom import create_intercom_android_secret
-from server.utils.auth import requires_auth, tfa_logic, AccessControl
+from server.utils.auth import requires_auth, tfa_logic
+from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.feedback import request_feedback_questions
