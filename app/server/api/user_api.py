@@ -2,9 +2,12 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
 from server import db
-from server.models import paginate_query, User, TransferAccount
+from server.models.models import paginate_query
+from server.models.user import User
+from server.models.transfer import TransferAccount
 from server.schemas import user_schema, users_schema
-from server.utils.auth import requires_auth, AccessControl
+from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.misc import AttributeDictProccessor
 from server.constants import CREATE_USER_SETTINGS

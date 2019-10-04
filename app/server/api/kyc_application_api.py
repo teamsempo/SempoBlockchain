@@ -1,8 +1,11 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from server import db, sentry
-from server.models import KycApplication, BankAccount, UploadedDocument
-from server.utils.auth import requires_auth, AccessControl
+from server.models.models import BankAccount
+from server.models.kyc_application import KycApplication
+from server.models.upload import UploadedDocument
+from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 from server.schemas import kyc_application_schema, kyc_application_state_schema
 from server.constants import ALLOWED_FILE_EXTENSIONS
 from server.utils.amazon_s3 import save_to_s3_from_document, generate_new_filename, save_to_s3_from_image_base64

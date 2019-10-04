@@ -4,7 +4,7 @@ import re
 from flask import current_app
 from eth_utils import keccak
 from cryptography.fernet import Fernet
-from server import models
+from server.models.models import Settings
 
 last_marker = datetime.datetime.utcnow()
 
@@ -56,7 +56,7 @@ class AttributeDictProccessor(object):
     def insert_settings_from_databse(self, settings_list):
         for setting in settings_list:
             if setting not in self.attribute_dict:
-                stored_setting = models.Settings.query.filter_by(name=setting).first()
+                stored_setting = Settings.query.filter_by(name=setting).first()
 
                 if stored_setting is not None:
                     self.attribute_dict[setting] = stored_setting.value

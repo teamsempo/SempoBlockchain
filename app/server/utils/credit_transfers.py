@@ -4,56 +4,58 @@ import time
 
 from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func
-from sqlalchemy.exc import IntegrityError
 import datetime, json
 
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
-from server import db, celery_app, sentry, red
-from server import models
+from server import db, sentry, red
+from server.models.models import TransferUsage
+from server.models.transfer import CreditTransfer, TransferTypeEnum, TransferAccount, BlockchainTransaction, BlockchainAddress
+from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.blockchain_tasks import get_wallet_balance
-from server.utils.misc import elapsed_time
+
 
 def calculate_transfer_stats(total_time_series=False):
 
-    total_distributed = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('total'))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT).first().total
+    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.DISBURSEMENT).first().total
 
-    total_spent = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('total'))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).first().total
+    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
 
-    total_beneficiaries = db.session.query(models.User).filter(models.User.has_beneficiary_role == True).count()
+    total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
 
-    total_vendors = db.session.query(models.User)\
-        .filter(models.User.has_vendor_role == True).count()
+    total_vendors = db.session.query(User)\
+        .filter(User.has_vendor_role == True).count()
 
     total_users = total_beneficiaries + total_vendors
 
-    has_transferred_count = db.session.query(func.count(func.distinct(models.CreditTransfer.sender_user_id))
+    has_transferred_count = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
         .label('transfer_count'))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).first().transfer_count
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().transfer_count
 
-    # zero_balance_count = db.session.query(func.count(models.TransferAccount.id).label('zero_balance_count'))\
-    #     .filter(models.TransferAccount.balance == 0).first().zero_balance_count
+    # zero_balance_count = db.session.query(func.count(TransferAccount.id).label('zero_balance_count'))\
+    #     .filter(TransferAccount.balance == 0).first().zero_balance_count
 
-    exhausted_balance_count = db.session.query(func.count(func.distinct(models.CreditTransfer.sender_transfer_account_id))
+    exhausted_balance_count = db.session.query(func.count(func.distinct(
+        CreditTransfer.sender_transfer_account_id))
         .label('transfer_count')) \
-        .join(models.CreditTransfer.sender_transfer_account)\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT) \
-        .filter(models.TransferAccount.balance == 0).first().transfer_count
+        .join(CreditTransfer.sender_transfer_account)\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT) \
+        .filter(TransferAccount.balance == 0).first().transfer_count
 
-    daily_transaction_volume = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('volume'),
-                 func.date_trunc('day', models.CreditTransfer.created).label('date'))\
-        .group_by(func.date_trunc('day', models.CreditTransfer.created))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).all()
+    daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+                                                func.date_trunc('day', CreditTransfer.created).label('date'))\
+        .group_by(func.date_trunc('day', CreditTransfer.created))\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).all()
 
-    daily_disbursement_volume = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', models.CreditTransfer.created).label('date')) \
-        .group_by(func.date_trunc('day', models.CreditTransfer.created)) \
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT).all()
+    daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+                                                 func.date_trunc('day', CreditTransfer.created).label('date')) \
+        .group_by(func.date_trunc('day', CreditTransfer.created)) \
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.DISBURSEMENT).all()
 
     try:
         master_wallet_balance = cached_funds_available()
@@ -145,13 +147,13 @@ def cached_funds_available(allowed_cache_age_seconds=60):
 
 
 
-    new_dibursements     = (models.CreditTransfer.query
-                             .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT)
-                             .filter(models.CreditTransfer.transfer_status == models.TransferStatusEnum.COMPLETE)
-                             .filter(models.CreditTransfer.id > highest_transfer_id_checked)
-                             .filter(models.CreditTransfer.created >
-                                     datetime.datetime.utcnow() - datetime.timedelta(hours=36))
-                             .all())
+    new_dibursements     = (CreditTransfer.query
+                            .filter(CreditTransfer.transfer_type == TransferTypeEnum.DISBURSEMENT)
+                            .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+                            .filter(CreditTransfer.id > highest_transfer_id_checked)
+                            .filter(CreditTransfer.created >
+                                    datetime.datetime.utcnow() - datetime.timedelta(hours=36))
+                            .all())
 
 
     local_disbursement_value = 0
@@ -169,7 +171,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
         if len(new_dibursements) > 0:
             highest_transfer_id_checked = new_dibursements[-1].id
         else:
-            all_transfers = models.CreditTransfer.query.all()
+            all_transfers = CreditTransfer.query.all()
             if len(all_transfers) > 0:
                 highest_transfer_id_checked = all_transfers[-1].id
             else:
@@ -207,7 +209,7 @@ def find_user_with_transfer_account_from_identifiers(user_id, public_identifier,
 def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
 
     if user_id:
-        user = models.User.query.get(user_id)
+        user = User.query.get(user_id)
 
         if not user:
             raise UserNotFoundError('User not found for user id {}'.format(user_id))
@@ -223,7 +225,7 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
             return user
 
     if transfer_account_id:
-        transfer_account = models.TransferAccount.query.get(transfer_account_id)
+        transfer_account = TransferAccount.query.get(transfer_account_id)
 
         user = transfer_account.primary_user
 
@@ -279,10 +281,10 @@ def handle_transfer_to_blockchain_address(
     return make_response(jsonify(response_object)), 201
 
 def create_address_object_if_required(address):
-    address_obj = models.BlockchainAddress.query.filter_by(address=address).first()
+    address_obj = BlockchainAddress.query.filter_by(address=address).first()
 
     if not address_obj:
-        address_obj = models.BlockchainAddress(type="EXTERNAL")
+        address_obj = BlockchainAddress(type="EXTERNAL")
         address_obj.address = address
 
         db.session.add(address_obj)
@@ -331,13 +333,13 @@ def make_blockchain_transfer(transfer_amount,
     transfer.sender_blockchain_address = send_address_obj
     transfer.recipient_blockchain_address = receive_address_obj
 
-    transfer.transfer_type = models.TransferTypeEnum.PAYMENT
+    transfer.transfer_type = TransferTypeEnum.PAYMENT
 
     if uuid:
         transfer.uuid = uuid
 
     if existing_blockchain_txn:
-        existing_blockchain_txn_obj = models.BlockchainTransaction(
+        existing_blockchain_txn_obj = BlockchainTransaction(
             status='SUCCESS',
             message='External Txn',
             added_date=datetime.datetime.utcnow(),
@@ -369,7 +371,7 @@ def make_payment_transfer(transfer_amount,
                           automatically_resolve_complete=True,
                           uuid=None):
 
-    transfer = models.CreditTransfer(transfer_amount,
+    transfer = CreditTransfer(transfer_amount,
                                      sender_user=send_user,
                                      sender_transfer_account=send_transfer_account,
                                      recipient_user=receive_user,
@@ -386,7 +388,7 @@ def make_payment_transfer(transfer_amount,
             use_ids = transfer_use
         for use_id in use_ids:
             if use_id != 'null':
-                use = models.TransferUsage.query.filter_by(id=use_id).first()
+                use = TransferUsage.query.filter_by(id=use_id).first()
                 if use:
                     usages.append(use.name)
                     if use.is_cashout:
@@ -439,7 +441,7 @@ def make_withdrawal_transfer(transfer_amount,
                              automatically_resolve_complete=True,
                              uuid=None):
 
-    transfer = models.CreditTransfer(transfer_amount, token, sender_user=send_account, uuid=uuid)
+    transfer = CreditTransfer(transfer_amount, token, sender_user=send_account, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
@@ -475,11 +477,11 @@ def make_disbursement_transfer(transfer_amount,
         message = "Master Wallet has insufficient funds"
         raise InsufficientBalanceError(message)
 
-    transfer = models.CreditTransfer(amount=transfer_amount,
+    transfer = CreditTransfer(amount=transfer_amount,
                                      token=token,
                                      sender_transfer_account=outbound_transfer_account,
                                      recipient_user=receive_account,
-                                     transfer_type=models.TransferTypeEnum.DISBURSEMENT, uuid=uuid)
+                                     transfer_type=TransferTypeEnum.DISBURSEMENT, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
@@ -530,18 +532,19 @@ def transfer_credit_via_phone(send_phone, receive_phone, transfer_amount):
 
     transfer_amount = abs(transfer_amount)
 
-    send_user = models.User.query.filter_by(phone=send_phone).first()
+    send_user = User.query.filter_by(phone=send_phone).first()
     if send_user is None:
         return {'status': 'Fail', 'message': "Can't send from phone number: " + send_phone}
 
-    receive_user = models.User.query.filter_by(phone=receive_phone).first()
+    receive_user = User.query.filter_by(phone=receive_phone).first()
     if receive_user is None:
         return {'status': 'Fail', 'message': "Can't send to phone number: " + send_phone}
 
     if send_user.transfer_account.balance < transfer_amount:
         return {'status': 'Fail', 'message': "Insufficient Funds"}
 
-    transfer = make_payment_transfer(transfer_amount, token, send_user, receive_user)
+    # TODO(refactor): removed token as second argument since it doesn't exist... where was it before?
+    transfer = make_payment_transfer(transfer_amount, send_user, receive_user)
 
     return {
         'status': 'Success',

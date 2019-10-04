@@ -2,7 +2,7 @@ import datetime
 
 from flask import g, make_response, jsonify, request
 from flask.views import MethodView
-from sqlalchemy import or_, func
+from sqlalchemy import or_
 from web3 import Web3
 
 from server import db
@@ -12,15 +12,12 @@ from server.exceptions import (
     AccountNotApprovedError,
     InsufficientBalanceError
 )
-from server.models import (
-    User,
-    TransferAccount,
-    TransferCard,
-    CreditTransfer,
-    paginate_query
-)
+from server.models.user import User
+from server.models.transfer import TransferAccount, TransferCard, CreditTransfer
+from server.models.models import paginate_query
 from server.schemas import me_credit_transfers_schema, me_credit_transfer_schema
-from server.utils.auth import requires_auth, AccessControl, show_all
+from server.utils.auth import requires_auth, show_all
+from server.utils.access_control import AccessControl
 from server.utils.credit_transfers import (
     check_for_any_valid_hash,
     find_user_with_transfer_account_from_identifiers,

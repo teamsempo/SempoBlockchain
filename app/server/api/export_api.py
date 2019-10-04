@@ -1,13 +1,13 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from openpyxl import Workbook
-from openpyxl.compat import range
 from datetime import datetime, timedelta
 import random, string, os
 from sqlalchemy import and_, or_
 from dateutil import parser
 
-from server.models import TransferAccount, CreditTransfer, BlockchainAddress, TransferTypeEnum, TransferStatusEnum, User
+from server.models.transfer import CreditTransfer, TransferTypeEnum, TransferStatusEnum
+from server.models.user import User
 from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import upload_local_file_to_s3
 from server.utils.date_magic import find_last_period_dates
