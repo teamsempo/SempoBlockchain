@@ -1,16 +1,16 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
-
 from sqlalchemy import or_
 
 from server import db
 from server.models.models import paginate_query, Token
-from server.models.transfer import CreditTransfer, TransferTypeEnum, BlockchainTransaction, BlockchainAddress
+from server.models.credit_transfer import CreditTransfer, BlockchainTransaction
+from server.models.transfer_account import BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
-
 from server.utils.credit_transfers import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
+from server.utils.transfer_enums import TransferTypeEnum
 from server.utils.credit_transfers import (
     make_payment_transfer,
     make_withdrawal_transfer,

@@ -1,7 +1,7 @@
 import googlemaps
 from flask import current_app
 from server import db
-from server.models.transfer import TransferAccount
+from server.models.transfer_account import TransferAccount
 
 gmaps = googlemaps.Client(key=current_app.config['GOOGLE_GEOCODE_KEY'])
 

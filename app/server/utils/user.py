@@ -8,16 +8,16 @@ from eth_utils import to_checksum_address
 from server import db
 from server.models.device_info import DeviceInfo
 from server.models.upload import UploadedImage
-from server.models.user import User, get_transfer_card
-from server.models.transfer import TransferCard, TransferAccount, BlockchainAddress
+from server.models.user import User
+from server.models.transfer_card import TransferCard
+from server.models.transfer_account import TransferAccount, BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
-from server.exceptions import NoTransferCardError, PhoneVerificationError
+from server.exceptions import PhoneVerificationError
 from server import celery_app, sentry
 from server.utils import credit_transfers as CreditTransferUtils
 from server.utils.phone import proccess_phone_number, send_onboarding_message, send_phone_verification_message
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
-
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
 
@@ -112,7 +112,7 @@ def update_transfer_account_user(user,
         user.location = location
 
     if use_precreated_pin:
-        transfer_card = get_transfer_card(public_serial_number)
+        transfer_card = TransferCard.get_transfer_card(public_serial_number)
 
         user.set_pin(transfer_card.PIN)
 
@@ -159,7 +159,7 @@ def create_transfer_account_user(first_name=None, last_name=None,
     is_activated = False
 
     try:
-        transfer_card = get_transfer_card(public_serial_number)
+        transfer_card = TransferCard.get_transfer_card(public_serial_number)
     except Exception as e:
         transfer_card = None
 
