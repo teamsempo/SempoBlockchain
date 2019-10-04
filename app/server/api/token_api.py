@@ -22,7 +22,7 @@ class TokenAPI(MethodView):
             }
         }
 
-        return make_response(jsonify(response_object)), 201
+        return make_response(jsonify(response_object)), 200
 
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})

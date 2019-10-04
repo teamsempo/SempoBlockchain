@@ -130,8 +130,8 @@ def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
     credit_transfer = CreditTransfer(
         amount=100,
         token=create_blockchain_token,
-        sender=create_transfer_account_user,
-        recipient=create_transfer_account_user
+        sender_user=create_transfer_account_user,
+        recipient_user=create_transfer_account_user
     )
     return credit_transfer
 

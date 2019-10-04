@@ -60,20 +60,23 @@ if load_from_s3:
 else:
     # Load config from local
 
+    # This occurs in local environments
     folder_common_path = os.path.join(CONFIG_DIR, 'config_files/common_config.ini')
     folder_specific_path = os.path.join(CONFIG_DIR, 'config_files/' + CONFIG_FILENAME)
 
+    # This occurs in docker environments, where the config folder is copied and unpacked to the parent directory
+    # We can't avoid unpacking the config folder due to docker stupidness around conditional file copying
     raw_common_path = os.path.join(CONFIG_DIR, 'common_config.ini')
     raw_specific_path = os.path.join(CONFIG_DIR, CONFIG_FILENAME)
 
     common_path = folder_common_path if os.path.isfile(folder_common_path) else raw_common_path
-    specific_path = folder_specific_path if os.path.isfile(folder_specific_path) else folder_specific_path
+    specific_path = folder_specific_path if os.path.isfile(folder_specific_path) else raw_specific_path
 
-    if not (os.path.isfile(common_path)):
+    if not os.path.isfile(common_path):
         raise Exception("Missing Common Config File")
 
     if not os.path.isfile(specific_path):
-        raise Exception("Missing Config Files: {}".format(CONFIG_FILENAME))
+        raise Exception("Missing Config File: {}".format(CONFIG_FILENAME))
 
     common_parser.read(common_path)
     specific_parser.read(specific_path)
@@ -82,9 +85,9 @@ DEPLOYMENT_NAME = specific_parser['APP']['DEPLOYMENT_NAME']
 
 # Check that the deployment name specified by the env matches the one in the config file
 if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
-    print('deployment name in env ({}) does not match that in config ({}), aborting'.format(ENV_DEPLOYMENT_NAME.lower(),
+    raise RuntimeError('deployment name in env ({}) does not match that in config ({}), aborting'.format(ENV_DEPLOYMENT_NAME.lower(),
                                                                                             DEPLOYMENT_NAME.lower()))
-    raise RuntimeError
+
 
 IS_TEST = specific_parser['APP'].getboolean('IS_TEST', False)
 IS_PRODUCTION = specific_parser['APP'].getboolean('IS_PRODUCTION', True)

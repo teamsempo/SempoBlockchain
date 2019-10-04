@@ -9,13 +9,12 @@ RUN cd / && pip install -r requirements.txt
 
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
 
+COPY ./config.py ./config_files* /src/
 ADD ./app/server /src/server
 ADD ./app/migrations /src/migrations
 ADD ./app/manage.py /src
 ADD ./app/RedisQueue.py /src
 ADD ./app/_docker_app_script.sh /
-#ADD ./config_files /src/config_files
-ADD ./config.py /src
 ADD ./test /src/test
 ADD ./invoke_tests.py /src
 

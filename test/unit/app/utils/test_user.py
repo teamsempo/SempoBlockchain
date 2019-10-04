@@ -4,17 +4,18 @@ This file (test_user.py) contains the unit tests for the user.py file in utils d
 import pytest
 
 
-def test_create_transfer_account_user(create_transfer_account_user):
-    """
-    GIVEN create_transfer_account_user function
-    WHEN called with first_name, last_name, phone
-    THEN assert one_time_code, transfer account exists,
-        transfer_account approval is equal to config
-    """
-    import config
-    assert create_transfer_account_user.one_time_code is not None
-    assert create_transfer_account_user.transfer_account is not None
-    assert create_transfer_account_user.transfer_account.is_approved is config.AUTO_APPROVE_TRANSFER_ACCOUNTS
+# REDACTED: USERS NOW HAVE MULTIPLE TRANSFER ACCOUNTS
+# def test_create_transfer_account_user(create_transfer_account_user):
+#     """
+#     GIVEN create_transfer_account_user function
+#     WHEN called with first_name, last_name, phone
+#     THEN assert one_time_code, transfer account exists,
+#         transfer_account approval is equal to config
+#     """
+#     import config
+#     assert create_transfer_account_user.one_time_code is not None
+#     assert create_transfer_account_user.transfer_account is not None
+#     assert create_transfer_account_user.transfer_account.is_approved is config.AUTO_APPROVE_TRANSFER_ACCOUNTS
 
 
 def test_create_user_with_existing_transfer_account(create_user_with_existing_transfer_account, create_transfer_account):
@@ -40,7 +41,7 @@ def test_save_device_info(save_device_info, create_transfer_account_user, serial
     device = save_device_info(
         device_info=dict(
             serialNumber=serial_number,
-            uniqueID=unique_id,
+            uniqueId=unique_id,
             model=None,
             brand=None,
             width=None,
