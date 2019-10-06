@@ -1648,9 +1648,10 @@ class FiatRamp(ModelBase):
     __tablename__               = 'fiat_ramp'
 
     _payment_method             = db.Column(db.String)
+    payment_reference           = db.Column(db.String)
     payment_status              = db.Column(db.Enum(FiatRampStatusEnum), default=FiatRampStatusEnum.PENDING)
 
-    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
+    credit_transfer_id          = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
 
     payment_metadata            = db.Column(JSON)
 

@@ -2,13 +2,13 @@ from flask import request, g, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models import Feedback, TargetingSurvey, Referral
+from server.models import Feedback, TargetingSurvey, Referral, FiatRamp, FiatRampStatusEnum
 from server.schemas import referrals_schema, referral_schema
 from server.utils.assembly_payments import create_ap_user, AssemblyPaymentsError, create_paypal_account, \
     UserIdentifierNotFoundError, create_bank_account, set_user_disbursement_account
 from server.utils.auth import requires_auth
 from server.utils.mobile_version import check_mobile_version
-
+from server.utils.poli_payments import PoliPaymentsError, create_poli_link, get_poli_link_status
 
 class MeFeedbackAPI(MethodView):
     @requires_auth
@@ -278,6 +278,42 @@ class AssemblyPaymentsPayoutAccountAPI(MethodView):
         response_object = {
             'message': '{} created and tied to user {}'.format(ap_type, user_id),
             'data': create_payout_account_response
+        }
+
+        return make_response(jsonify(response_object)), 201
+
+
+class PoliPaymentsAPI(MethodView):
+    @requires_auth
+    def post(self):
+        post_data = request.get_json()
+        amount = post_data.get('amount')
+
+        if amount is None:
+            return make_response(jsonify({'message': 'Must provide amount to generate POLi Link'})), 400
+
+        try:
+            create_poli_link_response = create_poli_link(
+                amount=amount
+            )
+
+        except PoliPaymentsError as e:
+            response_object = {
+                'message': str(e),
+            }
+            return make_response(jsonify(response_object)), 400
+
+        fiat_ramp = FiatRamp(
+            payment_method='POLI',
+            payment_reference=create_poli_link_response['payment_reference'],
+            payment_metadata=[{'poli_link': create_poli_link_response['poli_link']}]
+        )
+
+        db.session.add(fiat_ramp)
+
+        response_object = {
+            'message': 'Created POLi Link',
+            'data': fiat_ramp
         }
 
         return make_response(jsonify(response_object)), 201
