@@ -48,6 +48,8 @@ class FiatRamp(ModelBase):
         self._payment_method = payment_method
 
     def __init__(self, **kwargs):
+        super(FiatRamp, self).__init__(**kwargs)
+
         def random_string(length):
             return ''.join(random.choices(string.ascii_letters, k=length))
 

@@ -6,6 +6,7 @@ from server.models.models import TargetingSurvey
 from server.models.feedback import Feedback
 from server.models.referral import Referral
 from server.models.fiat_ramp import FiatRamp, FiatRampStatusEnum, Token
+from server.models.user import User
 from server.schemas import referrals_schema, referral_schema
 from server.utils.assembly_payments import create_ap_user, AssemblyPaymentsError, create_paypal_account, \
     UserIdentifierNotFoundError, create_bank_account, set_user_disbursement_account
@@ -310,20 +311,24 @@ class PoliPaymentsAPI(MethodView):
 
             status = get_poli_link_status_response['status']
 
-            if status == 'Completed':
-                # "The full amount has been paid"
-                individual_recipient_user = find_user_with_transfer_account_from_identifiers(fiat_ramp.authorising_user_id)
-                make_disbursement_transfer(
-                    transfer_amount=fiat_ramp.payment_amount,
-                    token=fiat_ramp.token,
-                    receive_account=individual_recipient_user)
-                fiat_ramp.payment_status = FiatRampStatusEnum.COMPLETE
+            if fiat_ramp.payment_status == FiatRampStatusEnum.PENDING:
+                if status == 'Completed':
+                    # "The full amount has been paid"
+                    individual_recipient_user = User.query.execution_options(show_all=True).get(fiat_ramp.authorising_user_id)
+                    make_disbursement_transfer(
+                        transfer_amount=fiat_ramp.payment_amount,
+                        token=fiat_ramp.token,
+                        receive_account=individual_recipient_user)
+                    fiat_ramp.payment_status = FiatRampStatusEnum.COMPLETE
+
+                else:
+                    # The POLi link failed for some reason.
+                    # e.g. Unused, Activated, PartPaid, Future
+                    fiat_ramp.payment_status = FiatRampStatusEnum.FAILED
+                    fiat_ramp.payment_metadata = {'poli_link': poli_link, 'reason': status}
 
             else:
-                # The POLi link failed for some reason.
-                # e.g. Unused, Activated, PartPaid, Future
-                fiat_ramp.payment_status = FiatRampStatusEnum.FAILED
-                fiat_ramp.payment_metadata = {'poli_link': poli_link, 'reason': status}
+                return make_response(jsonify({'message': 'Transfer Already Updated.'})), 400
 
             response_object = {
                 'message': 'Got POLi Link Status',
@@ -349,12 +354,12 @@ class PoliPaymentsAPI(MethodView):
         if token is None:
             return make_response(jsonify({'message': 'No token for ID {}'.format(token_id)})), 400
 
-        if token.symbol != 'AUD' or token.symbol != 'NZD':
-            return make_response(jsonify({'message': 'POLi payments only support AUD or NZD'})), 400
+        if token.symbol != 'AUD':
+            return make_response(jsonify({'message': 'POLi payments only support AUD'})), 400
 
         fiat_ramp = FiatRamp(
             payment_method='POLI',
-            payment_amount=amount,
+            payment_amount=int(amount),
         )
 
         try:

@@ -24,7 +24,7 @@ def upgrade():
     sa.Column('created', sa.DateTime(), nullable=True),
     sa.Column('updated', sa.DateTime(), nullable=True),
     sa.Column('_payment_method', sa.String(), nullable=True),
-    sa.Column('payment_amount', sa.String(), nullable=True),
+    sa.Column('payment_amount', sa.Integer(), nullable=True),
     sa.Column('payment_reference', sa.String(), nullable=True),
     sa.Column('payment_status', sa.Enum('PENDING', 'FAILED', 'COMPLETE', name='fiatrampstatusenum'), nullable=True),
     sa.Column('credit_transfer_id', sa.Integer(), nullable=True),
