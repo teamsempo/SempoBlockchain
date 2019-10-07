@@ -106,6 +106,4 @@ def get_poli_link_from_token(token):
     else:
         raise PoliPaymentsError(response.json()['ErrorMessage'])
 
-    # todo: desired format {'poli_link': 'QZZMS'} status code : 200
-
     return result

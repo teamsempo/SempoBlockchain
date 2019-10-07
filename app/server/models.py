@@ -1653,7 +1653,7 @@ class FiatRamp(ModelBase):
 
     credit_transfer_id          = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
 
-    payment_metadata            = db.Column(JSON)
+    payment_metadata            = db.Column(JSONB)
 
     @hybrid_property
     def payment_method(self):

@@ -122,7 +122,7 @@ def register_extensions(app):
         # Workaround to allow unparsed request body to be be read from cache
         # This is required to validate a signature on webhooks
         # This MUST go before Sentry integration as sentry triggers form parsing
-        if request.path.startswith('/api/slack/'):
+        if request.path.startswith('/api/slack/') or request.path.startswith('/api/poli_payments_webhook/'):
             if request.content_length > 1024 * 1024:  # 1mb
                 return make_response(jsonify({'message': 'Payload too large'})), 413  # Payload too large
             request.get_data(parse_form_data=False, cache=True)

@@ -293,7 +293,7 @@ class PoliPaymentsAPI(MethodView):
             if fiat_ramp is None:
                 return make_response(jsonify({'message': 'Could not find payment for reference {}'.format(reference)}))
 
-            poli_link = fiat_ramp.payment_metadata[0]['poli_link']
+            poli_link = fiat_ramp.payment_metadata['poli_link']
             try:
                 get_poli_link_status_response = get_poli_link_status(poli_link=poli_link.split('/')[-1])
 
@@ -314,7 +314,7 @@ class PoliPaymentsAPI(MethodView):
                 # The POLi link failed for some reason.
                 # e.g. Unused, Activated, PartPaid, Future
                 fiat_ramp.payment_status = FiatRampStatusEnum.FAILED
-                fiat_ramp.payment_metadata = [{'poli_link': poli_link, 'reason': status}]
+                fiat_ramp.payment_metadata = {'poli_link': poli_link, 'reason': status}
 
             response_object = {
                 'message': 'Got POLi Link Status',
@@ -348,7 +348,7 @@ class PoliPaymentsAPI(MethodView):
         fiat_ramp = FiatRamp(
             payment_method='POLI',
             payment_reference=create_poli_link_response['payment_reference'],
-            payment_metadata=[{'poli_link': create_poli_link_response['poli_link']}]
+            payment_metadata={'poli_link': create_poli_link_response['poli_link']}
         )
 
         db.session.add(fiat_ramp)

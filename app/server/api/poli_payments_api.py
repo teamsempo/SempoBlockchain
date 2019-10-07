@@ -16,11 +16,10 @@ class PoliPaymentWebhookAPI(MethodView):
 
         :return:
         """
-        post_data = request.get_json()
 
-        if post_data:
+        if request.data:
             try:
-                response = get_poli_link_from_token(token=post_data)
+                response = get_poli_link_from_token(token=request.data.decode())
 
             except PoliPaymentsError as e:
                 response_object = {
@@ -28,48 +27,51 @@ class PoliPaymentWebhookAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 400
 
-            if response.status_code == 200:
-                # get POLi status
-                poli_link = response.poli_link
-                try:
-                    get_poli_link_status_response = get_poli_link_status(
-                        poli_link=poli_link
-                    )
+            poli_link = response['poli_link']
+            try:
+                get_poli_link_status_response = get_poli_link_status(
+                    poli_link=poli_link
+                )
 
-                except PoliPaymentsError as e:
-                    response_object = {
-                        'message': str(e)
-                    }
-                    return make_response(jsonify(response_object)), 400
-
-                fiat_ramp = db.query(FiatRamp).filter(
-                    FiatRamp.payment_metadata["poli_link"] == cast(poli_link, JSON)
-                ).first()
-
-                if fiat_ramp is None:
-                    return make_response(jsonify({'message': 'Could not find payment for POLi Link: {}'.format(poli_link)})), 400
-
-                status = get_poli_link_status_response['status']
-
-                if status == 'Completed':
-                    # Complete: "The full amount has been paid"
-                    # todo: handle internal transfer from float wallet...
-                    fiat_ramp(payment_status=FiatRampStatusEnum.COMPLETE)
-
-                else:
-                    # The POLi link failed for some reason.
-                    # e.g. Unused, Activated, PartPaid, Future
-                    fiat_ramp(
-                        payment_status=FiatRampStatusEnum.FAILED,
-                        payment_metadata={'poli_link': poli_link, 'reason': status}
-                    )
-
+            except PoliPaymentsError as e:
                 response_object = {
-                    'message': 'POLi Link Status',
-                    'data': get_poli_link_status_response
+                    'message': str(e)
                 }
+                return make_response(jsonify(response_object)), 400
 
-                return make_response(jsonify(response_object)), 200
+            fiat_ramp = db.session.query(FiatRamp).filter(
+                FiatRamp.payment_metadata["poli_link"].astext == 'https://poli.to/'+poli_link
+            ).first()
+
+            if fiat_ramp is None:
+                return make_response(jsonify({'message': 'Could not find payment for POLi Link: {}'.format(poli_link)})), 400
+
+            status = get_poli_link_status_response['status']
+
+            if status == 'Completed':
+                # Complete: "The full amount has been paid"
+                # todo: handle internal transfer from float wallet...
+                fiat_ramp.payment_status = FiatRampStatusEnum.COMPLETE
+
+            else:
+                # The POLi link failed for some reason.
+                # e.g. Unused, Activated, PartPaid, Future
+                fiat_ramp.payment_status = FiatRampStatusEnum.FAILED
+                fiat_ramp.payment_metadata = {'poli_link': poli_link, 'reason': status}
+
+            response_object = {
+                'message': 'POLi Link Status',
+                'data': get_poli_link_status_response
+            }
+
+            return make_response(jsonify(response_object)), 200
 
         else:
-            return make_response(jsonify({'message', 'No post data???'})), 400
+            return make_response(jsonify({'message', 'No token'})), 400
+
+
+poli_payments_blueprint.add_url_rule(
+    '/poli_payments_webhook/',
+    view_func=PoliPaymentWebhookAPI.as_view('poli_payments_webhook_view'),
+    methods=['POST']
+)
