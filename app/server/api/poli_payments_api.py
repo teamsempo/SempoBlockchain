@@ -1,10 +1,8 @@
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from server import db
 from server.utils.poli_payments import PoliPaymentsError, get_poli_link_status, get_poli_link_from_token
-from server.models import FiatRamp, FiatRampStatusEnum
-from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.sql.expression import cast
+from server.models.fiat_ramp import FiatRamp, FiatRampStatusEnum
 
 poli_payments_blueprint = Blueprint('poli_payments_blueprint', __name__)
 

@@ -5,7 +5,7 @@ from server import db
 from server.models.models import TargetingSurvey
 from server.models.feedback import Feedback
 from server.models.referral import Referral
-from server.models import FiatRamp, FiatRampStatusEnum, Token
+from server.models.fiat_ramp import FiatRamp, FiatRampStatusEnum, Token
 from server.schemas import referrals_schema, referral_schema
 from server.utils.assembly_payments import create_ap_user, AssemblyPaymentsError, create_paypal_account, \
     UserIdentifierNotFoundError, create_bank_account, set_user_disbursement_account
