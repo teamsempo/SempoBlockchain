@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, MetaData
 from logging.config import fileConfig
 import logging
 
@@ -20,7 +20,32 @@ logger = logging.getLogger('alembic.env')
 from flask import current_app
 config.set_main_option('sqlalchemy.url',
                        current_app.config.get('SQLALCHEMY_DATABASE_URI'))
-target_metadata = current_app.extensions['migrate'].db.metadata
+#target_metadata = current_app.extensions['migrate'].db.metadata
+from server.models import (credit_transfer, device_info, feedback, ip_address, kyc_application, models, organisation,
+           referral, transfer_account, transfer_card, upload, user, ussd)
+
+def combine_metadata(*args):
+    m = MetaData()
+    for metadata in args:
+        for t in metadata.tables.values():
+            t.tometadata(m)
+    return m
+
+target_metadata = combine_metadata(
+    credit_transfer.ModelBase.metadata,
+    device_info.ModelBase.metadata,
+    feedback.ModelBase.metadata,
+    ip_address.ModelBase.metadata,
+    kyc_application.ModelBase.metadata,
+    models.ModelBase.metadata,
+    organisation.ModelBase.metadata,
+    referral.ModelBase.metadata,
+    transfer_account.ModelBase.metadata,
+    transfer_card.ModelBase.metadata,
+    upload.ModelBase.metadata,
+    user.ModelBase.metadata,
+    ussd.ModelBase.metadata
+)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

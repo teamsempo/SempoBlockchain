@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
 from server.models.user import User
+from server.models.ussd import UssdMenu
 from server.utils.phone import proccess_phone_number
 
 ussd_blueprint = Blueprint('ussd', __name__)
@@ -31,6 +32,7 @@ class ProcessKenyaUssd(MethodView):
             msisdn = proccess_phone_number(phone_number, 'KE')
             user = User.query.filter_by(phone=msisdn).first()
             if None in [user, msisdn, session_id]:
+                current_menu = UssdMenu.query
                 """
                     TODO(ussd)
                     current_menu = UssdMenu.find_by(name: 'exit_invalid_request')

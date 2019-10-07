@@ -6,7 +6,7 @@ from server.models.utils import ModelBase
 class UssdMenu(ModelBase):
     __tablename__ = 'ussd_menus'
 
-    name = db.Column(db.String, nullable=False)
+    name = db.Column(db.String, nullable=False, index=True, unique=True)
     description = db.Column(db.String)
     parent_id = db.Column(db.Integer)
     """
