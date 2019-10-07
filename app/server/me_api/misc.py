@@ -285,7 +285,49 @@ class AssemblyPaymentsPayoutAccountAPI(MethodView):
 
 class PoliPaymentsAPI(MethodView):
     @requires_auth
-    def post(self):
+    def get(self, reference):
+        reference = request.args.get('reference')
+        if reference:
+
+            fiat_ramp = FiatRamp.query.filter_by(payment_reference=reference).first()
+            if fiat_ramp is None:
+                return make_response(jsonify({'message': 'Could not find payment for reference {}'.format(reference)}))
+
+            poli_link = fiat_ramp.payment_metadata[0]['poli_link']
+            try:
+                get_poli_link_status_response = get_poli_link_status(poli_link=poli_link.split('/')[-1])
+
+            except PoliPaymentsError as e:
+                response_object = {
+                    'message': str(e)
+                }
+                return make_response(jsonify(response_object)), 400
+
+            status = get_poli_link_status_response['status']
+
+            if status == 'Completed':
+                # "The full amount has been paid"
+                # todo: handle internal transfer...
+                fiat_ramp.payment_status = FiatRampStatusEnum.COMPLETE
+
+            else:
+                # The POLi link failed for some reason.
+                # e.g. Unused, Activated, PartPaid, Future
+                fiat_ramp.payment_status = FiatRampStatusEnum.FAILED
+                fiat_ramp.payment_metadata = [{'poli_link': poli_link, 'reason': status}]
+
+            response_object = {
+                'message': 'Got POLi Link Status',
+                'data': get_poli_link_status_response
+            }
+
+            return make_response(jsonify(response_object)), 200
+
+        else:
+            return make_response(jsonify({'message': 'Must provide POLi Link to get status'})), 400
+
+    @requires_auth
+    def post(self, reference):
         post_data = request.get_json()
         amount = post_data.get('amount')
 
@@ -313,7 +355,7 @@ class PoliPaymentsAPI(MethodView):
 
         response_object = {
             'message': 'Created POLi Link',
-            'data': fiat_ramp
+            'data': create_poli_link_response
         }
 
         return make_response(jsonify(response_object)), 201

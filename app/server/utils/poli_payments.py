@@ -58,9 +58,11 @@ def create_poli_link(amount):
 
     response = requests.post(url=url, headers=headers, data=data)
 
-    result = response.json()  # todo: check formatting & reference is passed back
+    if response.status_code == 200:
+        result = dict(poli_link=response.json(), payment_reference=reference)
 
-    # todo: desired Formatting {'poli_link': 'https://poli.to/saf/', 'reference: 'afsd-afds'}
+    else:
+        raise PoliPaymentsError(response.json()['ErrorMessage'])
 
     return result
 
@@ -77,9 +79,11 @@ def get_poli_link_status(poli_link):
 
     response = requests.get(url=url, headers=headers)
 
-    result = response.json()  # todo: check formatting
+    if response.status_code == 200:
+        result = dict(status=response.json())
 
-    # todo: desired Formatting {'status': 'completed'}
+    else:
+        raise PoliPaymentsError(response.json()['ErrorMessage'])
 
     return result
 
@@ -96,7 +100,11 @@ def get_poli_link_from_token(token):
 
     response = requests.get(url=url, headers=headers)
 
-    result = response.json()  # todo: check formatting
+    if response.status_code == 200:
+        result = dict(poli_link=response.json())
+
+    else:
+        raise PoliPaymentsError(response.json()['ErrorMessage'])
 
     # todo: desired format {'poli_link': 'QZZMS'} status code : 200
 
