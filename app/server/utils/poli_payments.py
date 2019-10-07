@@ -24,20 +24,17 @@ def generate_poli_header():
     return headers
 
 
-def create_poli_link(amount):
+def create_poli_link(amount, reference, currency):
     """
     Generates a unique POLi Link that a user can than be directed to to pay.
 
     :param amount: int, amount for the payment to be for.
+    :param reference: payment reference
+    :param currency: AUD or NZD only
     :return: unique link
     """
     url = generate_poli_host(path='/POLiLink/Create')
     headers = generate_poli_header()
-
-    def random_string(length):
-        return ''.join(random.choices(string.ascii_letters, k=length))
-
-    reference = random_string(5) + '-' + random_string(5)
 
     one_day_in_future = datetime.datetime.now() + datetime.timedelta(days=1)
     expiry = one_day_in_future.strftime("%Y-%m-%d %H:%M:%S")
@@ -45,7 +42,7 @@ def create_poli_link(amount):
     data = {
         "LinkType": 0,
         "Amount": amount,
-        "CurrencyCode": "AUD",  # default to AUD. todo: handle NZ
+        "CurrencyCode": currency,
         "MerchantData": reference,
         "MerchantReference": reference,
         "ConfirmationEmail": "false",

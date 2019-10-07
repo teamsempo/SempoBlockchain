@@ -756,6 +756,9 @@ class ChatbotState(ModelBase):
 
 
 class DeviceInfo(ModelBase):
+    """
+    DeviceInfo model stores the information of a mobile device for fraud and analytics purposes.
+    """
     __tablename__ = 'device_info'
 
     serial_number   = db.Column(db.String)
@@ -789,6 +792,9 @@ class Token(ModelBase):
 
     approvals = db.relationship('SpendApproval', backref='token', lazy=True,
                                         foreign_keys='SpendApproval.token_id')
+
+    fiat_ramps = db.relationship('FiatRamp', backref='token', lazy=True,
+                                        foreign_keys='FiatRamp.token_id')
 
     @property
     def decimals(self):
@@ -1641,17 +1647,21 @@ class IpAddress(ModelBase):
 class FiatRamp(ModelBase):
     """
     FiatRamp model handles multiple on and off ramps (exchanging fiat for crypto)
+    e.g. used ONLY to exchange Fiat AUD for Synthetic AUD.
 
     credit_transfer_id: references addition or withdrawal of user funds in the exchange process
+    token_id: reference blockchain token
     """
 
     __tablename__               = 'fiat_ramp'
 
     _payment_method             = db.Column(db.String)
+    payment_amount              = db.Column(db.Integer, default=0)
     payment_reference           = db.Column(db.String)
     payment_status              = db.Column(db.Enum(FiatRampStatusEnum), default=FiatRampStatusEnum.PENDING)
 
     credit_transfer_id          = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
+    token_id                    = db.Column(db.Integer, db.ForeignKey(Token.id))
 
     payment_metadata            = db.Column(JSONB)
 
@@ -1665,3 +1675,9 @@ class FiatRamp(ModelBase):
             raise PaymentMethodException('Payment method {} not found'.format(payment_method))
 
         self._payment_method = payment_method
+
+    def __init__(self, **kwargs):
+        def random_string(length):
+            return ''.join(random.choices(string.ascii_letters, k=length))
+
+        self.payment_reference = random_string(5) + '-' + random_string(5)

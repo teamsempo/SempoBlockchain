@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 04c372052fc6
+Revision ID: cd5cb44c8f7c
 Revises: 132ea53022f1
-Create Date: 2019-10-03 11:41:41.029243
+Create Date: 2019-10-07 14:13:46.547895
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '04c372052fc6'
+revision = 'cd5cb44c8f7c'
 down_revision = '132ea53022f1'
 branch_labels = None
 depends_on = None
@@ -24,10 +24,14 @@ def upgrade():
     sa.Column('created', sa.DateTime(), nullable=True),
     sa.Column('updated', sa.DateTime(), nullable=True),
     sa.Column('_payment_method', sa.String(), nullable=True),
+    sa.Column('payment_amount', sa.String(), nullable=True),
+    sa.Column('payment_reference', sa.String(), nullable=True),
     sa.Column('payment_status', sa.Enum('PENDING', 'FAILED', 'COMPLETE', name='fiatrampstatusenum'), nullable=True),
     sa.Column('credit_transfer_id', sa.Integer(), nullable=True),
-    sa.Column('payment_metadata', postgresql.JSON(astext_type=sa.Text()), nullable=True),
+    sa.Column('token_id', sa.Integer(), nullable=True),
+    sa.Column('payment_metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.ForeignKeyConstraint(['credit_transfer_id'], ['credit_transfer.id'], ),
+    sa.ForeignKeyConstraint(['token_id'], ['token.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

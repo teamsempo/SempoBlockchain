@@ -2,13 +2,15 @@ from flask import request, g, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models import Feedback, TargetingSurvey, Referral, FiatRamp, FiatRampStatusEnum
+from server.models import Feedback, TargetingSurvey, Referral, FiatRamp, FiatRampStatusEnum, Token
 from server.schemas import referrals_schema, referral_schema
 from server.utils.assembly_payments import create_ap_user, AssemblyPaymentsError, create_paypal_account, \
     UserIdentifierNotFoundError, create_bank_account, set_user_disbursement_account
 from server.utils.auth import requires_auth
 from server.utils.mobile_version import check_mobile_version
 from server.utils.poli_payments import PoliPaymentsError, create_poli_link, get_poli_link_status
+from server.utils.credit_transfers import make_disbursement_transfer, find_user_with_transfer_account_from_identifiers
+
 
 class MeFeedbackAPI(MethodView):
     @requires_auth
@@ -307,7 +309,11 @@ class PoliPaymentsAPI(MethodView):
 
             if status == 'Completed':
                 # "The full amount has been paid"
-                # todo: handle internal transfer...
+                individual_recipient_user = find_user_with_transfer_account_from_identifiers(fiat_ramp.authorising_user_id)
+                make_disbursement_transfer(
+                    transfer_amount=fiat_ramp.payment_amount,
+                    token=fiat_ramp.token,
+                    receive_account=individual_recipient_user)
                 fiat_ramp.payment_status = FiatRampStatusEnum.COMPLETE
 
             else:
@@ -330,13 +336,29 @@ class PoliPaymentsAPI(MethodView):
     def post(self, reference):
         post_data = request.get_json()
         amount = post_data.get('amount')
+        token_id = post_data.get('token_id')
 
-        if amount is None:
-            return make_response(jsonify({'message': 'Must provide amount to generate POLi Link'})), 400
+        if amount is None or token_id is None:
+            return make_response(jsonify({'message': 'Must provide amount and token_id to generate POLi Link'})), 400
+
+        token = Token.query.get(token_id)
+
+        if token is None:
+            return make_response(jsonify({'message': 'No token for ID {}'.format(token_id)})), 400
+
+        if token.symbol != 'AUD' or token.symbol != 'NZD':
+            return make_response(jsonify({'message': 'POLi payments only support AUD or NZD'})), 400
+
+        fiat_ramp = FiatRamp(
+            payment_method='POLI',
+            payment_amount=amount,
+        )
 
         try:
             create_poli_link_response = create_poli_link(
-                amount=amount
+                amount=amount,
+                reference=fiat_ramp.payment_reference,
+                currency=token.symbol,
             )
 
         except PoliPaymentsError as e:
@@ -345,11 +367,9 @@ class PoliPaymentsAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        fiat_ramp = FiatRamp(
-            payment_method='POLI',
-            payment_reference=create_poli_link_response['payment_reference'],
-            payment_metadata={'poli_link': create_poli_link_response['poli_link']}
-        )
+        fiat_ramp.payment_metadata = {'poli_link': create_poli_link_response['poli_link']}
+
+        fiat_ramp.token = token
 
         db.session.add(fiat_ramp)
 
