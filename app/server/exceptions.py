@@ -1,3 +1,9 @@
+class PaymentMethodException(Exception):
+    """
+    Raise if trying to set a payment method that is not supported
+    """
+    pass
+
 class OrganisationNotProvidedException(Exception):
     """
     Raise if trying to query database without providing an organisation ID or SHOW_ALL flag.
