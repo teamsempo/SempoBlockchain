@@ -26,6 +26,11 @@ cd ../worker
 pip install -r requirements.txt
 ```
 
+Add to your .bash_profile the `FLASK_ENV` variable:
+```
+export FLASK_ENV="development"
+```
+
 ### Install Front-End Requirements
 ```
 cd app
@@ -73,7 +78,7 @@ redis-server
 Start celery:
 ```
 cd eth_worker
-celery -A eth_trans_manager worker --loglevel=INFO --concurrency=500 --pool=eventlet
+celery -A eth_manager worker --loglevel=INFO --concurrency=500 --pool=eventlet
 ```
 
 ### Database Migration:

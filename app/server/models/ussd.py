@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import JSON
 from server import db
 from server.models.utils import ModelBase
 
+
 class UssdMenu(ModelBase):
     __tablename__ = 'ussd_menus'
 
@@ -18,6 +19,7 @@ class UssdMenu(ModelBase):
     display_text_en = db.Column(db.String, nullable=False)
     display_text_sw = db.Column(db.String, nullable=False)
 
+
 class UssdSession(ModelBase):
     __tablename__ = 'ussd_sessions'
 
@@ -29,4 +31,3 @@ class UssdSession(ModelBase):
     ussd_menu_id = db.Column(db.Integer, nullable=False)
     state = db.Column(db.String, nullable=False)
     sessions_data = db.Column(JSON)
-
