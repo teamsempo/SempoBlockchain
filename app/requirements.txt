@@ -22,7 +22,6 @@ phonenumbers==8.9.8
 psycopg2-binary==2.7.7
 pusher==1.7.4
 pyotp==2.2.7
-pytest==4.6.3
 py-evm==0.3.0a5
 raven==6.9.0
 redis==3.2.0

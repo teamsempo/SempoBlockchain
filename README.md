@@ -13,17 +13,11 @@ Includes:
 ## To run locally machine:
 
 ### Install _All_ Python Requirements
-Download and install python 3.6
+Download and install python 3.6 and its respective pip and virtualenv (python 3.7 will break things). Then:
 ```
 python3 -m venv venv
 source venv/bin/activate
-cd app
-pip install -r slow_requirements.txt
-pip install -r requirements.txt
-cd ../eth_worker
-pip install -r requirements.txt
-cd ../worker
-pip install -r requirements.txt
+./install.sh
 ```
 
 Add to your .bash_profile the `FLASK_ENV` variable:
@@ -98,11 +92,17 @@ cd app
 python manage.py db upgrade
 ```
 
-To create a migrations file (remember to commit the file!):
+To create a new migration:
+
+Make the modifications to the model file to reflect the database changes.
+If you're adding a new model file, you'll also have to modify app/migrations/env to include the new file for discovery.
 
 ```
 python manage.py db migrate
 ```
+
+Remember to commit the file!
+
 
 Sometimes, branches split and you will have multiple heads:
 
@@ -133,6 +133,23 @@ https://github.com/enjeyw/SempoVendorMobile
 
 (if you have installed the prod vendor app, ensure you clear data and uninstall before installing from dev)
 
+## Testing
+
+Ensure your test_config.ini is up to date.
+
+Create the test databases:
+```
+create database eth_worker_test;
+create database sempo_blockchain_test;
+```
+
+Ensure redis-server is running (this is not ideal but necessary atm).
+
+Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
+
+
+
 ## To setup a production deployment
 Follow this guide
 https://docs.google.com/document/d/1PLJgCwRvHDdb_goWl0fMy8eFBfNUk2F3GzLHIiPzV0A/edit
+
