@@ -1,4 +1,8 @@
 from __future__ import with_statement
+from server.models import (credit_transfer, custom_attribute_user_storage, device_info, feedback, ip_address,
+                           kyc_application, models, organisation, referral, transfer_account, transfer_card,
+                           upload, user, ussd)
+from flask import current_app
 from alembic import context
 from sqlalchemy import engine_from_config, pool, MetaData
 from logging.config import fileConfig
@@ -17,12 +21,10 @@ logger = logging.getLogger('alembic.env')
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from flask import current_app
 config.set_main_option('sqlalchemy.url',
                        current_app.config.get('SQLALCHEMY_DATABASE_URI'))
 #target_metadata = current_app.extensions['migrate'].db.metadata
-from server.models import (credit_transfer, device_info, feedback, ip_address, kyc_application, models, organisation,
-           referral, transfer_account, transfer_card, upload, user, ussd)
+
 
 def combine_metadata(*args):
     m = MetaData()
@@ -31,8 +33,10 @@ def combine_metadata(*args):
             t.tometadata(m)
     return m
 
+
 target_metadata = combine_metadata(
     credit_transfer.ModelBase.metadata,
+    custom_attribute_user_storage.ModelBase.metadata,
     device_info.ModelBase.metadata,
     feedback.ModelBase.metadata,
     ip_address.ModelBase.metadata,
@@ -105,6 +109,7 @@ def run_migrations_online():
             context.run_migrations()
     finally:
         connection.close()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

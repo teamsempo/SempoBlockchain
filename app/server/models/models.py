@@ -26,14 +26,16 @@ class ChatbotState(ModelBase):
 
     provider_message_id = db.Column(db.String())
 
-    user = db.relationship('User', backref='chatbot_state', lazy=True, uselist=False)
+    user = db.relationship(
+        'User', backref='chatbot_state', lazy=True, uselist=False)
+
 
 class Token(ModelBase):
     __tablename__ = 'token'
 
     address = db.Column(db.String, index=True, unique=True, nullable=False)
-    name    = db.Column(db.String)
-    symbol  = db.Column(db.String)
+    name = db.Column(db.String)
+    symbol = db.Column(db.String)
     _decimals = db.Column(db.Integer)
 
     organisations = db.relationship('Organisation',
@@ -42,13 +44,13 @@ class Token(ModelBase):
                                     foreign_keys='Organisation.token_id')
 
     transfer_accounts = db.relationship('TransferAccount', backref='token', lazy=True,
-                                         foreign_keys='TransferAccount.token_id')
+                                        foreign_keys='TransferAccount.token_id')
 
     credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
-                                        foreign_keys='CreditTransfer.token_id')
+                                       foreign_keys='CreditTransfer.token_id')
 
     approvals = db.relationship('SpendApproval', backref='token', lazy=True,
-                                        foreign_keys='SpendApproval.token_id')
+                                foreign_keys='SpendApproval.token_id')
 
     @property
     def decimals(self):
@@ -68,18 +70,20 @@ class Token(ModelBase):
     def system_amount_to_token(self, system_amount):
         return int(float(system_amount) / 100 * 10**self.decimals)
 
+
 class TargetingSurvey(ModelBase):
     __tablename__ = 'targeting_survey'
 
-    number_people_household             = db.Column(db.Integer)
-    number_below_adult_age_household    = db.Column(db.Integer)
-    number_people_women_household       = db.Column(db.Integer)
-    number_people_men_household         = db.Column(db.Integer)
-    number_people_work_household        = db.Column(db.Integer)
-    disabilities_household              = db.Column(db.String)
-    long_term_illnesses_household       = db.Column(db.String)
+    number_people_household = db.Column(db.Integer)
+    number_below_adult_age_household = db.Column(db.Integer)
+    number_people_women_household = db.Column(db.Integer)
+    number_people_men_household = db.Column(db.Integer)
+    number_people_work_household = db.Column(db.Integer)
+    disabilities_household = db.Column(db.String)
+    long_term_illnesses_household = db.Column(db.String)
 
-    user = db.relationship('User', backref='targeting_survey', lazy=True, uselist=False)
+    user = db.relationship(
+        'User', backref='targeting_survey', lazy=True, uselist=False)
 
 
 class CurrencyConversion(ModelBase):
@@ -88,12 +92,14 @@ class CurrencyConversion(ModelBase):
     code = db.Column(db.String)
     rate = db.Column(db.Float)
 
+
 class Settings(ModelBase):
     __tablename__ = 'settings'
 
-    name        = db.Column(db.String)
-    type        = db.Column(db.String)
-    value       = db.Column(JSON)
+    name = db.Column(db.String)
+    type = db.Column(db.String)
+    value = db.Column(JSON)
+
 
 class BlacklistToken(ModelBase):
     """
@@ -103,7 +109,6 @@ class BlacklistToken(ModelBase):
 
     token = db.Column(db.String(500), unique=True, nullable=False)
     blacklisted_on = db.Column(db.DateTime, nullable=False)
-
 
     @staticmethod
     def check_blacklist(auth_token):
@@ -125,47 +130,50 @@ class BlacklistToken(ModelBase):
 class EmailWhitelist(OneOrgBase, ModelBase):
     __tablename__ = 'email_whitelist'
 
-    email               = db.Column(db.String)
+    email = db.Column(db.String)
 
-    tier                = db.Column(db.String, default='view')
-    referral_code       = db.Column(db.String)
+    tier = db.Column(db.String, default='view')
+    referral_code = db.Column(db.String)
 
     allow_partial_match = db.Column(db.Boolean, default=False)
-    used                = db.Column(db.Boolean, default=False)
-
-
+    used = db.Column(db.Boolean, default=False)
 
     def __init__(self, **kwargs):
         super(EmailWhitelist, self).__init__(**kwargs)
-        self.referral_code = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+        self.referral_code = ''.join(random.choices(
+            string.ascii_letters + string.digits, k=16))
+
 
 class SavedFilter(ModelBase):
     __tablename__ = 'saved_filter'
 
-    name          = db.Column(db.String)
-    filter        = db.Column(JSON)
+    name = db.Column(db.String)
+    filter = db.Column(JSON)
+
 
 class BankAccount(ModelBase):
-    __tablename__       = 'bank_account'
+    __tablename__ = 'bank_account'
 
     # Wyre SRN
     wyre_id = db.Column(db.String)
 
-    kyc_application_id = db.Column(db.Integer, db.ForeignKey('kyc_application.id'))
+    kyc_application_id = db.Column(
+        db.Integer, db.ForeignKey('kyc_application.id'))
 
-    bank_country        = db.Column(db.String)
-    routing_number      = db.Column(db.String)
-    account_number      = db.Column(db.String)
-    currency            = db.Column(db.String)
+    bank_country = db.Column(db.String)
+    routing_number = db.Column(db.String)
+    account_number = db.Column(db.String)
+    currency = db.Column(db.String)
+
 
 class TransferUsage(ModelBase):
-    __tablename__               = 'transfer_usage'
+    __tablename__ = 'transfer_usage'
 
-    name                        = db.Column(db.String)
-    is_cashout                  = db.Column(db.Boolean)
-    _icon                       = db.Column(db.String)
-    priority                    = db.Column(db.Integer)
-    translations                = db.Column(JSON)
+    name = db.Column(db.String)
+    is_cashout = db.Column(db.Boolean)
+    _icon = db.Column(db.String)
+    priority = db.Column(db.Integer)
+    translations = db.Column(JSON)
 
     @hybrid_property
     def icon(self):
@@ -179,8 +187,6 @@ class TransferUsage(ModelBase):
 
 
 class CustomAttribute(ModelBase):
-    __tablename__               = 'custom_attribute'
+    __tablename__ = 'custom_attribute'
 
-    name                        = db.Column(db.String)
-
-
+    name = db.Column(db.String)
