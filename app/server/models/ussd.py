@@ -1,6 +1,6 @@
 from sqlalchemy.dialects.postgresql import JSON
 
-from server import db
+from server import db, sentry
 from server.models.utils import ModelBase
 
 
@@ -19,6 +19,19 @@ class UssdMenu(ModelBase):
     display_text_en = db.Column(db.String, nullable=False)
     display_text_sw = db.Column(db.String, nullable=False)
 
+    @staticmethod
+    def find_by_name(name: str) -> "UssdMenu":
+        menus = UssdMenu.query.filter_by(name=name)
+        if menus.count() == 0:
+            sentry.captureMessage("No USSD Menu with name {}".format(name))
+            # should handle case if no invalid_request menu?
+            return UssdMenu.query.filter_by(name='exit_invalid_request').first()
+        else:
+            return menus.first()
+
+    def parent(self):
+        return UssdMenu.query.filter_by(id=self.parent_id).first()
+
 
 class UssdSession(ModelBase):
     __tablename__ = 'ussd_sessions'
@@ -30,4 +43,4 @@ class UssdSession(ModelBase):
     user_input = db.Column(db.String)
     ussd_menu_id = db.Column(db.Integer, nullable=False)
     state = db.Column(db.String, nullable=False)
-    sessions_data = db.Column(JSON)
+    session_data = db.Column(JSON)
