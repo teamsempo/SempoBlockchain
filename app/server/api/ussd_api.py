@@ -4,7 +4,7 @@ from flask.views import MethodView
 from server.models.user import User
 from server.models.ussd import UssdMenu
 from server.utils.phone import proccess_phone_number
-from server.utils.ussd.kenya_ussd import KenyaUssdProcessor
+from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
 ussd_blueprint = Blueprint('ussd', __name__)

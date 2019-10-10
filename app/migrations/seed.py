@@ -1,5 +1,5 @@
 """
-Migration code from GE - need to translate to Python
+TODO(ussd): Migration code from GE - need to translate to Python
 
 CommunityToken.where(name: 'Gatina').first_or_create! do |c|
   c.name = 'Gatina'
