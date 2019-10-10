@@ -2,8 +2,8 @@ from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models.upload import UploadedImage
-from server.schemas import uploaded_image_schema
+from server.models.upload import UploadedResource
+from server.schemas import uploaded_resource_schema
 from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import save_to_s3_from_image_object, generate_new_filename
 
@@ -28,7 +28,7 @@ class ImageUploader(MethodView):
 
         url = save_to_s3_from_image_object(image_object=image, new_filename=new_filename)
 
-        uploaded_image = UploadedImage(filename=new_filename, image_type=image_type)
+        uploaded_image = UploadedResource(filename=new_filename, file_type=image_type)
 
         if transfer_id:
             uploaded_image.credit_transfer_id = transfer_id
@@ -38,7 +38,7 @@ class ImageUploader(MethodView):
 
         response_object = {
             'data': {
-                'uploaded_image': uploaded_image_schema.dump(uploaded_image).data
+                'uploaded_image': uploaded_resource_schema.dump(uploaded_image).data
             }
         }
 

@@ -46,7 +46,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
     blockchain_transactions = db.relationship('BlockchainTransaction', backref='credit_transfer', lazy=True)
 
-    attached_images = db.relationship('UploadedImage', backref='credit_transfer', lazy=True)
+    attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy=True)
 
     @hybrid_property
     def blockchain_status(self):

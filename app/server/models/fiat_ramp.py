@@ -5,7 +5,7 @@ import enum, random, string
 from server.exceptions import PaymentMethodException
 from server.constants import PAYMENT_METHODS
 from server import db
-from server.models.transfer import CreditTransfer
+from server.models.credit_transfer import CreditTransfer
 from server.models.models import Token
 
 

@@ -47,8 +47,8 @@ class KycApplication(ModelBase):
     postal_code         = db.Column(db.Integer)
     beneficial_owners   = db.Column(JSON)
 
-    uploaded_documents = db.relationship('UploadedDocument', backref='kyc_application', lazy=True,
-                                         foreign_keys='UploadedDocument.kyc_application_id')
+    uploaded_documents = db.relationship('UploadedResource', backref='kyc_application', lazy=True,
+                                         foreign_keys='UploadedResource.kyc_application_id')
 
     bank_accounts        = db.relationship('BankAccount', backref='kyc_application', lazy=True,
                                            foreign_keys='BankAccount.kyc_application_id')

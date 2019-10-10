@@ -7,7 +7,7 @@ from eth_utils import to_checksum_address
 
 from server import db
 from server.models.device_info import DeviceInfo
-from server.models.upload import UploadedImage
+from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount, BlockchainAddress
@@ -265,7 +265,7 @@ def set_custom_attributes(attribute_dict, user):
 
                 new_filename = generate_new_filename(submitted_filename, type, 'KOBO')
 
-                uploaded_image = UploadedImage(filename=new_filename, image_type=type)
+                uploaded_image = UploadedResource(filename=new_filename, file_type=type)
 
                 uploaded_image.user = user
 
