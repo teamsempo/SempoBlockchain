@@ -3,7 +3,7 @@ bit==0.4.3
 blinker==1.4
 boto3==1.7.2
 celery==4.2.1
-ecdsa==0.13
+ecdsa==0.13.3
 ethereum==2.3.1
 Flask==1.1.1
 Flask-BasicAuth==0.2.0
