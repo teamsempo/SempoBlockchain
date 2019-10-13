@@ -1,6 +1,7 @@
 from flask import make_response, jsonify, current_app
 from sqlalchemy import or_, and_
-from server.models.transfer import BlockchainTransaction, BlockchainAddress
+from server.models.credit_transfer import BlockchainTransaction
+from server.models.transfer_account import BlockchainAddress
 from server.exceptions import BlockchainError
 from server import db, celery_app, sentry
 import datetime

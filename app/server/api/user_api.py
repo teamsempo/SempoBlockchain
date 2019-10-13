@@ -4,7 +4,7 @@ from flask.views import MethodView
 from server import db
 from server.models.models import paginate_query
 from server.models.user import User
-from server.models.transfer import TransferAccount
+from server.models.transfer_account import TransferAccount
 from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl

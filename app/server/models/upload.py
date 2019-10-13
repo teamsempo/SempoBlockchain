@@ -3,16 +3,14 @@ from server.utils.amazon_s3 import get_file_url
 
 from server import db
 from server.models.utils import ModelBase
-from server.models.user import User
-from server.models.transfer import CreditTransfer
 
 class UploadedImage(ModelBase):
     __tablename__ = 'uploaded_image'
 
     filename = db.Column(db.String)
     image_type = db.Column(db.String)
-    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    credit_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
     @hybrid_property
     def image_url(self):
