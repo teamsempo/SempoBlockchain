@@ -99,10 +99,10 @@ class OrganisationUserAPI(MethodView):
         user_ids = put_data.get('user_ids')
 
         if len(user_ids) == 0:
-            return make_response(jsonify({'message': 'Must provide a list of user ids'})), 401
+            return make_response(jsonify({'message': 'Must provide a list of user ids'})), 400
 
         if organisation_id is None:
-            return make_response(jsonify({'message': 'Must provide organisation ID'})), 401
+            return make_response(jsonify({'message': 'Must provide organisation ID'})), 400
 
         organisation = Organisation.query.execution_options(show_all=True).get(organisation_id)
 

@@ -18,12 +18,8 @@ class UpdateData(Command):
 
             print("~~~~~~~~~~ Searching for Master Address ~~~~~~~~~~")
 
-            if app.config['IS_USING_BITCOIN']:
-                master_address_type = "BITCOIN_MASTER"
-                master_address = app.config['BITCOIN_MASTER_WALLET_ADDRESS']
-            else:
-                master_address_type = "MASTER"
-                master_address = app.config['MASTER_WALLET_ADDRESS']
+            master_address_type = "MASTER"
+            master_address = app.config['MASTER_WALLET_ADDRESS']
 
             master_address_object = BlockchainAddress.query.filter(BlockchainAddress.type == master_address_type).first()
 

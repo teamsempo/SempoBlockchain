@@ -1,10 +1,12 @@
 # https://stackoverflow.com/questions/54617308/pip-install-produces-the-following-error-on-mac-error-command-gcc-failed-wit
 # python3.7 / concurrent / futures/thread.py line 135 was originally self._work_queue = queue.SimpleQueue()
-
 from celery import Celery
 from raven import Client
-import redis
+import redis, requests
+from time import sleep
 
+from requests.exceptions import ConnectionError
+from requests.auth import HTTPBasicAuth
 from web3 import (
     Web3,
     WebsocketProvider,
@@ -18,7 +20,7 @@ sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 import config
-from eth_worker.sql_persistence.interface import SQLPersistenceInterface
+from sql_persistence.interface import SQLPersistenceInterface
 
 from eth_manager.ABIs import dai_abi
 from eth_manager.processor import TransactionProcessor, ContractRegistry
@@ -65,16 +67,41 @@ blockchain_processor.registry.register_contract(
     contract_name='Dai Stablecoin v1.0'
 )
 
-
-from eth_manager.utils import register_contracts_from_app
-
-register_contracts_from_app(config.APP_HOST,
-                            config.INTERNAL_AUTH_USERNAME,
-                            config.INTERNAL_AUTH_PASSWORD)
-
 # Register the master wallet so we can use it for tasks
-
 try:
     persistence_interface.create_blockchain_wallet_from_private_key(config.MASTER_WALLET_PRIVATE_KEY)
 except WalletExistsError:
     pass
+
+def register_contracts_from_app(host_address, auth_username, auth_password):
+    token_req = requests.get(host_address + '/api/token', auth=HTTPBasicAuth(auth_username, auth_password))
+
+    if token_req.status_code == 200:
+
+        for token in token_req.json()['data']['tokens']:
+            blockchain_processor.registry.register_contract(token['address'], dai_abi.abi)
+
+        return True
+
+    else:
+        return False
+
+
+contracts_registered = False
+attempts = 0
+while contracts_registered is False and attempts < 20:
+    print('Contract Register Attempt ' + str(attempts))
+    try:
+        contracts_registered = register_contracts_from_app(config.APP_HOST,
+                                    config.INTERNAL_AUTH_USERNAME,
+                                    config.INTERNAL_AUTH_PASSWORD)
+
+        if contracts_registered:
+            print('Contracts Registered Successfully')
+
+    except ConnectionError:
+        pass
+
+    attempts += 1
+    sleep(1)
+

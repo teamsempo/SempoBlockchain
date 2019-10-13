@@ -1,9 +1,8 @@
 import pytest
 import os, sys
 
-if os.environ.get("LOCATION") != 'LOCAL_DOCKER':
+if os.environ.get('DEPLOYMENT_NAME') != 'DOCKER_TEST':
     os.environ['DEPLOYMENT_NAME'] = "TEST"
-    os.environ['LOCATION'] = "TEST"
 
 if __name__ == '__main__':
     # use '--setup-show' to show fixture SETUP and TEARDOWN

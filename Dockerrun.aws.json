@@ -15,8 +15,8 @@
           "value": "APP"
         },
         {
-          "name": "LOCATION",
-          "value": "PROD"
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
         },
         {
           "name": "PYTHONUNBUFFERED",
@@ -55,8 +55,8 @@
           "value": "WORKER"
         },
         {
-          "name": "LOCATION",
-          "value": "PROD"
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
         },
         {
           "name": "PYTHONUNBUFFERED",
@@ -78,8 +78,8 @@
           "value": "BEAT"
         },
         {
-          "name": "LOCATION",
-          "value": "PROD"
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
         },
         {
           "name": "PYTHONUNBUFFERED",

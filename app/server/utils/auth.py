@@ -129,6 +129,7 @@ def requires_auth(f = None,
 
                     if len(allowed_roles) > 0:
                         held_roles = resp.get('roles', {})
+
                         if not AccessControl.has_suffient_role(held_roles, allowed_roles):
                             response_object = {
                                 'message': 'user does not have any of the allowed roles: ' + str(allowed_roles),

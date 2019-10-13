@@ -234,13 +234,14 @@ def test_get_permissions_api(test_client, complete_auth_token):
     assert response.json['admin_list'] is not None
 
 @pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id, response_code", [
-    ('admin', 'foo@acme.com', 'admin', 1,  401),
+    ('admin', 'foo@acme.com', 'admin', 1, 401),
     ('sempoadmin', 'foo@acme.com', 'admin', 2, 404),
     ('sempoadmin',  None, 'admin', 1, 400),
     ('sempoadmin', 'foo@acme.com', None, 1, 400),
     ('sempoadmin', 'foo@acme.com', 'admin', 1, 200),
-    ('sempoadmin', 'foo@acme.com', 'admin', 1, 400)
+    ('sempoadmin', 'foo@acme.com', 'admin', 1, 400),
 ])
+
 def test_create_permissions_api(test_client, authed_sempo_admin_user,
                                 creator_tier, email, invitee_tier, organisation_id, response_code):
     """
@@ -277,3 +278,23 @@ def test_get_kobo_credentials_api(test_client, authed_sempo_admin_user):
     assert response.status_code == 200
     assert response.json['username'] == config.EXTERNAL_AUTH_USERNAME
     assert response.json['password'] == config.EXTERNAL_AUTH_PASSWORD
+
+
+def test_logout_api(test_client, authed_sempo_admin_user):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/logout/' api is posted to (POST)
+    THEN check response is 200 and auth_token is added to blacklist
+    """
+    from server.models.models import BlacklistToken
+    authed_sempo_admin_user.is_activated = True
+    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
+    response = test_client.post('/api/auth/logout/',
+                               headers=dict(Authorization=auth_token, Accept='application/json'),
+                               content_type='application/json', follow_redirects=True)
+    assert response.status_code == 200
+    assert BlacklistToken.check_blacklist(auth_token) is True
+
+    from time import sleep
+    # This is here to stop tokens having the same timestamp dying
+    sleep(1)
