@@ -90,7 +90,7 @@ if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
 
 
 IS_TEST = specific_parser['APP'].getboolean('IS_TEST', False)
-IS_PRODUCTION = specific_parser['APP'].getboolean('IS_PRODUCTION', True)
+IS_PRODUCTION = specific_parser['APP'].getboolean('IS_PRODUCTION', False)
 
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
