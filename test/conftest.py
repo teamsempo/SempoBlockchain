@@ -1,6 +1,12 @@
 import pytest
-
 from flask import current_app
+
+import os
+import sys
+app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
+sys.path.append(app_dir)
+sys.path.append(os.getcwd())
+
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
 # from app.manage import manager

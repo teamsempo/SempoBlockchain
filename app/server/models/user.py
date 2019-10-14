@@ -23,6 +23,7 @@ from server.constants import (
     ACCESS_ROLES
 )
 
+
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
@@ -36,32 +37,32 @@ class User(ManyOrgBase, ModelBase):
     """
     __tablename__ = 'user'
 
-    first_name      = db.Column(db.String())
-    last_name       = db.Column(db.String())
+    first_name = db.Column(db.String())
+    last_name = db.Column(db.String())
 
-    _last_seen       = db.Column(db.DateTime)
+    _last_seen = db.Column(db.DateTime)
 
-    email                   = db.Column(db.String())
-    _phone                  = db.Column(db.String())
-    _public_serial_number   = db.Column(db.String())
-    nfc_serial_number       = db.Column(db.String())
+    email = db.Column(db.String())
+    _phone = db.Column(db.String())
+    _public_serial_number = db.Column(db.String())
+    nfc_serial_number = db.Column(db.String())
 
-    password_hash   = db.Column(db.String(128))
-    one_time_code   = db.Column(db.String)
-    secret          = db.Column(db.String())
-    _TFA_secret     = db.Column(db.String(128))
-    TFA_enabled     = db.Column(db.Boolean, default=False)
+    password_hash = db.Column(db.String(128))
+    one_time_code = db.Column(db.String)
+    secret = db.Column(db.String())
+    _TFA_secret = db.Column(db.String(128))
+    TFA_enabled = db.Column(db.Boolean, default=False)
 
     default_currency = db.Column(db.String())
 
-    _location       = db.Column(db.String())
-    lat             = db.Column(db.Float())
-    lng             = db.Column(db.Float())
+    _location = db.Column(db.String())
+    lat = db.Column(db.Float())
+    lng = db.Column(db.Float())
 
     _held_roles = db.Column(JSONB)
 
-    is_activated    = db.Column(db.Boolean, default=False)
-    is_disabled     = db.Column(db.Boolean, default=False)
+    is_activated = db.Column(db.Boolean, default=False)
+    is_disabled = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
 
@@ -70,10 +71,10 @@ class User(ManyOrgBase, ModelBase):
     custom_attributes = db.Column(JSON)
     matched_profile_pictures = db.Column(JSON)
 
-    ap_user_id     = db.Column(db.String())
-    ap_bank_id     = db.Column(db.String())
-    ap_paypal_id   = db.Column(db.String())
-    kyc_state      = db.Column(db.String())
+    ap_user_id = db.Column(db.String())
+    ap_bank_id = db.Column(db.String())
+    ap_paypal_id = db.Column(db.String())
+    kyc_state = db.Column(db.String())
 
     cashout_authorised = db.Column(db.Boolean, default=False)
 
@@ -82,14 +83,14 @@ class User(ManyOrgBase, ModelBase):
         secondary=user_transfer_account_association_table,
         back_populates="users")
 
-    chatbot_state_id    = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
+    chatbot_state_id = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
     targeting_survey_id = db.Column(db.Integer, db.ForeignKey('targeting_survey.id'))
 
     default_organisation_id = db.Column(db.Integer, db.ForeignKey('organisation.id'))
-    default_organisation    = db.relationship('Organisation',
-                                              primaryjoin=Organisation.id==default_organisation_id,
-                                              lazy=True,
-                                              uselist=False)
+    default_organisation = db.relationship('Organisation',
+                                           primaryjoin=Organisation.id == default_organisation_id,
+                                           lazy=True,
+                                           uselist=False)
 
     # roles = db.relationship('UserRole', backref='user', lazy=True,
     #                              foreign_keys='UserRole.user_id')
@@ -100,11 +101,11 @@ class User(ManyOrgBase, ModelBase):
     kyc_applications = db.relationship('KycApplication', backref='user', lazy=True,
                                        foreign_keys='KycApplication.user_id')
 
-    devices          = db.relationship('DeviceInfo', backref='user', lazy=True)
+    devices = db.relationship('DeviceInfo', backref='user', lazy=True)
 
-    referrals        = db.relationship('Referral', backref='referring_user', lazy=True)
+    referrals = db.relationship('Referral', backref='referring_user', lazy=True)
 
-    transfer_card    = db.relationship('TransferCard', backref='user', lazy=True, uselist=False)
+    transfer_card = db.relationship('TransferCard', backref='user', lazy=True, uselist=False)
 
     credit_sends = db.relationship('CreditTransfer', backref='sender_user',
                                    lazy='dynamic', foreign_keys='CreditTransfer.sender_user_id')
@@ -112,10 +113,10 @@ class User(ManyOrgBase, ModelBase):
     credit_receives = db.relationship('CreditTransfer', backref='recipient_user',
                                       lazy='dynamic', foreign_keys='CreditTransfer.recipient_user_id')
 
-    ip_addresses     = db.relationship('IpAddress', backref='user', lazy=True)
+    ip_addresses = db.relationship('IpAddress', backref='user', lazy=True)
 
-    feedback            = db.relationship('Feedback', backref='user',
-                                          lazy='dynamic', foreign_keys='Feedback.user_id')
+    feedback = db.relationship('Feedback', backref='user',
+                               lazy='dynamic', foreign_keys='Feedback.user_id')
 
     @hybrid_property
     def phone(self):
@@ -234,7 +235,6 @@ class User(ManyOrgBase, ModelBase):
     def vendor_tier(self):
         return self._held_roles.get('VENDOR', None)
 
-
     # These two are here to interface with the mobile API
     @hybrid_property
     def is_vendor(self):
@@ -276,14 +276,13 @@ class User(ManyOrgBase, ModelBase):
         else:
             self._last_seen = cur_time
 
-
     def hash_password(self, password):
         self.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
     def verify_password(self, password):
         return bcrypt.checkpw(password.encode(), self.password_hash.encode())
 
-    def encode_TFA_token(self, valid_days = 1):
+    def encode_TFA_token(self, valid_days=1):
         """
         Generates the Auth Token for TFA
         :return: string
@@ -348,7 +347,8 @@ class User(ManyOrgBase, ModelBase):
 
     def encode_single_use_JWS(self, token_type):
 
-        s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'], expires_in=current_app.config['TOKEN_EXPIRATION'])
+        s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'],
+                                            expires_in=current_app.config['TOKEN_EXPIRATION'])
 
         return s.dumps({'id': self.id, 'type': token_type}).decode("utf-8")
 
@@ -442,6 +442,20 @@ class User(ManyOrgBase, ModelBase):
 
         self.hash_password(pin)
 
+    # TODO(ussd): change to a field, whether on User or a related table like UserPreference
+    def preferred_language(self):
+        return "en_AU"
+
+    # TODO(ussd): change to a field once we figure out what's the deal with reset_token
+    def is_resetting(self):
+        return False
+
+    # TODO(ussd): change to a field once we figure out what's the deal with resetting
+    def pin_failed_attempts(self):
+        return 0
+
+    def user_details(self):
+        "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
