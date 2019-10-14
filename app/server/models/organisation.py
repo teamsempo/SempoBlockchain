@@ -1,77 +1,11 @@
-from sqlalchemy import event, inspect
-from sqlalchemy.orm.query import Query
-from flask import g, current_app
+from flask import current_app
 
 from server import db
-from server.exceptions import (
-    OrganisationNotProvidedException
-)
 from server.utils.blockchain_tasks import (
     create_blockchain_wallet
 )
-from server.models.utils import ModelBase, OneOrgBase, ManyOrgBase, organisation_association_table
+from server.models.utils import ModelBase, organisation_association_table
 
-@event.listens_for(Query, "before_compile", retval=True)
-def before_compile(query):
-    """A query compilation rule that will add limiting criteria for every
-    subclass of OrgBase"""
-
-    show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
-    if show_all:
-        return query
-
-    for ent in query.column_descriptions:
-        entity = ent['entity']
-        if entity is None:
-            continue
-        insp = inspect(ent['entity'])
-        mapper = getattr(insp, 'mapper', None)
-
-        # if the subclass OrgBase exists, then filter by organisations - else, return default query
-        if mapper:
-            if issubclass(mapper.class_, ManyOrgBase) or issubclass(mapper.class_, OneOrgBase):
-
-                try:
-                    # member_organisations = getattr(g, "member_organisations", [])
-                    active_organisation = getattr(g, "active_organisation_id", None)
-                    member_organisations = [active_organisation] if active_organisation else []
-
-                    if issubclass(mapper.class_, ManyOrgBase):
-                        # filters many-to-many
-                        query = query.enable_assertions(False).filter(
-                            ent['entity'].organisations.any(Organisation.id.in_(member_organisations))
-                        )
-                    else:
-                        query = query.enable_assertions(False).filter(
-                            ent['entity'].organisation_id == active_organisation
-                        )
-
-                except AttributeError:
-                    raise
-
-                except TypeError:
-                    raise OrganisationNotProvidedException('Must provide organisation ID or specify SHOW_ALL flag')
-
-            elif issubclass(mapper.class_, OneOrgBase):
-                # must filter directly on query
-                raise OrganisationNotProvidedException('{} has a custom org base. Must filter directly on query'.format(ent['entity']))
-
-    return query
-
-# the recipe has a few holes in it, unfortunately, including that as given,
-# it doesn't impact the JOIN added by joined eager loading.   As a guard
-# against this and other potential scenarios, we can check every object as
-# its loaded and refuse to continue if there's a problem
-
-# @event.listens_for(OrgBase, "load", propagate=True)
-# def load(obj, context):
-# todo: need to actually make this work...
-#  if not obj.organisations and not context.query._execution_options.get("show_all", False):
-#     raise TypeError(
-#         "organisation object %s was incorrectly loaded, did you use "
-#         "joined eager loading?" % obj)
-
-# todo: see if we can dynamically generate org relationships from mapper args??
 class Organisation(ModelBase):
     """
     Establishes organisation object that resources can be associated with.

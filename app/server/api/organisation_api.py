@@ -3,7 +3,8 @@ from flask.views import MethodView
 
 from server import db
 from server.models.organisation import Organisation
-from server.models.models import paginate_query, Token
+from server.models.models import Token
+from server.models.utils import paginate_query
 from server.models.user import User
 from server.models.transfer_account import TransferAccount
 from server.schemas import organisation_schema, organisations_schema

@@ -3,7 +3,8 @@ from flask.views import MethodView
 from sqlalchemy import or_
 
 from server import db
-from server.models.models import paginate_query, Token
+from server.models.models import Token
+from server.models.utils import paginate_query
 from server.models.credit_transfer import CreditTransfer, BlockchainTransaction
 from server.models.transfer_account import BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
