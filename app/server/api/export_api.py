@@ -6,7 +6,8 @@ import random, string, os
 from sqlalchemy import and_, or_
 from dateutil import parser
 
-from server.models.transfer import CreditTransfer, TransferTypeEnum, TransferStatusEnum
+from server.models.credit_transfer import CreditTransfer
+from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
 from server.models.user import User
 from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import upload_local_file_to_s3

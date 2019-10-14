@@ -1,6 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
-from server.models.transfer import TransferCard
+from server.models.transfer_card import TransferCard
 from server.utils.auth import requires_auth
 from server.schemas import transfer_cards_schema
 from server import db

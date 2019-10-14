@@ -1,6 +1,7 @@
 from flask import current_app
 from sqlalchemy import or_, and_
-from server.models.transfer import TransferAccount, CreditTransfer
+from server.models.transfer_account import TransferAccount
+from server.models.credit_transfer import CreditTransfer
 from server.models.feedback import Feedback
 from server.models.user import User
 

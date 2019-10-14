@@ -90,7 +90,9 @@ if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
 
 
 IS_TEST = specific_parser['APP'].getboolean('IS_TEST', False)
-IS_PRODUCTION = specific_parser['APP'].getboolean('IS_PRODUCTION', True)
+IS_PRODUCTION = specific_parser['APP'].getboolean('IS_PRODUCTION')
+if IS_PRODUCTION is None:
+    raise KeyError("IS_PRODUCTION key not found")
 
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']

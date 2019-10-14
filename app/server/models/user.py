@@ -11,7 +11,9 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
-from server.models.models import Organisation, BlacklistToken
+from server.models.organisation import Organisation
+from server.models.models import BlacklistToken
+from server.models.transfer_card import TransferCard
 from server.exceptions import (
     RoleNotFoundException,
     TierNotFoundException,
@@ -20,18 +22,6 @@ from server.exceptions import (
 from server.constants import (
     ACCESS_ROLES
 )
-
-# TODO(refactor): circular dependency when in util.user
-def get_transfer_card(public_serial_number):
-    from server.models.transfer import TransferCard
-    transfer_card = TransferCard.query.filter_by(
-        public_serial_number=public_serial_number).first()
-
-    if not transfer_card:
-        raise NoTransferCardError("No transfer card found for public serial number {}"
-                                  .format(public_serial_number))
-
-    return transfer_card
 
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
@@ -144,7 +134,7 @@ class User(ManyOrgBase, ModelBase):
         self._public_serial_number = public_serial_number
 
         try:
-            transfer_card = get_transfer_card(public_serial_number)
+            transfer_card = TransferCard.get_transfer_card(public_serial_number)
 
             if transfer_card.user_id is None and transfer_card.nfc_serial_number is not None:
                 # Card hasn't been used before, and has a nfc number attached

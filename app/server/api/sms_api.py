@@ -10,7 +10,7 @@ import hashlib
 from server import db
 from server.utils.chatbot_controller import MessageProcessor, bind_fb_psid_to_account
 from server.utils.phone import make_sms_respone, send_messagebird_message
-from server.models.transfer import TransferAccount
+from server.models.transfer_account import TransferAccount
 
 sms_blueprint = Blueprint('sms', __name__)
 

@@ -1,7 +1,6 @@
 import hashlib
 import hmac
 import time
-
 from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func
 import datetime, json
@@ -10,13 +9,14 @@ from server.exceptions import NoTransferAccountError, UserNotFoundError, Insuffi
     InvalidTargetBalanceError, BlockchainError
 from server import db, sentry, red
 from server.models.models import TransferUsage
-from server.models.transfer import CreditTransfer, TransferTypeEnum, TransferAccount, BlockchainTransaction, BlockchainAddress
+from server.models.transfer_account import TransferAccount, BlockchainAddress
+from server.models.credit_transfer import CreditTransfer, BlockchainTransaction
 from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.blockchain_tasks import get_wallet_balance
-
+from server.utils.transfer_enums import TransferTypeEnum
 
 def calculate_transfer_stats(total_time_series=False):
 
@@ -543,7 +543,6 @@ def transfer_credit_via_phone(send_phone, receive_phone, transfer_amount):
     if send_user.transfer_account.balance < transfer_amount:
         return {'status': 'Fail', 'message': "Insufficient Funds"}
 
-    # TODO(refactor): removed token as second argument since it doesn't exist... where was it before?
     transfer = make_payment_transfer(transfer_amount, send_user, receive_user)
 
     return {
