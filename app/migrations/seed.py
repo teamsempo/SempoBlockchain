@@ -1,5 +1,5 @@
 """
-Migration code from GE - need to translate to Python
+TODO(ussd): Migration code from GE - need to translate to Python
 
 CommunityToken.where(name: 'Gatina').first_or_create! do |c|
   c.name = 'Gatina'
@@ -260,51 +260,6 @@ UssdMenu.where(name: 'directory_listing').first_or_create! do |u|
 7. Mazingira
 8. Usafiri
 9. Mfanyakazi'
-  u.parent_id = start_menu.id
-end
-
-puts 'Creating convert token menu...'
-UssdMenu.where(name: 'convert_token_from').first_or_create! do |u|
-  u.name = 'convert_token_from'
-  u.description = 'From Token selection before conversion'
-  u.display_text_en = 'CON Select Token you want to use to trade: %tokens%
-0. Back'
-  u.parent_id = start_menu.id
-end
-
-UssdMenu.where(name: 'convert_token_amount').first_or_create! do |u|
-  u.name = 'convert_token_amount'
-  u.description = 'Convert Token amount prompt menu'
-  u.display_text_en = 'CON Enter Amount to convert
-0. Back'
-  u.parent_id = start_menu.id
-end
-
-UssdMenu.where(name: 'convert_token_to').first_or_create! do |u|
-  u.name = 'convert_token_to'
-  u.description = 'To Token selection before conversion'
-  u.display_text_en = 'CON Select Token to convert to: %tokens%
-0. Back'
-  u.parent_id = start_menu.id
-end
-
-UssdMenu.where(name: 'convert_token_pin_authorization').first_or_create! do |u|
-  u.name = 'convert_token_pin_authorization'
-  u.description = 'PIN entry for authorization to send token'
-  u.display_text_en = 'CON Please enter your PIN. %remaining_attempts%
-0. Back'
-  u.display_text_sw = 'CON Tafadhali ingiza PIN yako. %remaining_attempts%
-0. Nyuma'
-  u.parent_id = start_menu.id
-end
-
-UssdMenu.where(name: 'convert_token_confirmation').first_or_create! do |u|
-  u.name = 'convert_token_confirmation'
-  u.description = 'Convert Token confirmation menu'
-  u.display_text_en = 'CON Convert %transaction_amount% %from_token% to %to_token%
-1. Confirm
-2. Cancel
-0. Back'
   u.parent_id = start_menu.id
 end
 

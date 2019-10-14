@@ -446,6 +446,17 @@ class User(ManyOrgBase, ModelBase):
     def preferred_language(self):
         return "en_AU"
 
+    # TODO(ussd): change to a field once we figure out what's the deal with reset_token
+    def is_resetting(self):
+        return False
+
+    # TODO(ussd): change to a field once we figure out what's the deal with resetting
+    def pin_failed_attempts(self):
+        return 0
+
+    def user_details(self):
+        "{} {} {}".format(self.first_name, self.last_name, self.phone)
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         self.secret = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
