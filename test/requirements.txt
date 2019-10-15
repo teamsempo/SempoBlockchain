@@ -1,0 +1,2 @@
+pytest==4.6.3
+factory_boy==2.12.0

@@ -4,8 +4,9 @@ RUN apt update \
   && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
 
 COPY ./app/requirements.txt /
+COPY ./test/requirements.txt /test_requirements.txt
 
-RUN cd / && pip install -r requirements.txt
+RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
 
@@ -17,7 +18,6 @@ ADD ./app/RedisQueue.py /src
 ADD ./app/_docker_app_script.sh /
 ADD ./test /src/test
 ADD ./invoke_tests.py /src
-
 
 WORKDIR /
 
