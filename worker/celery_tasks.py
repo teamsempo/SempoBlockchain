@@ -41,7 +41,7 @@ elif config.ETH_CONTRACT_TYPE == 'mintable':
     expected_contract_name = config.ETH_CONTRACT_NAME
 
     blockchain_processor = MintableERC20Processor(**ERC20_config)
-    blockchain_processor.check_for_correct_contract(expected_contract_name)
+    blockchain_processor.check_contract_name(expected_contract_name)
 
 elif config.ETH_CONTRACT_TYPE == 'ccv':
     print('~~~USING CCV~~~')
@@ -295,8 +295,8 @@ def geolocate_address(geo_task):
                                 'lat': geo_result.get('lat'),
                                 'lng': geo_result.get('lng')
                                 },
-                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                             config.BASIC_AUTH_PASSWORD))
+                          auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                             config.INTERNAL_AUTH_PASSWORD))
 
 
 @celery_app.task()
@@ -310,8 +310,8 @@ def ip_location(ip_task):
                           json={'ip_address_id': ip_result.get('ip_address_id'),
                                 'country': ip_result.get('country'),
                                 },
-                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                             config.BASIC_AUTH_PASSWORD))
+                          auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                             config.INTERNAL_AUTH_PASSWORD))
 
 
 @celery_app.task()
@@ -324,8 +324,8 @@ def check_for_duplicate_person(image_name, image_id):
     if len(rekognised_faces) > 0:
         r = requests.put(app_host + '/api/recognised_face/',
                          json={'image_id': image_id, 'recognised_faces': rekognised_faces},
-                         auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                            config.BASIC_AUTH_PASSWORD)
+                         auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                            config.INTERNAL_AUTH_PASSWORD)
                          )
 
     upload_resp = rekogniser.upload_face(image_name, image_id)
@@ -333,7 +333,6 @@ def check_for_duplicate_person(image_name, image_id):
     if upload_resp['success']:
         r = requests.post(app_host + '/api/recognised_face/',
                           json={'image_id': image_id, 'roll': upload_resp['roll']},
-                          auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                             config.BASIC_AUTH_PASSWORD)
+                          auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                             config.INTERNAL_AUTH_PASSWORD)
                           )
-

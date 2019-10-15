@@ -39,8 +39,8 @@ class BaseERC20Processor(ABC):
         r = requests.post(config.APP_HOST + '/api/blockchain_transaction/',
                          json={'signing_address': signing_address,
                                'network_nonce': network_nonce},
-                         auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                            config.BASIC_AUTH_PASSWORD))
+                         auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                            config.INTERNAL_AUTH_PASSWORD))
 
         json = r.json()
 
@@ -302,7 +302,7 @@ class BaseERC20Processor(ABC):
             self.ethereum_chain_id = int(ethereum_chain_id)
 
             self.w3 = Web3(HTTPProvider(http_provider))
-            self.wsw3 = Web3(WebsocketProvider(websocket_provider))
+            # self.wsw3 = Web3(WebsocketProvider(websocket_provider))
 
             self.contract = self.w3.eth.contract(address=self.contract_address, abi=self.abi_dict)
             self.decimals = self.get_decimals()

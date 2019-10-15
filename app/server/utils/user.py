@@ -1,21 +1,23 @@
-import threading, re
+import threading
 from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app
+from eth_utils import to_checksum_address
 
-from server import db, models
+from server import db
+from server.models.device_info import DeviceInfo
+from server.models.upload import UploadedImage
+from server.models.user import User
+from server.models.transfer_card import TransferCard
+from server.models.transfer_account import TransferAccount, BlockchainAddress
 from server.schemas import user_schema
-from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES, CREATE_USER_SETTINGS
-from server.exceptions import NoTransferCardError
+from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
+from server.exceptions import PhoneVerificationError
 from server import celery_app, sentry
 from server.utils import credit_transfers as CreditTransferUtils
-from server.utils.phone import proccess_phone_number, send_onboarding_message
+from server.utils.phone import proccess_phone_number, send_onboarding_message, send_phone_verification_message
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
-from server.utils.misc import elapsed_time
-
-from ethereum import utils
-
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
 
@@ -54,28 +56,28 @@ def find_user_from_public_identifier(*public_identifiers):
         if public_identifier is None:
             continue
 
-        user = models.User.query.filter_by(email=str(public_identifier).lower()).first()
+        user = User.query.execution_options(show_all=True).filter_by(email=str(public_identifier).lower()).first()
         if user:
             continue
 
         try:
-            user = models.User.query.filter_by(phone=proccess_phone_number(public_identifier)).first()
+            user = User.query.execution_options(show_all=True).filter_by(phone=proccess_phone_number(public_identifier)).first()
             if user:
                 continue
         except NumberParseException:
             pass
 
-        user = models.User.query.filter_by(public_serial_number=str(public_identifier).lower()).first()
+        user = User.query.execution_options(show_all=True).filter_by(public_serial_number=str(public_identifier).lower()).first()
         if user:
             continue
 
-        user = models.User.query.filter_by(nfc_serial_number=public_identifier.upper()).first()
+        user = User.query.execution_options(show_all=True).filter_by(nfc_serial_number=public_identifier.upper()).first()
         if user:
             continue
 
         try:
-            checksummed = utils.checksum_encode(public_identifier)
-            blockchain_address = models.BlockchainAddress.query.filter_by(address=checksummed).first()
+            checksummed = to_checksum_address(public_identifier)
+            blockchain_address = BlockchainAddress.query.filter_by(address=checksummed).first()
 
             if blockchain_address and blockchain_address.transfer_account:
                 user = blockchain_address.transfer_account.primary_user
@@ -86,18 +88,6 @@ def find_user_from_public_identifier(*public_identifiers):
             pass
 
     return user
-
-
-def get_transfer_card(public_serial_number):
-    transfer_card = models.TransferCard.query.filter_by(
-        public_serial_number=public_serial_number).first()
-
-    if not transfer_card:
-        raise NoTransferCardError("No transfer card found for public serial number {}"
-                                  .format(public_serial_number))
-
-    return transfer_card
-
 
 def update_transfer_account_user(user,
                                  first_name=None, last_name=None,
@@ -122,24 +112,32 @@ def update_transfer_account_user(user,
         user.location = location
 
     if use_precreated_pin:
-        transfer_card = get_transfer_card(public_serial_number)
+        transfer_card = TransferCard.get_transfer_card(public_serial_number)
 
         user.set_pin(transfer_card.PIN)
 
-    is_supervendor = True if is_vendor and not existing_transfer_account else False
+    if not is_vendor:
+        vendor_tier = None
+    elif existing_transfer_account:
+        vendor_tier = 'vendor'
+    else:
+        vendor_tier = 'supervendor'
 
-    user.is_vendor = is_vendor
-    user.is_beneficiary = is_beneficiary
-    user.is_supervendor = is_supervendor
+    user.set_held_role('VENDOR', vendor_tier)
+
+    if is_beneficiary:
+        user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if existing_transfer_account:
-        user.transfer_account = existing_transfer_account
+        user.transfer_accounts.append(existing_transfer_account)
 
     return user
 
 
 def create_transfer_account_user(first_name=None, last_name=None,
                                  phone=None, email=None, public_serial_number=None,
+                                 organisation=None,
+                                 token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
                                  location=None,
@@ -147,19 +145,25 @@ def create_transfer_account_user(first_name=None, last_name=None,
                                  use_last_4_digits_of_id_as_initial_pin = False,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
-                                 is_vendor=False):
+                                 is_vendor=False,
+                                 is_self_sign_up=False):
 
-    user = models.User(first_name=first_name,
+    user = User(first_name=first_name,
                        last_name=last_name,
                        phone=phone,
                        email=email,
-                       public_serial_number=public_serial_number)
+                       public_serial_number=public_serial_number,
+                       is_self_sign_up=is_self_sign_up)
 
     precreated_pin = None
     is_activated = False
 
+    try:
+        transfer_card = TransferCard.get_transfer_card(public_serial_number)
+    except Exception as e:
+        transfer_card = None
+
     if use_precreated_pin:
-        transfer_card = get_transfer_card(public_serial_number)
         precreated_pin = transfer_card.PIN
         is_activated = True
 
@@ -169,27 +173,41 @@ def create_transfer_account_user(first_name=None, last_name=None,
 
     user.set_pin(precreated_pin, is_activated)
 
-    is_supervendor = True if is_vendor and not existing_transfer_account else False
+    if not is_vendor:
+        vendor_tier = None
+    elif existing_transfer_account:
+        vendor_tier = 'vendor'
+    else:
+        vendor_tier = 'supervendor'
 
-    user.is_vendor = is_vendor
-    user.is_beneficiary = is_beneficiary
-    user.is_supervendor = is_supervendor
+    user.set_held_role('VENDOR', vendor_tier)
+
+    if is_beneficiary:
+        user.set_held_role('BENEFICIARY', 'beneficiary')
+
+    if organisation:
+        user.organisations.append(organisation)
 
     db.session.add(user)
 
     if existing_transfer_account:
-        user.transfer_account = existing_transfer_account
+        user.transfer_accounts.append(existing_transfer_account)
     else:
 
-        transfer_account = models.TransferAccount(blockchain_address=blockchain_address)
+        transfer_account = TransferAccount(blockchain_address=blockchain_address, organisation=organisation)
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
+        user.transfer_accounts.append(transfer_account)
 
-        user.transfer_account = transfer_account
+        if transfer_card:
+            transfer_account.transfer_card = transfer_card
 
-    if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS']:
-        user.transfer_account.approve()
+        if token:
+            transfer_account.token = token
+
+        if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
+            transfer_account.approve()
 
     return user
 
@@ -198,10 +216,10 @@ def save_device_info(device_info, user):
 
     add_device = False
 
-    if device_info['serialNumber'] and not models.DeviceInfo.query.filter_by(serial_number=device_info['serialNumber']).first():
+    if device_info['serialNumber'] and not DeviceInfo.query.filter_by(serial_number=device_info['serialNumber']).first():
         # Add the device if the serial number is defined, and isn't already in db
         add_device = True
-    elif not device_info['serialNumber'] and not models.DeviceInfo.query.filter_by(unique_id=device_info['uniqueID']).first():
+    elif not device_info['serialNumber'] and not DeviceInfo.query.filter_by(unique_id=device_info['uniqueId']).first():
         # Otherwise add the device if the serial number is NOT defined unique id isn't already in db.
         # This means that where serial number is defined but unique id is different, we DO NOT add
         # (because unique ids can change under some circumstances, so they say)
@@ -209,10 +227,10 @@ def save_device_info(device_info, user):
 
     if add_device:
 
-        device = models.DeviceInfo()
+        device = DeviceInfo()
 
         device.serial_number    = device_info['serialNumber']
-        device.unique_id        = device_info['uniqueID']
+        device.unique_id        = device_info['uniqueId']
         device.brand            = device_info['brand']
         device.model            = device_info['model']
         device.width            = device_info['width']
@@ -247,7 +265,7 @@ def set_custom_attributes(attribute_dict, user):
 
                 new_filename = generate_new_filename(submitted_filename, type, 'KOBO')
 
-                uploaded_image = models.UploadedImage(filename=new_filename, image_type=type)
+                uploaded_image = UploadedImage(filename=new_filename, image_type=type)
 
                 uploaded_image.user = user
 
@@ -282,67 +300,32 @@ def set_custom_attributes(attribute_dict, user):
     return default_attributes, custom_attributes
 
 
-def force_attribute_dict_keys_to_lowercase(attribute_dict):
-    return dict(zip(map(str.lower, attribute_dict.keys()), attribute_dict.values()))
-
-def apply_settings(attribute_dict):
-    for setting in CREATE_USER_SETTINGS:
-        if setting not in attribute_dict:
-            stored_setting = models.Settings.query.filter_by(name=setting).first()
-
-            if stored_setting is not None:
-                attribute_dict[setting] = stored_setting.value
-
-    return attribute_dict
-
-def convert_yes_no_string_to_bool(test_string):
-    if str(test_string).lower() in ["yes", "true"]:
-        return True
-    elif str(test_string).lower() in ["no", "false"]:
-        return False
-    else:
-        return test_string
-
-def truthy_all_dict_values(attribute_dict):
-    return dict(zip(attribute_dict.keys(), map(convert_yes_no_string_to_bool, attribute_dict.values())))
-
-def return_index_of_slash_or_neg1(string):
+def send_one_time_code(phone, user):
     try:
-        return str(string).index("/")
-    except ValueError:
-        return -1
+        send_phone_verification_message(to_phone=phone, one_time_code=user.one_time_code)
+
+    except Exception as e:
+        raise PhoneVerificationError('Something went wrong. ERROR: {}'.format(e))
 
 
-def remove_whitespace_from_string(maybe_string):
-    if isinstance(maybe_string,str):
-        return re.sub(r'[\t\n\r]', '', maybe_string)
-    else:
-        return maybe_string
+def proccess_create_or_modify_user_request(attribute_dict,
+                                           organisation=None,
+                                           allow_existing_user_modify=False,
+                                           is_self_sign_up=False):
 
-def strip_kobo_preslashes(attribute_dict):
-    return dict(zip(map(lambda key: key[return_index_of_slash_or_neg1(key) + 1:], attribute_dict.keys()), attribute_dict.values()))
+    """
+    Takes a create or modify user request and determines the response. Normally what's in the top level API function,
+    but here it's one layer down because there's multiple entry points for 'create user':
+    - The admin api
+    - The register api
 
-def strip_whitespace_characters(attribute_dict):
-    return dict(zip(map(remove_whitespace_from_string,attribute_dict.keys()), map(remove_whitespace_from_string, attribute_dict.values())))
+    :param attribute_dict: attributes that can be supplied by the request maker
+    :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
+    :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
+    :param is_self_sign_up: does the request come from the register api?
+    :return: An http response
+    """
 
-def proccess_attribute_dict(attribute_dict,
-                            force_dict_keys_lowercase=False,
-                            allow_existing_user_modify=False,
-                            require_transfer_card_exists=False):
-    elapsed_time('1.0 Start')
-
-    if force_dict_keys_lowercase:
-        attribute_dict = force_attribute_dict_keys_to_lowercase(attribute_dict)
-
-    attribute_dict = strip_kobo_preslashes(attribute_dict)
-
-    attribute_dict = apply_settings(attribute_dict)
-
-    attribute_dict = truthy_all_dict_values(attribute_dict)
-
-    attribute_dict = strip_whitespace_characters(attribute_dict)
-
-    elapsed_time('2.0 Post Processing')
 
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
@@ -354,13 +337,16 @@ def proccess_attribute_dict(attribute_dict,
     if not blockchain_address and provided_public_serial_number:
 
         try:
-            blockchain_address = utils.checksum_encode(provided_public_serial_number)
+            blockchain_address = to_checksum_address(provided_public_serial_number)
 
             # Since it's actually an ethereum address set the provided public serial number to None
             # so it doesn't get used as a transfer card
             provided_public_serial_number = None
         except Exception:
             pass
+
+
+    require_transfer_card_exists = attribute_dict.get('require_transfer_card_exists', True)
 
     public_serial_number = (provided_public_serial_number
                             or attribute_dict.get('payment_card_qr_code')
@@ -397,7 +383,8 @@ def proccess_attribute_dict(attribute_dict,
     if isinstance(phone,bool):
         phone = None
 
-    if phone:
+    if phone and not is_self_sign_up:
+        # phone has already been parsed if self sign up
         try:
             phone = proccess_phone_number(phone)
         except NumberParseException as e:
@@ -439,7 +426,7 @@ def proccess_attribute_dict(attribute_dict,
         public_serial_number = str(public_serial_number)
 
         if use_precreated_pin or require_transfer_card_exists:
-            transfer_card = models.TransferCard.query.filter_by(
+            transfer_card = TransferCard.query.filter_by(
                 public_serial_number=public_serial_number).first()
 
             if not transfer_card:
@@ -481,68 +468,60 @@ def proccess_attribute_dict(attribute_dict,
 
         return response_object, 200
 
-    elapsed_time('3.0 Ready to create')
-
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name,
         phone=phone, email=email, public_serial_number=public_serial_number,
+        organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
         location=location,
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin = use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
-        is_beneficiary=is_beneficiary, is_vendor=is_vendor
+        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up
     )
-
-    elapsed_time('4.0 Created')
 
     default_attributes, custom_attributes = set_custom_attributes(attribute_dict, user)
 
+    if is_self_sign_up and attribute_dict.get('deviceinfo', None) is not None:
+        save_device_info(device_info=attribute_dict.get('deviceinfo'), user=user)
+
     if custom_initial_disbursement:
-        try:
-            disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, user)
-        except Exception as e:
-            response_object = {'message': str(e)}
-            return response_object, 400
+        disbursement = CreditTransferUtils.make_disbursement_transfer(custom_initial_disbursement, organisation.token, user)
 
-    elapsed_time('5.0 Disbursement done')
-
+    # Location fires an async task that needs to know user ID
     db.session.flush()
 
     if location:
         user.location = location
 
-    if phone and current_app.config['ONBOARDING_SMS']:
-        try:
-            balance = user.transfer_account.balance
-            if isinstance(balance, int):
-                balance = balance / 100
+    if phone:
+        if is_self_sign_up:
+            send_one_time_code(phone=phone, user=user)
+            return {'message': 'User Created. Please verify phone number.','otp_verify': True}, 200
 
-            send_onboarding_message(
-                first_name=user.first_name,
-                to_phone=phone,
-                credits=balance,
-                one_time_code=user.one_time_code
-            )
-        except Exception as e:
-            print(e)
-            pass
+        elif current_app.config['ONBOARDING_SMS']:
+            try:
+                balance = user.transfer_account.balance
+                if isinstance(balance, int):
+                    balance = balance / 100
 
-    if user.one_time_code:
-        response_object = {
-            'message': 'User Created',
-            'data': {
-                'user': user_schema.dump(user).data
-            }
+                send_onboarding_message(
+                    first_name=user.first_name,
+                    to_phone=phone,
+                    credits=balance,
+                    one_time_code=user.one_time_code
+                )
+            except Exception as e:
+                print(e)
+                sentry.captureException()
+                pass
+
+    response_object = {
+        'message': 'User Created',
+        'data': {
+            'user': user_schema.dump(user).data
         }
-
-    else:
-        response_object = {
-            'message': 'User Created',
-            'data': {'user': user_schema.dump(user).data }
-        }
-
-    elapsed_time('6.0 Complete')
+    }
 
     return response_object, 200

@@ -59,14 +59,17 @@ def send_bank_transfer_email(email_address, charge_info):
 
     ses_email_handler(email_address, 'Sempo: Fund your wallet', textbody, htmlbody)
 
-def send_invite_email(email_address):
+def send_invite_email(invite, organisation):
 
     TEMPLATE_FILE = 'invite_email.txt'
     template = get_email_template(TEMPLATE_FILE)
-    email = parse.quote(email_address, safe='')
-    body = template.render(host=request.url_root, deployment=current_app.config['DEPLOYMENT_NAME'], email=email)
+    email = parse.quote(invite.email, safe='')
+    body = template.render(host=request.url_root,
+                           organisation_name=organisation.name,
+                           referral_code=invite.referral_code,
+                           email=email)
 
-    ses_email_handler(email_address, 'Sempo: Invite to Join!', body)
+    ses_email_handler(invite.email, 'Sempo: Invite to Join!', body)
 
 def send_export_email(file_url, email_address):
 
@@ -111,44 +114,45 @@ def ses_email_handler(recipient, subject, textbody, htmlbody = None):
     htmlbody = htmlbody or textbody
     charset = "UTF-8"
 
+    if not current_app.config['IS_TEST']:
 
-    # Create a new SES resource and specify a region.
-    client = boto3.client('ses',
-                        aws_access_key_id= current_app.config['AWS_SES_KEY_ID'],
-                        aws_secret_access_key=current_app.config['AWS_SES_SECRET'],
-                          region_name=awsregion)
+        # Create a new SES resource and specify a region.
+        client = boto3.client('ses',
+                            aws_access_key_id= current_app.config['AWS_SES_KEY_ID'],
+                            aws_secret_access_key=current_app.config['AWS_SES_SECRET'],
+                              region_name=awsregion)
 
-    # Try to send the email.
-    try:
-        #Provide the contents of the email.
-        response = client.send_email(
-            Destination={
-                'ToAddresses': [
-                    recipient,
-                ],
-            },
-            Message={
-                'Body': {
-                    'Html': {
-                        'Charset': charset,
-                        'Data': htmlbody,
+        # Try to send the email.
+        try:
+            #Provide the contents of the email.
+            response = client.send_email(
+                Destination={
+                    'ToAddresses': [
+                        recipient,
+                    ],
+                },
+                Message={
+                    'Body': {
+                        'Html': {
+                            'Charset': charset,
+                            'Data': htmlbody,
+                        },
+                        'Text': {
+                            'Charset': charset,
+                            'Data': textbody,
+                        },
                     },
-                    'Text': {
+                    'Subject': {
                         'Charset': charset,
-                        'Data': textbody,
+                        'Data': subject,
                     },
                 },
-                'Subject': {
-                    'Charset': charset,
-                    'Data': subject,
-                },
-            },
-            Source=sender,
-        )
+                Source=sender,
+            )
 
-        print(response)
-    # Display an error if something goes wrong.
-    except Exception as e:
-        print ("Error: ", e)
-    else:
-        print ("Email sent!")
+            print(response)
+        # Display an error if something goes wrong.
+        except Exception as e:
+            print ("Error: ", e)
+        else:
+            print ("Email sent!")

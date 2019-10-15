@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from server import db
-from server.models import TransferUsage
+from server.models.models import TransferUsage
 from server.exceptions import IconNotSupportedException
 from server.utils.auth import requires_auth
 
@@ -10,7 +10,7 @@ transfer_usage_blueprint = Blueprint('transfer_usage', __name__)
 
 class TransferUsageAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
 

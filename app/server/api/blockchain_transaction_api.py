@@ -1,8 +1,8 @@
-from flask import Blueprint, request, make_response, jsonify, g, session
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import basic_auth, db, celery_app
-from server.models import BlockchainTransaction, CreditTransfer
+from server import db, celery_app
+from server.models.credit_transfer import BlockchainTransaction, CreditTransfer
 from server.utils.blockchain_transaction import add_full_transaction_details, claim_nonce
 from server.utils.auth import requires_auth
 
@@ -10,7 +10,7 @@ blockchain_transaction_blueprint = Blueprint('make_blockchain_transaction', __na
 
 class BlockchainTransactionAPI(MethodView):
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def get(self):
         """
         :return: list of bitcoin transactions with outputs that have not yet been identified as spent
@@ -39,7 +39,7 @@ class BlockchainTransactionAPI(MethodView):
         return make_response(jsonify({'transactions': txn_dict})), 201
 
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
 
         post_data = request.get_json()
@@ -59,7 +59,7 @@ class BlockchainTransactionAPI(MethodView):
         return response, status_code
 
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def put(self):
         put_data = request.get_json()
 
@@ -112,7 +112,7 @@ class BlockchainTransactionRPC(MethodView):
 
                 return make_response(jsonify(response_object)), 404
 
-            blockchain_task = celery_app.signature('worker.celery_tasks.create_transaction_response',
+            blockchain_task = celery_app.signature('worker.celery_tasks.check_transaction_response',
                                                    kwargs={'previous_result': {'transaction_hash': transaction_hash},
                                                            'credit_transfer_id': credit_transfer_id
                                                            })

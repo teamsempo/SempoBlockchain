@@ -3,12 +3,13 @@ from flask.views import MethodView
 
 from server import basic_auth
 from server.utils.chatbot_controller import MessageProcessor
+from server.utils.auth import requires_auth
 
 whatsapp_blueprint = Blueprint('whatsapp', __name__)
 
 class ProcessWhatsAppAPI(MethodView):
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
         post_data = request.get_json()
 
@@ -19,12 +20,12 @@ class ProcessWhatsAppAPI(MethodView):
 
         reply = processor.process_message()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'reply': reply,
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 whatsapp_blueprint.add_url_rule(

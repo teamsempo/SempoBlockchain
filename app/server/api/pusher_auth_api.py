@@ -4,6 +4,7 @@ from flask.views import MethodView
 
 from server import pusher_client
 from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 
 pusher_auth_blueprint = Blueprint('pusher_auth', __name__)
 
@@ -16,7 +17,8 @@ class PusherAuthAPI(MethodView):
         channel = request.form['channel_name']
 
         if (channel == 'private-user-{}-{}'.format(current_app.config['DEPLOYMENT_NAME'], g.user.id)
-            or (g.user.is_admin and channel == current_app.config['PUSHER_ENV_CHANNEL'])):
+            or (AccessControl.has_suffient_role(g.user.roles,{'ADMIN': 'admin'})
+                and channel == current_app.config['PUSHER_ENV_CHANNEL'])):
 
             auth = pusher_client.authenticate(
                 channel=channel,
@@ -25,14 +27,14 @@ class PusherAuthAPI(MethodView):
 
             return make_response(jsonify(auth)), 200
         else:
-            responseObject = {
+            response_object = {
                 'message': 'channel {} not authorised'.format(channel)
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
 class PusherSuperAdminAuthAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
         auth = pusher_client.authenticate(
             channel=request.form['channel_name'],

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, Blueprint, current_app
 from server import basic_auth, celery_app
+from server.utils.auth import requires_auth
 import glob, os
 from pathlib import Path
 from celery import signature
@@ -67,6 +68,6 @@ def login(subroute):
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/whatsapp-sync/')
-@basic_auth.required
+@requires_auth(allowed_basic_auth_types=('internal'))
 def WhatsApp_sync():
     return render_template('WhatsAppQR.html', qr_code = whatsapp_q.get_info('whatsApp_qr_code').get('data'), status = whatsapp_q.get_info('whatsApp_status'))

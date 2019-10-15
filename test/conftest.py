@@ -1,40 +1,104 @@
 import pytest
-
 from flask import current_app
+
+import os
+import sys
+app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
+sys.path.append(app_dir)
+sys.path.append(os.getcwd())
+
 from server import create_app, db
+from server.utils.auth import get_complete_auth_token
 # from app.manage import manager
+
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
-
 
 @pytest.fixture(scope='function')
 def requires_auth(test_client):
     from server.utils.auth import requires_auth
     return requires_auth
 
+@pytest.fixture(scope='module')
+def create_blockchain_token(test_client, init_database):
+    from server.models.models import Token
+    token = Token(address='0xc1275b7de8af5a38a93548eb8453a498222c4ff2',
+                  name='BAR Token',
+                  symbol='BAR')
 
-@pytest.fixture(scope='function')
-def new_admin_user():
-    from server.models import User
+    db.session.add(token)
+    db.session.commit()
+
+    return token
+
+@pytest.fixture(scope='module')
+def create_organisation(test_client, init_database, create_blockchain_token):
+    from server.models.organisation import Organisation
+    organisation = Organisation(name='Sempo', token=create_blockchain_token)
+    db.session.add(organisation)
+    db.session.commit()
+    return organisation
+
+@pytest.fixture(scope='module')
+def new_sempo_admin_user():
+    from server.models.user import User
     user = User()
-    user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword')
+    user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
     return user
 
 
-@pytest.fixture(scope='function')
-def create_admin_user(test_client, init_database, new_admin_user):
-    db.session.add(new_admin_user)
+@pytest.fixture(scope='module')
+def create_unactivated_sempo_admin_user(test_client, init_database, new_sempo_admin_user, create_organisation):
+    db.session.add(new_sempo_admin_user)
+    new_sempo_admin_user.organisations.append(create_organisation)
 
     # Commit the changes for the users
     db.session.commit()
-    return new_admin_user
+
+    return new_sempo_admin_user
+
+@pytest.fixture(scope='module')
+def activated_sempo_admin_user(create_unactivated_sempo_admin_user):
+    """
+    Returns a sempo admin user that is activated but does NOT have TFA set up
+    """
+
+    create_unactivated_sempo_admin_user.is_activated = True
+    # Commit the changes for the users
+    db.session.commit()
+
+    return create_unactivated_sempo_admin_user
 
 
 @pytest.fixture(scope='module')
-def create_transfer_account_user(test_client, init_database):
+def authed_sempo_admin_user(create_unactivated_sempo_admin_user):
+    """
+    Returns a sempo admin user that is activated and has TFA set up
+    """
+
+    create_unactivated_sempo_admin_user.is_activated = True
+    create_unactivated_sempo_admin_user.set_TFA_secret()
+    create_unactivated_sempo_admin_user.TFA_enabled = True
+
+    # Commit the changes for the users
+    db.session.commit()
+
+    return create_unactivated_sempo_admin_user
+
+
+@pytest.fixture(scope='function')
+def complete_auth_token(authed_sempo_admin_user):
+    return get_complete_auth_token(authed_sempo_admin_user)
+
+
+@pytest.fixture(scope='module')
+def create_transfer_account_user(test_client, init_database, create_organisation):
     from server.utils.user import create_transfer_account_user
-    user = create_transfer_account_user(first_name='Tristan', last_name='Cole', phone='0401391419')
+    user = create_transfer_account_user(first_name='Transfer',
+                                        last_name='User',
+                                        phone='0400000000',
+                                        organisation=create_organisation)
     db.session.commit()
     return user
 
@@ -42,17 +106,15 @@ def create_transfer_account_user(test_client, init_database):
 @pytest.fixture(scope='module')
 def create_user_with_existing_transfer_account(test_client, init_database, create_transfer_account):
     from server.utils.user import create_transfer_account_user
-    user = create_transfer_account_user(first_name='Tristan', last_name='Cole',
-                                        phone='0401391419', existing_transfer_account=create_transfer_account)
+    user = create_transfer_account_user(first_name='Existing Transfer', last_name='User',
+                                        phone='0400000000', existing_transfer_account=create_transfer_account)
     db.session.commit()
     return user
 
-
 @pytest.fixture(scope='module')
 def new_transfer_account():
-    from server.models import TransferAccount
+    from server.models.transfer_account import TransferAccount
     return TransferAccount()
-
 
 @pytest.fixture(scope='module')
 def create_transfer_account(new_transfer_account):
@@ -67,19 +129,15 @@ def new_disbursement(create_transfer_account_user):
     return disbursement
 
 @pytest.fixture(scope='function')
-def new_credit_transfer(create_transfer_account_user):
-    from server.models import CreditTransfer
+def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
+    from server.models.credit_transfer import CreditTransfer
     credit_transfer = CreditTransfer(
-        amount=100, sender=create_transfer_account_user, recipient=create_transfer_account_user)
+        amount=100,
+        token=create_blockchain_token,
+        sender_user=create_transfer_account_user,
+        recipient_user=create_transfer_account_user
+    )
     return credit_transfer
-
-@pytest.fixture(scope='function')
-def new_credit_transfer(create_transfer_account_user):
-    from server.models import CreditTransfer
-    credit_transfer = CreditTransfer(
-        amount=100, sender=create_transfer_account_user, recipient=create_transfer_account_user)
-    return credit_transfer
-
 
 @pytest.fixture(scope='function')
 def create_credit_transfer(new_credit_transfer):
@@ -101,9 +159,9 @@ def save_device_info(test_client, init_database, create_transfer_account_user):
 
 
 @pytest.fixture(scope='function')
-def create_blacklisted_token(create_admin_user):
-    from server.models import BlacklistToken
-    auth_token = create_admin_user.encode_auth_token().decode()
+def create_blacklisted_token(authed_sempo_admin_user):
+    from server.models.models import BlacklistToken
+    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
     blacklist_token = BlacklistToken(token=auth_token)
     db.session.add(blacklist_token)
     db.session.commit()
@@ -112,7 +170,7 @@ def create_blacklisted_token(create_admin_user):
 
 @pytest.fixture(scope='function')
 def create_transfer_usage(test_client, init_database):
-    from server.models import TransferUsage
+    from server.models.models import TransferUsage
     transfer_usage = TransferUsage(name='Food', icon='food-apple', translations=dict(en='Food', fr='aliments'))
 
     db.session.add(transfer_usage)
@@ -121,10 +179,10 @@ def create_transfer_usage(test_client, init_database):
 
 
 @pytest.fixture(scope='function')
-def create_ip_address(create_admin_user):
-    from server.models import IpAddress
+def create_ip_address(authed_sempo_admin_user):
+    from server.models.ip_address import IpAddress
     ip_address = IpAddress(ip="210.18.192.196")
-    ip_address.user = create_admin_user
+    ip_address.user = authed_sempo_admin_user
     db.session.add(ip_address)
     db.session.commit()
     return ip_address

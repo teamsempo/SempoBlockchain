@@ -1,48 +1,108 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
-from server import db
-from server.models import KycApplication, BankAccount, UploadedDocument
+from server import db, sentry
+from server.models.models import BankAccount
+from server.models.kyc_application import KycApplication
+from server.models.upload import UploadedDocument
 from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 from server.schemas import kyc_application_schema, kyc_application_state_schema
 from server.constants import ALLOWED_FILE_EXTENSIONS
-from server.utils.amazon_s3 import save_to_s3_from_document, generate_new_filename
+from server.utils.amazon_s3 import save_to_s3_from_document, generate_new_filename, save_to_s3_from_image_base64
+from server.utils.slack_controller import post_verification_message
 
 kyc_application_blueprint = Blueprint('kyc_application', __name__)
 
+supported_countries = ['AU', 'TO', 'VU', 'NZ']
+supported_documents = {'AU': ['Passport', 'DrivingLicence'], 'TO': ['Passport', 'DrivingLicence', 'CustomerIdentificationCard', 'GovernmentID', 'GovernmentSuperannuationID', 'StudentUniversityID'], 'VU': ['Passport', 'DrivingLicence'], 'NZ': ['Passport', 'DrivingLicence', 'IdentityCard']}
+
+
+def handle_kyc_documents(data=None,document_country=None,document_type=None,kyc_details=None):
+    for (key, value) in data.items():
+        if set([key]).intersection(set(['document_front_base64', 'document_back_base64', 'selfie_base64'])) and value is not None:
+            try:
+                new_filename = generate_new_filename(original_filename="{}-{}.jpg".format(key, document_country), file_type='jpg')
+                save_to_s3_from_image_base64(image_base64=value, new_filename=new_filename)
+                uploaded_document = UploadedDocument(filename=new_filename, reference=document_type,
+                                                     user_filename=key)
+                db.session.add(uploaded_document)
+                # tie document to kyc application
+                uploaded_document.kyc_application_id = kyc_details.id
+            except Exception as e:
+                print(e)
+                sentry.captureException()
+                pass
+
 
 class KycApplicationAPI(MethodView):
-    @requires_auth(allowed_roles=['is_subadmin', 'is_admin', 'is_superadmin'])
+    @requires_auth
     def get(self, kyc_application_id):
 
-        # we only support MASTER (ngo) KYC application currently
-        business_details = KycApplication.query.filter_by(type='MASTER').first()
+        trulioo_countries = request.args.get('trulioo_countries', None)
+        trulioo_documents = request.args.get('trulioo_documents', None)
+        country = request.args.get('country', None)
 
-        if business_details is None:
-            response_object = {
-                'message': 'No business verification details found'
-            }
+        if trulioo_countries:
+            trulioo_countries = supported_countries
+            return make_response(jsonify({'message': 'Trulioo Countries', 'data': {'kyc_application': {'trulioo_countries': trulioo_countries}}})), 200
 
-            return make_response(jsonify(response_object)), 404
+        if trulioo_documents:
+            trulioo_documents = {country: supported_documents[country]}
+            return make_response(jsonify({'message': 'Trulioo Countries', 'data': {'kyc_application': {'trulioo_documents': trulioo_documents}}})), 200
 
-        if g.user.is_superadmin:
-            response_object = {
-                'message': 'Successfully loaded business verification details',
-                'data': {'kyc_application': kyc_application_schema.dump(business_details).data}
-            }
+        if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'subadmin'}):
+            # business account
 
-            return make_response(jsonify(response_object)), 200
+            # todo: fix this for multi-tenant
+            # we only support MASTER (ngo) KYC application currently
+            kyc_details = KycApplication.query.filter_by(type='MASTER').first()
 
-        # displays kyc_status state only.
+            if kyc_details is None:
+                response_object = {
+                    'message': 'No business verification details found'
+                }
+
+                return make_response(jsonify(response_object)), 404
+
+            if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
+                response_object = {
+                    'message': 'Successfully loaded business verification details',
+                    'data': {'kyc_application': kyc_application_schema.dump(kyc_details).data}
+                }
+
+                return make_response(jsonify(response_object)), 200
+
+        else:
+            # must be an individual (mobile) user account
+            kyc_details = KycApplication.query.filter_by(user_id=g.user.id).first()
+            if kyc_details is None:
+                return make_response(jsonify({'message': 'No KYC object found for user.', 'data': {'kyc_application': {}}}))
+
+        # displays kyc_status and kyc_actions state only.
         response_object = {
-            'message': 'Successfully loaded business verification details',
-            'data': {'kyc_application': kyc_application_state_schema.dump(business_details).data}
+            'message': 'Loaded KYC details',
+            'data': {'kyc_application': kyc_application_state_schema.dump(kyc_details).data}
         }
 
         return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth
     def put(self, kyc_application_id):
         put_data = request.get_json()
+
+        is_mobile = put_data.get('is_mobile')
+
+        # worker. trulioo response
+        kyc_application_id = put_data.get('kyc_application_id')
+        transaction_id = put_data.get('TransactionId')
+
+        # NEW kyc flow. Trulioo check.
+        type = put_data.get('type')
+        document_type = put_data.get('document_type')
+        document_country = put_data.get('document_country')
+        document_front_base64 = put_data.get('document_front_base64')  # image
+        document_back_base64 = put_data.get('document_back_base64')  # image
+        selfie_base64 = put_data.get('selfie_base64')  # image
 
         kyc_status = put_data.get('kyc_status')
         first_name = put_data.get('first_name')
@@ -61,73 +121,114 @@ class KycApplicationAPI(MethodView):
         postal_code = put_data.get('postal_code')
         beneficial_owners = put_data.get('beneficial_owners')
 
-        if kyc_application_id is None:
+        kyc_details = None
+
+        if type == 'INDIVIDUAL':
+            if document_type is None or document_country is None or document_front_base64 is None or selfie_base64 is None:
+                return make_response(jsonify({'message': 'Must provide correct parameters'})), 400
+
+            kyc_details = KycApplication.query.filter_by(user_id=g.user.id).first()
+            if kyc_details is None:
+                return make_response(jsonify({'message': 'No KYC object found'})), 400
+
+            kyc_details.kyc_attempts = kyc_details.kyc_attempts + 1
+
+            if kyc_details.kyc_attempts > 2:
+                # only allow two attempts
+                kyc_details.kyc_status = 'REJECTED'
+                db.session.commit()
+                return make_response(jsonify({'message': 'KYC attempts exceeded. Contact Support.'})), 400
+
+            kyc_details.kyc_status = 'PENDING'
+
+            if is_mobile:
+                # handle document upload to s3
+                handle_kyc_documents(data=put_data, document_country=document_country, document_type=document_type,
+                                     kyc_details=kyc_details)
+
+                # Post verification message to slack
+                post_verification_message(user=g.user)
+
             response_object = {
-                'message': 'Must provide business profile ID'
+                'message': 'Successfully Updated KYC Application.',
+                'data': {
+                    'kyc_application': kyc_application_schema.dump(kyc_details).data
+                }
             }
-            return make_response(jsonify(response_object)), 400
 
-        business = KycApplication.query.get(kyc_application_id)
+            return make_response(jsonify(response_object)), 200
 
-        if not business:
-            response_object = {
-                'message': 'Business Verification Profile not found'
-            }
-            return make_response(jsonify(response_object)), 404
+        if type == 'BUSINESS':
+            if g.user.is_superadmin is False:
+                return make_response(jsonify({'message': 'Must be a superadmin to edit KYC object'})), 401
 
-        # update business profile
-        if kyc_status:
-            business.kyc_status = kyc_status
-        if first_name:
-            business.first_name = first_name
-        if last_name:
-            business.last_name = last_name
-        if phone:
-            business.phone = phone
-        if business_legal_name:
-            business.business_legal_name = business_legal_name
-        if business_type:
-            business.business_type = business_type
-        if tax_id:
-            business.tax_id = tax_id
-        if website:
-            business.website = website
-        if date_established:
-            business.date_established = date_established
-        if country:
-            business.country = country
-        if street_address:
-            business.street_address = street_address
-        if street_address_2:
-            business.street_address_2 = street_address_2
-        if city:
-            business.city = city
-        if region:
-            business.region = region
-        if postal_code:
-            business.postal_code = postal_code
+            if kyc_application_id is None:
+                response_object = {
+                    'message': 'Must provide business profile ID'
+                }
+                return make_response(jsonify(response_object)), 400
 
-        if beneficial_owners is not None:
-            # filter empty beneficial owners
-            beneficial_owners = [owner for owner in beneficial_owners if (owner['full_name'].strip(' ', ) != '')]
+            kyc_details = KycApplication.query.get(kyc_application_id)
 
-        if beneficial_owners:
-            business.beneficial_owners = beneficial_owners
+            if not kyc_details:
+                response_object = {
+                    'message': 'Business Verification Profile not found'
+                }
+                return make_response(jsonify(response_object)), 404
 
-        db.session.commit()
+            # update business profile
+            if kyc_status:
+                kyc_details.kyc_status = kyc_status
+            if first_name:
+                kyc_details.first_name = first_name
+            if last_name:
+                kyc_details.last_name = last_name
+            if phone:
+                kyc_details.phone = phone
+            if business_legal_name:
+                kyc_details.business_legal_name = business_legal_name
+            if business_type:
+                kyc_details.business_type = business_type
+            if tax_id:
+                kyc_details.tax_id = tax_id
+            if website:
+                kyc_details.website = website
+            if date_established:
+                kyc_details.date_established = date_established
+            if country:
+                kyc_details.country = country
+            if street_address:
+                kyc_details.street_address = street_address
+            if street_address_2:
+                kyc_details.street_address_2 = street_address_2
+            if city:
+                kyc_details.city = city
+            if region:
+                kyc_details.region = region
+            if postal_code:
+                kyc_details.postal_code = postal_code
+
+            if beneficial_owners is not None:
+                # filter empty beneficial owners
+                beneficial_owners = [owner for owner in beneficial_owners if (owner['full_name'].strip(' ', ) != '')]
+
+            if beneficial_owners:
+                kyc_details.beneficial_owners = beneficial_owners
 
         response_object = {
             'message': 'Successfully Updated KYC Application.',
             'data': {
-                'kyc_application': kyc_application_schema.dump(business).data
+                'kyc_application': kyc_application_schema.dump(kyc_details).data
             }
         }
 
         return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth
     def post(self, kyc_application_id):
         post_data = request.get_json()
+
+        is_mobile = post_data.get('is_mobile')
 
         type = post_data.get('type')
         first_name = post_data.get('first_name')
@@ -146,41 +247,68 @@ class KycApplicationAPI(MethodView):
         postal_code = post_data.get('postal_code')
         beneficial_owners = post_data.get('beneficial_owners')
 
-        # check for existing business based on Legal Name and Tax ID.
-        business_details = KycApplication.query.filter_by(business_legal_name=business_legal_name, tax_id=tax_id).first()
+        document_type = post_data.get('document_type')
+        document_country = post_data.get('document_country')
+        document_front_base64 = post_data.get('document_front_base64')  # image
+        document_back_base64 = post_data.get('document_back_base64')  # image
+        selfie_base64 = post_data.get('selfie_base64')  # image
 
-        if business_details is not None:
-            response_object = {
-                'message': 'Business Verification profile already exists for business name: {} and tax ID: {}'.format(business_legal_name, tax_id)
-            }
+        if is_mobile:
 
-            return make_response(jsonify(response_object)), 400
+            # creation logic is handled after kyc object creation.
+            kyc_details = KycApplication.query.filter_by(user_id=g.user.id).first()
+            if kyc_details is not None:
+                return make_response(jsonify({'message': 'KYC details already exist'})), 400
 
-        if beneficial_owners is not None:
-            # filter empty beneficial owners
-            beneficial_owners = [owner for owner in beneficial_owners if(owner['full_name'].strip(' ',) != '')]
+            if document_type is None or document_country is None or document_front_base64 is None or selfie_base64 is None:
+                return make_response(jsonify({'message': 'Must provide correct parameters'})), 400
 
-        if g.user.is_superadmin:
-            type = 'MASTER'
+        elif type == 'BUSINESS':
 
-        create_business_details = KycApplication(
+            if g.user.is_superadmin is not True:
+                return make_response(jsonify({'message': 'Must be superadmin to create business KYC profile'})), 401
+
+            # check for existing business based on Legal Name and Tax ID.
+            business_details = KycApplication.query.filter_by(business_legal_name=business_legal_name, tax_id=tax_id).first()
+
+            if business_details is not None:
+                response_object = {
+                    'message': 'Business Verification profile already exists for business name: {} and tax ID: {}'.format(business_legal_name, tax_id)
+                }
+
+                return make_response(jsonify(response_object)), 400
+
+            if beneficial_owners is not None:
+                # filter empty beneficial owners
+                beneficial_owners = [owner for owner in beneficial_owners if(owner['full_name'].strip(' ',) != '')]
+
+        create_kyc_application = KycApplication(
             type=type,
-            first_name=first_name, last_name=last_name,
-            phone=phone, business_legal_name=business_legal_name,
+            first_name=first_name or g.user.first_name, last_name=last_name or g.user.last_name,
+            phone=phone or g.user.phone, business_legal_name=business_legal_name,
             business_type=business_type, tax_id=tax_id,
             website=website, date_established=date_established,
-            country=country, street_address=street_address,
+            country=country or document_country, street_address=street_address,
             street_address_2=street_address_2, city=city,
             region=region, postal_code=postal_code,
             beneficial_owners=beneficial_owners,
         )
 
-        db.session.add(create_business_details)
-        db.session.commit()
+        create_kyc_application.user = g.user
+        db.session.add(create_kyc_application)
+        db.session.flush()  # need this to create an ID
+
+        if is_mobile:
+            # handle document upload to s3
+            handle_kyc_documents(data=post_data, document_country=document_country, document_type=document_type,
+                                 kyc_details=create_kyc_application)
+
+            # Post verification message to slack
+            post_verification_message(user=g.user)
 
         response_object = {
-            'message': 'Business Verification profile created',
-            'data': {'kyc_application': kyc_application_schema.dump(create_business_details).data}
+            'message': 'KYC Application created',
+            'data': {'kyc_application': kyc_application_state_schema.dump(create_kyc_application).data}
         }
 
         return make_response(jsonify(response_object)), 201
@@ -192,7 +320,7 @@ def allowed_file(filename):
 
 
 class DocumentUploadAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
         reference = None
         kyc_application_id = None
@@ -237,8 +365,6 @@ class DocumentUploadAPI(MethodView):
         # tie document to kyc application
         uploaded_document.kyc_application_id = business_details.id
 
-        db.session.commit()
-
         response_object = {
             'message': 'Document uploaded',
             'data': {'kyc_application': kyc_application_schema.dump(business_details).data}
@@ -248,7 +374,7 @@ class DocumentUploadAPI(MethodView):
 
 
 class BankAccountAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self, bank_account_id):
         post_data = request.get_json()
 
@@ -298,7 +424,7 @@ class BankAccountAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, bank_account_id):
 
         put_data = request.get_json()
@@ -329,8 +455,6 @@ class BankAccountAPI(MethodView):
             bank_account.routing_number = routing_number
             bank_account.account_number = account_number
             bank_account.currency = currency
-
-        db.session.commit()
 
         response_object = {
             'message': 'Bank account edited',

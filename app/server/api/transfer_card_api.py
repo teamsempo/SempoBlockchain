@@ -1,6 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
-from server.models import TransferCard
+from server.models.transfer_card import TransferCard
 from server.utils.auth import requires_auth
 from server.schemas import transfer_cards_schema
 from server import db
@@ -30,39 +30,39 @@ class TransferCardAPI(MethodView):
         nfc_serial_number = post_data.get('nfc_serial_number')
 
         if not public_serial_number or not nfc_serial_number:
-            responseObject = {
+            response_object = {
                 'message': 'Missing Data',
             }
 
-            return make_response(jsonify(responseObject)), 400
+            return make_response(jsonify(response_object)), 400
 
         public_serial_number = re.sub(r'[\t\n\r]', '', public_serial_number)
 
 
         if TransferCard.query.filter_by(public_serial_number=public_serial_number).first():
-            responseObject = {
+            response_object = {
                 'message': 'Public Serial Number already used',
             }
 
-            return make_response(jsonify(responseObject)), 400
+            return make_response(jsonify(response_object)), 400
 
         if TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first():
-            responseObject = {
+            response_object = {
                 'message': 'NFC Serial Number already used',
             }
 
-            return make_response(jsonify(responseObject)), 400
+            return make_response(jsonify(response_object)), 400
 
         transfer_card = TransferCard(nfc_serial_number=nfc_serial_number, public_serial_number=public_serial_number)
 
         db.session.add(transfer_card)
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 transfer_cards_blueprint.add_url_rule(
     '/transfer_cards/',

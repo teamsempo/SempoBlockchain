@@ -93,7 +93,8 @@ const createStatus = (state = initialCreateStatusState, action) => {
         isRequesting: false,
         success: true,
         one_time_code: action.result.data.user.one_time_code,
-        has_private_key: action.result.data.user.transfer_account.blockchain_address.has_private_key
+        //TODO: Fix this to actually determine if private key is present
+        has_private_key: true
       };
 
     case CREATE_USER_FAILURE:

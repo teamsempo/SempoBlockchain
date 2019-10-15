@@ -1,13 +1,14 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from openpyxl import Workbook
-from openpyxl.compat import range
 from datetime import datetime, timedelta
 import random, string, os
 from sqlalchemy import and_, or_
 from dateutil import parser
 
-from server.models import TransferAccount, CreditTransfer, BlockchainAddress, TransferTypeEnum, TransferStatusEnum, User
+from server.models.credit_transfer import CreditTransfer
+from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
+from server.models.user import User
 from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import upload_local_file_to_s3
 from server.utils.date_magic import find_last_period_dates
@@ -16,7 +17,7 @@ from server.utils.amazon_ses import send_export_email
 export_blueprint = Blueprint('export', __name__)
 
 class ExportAPI(MethodView):
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
         post_data = request.get_json()
@@ -84,10 +85,10 @@ class ExportAPI(MethodView):
 
         # filter user accounts
         if user_type == 'beneficiary':
-            user_filter = User.is_beneficiary
+            user_filter = User.has_beneficiary_role
 
         if user_type == 'vendor':
-            user_filter = User.is_vendor
+            user_filter = User.has_vendor_role
 
         if date_range == 'all':
             end_date = datetime.utcnow()
@@ -261,23 +262,23 @@ class ExportAPI(MethodView):
 
             os.remove(local_save_path)
 
-            responseObject = {
+            response_object = {
                 'status': 'success',
                 'message': 'Export file created.',
                 'file_url': file_url,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         else:
             # return no data
-            responseObject = {
+            response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
                 'file_url': None,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
 
 class MeExportAPI(MethodView):
@@ -369,23 +370,23 @@ class MeExportAPI(MethodView):
 
             os.remove(local_save_path)
 
-            responseObject = {
+            response_object = {
                 'status': 'success',
                 'message': 'Export file created.',
                 'file_url': file_url,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         else:
             # return no data
-            responseObject = {
+            response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
                 'file_url': None,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
 
 # add Rules for API Endpoints

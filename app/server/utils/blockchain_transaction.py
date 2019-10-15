@@ -1,11 +1,13 @@
 from flask import make_response, jsonify, current_app
 from sqlalchemy import or_, and_
-from server.models import BlockchainTransaction, BlockchainAddress
+from server.models.credit_transfer import BlockchainTransaction
+from server.models.transfer_account import BlockchainAddress
 from server.exceptions import BlockchainError
 from server import db, celery_app, sentry
 import datetime
 import random
 import time
+
 
 def add_full_transaction_details(details_dict, method='POST', force_transaction_creation=False):
 
@@ -117,7 +119,7 @@ def claim_nonce(details_dict):
         # Occasionally two workers will hit the db at the same time and claim the same nonce
 
         expire_time = datetime.datetime.utcnow() - datetime.timedelta(
-            seconds=current_app.config['ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT'])
+            seconds=current_app.config['PENDING_TRANSACTION_EXPIRY_SECONDS'])
 
         clashed_nonces = (BlockchainTransaction.query
                           .filter(BlockchainTransaction.created > expire_time)
@@ -155,7 +157,7 @@ def claim_nonce(details_dict):
 def consecutive_success_or_pending_txn_count(singing_address_id, starting_nonce=0):
 
     expire_time = datetime.datetime.utcnow() - datetime.timedelta(
-        seconds=current_app.config['ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT'])
+        seconds=current_app.config['PENDING_TRANSACTION_EXPIRY_SECONDS'])
 
     successful_or_pending = (BlockchainTransaction.query
                              .filter(BlockchainTransaction.signing_blockchain_address_id == singing_address_id)

@@ -47,6 +47,7 @@ function* updateStateFromCreditTransfer(result) {
   }
 
   if (result.message === 'Transfer Successful') {
+    //TODO: More string comparisons!??!?!
     // a single transfer was just created!
     // we need to add the newly created credit_transfer id
     // to the associated transfer_account object credit_transfer array
@@ -64,7 +65,9 @@ function* updateStateFromCreditTransfer(result) {
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
 
-  yield put({type: UPDATE_CREDIT_TRANSFER_LIST, credit_transfers});
+  if (credit_transfers) {
+      yield put({type: UPDATE_CREDIT_TRANSFER_LIST, credit_transfers});
+  }
 }
 
 function* loadCreditTransferList({ payload }) {

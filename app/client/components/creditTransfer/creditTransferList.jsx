@@ -303,7 +303,7 @@ class CreditTransferList extends React.Component {
 				  <ReactTable
             columns={[
               {
-					      Header: "ID",
+					      Header: "Id",
                 accessor: "id",
                 headerClassName: 'react-table-header',
                 width: 60,

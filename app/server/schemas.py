@@ -1,10 +1,11 @@
 from flask import g
-from marshmallow import Schema, fields, ValidationError, pre_load, post_dump, pre_dump
+from marshmallow import Schema, fields, post_dump
+
+from server.models.models import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
-from server import models
+from server.models.user import User
 
 class UserSchema(Schema):
-
     id      = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
 
@@ -26,8 +27,8 @@ class UserSchema(Schema):
     is_activated            = fields.Boolean()
     is_disabled             = fields.Boolean()
 
-    is_beneficiary          = fields.Boolean()
-    is_vendor               = fields.Boolean()
+    is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
+    is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_any_admin            = fields.Boolean(attribute='is_any_admin')
 
     ap_user_id              = fields.Str()
@@ -38,11 +39,13 @@ class UserSchema(Schema):
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
 
-    transfer_account        = fields.Nested('server.schemas.TransferAccountSchema', exclude=('user',))
+    transfer_accounts        = fields.Nested('TransferAccountSchema',
+                                             many=True,
+                                             exclude=('users','credit_sends','credit_receives'))
 
     def get_json_data(self, obj):
         
-        allowed_custom_attributes_objs = models.CustomAttribute.query.all()
+        allowed_custom_attributes_objs = CustomAttribute.query.all()
         allowed_custom_attributes = []
 
         for attribute in allowed_custom_attributes_objs:
@@ -87,12 +90,6 @@ class UploadedImageSchema(Schema):
     image_url               = fields.Function(lambda obj: obj.image_url)
     credit_transfer_id      = fields.Int()
 
-class BlockchainAddressSchema(Schema):
-    id = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-    address = fields.Str()
-    has_private_key = fields.Function(lambda obj: bool(obj.encoded_private_key))
-
 class CreditTransferSchema(Schema):
 
     id      = fields.Int(dump_only=True)
@@ -119,6 +116,8 @@ class CreditTransferSchema(Schema):
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
+    sender_transfer_account_id = fields.Int()
+    recipient_transfer_account_id = fields.Int()
 
     sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
     recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
@@ -126,32 +125,35 @@ class CreditTransferSchema(Schema):
     sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
     recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
 
-    sender_blockchain_address    = fields.Nested(BlockchainAddressSchema)
-    recipient_blockchain_address = fields.Nested(BlockchainAddressSchema)
-
     attached_images         = fields.Nested(UploadedImageSchema, many=True)
 
     lat               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
 
-    is_sender               = fields.Function(lambda obj: obj.sender_transfer_account_id == g.user.transfer_account_id)
+    is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
     blockchain_status = fields.Function(lambda obj: obj.blockchain_status)
-    blockchain_status_breakdown = fields.Function(lambda obj: obj.blockchain_status_breakdown)
-    uncompleted_blockchain_tasks = fields.Function(lambda obj: list(obj.uncompleted_blockchain_tasks))
 
     def get_authorising_user_email(self, obj):
         authorising_user_id = obj.authorising_user_id
         if authorising_user_id is None:
             return None
 
-        authorising_user = models.User.query.get(obj.authorising_user_id)
+        authorising_user = User.query.get(obj.authorising_user_id)
         if authorising_user is None:
             return None
 
         return authorising_user.email
 
 
+class TokenSchema(Schema):
+
+    id      = fields.Int(dump_only=True)
+    created = fields.DateTime(dump_only=True)
+
+    address = fields.String()
+    name    = fields.String()
+    symbol  = fields.String()
 
 class TransferAccountSchema(Schema):
 
@@ -173,18 +175,20 @@ class TransferAccountSchema(Schema):
     payable_epoch           = fields.Str()
     payable_period_epoch    = fields.DateTime()
 
-    blockchain_address = fields.Nested(BlockchainAddressSchema)
+    blockchain_address = fields.Str()
 
-    #TODO: Make this plural because it's stupid
-    users                   = fields.Nested(UserSchema, attribute='users', many = True, exclude=('transfer_account',))
+    users                   = fields.Nested(UserSchema, attribute='users', many=True, exclude=('transfer_account',))
 
     credit_sends            = fields.Nested(CreditTransferSchema, many=True)
     credit_receives         = fields.Nested(CreditTransferSchema, many=True)
+
+    token                   = fields.Nested(TokenSchema)
 
     def get_primary_user_id(self, obj):
         users = obj.user
         print(obj)
         return sorted(users, key=lambda user: user.created)[0].id
+
 
 class TransferCardSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -193,10 +197,18 @@ class TransferCardSchema(Schema):
     public_serial_number = fields.Str()
     nfc_serial_number = fields.Function(lambda obj: obj.nfc_serial_number.upper())
 
+    symbol = fields.Method('get_symbol')
+
     amount_loaded = fields.Function(lambda obj: obj._amount_loaded)
     amount_loaded_signature = fields.Str()
 
     user = fields.Nested(UserSchema, only=('first_name', 'last_name'))
+
+    def get_symbol(self, obj):
+        try:
+            return obj.transfer_account.token.symbol
+        except Exception as e:
+            return None
 
 
 class ReferralSchema(Schema):
@@ -251,12 +263,17 @@ class KycApplicationSchema(Schema):
     id                  = fields.Int(dump_only=True)
     created             = fields.DateTime(dump_only=True)
 
+    type                = fields.Str()
+
+    trulioo_id          = fields.Str()
     wyre_id             = fields.Str()
     kyc_status          = fields.Str()
+    kyc_actions         = fields.Method('get_kyc_actions_json')
 
     first_name          = fields.Str()
     last_name           = fields.Str()
     phone               = fields.Str()
+    dob                 = fields.Str()
     business_legal_name = fields.Str()
     business_type       = fields.Str()
     tax_id              = fields.Str()
@@ -276,15 +293,38 @@ class KycApplicationSchema(Schema):
     def get_beneficial_owners_json(self, obj):
         return obj.beneficial_owners
 
+    def get_kyc_actions_json(self, obj):
+        return obj.kyc_actions
 
-old_user_schema = UserSchema(exclude=("transfer_account.users",))
-user_schema = UserSchema(exclude=("transfer_account.users",
-                                  "transfer_account.credit_sends",
-                                  "transfer_account.credit_receives"))
 
-users_schema = UserSchema(many=True, exclude=("transfer_account.users",))
+class OrganisationSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+    created             = fields.DateTime(dump_only=True)
 
-blockchain_address_schema = BlockchainAddressSchema(many=True)
+    name                = fields.Str()
+
+    users               = fields.Nested('server.schemas.UserSchema', many=True)
+    transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
+    credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
+
+    org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
+
+class TokenSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+    created             = fields.DateTime(dump_only=True)
+
+    address             = fields.Str()
+    symbol              = fields.Str()
+    name                = fields.Str()
+
+
+
+
+user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
+                                  "transfer_accounts.credit_receives"))
+
+users_schema = UserSchema(many=True, exclude=("transfer_accounts.credit_sends",
+                                              "transfer_accounts.credit_receives"))
 
 transfer_account_schema = TransferAccountSchema(
     exclude=(
@@ -318,6 +358,39 @@ credit_transfers_schema = CreditTransferSchema(many=True)
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
+transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
+
+uploaded_image_schema = UploadedImageSchema()
+
+referral_schema = ReferralSchema()
+referrals_schema = ReferralSchema(many=True)
+
+filter_schema = SavedFilterSchema()
+filters_schema = SavedFilterSchema(many=True)
+
+kyc_application_schema = KycApplicationSchema()
+kyc_application_state_schema = KycApplicationSchema(exclude=("trulioo_id","wyre_id", "first_name", "last_name", "phone",
+                                                                         "business_legal_name", "business_type",
+                                                                         "tax_id", "website", "date_established",
+                                                                         "country", "street_address", "street_address_2"
+                                                                         "city", "region", "postal_code",
+                                                                         "beneficial_owners", "bank_accounts",
+                                                                         "documents", "dob"
+                                                                         ))
+organisation_schema = OrganisationSchema()
+organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
+
+token_schema = TokenSchema()
+tokens_schema = TokenSchema(many=True)
+
+
+# Me Schemas
+
+me_transfer_accounts_schema = TransferAccountSchema(many=True,
+                                                    exclude=("credit_sends",
+                                                             "credit_receives",
+                                                             "users"))
+
 me_credit_transfer_schema = CreditTransferSchema(exclude=("sender_transfer_account",
                                                           "recipient_transfer_account",
                                                           "sender_user",
@@ -331,23 +404,3 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
                                                                       "recipient_user",
                                                                       ),
                                                   context={'filter_rejected': True})
-
-transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
-
-uploaded_image_schema = UploadedImageSchema()
-
-referral_schema = ReferralSchema()
-referrals_schema = ReferralSchema(many=True)
-
-filter_schema = SavedFilterSchema()
-filters_schema = SavedFilterSchema(many=True)
-
-kyc_application_schema = KycApplicationSchema()
-kyc_application_state_schema = KycApplicationSchema(exclude=("wyre_id", "first_name", "last_name", "phone",
-                                                                         "business_legal_name", "business_type",
-                                                                         "tax_id", "website", "date_established",
-                                                                         "country", "street_address", "street_address_2"
-                                                                         "city", "region", "postal_code",
-                                                                         "beneficial_owners", "bank_accounts",
-                                                                         "documents"
-                                                                         ))

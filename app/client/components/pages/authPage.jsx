@@ -9,7 +9,6 @@ import LoginForm from '../auth/loginForm.jsx'
 import RegisterForm from '../auth/registerForm.jsx'
 import RequestResetEmailForm from '../auth/requestResetEmailForm.jsx'
 
-
 const mapStateToProps = (state) => {
   return {
     loggedIn: (state.login.userId !== null),
@@ -29,6 +28,7 @@ export class authPage extends React.Component {
     this.state = {
       redirectToReferrer: false,
       email: null,
+      referralCode: null,
     };
   }
 
@@ -44,7 +44,8 @@ export class authPage extends React.Component {
     if (parsed.r && parsed.u) {
       this.setState({
         login: (!parsed.r === 'true'),
-        email: parsed.u
+        email: parsed.u,
+        referralCode: parsed.c
       })
     }
   }
@@ -66,7 +67,7 @@ export class authPage extends React.Component {
   }
 
   render() {
-      let deploymentName = window.DEPLOYMENT_NAME;
+    let deploymentName = window.DEPLOYMENT_NAME;
       const { from } = this.props.location.state || { from: { pathname: "/" } };
 
       if (this.state.redirectToReferrer) {
@@ -76,12 +77,13 @@ export class authPage extends React.Component {
       return (
           <WrapperDiv>
               <LoginModuleBox>
-                <div>
+                  <div>
                   <SempoLogoSVG src="/static/media/sempo_logo.svg"/>
                 </div>
                 <Switch>
                   <Route path={this.props.match.url + '/forgot/'} component={forgotPassword} />
-                  <Route path={this.props.match.url + '/sign-up/'} render={()=><Signup email={this.state.email}/>} />
+                  <Route path={this.props.match.url + '/sign-up/'}
+                         render={()=><Signup email={this.state.email} referralCode={this.state.referralCode}/>}/>
                   <Route component={LoginForm} />
                 </Switch>
               </LoginModuleBox>
@@ -111,10 +113,10 @@ const forgotPassword = () => (
   </div>
 )
 
-const Signup = ({email}) => (
+const Signup = ({email, referralCode}) => (
   <div>
    <div className="form" style={{position: 'relative'}}>
-    <RegisterForm email={email}/>
+    <RegisterForm email={email} referralCode={referralCode}/>
    </div>
     <Footer>
       <FooterText>

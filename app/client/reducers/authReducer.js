@@ -242,11 +242,10 @@ export const validateTFA = (state = initialValidateTFAstate, action) => {
 };
 
 // ACTIONS
-export const loginRequest = ( {username, password}) => (
+export const loginRequest = (payload) => (
   {
     type: LOGIN_REQUEST,
-    username,
-    password
+    payload,
   }
 );
 
@@ -278,11 +277,10 @@ export const logout = () => (
 );
 
 
-export const registerRequest = ( {username, password}) => (
+export const registerRequest = (payload) => (
   {
     type: REGISTER_REQUEST,
-    username,
-    password
+    payload
   }
 );
 

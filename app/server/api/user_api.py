@@ -2,10 +2,16 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
 from server import db
-from server.models import paginate_query, User, TransferAccount
+from server.models.utils import paginate_query
+from server.models.user import User
+from server.models.transfer_account import TransferAccount
 from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
+from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
+from server.utils.misc import AttributeDictProccessor
+from server.constants import CREATE_USER_SETTINGS
+
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -13,12 +19,8 @@ user_blueprint = Blueprint('user', __name__)
 class UserAPI(MethodView):
     @requires_auth
     def get(self, user_id):
-        role = None
 
-        if g.user.is_admin:
-            role = 'is_admin'
-
-        can_see_full_details = role in ['is_admin']
+        can_see_full_details = AccessControl.has_suffient_role(g.user.roles,{'ADMIN': 'admin'})
 
         if not can_see_full_details:
             public_serial_number = request.args.get('public_serial_number')
@@ -83,13 +85,13 @@ class UserAPI(MethodView):
 
         else:
             if account_type_filter == 'beneficiary':
-                user_query = User.query.filter(User.is_beneficiary)
+                user_query = User.query.filter(User.has_beneficiary_role)
 
             elif account_type_filter == 'vendor':
-                user_query = User.query.filter(User.is_vendor)
+                user_query = User.query.filter(User.has_vendor_role)
 
             elif account_type_filter == 'admin':
-                user_query = User.query.filter(User.is_subadmin).order_by(User.created.desc())
+                user_query = User.query.filter(User.has_admin_role).order_by(User.created.desc())
 
             else:
                 user_query = User.query
@@ -115,16 +117,23 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_subadmin', 'basic_auth'])
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()
 
-        response_object, response_code = UserUtils.proccess_attribute_dict(
+        # Data supplied to the API via integrations such as KoboToolbox can be messy, so clean the data first
+        dict_processor = AttributeDictProccessor(post_data)
+        dict_processor.force_attribute_dict_keys_to_lowercase()
+        dict_processor.strip_kobo_preslashes()
+        dict_processor.attempt_to_truthy_dict_values()
+        dict_processor.strip_weirdspace_characters()
+        dict_processor.insert_settings_from_databse(CREATE_USER_SETTINGS)
+        post_data = dict_processor.attribute_dict
+
+        response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
-            force_dict_keys_lowercase=True,
-            # TODO: This should probably be shifted back inside the dict
-            require_transfer_card_exists=post_data.get('require_transfer_card_exists', True)
+            organisation=g.user.get_active_organisation()
         )
 
         if response_code == 200:
@@ -132,7 +141,7 @@ class UserAPI(MethodView):
 
         return make_response(jsonify(response_object)), response_code
 
-    @requires_auth(allowed_roles=['is_subadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'})
     def put(self, user_id):
         put_data = request.get_json()
 
@@ -172,7 +181,7 @@ class UserAPI(MethodView):
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Successfully Edited User.',
             'data': {
@@ -180,7 +189,7 @@ class UserAPI(MethodView):
             }
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 # add Rules for API Endpoints
 user_blueprint.add_url_rule(

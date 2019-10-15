@@ -44,7 +44,7 @@ class vendorAuth extends React.Component {
     console.log('here');
     console.log(this.state.vendor_code);
     this.setState({vendor_missing: false});
-    this.props.loginRequest({username: this.state.vendor_code})
+    this.props.loginRequest({body:{username: this.state.vendor_code}})
   }
 
   onClick(){

@@ -1,3 +1,9 @@
+class OrganisationNotProvidedException(Exception):
+    """
+    Raise if trying to query database without providing an organisation ID or SHOW_ALL flag.
+    """
+    pass
+
 class IconNotSupportedException(Exception):
     """
     Raise if trying to set TransferUsage to an icon not supported on mobile (currently only MaterialCommunityIcons)
@@ -11,7 +17,13 @@ class TypeNotFoundException(Exception):
 
 class TierNotFoundException(Exception):
     """
-    Raise if trying to set user role to tier that does not exist
+    Raise if trying reference role tier that does not exist
+    """
+    pass
+
+class RoleNotFoundException(Exception):
+    """
+    Raise if trying reference role that does not exist
     """
     pass
 
@@ -59,4 +71,8 @@ class BlockchainError(Exception):
 
 
 class NoTransferCardError(Exception):
+    pass
+
+
+class PhoneVerificationError(Exception):
     pass

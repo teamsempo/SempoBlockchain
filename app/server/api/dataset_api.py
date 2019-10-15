@@ -17,7 +17,7 @@ dataset_blueprint = Blueprint('dataset', __name__)
 
 class SpreadsheetUploadAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
         if 'spreadsheet' not in request.files:
@@ -54,7 +54,7 @@ class DatasetAPI(MethodView):
         print(diagnostic)
         self.diagnostics.append(diagnostic)
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         # get the post data
         post_data = request.get_json()
@@ -80,9 +80,9 @@ class DatasetAPI(MethodView):
                     attribute_dict[header_label] = attribute
 
             if contains_anything:
-                item_response_object, response_code = UserUtils.proccess_attribute_dict(attribute_dict,
-                                                                                        force_dict_keys_lowercase=True,
-                                                                                        allow_existing_user_modify=True)
+                item_response_object, response_code = UserUtils.proccess_create_or_modify_user_request(attribute_dict,
+                                                                                                       force_dict_keys_lowercase=True,
+                                                                                                       allow_existing_user_modify=True)
 
                 self.diagnostics.append((item_response_object.get('message'), response_code))
 
@@ -91,13 +91,13 @@ class DatasetAPI(MethodView):
                 else:
                     db.session.flush()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Successfully Saved.',
             'diagnostics': self.diagnostics
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
 
 
 # add Rules for API Endpoints
@@ -112,7 +112,3 @@ dataset_blueprint.add_url_rule(
     view_func=DatasetAPI.as_view('dataset_view'),
     methods=['POST', 'GET']
 )
-
-import numpy
-
-numpy.ufunc

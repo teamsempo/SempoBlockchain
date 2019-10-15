@@ -1,7 +1,9 @@
 from flask import current_app
-from sqlalchemy import or_, and_, text
-from server.models import TransferAccount, CreditTransfer, Feedback
-
+from sqlalchemy import or_, and_
+from server.models.transfer_account import TransferAccount
+from server.models.credit_transfer import CreditTransfer
+from server.models.feedback import Feedback
+from server.models.user import User
 
 def request_feedback_questions(user):
     questions = current_app.config['DEFAULT_FEEDBACK_QUESTIONS']
@@ -11,12 +13,20 @@ def request_feedback_questions(user):
         # Makes it easy to disable the transfer count trigger by setting it to -1
         transfer_count_above_trigger = 999999999999
 
-    if user.is_beneficiary and (user.transfer_account_id is not None):
-        transfer_account = TransferAccount.query.get(user.transfer_account_id)
+    user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
+        TransferAccount.users.any(User.id.in_([user.id]))).all()
 
-        transfer_number = CreditTransfer.query.filter(or_(CreditTransfer.recipient_transfer_account_id == user.transfer_account_id, CreditTransfer.sender_transfer_account_id == user.transfer_account_id)).count()
+    if user.has_beneficiary_role and (len(user_transfer_accounts) > 0):
+        # todo: this will raise an error No 'user.transfer_account_id'. fix.
+        # transfer_account = TransferAccount.query.get(user.transfer_account_id)
+        transfer_account = user_transfer_accounts[0]  # get the first transfer account. todo: fix this for many-to-many
 
-        feedback = Feedback.query.filter(and_(Feedback.transfer_account_id == user.transfer_account_id,
+        transfer_number = CreditTransfer.query.filter(or_(
+            CreditTransfer.recipient_user == user,
+            CreditTransfer.sender_user == user
+        )).count()
+
+        feedback = Feedback.query.filter(and_(Feedback.user == user,
                                               Feedback.question.in_(questions))).first()
 
         if feedback is None and transfer_account.is_approved:

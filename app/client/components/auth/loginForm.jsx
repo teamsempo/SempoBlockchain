@@ -49,7 +49,7 @@ export class LoginFormContainer extends React.Component {
       this.setState({password_missing: true});
       return
     }
-    this.props.loginRequest({username: this.state.username, password: this.state.password})
+    this.props.loginRequest({body:{username: this.state.username, password: this.state.password, organisation: this.props.organisation}})
   }
 
   onUserFieldKeyPress(e) {

@@ -2,11 +2,14 @@ from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Command
 import sys
+import os
 
-sys.path.append('../')
+parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
+sys.path.append(parent_dir)
+sys.path.append(os.getcwd())
 
 from server import create_app, db
-from server.models import BlockchainAddress
+from server.models.transfer_account import BlockchainAddress
 
 class UpdateData(Command):
 
@@ -15,12 +18,8 @@ class UpdateData(Command):
 
             print("~~~~~~~~~~ Searching for Master Address ~~~~~~~~~~")
 
-            if app.config['IS_USING_BITCOIN']:
-                master_address_type = "BITCOIN_MASTER"
-                master_address = app.config['BITCOIN_MASTER_WALLET_ADDRESS']
-            else:
-                master_address_type = "MASTER"
-                master_address = app.config['MASTER_WALLET_ADDRESS']
+            master_address_type = "MASTER"
+            master_address = app.config['MASTER_WALLET_ADDRESS']
 
             master_address_object = BlockchainAddress.query.filter(BlockchainAddress.type == master_address_type).first()
 

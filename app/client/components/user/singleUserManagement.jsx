@@ -90,7 +90,7 @@ class SingleUserManagement extends React.Component {
   render() {
     let blockchain_address = '';
     if (this.props.user.transfer_account) {
-      blockchain_address =  this.props.user.transfer_account.blockchain_address.address
+      blockchain_address =  this.props.user.transfer_account.blockchain_address
       if (!window.IS_USING_BITCOIN) {
         var tracker_link = (
           'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')

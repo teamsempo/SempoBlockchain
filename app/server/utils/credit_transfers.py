@@ -1,61 +1,64 @@
 import hashlib
 import hmac
 import time
-
-from flask import make_response, jsonify, current_app
+from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func
-from sqlalchemy.exc import IntegrityError
 import datetime, json
 
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
-from server import db, celery_app, sentry, red
-from server import models
+from server import db, sentry, red
+from server.models.models import TransferUsage
+from server.models.transfer_account import TransferAccount, BlockchainAddress
+from server.models.credit_transfer import CreditTransfer, BlockchainTransaction
+from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
-from server.utils.misc import elapsed_time
+from server.utils.blockchain_tasks import get_wallet_balance
+from server.utils.transfer_enums import TransferTypeEnum
 
 def calculate_transfer_stats(total_time_series=False):
 
-    total_distributed = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('total'))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT).first().total
+    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.DISBURSEMENT).first().total
 
-    total_spent = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('total'))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).first().total
+    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
 
-    total_beneficiaries = db.session.query(models.User).filter(models.User.is_beneficiary == True).count()
+    total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
 
-    total_vendors = db.session.query(models.User)\
-        .filter(models.User.is_vendor == True).count()
+    total_vendors = db.session.query(User)\
+        .filter(User.has_vendor_role == True).count()
 
     total_users = total_beneficiaries + total_vendors
 
-    has_transferred_count = db.session.query(func.count(func.distinct(models.CreditTransfer.sender_user_id))
+    has_transferred_count = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
         .label('transfer_count'))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).first().transfer_count
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().transfer_count
 
-    # zero_balance_count = db.session.query(func.count(models.TransferAccount.id).label('zero_balance_count'))\
-    #     .filter(models.TransferAccount.balance == 0).first().zero_balance_count
+    # zero_balance_count = db.session.query(func.count(TransferAccount.id).label('zero_balance_count'))\
+    #     .filter(TransferAccount.balance == 0).first().zero_balance_count
 
-    exhausted_balance_count = db.session.query(func.count(func.distinct(models.CreditTransfer.sender_transfer_account_id))
+    exhausted_balance_count = db.session.query(func.count(func.distinct(
+        CreditTransfer.sender_transfer_account_id))
         .label('transfer_count')) \
-        .join(models.CreditTransfer.sender_transfer_account)\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT) \
-        .filter(models.TransferAccount.balance == 0).first().transfer_count
+        .join(CreditTransfer.sender_transfer_account)\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT) \
+        .filter(TransferAccount.balance == 0).first().transfer_count
 
-    daily_transaction_volume = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('volume'),
-                 func.date_trunc('day', models.CreditTransfer.created).label('date'))\
-        .group_by(func.date_trunc('day', models.CreditTransfer.created))\
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.PAYMENT).all()
+    daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+                                                func.date_trunc('day', CreditTransfer.created).label('date'))\
+        .group_by(func.date_trunc('day', CreditTransfer.created))\
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).all()
 
-    daily_disbursement_volume = db.session.query(func.sum(models.CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', models.CreditTransfer.created).label('date')) \
-        .group_by(func.date_trunc('day', models.CreditTransfer.created)) \
-        .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT).all()
+    daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+                                                 func.date_trunc('day', CreditTransfer.created).label('date')) \
+        .group_by(func.date_trunc('day', CreditTransfer.created)) \
+        .filter(CreditTransfer.transfer_type == TransferTypeEnum.DISBURSEMENT).all()
 
     try:
-        master_wallet_balance = master_wallet_funds_available()
+        master_wallet_balance = cached_funds_available()
     except BlockchainError:
         master_wallet_balance = 0
 
@@ -97,17 +100,22 @@ def calculate_transfer_stats(total_time_series=False):
     return data
 
 
-def master_wallet_funds_available(allowed_cache_age_seconds=60):
+def cached_funds_available(allowed_cache_age_seconds=60):
     """
     IF refreshing cash THEN:
         return: [current blockchain balance] - [all transfers with blockchain state pending or unknown]
-        save to cache: [funds available at last cache], [ID of highest transfer used in cache], [cache creation datetime]
+        save to cache: [funds available], [ID of highest transfer used in cache], [cache creation datetime]
     ELSE
-        return: [funds available at last cache] - [all non-failed transfers since cache created]
+        return: [funds available at last cache] - [all non-failed transfers since last cache]
+
+    Max Txn ID is a simple way to determine whether txn was used in cache or not, and thus needs to be accounted for
+
     :param allowed_cache_age_seconds: how long between checking the blockchain for external funds added or removed
     :return: amount of funds available
     """
 
+    return get_wallet_balance(g.active_organisation.org_level_transfer_account.blockchain_address,
+                       g.active_organisation.org_level_transfer_account.token)
 
     refresh_cache = False
     funds_available_cache = red.get('funds_available_cache')
@@ -127,20 +135,7 @@ def master_wallet_funds_available(allowed_cache_age_seconds=60):
 
     if refresh_cache:
 
-        blockchain_task = celery_app.signature('worker.celery_tasks.get_master_balance')
-
-        result = blockchain_task.apply_async()
-
-        try:
-            master_wallet_balance = result.wait(timeout=6, propagate=True, interval=0.5)
-
-        except Exception as e:
-            print(e)
-            sentry.captureException()
-            raise BlockchainError("Blockchain Error")
-
-        finally:
-            result.forget()
+        master_wallet_balance = get_wallet_balance()
 
         highest_transfer_id_checked = 0
         required_blockchain_statuses = ['PENDING', 'UNKNOWN']
@@ -152,13 +147,13 @@ def master_wallet_funds_available(allowed_cache_age_seconds=60):
 
 
 
-    new_dibursements     = (models.CreditTransfer.query
-                             .filter(models.CreditTransfer.transfer_type == models.TransferTypeEnum.DISBURSEMENT)
-                             .filter(models.CreditTransfer.transfer_status == models.TransferStatusEnum.COMPLETE)
-                             .filter(models.CreditTransfer.id > highest_transfer_id_checked)
-                             .filter(models.CreditTransfer.created >
-                                     datetime.datetime.utcnow() - datetime.timedelta(hours=36))
-                             .all())
+    new_dibursements     = (CreditTransfer.query
+                            .filter(CreditTransfer.transfer_type == TransferTypeEnum.DISBURSEMENT)
+                            .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+                            .filter(CreditTransfer.id > highest_transfer_id_checked)
+                            .filter(CreditTransfer.created >
+                                    datetime.datetime.utcnow() - datetime.timedelta(hours=36))
+                            .all())
 
 
     local_disbursement_value = 0
@@ -176,7 +171,7 @@ def master_wallet_funds_available(allowed_cache_age_seconds=60):
         if len(new_dibursements) > 0:
             highest_transfer_id_checked = new_dibursements[-1].id
         else:
-            all_transfers = models.CreditTransfer.query.all()
+            all_transfers = CreditTransfer.query.all()
             if len(all_transfers) > 0:
                 highest_transfer_id_checked = all_transfers[-1].id
             else:
@@ -214,7 +209,7 @@ def find_user_with_transfer_account_from_identifiers(user_id, public_identifier,
 def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
 
     if user_id:
-        user = models.User.query.get(user_id)
+        user = User.query.get(user_id)
 
         if not user:
             raise UserNotFoundError('User not found for user id {}'.format(user_id))
@@ -230,7 +225,7 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
             return user
 
     if transfer_account_id:
-        transfer_account = models.TransferAccount.query.get(transfer_account_id)
+        transfer_account = TransferAccount.query.get(transfer_account_id)
 
         user = transfer_account.primary_user
 
@@ -241,28 +236,15 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
 
     return None
 
-def create_and_commit_transfer(transfer_amount, send_account = None, receive_account = None, uuid=None):
-    try:
-        transfer = models.CreditTransfer(transfer_amount, sender=send_account, recipient=receive_account, uuid=uuid)
-
-        # We need this commit to prevent a race condition with the async blockchain task
-        db.session.commit()
-
-    except IntegrityError:
-        raise Exception("Transfer Integrity Error")
-
-    return transfer
-
-
 def handle_transfer_to_blockchain_address(
     transfer_amount, sender_user, recipient_blockchain_address, transfer_use, uuid=None):
 
     if transfer_amount > sender_user.transfer_account.balance:
-        responseObject = {
+        response_object = {
             'message': 'Insufficient funds',
             'feedback': True,
         }
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
     try:
         transfer = make_blockchain_transfer(transfer_amount,
@@ -275,20 +257,20 @@ def handle_transfer_to_blockchain_address(
         db.session.commit()
 
     except AccountNotApprovedError as e:
-        responseObject = {
+        response_object = {
             'message': "Sender is not approved",
             'feedback': True,
         }
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
     except InsufficientBalanceError as e:
-        responseObject = {
+        response_object = {
             'message': "Insufficient balance",
             'feedback': True,
         }
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
-    responseObject = {
+    response_object = {
         'message': 'Payment Successful',
         'feedback': True,
         'data': {
@@ -296,13 +278,13 @@ def handle_transfer_to_blockchain_address(
         }
     }
 
-    return make_response(jsonify(responseObject)), 201
+    return make_response(jsonify(response_object)), 201
 
 def create_address_object_if_required(address):
-    address_obj = models.BlockchainAddress.query.filter_by(address=address).first()
+    address_obj = BlockchainAddress.query.filter_by(address=address).first()
 
     if not address_obj:
-        address_obj = models.BlockchainAddress(type="EXTERNAL")
+        address_obj = BlockchainAddress(type="EXTERNAL")
         address_obj.address = address
 
         db.session.add(address_obj)
@@ -312,6 +294,7 @@ def create_address_object_if_required(address):
 
 def make_blockchain_transfer(transfer_amount,
                              send_address,
+                             token,
                              receive_address,
                              transfer_use=None,
                              transfer_mode=None,
@@ -337,6 +320,7 @@ def make_blockchain_transfer(transfer_amount,
 
     require_recipient_approved = False
     transfer = make_payment_transfer(transfer_amount,
+                                     token,
                                      sender_user,
                                      recipient_user,
                                      transfer_use,
@@ -349,13 +333,13 @@ def make_blockchain_transfer(transfer_amount,
     transfer.sender_blockchain_address = send_address_obj
     transfer.recipient_blockchain_address = receive_address_obj
 
-    transfer.transfer_type = models.TransferTypeEnum.PAYMENT
+    transfer.transfer_type = TransferTypeEnum.PAYMENT
 
     if uuid:
         transfer.uuid = uuid
 
     if existing_blockchain_txn:
-        existing_blockchain_txn_obj = models.BlockchainTransaction(
+        existing_blockchain_txn_obj = BlockchainTransaction(
             status='SUCCESS',
             message='External Txn',
             added_date=datetime.datetime.utcnow(),
@@ -373,9 +357,12 @@ def make_blockchain_transfer(transfer_amount,
 
     return transfer
 
+
 def make_payment_transfer(transfer_amount,
-                          send_account,
-                          receive_account,
+                          send_user,
+                          send_transfer_account,
+                          receive_user,
+                          receive_transfer_account,
                           transfer_use=None,
                           transfer_mode=None,
                           require_sender_approved=True,
@@ -384,10 +371,12 @@ def make_payment_transfer(transfer_amount,
                           automatically_resolve_complete=True,
                           uuid=None):
 
-    transfer = create_and_commit_transfer(transfer_amount,
-                                          send_account=send_account,
-                                          receive_account=receive_account,
-                                          uuid=uuid)
+    transfer = CreditTransfer(transfer_amount,
+                              sender_user=send_user,
+                              sender_transfer_account=send_transfer_account,
+                              recipient_user=receive_user,
+                              recipient_transfer_account=receive_transfer_account,
+                              uuid=uuid)
 
     make_cashout_incentive_transaction = False
 
@@ -399,7 +388,7 @@ def make_payment_transfer(transfer_amount,
             use_ids = transfer_use
         for use_id in use_ids:
             if use_id != 'null':
-                use = models.TransferUsage.query.filter_by(id=use_id).first()
+                use = TransferUsage.query.filter_by(id=use_id).first()
                 if use:
                     usages.append(use.name)
                     if use.is_cashout:
@@ -413,17 +402,17 @@ def make_payment_transfer(transfer_amount,
     transfer.uuid = uuid
 
     if require_sender_approved and not transfer.check_sender_is_approved():
-        message = "Sender {} is not approved".format(send_account)
+        message = "Sender {} is not approved".format(send_transfer_account)
         transfer.resolve_as_rejected(message)
         raise AccountNotApprovedError(message, is_sender=True)
 
     if require_recipient_approved and not transfer.check_recipient_is_approved():
-        message = "Recipient {} is not approved".format(receive_account)
+        message = "Recipient {} is not approved".format(receive_user)
         transfer.resolve_as_rejected(message)
         raise AccountNotApprovedError(message, is_sender=False)
 
     if require_sufficient_balance and not transfer.check_sender_has_sufficient_balance():
-        message = "Sender {} has insufficient balance".format(send_account)
+        message = "Sender {} has insufficient balance".format(send_transfer_account)
         transfer.resolve_as_rejected(message)
         raise InsufficientBalanceError(message)
 
@@ -435,7 +424,7 @@ def make_payment_transfer(transfer_amount,
         try:
             incentive_amount = round(transfer_amount * current_app.config['CASHOUT_INCENTIVE_PERCENT'] / 100)
 
-            make_disbursement_transfer(incentive_amount, receive_account)
+            make_disbursement_transfer(incentive_amount, receive_user)
 
         except Exception as e:
             print(e)
@@ -444,6 +433,7 @@ def make_payment_transfer(transfer_amount,
     return transfer
 
 def make_withdrawal_transfer(transfer_amount,
+                             token,
                              send_account,
                              transfer_mode=None,
                              require_sender_approved=True,
@@ -451,7 +441,7 @@ def make_withdrawal_transfer(transfer_amount,
                              automatically_resolve_complete=True,
                              uuid=None):
 
-    transfer = create_and_commit_transfer(transfer_amount, send_account=send_account, uuid=uuid)
+    transfer = CreditTransfer(transfer_amount, token, sender_user=send_account, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
@@ -471,39 +461,34 @@ def make_withdrawal_transfer(transfer_amount,
 
     return transfer
 
+
 def make_disbursement_transfer(transfer_amount,
+                               token,
                                receive_account,
                                transfer_mode=None,
                                automatically_resolve_complete=True,
                                uuid=None):
 
-    if current_app.config['USING_EXTERNAL_ERC20']:
+    outbound_transfer_account = g.active_organisation.org_level_transfer_account
 
-        master_wallet_balance = master_wallet_funds_available()
+    master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address, token)
 
-        if transfer_amount > master_wallet_balance:
-            message = "Master Wallet has insufficient funds"
-            raise InsufficientBalanceError(message)
+    if transfer_amount > master_wallet_balance:
+        message = "Master Wallet has insufficient funds"
+        raise InsufficientBalanceError(message)
 
-    elapsed_time('4.1: Retrieved Master Balance')
-
-    if current_app.config['IS_USING_BITCOIN']:
-        if transfer_amount < 1000 * 100:
-            raise Exception("Minimum Transfer Amount is 1000 sat")
-
-    transfer = create_and_commit_transfer(transfer_amount, receive_account=receive_account, uuid=uuid)
+    transfer = CreditTransfer(amount=transfer_amount,
+                                     token=token,
+                                     sender_transfer_account=outbound_transfer_account,
+                                     recipient_user=receive_account,
+                                     transfer_type=TransferTypeEnum.DISBURSEMENT, uuid=uuid)
 
     transfer.transfer_mode = transfer_mode
 
-    elapsed_time('4.3: Created and commited')
-
     if automatically_resolve_complete:
         transfer.resolve_as_completed()
-        elapsed_time('4.4: Resolved as complete')
 
         pusher.push_admin_credit_transfer(transfer)
-
-        elapsed_time('4.5: Pusher complete')
 
     return transfer
 
@@ -547,11 +532,11 @@ def transfer_credit_via_phone(send_phone, receive_phone, transfer_amount):
 
     transfer_amount = abs(transfer_amount)
 
-    send_user = models.User.query.filter_by(phone=send_phone).first()
+    send_user = User.query.filter_by(phone=send_phone).first()
     if send_user is None:
         return {'status': 'Fail', 'message': "Can't send from phone number: " + send_phone}
 
-    receive_user = models.User.query.filter_by(phone=receive_phone).first()
+    receive_user = User.query.filter_by(phone=receive_phone).first()
     if receive_user is None:
         return {'status': 'Fail', 'message': "Can't send to phone number: " + send_phone}
 
@@ -567,7 +552,7 @@ def transfer_credit_via_phone(send_phone, receive_phone, transfer_amount):
     }
 
 
-def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
+def check_for_any_valid_hash(transfer_amount, transfer_account_id, user_secret, hash_to_check):
     # How many seconds each hash lasts for
     time_interval = 5
     # How far in seconds from current time a valid hash can be
@@ -579,7 +564,7 @@ def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
     while t_backward <= time_tolerance:
         unix_time_to_check = current_unix_time - t_backward * 1000
 
-        valid = check_hash(hash_to_check, transfer_amount, user_secret, unix_time_to_check, time_interval)
+        valid = check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret, unix_time_to_check, time_interval)
 
         if valid:
             return True
@@ -590,7 +575,7 @@ def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
     while t_forward <= time_tolerance:
         unix_time_to_check = current_unix_time + t_forward * 1000
 
-        valid = check_hash(hash_to_check, transfer_amount, user_secret, unix_time_to_check, time_interval)
+        valid = check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret, unix_time_to_check, time_interval)
 
         if valid:
             return True
@@ -600,14 +585,14 @@ def check_for_any_valid_hash(transfer_amount, user_secret, hash_to_check):
     return False
 
 
-def check_hash(hash_to_check, transfer_amount, user_secret, unix_time, time_interval):
+def check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret, unix_time, time_interval):
     hash_size = 6
 
     intervaled_time = int((unix_time - (unix_time % (time_interval * 1000))) / (time_interval * 1000))
 
     valid_hash = valid_hmac = False
 
-    string_to_hash = str(transfer_amount) + str(user_secret or '') + str(intervaled_time)
+    string_to_hash = str(transfer_amount) + str(transfer_account_id) + str(user_secret or '') + str(intervaled_time)
     full_hashed_string = hashlib.sha256(string_to_hash.encode()).hexdigest()
     truncated_hashed_string = full_hashed_string[0: hash_size]
     valid_hash = truncated_hashed_string == hash_to_check

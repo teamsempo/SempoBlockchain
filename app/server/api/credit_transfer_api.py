@@ -1,14 +1,17 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
-
 from sqlalchemy import or_
 
 from server import db
-from server.models import paginate_query, CreditTransfer, TransferTypeEnum, BlockchainAddress, BlockchainTransaction
+from server.models.models import Token
+from server.models.utils import paginate_query
+from server.models.credit_transfer import CreditTransfer, BlockchainTransaction
+from server.models.transfer_account import BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
-
+from server.utils.access_control import AccessControl
 from server.utils.credit_transfers import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
+from server.utils.transfer_enums import TransferTypeEnum
 from server.utils.credit_transfers import (
     make_payment_transfer,
     make_withdrawal_transfer,
@@ -24,7 +27,7 @@ credit_transfer_blueprint = Blueprint('credit_transfer', __name__)
 
 class CreditTransferAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin', 'is_view'])
+    @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, credit_transfer_id):
 
         transfer_account_ids = request.args.get('transfer_account_ids')
@@ -40,9 +43,9 @@ class CreditTransferAPI(MethodView):
 
             credit_transfer = CreditTransfer.query.get(credit_transfer_id)
 
-            if g.user.is_admin:
+            if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump([credit_transfer]).data
-            elif g.user.is_view:
+            elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
                 transfer_list = view_credit_transfers_schema.dump([credit_transfer]).data
 
             transfer_stats = []
@@ -98,9 +101,9 @@ class CreditTransferAPI(MethodView):
             else:
                 transfer_stats = None
 
-            if g.user.is_admin:
+            if g.user.roles:
                 transfer_list = credit_transfers_schema.dump(transfers).data
-            elif g.user.is_view:
+            elif g.user.has_admin_role:
                 transfer_list = view_credit_transfers_schema.dump(transfers).data
 
             response_object = {
@@ -116,7 +119,7 @@ class CreditTransferAPI(MethodView):
 
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, credit_transfer_id):
 
         put_data = request.get_json()
@@ -162,7 +165,7 @@ class CreditTransferAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self, credit_transfer_id):
 
         post_data = request.get_json()
@@ -171,6 +174,7 @@ class CreditTransferAPI(MethodView):
 
         transfer_type = post_data.get('transfer_type')
         transfer_amount = abs(round(float(post_data.get('transfer_amount') or 0),6))
+        token_id = post_data.get('token_id')
         target_balance = post_data.get('target_balance')
 
         transfer_use = post_data.get('transfer_use')
@@ -250,32 +254,39 @@ class CreditTransferAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 400
 
-            if not CreditTransfer.check_has_correct_users_for_transfer_type(
-                    transfer_type, individual_sender_user, individual_recipient_user):
-
+        if token_id:
+            token = Token.query.get(token_id)
+            if not token:
                 response_object = {
-                    'message': 'For transfer type {}, wrong  users of {} and {}'.format(
-                        transfer_type,
-                        individual_sender_user,
-                        individual_recipient_user)
+                    'message': 'Token not found'
+                }
+                return make_response(jsonify(response_object)), 404
+        else:
+            active_organisation = g.user.get_active_organisation()
+            if active_organisation is None:
+                response_object = {
+                    'message': 'Must provide token_id'
                 }
                 return make_response(jsonify(response_object)), 400
+            else:
+                token = active_organisation.token
+
 
         for sender_user, recipient_user in transfer_user_list:
 
             try:
                 if transfer_type == 'PAYMENT':
                     transfer = make_payment_transfer(
-                        transfer_amount, sender_user, recipient_user, transfer_use, uuid=uuid)
+                        transfer_amount, token, sender_user, recipient_user, transfer_use, uuid=uuid)
 
                 elif transfer_type == 'WITHDRAWAL':
-                    transfer = make_withdrawal_transfer(transfer_amount, sender_user, uuid=uuid)
+                    transfer = make_withdrawal_transfer(transfer_amount, token,  sender_user, uuid=uuid)
 
                 elif transfer_type == 'DISBURSEMENT':
-                    transfer = make_disbursement_transfer(transfer_amount, recipient_user, uuid=uuid)
+                    transfer = make_disbursement_transfer(transfer_amount, token,  recipient_user, uuid=uuid)
 
                 elif transfer_type == 'BALANCE':
-                    transfer = make_target_balance_transfer(target_balance, recipient_user, uuid=uuid)
+                    transfer = make_target_balance_transfer(target_balance, token,  recipient_user, uuid=uuid)
 
             except (InsufficientBalanceError,
                     AccountNotApprovedError,
@@ -294,14 +305,13 @@ class CreditTransferAPI(MethodView):
             else:
                 if is_bulk:
                     credit_transfers.append(transfer)
-                    db.session.commit()
 
                     response_list.append({'status': 200, 'message': 'Transfer Successful'})
 
                 else:
 
-                    db.session.commit()
                     credit_transfer = credit_transfer_schema.dump(transfer).data
+
 
                     response_object = {
                         'message': 'Transfer Successful',
@@ -309,6 +319,8 @@ class CreditTransferAPI(MethodView):
                             'credit_transfer': credit_transfer,
                         }
                     }
+                    db.session.commit()
+
                     return make_response(jsonify(response_object)), 201
 
         db.session.commit()
@@ -320,12 +332,13 @@ class CreditTransferAPI(MethodView):
                 'credit_transfers': credit_transfers_schema.dump(credit_transfers).data
             }
         }
+
         return make_response(jsonify(response_object)), 201
 
 
 class ConfirmWithdrawalAPI(MethodView):
 
-    @requires_auth(required_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
         post_data = request.get_json()

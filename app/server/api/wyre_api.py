@@ -1,16 +1,14 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 import config
-from server import db
 from server.utils.amazon_ses import send_bank_transfer_email, send_transfer_update_email
-from server.models import KycApplication
+from server.models.kyc_application import KycApplication
 from server.utils.auth import requires_auth
 from server.utils.wyre import (
     create_transfer,
     get_account,
     get_exchange_rates,
     get_transfer,
-    get_transfer_history,
     WyreError
 )
 
@@ -19,7 +17,7 @@ wyre_blueprint = Blueprint('wyre_blueprint', __name__)
 
 # need to manually create a wyre account on their website from the kyc application details provided.
 class WyreAccountAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
 
         # we only support MASTER (ngo) KYC application currently
@@ -49,7 +47,7 @@ class WyreAccountAPI(MethodView):
 
 
 class WyreTransferAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self):
         post_data = request.get_json()
 
@@ -107,7 +105,7 @@ class WyreTransferAPI(MethodView):
 
 
 class WyreExchangeAPI(MethodView):
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
         try:
             # default to DIVISOR format

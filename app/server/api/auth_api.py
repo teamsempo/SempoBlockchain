@@ -1,44 +1,31 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
-from server import db, sentry, basic_auth
+from server import db, sentry
 # from server import limiter
 from server.constants import DENOMINATION_DICT
-from server.models import User, BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
+from server.models.transfer_account import TransferAccount
+from phonenumbers.phonenumberutil import NumberParseException
+from server.models.user import User
+from server.models.organisation import Organisation
+from server.models.models import BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
 from server.utils.intercom import create_intercom_android_secret
 from server.utils.auth import requires_auth, tfa_logic
-from server.utils.user import save_device_info
+from server.utils.access_control import AccessControl
+from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.feedback import request_feedback_questions
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
-from sqlalchemy import and_, or_
 
-
-from datetime import datetime
 import time, random
 
 auth_blueprint = Blueprint('auth', __name__)
-
 
 def get_denominations():
     currency_name = current_app.config['CURRENCY_NAME']
     return DENOMINATION_DICT.get(currency_name, {})
 
-def get_highest_admin_tier(user):
-    if user.is_superadmin:
-        return 'superadmin'
-    elif user.is_admin:
-        return 'admin'
-    elif user.is_subadmin:
-        return 'subadmin'
-    elif user.is_view:
-        return 'view'
-    else:
-        return None
-
-
 def create_user_response_object(user, auth_token, message):
-
     if current_app.config['IS_USING_BITCOIN']:
         try:
             usd_to_satoshi_rate = get_usd_to_satoshi_rate()
@@ -48,13 +35,13 @@ def create_user_response_object(user, auth_token, message):
         usd_to_satoshi_rate = None
 
     must_answer_targeting_survey = False
-    if user.is_beneficiary and current_app.config['REQUIRE_TARGETING_SURVEY'] and not user.targeting_survey_id:
+    if user.has_beneficiary_role and current_app.config['REQUIRE_TARGETING_SURVEY'] and not user.targeting_survey_id:
         must_answer_targeting_survey = True
 
     conversion_rate = 1
     currency_name = current_app.config['CURRENCY_NAME']
     if user.default_currency:
-        conversion = CurrencyConversion.query.filter_by(code = user.default_currency).first()
+        conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
         if conversion is not None:
             conversion_rate = conversion.rate
             currency_name = user.default_currency
@@ -71,13 +58,13 @@ def create_user_response_object(user, auth_token, message):
                 'translations': usage.translations
             })
 
-    responseObject = {
+    response_object = {
         'status': 'success',
         'message': message,
         'auth_token': auth_token.decode(),
         'user_id': user.id,
         'email': user.email,
-        'admin_tier': get_highest_admin_tier(user),
+        'admin_tier': user.admin_tier,
         'is_vendor': user.is_vendor,
         'is_supervendor': user.is_supervendor,
         'server_time': int(time.time() * 1000),
@@ -96,53 +83,62 @@ def create_user_response_object(user, auth_token, message):
         'terms_accepted': user.terms_accepted,
         'request_feedback_questions': request_feedback_questions(user),
         'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
-        #This is here to stop the old release from dying
+        # This is here to stop the old release from dying
         'feedback_questions': request_feedback_questions(user),
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
+        'kyc_active': True,  # todo; kyc active function
         'android_intercom_hash': create_intercom_android_secret(user_id=user.id)
     }
 
-    if user.transfer_account:
-        responseObject['transfer_account_ID'] = user.transfer_account.id
-        responseObject['name'] = user.transfer_account.name
+    # todo: fix this (now many to many)
+    user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
+        TransferAccount.users.any(User.id.in_([user.id]))).all()
+    if len(user_transfer_accounts) > 0:
+        response_object['transfer_account_Id'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
+        response_object['name'] = user_transfer_accounts[0].name  # get the first transfer account name
 
-    return responseObject
+    # if user.transfer_account:
+    #     response_object['transfer_account_Id'] = user.transfer_account.id
+    #     response_object['name'] = user.transfer_account.name
+
+    return response_object
+
 
 class CheckBasicAuth(MethodView):
 
-    @basic_auth.required
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def get(self):
-
-        responseObject = {
+        response_object = {
             'status': 'success',
         }
 
-        return make_response(jsonify(responseObject)), 201
+        return make_response(jsonify(response_object)), 201
+
 
 class RefreshTokenAPI(MethodView):
     """
     User Refresh Token Resource
     """
+
     @requires_auth
     def get(self):
         try:
 
             auth_token = g.user.encode_auth_token()
 
-            responseObject = create_user_response_object(g.user,auth_token,'Token refreshed successfully.')
+            response_object = create_user_response_object(g.user, auth_token, 'Token refreshed successfully.')
 
-            return make_response(jsonify(responseObject)), 201
+            return make_response(jsonify(response_object)), 201
 
         except Exception as e:
 
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Some error occurred. Please try again.'
             }
 
-            return make_response(jsonify(responseObject)), 403
-
+            return make_response(jsonify(response_object)), 403
 
 
 class RegisterAPI(MethodView):
@@ -154,92 +150,122 @@ class RegisterAPI(MethodView):
         # get the post data
         post_data = request.get_json()
 
-        email = post_data.get('email')
+        email = post_data.get('email') or post_data.get('username')
         password = post_data.get('password')
+        phone = post_data.get('phone')
+        referral_code = post_data.get('referral_code')
+
+        if phone is not None:
+            # this is a registration from a mobile device THUS a vendor or recipient.
+            response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+                post_data,
+                is_self_sign_up=True,
+            )
+
+            if response_code == 200:
+                db.session.commit()
+
+            return make_response(jsonify(response_object)), response_code
 
         # email_tail = email.split('@')[-1]
         email_ok = False
 
-        whitelisted_emails = EmailWhitelist.query.filter_by(used=False).all()
+        whitelisted_emails = EmailWhitelist.query\
+            .filter_by(email=email, referral_code=referral_code, used=False) \
+            .execution_options(show_all=True).all()
+
+        selected_whitelist_item = None
+        exact_match = False
 
         tier = None
         if '@sempo.ai' in email:
             email_ok = True
-            tier = 'superadmin'
+            tier = 'sempoadmin'
 
         for whitelisted in whitelisted_emails:
             if whitelisted.allow_partial_match and whitelisted.email in email:
                 email_ok = True
                 tier = whitelisted.tier
+                selected_whitelist_item = whitelisted
+                exact_match = False
                 continue
             elif whitelisted.email == email:
                 email_ok = True
 
                 whitelisted.used = True
                 tier = whitelisted.tier
+                selected_whitelist_item = whitelisted
+                exact_match = True
                 continue
 
-        db.session.commit()
-
         if not email_ok:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Invalid email domain.',
             }
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
 
         if len(password) < 7:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Password must be at least 6 characters long',
             }
-            return make_response(jsonify(responseObject)), 403
-
+            return make_response(jsonify(response_object)), 403
 
         # check if user already exists
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
         if user:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'User already exists. Please Log in.',
             }
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
 
 
-        try:
+        if tier is None:
+            tier = 'subadmin'
 
-            if tier is None:
-                tier = 'subadmin'
+        user = User()
+        user.create_admin_auth(email, password, tier)
 
-            user = User()
-            user.create_admin_auth(email, password, tier)
+        # insert the user
+        db.session.add(user)
 
-            # insert the user
-            db.session.add(user)
-            db.session.commit()
+        if selected_whitelist_item:
+            user.organisations.append(selected_whitelist_item.organisation)
 
-            activation_token = user.encode_single_use_JWS('A')
+        db.session.flush()
 
-            send_activation_email(activation_token, email)
+        if exact_match:
+            user.is_activated = True
 
-            # generate the auth token
-            responseObject = {
+            auth_token = user.encode_auth_token()
+
+            response_object = {
                 'status': 'success',
-                'message': 'Successfully registered.',
+                'message': 'Successfully activated.',
+                'auth_token': auth_token.decode(),
+                'user_id': user.id,
+                'email': user.email,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            db.session.commit()
 
-        except Exception as e:
+            return make_response(jsonify(response_object)), 201
 
-            print('Error at: ' + str(datetime.utcnow()))
-            print(e)
+        activation_token = user.encode_single_use_JWS('A')
 
-            raise e
+        send_activation_email(activation_token, email)
 
+        db.session.commit()
 
+        # generate the auth token
+        response_object = {
+            'status': 'success',
+            'message': 'Successfully registered.',
+        }
 
-
+        return make_response(jsonify(response_object)), 201
 
 
 
@@ -260,35 +286,31 @@ class ActivateUserAPI(MethodView):
             auth_token = ''
         if auth_token:
 
-            validity_check =  User.decode_single_use_JWS(activation_token, 'A')
+            validity_check = User.decode_single_use_JWS(activation_token, 'A')
 
             if not validity_check['success']:
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': validity_check['message']
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user = validity_check['user']
 
             if user.is_activated:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Already activated.'
                 }
 
-                return make_response(jsonify(responseObject)), 401
-
+                return make_response(jsonify(response_object)), 401
 
             user.is_activated = True
 
-            db.session.commit()
-
             auth_token = user.encode_auth_token()
 
-            responseObject = {
+            response_object = {
                 'status': 'success',
                 'message': 'Successfully activated.',
                 'auth_token': auth_token.decode(),
@@ -296,15 +318,16 @@ class ActivateUserAPI(MethodView):
                 'email': user.email,
             }
 
-            return make_response(jsonify(responseObject)), 201
+            db.session.commit()
+
+            return make_response(jsonify(response_object)), 201
 
         else:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Provide a valid auth token.'
             }
-            return make_response(jsonify(responseObject)), 401
-
+            return make_response(jsonify(response_object)), 401
 
 
 class LoginAPI(MethodView):
@@ -317,13 +340,15 @@ class LoginAPI(MethodView):
         print("process started")
 
         challenges = [
-            ('Why don’t they play poker in the jungle?','Too many cheetahs.'),
+            ('Why don’t they play poker in the jungle?', 'Too many cheetahs.'),
             ('What did the Buddhist say to the hot dog vendor?', 'Make me one with everything.'),
             ('What does a zombie vegetarian eat?', 'Graaaaaaaains!'),
             ('My new thesaurus is terrible.', 'Not only that, but it’s also terrible.'),
             ('Why didn’t the astronaut come home to his wife?', 'He needed his space.'),
-            ('I got fired from my job at the bank today.', 'An old lady came in and asked me to check her balance, so I pushed her over.'),
-            ('I like to spend every day as if it’s my last', 'Staying in bed and calling for a nurse to bring me more pudding.')
+            ('I got fired from my job at the bank today.',
+             'An old lady came in and asked me to check her balance, so I pushed her over.'),
+            ('I like to spend every day as if it’s my last',
+             'Staying in bed and calling for a nurse to bring me more pudding.')
         ]
 
         challenge = random.choice(challenges)
@@ -341,13 +366,13 @@ class LoginAPI(MethodView):
         # proxies = request.headers.getlist("X-Forwarded-For")
         # http://esd.io/blog/flask-apps-heroku-real-ip-spoofing.html
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'who_allows_a_get_request_to_their_auth_endpoint': 'We do.',
             challenge[0]: challenge[1],
             # 'metadata': {'user_agent': user_agent, 'ip': ip_address, 'otherip': ip, 'proxies': proxies},
         }
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
     # @limiter.limit("20 per day")
     def post(self):
@@ -356,6 +381,7 @@ class LoginAPI(MethodView):
         post_data = request.get_json()
 
         user = None
+        phone = None
 
         email = post_data.get('username') or post_data.get('email')
         password = post_data.get('password')
@@ -363,73 +389,104 @@ class LoginAPI(MethodView):
 
         # First try to match email
         if email:
-            user = User.query.filter_by(email=email).first()
+            user = User.query.filter_by(email=email).execution_options(show_all=True).first()
 
-        #Now try to match the public serial number (comes in under the phone)
+        # Now try to match the public serial number (comes in under the phone)
         if not user:
             public_serial_number_or_phone = post_data.get('phone')
 
-            user = User.query.filter_by(public_serial_number=public_serial_number_or_phone).first()
+            user = User.query.filter_by(public_serial_number=public_serial_number_or_phone).execution_options(
+                show_all=True).first()
 
-        #Now try to match the phone
+        # Now try to match the phone
         if not user:
-            phone = proccess_phone_number(post_data.get('phone'))
+            try:
+                phone = proccess_phone_number(post_data.get('phone'), region=post_data.get('region'))
+            except NumberParseException as e:
+                response_object = {'message': 'Invalid Phone Number: ' + str(e)}
+                return make_response(jsonify(response_object)), 401
 
             if phone:
+                user = User.query.filter_by(phone=phone).execution_options(show_all=True).first()
 
-                user = User.query.filter_by(phone=phone).first()
+        # mobile user doesn't exist so default to creating a new wallet!
+        if user is None and phone:
+            # this is a registration from a mobile device THUS a vendor or recipient.
+            response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+                dict(phone=phone, deviceInfo=post_data.get('deviceInfo')),
+                is_self_sign_up=True,
+            )
+
+            if response_code == 200:
+                db.session.commit()
+
+            return make_response(jsonify(response_object)), response_code
+
+        if user and user.is_activated and post_data.get('phone') and (password == ''):
+            # user already exists, is activated. no password provided, thus request PIN screen.
+            # todo: this should check if device exists, if no, resend OTP to verify login is real.
+            response_object = {
+                'status': 'success',
+                'login_with_pin': True,
+                'message': 'Login with PIN'
+            }
+            return make_response(jsonify(response_object)), 200
 
         if not (email or post_data.get('phone')):
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'No username supplied'
             }
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
         if post_data.get('phone') and user and user.one_time_code and not user.is_activated:
+            # vendor sign up with one time code or OTP verified
             if user.one_time_code == password:
-                responseObject = {
-                        'status': 'success',
-                        'pin_must_be_set': True,
-                        'message': 'Please set your pin.'
+                response_object = {
+                    'status': 'success',
+                    'pin_must_be_set': True,
+                    'message': 'Please set your pin.'
                 }
-                return make_response(jsonify(responseObject)), 200
+                return make_response(jsonify(response_object)), 200
+
+            if not user.is_phone_verified:
+                if user.is_self_sign_up:
+                    # self sign up, resend phone verification code
+                    user.set_pin(None, False)  # resets PIN
+                    UserUtils.send_one_time_code(phone=phone, user=user)
+                db.session.commit()
+                response_object = {'message':  'Please verify phone number.', 'otp_verify': True}
+                return make_response(jsonify(response_object)), 200
 
         try:
 
-            if not user or not user.verify_password(post_data.get('password')):
-
-                responseObject = {
+            if not user or not user.verify_password(password):
+                response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if not user.is_activated:
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'is_activated': False,
                     'message': 'Account has not been activated. Please check your emails.'
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if post_data.get('deviceInfo'):
-
-                save_device_info(post_data.get('deviceInfo'), user)
-
-                db.session.commit()
+                UserUtils.save_device_info(post_data.get('deviceInfo'), user)
 
             auth_token = user.encode_auth_token()
 
             if not auth_token:
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             # Possible Outcomes:
             # TFA required, but not set up
@@ -439,17 +496,18 @@ class LoginAPI(MethodView):
 
             tfa_response_oject = tfa_logic(user, tfa_token)
             if tfa_response_oject:
-
                 tfa_response_oject['auth_token'] = auth_token.decode()
 
                 return make_response(jsonify(tfa_response_oject)), 401
 
-            #Update the last_seen TS for this user
+            # Update the last_seen TS for this user
             user.update_last_seen_ts()
 
-            responseObject = create_user_response_object(user, auth_token, 'Successfully logged in.')
+            response_object = create_user_response_object(user, auth_token, 'Successfully logged in.')
 
-            return make_response(jsonify(responseObject)), 200
+            db.session.commit()
+
+            return make_response(jsonify(response_object)), 200
 
         except Exception as e:
 
@@ -457,18 +515,19 @@ class LoginAPI(MethodView):
 
             raise e
 
-            # responseObject = {
+            # response_object = {
             #     'status': 'fail',
             #     'message': "Unknown Error."
             # }
             #
-            # return make_response(jsonify(responseObject)), 500
+            # return make_response(jsonify(response_object)), 500
 
 
 class LogoutAPI(MethodView):
     """
     Logout Resource
     """
+
     def post(self):
         # get auth token
         auth_header = request.headers.get('Authorization')
@@ -485,35 +544,37 @@ class LogoutAPI(MethodView):
                     # insert the token
                     db.session.add(blacklist_token)
                     db.session.commit()
-                    responseObject = {
+                    response_object = {
                         'status': 'success',
                         'message': 'Successfully logged out.'
                     }
-                    return make_response(jsonify(responseObject)), 200
+                    return make_response(jsonify(response_object)), 200
                 except Exception as e:
-                    responseObject = {
+                    response_object = {
                         'status': 'fail',
                         'message': e
                     }
-                    return make_response(jsonify(responseObject)), 200
+                    return make_response(jsonify(response_object)), 200
             else:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': resp
                 }
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
         else:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Provide a valid auth token.'
             }
-            return make_response(jsonify(responseObject)), 403
+            return make_response(jsonify(response_object)), 403
+
 
 class RequestPasswordResetEmailAPI(MethodView):
     """
     Password Reset Email Resource
     """
+
     def post(self):
         # get the post data
         post_data = request.get_json()
@@ -521,92 +582,89 @@ class RequestPasswordResetEmailAPI(MethodView):
         email = post_data.get('email')
 
         if not email:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'No email supplied'
             }
 
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
 
         if user:
-
             password_reset_token = user.encode_single_use_JWS('R')
 
-            send_reset_email(password_reset_token,email)
+            send_reset_email(password_reset_token, email)
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Reset email sent'
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 
 class ResetPasswordAPI(MethodView):
     """
     Password Reset Resource
     """
+
     def post(self):
 
         # get the post data
         post_data = request.get_json()
 
-        old_password  = post_data.get('old_password')
-        new_password  = post_data.get('new_password')
-        phone         = proccess_phone_number(post_data.get('phone'))
+        old_password = post_data.get('old_password')
+        new_password = post_data.get('new_password')
+        phone = proccess_phone_number(phone_number=post_data.get('phone'), region=post_data.get('region'))
         one_time_code = post_data.get('one_time_code')
-
 
         auth_header = request.headers.get('Authorization')
 
-        #Check authorisation using a one time code
+        # Check authorisation using a one time code
         if phone and one_time_code:
             card = phone[-6:]
-            user = (User.query.filter_by(phone = phone).first() or
-                    User.query.filter_by(public_serial_number=card).first()
+            user = (User.query.filter_by(phone=phone).execution_options(show_all=True).first() or
+                    User.query.filter_by(public_serial_number=card).execution_options(show_all=True).first()
                     )
 
-
             if not user:
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'User not found'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if user.is_activated:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Account already activated'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if str(one_time_code) != user.one_time_code:
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'One time code not valid'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user.hash_password(new_password)
 
+            user.is_phone_verified = True
             user.is_activated = True
             user.one_time_code = None
 
             auth_token = user.encode_auth_token()
 
-            responseObject = create_user_response_object(user, auth_token, 'Successfully set pin')
+            response_object = create_user_response_object(user, auth_token, 'Successfully set pin')
 
             db.session.commit()
 
-            return make_response(jsonify(responseObject)), 200
+            return make_response(jsonify(response_object)), 200
 
         # Check authorisation using regular auth
         elif auth_header and auth_header != 'null' and old_password:
@@ -615,33 +673,30 @@ class ResetPasswordAPI(MethodView):
             resp = User.decode_auth_token(auth_token)
 
             if isinstance(resp, str):
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Invalid auth token'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
-            user = User.query.filter_by(id=resp.get('user_id')).first()
+            user = User.query.filter_by(id=resp.get('user_id')).execution_options(show_all=True).first()
 
             if not user:
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'User not found'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             if not user.verify_password(old_password):
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'invalid password'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
         # Check authorisation using a reset token provided via email
         else:
@@ -649,72 +704,57 @@ class ResetPasswordAPI(MethodView):
             reset_password_token = post_data.get('reset_password_token')
 
             if not reset_password_token:
-
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': 'Missing token.'
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             reset_password_token = reset_password_token.split(" ")[0]
 
             validity_check = User.decode_single_use_JWS(reset_password_token, 'R')
 
             if not validity_check['success']:
-                responseObject = {
+                response_object = {
                     'status': 'fail',
                     'message': validity_check['message']
                 }
 
-                return make_response(jsonify(responseObject)), 401
+                return make_response(jsonify(response_object)), 401
 
             user = validity_check['user']
 
         if not new_password or len(new_password) < 6:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'Password must be at least 6 characters long'
             }
 
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
         user.hash_password(new_password)
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Password changed, please log in'
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
+
 
 class PermissionsAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
 
-        admins = User.query.filter(or_(
-            User.is_subadmin == True,
-            User.is_admin == True,
-            User.is_superadmin == True,
-            User.is_view == True,
-        )
-        ).all()
+        admins = User.query.filter_by(has_admin_role=True).all()
 
         admin_list = []
         for admin in admins:
 
-            tier = None
-
-            if admin.is_superadmin:
-                tier = 'superadmin'
-            elif admin.is_admin:
-                tier = 'admin'
-            elif admin.is_subadmin:
-                tier = 'subadmin'
-            else:
-                tier = 'view'
+            tier = admin.admin_tier
 
             admin_list.append({
                 'id': admin.id,
@@ -725,21 +765,36 @@ class PermissionsAPI(MethodView):
                 'is_disabled': admin.is_disabled
             })
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Admin List Loaded',
             'admin_list': admin_list
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
         post_data = request.get_json()
 
         email = post_data.get('email')
         tier = post_data.get('tier')
+        organisation_id = post_data.get('organisation_id', None)
+
+        if organisation_id and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
+            response_object = {'message': 'Not Authorised to set organisation ID'}
+            return make_response(jsonify(response_object)), 401
+
+        target_organisation_id = organisation_id or g.active_organisation
+        if not target_organisation_id:
+            response_object = {'message': 'Must provide an organisation to bind user to'}
+            return make_response(jsonify(response_object)), 400
+
+        organisation = Organisation.query.get(target_organisation_id)
+        if not organisation:
+            response_object = {'message': 'Organisation Not Found'}
+            return make_response(jsonify(response_object)), 404
 
         email_exists = EmailWhitelist.query.filter_by(email=email).first()
 
@@ -747,26 +802,28 @@ class PermissionsAPI(MethodView):
             response_object = {'message': 'Email already on whitelist.'}
             return make_response(jsonify(response_object)), 400
 
-        if not (email or tier):
+        if not (email and tier):
             response_object = {'message': 'No email or tier provided'}
             return make_response(jsonify(response_object)), 400
 
-        user = EmailWhitelist(email=email,
-                              tier=tier)
+        invite = EmailWhitelist(email=email,
+                                tier=tier,
+                                organisation_id=target_organisation_id)
 
-        db.session.add(user)
+        db.session.add(invite)
+
+        send_invite_email(invite, organisation)
+
         db.session.commit()
 
-        send_invite_email(email)
-
-        responseObject = {
+        response_object = {
             'message': 'An invite has been sent!',
+            'referral_code': invite.referral_code
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
-
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self):
 
         post_data = request.get_json()
@@ -778,67 +835,66 @@ class PermissionsAPI(MethodView):
         user = User.query.get(user_id)
 
         if not user:
-            responseObject = {
+            response_object = {
                 'status': 'fail',
                 'message': 'User not found'
             }
 
-            return make_response(jsonify(responseObject)), 401
+            return make_response(jsonify(response_object)), 401
 
         if admin_tier:
-            user.set_admin_role_using_tier_string(admin_tier)
+            user.set_held_role('ADMIN',admin_tier)
 
         if deactivated is not None:
             user.is_disabled = deactivated
 
         db.session.commit()
 
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Account status modified',
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 
 class BlockchainKeyAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_superadmin'])
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
-
-        responseObject = {
+        response_object = {
             'status': 'success',
             'message': 'Key loaded',
             'private_key': current_app.config['MASTER_WALLET_PRIVATE_KEY'],
             'address': current_app.config['MASTER_WALLET_ADDRESS']
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
 
 class KoboCredentialsAPI(MethodView):
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
-
         response_object = {
-            'username': current_app.config['KOBO_AUTH_USERNAME'],
-            'password': current_app.config['KOBO_AUTH_PASSWORD']
+            'username': current_app.config['EXTERNAL_AUTH_USERNAME'],
+            'password': current_app.config['EXTERNAL_AUTH_PASSWORD']
         }
 
         return make_response(jsonify(response_object)), 200
+
 
 class TwoFactorAuthAPI(MethodView):
     @requires_auth
     def get(self):
         tfa_url = g.user.tfa_url
-        responseObject = {
-           'data': {"tfa_url": tfa_url}
+        response_object = {
+            'data': {"tfa_url": tfa_url}
         }
 
-        return make_response(jsonify(responseObject)), 200
+        return make_response(jsonify(response_object)), 200
 
-    @requires_auth(ignore_tfa_requirement = True)
+    @requires_auth(ignore_tfa_requirement=True)
     def post(self):
         request_data = request.get_json()
         user = g.user
@@ -853,18 +909,18 @@ class TwoFactorAuthAPI(MethodView):
             if tfa_auth_token:
                 auth_token = g.user.encode_auth_token()
 
-                responseObject = create_user_response_object(user, auth_token, 'Successfully logged in.')
+                response_object = create_user_response_object(user, auth_token, 'Successfully logged in.')
 
-                responseObject['tfa_auth_token'] = tfa_auth_token.decode()
+                response_object['tfa_auth_token'] = tfa_auth_token.decode()
 
-                return make_response(jsonify(responseObject)), 200
+                return make_response(jsonify(response_object)), 200
 
-        responseObject = {
-                            'status': "Failed",
-                            'message': "Validation failed. Please try again."
-                        }
+        response_object = {
+            'status': "Failed",
+            'message': "Validation failed. Please try again."
+        }
 
-        return make_response(jsonify(responseObject)), 400
+        return make_response(jsonify(response_object)), 400
 
 
 # add Rules for API Endpoints
@@ -938,5 +994,5 @@ auth_blueprint.add_url_rule(
 auth_blueprint.add_url_rule(
     '/auth/tfa/',
     view_func=TwoFactorAuthAPI.as_view('tfa_view'),
-    methods=['GET','POST']
+    methods=['GET', 'POST']
 )

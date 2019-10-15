@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from server import db
-from server.models import SavedFilter
+from server.models.models import SavedFilter
 from server.utils.auth import requires_auth
 from server.schemas import filters_schema, filter_schema
 
@@ -9,7 +9,7 @@ filter_blueprint = Blueprint('filter', __name__)
 
 
 class SavedFiltersAPI(MethodView):
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
 
         filters = SavedFilter.query.all()
@@ -28,7 +28,7 @@ class SavedFiltersAPI(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles=['is_admin'])
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
 
