@@ -372,11 +372,11 @@ def make_payment_transfer(transfer_amount,
                           uuid=None):
 
     transfer = CreditTransfer(transfer_amount,
-                                     sender_user=send_user,
-                                     sender_transfer_account=send_transfer_account,
-                                     recipient_user=receive_user,
-                                     recipient_transfer_account=receive_transfer_account,
-                                     uuid=uuid)
+                              sender_user=send_user,
+                              sender_transfer_account=send_transfer_account,
+                              recipient_user=receive_user,
+                              recipient_transfer_account=receive_transfer_account,
+                              uuid=uuid)
 
     make_cashout_incentive_transaction = False
 
