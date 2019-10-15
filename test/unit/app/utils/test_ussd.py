@@ -3,37 +3,23 @@ import pytest
 from server import db
 from fixtures.user import UserFactory
 from server.models.ussd import UssdMenu, UssdSession
+from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
 
-@pytest.fixture(scope='function')
-def menu_display_text_in_lang(test_client, init_database):
-    from server.utils.ussd.ussd import menu_display_text_in_lang
-    return menu_display_text_in_lang
-
-
-@pytest.fixture(scope='function')
-def create_or_update_session(test_client, init_database):
-    from server.utils.ussd.ussd import create_or_update_session
-    return create_or_update_session
-
-
+from functools import partial
 # TODO(ussd): once preferred_language is added, add another test that sw_KE works and user without preferred_language
-@pytest.mark.parametrize("case,expected", [
-    (1, "foo"),
-    (2, "foo"),
+@pytest.mark.parametrize("user_factory,expected", [
+    (None, "foo"),
+    (partial(UserFactory,first_name="Bob"), "foo"),
 ])
-def test_menu_display_text_in_lang(menu_display_text_in_lang, case, expected):
-    if case == 1:
-        user = None
-    else:
-        # TODO: this is really gross, but I can't use the factory in the parameters since no db initiated... how do?
-        user = UserFactory()
+def test_menu_display_text_in_lang(test_client, init_database, user_factory, expected):
+    user = user_factory() if user_factory else None
 
     menu = UssdMenu(display_text_en="foo", display_text_sw="bar")
     assert menu_display_text_in_lang(menu, user) == expected
 
 
-def test_create_or_update_session(create_or_update_session):
+def test_create_or_update_session(test_client, init_database):
     # create a session in db
     session = UssdSession(session_id="1", user_id=2, msisdn="123", ussd_menu_id=3, state="foo", service_code="*123#")
     db.session.add(session)
