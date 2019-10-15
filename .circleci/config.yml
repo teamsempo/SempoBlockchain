@@ -206,6 +206,8 @@ workflows:
       - deploy:
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - nick/master-merge
           requires:
             - test
