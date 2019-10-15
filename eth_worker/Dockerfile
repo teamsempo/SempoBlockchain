@@ -1,6 +1,6 @@
 FROM python:3.6-slim-stretch
 
-RUN apt update && apt -y install gcc libssl-dev
+RUN apt update && apt -y install gcc libssl-dev sudo apt-get install libffi-dev
 
 COPY ./eth_worker/requirements.txt /
 
