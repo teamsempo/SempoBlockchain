@@ -24,7 +24,7 @@ class ProcessKenyaUssd(MethodView):
         All responses mid-session begin with CON. All responses that terminate the session begin with the word END
     """
     def post(self):
-        post_data = request.get_json()
+        post_data = request.get_json() or request.form
 
         session_id = post_data.get('sessionId')
         phone_number = post_data.get('phoneNumber')
