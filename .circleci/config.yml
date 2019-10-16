@@ -208,6 +208,5 @@ workflows:
             branches:
               only:
                 - master
-                - nick/master-merge
           requires:
             - test
