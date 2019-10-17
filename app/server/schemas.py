@@ -1,9 +1,10 @@
 from flask import g
 from marshmallow import Schema, fields, post_dump
 
-from server.models.models import CustomAttribute
+from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
+
 
 class UserSchema(Schema):
     id      = fields.Int(dump_only=True)

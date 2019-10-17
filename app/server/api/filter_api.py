@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from server import db
-from server.models.models import SavedFilter
+from server.models.saved_filter import SavedFilter
 from server.utils.auth import requires_auth
 from server.schemas import filters_schema, filter_schema
 

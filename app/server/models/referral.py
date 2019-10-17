@@ -5,6 +5,7 @@ from server.models.utils import ModelBase
 from server.models.user import User
 from server.utils.phone import proccess_phone_number
 
+
 class Referral(ModelBase):
     __tablename__ = 'referral'
 
