@@ -17,9 +17,11 @@ def menu_display_text_in_lang(current_menu: UssdMenu, user: Optional[User]) -> s
 
 
 def create_or_update_session(session_id: str, user: User, current_menu: UssdMenu, user_input: str, service_code: str) -> UssdSession:
-    session = UssdSession.query.filter_by(session_id=session_id)
-    if session.count() > 0:
-        session.update({"user_input": user_input, "ussd_menu_id": current_menu.id, "state": current_menu.name})
+    session: Optional[UssdSession] = UssdSession.query.filter_by(session_id=session_id).first()
+    if session:
+        session.user_input = user_input
+        session.ussd_menu_id = current_menu.id
+        session.state = current_menu.name
         db.session.commit()
     else:
         session = UssdSession(session_id=session_id, user_id=user.id, msisdn=user.phone, user_input=user_input,
