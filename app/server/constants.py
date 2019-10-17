@@ -26,7 +26,6 @@ DEFAULT_ATTRIBUTES = ['email', 'phone', 'blockchain_address', 'public_serial_num
                       'location', 'use_precreated_pin',
                       'transfer_account_name', 'primary_user_identifier',
                       'first_name', 'last_name', 'preferred_language',
-                      'bio', 'gender',
                       'custom_initial_disbursement', 'is_vendor', 'is_beneficiary',
                       'existing_vendor_phone', 'existing_vendor_pin', 'use_last_4_digits_of_id_as_initial_pin']
 

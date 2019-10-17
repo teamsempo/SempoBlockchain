@@ -45,9 +45,6 @@ class User(ManyOrgBase, ModelBase):
     last_name = db.Column(db.String())
     preferred_language = db.Column(db.String())
 
-    bio = db.Column(db.String())
-    gender = db.Column(db.String())
-
     _last_seen = db.Column(db.DateTime)
 
     email = db.Column(db.String())
@@ -463,10 +460,6 @@ class User(ManyOrgBase, ModelBase):
             pin = supplied_pin
 
         self.hash_password(pin)
-
-    # TODO(ussd): change to a field, whether on User or a related table like UserPreference
-    def preferred_language(self):
-        return "en_AU"
 
     # TODO(ussd): change to a field once we figure out what's the deal with reset_token
     def is_resetting(self):
