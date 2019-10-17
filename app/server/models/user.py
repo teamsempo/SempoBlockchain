@@ -16,7 +16,7 @@ from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
-from server.models.models import BlacklistToken
+from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
 from server.exceptions import (
     RoleNotFoundException,

@@ -11,7 +11,8 @@ from server.models.upload import UploadedImage
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
-from server.models.transfer_account import TransferAccount, BlockchainAddress
+from server.models.transfer_account import TransferAccount
+from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError

@@ -9,7 +9,7 @@ sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 from server import create_app, db
-from server.models.transfer_account import BlockchainAddress
+from server.models.blockchain_address import BlockchainAddress
 
 class UpdateData(Command):
 

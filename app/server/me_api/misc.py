@@ -2,7 +2,7 @@ from flask import request, g, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models.models import TargetingSurvey
+from server.models.targeting_survey import TargetingSurvey
 from server.models.feedback import Feedback
 from server.models.referral import Referral
 from server.schemas import referrals_schema, referral_schema

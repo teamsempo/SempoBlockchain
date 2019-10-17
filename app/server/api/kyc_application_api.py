@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from server import db, sentry
-from server.models.models import BankAccount
+from server.models.bank_account import BankAccount
 from server.models.kyc_application import KycApplication
 from server.models.upload import UploadedDocument
 from server.utils.auth import requires_auth

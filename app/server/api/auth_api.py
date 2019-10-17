@@ -7,7 +7,10 @@ from server.models.transfer_account import TransferAccount
 from phonenumbers.phonenumberutil import NumberParseException
 from server.models.user import User
 from server.models.organisation import Organisation
-from server.models.models import BlacklistToken, EmailWhitelist, CurrencyConversion, TransferUsage
+from server.models.email_whitelist import EmailWhitelist
+from server.models.currency_conversion import CurrencyConversion
+from server.models.blacklist_token import BlacklistToken
+from server.models.transfer_usage import TransferUsage
 from server.utils.intercom import create_intercom_android_secret
 from server.utils.auth import requires_auth, tfa_logic
 from server.utils.access_control import AccessControl

@@ -11,6 +11,7 @@ import server
 from server import db
 from server.exceptions import OrganisationNotProvidedException
 
+
 def get_authorising_user_id():
     if hasattr(g,'user'):
         return g.user.id
@@ -18,6 +19,7 @@ def get_authorising_user_id():
         return g.authorising_user_id
     else:
         return None
+
 
 def paginate_query(query, queried_object=None, order_override=None):
     """
@@ -144,6 +146,7 @@ organisation_association_table = db.Table(
     db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id')),
 )
 
+
 class ModelBase(db.Model):
     __abstract__ = True
 
@@ -151,6 +154,7 @@ class ModelBase(db.Model):
     authorising_user_id = db.Column(db.Integer, default=get_authorising_user_id)
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
 
 class OneOrgBase(object):
     """
