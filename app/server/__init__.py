@@ -19,31 +19,6 @@ from eth_utils import to_checksum_address
 import sys
 import os
 
-# try:
-#     import uwsgi
-#     is_running_uwsgi = True
-# except ImportError:
-#     is_running_uwsgi = False
-
-sys.path.append('../')
-
-db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
-basic_auth = BasicAuth()
-sentry = Sentry()
-
-# limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
-
-s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
-                  aws_secret_access_key=config.AWS_SES_SECRET)
-
-messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
-
-celery_app = Celery('tasks',
-                    broker=config.REDIS_URL,
-                    backend=config.REDIS_URL,
-                    task_serializer='json')
-
-
 def encrypt_string(raw_string):
 
     import base64
@@ -54,20 +29,6 @@ def encrypt_string(raw_string):
     cipher_suite = Fernet(fernet_encryption_key)
 
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
-
-
-encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
-dependent_on_tasks = None
-
-red = redis.Redis.from_url(config.REDIS_URL)
-
-pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
-                       key=config.PUSHER_KEY,
-                       secret=config.PUSHER_SECRET,
-                       cluster=config.PUSHER_CLUSTER,
-                       ssl=True)
-
-twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
 
 def create_app():
     # create and configure the app
@@ -222,3 +183,37 @@ def migrate_data():
         db.session.add(exchange_contract)
 
         db.session.commit()
+
+
+sys.path.append('../')
+
+db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
+basic_auth = BasicAuth()
+sentry = Sentry()
+
+# limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
+
+s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
+                  aws_secret_access_key=config.AWS_SES_SECRET)
+
+messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
+
+celery_app = Celery('tasks',
+                    broker=config.REDIS_URL,
+                    backend=config.REDIS_URL,
+                    task_serializer='json')
+
+encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
+dependent_on_tasks = None
+
+red = redis.Redis.from_url(config.REDIS_URL)
+
+pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
+                       key=config.PUSHER_KEY,
+                       secret=config.PUSHER_SECRET,
+                       cluster=config.PUSHER_CLUSTER,
+                       ssl=True)
+
+twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
+
+migrate_data()
