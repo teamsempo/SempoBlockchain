@@ -60,6 +60,7 @@ def make_token_transfer(signing_address, token,
                         from_address, to_address, amount,
                         dependent_on_tasks=None):
     """
+    Makes a "Transfer From" transaction on an ERC20 token.
 
     :param signing_address: address of wallet signing txn
     :param token: ERC20 token being transferred
@@ -85,8 +86,6 @@ def make_token_transfer(signing_address, token,
 
     return execute_synchronous_transaction_task(transfer_sig)
 
-
-
 def make_approval(signing_address, token,
                   spender, amount,
                   dependent_on_tasks=None):
@@ -105,6 +104,68 @@ def make_approval(signing_address, token,
                                 })
 
     return execute_synchronous_transaction_task(transfer_sig)
+
+def make_liquid_token_exchange(signing_address,
+                               exchange_contract_address,
+                               from_token,
+                               to_token,
+                               reserve_token,
+                               from_amount,
+                               dependent_on_tasks=None):
+    """
+    Uses a Liquid Token Contract network to exchange between two ERC20 smart tokens.
+    :param signing_address: address of wallet signing txn
+    :param exchange_contract_address: the address of the one of the convert contracts used in the network
+    :param from_token: the token being exchanged from
+    :param to_token: the token being exchanged to
+    :param reserve_token: the reserve token used as a connector in the network
+    :param from_amount: the amount of the token being exchanged from
+    :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
+    :return: task id for the exchange
+    """
+
+    path = [from_token.address,
+            from_token.address,
+            reserve_token.address,
+            to_token.address,
+            to_token.address]
+
+    transfer_sig = celery_app.signature(eth_endpoint('transact_with_contract_function'),
+                                kwargs={
+                                    'signing_address': signing_address,
+                                    'contract': exchange_contract_address,
+                                    'function': 'convert',
+                                    'args': [
+                                        path,
+                                        from_token.system_amount_to_token(from_amount),
+                                        '1'
+                                    ],
+                                    'dependent_on_tasks': dependent_on_tasks
+                                })
+
+    return execute_synchronous_transaction_task(transfer_sig)
+
+def get_conversion_amount(exchange_contract_address, from_token, to_token, reserve_token, from_amount):
+
+    path = [from_token.address,
+            from_token.address,
+            reserve_token.address,
+            to_token.address,
+            to_token.address]
+
+    conversion_amount_sig = celery_app.signature(eth_endpoint('call_contract_function'),
+                                                 kwargs={
+                                                     'contract': exchange_contract_address,
+                                                     'function': 'getReturnByPath',
+                                                     'args': [
+                                                         path,
+                                                         from_token.system_amount_to_token(from_amount)
+                                                     ]
+                                                 })
+
+    raw_conversion_amount = execute_synchronous_call_task(conversion_amount_sig)
+
+    return to_token.system_amount_to_token(raw_conversion_amount)
 
 def get_token_decimals(token):
 
@@ -138,6 +199,16 @@ def get_wallet_balance(address, token):
     return token.token_amount_to_system(balance)
 
 def get_blockchain_task(task_id):
+    """
+    Used to check the status of a blockchain task
+
+    :param task_id: id of the blockchain
+    :return: Serialised Task Dictionary:
+    {
+        status: enum, one of 'SUCCESS', 'PENDING', 'UNSTARTED', 'FAILED', 'UNKNOWN'
+        dependents: list of dependent task ids
+    }
+    """
 
     sig = celery_app.signature(eth_endpoint('get_task'),
                                kwargs={'task_id': task_id})

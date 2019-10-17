@@ -201,7 +201,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         return matching_transfer_accounts[0]
 
-    def _select_transfer_account(self, supplied_transfer_account, user, token):
+    def _select_transfer_account(self, token, user, supplied_transfer_account = None):
         if token is None:
             raise Exception("Token must be specified")
         if supplied_transfer_account:
@@ -229,13 +229,15 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.sender_user = sender_user
         self.recipient_user = recipient_user
 
-        self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
-            sender_transfer_account, sender_user, token)
+        self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(token,
+                                                                                                sender_user,
+                                                                                                sender_transfer_account)
 
         self.token = token or self.sender_transfer_account.token
 
-        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
-            recipient_transfer_account, recipient_user, self.token)
+        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(self.token,
+                                                                                                      recipient_user,
+                                                                                                      recipient_transfer_account)
 
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:
             raise Exception("Tokens do not match")
