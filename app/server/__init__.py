@@ -58,31 +58,6 @@ def encrypt_string(raw_string):
 
 encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 dependent_on_tasks = None
-#
-# for i in range(0,20):
-#     blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
-#                                            kwargs={
-#                                                'encrypted_private_key': encrypted_private_key,
-#                                                'contract': 'Dai Stablecoin v1.0',
-#                                                'function': 'transfer',
-#                                                'args': [
-#                                                    '0x68D3ce90D84B4DD8936908Afd4079797057996bB',
-#                                                    1
-#                                                ],
-#                                                'dependent_on_tasks': dependent_on_tasks
-#                                            })
-#     result = blockchain_task.delay()
-#
-#     try:
-#         task_id = result.get(timeout=3, propagate=True, interval=0.3)
-#     except Exception as e:
-#         raise e
-#     finally:
-#         result.forget()
-#
-#     # if not dependent_on_tasks:
-#     # dependent_on_tasks = [task_id]
-#     print(task_id)
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
@@ -93,7 +68,6 @@ pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
                        ssl=True)
 
 twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
-
 
 def create_app():
     # create and configure the app
@@ -113,7 +87,6 @@ def create_app():
     register_blueprints(app)
 
     return app
-
 
 def register_extensions(app):
     db.init_app(app)
@@ -141,7 +114,6 @@ def register_extensions(app):
 
     print('celery joined on {} at {}'.format(
         app.config['REDIS_URL'], datetime.utcnow()))
-
 
 def register_blueprints(app):
     @app.before_request
@@ -232,3 +204,21 @@ def register_blueprints(app):
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('index.html'), 404
+
+def migrate_data():
+    from server.models.token import Token
+    from server.models.exchange import ExchangeContract
+
+    if config.RESERVE_TOKEN_ADDRESS and config.EXCHANGE_CONTRACT_ADDRESS:
+        reserve_token = Token.query.filter_by(address=config.RESERVE_TOKEN_ADDRESS).first()
+
+        if not reserve_token:
+            reserve_token = Token(address=config.RESERVE_TOKEN_ADDRESS)
+            db.session.add(reserve_token)
+
+        exchange_contract = ExchangeContract.query.filter_by(blockchain_address=config.EXCHANGE_CONTRACT_ADDRESS)
+
+        exchange_contract.reserve_token = reserve_token
+        db.session.add(exchange_contract)
+
+        db.session.commit()

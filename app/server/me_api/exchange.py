@@ -1,7 +1,8 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
-from server.models.models import Token
+from server.models.token import Token
+
 
 class ExchangeAPI(MethodView):
 

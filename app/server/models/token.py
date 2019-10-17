@@ -1,8 +1,6 @@
 from server import db
-from server.utils.blockchain_tasks import (
-    get_token_decimals
-)
-from server.models.utils import ModelBase
+from server.models.utils import ModelBase, exchange_contract_token_association_table
+from server.utils.blockchain_tasks import get_token_decimals
 
 
 class Token(ModelBase):
@@ -19,13 +17,27 @@ class Token(ModelBase):
                                     foreign_keys='Organisation.token_id')
 
     transfer_accounts = db.relationship('TransferAccount', backref='token', lazy=True,
-                                        foreign_keys='TransferAccount.token_id')
+                                         foreign_keys='TransferAccount.token_id')
 
     credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
-                                       foreign_keys='CreditTransfer.token_id')
+                                        foreign_keys='CreditTransfer.token_id')
 
     approvals = db.relationship('SpendApproval', backref='token', lazy=True,
-                                foreign_keys='SpendApproval.token_id')
+                                        foreign_keys='SpendApproval.token_id')
+
+    reserve_for_exchange = db.relationship('ExchangeContract', backref='reserve_token', lazy=True,
+                                           foreign_keys='ExchangeContract.reserve_token_id')
+
+    exchange_contracts = db.relationship(
+        "ExchangeContract",
+        secondary=exchange_contract_token_association_table,
+        back_populates="exchangeable_tokens")
+
+    exchanges_from = db.relationship('Exchange', backref='from_token', lazy=True,
+                                     foreign_keys='Exchange.from_token_id')
+
+    exchanges_to = db.relationship('Exchange', backref='to_token', lazy=True,
+                                   foreign_keys='Exchange.to_token_id')
 
     @property
     def decimals(self):
@@ -44,4 +56,3 @@ class Token(ModelBase):
 
     def system_amount_to_token(self, system_amount):
         return int(float(system_amount) / 100 * 10**self.decimals)
-

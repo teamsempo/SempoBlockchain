@@ -254,7 +254,10 @@ if specific_parser['ETHEREUM'].get('dai_contract_address'):
     # support of old config file syntax
     ETH_CONTRACT_ADDRESS = specific_parser['ETHEREUM'].get('dai_contract_address')
 
-IS_USING_BITCOIN        = False
+IS_USING_BITCOIN = False
+
+RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
+EXCHANGE_CONTRACT_ADDRESS = specific_parser['ETHEREUM'].get('exchange_contract_address')
 
 FACEBOOK_TOKEN = common_parser['FACEBOOK']['token']
 FACEBOOK_VERIFY_TOKEN = common_parser['FACEBOOK']['verify_token']

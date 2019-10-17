@@ -49,6 +49,12 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
     attached_images = db.relationship('UploadedImage', backref='credit_transfer', lazy=True)
 
+    from_exchange = db.relationship('Exchange', backref='from_transfer', lazy=True, uselist=False,
+                                     foreign_keys='Exchange.from_transfer_id')
+
+    to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
+                                  foreign_keys='Exchange.to_transfer_id')
+
     @hybrid_property
     def blockchain_status(self):
         if self.blockchain_task_id:

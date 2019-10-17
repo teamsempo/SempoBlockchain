@@ -39,6 +39,9 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     transfer_card    = db.relationship('TransferCard', backref='transfer_account', lazy=True, uselist=False)
 
+    exchange_contract = db.relationship('ExchangeContract', backref='transfer_account', lazy=True, uselist=False)
+
+
     # users               = db.relationship('User', backref='transfer_account', lazy=True)
     users = db.relationship(
         "User",

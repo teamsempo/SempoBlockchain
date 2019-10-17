@@ -148,7 +148,7 @@ organisation_association_table = db.Table(
 exchange_contract_token_association_table = db.Table(
     'exchange_contract_token_association_table',
     db.Model.metadata,
-    db.Column('exchange_contract_id', db.Integer, db.ForeignKey('exchange_contract.id')),
+    db.Column('exchange_contract_id', db.Integer, db.ForeignKey("exchange_contract.id")),
     db.Column('token_id', db.Integer, db.ForeignKey('token.id'))
 )
 

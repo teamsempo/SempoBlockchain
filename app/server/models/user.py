@@ -129,6 +129,8 @@ class User(ManyOrgBase, ModelBase):
     custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
                                         lazy='dynamic', foreign_keys='CustomAttributeUserStorage.user_id')
 
+    exchanges = db.relationship("Exchange", backref="user")
+
     @hybrid_property
     def phone(self):
         return self._phone

@@ -1,19 +1,18 @@
 from flask import current_app
-from sqlalchemy.orm import relationship
 import time
-from server.models.utils import ModelBase, ManyOrgBase
+from server.models.utils import ModelBase, ManyOrgBase, exchange_contract_token_association_table
 from server import db
-from server.models.utils import exchange_contract_token_association_table
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
 from server.utils.blockchain_tasks import make_liquid_token_exchange, get_conversion_amount
 
 class ExchangeContract(ModelBase):
-    __tablename__ = 'exchange'
+    __tablename__ = 'exchange_contract'
 
     blockchain_address = db.Column(db.String())
 
     transfer_account_id = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
+
     reserve_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
 
     exchangeable_tokens = db.relationship(
@@ -27,22 +26,17 @@ class Exchange(ModelBase):
     to_desired_amount = db.Column(db.Integer)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    user = relationship("User", back_populates="exchanges")
 
     # user_transfer_account_id = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
     # transfer_account = relationship("TransferAccount", back_populates="exchanges")
 
     from_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
-    from_token = relationship("Token", back_populates="exchanges_from")
 
     to_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
-    to_token = relationship("Token", back_populates="exchanges_to")
 
     from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
-    from_transfer = relationship("Token")
 
     to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
-    to_transfer = relationship("Token")
 
     blockchain_task_id = db.Column(db.Integer)
 
@@ -107,3 +101,4 @@ class Exchange(ModelBase):
     #
     # credit_receives = db.relationship('CreditTransfer', backref='recipient_user',
     #                                   lazy='dynamic', foreign_keys='CreditTransfer.recipient_user_id')
+
