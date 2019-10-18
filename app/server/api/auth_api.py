@@ -24,9 +24,11 @@ import time, random
 
 auth_blueprint = Blueprint('auth', __name__)
 
+
 def get_denominations():
     currency_name = current_app.config['CURRENCY_NAME']
     return DENOMINATION_DICT.get(currency_name, {})
+
 
 def create_user_response_object(user, auth_token, message):
     if current_app.config['IS_USING_BITCOIN']:
@@ -224,7 +226,6 @@ class RegisterAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 403
 
-
         if tier is None:
             tier = 'subadmin'
 
@@ -269,7 +270,6 @@ class RegisterAPI(MethodView):
         }
 
         return make_response(jsonify(response_object)), 201
-
 
 
 class ActivateUserAPI(MethodView):
@@ -596,7 +596,7 @@ class RequestPasswordResetEmailAPI(MethodView):
 
         if user:
             password_reset_token = user.encode_single_use_JWS('R')
-
+            user.save_password_reset_token(password_reset_token)
             send_reset_email(password_reset_token, email)
 
         response_object = {
@@ -728,6 +728,18 @@ class ResetPasswordAPI(MethodView):
 
             user = validity_check['user']
 
+            reuse_check = user.check_reset_token_already_used(
+                reset_password_token)
+
+            
+            if not reuse_check:
+                response_object = {
+                    'status': 'fail',
+                    'message': 'Token already used'
+                }
+
+                return make_response(jsonify(response_object)), 401
+
         if not new_password or len(new_password) < 6:
             response_object = {
                 'status': 'fail',
@@ -737,6 +749,7 @@ class ResetPasswordAPI(MethodView):
             return make_response(jsonify(response_object)), 401
 
         user.hash_password(new_password)
+        user.delete_password_reset_tokens()
         db.session.commit()
 
         response_object = {
