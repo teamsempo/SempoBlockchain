@@ -18,28 +18,11 @@ Guards for menu selection
 """
 
 
-def current_ussd_session(session_id):
-    session = UssdSession.query.filter_by(session_id=session_id).first()
-    if len(session) > 0:
-        return session
-    else:
-        raise Exception("Invalid session_id argument")
-
-
 def user_object(user_phone):
     return User.query.filter_by(phone=proccess_phone_number(user_phone)).first()
 
 
 # conditions and guards for menu selections
-def session_object(session_id):
-    return UssdSession.query.filter_by(session_id=session_id).first()
-
-
-def menu_one_selected(user_input):
-    selection = user_input == '1'
-    return selection
-
-
 def menu_two_selected(user_input):
     selection = user_input == '2'
     return selection
@@ -83,8 +66,7 @@ def recipient_exists(recipient_phone):
 
 
 # TODO: [Philip] Create provision to access USSD Session from class, may require it in constructor
-def recipient_not_initiator(recipient_phone, session_id):
-    session = session_object(session_id)
+def recipient_not_initiator(recipient_phone, session):
     return session.msisdn != proccess_phone_number(recipient_phone)
 
 
@@ -158,24 +140,23 @@ class KenyaUssdStateMachine:
               ]
 
     # initialize machine
-    def __init__(self, session_id):
-        self.session_id = session_id
-        self.current_session = current_ussd_session(session_id)
+    def __init__(self, session: UssdSession):
+        self.session = session
         self.machine = Machine(model=self,
                                states=self.states,
-                               initial='start')
+                               initial=session.state)
 
         # event: initial_language_selection transitions
         initial_language_selection_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'complete',
              'after': 'change_preferred_language'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'help',
              'conditions': 'menu_three_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'exit_invalid_menu_option'}
         ]
@@ -183,11 +164,11 @@ class KenyaUssdStateMachine:
 
         # event: initial_pin_entry transitions
         initial_pin_entry_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'initial_pin_entry',
              'dest': 'initial_pin_confirmation',
              'conditions': 'is_valid_pin'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'initial_pin_entry',
              'dest': 'exit_invalid_pin'}
         ]
@@ -195,11 +176,11 @@ class KenyaUssdStateMachine:
 
         # event: initial_pin_confirmation transitions
         initial_pin_confirmation_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'complete',
              'conditions': 'new_pins_match'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'exit_pin_mismatch'}
         ]
@@ -207,27 +188,27 @@ class KenyaUssdStateMachine:
 
         # event: start transitions
         start_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'send_enter_recipient',
              'conditions': 'menu_one_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'account_management',
              'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'directory_listing',
              'conditions': 'menu_three_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'exchange_token',
              'conditions': 'menu_four_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'help',
              'conditions': 'menu_five_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'exit_invalid_menu_option'}
         ]
@@ -235,17 +216,17 @@ class KenyaUssdStateMachine:
 
         # event: send_enter_recipient transitions
         send_enter_recipient_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_enter_recipient',
              'dest': 'send_token_amount',
              'conditions': 'is_valid_recipient',
              'after': 'save_recipient_phone'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_enter_recipient',
              'dest': 'exit_use_exchange_menu',
              'conditions': 'token_agent_exists',
              'after': 'save_recipient_phone'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_enter_recipient',
              'dest': 'exit_invalid_recipient',
              'after': 'upsell_unregistered_recipient'}
@@ -254,7 +235,7 @@ class KenyaUssdStateMachine:
 
         # event: send_choose_token transitions
         send_choose_token_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_choose_token',
              'dest': 'send_token_amount',
              'after': 'save_community_token_id'}
@@ -263,7 +244,7 @@ class KenyaUssdStateMachine:
 
         # event: send_token_amount transitions
         send_token_amount_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_amount',
              'dest': 'send_token_reason',
              'after': 'save_transaction_amount'}
@@ -272,11 +253,11 @@ class KenyaUssdStateMachine:
 
         # event: send_token_reason transitions
         send_token_reason_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_reason',
              'dest': 'send_token_reason_other',
              'conditions': 'menu_ten_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_reason',
              'dest': 'send_token_pin_authorization',
              'after': 'save_transaction_reason'}
@@ -285,7 +266,7 @@ class KenyaUssdStateMachine:
 
         # event: send_token_reason_other transitions
         send_token_reason_other_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_reason_other',
              'dest': 'send_token_pin_authorization',
              'after': 'save_transaction_reason_other'}
@@ -294,11 +275,11 @@ class KenyaUssdStateMachine:
 
         # event: send_token_pin_authorization transitions
         send_token_pin_authorization_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_pin_authorization',
              'dest': 'send_token_confirmation',
              'conditions': 'is_authorized_pin'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_pin_authorization',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
@@ -307,16 +288,16 @@ class KenyaUssdStateMachine:
 
         # event: send_token_confirmation transitions
         send_token_confirmation_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_confirmation',
              'dest': 'complete',
              'conditions': 'menu_one_selected',
              'after': 'process_send_token_request'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_confirmation',
              'dest': 'exit',
              'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'send_token_confirmation',
              'dest': 'exit_invalid_menu_option'}
         ]
@@ -324,7 +305,7 @@ class KenyaUssdStateMachine:
 
         # event: convert_token_from transitions
         convert_token_from_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'convert_token_from',
              'dest': 'convert_token_amount',
              'after': 'save_convert_from_token_id'}
@@ -333,28 +314,28 @@ class KenyaUssdStateMachine:
 
         # event: account_management transitions
         account_management_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'my_business',
              'conditions': 'menu_one_selected',
              'after': 'process_send_token_request'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'choose_language',
              'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'balance_inquiry_pin_authorization',
              'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'current_pin',
              'conditions': 'menu_three_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'opt_out_of_market_place_pin_authorization',
              'conditions': 'menu_four_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'exit_invalid_menu_option'}
         ]
@@ -362,11 +343,11 @@ class KenyaUssdStateMachine:
 
         # event: my_business transitions
         my_business_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'my_business',
              'dest': 'about_my_business',
              'conditions': 'menu_one_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'my_business',
              'dest': 'change_my_business_prompt',
              'conditions': 'menu_two_selected'}
@@ -375,7 +356,7 @@ class KenyaUssdStateMachine:
 
         # event: choose_language transitions
         choose_language_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
              'after': 'change_preferred_language'}
@@ -384,11 +365,11 @@ class KenyaUssdStateMachine:
 
         # event: balance_inquiry_pin_authorization transitions
         balance_inquiry_pin_authorization_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'balance_inquiry_pin_authorization',
              'dest': 'complete',
              'conditions': 'is_authorized_pin'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'balance_inquiry_pin_authorization',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
@@ -397,11 +378,11 @@ class KenyaUssdStateMachine:
 
         # event: current_pin transitions
         current_pin_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'current_pin',
              'dest': 'new_pin',
              'conditions': 'is_authorized_pin'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'current_pin',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
@@ -410,11 +391,11 @@ class KenyaUssdStateMachine:
 
         # event: new_pin transitions
         new_pin_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'new_pin',
              'dest': 'new_pin_confirmation',
              'conditions': 'is_valid_new_pin'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'new_pin',
              'dest': 'exit_invalid_pin'}
         ]
@@ -422,11 +403,11 @@ class KenyaUssdStateMachine:
 
         # event: new_pin_confirmation transitions
         new_pin_confirmation = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'new_pin_confirmation',
              'dest': 'complete',
              'conditions': 'new_pins_match'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'new_pin_confirmation',
              'dest': 'exit_pin_mismatch'}
         ]
@@ -434,12 +415,12 @@ class KenyaUssdStateMachine:
 
         # event: opt_out_of_market_place_pin_authorization transitions
         opt_out_of_market_place_pin_authorization_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'opt_out_of_market_place_pin_authorization',
              'dest': 'complete',
              'conditions': 'is_authorized_pin',
              'after': 'change_opt_in_market_status'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'opt_out_of_market_place_pin_authorization',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
@@ -448,16 +429,16 @@ class KenyaUssdStateMachine:
 
         # event: exchange_token transitions
         exchange_token_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token',
              'dest': 'exchange_rate_pin_authorization',
              'conditions': 'menu_one_selected',
              'after': 'process_send_token_request'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token',
              'dest': 'exchange_token_agent_number_entry',
              'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token',
              'dest': 'exit_invalid_menu_option'}
         ]
@@ -465,12 +446,12 @@ class KenyaUssdStateMachine:
 
         # event: exchange_rate_pin_authorization transitions
         exchange_rate_pin_authorization_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_rate_pin_authorization',
              'dest': 'complete',
              'conditions': 'is_authorized_pin',
              'after': 'fetch_user_exchange_rate'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_rate_pin_authorization',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
@@ -479,12 +460,12 @@ class KenyaUssdStateMachine:
 
         # event: exchange_token_agent_number_entry transitions
         exchange_token_agent_number_entry_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_agent_number_entry',
              'dest': 'exchange_token_amount_entry',
              'conditions': 'is_valid_token_agent',
              'after': 'save_exchange_agent_phone'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_agent_number_entry',
              'dest': 'exit_invalid_token_agent'}
         ]
@@ -492,12 +473,12 @@ class KenyaUssdStateMachine:
 
         # event: exchange_token_amount_entry transitions
         exchange_token_amount_entry_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_amount_entry',
              'dest': 'exchange_token_pin_authorization',
              'conditions': 'is_valid_token_exchange_amount',
              'after': 'save_exchange_amount'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_amount_entry',
              'dest': 'exit_invalid_exchange_amount'}
         ]
@@ -505,11 +486,11 @@ class KenyaUssdStateMachine:
 
         # event: exchange_token_pin_authorization transitions
         exchange_token_pin_authorization_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_pin_authorization',
              'dest': 'exchange_token_confirmation',
              'conditions': 'is_authorized_pin'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_pin_authorization',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
@@ -518,16 +499,16 @@ class KenyaUssdStateMachine:
 
         # event: exchange_token_confirmation transitions
         exchange_token_confirmation_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_confirmation',
              'dest': 'complete',
              'conditions': 'menu_one_selected',
              'after': 'process_exchange_token_request'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_confirmation',
              'dest': 'exit',
              'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'exchange_token_confirmation',
              'dest': 'exit_invalid_menu_option'}
         ]
@@ -535,27 +516,30 @@ class KenyaUssdStateMachine:
 
         # event: help transitions
         help_transitions = [
-            {'trigger': 'feed_car',
+            {'trigger': 'feed_char',
              'source': 'help',
              'dest': 'complete'}
         ]
         self.machine.add_transitions(help_transitions)
 
+    def menu_one_selected(self, user_input):
+        return user_input == '1'
+
     def is_valid_recipient(self, char):
         recipient_validity = recipient_exists(char) \
                              and recipient_not_initiator(char,
-                                                         self.session_id) \
+                                                         self.session.id) \
                              and user_active(char)
         return recipient_validity
 
     def save_recipient_phone(self, char):
-        session = current_ussd_session(self.session_id)
+        session = self.session
         session.session_data = {'recipient_phone': char}
         db.session.commit()
 
     def upsell_unregistered_recipient(self, char):
         if recipient_exists(char):
-            sender = user_object(self.current_session.msisdn)
+            sender = user_object(self.session.msisdn)
             upsell_msg = f"{sender.full_name} amejaribu kukutumia #{sender.community_token.name} lakini hujasajili. " \
                          "Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako " \
                          "kwa 0757628885 "

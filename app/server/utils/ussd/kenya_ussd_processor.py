@@ -3,6 +3,8 @@ from functools import reduce
 from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
 from server.utils.phone import proccess_phone_number
+from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server import db
 
 
 class KenyaUssdProcessor:
@@ -28,10 +30,18 @@ class KenyaUssdProcessor:
             elif user_input.split('*')[-1] == 0:
                 return UssdMenu.find_by_name(session.state).parent()
             else:
-                # TODO(ussd): get next state in state machine based on current state + user input
-                # session.send("#{session.aasm.current_state}!", request_hash[:user_input].split('*').last)
-                return UssdMenu.find_by_name('TODO')
+                new_state = KenyaUssdProcessor.next_state(session, user_input)
+                return UssdMenu.find_by_name(new_state)
 
+    @staticmethod
+    def next_state(session: UssdSession, user_input: str) -> UssdMenu:
+        state_machine = KenyaUssdStateMachine(session)
+        state_machine.feed_char(user_input.split('*')[-1])
+        new_state = state_machine.state
+
+        session.state = new_state
+        db.session.commit()
+        return new_state
 
     @staticmethod
     def replace_vars(menu: UssdMenu, ussd_session: UssdSession, display_text: str, user: User) -> str:

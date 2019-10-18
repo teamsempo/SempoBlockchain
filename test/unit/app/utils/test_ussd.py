@@ -1,4 +1,5 @@
 import pytest
+from functools import partial
 
 from server import db
 from fixtures.user import UserFactory
@@ -6,7 +7,6 @@ from server.models.ussd import UssdMenu, UssdSession
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
 
-from functools import partial
 # TODO(ussd): once preferred_language is added, add another test that sw_KE works and user without preferred_language
 @pytest.mark.parametrize("user_factory,expected", [
     (None, "foo"),
