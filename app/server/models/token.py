@@ -1,7 +1,11 @@
 from server import db
-from server.models.utils import ModelBase, exchange_contract_token_association_table
-from server.utils.blockchain_tasks import get_token_decimals
-
+from server.utils.blockchain_tasks import (
+    get_token_decimals,
+)
+from server.models.utils import (
+    ModelBase,
+    exchange_contract_token_association_table
+)
 
 class Token(ModelBase):
     __tablename__ = 'token'

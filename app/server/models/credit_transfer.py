@@ -255,4 +255,3 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
-

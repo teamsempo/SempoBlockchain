@@ -216,4 +216,4 @@ pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
 
 twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
 
-migrate_data()
+# migrate_data()
