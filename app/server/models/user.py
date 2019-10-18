@@ -496,20 +496,8 @@ class User(ManyOrgBase, ModelBase):
 
     def is_resetting(self):
         self.clear_expired_tokens()
-<<<<<<< HEAD
         is_resetting = len(self.password_reset_tokens) > 0
         return is_resetting
-=======
-        valid_tokens = []
-        for token in self.password_reset_tokens:
-            validity_check = self.decode_single_use_JWS(token, 'R')
-            if validity_check['success']:
-                valid_tokens.append(token)
-        if len(valid_tokens) > 0:
-            return True
-        else:
-            return False
->>>>>>> Implemented the is_resetting functionality
 
     # TODO(ussd): change to a field once we figure out what's the deal with resetting
     def pin_failed_attempts(self):
