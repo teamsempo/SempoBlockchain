@@ -4,7 +4,7 @@ import re
 from flask import current_app
 from eth_utils import keccak
 from cryptography.fernet import Fernet
-from server.models.models import Settings
+from server.models.settings import Settings
 
 last_marker = datetime.datetime.utcnow()
 

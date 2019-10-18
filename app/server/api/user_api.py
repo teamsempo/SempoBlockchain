@@ -20,16 +20,19 @@ class UserAPI(MethodView):
     @requires_auth
     def get(self, user_id):
 
-        can_see_full_details = AccessControl.has_suffient_role(g.user.roles,{'ADMIN': 'admin'})
+        can_see_full_details = AccessControl.has_suffient_role(
+            g.user.roles, {'ADMIN': 'admin'})
 
         if not can_see_full_details:
             public_serial_number = request.args.get('public_serial_number')
 
             if public_serial_number:
-                user = User.query.filter_by(public_serial_number=public_serial_number.strip()).first()
+                user = User.query.filter_by(
+                    public_serial_number=public_serial_number.strip()).first()
 
                 if user:
-                    transfer_account = TransferAccount.query.get(user.transfer_account_id)
+                    transfer_account = TransferAccount.query.get(
+                        user.transfer_account_id)
 
                     if transfer_account:
                         response_object = {
@@ -91,7 +94,8 @@ class UserAPI(MethodView):
                 user_query = User.query.filter(User.has_vendor_role)
 
             elif account_type_filter == 'admin':
-                user_query = User.query.filter(User.has_admin_role).order_by(User.created.desc())
+                user_query = User.query.filter(
+                    User.has_admin_role).order_by(User.created.desc())
 
             else:
                 user_query = User.query
@@ -121,15 +125,6 @@ class UserAPI(MethodView):
     def post(self, user_id):
 
         post_data = request.get_json()
-
-        # Data supplied to the API via integrations such as KoboToolbox can be messy, so clean the data first
-        dict_processor = AttributeDictProccessor(post_data)
-        dict_processor.force_attribute_dict_keys_to_lowercase()
-        dict_processor.strip_kobo_preslashes()
-        dict_processor.attempt_to_truthy_dict_values()
-        dict_processor.strip_weirdspace_characters()
-        dict_processor.insert_settings_from_databse(CREATE_USER_SETTINGS)
-        post_data = dict_processor.attribute_dict
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
@@ -190,6 +185,8 @@ class UserAPI(MethodView):
         }
 
         return make_response(jsonify(response_object)), 201
+
+
 
 # add Rules for API Endpoints
 user_blueprint.add_url_rule(

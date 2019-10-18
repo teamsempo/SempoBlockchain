@@ -6,6 +6,7 @@ from server.utils.blockchain_tasks import (
 )
 from server.models.utils import ModelBase, organisation_association_table
 
+
 class Organisation(ModelBase):
     """
     Establishes organisation object that resources can be associated with.
@@ -23,7 +24,6 @@ class Organisation(ModelBase):
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
-
     org_level_transfer_account_id    = db.Column(db.Integer, db.ForeignKey('transfer_account.id', name="fk_org_level_account"))
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
@@ -40,7 +40,6 @@ class Organisation(ModelBase):
     transfer_accounts   = db.relationship('TransferAccount',
                                           backref='organisation',
                                           lazy=True, foreign_keys='TransferAccount.organisation_id')
-
 
     blockchain_addresses = db.relationship('BlockchainAddress', backref='organisation',
                                            lazy=True, foreign_keys='BlockchainAddress.organisation_id')

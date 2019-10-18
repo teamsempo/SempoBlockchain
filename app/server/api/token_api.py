@@ -3,7 +3,7 @@ from flask.views import MethodView
 
 from server import db
 from server.utils.auth import requires_auth
-from server.models.models import Token
+from server.models.token import Token
 from server.schemas import token_schema, tokens_schema
 
 token_blueprint = Blueprint('token', __name__)

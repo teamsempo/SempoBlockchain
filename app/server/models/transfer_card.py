@@ -7,6 +7,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
 from server.exceptions import NoTransferCardError
 
+
 class TransferCard(ModelBase):
     __tablename__ = 'transfer_card'
 

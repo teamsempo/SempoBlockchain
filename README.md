@@ -20,11 +20,6 @@ source venv/bin/activate
 ./install.sh
 ```
 
-Add to your .bash_profile the `FLASK_ENV` variable:
-```
-export FLASK_ENV="development"
-```
-
 ### Install Front-End Requirements
 ```
 cd app
@@ -95,7 +90,6 @@ python manage.py db upgrade
 To create a new migration:
 
 Make the modifications to the model file to reflect the database changes.
-If you're adding a new model file, you'll also have to modify app/migrations/env to include the new file for discovery.
 
 ```
 python manage.py db migrate

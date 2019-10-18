@@ -22,7 +22,7 @@ def requires_auth(test_client):
 
 @pytest.fixture(scope='module')
 def create_blockchain_token(test_client, init_database):
-    from server.models.models import Token
+    from server.models.token import Token
     token = Token(address='0xc1275b7de8af5a38a93548eb8453a498222c4ff2',
                   name='BAR Token',
                   symbol='BAR')
@@ -160,7 +160,7 @@ def save_device_info(test_client, init_database, create_transfer_account_user):
 
 @pytest.fixture(scope='function')
 def create_blacklisted_token(authed_sempo_admin_user):
-    from server.models.models import BlacklistToken
+    from server.models.blacklist_token import BlacklistToken
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
     blacklist_token = BlacklistToken(token=auth_token)
     db.session.add(blacklist_token)
@@ -170,7 +170,7 @@ def create_blacklisted_token(authed_sempo_admin_user):
 
 @pytest.fixture(scope='function')
 def create_transfer_usage(test_client, init_database):
-    from server.models.models import TransferUsage
+    from server.models.transfer_usage import TransferUsage
     transfer_usage = TransferUsage(name='Food', icon='food-apple', translations=dict(en='Food', fr='aliments'))
 
     db.session.add(transfer_usage)

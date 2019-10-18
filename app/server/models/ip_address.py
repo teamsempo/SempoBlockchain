@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import INET
 
 from server.models.utils import ModelBase
 
+
 class IpAddress(ModelBase):
     __tablename__               = 'ip_address'
 
