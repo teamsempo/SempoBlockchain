@@ -14,11 +14,12 @@ from server.models.utils import ModelBase
 class TransferUsage(ModelBase):
     __tablename__ = 'transfer_usage'
 
-    name = db.Column(db.String)
+    _name = db.Column(db.String, unique=True)
     is_cashout = db.Column(db.Boolean)
     _icon = db.Column(db.String)
     priority = db.Column(db.Integer)
     translations = db.Column(JSON)
+    default = db.Column(db.Boolean)
 
     @hybrid_property
     def icon(self):
@@ -29,3 +30,11 @@ class TransferUsage(ModelBase):
         if icon not in MATERIAL_COMMUNITY_ICONS:
             raise IconNotSupportedException('Icon {} not supported or found')
         self._icon = icon
+
+    @hybrid_property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name.strip().upper()

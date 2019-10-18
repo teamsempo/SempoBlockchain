@@ -159,6 +159,19 @@ def test_valid_tfa_token(authed_sempo_admin_user):
             is not None)
 
 
+def test_get_most_relevant_transfer_usage(authed_sempo_admin_user):
+    """
+    GIVEN A User Model
+    WHEN get_most_relevant_transfer_usage is called
+    THEN a list is returnen
+    """
+    # TODO This test in pretty lightweight atm it just checks if a list
+    # is returned. It may be worthwhile to add more extensive testing in
+    # the future.
+    usages = authed_sempo_admin_user.get_most_relevant_transfer_usage()
+    assert isinstance(usages, list)
+
+
 """ ----- Transfer Account Model ----- """
 
 
@@ -265,7 +278,7 @@ def test_create_transfer_usage(create_transfer_usage):
     assert isinstance(create_transfer_usage.id, int)
     assert isinstance(create_transfer_usage.created, object)
 
-    assert create_transfer_usage.name == 'Food'
+    assert create_transfer_usage.name == 'FOOD'
     assert create_transfer_usage.icon == 'food-apple'
     assert create_transfer_usage.translations == dict(en='Food', fr='aliments')
 

@@ -170,8 +170,10 @@ def create_blacklisted_token(authed_sempo_admin_user):
 @pytest.fixture(scope='function')
 def create_transfer_usage(test_client, init_database):
     from server.models.transfer_usage import TransferUsage
+    instance = TransferUsage.query.filter_by(name='FOOD').first()
+    if instance:
+        return instance
     transfer_usage = TransferUsage(name='Food', icon='food-apple', translations=dict(en='Food', fr='aliments'))
-
     db.session.add(transfer_usage)
     db.session.commit()
     return transfer_usage

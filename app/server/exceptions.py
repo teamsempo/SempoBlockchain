@@ -15,6 +15,7 @@ class IconNotSupportedException(Exception):
     Raise if trying to set TransferUsage to an icon not supported on mobile (currently only MaterialCommunityIcons)
     """
 
+
 class TypeNotFoundException(Exception):
     """
     Raise if trying to set kyc application type to type that does not exist
