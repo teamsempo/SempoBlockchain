@@ -119,11 +119,6 @@ class KenyaUssdStateMachine:
               'send_token_reason_other',
               'send_token_pin_authorization',
               'send_token_confirmation',
-              'convert_token_from',
-              'convert_token_amount',
-              'convert_token_to',
-              'convert_token_pin_authorization',
-              'convert_token_confirmation',
               # account management states
               'account_management',
               'balance_inquiry_pin_authorization',
@@ -335,54 +330,6 @@ class KenyaUssdStateMachine:
              'after': 'save_convert_from_token_id'}
         ]
         self.machine.add_transitions(convert_token_from_transitions)
-
-        # event: convert_token_amount transitions
-        convert_token_amount_transitions = [
-            {'trigger': 'feed_car',
-             'source': 'convert_token_amount',
-             'dest': 'convert_token_to',
-             'after': 'save_transaction_amount'}
-        ]
-        self.machine.add_transitions(convert_token_amount_transitions)
-
-        # event: convert_token_to transitions
-        convert_token_to_transitions = [
-            {'trigger': 'feed_car',
-             'source': 'convert_token_to',
-             'dest': 'convert_token_pin_authorization',
-             'after': 'save_convert_to_token_id'}
-        ]
-        self.machine.add_transitions(convert_token_to_transitions)
-
-        # event: convert_token_pin_authorization transitions
-        convert_token_pin_authorization_transitions = [
-            {'trigger': 'feed_car',
-             'source': 'convert_token_pin_authorization',
-             'dest': 'convert_token_confirmation',
-             'conditions': 'is_authorized_pin'},
-            {'trigger': 'feed_car',
-             'source': 'convert_token_pin_authorization',
-             'dest': 'exit_pin_blocked',
-             'conditions': 'is_blocked_pin'}
-        ]
-        self.machine.add_transitions(convert_token_pin_authorization_transitions)
-
-        # event: convert_token_confirmation transitions
-        convert_token_confirmation_transitions = [
-            {'trigger': 'feed_car',
-             'source': 'convert_token_confirmation',
-             'dest': 'complete',
-             'conditions': 'menu_one_selected',
-             'after': 'process_send_token_request'},
-            {'trigger': 'feed_car',
-             'source': 'convert_token_confirmation',
-             'dest': 'exit',
-             'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_car',
-             'source': 'convert_token_confirmation',
-             'dest': 'exit_invalid_menu_option'}
-        ]
-        self.machine.add_transitions(convert_token_confirmation_transitions)
 
         # event: account_management transitions
         account_management_transitions = [
