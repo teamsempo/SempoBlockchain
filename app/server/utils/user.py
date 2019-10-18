@@ -141,32 +141,6 @@ def update_transfer_account_user(user,
     return user
 
 
-<<<<<<< HEAD
-def create_transfer_account_user(
-        first_name=None, last_name=None, preferred_language=None,
-        phone=None, email=None, public_serial_number=None,
-        organisation=None,
-        token=None,
-        blockchain_address=None,
-        transfer_account_name=None,
-        location=None,
-        use_precreated_pin=False,
-        use_last_4_digits_of_id_as_initial_pin=False,
-        existing_transfer_account=None,
-        is_beneficiary=False,
-        is_vendor=False,
-        is_self_sign_up=False,
-):
-    user = User(
-        first_name=first_name,
-        last_name=last_name,
-        preferred_language=preferred_language,
-        phone=phone,
-        email=email,
-        public_serial_number=public_serial_number,
-        is_self_sign_up=is_self_sign_up
-    )
-=======
 def create_transfer_account_user(first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
                                  organisation=None,
@@ -190,7 +164,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
                 business_usage_id=business_usage_id)
->>>>>>> Created seed_dev and added businness usage id
 
     precreated_pin = None
     is_activated = False
@@ -540,11 +513,7 @@ def proccess_create_or_modify_user_request(
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
         is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up,
-<<<<<<< HEAD
-    )
-=======
         business_usage_id=business_usage_id)
->>>>>>> Created seed_dev and added businness usage id
 
     if attribute_dict.get('custom_attributes', None) is None: attribute_dict['custom_attributes'] = {}
     if attribute_dict.get('business_usage_id'): attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')
