@@ -84,6 +84,8 @@ class User(ManyOrgBase, ModelBase):
 
     cashout_authorised = db.Column(db.Boolean, default=False)
 
+    business_usage_id = db.Column(db.Integer)
+
     transfer_accounts = db.relationship(
         "TransferAccount",
         secondary=user_transfer_account_association_table,
@@ -130,6 +132,8 @@ class User(ManyOrgBase, ModelBase):
 
     custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
                                         lazy='dynamic', foreign_keys='CustomAttributeUserStorage.user_id')
+
+
 
     @hybrid_property
     def phone(self):

@@ -19,6 +19,7 @@ class TransferUsage(ModelBase):
     _icon = db.Column(db.String)
     priority = db.Column(db.Integer)
     translations = db.Column(JSON)
+    default = db.Column(db.Boolean)
 
     @hybrid_property
     def icon(self):
