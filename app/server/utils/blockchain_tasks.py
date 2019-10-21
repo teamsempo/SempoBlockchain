@@ -11,7 +11,7 @@ def _execute_synchronous_celery(signature):
     async_result = signature.delay()
 
     try:
-        response = async_result.get(timeout=2, propagate=True, interval=0.3)
+        response = async_result.get(timeout=20, propagate=True, interval=0.3)
     except Exception as e:
         raise e
     finally:
@@ -74,7 +74,8 @@ def make_token_transfer(signing_address, token,
     transfer_sig = celery_app.signature(eth_endpoint('transact_with_contract_function'),
                                 kwargs={
                                     'signing_address': signing_address,
-                                    'contract': token.address,
+                                    'contract_address': token.address,
+                                    'abi_type': 'ERC20',
                                     'function': 'transferFrom',
                                     'args': [
                                         from_address,
@@ -93,7 +94,8 @@ def make_approval(signing_address, token,
     transfer_sig = celery_app.signature(eth_endpoint('transact_with_contract_function'),
                                 kwargs={
                                     'signing_address': signing_address,
-                                    'contract': token.address,
+                                    'contract_address': token.address,
+                                    'abi_type': 'ERC20',
                                     'function': 'approve',
                                     'args': [
                                         spender,
@@ -133,12 +135,13 @@ def make_liquid_token_exchange(signing_address,
     transfer_sig = celery_app.signature(eth_endpoint('transact_with_contract_function'),
                                 kwargs={
                                     'signing_address': signing_address,
-                                    'contract': exchange_contract_address,
-                                    'function': 'convert',
+                                    'contract_address': exchange_contract_address,
+                                    'abi_type': 'bancor_converter',
+                                    'function': 'quickConvert',
                                     'args': [
                                         path,
                                         from_token.system_amount_to_token(from_amount),
-                                        '1'
+                                        1
                                     ],
                                     'dependent_on_tasks': dependent_on_tasks
                                 })
@@ -153,26 +156,32 @@ def get_conversion_amount(exchange_contract_address, from_token, to_token, reser
             to_token.address,
             to_token.address]
 
+    amount = from_token.system_amount_to_token(from_amount)
+
     conversion_amount_sig = celery_app.signature(eth_endpoint('call_contract_function'),
                                                  kwargs={
-                                                     'contract': exchange_contract_address,
-                                                     'function': 'getReturnByPath',
+                                                     'contract_address': exchange_contract_address,
+                                                     'abi_type': 'bancor_converter',
+                                                     'function': 'quickConvert',
                                                      'args': [
                                                          path,
-                                                         from_token.system_amount_to_token(from_amount)
-                                                     ]
+                                                         from_token.system_amount_to_token(from_amount),
+                                                         1
+                                                     ],
                                                  })
 
     raw_conversion_amount = execute_synchronous_call_task(conversion_amount_sig)
 
     return to_token.system_amount_to_token(raw_conversion_amount)
 
+
 def get_token_decimals(token):
 
     decimals_sig = celery_app.signature(eth_endpoint('call_contract_function'),
                                          kwargs={
-                                                      'contract': token.address,
-                                                      'function': 'decimals'
+                                             'contract_address': token.address,
+                                             'abi_type': 'ERC20',
+                                             'function': 'decimals'
                                          })
 
     if current_app.config['IS_TEST']:
@@ -185,9 +194,10 @@ def get_wallet_balance(address, token):
 
     balance_sig = celery_app.signature(eth_endpoint('call_contract_function'),
                                         kwargs={
-                                                     'contract': token.address,
-                                                     'function': 'balanceOf',
-                                                     'args': [address]
+                                            'contract_address': token.address,
+                                            'abi_type': 'ERC20',
+                                            'function': 'balanceOf',
+                                            'args': [address]
                                         })
 
     balance = execute_synchronous_call_task(balance_sig)

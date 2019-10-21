@@ -1,7 +1,9 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
+from server.utils.auth import requires_auth, show_all
 from server.models.token import Token
+from server.models.exchange import Exchange
 
 
 class ExchangeAPI(MethodView):
@@ -16,6 +18,8 @@ class ExchangeAPI(MethodView):
 
         :return: status of exchange, and serialised exchange object if successful
     """
+    @requires_auth
+    @show_all
     def post(self):
         post_data = request.get_json()
 
@@ -54,7 +58,14 @@ class ExchangeAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
+        exchange = Exchange()
 
+        exchange.exchange_from_amount(
+            user=user,
+            from_token=from_token,
+            to_token=to_token,
+            from_amount=from_amount
+        )
 
         response_object = {
             'message': 'Transfer Successful',

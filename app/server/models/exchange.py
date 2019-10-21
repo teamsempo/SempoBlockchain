@@ -1,9 +1,13 @@
-from flask import current_app
-import time
-from server.models.utils import ModelBase, ManyOrgBase, exchange_contract_token_association_table
 from server import db
+
+from server.models.utils import (
+    ModelBase,
+    exchange_contract_token_association_table
+)
+
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
+
 from server.utils.blockchain_tasks import make_liquid_token_exchange, get_conversion_amount
 
 class ExchangeContract(ModelBase):
@@ -19,6 +23,12 @@ class ExchangeContract(ModelBase):
         "Token",
         secondary=exchange_contract_token_association_table,
         back_populates="exchange_contracts")
+
+    def __init__(self, blockchain_address):
+
+        self.blockchain_address = blockchain_address
+
+        self.transfer_account = TransferAccount(blockchain_address=blockchain_address)
 
 class Exchange(ModelBase):
     __tablename__ = 'exchange'

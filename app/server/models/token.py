@@ -59,4 +59,5 @@ class Token(ModelBase):
         return int(token_amount) * 100 / 10**self.decimals
 
     def system_amount_to_token(self, system_amount):
-        return int(float(system_amount) / 100 * 10**self.decimals)
+        return int(float(system_amount) * 10**self.decimals / 100)
+

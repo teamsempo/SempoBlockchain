@@ -1,6 +1,8 @@
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
 from flask_cors import CORS
 
+
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_basicauth import BasicAuth
 from flask_limiter import Limiter
@@ -13,11 +15,12 @@ from raven.contrib.flask import Sentry
 import messagebird
 from datetime import datetime
 import redis
-import config
 from eth_utils import to_checksum_address
 
-import sys
-import os
+import sys, os
+sys.path.append('../')
+
+import config
 
 def encrypt_string(raw_string):
 
@@ -132,6 +135,7 @@ def register_blueprints(app):
     from server.api.transfer_card_api import transfer_cards_blueprint
     from server.api.organisation_api import organisation_blueprint
     from server.api.token_api import token_blueprint
+    from server.api.exchange_api import exchange_blueprint
     from server.api.slack_api import slack_blueprint
     from server.api.ussd_api import ussd_blueprint
 
@@ -160,32 +164,12 @@ def register_blueprints(app):
     app.register_blueprint(token_blueprint, url_prefix='/api')
     app.register_blueprint(slack_blueprint, url_prefix='/api')
     app.register_blueprint(ussd_blueprint, url_prefix='/api')
+    app.register_blueprint(exchange_blueprint, url_prefix='/api')
 
     # 404 handled in react
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('index.html'), 404
-
-def migrate_data():
-    from server.models.token import Token
-    from server.models.exchange import ExchangeContract
-
-    if config.RESERVE_TOKEN_ADDRESS and config.EXCHANGE_CONTRACT_ADDRESS:
-        reserve_token = Token.query.filter_by(address=config.RESERVE_TOKEN_ADDRESS).first()
-
-        if not reserve_token:
-            reserve_token = Token(address=config.RESERVE_TOKEN_ADDRESS)
-            db.session.add(reserve_token)
-
-        exchange_contract = ExchangeContract.query.filter_by(blockchain_address=config.EXCHANGE_CONTRACT_ADDRESS)
-
-        exchange_contract.reserve_token = reserve_token
-        db.session.add(exchange_contract)
-
-        db.session.commit()
-
-
-sys.path.append('../')
 
 db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
 basic_auth = BasicAuth()
@@ -216,4 +200,3 @@ pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
 
 twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
 
-# migrate_data()

@@ -24,18 +24,20 @@ class Organisation(ModelBase):
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
-    org_level_transfer_account_id    = db.Column(db.Integer, db.ForeignKey('transfer_account.id', name="fk_org_level_account"))
+    org_level_transfer_account_id    = db.Column(db.Integer,
+                                                 db.ForeignKey('transfer_account.id', name="fk_org_level_account"))
+
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
-    org_level_transfer_account       = db.relationship("TransferAccount",
-                                                       post_update=True,
-                                                       primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
-                                                       uselist=False)
+    org_level_transfer_account = db.relationship(
+        "TransferAccount",
+        post_update=True,
+        primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
+        uselist=False)
 
-    credit_transfers    = db.relationship(
-        "CreditTransfer",
-        secondary=organisation_association_table,
-        back_populates="organisations")
+    credit_transfers    = db.relationship("CreditTransfer",
+                                          secondary=organisation_association_table,
+                                          back_populates="organisations")
 
     transfer_accounts   = db.relationship('TransferAccount',
                                           backref='organisation',

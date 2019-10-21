@@ -4,6 +4,7 @@ from flask.views import MethodView
 from server import db
 from server.utils.auth import requires_auth
 from server.models.token import Token
+from server.models.exchange import ExchangeContract
 from server.schemas import token_schema, tokens_schema
 
 token_blueprint = Blueprint('token', __name__)
@@ -61,8 +62,64 @@ class TokenAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
+
+class TokenExchangeContractAPI(MethodView):
+
+    @requires_auth(allowed_basic_auth_types=['internal'])
+    def put(self, token_id):
+
+        put_data = request.get_json()
+        exchange_contract_id = put_data.get('exchange_contract_id')
+
+        # Even though it's non-standard, allow specifying exchange contract by address
+        # Because it's often way easier to get hold of than the contract id
+        exchange_contract_address = put_data.get('exchange_contract_address')
+
+
+        token = Token.query.get(token_id)
+
+        if token is None:
+            return make_response(jsonify(
+                {'message': 'No Token found for ID: {}'.format(token_id)}))
+
+
+        if exchange_contract_address and exchange_contract_id:
+            return make_response(jsonify(
+                {'message': 'Must ONLY specify one of exchange contract id or address'}))
+
+        if exchange_contract_id:
+            exchange_contract = ExchangeContract.query.get(exchange_contract_id)
+
+        elif exchange_contract_address:
+            exchange_contract = ExchangeContract.query.filter_by(blockchain_address = exchange_contract_address).first()
+
+        else:
+            return make_response(jsonify(
+                {'message': 'Must specify one of exchange contract id or address'}))
+
+        if exchange_contract is None:
+            return make_response(jsonify(
+                {'message': 'No Exchange Contract found for ID: {}'.format(exchange_contract_id)}))
+
+        token.exchange_contracts.append(exchange_contract)
+
+        db.session.commit()
+
+        response_object = {
+            'message': 'success',
+        }
+
+        return make_response(jsonify(response_object)), 200
+
+
 token_blueprint.add_url_rule(
     '/token/',
     view_func=TokenAPI.as_view('token_view'),
     methods=['POST', 'GET']
+)
+
+token_blueprint.add_url_rule(
+    '/token/<int:token_id>/exchange_contracts',
+    view_func=TokenExchangeContractAPI.as_view('token_exchange_contract_view'),
+    methods=['PUT']
 )
