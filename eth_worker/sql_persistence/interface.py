@@ -97,6 +97,9 @@ class SQLPersistenceInterface(object):
 
         blockchain_transaction = session.query(BlockchainTransaction).get(transaction_id)
 
+        if blockchain_transaction.nonce is not None:
+            return blockchain_transaction.nonce, blockchain_transaction.id
+
         calculated_nonce = self._calculate_nonce(signing_wallet_obj, transaction_id, network_nonce)
 
         blockchain_transaction.signing_wallet = signing_wallet_obj
@@ -142,7 +145,7 @@ class SQLPersistenceInterface(object):
             else:
                 gauranteed_clash_free = True
 
-        print('@@@@@@@@@@@@@@ tx {} usign nonce {} @@@@@@@@@@@@@@'.format(transaction_id, calculated_nonce))
+        print('@@@@@@@@@@@@@@ tx {} using nonce {} @@@@@@@@@@@@@@'.format(transaction_id, calculated_nonce))
 
         session.commit()
 
