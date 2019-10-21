@@ -156,8 +156,6 @@ def get_conversion_amount(exchange_contract_address, from_token, to_token, reser
             to_token.address,
             to_token.address]
 
-    amount = from_token.system_amount_to_token(from_amount)
-
     conversion_amount_sig = celery_app.signature(eth_endpoint('call_contract_function'),
                                                  kwargs={
                                                      'contract_address': exchange_contract_address,
@@ -172,7 +170,7 @@ def get_conversion_amount(exchange_contract_address, from_token, to_token, reser
 
     raw_conversion_amount = execute_synchronous_call_task(conversion_amount_sig)
 
-    return to_token.system_amount_to_token(raw_conversion_amount)
+    return to_token.token_amount_to_system(raw_conversion_amount)
 
 
 def get_token_decimals(token):

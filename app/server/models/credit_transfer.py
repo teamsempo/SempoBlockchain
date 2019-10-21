@@ -6,6 +6,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from server import db
 from server.models.utils import ModelBase, ManyOrgBase
 from server.models.token import Token
+from server.models.transfer_account import TransferAccount
+
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError
@@ -14,6 +16,9 @@ from server.utils.blockchain_tasks import (
     make_token_transfer,
     get_blockchain_task
 )
+
+from server.utils.transfer_account import find_transfer_accounts_with_matching_token
+
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferModeEnum
 
 
@@ -169,8 +174,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
-        self.sender_transfer_account.balance -= self.transfer_amount
-        self.recipient_transfer_account.balance += self.transfer_amount
+        self.sender_transfer_account.add_to_balance(-1 * self.transfer_amount)
+        self.recipient_transfer_account.add_to_balance(self.transfer_amount)
 
         if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -195,18 +200,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     def check_recipient_is_approved(self):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
-    def find_user_transfer_accounts_with_matching_token(self, user, token):
-        matching_transfer_accounts = []
-        for transfer_account in user.transfer_accounts:
-            if transfer_account.token == token:
-                matching_transfer_accounts.append(transfer_account)
-        if len(matching_transfer_accounts) == 0:
-            raise NoTransferAccountError("No transfer account for user {} and token".format(user, token))
-        if len(matching_transfer_accounts) > 1:
-            raise Exception(f"User has multiple transfer accounts for token {token}")
-
-        return matching_transfer_accounts[0]
-
     def _select_transfer_account(self, token, user, supplied_transfer_account = None):
         if token is None:
             raise Exception("Token must be specified")
@@ -215,10 +208,17 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                 raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
             return supplied_transfer_account
 
-        return self.find_user_transfer_accounts_with_matching_token(user, token)
+        try:
+            return find_transfer_accounts_with_matching_token(user, token)
+        except NoTransferAccountError:
+            transfer_account = TransferAccount()
+            transfer_account.token = token
+            user.transfer_accounts.append(transfer_account)
+            db.session.add(transfer_account)
+            return transfer_account
 
     def append_organisation_if_required(self, organisation):
-        if organisation not in self.organisations:
+        if organisation and organisation not in self.organisations:
             self.organisations.append(organisation)
 
     def __init__(self,
@@ -235,15 +235,19 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.sender_user = sender_user
         self.recipient_user = recipient_user
 
-        self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(token,
-                                                                                                sender_user,
-                                                                                                sender_transfer_account)
+        self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
+            token,
+            sender_user,
+            sender_transfer_account
+        )
 
         self.token = token or self.sender_transfer_account.token
 
-        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(self.token,
-                                                                                                      recipient_user,
-                                                                                                      recipient_transfer_account)
+        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
+            self.token,
+            recipient_user,
+            recipient_transfer_account
+        )
 
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:
             raise Exception("Tokens do not match")

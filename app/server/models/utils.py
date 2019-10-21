@@ -6,6 +6,7 @@ import datetime
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import Query
+from sqlalchemy import or_
 
 import server
 from server import db
@@ -96,13 +97,16 @@ def before_compile(query):
 
                     if issubclass(mapper.class_, ManyOrgBase):
                         # filters many-to-many
-                        query = query.enable_assertions(False).filter(
-                            ent['entity'].organisations.any(server.models.organisation.Organisation.id.in_(member_organisations))
-                        )
+                        query = query.enable_assertions(False).filter(or_(
+                            ent['entity'].organisations.any(
+                                server.models.organisation.Organisation.id.in_(member_organisations)),
+                            ent['entity'].is_public == True,
+                        ))
                     else:
-                        query = query.enable_assertions(False).filter(
-                            ent['entity'].organisation_id == active_organisation
-                        )
+                        query = query.enable_assertions(False).filter(or_(
+                            ent['entity'].organisation_id == active_organisation,
+                            ent['entity'].is_public == True,
+                        ))
 
                 except AttributeError:
                     raise
@@ -169,6 +173,8 @@ class OneOrgBase(object):
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
 
+    is_public = db.Column(db.Boolean, default=False)
+
     @declared_attr
     def organisation_id(cls):
         return db.Column('organisation_id', db.ForeignKey('organisation.id'))
@@ -180,6 +186,8 @@ class ManyOrgBase(object):
 
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
+
+    is_public = db.Column(db.Boolean, default=False)
 
     @declared_attr
     def organisations(cls):

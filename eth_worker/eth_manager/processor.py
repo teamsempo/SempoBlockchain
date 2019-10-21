@@ -3,69 +3,18 @@ from typing import List, Optional, NewType, Any
 import datetime
 
 from eth_keys import keys
-from eth_utils import to_checksum_address
 
 from celery import chain, signature
 
 import requests
 
 import config
-from eth_manager.exceptions import WrongContractNameError, PreBlockchainError
+from eth_manager.exceptions import PreBlockchainError
 from eth_manager import utils
+from eth_manager.contract_registry import ContractRegistry
 
 Id = NewType("Id", int)
 IdList = List[Id]
-
-class ContractRegistry(object):
-
-    def _get_contract_name(self, contract):
-        bytes_contract_name = contract.functions.name().call()
-        null_byte_stripped_name = bytes(filter(None,bytes_contract_name))
-        return null_byte_stripped_name.decode()
-
-    def _check_contract_name(self, contract_name, expected_name):
-
-        print('Expecting Contract: ' + expected_name)
-        print('Found Contract: ' + contract_name)
-        if contract_name != expected_name:
-            raise WrongContractNameError
-
-    def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
-        checksum_address = to_checksum_address(contract_address)
-
-        contract = self.w3.eth.contract(address=checksum_address, abi=abi)
-
-        found_contract_name = self._get_contract_name(contract)
-
-        if require_name_matches:
-            self._check_contract_name(found_contract_name, contract_name)
-
-        if contract_name in self.contracts_by_name:
-            raise Exception("Contract with name {} already registered".format(contract_name))
-
-        if contract_name:
-            self.contracts_by_name[contract_name] = contract
-
-        self.contracts_by_address[contract_address] = contract
-
-    def get_contract(self, contract_name_or_address):
-        contract = self.contracts_by_address.get(contract_name_or_address)\
-                   or self.contracts_by_name.get(contract_name_or_address)
-
-        if not contract:
-            raise Exception('Contract not found for name or address: {}'.format(contract_name_or_address))
-
-        return contract
-
-    def get_contract_function(self, contract_name_or_address, function_name):
-        contract = self.get_contract(contract_name_or_address)
-        return getattr(contract.functions, function_name)
-
-    def __init__(self, w3):
-
-        self.w3 = w3
-        self.contracts_by_address = {}
-        self.contracts_by_name = {}
 
 
 class TransactionProcessor(object):
@@ -106,8 +55,8 @@ class TransactionProcessor(object):
         return self.process_transaction(transaction_id, partial_txn_dict=partial_txn_dict)
 
 
-    def process_function_transaction(self, transaction_id,
-                                     contract_name, function_name, args=None, kwargs=None, gas_limit=None):
+    def process_function_transaction(self, transaction_id, contract_address, abi_type,
+                                     function_name, args=None, kwargs=None, gas_limit=None):
 
         args = args or tuple()
         if not isinstance(args, (list, tuple)):
@@ -115,7 +64,7 @@ class TransactionProcessor(object):
 
         kwargs = kwargs or dict()
 
-        function = self.registry.get_contract_function(contract_name, function_name)\
+        function = self.registry.get_contract_function(contract_address, function_name, abi_type)
 
         bound_function = function(*args, **kwargs)
 
@@ -240,6 +189,7 @@ class TransactionProcessor(object):
             chain1 = signature(utils.eth_endpoint('_process_function_transaction'),
                                args=(transaction_obj.id,
                                      task_object.contract,
+                                     task_object.abi_type,
                                      task_object.function,
                                      task_object.args,
                                      task_object.kwargs,
@@ -284,14 +234,15 @@ class TransactionProcessor(object):
 
         return self.persistence_interface.get_serialised_task_from_id(id)
 
-    def call_contract_function(self, contract_name: str, function_name: str,
+    def call_contract_function(self, contract_address: str, abi_type: str, function_name: str,
                                args: Optional[tuple] = None, kwargs: Optional[dict] = None) -> Any:
         """
         The main call entrypoint for the transaction. This task completes quickly,
         so can be called synchronously.
 
         :param encrypted_private_key: private key of the wallet making the transaction, encrypted usign key from settings
-        :param contract_name: name of the contract for the function
+        :param contract_address: address of the contract for the function
+        :param abi_type: the type of ABI for the contract being called
         :param function_name: name of the function
         :param args: arguments for the function
         :param kwargs: keyword arguments for the function
@@ -305,13 +256,18 @@ class TransactionProcessor(object):
 
         kwargs = kwargs or dict()
 
-        function = self.registry.get_contract_function(contract_name, function_name)(*args, **kwargs)
+        if function_name == 'quickConvert':
+            tt = 5
+
+        function_list = self.registry.get_contract_function(contract_address, function_name, abi_type)
+
+        function = function_list(*args, **kwargs)
 
         return function.call()
 
 
     def transact_with_contract_function(self,
-                                        contract_name_or_address: str, function_name: str,
+                                        contract_address: str, abi_type: str, function_name: str,
                                         args: Optional[tuple] = None, kwargs: Optional[dict] = None,
                                         signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
                                         gas_limit: Optional[int] = None,
@@ -320,7 +276,8 @@ class TransactionProcessor(object):
         The main transaction entrypoint for the processor. This task completes quickly,
         so can be called synchronously in order to retrieve a task ID
 
-        :param contract_name_or_address: name or address of the contract for the function
+        :param contract_address: the address of the contract for the function
+        :param abi_type: the type of ABI for the contract being called
         :param function_name: name of the function
         :param args: arguments for the function
         :param kwargs: keyword arguments for the function
@@ -334,7 +291,8 @@ class TransactionProcessor(object):
         signing_wallet_obj = self.get_signing_wallet_object(signing_address, encrypted_private_key)
 
         task = self.persistence_interface.create_function_task(signing_wallet_obj,
-                                                               contract_name_or_address, function_name, args, kwargs,
+                                                               contract_address, abi_type,
+                                                               function_name, args, kwargs,
                                                                gas_limit, dependent_on_tasks)
 
         # Attempt Create Async Transaction

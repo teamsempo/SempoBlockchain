@@ -242,6 +242,7 @@ else:
 master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
 MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
 MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
+print(f'Master Wallet address: {MASTER_WALLET_ADDRESS}')
 
 SYSTEM_WALLET_TARGET_BALANCE = int(specific_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
 SYSTEM_WALLET_TOPUP_THRESHOLD = int(specific_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))

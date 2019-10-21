@@ -13,6 +13,8 @@ from web3 import (
     HTTPProvider
 )
 
+from web3.exceptions import BadFunctionCallOutput
+
 import os
 import sys
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
@@ -22,8 +24,15 @@ sys.path.append(os.getcwd())
 import config
 from sql_persistence.interface import SQLPersistenceInterface
 
-from eth_manager.ABIs import dai_abi
-from eth_manager.processor import TransactionProcessor, ContractRegistry
+from eth_manager.ABIs import (
+    dai_abi,
+    erc20_abi,
+    bancor_converter_abi,
+    bancor_network_abi
+)
+
+from eth_manager.processor import TransactionProcessor
+from eth_manager.contract_registry import ContractRegistry
 from eth_manager.exceptions import WalletExistsError
 from eth_manager import utils
 
@@ -60,12 +69,12 @@ blockchain_processor = TransactionProcessor(**eth_config,
                                             persistence_interface=persistence_interface)
 
 import eth_manager.celery_tasks
-
-blockchain_processor.registry.register_contract(
-    config.ETH_CONTRACT_ADDRESS,
-    dai_abi.abi,
-    contract_name='Dai Stablecoin v1.0'
-)
+#
+# blockchain_processor.registry.register_contract(
+#     config.ETH_CONTRACT_ADDRESS,
+#     dai_abi.abi,
+#     contract_name='Dai Stablecoin v1.0'
+# )
 
 # Register the master wallet so we can use it for tasks
 try:
@@ -73,13 +82,20 @@ try:
 except WalletExistsError:
     pass
 
-def register_contracts_from_app(host_address, auth_username, auth_password):
+def register_tokens_from_app(host_address, auth_username, auth_password):
     token_req = requests.get(host_address + '/api/token', auth=HTTPBasicAuth(auth_username, auth_password))
 
     if token_req.status_code == 200:
 
         for token in token_req.json()['data']['tokens']:
-            blockchain_processor.registry.register_contract(token['address'], dai_abi.abi)
+            try:
+                blockchain_processor.registry.register_contract(token['address'], dai_abi.abi)
+            except BadFunctionCallOutput as e:
+                # It's probably a contract on a different chain
+                if not config.IS_PRODUCTION:
+                    pass
+                else:
+                    raise e
 
         return True
 
@@ -87,21 +103,26 @@ def register_contracts_from_app(host_address, auth_username, auth_password):
         return False
 
 
-contracts_registered = False
-attempts = 0
-while contracts_registered is False and attempts < 20:
-    print('Contract Register Attempt ' + str(attempts))
-    try:
-        contracts_registered = register_contracts_from_app(config.APP_HOST,
-                                    config.INTERNAL_AUTH_USERNAME,
-                                    config.INTERNAL_AUTH_PASSWORD)
+blockchain_processor.registry.register_abi('ERC20', erc20_abi.abi)
+blockchain_processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
+blockchain_processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
 
-        if contracts_registered:
-            print('Contracts Registered Successfully')
 
-    except ConnectionError:
-        pass
-
-    attempts += 1
-    sleep(1)
-
+# contracts_registered = False
+# attempts = 0
+# while contracts_registered is False and attempts < 10:
+#     print('Contract Register Attempt ' + str(attempts))
+#     try:
+#         contracts_registered = register_tokens_from_app(config.APP_HOST,
+#                                                         config.INTERNAL_AUTH_USERNAME,
+#                                                         config.INTERNAL_AUTH_PASSWORD)
+#
+#         if contracts_registered:
+#             print('Contracts Registered Successfully')
+#
+#     except ConnectionError:
+#         pass
+#
+#     attempts += 1
+#     sleep(1)
+#

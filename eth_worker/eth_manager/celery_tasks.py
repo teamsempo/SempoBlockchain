@@ -43,15 +43,15 @@ def register_contract(self, contract_address, abi, contract_name=None, require_n
     )
 
 @celery_app.task(**task_config)
-def call_contract_function(self, contract, function, args=None, kwargs=None):
-    return blockchain_processor.call_contract_function(contract, function, args, kwargs)
+def call_contract_function(self, contract_address, function, abi_type=None, args=None, kwargs=None):
+    return blockchain_processor.call_contract_function(contract_address, abi_type, function, args, kwargs)
 
 @celery_app.task(**task_config)
-def transact_with_contract_function(self, contract, function, args=None, kwargs=None,
+def transact_with_contract_function(self, contract_address, function,  abi_type=None, args=None, kwargs=None,
                                     signing_address=None, encrypted_private_key=None,
                                     gas_limit=None, dependent_on_tasks=None):
 
-    return blockchain_processor.transact_with_contract_function(contract, function, args, kwargs,
+    return blockchain_processor.transact_with_contract_function(contract_address, abi_type, function, args, kwargs,
                                                                 signing_address, encrypted_private_key,
                                                                 gas_limit, dependent_on_tasks)
 
@@ -73,8 +73,11 @@ def _attempt_transaction(self, task_id):
     return blockchain_processor.attempt_transaction(task_id)
 
 @celery_app.task(**task_config)
-def _process_function_transaction(self, transaction_id, contract, function, args=None, kwargs=None, gas_limit=None):
-    return blockchain_processor.process_function_transaction(transaction_id, contract, function, args, kwargs, gas_limit)
+def _process_function_transaction(self, transaction_id, contract, abi_type,
+                                  function, args=None, kwargs=None,  gas_limit=None):
+
+    return blockchain_processor.process_function_transaction(transaction_id, contract, abi_type,
+                                                             function, args, kwargs, gas_limit)
 
 @celery_app.task(**task_config)
 def _process_send_eth_transaction(self, transaction_id, recipient_address, amount):

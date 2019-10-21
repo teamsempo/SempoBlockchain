@@ -118,6 +118,7 @@ class BlockchainTask(ModelBase):
     __tablename__ = 'blockchain_task'
 
     contract = Column(String)
+    abi_type = Column(String)
     function = Column(String)
     args = Column(JSON)
     kwargs = Column(JSON)

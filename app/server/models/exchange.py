@@ -5,17 +5,16 @@ from server.models.utils import (
     exchange_contract_token_association_table
 )
 
-from server.models.credit_transfer import CreditTransfer
-from server.models.transfer_account import TransferAccount
+import server.models.credit_transfer
 
 from server.utils.blockchain_tasks import make_liquid_token_exchange, get_conversion_amount
+
+from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
 class ExchangeContract(ModelBase):
     __tablename__ = 'exchange_contract'
 
     blockchain_address = db.Column(db.String())
-
-    transfer_account_id = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
 
     reserve_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
 
@@ -24,11 +23,13 @@ class ExchangeContract(ModelBase):
         secondary=exchange_contract_token_association_table,
         back_populates="exchange_contracts")
 
+    transfer_accounts = db.relationship('TransferAccount', backref='exchange_contract',
+                                         lazy=True, foreign_keys='TransferAccount.exchange_contract_id')
+
     def __init__(self, blockchain_address):
 
         self.blockchain_address = blockchain_address
 
-        self.transfer_account = TransferAccount(blockchain_address=blockchain_address)
 
 class Exchange(ModelBase):
     __tablename__ = 'exchange'
@@ -73,29 +74,31 @@ class Exchange(ModelBase):
                                           exchange_contract.reserve_token,
                                           from_amount)
 
-        self.from_transfer = CreditTransfer(from_amount,
-                                            from_token,
-                                            sender_user=user,
-                                            recipient_transfer_account=exchange_contract.transfer_account)
+        self.from_transfer = server.models.credit_transfer.CreditTransfer(
+            from_amount,
+            from_token,
+            sender_user=user,
+            recipient_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, from_token))
 
         db.session.add(self.from_transfer)
 
-        self.to_transfer = CreditTransfer(to_amount,
-                                          from_token,
-                                          sender_transfer_account=exchange_contract.transfer_account,
-                                          recipient_user=user)
+        self.to_transfer = server.models.credit_transfer.CreditTransfer(
+            to_amount,
+            to_token,
+            sender_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, to_token),
+            recipient_user=user)
 
         db.session.add(self.to_transfer)
 
         self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
         self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)
 
-        task_id = make_liquid_token_exchange(self.from_transfer.sender_transfer_account.blockchain_address,
-                                             exchange_contract.blockchain_address,
-                                             from_token,
-                                             to_token,
-                                             from_amount,
-                                             exchange_contract.reserve_token)
+        task_id = make_liquid_token_exchange(signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
+                                             exchange_contract_address=exchange_contract.blockchain_address,
+                                             from_token=from_token,
+                                             to_token=to_token,
+                                             reserve_token=exchange_contract.reserve_token,
+                                             from_amount=from_amount)
 
         self.blockchain_task_id = task_id
 

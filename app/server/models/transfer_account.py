@@ -4,10 +4,10 @@ from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from server import db
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table
-from server.models.token import Token
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
-from server.models.credit_transfer import CreditTransfer
+from server.models.exchange import ExchangeContract
+import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
 from server.utils.blockchain_tasks import (
     create_blockchain_wallet
@@ -35,12 +35,11 @@ class TransferAccount(OneOrgBase, ModelBase):
     payable_period_length = db.Column(db.Integer, default=2)
     payable_epoch         = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
+    token_id        = db.Column(db.Integer, db.ForeignKey("token.id"))
+
+    exchange_contract_id = db.Column(db.Integer, db.ForeignKey(ExchangeContract.id))
 
     transfer_card    = db.relationship('TransferCard', backref='transfer_account', lazy=True, uselist=False)
-
-    exchange_contract = db.relationship('ExchangeContract', backref='transfer_account', lazy=True, uselist=False)
-
 
     # users               = db.relationship('User', backref='transfer_account', lazy=True)
     users = db.relationship(
@@ -63,6 +62,13 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
+
+    def add_to_balance(self, amount):
+
+        if not self.balance:
+            self.balance = amount
+        else:
+            self.balance += amount
 
     def get_or_create_system_transfer_approval(self):
 
@@ -89,17 +95,17 @@ class TransferAccount(OneOrgBase, ModelBase):
     @hybrid_property
     def total_sent(self):
         return int(
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
+            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
+            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+            .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
         )
 
     @hybrid_property
     def total_received(self):
         return int(
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
+            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
+            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
         )
 
     # @hybrid_property
@@ -177,8 +183,9 @@ class TransferAccount(OneOrgBase, ModelBase):
                                               automatically_resolve_complete=False)
         return withdrawal
 
-    def __init__(self, blockchain_address=None, organisation=None):
-        #
+    def __init__(self, blockchain_address=None, organisation=None, **kwargs):
+        super(TransferAccount, self).__init__(**kwargs)
+
         # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
         # db.session.add(blockchain_address_obj)
 

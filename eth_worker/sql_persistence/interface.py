@@ -229,13 +229,15 @@ class SQLPersistenceInterface(object):
 
         return task
 
-    def create_function_task(self, signing_wallet_obj, contract,
+    def create_function_task(self, signing_wallet_obj,
+                             contract_address, abi_type,
                              function, args=None, kwargs=None,
                              gas_limit=None, dependent_on_tasks=None):
 
 
         task = BlockchainTask(signing_wallet=signing_wallet_obj,
-                              contract=contract,
+                              contract=contract_address,
+                              abi_type=abi_type,
                               function=function,
                               args=args,
                               kwargs=kwargs,

@@ -91,7 +91,7 @@ class TokenExchangeContractAPI(MethodView):
             exchange_contract = ExchangeContract.query.get(exchange_contract_id)
 
         elif exchange_contract_address:
-            exchange_contract = ExchangeContract.query.filter_by(blockchain_address = exchange_contract_address).first()
+            exchange_contract = ExchangeContract.query.filter_by(blockchain_address=exchange_contract_address).first()
 
         else:
             return make_response(jsonify(
@@ -101,9 +101,7 @@ class TokenExchangeContractAPI(MethodView):
             return make_response(jsonify(
                 {'message': 'No Exchange Contract found for ID: {}'.format(exchange_contract_id)}))
 
-        token.exchange_contracts.append(exchange_contract)
-
-        db.session.commit()
+        token.add_exchange_contract(exchange_contract)
 
         response_object = {
             'message': 'success',

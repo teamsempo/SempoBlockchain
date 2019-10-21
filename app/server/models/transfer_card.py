@@ -3,7 +3,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from server import db
 from server.models.utils import ModelBase
-from server.models.credit_transfer import CreditTransfer
+import server.models.credit_transfer
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
 from server.exceptions import NoTransferCardError
 
@@ -44,7 +44,7 @@ class TransferCard(ModelBase):
         return transfer_card
 
     def update_transfer_card(self):
-        disbursements = (CreditTransfer.query
+        disbursements = (server.models.credit_transfer.CreditTransfer.query
                          .execution_options(show_all=True)
                          .filter_by(recipient_user_id=self.user_id)
                          .filter_by(transfer_type=TransferTypeEnum.DISBURSEMENT)
