@@ -31,18 +31,6 @@ class ExchangeAPI(MethodView):
         from_amount = post_data.get('from_amount')
         to_desired_amount = post_data.get('to_desired_amount')
 
-        if not from_amount and not to_desired_amount:
-            response_object = {
-                'message': 'Must specify either from amount or to amount',
-            }
-            return make_response(jsonify(response_object)), 400
-
-        if from_amount and to_desired_amount:
-            response_object = {
-                'message': 'Must not specify both from amount and to amount',
-            }
-            return make_response(jsonify(response_object)), 400
-
         from_token = Token.query.get(from_token_id)
         to_token = Token.query.get(to_token_id)
 
@@ -58,14 +46,39 @@ class ExchangeAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        exchange = Exchange()
+        if from_amount and to_desired_amount:
+            response_object = {
+                'message': 'Must not specify both from amount and to amount',
+            }
+            return make_response(jsonify(response_object)), 400
+        elif from_amount:
 
-        exchange.exchange_from_amount(
-            user=user,
-            from_token=from_token,
-            to_token=to_token,
-            from_amount=from_amount
-        )
+            exchange = Exchange()
+
+            exchange.exchange_from_amount(
+                user=user,
+                from_token=from_token,
+                to_token=to_token,
+                from_amount=from_amount
+            )
+
+        elif to_desired_amount:
+
+            exchange = Exchange()
+
+            exchange.exchange_to_desired_amount(
+                user=user,
+                from_token=from_token,
+                to_token=to_token,
+                to_desired_amount=to_desired_amount
+            )
+
+        else:
+
+            response_object = {
+                'message': 'Must specify either from amount or to amount',
+            }
+            return make_response(jsonify(response_object)), 400
 
         response_object = {
             'message': 'Transfer Successful',

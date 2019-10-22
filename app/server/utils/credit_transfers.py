@@ -5,8 +5,15 @@ from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func
 import datetime, json
 
-from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
-    InvalidTargetBalanceError, BlockchainError
+from server.exceptions import (
+    NoTransferAccountError,
+    UserNotFoundError,
+    InsufficientBalanceError,
+    AccountNotApprovedError,
+    InvalidTargetBalanceError,
+    BlockchainError
+)
+
 from server import db, sentry, red
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount

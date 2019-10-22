@@ -71,7 +71,7 @@ class Setup(object):
                          json={
                              'from_token_id': from_token_id,
                              'to_token_id': to_token_id,
-                             'from_amount': from_amount
+                             'to_desired_amount': from_amount
                          })
 
         json = r.json()
@@ -116,4 +116,4 @@ if __name__ == '__main__':
 
     print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))
 
-    s.test_exchange(cic1_token_id, cic2_token_id, 3000*10**(-18))
+    s.test_exchange(cic1_token_id, cic2_token_id, 3000*10**(-14))
