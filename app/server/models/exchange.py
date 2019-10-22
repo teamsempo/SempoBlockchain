@@ -1,3 +1,4 @@
+from functools import partial
 from server import db
 
 from server.models.utils import (
@@ -8,8 +9,8 @@ from server.models.utils import (
 import server.models.credit_transfer
 
 from server.utils.blockchain_tasks import make_liquid_token_exchange, get_conversion_amount
-
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
+from server.utils.root_solver import find_monotonic_increasing_bounds, false_position_method
 
 from server.exceptions import InsufficientBalanceError
 
@@ -54,7 +55,7 @@ class Exchange(ModelBase):
     blockchain_task_id = db.Column(db.Integer)
 
 
-    def exchange_from_amount(self, user, from_token, to_token, from_amount):
+    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount = None):
 
         self.user = user
         self.from_token = from_token
@@ -62,12 +63,15 @@ class Exchange(ModelBase):
 
         exchange_contract = self._find_exchange_contract(from_token, to_token)
 
-        # TODO: Shift this away from an estimate to getting the real number async from the completed task
-        to_amount = get_conversion_amount(exchange_contract.blockchain_address,
-                                          from_token,
-                                          to_token,
-                                          exchange_contract.reserve_token,
-                                          from_amount)
+        if calculated_to_amount:
+            to_amount = calculated_to_amount
+        else:
+            # TODO: Shift this away from an estimate to getting the real number async from the completed task
+            to_amount = get_conversion_amount(exchange_contract.blockchain_address,
+                                              from_token,
+                                              to_token,
+                                              exchange_contract.reserve_token,
+                                              from_amount)
 
         self.from_transfer = server.models.credit_transfer.CreditTransfer(
             from_amount,
@@ -108,85 +112,9 @@ class Exchange(ModelBase):
         This is 'to_desired_amount' rather than just 'to_amount'
         because we can't actually guarantee how much of the 'to' token the user will receive through the exchange
         """
-        from_amount = self._half_interval_search(from_token, to_token, to_desired_amount)
+        from_amount, calculated_to_amount = self._estimate_from_amount(from_token, to_token, to_desired_amount)
 
-        self.exchange_from_amount(user, from_token, to_token, from_amount)
-
-    def _half_interval_search(self, from_token, to_token, to_desired_amount):
-        bound_expansion_rate = 1.5
-        max_error = 3e-15
-
-        exchange_contract = self._find_exchange_contract(from_token, to_token)
-
-        # Find a lower bound guess that is results in a conversion less than the desired amount
-        x_lower = to_desired_amount
-
-        y_lower = get_conversion_amount(
-            exchange_contract.blockchain_address,
-            from_token,
-            to_token,
-            exchange_contract.reserve_token,
-            x_lower)
-
-        while y_lower - to_desired_amount >= 0:
-
-            x_lower = to_desired_amount / bound_expansion_rate
-
-            y_lower = get_conversion_amount(
-                exchange_contract.blockchain_address,
-                from_token,
-                to_token,
-                exchange_contract.reserve_token,
-                x_lower)
-
-        # Find an bound guess that is results in a conversion greater than the desired amount
-        x_upper = to_desired_amount
-
-        y_upper = get_conversion_amount(
-            exchange_contract.blockchain_address,
-            from_token,
-            to_token,
-            exchange_contract.reserve_token,
-            x_upper)
-
-        while y_upper - to_desired_amount <= 0:
-            x_upper = to_desired_amount * bound_expansion_rate
-
-            y_upper = get_conversion_amount(
-                exchange_contract.blockchain_address,
-                from_token,
-                to_token,
-                exchange_contract.reserve_token,
-                x_upper)
-
-        # Half interval away!!!
-        new_x = (x_upper + x_lower)/2
-
-        new_y = get_conversion_amount(
-            exchange_contract.blockchain_address,
-            from_token,
-            to_token,
-            exchange_contract.reserve_token,
-            new_x)
-
-        while abs(new_y - to_desired_amount) > max_error:
-
-            if new_y - to_desired_amount > 0:
-                x_upper = new_x
-            else:
-                x_lower = new_x
-
-            new_x = (x_upper + x_lower) / 2
-
-            new_y = get_conversion_amount(
-                exchange_contract.blockchain_address,
-                from_token,
-                to_token,
-                exchange_contract.reserve_token,
-                new_x)
-
-        return new_x
-
+        self.exchange_from_amount(user, from_token, to_token, from_amount, calculated_to_amount)
 
     def _find_exchange_contract(self, from_token, to_token):
         # TODO: get this to work as an actual SQLAlchemy Filter
@@ -200,3 +128,31 @@ class Exchange(ModelBase):
             raise Exception("No matching exchange contract found")
 
         return exchange_contract
+
+    def _get_conversion_function(self, exchange_contract, from_token, to_token):
+        return partial(
+            get_conversion_amount,
+            exchange_contract.blockchain_address,
+            from_token,
+            to_token,
+            exchange_contract.reserve_token
+        )
+
+    def _estimate_from_amount(self, from_token, to_token, to_desired_amount):
+        max_error = 3e-15
+
+        exchange_contract = self._find_exchange_contract(from_token, to_token)
+        conversion_func = self._get_conversion_function(exchange_contract, from_token, to_token)
+
+        def root_func(x):
+            return conversion_func(x) - to_desired_amount
+
+        x_lower, y_lower, x_upper, y_upper = find_monotonic_increasing_bounds(root_func, to_desired_amount)
+
+        new_x, new_y = false_position_method(
+            root_func,
+            x_lower, y_lower,
+            x_upper, y_upper,
+            max_error, max_iterations=6)
+
+        return new_x, new_y + to_desired_amount
