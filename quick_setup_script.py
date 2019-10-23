@@ -71,7 +71,7 @@ class Setup(object):
                          json={
                              'from_token_id': from_token_id,
                              'to_token_id': to_token_id,
-                             'to_desired_amount': from_amount
+                             'from_amount': from_amount
                          })
 
         json = r.json()
@@ -101,12 +101,12 @@ if __name__ == '__main__':
         name='RESERVE',
         symbol='RSRV')
 
-    cic1_token_id = s.register_blockchain_token('0x8c5174c2dD1e5DE8a1854Ba02370e4225798CD17',
+    cic1_token_id = s.register_blockchain_token('0xA1678D3ED0fF92C66753472e3A015a16DEA0F10f',
                                                 name='CIC1',
                                                 symbol='CIC1',
                                                 exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
 
-    cic2_token_id = s.register_blockchain_token('0xFf261C8ed4B2F4bB43E612B07bC584D2Aa224fAb',
+    cic2_token_id = s.register_blockchain_token('0x5CB40AcCE23D33fB28015DFf0C552E4583633996',
                                                 name='CIC2',
                                                 symbol='CIC2',
                                                 exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
@@ -116,4 +116,4 @@ if __name__ == '__main__':
 
     print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))
 
-    s.test_exchange(cic1_token_id, cic2_token_id, 3000*10**(-14))
+    s.test_exchange(reserve_token_id, cic1_token_id, 1000000000000000*10**(-16))

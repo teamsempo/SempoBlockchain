@@ -5,6 +5,7 @@ import datetime
 
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query
 from sqlalchemy import or_
 
@@ -12,11 +13,15 @@ import server
 from server import db
 from server.exceptions import OrganisationNotProvidedException
 
+from server.utils.blockchain_tasks import (
+    get_blockchain_task
+)
+
 
 def get_authorising_user_id():
-    if hasattr(g,'user'):
+    if hasattr(g, 'user'):
         return g.user.id
-    elif hasattr(g,'authorising_user_id'):
+    elif hasattr(g, 'authorising_user_id'):
         return g.authorising_user_id
     else:
         return None
@@ -133,6 +138,7 @@ def before_compile(query):
 #         "organisation object %s was incorrectly loaded, did you use "
 #         "joined eager loading?" % obj)
 
+
 user_transfer_account_association_table = db.Table(
     'user_transfer_account_association_table',
     db.Model.metadata,
@@ -164,6 +170,22 @@ class ModelBase(db.Model):
     authorising_user_id = db.Column(db.Integer, default=get_authorising_user_id)
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class BlockchainTaskableBase(ModelBase):
+    __abstract__ = True
+
+    blockchain_task_id = db.Column(db.Integer)
+
+    @hybrid_property
+    def blockchain_status(self):
+        if self.blockchain_task_id:
+            task = get_blockchain_task(self.blockchain_task_id)
+
+            return task.get('status', 'ERROR')
+        else:
+            return 'UNKNOWN'
+
 
 
 class OneOrgBase(object):

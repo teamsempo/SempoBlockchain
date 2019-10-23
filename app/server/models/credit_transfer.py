@@ -4,7 +4,7 @@ from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from server import db
-from server.models.utils import ModelBase, ManyOrgBase
+from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 
@@ -22,7 +22,7 @@ from server.utils.transfer_account import find_transfer_accounts_with_matching_t
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferModeEnum
 
 
-class CreditTransfer(ManyOrgBase, ModelBase):
+class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     __tablename__ = 'credit_transfer'
 
     uuid            = db.Column(db.String, unique=True)
@@ -36,8 +36,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     transfer_use    = db.Column(JSON)
 
     resolution_message = db.Column(db.String())
-
-    blockchain_task_id = db.Column(db.Integer)
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
@@ -59,27 +57,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
-
-    @hybrid_property
-    def blockchain_status(self):
-        if self.blockchain_task_id:
-            task = get_blockchain_task(self.blockchain_task_id)
-
-            return task.get('status', 'ERROR')
-        else:
-            return 'UNKNOWN'
-
-        # if len(self.uncompleted_blockchain_tasks) == 0:
-        #     return 'COMPLETE'
-        #
-        # if len(self.pending_blockchain_tasks) > 0:
-        #     return 'PENDING'
-        #
-        # if len(self.failed_blockchain_tasks) > 0:
-        #     return 'ERROR'
-        #
-        # return 'UNKNOWN'
-
 
     @hybrid_property
     def blockchain_status_breakdown(self):
@@ -211,7 +188,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         try:
             return find_transfer_accounts_with_matching_token(user, token)
         except NoTransferAccountError:
-            transfer_account = TransferAccount()
+            transfer_account = TransferAccount(blockchain_address=user.primary_blockchain_address)
             transfer_account.token = token
             user.transfer_accounts.append(transfer_account)
             db.session.add(transfer_account)

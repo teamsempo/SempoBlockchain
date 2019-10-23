@@ -14,6 +14,10 @@ import string
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
+from server.utils.blockchain_tasks import (
+    create_blockchain_wallet
+)
+
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -26,6 +30,7 @@ from server.exceptions import (
 from server.constants import (
     ACCESS_ROLES
 )
+
 
 
 class User(ManyOrgBase, ModelBase):
@@ -44,6 +49,8 @@ class User(ManyOrgBase, ModelBase):
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     preferred_language = db.Column(db.String())
+
+    primary_blockchain_address = db.Column(db.String())
 
     _last_seen = db.Column(db.DateTime)
 
@@ -474,10 +481,14 @@ class User(ManyOrgBase, ModelBase):
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
-    def __init__(self, **kwargs):
+    def __init__(self, blockchain_address=None, **kwargs):
         super(User, self).__init__(**kwargs)
+
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
+
+        self.primary_blockchain_address = blockchain_address or create_blockchain_wallet()
+
 
     def __repr__(self):
         if self.has_admin_role:

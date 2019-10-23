@@ -101,7 +101,7 @@ class TokenExchangeContractAPI(MethodView):
             return make_response(jsonify(
                 {'message': 'No Exchange Contract found for ID: {}'.format(exchange_contract_id)}))
 
-        token.add_exchange_contract(exchange_contract)
+        exchange_contract.add_token(token)
 
         response_object = {
             'message': 'success',

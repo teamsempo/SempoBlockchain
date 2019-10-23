@@ -86,5 +86,6 @@ class ExchangeAPI(MethodView):
                 'exchange': 'foo',
             }
         }
+
         return make_response(jsonify(response_object)), 201
 

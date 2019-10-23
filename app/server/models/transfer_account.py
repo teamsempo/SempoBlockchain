@@ -19,7 +19,7 @@ class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    balance         = db.Column(db.BigInteger, default=0)
+    _balance         = db.Column(db.BigInteger, default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -63,34 +63,17 @@ class TransferAccount(OneOrgBase, ModelBase):
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
 
-    def add_to_balance(self, amount):
+    # @hybrid_property
+    # def balance(self):
+    #     return self.total_received - self.total_sent
 
-        if not self.balance:
-            self.balance = amount
-        else:
-            self.balance += amount
+    @hybrid_property
+    def balance(self):
+        return self._balance or 0
 
-    def get_or_create_system_transfer_approval(self):
-
-        organisation_blockchain_address = self.organisation.system_blockchain_address
-
-        approval = self.get_approval(organisation_blockchain_address)
-
-        if not approval:
-            approval = self.give_approval_to_address(organisation_blockchain_address)
-
-        return approval
-
-    def give_approval_to_address(self, address_getting_approved):
-        approval = SpendApproval(transfer_account_giving_approval=self,
-                                 address_getting_approved=address_getting_approved)
-        return approval
-
-    def get_approval(self, receiving_address):
-        for approval in self.spend_approvals_given:
-            if approval.receiving_address == receiving_address:
-                return approval
-        return None
+    @balance.setter
+    def balance(self, val):
+        self._balance = val
 
     @hybrid_property
     def total_sent(self):
@@ -107,10 +90,6 @@ class TransferAccount(OneOrgBase, ModelBase):
             .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
             .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
         )
-
-    # @hybrid_property
-    # def balance(self):
-    #     return self.total_received - self.total_sent
 
     @hybrid_property
     def primary_user(self):
@@ -157,6 +136,35 @@ class TransferAccount(OneOrgBase, ModelBase):
             return 'FAILED'
 
         return 'NO_REQUEST'
+
+    def add_to_balance(self, amount):
+
+        if not self.balance:
+            self.balance = amount
+        else:
+            self.balance += amount
+
+    def get_or_create_system_transfer_approval(self):
+
+        organisation_blockchain_address = self.organisation.system_blockchain_address
+
+        approval = self.get_approval(organisation_blockchain_address)
+
+        if not approval:
+            approval = self.give_approval_to_address(organisation_blockchain_address)
+
+        return approval
+
+    def give_approval_to_address(self, address_getting_approved):
+        approval = SpendApproval(transfer_account_giving_approval=self,
+                                 address_getting_approved=address_getting_approved)
+        return approval
+
+    def get_approval(self, receiving_address):
+        for approval in self.spend_approvals_given:
+            if approval.receiving_address == receiving_address:
+                return approval
+        return None
 
     def approve(self):
 

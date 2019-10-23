@@ -3,16 +3,25 @@ from server import db
 
 from server.models.utils import (
     ModelBase,
+    BlockchainTaskableBase,
     exchange_contract_token_association_table
 )
 
 import server.models.credit_transfer
+import server.models.transfer_account
 
-from server.utils.blockchain_tasks import make_liquid_token_exchange, get_conversion_amount
+from server.utils.blockchain_tasks import (
+    make_liquid_token_exchange,
+    make_approval,
+    get_conversion_amount,
+    get_wallet_balance
+)
+
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 from server.utils.root_solver import find_monotonic_increasing_bounds, false_position_method
 
 from server.exceptions import InsufficientBalanceError
+
 
 class ExchangeContract(ModelBase):
     __tablename__ = 'exchange_contract'
@@ -26,15 +35,37 @@ class ExchangeContract(ModelBase):
         secondary=exchange_contract_token_association_table,
         back_populates="exchange_contracts")
 
-    transfer_accounts = db.relationship('TransferAccount', backref='exchange_contract',
-                                         lazy=True, foreign_keys='TransferAccount.exchange_contract_id')
+    transfer_accounts = db.relationship(
+        'TransferAccount', backref='exchange_contract',
+        lazy=True, foreign_keys='TransferAccount.exchange_contract_id'
+    )
+
+    def add_token(self, token):
+
+        exchange_transfer_account = (server.models.transfer_account.TransferAccount.query
+                                     .filter_by(token=token)
+                                     .filter_by(exchange_contract=self)
+                                     .first())
+
+        if not exchange_transfer_account:
+            exchange_transfer_account = server.models.transfer_account.TransferAccount(
+                blockchain_address=self.blockchain_address,
+                is_public=True
+            )
+
+            exchange_transfer_account.token = token
+            db.session.add(exchange_transfer_account)
+
+        exchange_transfer_account.exchange_contract = self
+
+        self.exchangeable_tokens.append(token)
 
     def __init__(self, blockchain_address):
 
         self.blockchain_address = blockchain_address
 
 
-class Exchange(ModelBase):
+class Exchange(BlockchainTaskableBase):
     __tablename__ = 'exchange'
 
     to_desired_amount = db.Column(db.Integer)
@@ -52,10 +83,7 @@ class Exchange(ModelBase):
 
     to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
 
-    blockchain_task_id = db.Column(db.Integer)
-
-
-    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount = None):
+    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None):
 
         self.user = user
         self.from_token = from_token
@@ -98,14 +126,41 @@ class Exchange(ModelBase):
         self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
         self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)
 
-        task_id = make_liquid_token_exchange(signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
-                                             exchange_contract_address=exchange_contract.blockchain_address,
-                                             from_token=from_token,
-                                             to_token=to_token,
-                                             reserve_token=exchange_contract.reserve_token,
-                                             from_amount=from_amount)
+        # We need to approve all the tokens involved for spend by the exchange contract
+        to_approval_id = make_approval(
+            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
+            token=to_token,
+            spender=exchange_contract.blockchain_address,
+            amount=from_amount * 100000
+        )
+
+        reserve_approval_id = make_approval(
+            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
+            token=exchange_contract.reserve_token,
+            spender=exchange_contract.blockchain_address,
+            amount=from_amount * 100000
+        )
+
+        from_approval_id = make_approval(
+            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
+            token=from_token,
+            spender=exchange_contract.blockchain_address,
+            amount=from_amount*100000
+        )
+
+        task_id = make_liquid_token_exchange(
+            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
+            exchange_contract_address=exchange_contract.blockchain_address,
+            from_token=from_token,
+            to_token=to_token,
+            reserve_token=exchange_contract.reserve_token,
+            from_amount=from_amount,
+            dependent_on_tasks=[to_approval_id, reserve_approval_id, from_approval_id]
+        )
 
         self.blockchain_task_id = task_id
+        self.from_transfer.blockchain_task_id = task_id
+        self.to_transfer.blockchain_task_id = task_id
 
     def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount):
         """
@@ -117,11 +172,15 @@ class Exchange(ModelBase):
         self.exchange_from_amount(user, from_token, to_token, from_amount, calculated_to_amount)
 
     def _find_exchange_contract(self, from_token, to_token):
+
+        def exchangeable_by_contract(token, contract):
+            return token == contract.reserve_token or token in contract.exchangeable_tokens
+
         # TODO: get this to work as an actual SQLAlchemy Filter
         exchange_contracts = ExchangeContract.query.all()
         exchange_contract = None
         for c in exchange_contracts:
-            if (from_token in c.exchangeable_tokens) and (to_token in c.exchangeable_tokens):
+            if exchangeable_by_contract(from_token, c) and exchangeable_by_contract(to_token, c):
                 exchange_contract = c
 
         if exchange_contract is None:

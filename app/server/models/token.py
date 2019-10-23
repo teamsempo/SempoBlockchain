@@ -8,9 +8,6 @@ from server.models.utils import (
     exchange_contract_token_association_table
 )
 
-from server.models.exchange import ExchangeContract
-import server.models.transfer_account
-
 class Token(ModelBase):
     __tablename__ = 'token'
 
@@ -64,26 +61,4 @@ class Token(ModelBase):
 
     def system_amount_to_token(self, system_amount):
         return int(float(system_amount) * 10**self.decimals / 100)
-
-    def add_exchange_contract(self, exchange_contract: ExchangeContract):
-
-        exchange_transfer_account = (server.models.transfer_account.TransferAccount.query
-                                     .filter_by(token=self)
-                                     .filter_by(exchange_contract=exchange_contract)
-                                     .first())
-
-        if not exchange_transfer_account:
-            exchange_transfer_account = server.models.transfer_account.TransferAccount(
-                blockchain_address=exchange_contract.blockchain_address,
-                is_public=True
-            )
-
-            exchange_transfer_account.token = self
-            db.session.add(exchange_transfer_account)
-
-
-        exchange_transfer_account.exchange_contract = exchange_contract
-
-        self.exchange_contracts.append(exchange_contract)
-
 

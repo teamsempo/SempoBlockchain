@@ -43,6 +43,7 @@ class UpdateData(Command):
                     exchange_contract = ExchangeContract(blockchain_address=exchange_contract_address)
 
                     exchange_contract.reserve_token = reserve_token
+                    exchange_contract.add_token(reserve_token)
 
                     db.session.add(exchange_contract)
                     db.session.commit()

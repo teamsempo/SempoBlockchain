@@ -79,13 +79,13 @@ class TransactionProcessor(object):
 
         signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
 
-        nonce, transaction_id = self.persistence_interface\
-            .claim_transaction_nonce(signing_wallet_obj, transaction_id)
+        nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
 
+        estimated_gas = function.estimateGas({})
 
         txn = {
             'chainId': self.ethereum_chain_id,
-            'gas': gas_limit or self.gas_limit,
+            'gas': gas_limit or int(estimated_gas*2),
             'gasPrice': gas_price or self.get_gas_price(),
             'nonce': nonce
         }
@@ -97,13 +97,18 @@ class TransactionProcessor(object):
 
         signed_txn = self.w3.eth.account.signTransaction(txn, private_key=signing_wallet_obj.private_key)
 
-
         try:
             result = self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
         except ValueError as e:
 
-            raise PreBlockchainError(f'Transaction {transaction_id}: {str(e)}')
+            message = f'Transaction {transaction_id}: {str(e)}'
+
+            exc = PreBlockchainError(message, False)
+
+            self.log_error(None, exc, None, transaction_id)
+
+            raise PreBlockchainError(message, True)
 
         # If we've made it this far, the nonce will(?) be consumed
         transaction_data = {
@@ -228,10 +233,13 @@ class TransactionProcessor(object):
             'status': 'FAILED'
         }
 
-        self.persistence_interface.update_transaction_data(transaction_id, data)
+        if not getattr(exc, 'is_logged', False):
+            print("LOGGING")
+            self.persistence_interface.update_transaction_data(transaction_id, data)
+        else:
+            print("NOT LOGGING")
 
     def get_serialised_task_from_id(self, id):
-
         return self.persistence_interface.get_serialised_task_from_id(id)
 
     def call_contract_function(self, contract_address: str, abi_type: str, function_name: str,
@@ -240,13 +248,11 @@ class TransactionProcessor(object):
         The main call entrypoint for the transaction. This task completes quickly,
         so can be called synchronously.
 
-        :param encrypted_private_key: private key of the wallet making the transaction, encrypted usign key from settings
         :param contract_address: address of the contract for the function
         :param abi_type: the type of ABI for the contract being called
         :param function_name: name of the function
         :param args: arguments for the function
         :param kwargs: keyword arguments for the function
-        :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
         :return: the result of the contract call
         """
 
@@ -256,22 +262,20 @@ class TransactionProcessor(object):
 
         kwargs = kwargs or dict()
 
-        if function_name == 'quickConvert':
-            tt = 5
-
         function_list = self.registry.get_contract_function(contract_address, function_name, abi_type)
 
         function = function_list(*args, **kwargs)
 
         return function.call()
 
-
-    def transact_with_contract_function(self,
-                                        contract_address: str, abi_type: str, function_name: str,
-                                        args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-                                        signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
-                                        gas_limit: Optional[int] = None,
-                                        dependent_on_tasks: Optional[IdList] = None) -> int:
+    def transact_with_contract_function(
+            self,
+            contract_address: str, abi_type: str, function_name: str,
+            args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+            signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
+            gas_limit: Optional[int] = None,
+            dependent_on_tasks: Optional[IdList] = None
+    ) -> int:
         """
         The main transaction entrypoint for the processor. This task completes quickly,
         so can be called synchronously in order to retrieve a task ID
