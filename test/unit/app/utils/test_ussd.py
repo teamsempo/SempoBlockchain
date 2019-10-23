@@ -10,7 +10,7 @@ from functools import partial
 # TODO(ussd): once preferred_language is added, add another test that sw_KE works and user without preferred_language
 @pytest.mark.parametrize("user_factory,expected", [
     (None, "foo"),
-    (partial(UserFactory,first_name="Bob"), "foo"),
+    (partial(UserFactory, first_name="Bob"), "foo"),
 ])
 def test_menu_display_text_in_lang(test_client, init_database, user_factory, expected):
     user = user_factory() if user_factory else None

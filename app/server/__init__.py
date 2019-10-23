@@ -1,8 +1,5 @@
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
 from flask_cors import CORS
-
-
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_basicauth import BasicAuth
 from flask_limiter import Limiter
@@ -23,7 +20,6 @@ sys.path.append('../')
 import config
 
 def encrypt_string(raw_string):
-
     import base64
     from cryptography.fernet import Fernet
     from eth_utils import keccak
@@ -32,6 +28,7 @@ def encrypt_string(raw_string):
     cipher_suite = Fernet(fernet_encryption_key)
 
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
+
 
 def create_app():
     # create and configure the app
@@ -78,6 +75,7 @@ def register_extensions(app):
 
     print('celery joined on {} at {}'.format(
         app.config['REDIS_URL'], datetime.utcnow()))
+
 
 def register_blueprints(app):
     @app.before_request
@@ -170,6 +168,7 @@ def register_blueprints(app):
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('index.html'), 404
+
 
 db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
 basic_auth = BasicAuth()

@@ -20,6 +20,7 @@ def requires_auth(test_client):
     from server.utils.auth import requires_auth
     return requires_auth
 
+
 @pytest.fixture(scope='module')
 def create_blockchain_token(test_client, init_database):
     from server.models.token import Token
@@ -32,6 +33,7 @@ def create_blockchain_token(test_client, init_database):
 
     return token
 
+
 @pytest.fixture(scope='module')
 def create_organisation(test_client, init_database, create_blockchain_token):
     from server.models.organisation import Organisation
@@ -40,8 +42,9 @@ def create_organisation(test_client, init_database, create_blockchain_token):
     db.session.commit()
     return organisation
 
+
 @pytest.fixture(scope='module')
-def new_sempo_admin_user():
+def new_sempo_admin_user(test_client):
     from server.models.user import User
     user = User()
     user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')

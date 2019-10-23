@@ -77,6 +77,7 @@ def test_update_admin_user_tier(new_sempo_admin_user):
     assert AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'admin')
     assert AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'superadmin')
 
+
 def test_update_password(new_sempo_admin_user):
     """
     GIVEN a User model
