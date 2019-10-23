@@ -1,8 +1,11 @@
 from __future__ import with_statement
+from flask import current_app
 from alembic import context
-from sqlalchemy import engine_from_config, pool, MetaData
+from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 import logging
+
+from server import db
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -17,35 +20,10 @@ logger = logging.getLogger('alembic.env')
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from flask import current_app
 config.set_main_option('sqlalchemy.url',
                        current_app.config.get('SQLALCHEMY_DATABASE_URI'))
-#target_metadata = current_app.extensions['migrate'].db.metadata
-from server.models import (credit_transfer, device_info, feedback, ip_address, kyc_application, models, organisation,
-           referral, transfer_account, transfer_card, upload, user, ussd)
+target_metadata = db.Model.metadata
 
-def combine_metadata(*args):
-    m = MetaData()
-    for metadata in args:
-        for t in metadata.tables.values():
-            t.tometadata(m)
-    return m
-
-target_metadata = combine_metadata(
-    credit_transfer.ModelBase.metadata,
-    device_info.ModelBase.metadata,
-    feedback.ModelBase.metadata,
-    ip_address.ModelBase.metadata,
-    kyc_application.ModelBase.metadata,
-    models.ModelBase.metadata,
-    organisation.ModelBase.metadata,
-    referral.ModelBase.metadata,
-    transfer_account.ModelBase.metadata,
-    transfer_card.ModelBase.metadata,
-    upload.ModelBase.metadata,
-    user.ModelBase.metadata,
-    ussd.ModelBase.metadata
-)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -105,6 +83,7 @@ def run_migrations_online():
             context.run_migrations()
     finally:
         connection.close()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

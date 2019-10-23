@@ -14,7 +14,7 @@ class KenyaUssdProcessor:
             if user.is_resetting():
                 if user.pin_failed_attempts() >= 3:
                     return UssdMenu.find_by_name('exit_pin_blocked')
-                elif user.preferred_language() is None:
+                elif user.preferred_language is None:
                     return UssdMenu.find_by_name('initial_language_selection')
                 else:
                     return UssdMenu.find_by_name('initial_pin_entry')
@@ -59,7 +59,7 @@ class KenyaUssdProcessor:
         elif 'pin_authorization' in menu.name or 'current_pin' in menu.name:
             if user.pin_failed_attempts() > 0:
                 # TODO: not a great way to do i18n...
-                if user.preferred_language() == 'sw_KE':
+                if user.preferred_language == 'sw_KE':
                     replacements.append(['%remaining_attempts%', "Una majaribio #{3 - user.pin_failed_attempts} yaliyobaki."])
                 else:
                     replacements.append(['%remaining_attempts%', "You have #{3 - user.pin_failed_attempts} attempts remaining."])

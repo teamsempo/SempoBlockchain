@@ -8,9 +8,11 @@ import datetime, json
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
 from server import db, sentry, red
-from server.models.models import TransferUsage
-from server.models.transfer_account import TransferAccount, BlockchainAddress
-from server.models.credit_transfer import CreditTransfer, BlockchainTransaction
+from server.models.transfer_usage import TransferUsage
+from server.models.transfer_account import TransferAccount
+from server.models.blockchain_address import BlockchainAddress
+from server.models.credit_transfer import CreditTransfer
+from server.models.blockchain_transaction import BlockchainTransaction
 from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils

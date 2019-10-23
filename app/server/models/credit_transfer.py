@@ -5,7 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from server import db
 from server.models.utils import ModelBase, ManyOrgBase
-from server.models.models import Token
+from server.models.token import Token
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError
@@ -15,6 +15,7 @@ from server.utils.blockchain_tasks import (
     get_blockchain_task
 )
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferModeEnum
+
 
 class CreditTransfer(ManyOrgBase, ModelBase):
     __tablename__ = 'credit_transfer'
@@ -247,23 +248,3 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
 
-class BlockchainTransaction(ModelBase):
-    __tablename__ = 'blockchain_transaction'
-
-    status = db.Column(db.String)  # PENDING, SUCCESS, FAILED
-    message = db.Column(db.String)
-    block = db.Column(db.Integer)
-    submitted_date = db.Column(db.DateTime)
-    added_date = db.Column(db.DateTime)
-    hash = db.Column(db.String)
-    nonce = db.Column(db.Integer)
-    transaction_type = db.Column(db.String)
-
-    is_bitcoin = db.Column(db.Boolean)
-
-    # Output spent txn for bitcoin
-    has_output_txn = db.Column(db.Boolean, default=False)
-
-    credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
-
-    signing_blockchain_address_id = db.Column(db.Integer, db.ForeignKey('blockchain_address.id'))

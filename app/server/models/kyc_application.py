@@ -10,6 +10,7 @@ from server.exceptions import (
     TypeNotFoundException
 )
 
+
 class KycApplication(ModelBase):
     __tablename__       = 'kyc_application'
 

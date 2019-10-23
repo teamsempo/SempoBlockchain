@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from server import db
-from server.models.models import TransferUsage
+from server.models.transfer_usage import TransferUsage
 from server.exceptions import IconNotSupportedException
 from server.utils.auth import requires_auth
 

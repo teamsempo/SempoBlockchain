@@ -5,14 +5,18 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
 from flask import current_app
-import datetime, bcrypt, jwt, random, string
+import datetime
+import bcrypt
+import jwt
+import random
+import string
 
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
-from server.models.models import BlacklistToken
+from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
 from server.exceptions import (
     RoleNotFoundException,
@@ -39,6 +43,7 @@ class User(ManyOrgBase, ModelBase):
 
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
+    preferred_language = db.Column(db.String())
 
     _last_seen = db.Column(db.DateTime)
 
@@ -66,9 +71,10 @@ class User(ManyOrgBase, ModelBase):
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
 
+    password_reset_tokens = db.Column(JSONB, default=[])
+
     terms_accepted = db.Column(db.Boolean, default=True)
 
-    custom_attributes = db.Column(JSON)
     matched_profile_pictures = db.Column(JSON)
 
     ap_user_id = db.Column(db.String())
@@ -84,9 +90,11 @@ class User(ManyOrgBase, ModelBase):
         back_populates="users")
 
     chatbot_state_id = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
-    targeting_survey_id = db.Column(db.Integer, db.ForeignKey('targeting_survey.id'))
+    targeting_survey_id = db.Column(
+        db.Integer, db.ForeignKey('targeting_survey.id'))
 
-    default_organisation_id = db.Column(db.Integer, db.ForeignKey('organisation.id'))
+    default_organisation_id = db.Column(
+        db.Integer, db.ForeignKey('organisation.id'))
     default_organisation = db.relationship('Organisation',
                                            primaryjoin=Organisation.id == default_organisation_id,
                                            lazy=True,
@@ -103,9 +111,11 @@ class User(ManyOrgBase, ModelBase):
 
     devices = db.relationship('DeviceInfo', backref='user', lazy=True)
 
-    referrals = db.relationship('Referral', backref='referring_user', lazy=True)
+    referrals = db.relationship(
+        'Referral', backref='referring_user', lazy=True)
 
-    transfer_card = db.relationship('TransferCard', backref='user', lazy=True, uselist=False)
+    transfer_card = db.relationship(
+        'TransferCard', backref='user', lazy=True, uselist=False)
 
     credit_sends = db.relationship('CreditTransfer', backref='sender_user',
                                    lazy='dynamic', foreign_keys='CreditTransfer.sender_user_id')
@@ -117,6 +127,9 @@ class User(ManyOrgBase, ModelBase):
 
     feedback = db.relationship('Feedback', backref='user',
                                lazy='dynamic', foreign_keys='Feedback.user_id')
+
+    custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
+                                        lazy='dynamic', foreign_keys='CustomAttributeUserStorage.user_id')
 
     @hybrid_property
     def phone(self):
@@ -135,7 +148,8 @@ class User(ManyOrgBase, ModelBase):
         self._public_serial_number = public_serial_number
 
         try:
-            transfer_card = TransferCard.get_transfer_card(public_serial_number)
+            transfer_card = TransferCard.get_transfer_card(
+                public_serial_number)
 
             if transfer_card.user_id is None and transfer_card.nfc_serial_number is not None:
                 # Card hasn't been used before, and has a nfc number attached
@@ -155,7 +169,8 @@ class User(ManyOrgBase, ModelBase):
         secret_key = self.get_TFA_secret()
         return pyotp.totp.TOTP(secret_key).provisioning_uri(
             self.email,
-            issuer_name='Sempo: {}'.format(current_app.config.get('DEPLOYMENT_NAME'))
+            issuer_name='Sempo: {}'.format(
+                current_app.config.get('DEPLOYMENT_NAME'))
         )
 
     @hybrid_property
@@ -194,7 +209,8 @@ class User(ManyOrgBase, ModelBase):
             raise RoleNotFoundException("Role '{}' not valid".format(role))
         allowed_tiers = ACCESS_ROLES[role]
         if tier is not None and tier not in allowed_tiers:
-            raise TierNotFoundException("Tier {} not recognised for role {}".format(tier, role))
+            raise TierNotFoundException(
+                "Tier {} not recognised for role {}".format(tier, role))
 
         if self._held_roles is None:
             self._held_roles = {}
@@ -271,13 +287,15 @@ class User(ManyOrgBase, ModelBase):
     def update_last_seen_ts(self):
         cur_time = datetime.datetime.utcnow()
         if self._last_seen:
-            if cur_time - self._last_seen >= datetime.timedelta(minutes=1):  # default to 1 minute intervals
+            # default to 1 minute intervals
+            if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
                 self._last_seen = cur_time
         else:
             self._last_seen = cur_time
 
     def hash_password(self, password):
-        self.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        self.password_hash = bcrypt.hashpw(
+            password.encode(), bcrypt.gensalt()).decode()
 
     def verify_password(self, password):
         return bcrypt.checkpw(password.encode(), self.password_hash.encode())
@@ -333,7 +351,8 @@ class User(ManyOrgBase, ModelBase):
         :return: integer|string
         """
         try:
-            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'), algorithms='HS256')
+            payload = jwt.decode(auth_token, current_app.config.get(
+                'SECRET_KEY'), algorithms='HS256')
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
@@ -356,7 +375,8 @@ class User(ManyOrgBase, ModelBase):
     def decode_single_use_JWS(cls, token, required_type):
 
         try:
-            s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'])
+            s = TimedJSONWebSignatureSerializer(
+                current_app.config['SECRET_KEY'])
 
             data = s.loads(token.encode("utf-8"))
 
@@ -370,7 +390,8 @@ class User(ManyOrgBase, ModelBase):
             if not user_id:
                 return {'success': False, 'message': 'No User ID provided'}
 
-            user = cls.query.filter_by(id=user_id).execution_options(show_all=True).first()
+            user = cls.query.filter_by(
+                id=user_id).execution_options(show_all=True).first()
 
             if not user:
                 return {'success': False, 'message': 'User not found'}
@@ -388,6 +409,37 @@ class User(ManyOrgBase, ModelBase):
         except Exception as e:
 
             return {'success': False, 'message': e}
+
+    def save_password_reset_token(self, password_reset_token):
+        # make a "clone" of the existing token list
+        self.clear_expired_tokens()
+        current_reset_tokens = self.password_reset_tokens[:]
+        current_reset_tokens.append(password_reset_token)
+        # set db value
+        self.password_reset_tokens = current_reset_tokens
+
+    def check_reset_token_already_used(self, password_reset_token):
+        self.clear_expired_tokens()
+        is_valid = password_reset_token in self.password_reset_tokens
+        return is_valid
+
+    def delete_password_reset_tokens(self):
+        self.password_reset_tokens = []
+
+    def clear_expired_tokens(self):
+
+        # For some reason the existing user get an None instead of a [] 
+        # during migration. This is to ensure no TypeError occurs
+
+        if self.password_reset_tokens is None:
+            self.password_reset_tokens = []
+
+        valid_tokens = []
+        for token in self.password_reset_tokens:
+            validity_check = self.decode_single_use_JWS(token, 'R')
+            if validity_check['success']:
+                valid_tokens.append(token)
+        self.password_reset_tokens = valid_tokens
 
     def create_admin_auth(self, email, password, tier='view'):
         self.email = email
@@ -442,13 +494,10 @@ class User(ManyOrgBase, ModelBase):
 
         self.hash_password(pin)
 
-    # TODO(ussd): change to a field, whether on User or a related table like UserPreference
-    def preferred_language(self):
-        return "en_AU"
-
-    # TODO(ussd): change to a field once we figure out what's the deal with reset_token
     def is_resetting(self):
-        return False
+        self.clear_expired_tokens()
+        is_resetting = len(self.password_reset_tokens) > 0
+        return is_resetting
 
     # TODO(ussd): change to a field once we figure out what's the deal with resetting
     def pin_failed_attempts(self):
@@ -459,7 +508,8 @@ class User(ManyOrgBase, ModelBase):
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
-        self.secret = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+        self.secret = ''.join(random.choices(
+            string.ascii_letters + string.digits, k=16))
 
     def __repr__(self):
         if self.has_admin_role:
