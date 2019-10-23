@@ -4,12 +4,7 @@ import { StyledButton } from './styledElements'
 import loadingSpinner from './loadingSpinner.jsx'
 
 export default class AsyncButton extends React.Component {
-    constructor() {
-        super();
-    }
-
     render() {
-
       if (this.props.isLoading) {
         return(
           <StyledButton onClick={() => null} theme={this.props.theme} style={{...this.props.buttonStyle, position: 'relative', alignItems: 'center', justifyContent: 'center'}}>
@@ -25,7 +20,7 @@ export default class AsyncButton extends React.Component {
         )
       }
       return(
-          <StyledButton onClick={this.props.onClick} theme={this.props.theme} style={{...this.props.buttonStyle, position: 'relative', alignItems: 'center', justifyContent: 'center'}}> {this.props.buttonText} </StyledButton>
+          <StyledButton type={this.props.type} onClick={this.props.onClick} theme={this.props.theme} style={{...this.props.buttonStyle, position: 'relative', alignItems: 'center', justifyContent: 'center'}}> {this.props.buttonText} </StyledButton>
       )
     }
 }

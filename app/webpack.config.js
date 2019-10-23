@@ -33,8 +33,34 @@ module.exports = {
     filename: '[name].bundle.[contenthash].js',
   },
   devtool: "#cheap-module-source-map.",  // #eval-source-map" #cheap-module-source-map."
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.css']
+  },
   module: {
     rules : [
+       {
+        test: /\.css$/,
+        use: [
+          { loader: "style-loader" },
+          { loader: "css-modules-typescript-loader"},
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 1,
+              modules: true
+            }
+          }
+        ],
+        include: /\.module\.css$/
+      },
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ],
+        exclude: /\.module\.css$/
+      },
       {
         test : /\.(js|jsx)$/,
         exclude: /node_modules/,
@@ -42,12 +68,15 @@ module.exports = {
 
         use : [{
           loader: 'babel-loader',
-
           options: {
-              babelrc: false,
-              presets:["env", "react", "stage-2"]
+            babelrc: false,
+            presets:["env", "react", "stage-2"]
           }
         }]
+      },
+      {
+        test: /\.(ts|tsx)?$/,
+        loader: 'awesome-typescript-loader'
       }
     ]
   }
