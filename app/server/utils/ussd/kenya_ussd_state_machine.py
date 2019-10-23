@@ -1,101 +1,34 @@
 """
-This class contains the KenyaUssdStateMachine responsible for managing the states of the ussd application
-as would apply to its use in kenya.
+This file (kenya_ussd_state_machine.py) contains the KenyaUssdStateMachine responsible for managing the states of
+the ussd application as would apply to its use in kenya.
 It manages transitions between different states of the ussd system based on user input.
 The class contains methods responsible for validation of user input and processing user input to facilitate
 the services provided by the  ussd app.
 """
-from transitions import Machine
 import re
+from transitions import Machine
 
 from server import db
 from server.models.user import User
-from server.utils.phone import proccess_phone_number, send_generic_message
 from server.models.ussd import UssdSession
-
-"""
-Guards for menu selection
-"""
+from server.utils.phone import proccess_phone_number, send_generic_message
 
 
-def user_object(user_phone):
-    return User.query.filter_by(phone=proccess_phone_number(user_phone)).first()
+def get_user(query_filter):
+    user = User.query.filter_by(phone=proccess_phone_number(phone_number=query_filter, region="KE")).first()
+    if user is not None:
+        return user
 
 
-# conditions and guards for menu selections
-def menu_two_selected(user_input):
-    selection = user_input == '2'
-    return selection
-
-
-def menu_three_selected(user_input):
-    selection = user_input == '3'
-    return selection
-
-
-def menu_four_selected(user_input):
-    selection = user_input == '4'
-    return selection
-
-
-def menu_five_selected(user_input):
-    selection = user_input == '5'
-    return selection
-
-
-def menu_ten_selected(user_input):
-    selection = user_input == '10'
-    return selection
-
-
-def is_valid_pin(user_pin):
-    pin_validity = False
-    if len(user_pin) == 4 and re.match(r"\d", user_pin):
-        pin_validity = True
-    return pin_validity
-
-
-# TODO: [Philip] Find way to compare pin entered in previous transition to pin in initial_pin_confirmation transitions
-def new_pins_match(user_confirmation_pin):
-    pass
-
-
-def recipient_exists(recipient_phone):
-    recipient = user_object(recipient_phone)
-    return recipient.count() == 1
-
-
-# TODO: [Philip] Create provision to access USSD Session from class, may require it in constructor
-def recipient_not_initiator(recipient_phone, session):
-    return session.msisdn != proccess_phone_number(recipient_phone)
-
-
-# TODO: [Philip] User model differs from GE User model confirm this active status is the same
-def user_active(user_phone):
-    user = user_object(user_phone)
-    return user.is_activated
-
-
-# TODO: [Philip] Find out how token agents and other user roles are stored
-def user_not_token_agent(user_phone):
-    user_object(user_phone)
-    pass
-
-
-def token_agent_exists(user_phone):
-    user_object(user_phone)
-    pass
-
-
-class KenyaUssdStateMachine:
+class KenyaUssdStateMachine(Machine):
     # define machine states
-    states = ['start',
+    states = ['feed_char',
+              'start',
               'initial_language_selection',
               'initial_pin_entry',
               'initial_pin_confirmation',
               # send token states
               'send_enter_recipient',
-              'send_choose_token',
               'send_token_amount',
               'send_token_reason',
               'send_token_reason_other',
@@ -121,7 +54,7 @@ class KenyaUssdStateMachine:
               'exchange_token_agent_number_entry',
               'exchange_token_amount_entry',
               'exchange_token_pin_authorization',
-              'exchange_token_confirmation'
+              'exchange_token_confirmation',
               # help state
               'help',
               # exit states
@@ -139,19 +72,129 @@ class KenyaUssdStateMachine:
               'complete'
               ]
 
+    def change_preferred_language_to_sw_KE(self, user_input):
+        pass
+
+    def change_preferred_language_to_en_KE(self, user_input):
+        pass
+
+    def is_valid_pin(self, user_input):
+        pin_validity = False
+        if len(user_input) == 4 and re.match(r"\d", user_input):
+            pin_validity = True
+        return pin_validity
+
+    def new_pins_match(self, user_input):
+        pins_match = False
+        # get previous pin input
+        initial_pin = self.session.user_input.split('*')[-2]
+        if user_input == initial_pin:
+            pins_match = True
+        return pins_match
+
+    def recipient_exists(self, phone_number):
+        pass
+
+    def is_valid_recipient(self, user_input):
+        pass
+
+    def is_token_agent(self, user_input):
+        pass
+
+    # TODO: [Philip] Add community token when available
+    def upsell_unregistered_recipient(self, user_input):
+        upsell_message = f"{self.user.first_name} {self.user.last_name} amejaribu kukutumia {self.user} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
+        send_generic_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
+
+    def save_transaction_amount(self, user_input):
+        pass
+
+    def save_transaction_reason(self, user_input):
+        pass
+
+    def save_transaction_reason_other(self, user_input):
+        pass
+
+    def is_authorized_pin(self, user_input):
+        pass
+
+    def is_blocked_pin(self, user_input):
+        pass
+
+    def is_valid_new_pin(self, user_input):
+        pass
+
+    def save_business_directory_info(self, user_input):
+        pass
+
+    def change_opt_in_market_status(self):
+        pass
+
+    def process_send_token_request(self):
+        pass
+
+    def fetch_user_exchange_rate(self):
+        pass
+
+    def change_opted_in_market_status(self):
+        pass
+
+    def is_valid_token_agent(self, user_input):
+        user = get_user(user_input)
+        return 'TOKEN_AGENT' in user.held_roles
+
+    def save_exchange_agent_phone(self, user_input):
+        pass
+
+    def is_valid_token_exchange_amount(self, user_input):
+        return int(user_input) >= 40
+
+    def save_exchange_amount(self, user_input):
+        pass
+
+    def process_exchange_token_request(self):
+        pass
+
+
+    def menu_one_selected(self, user_input):
+        return user_input == '1'
+
+    def menu_two_selected(self, user_input):
+        return user_input == '2'
+
+    def menu_three_selected(self, user_input):
+        return user_input == '3'
+
+    def menu_four_selected(self, user_input):
+        return user_input == '4'
+
+    def menu_five_selected(self, user_input):
+        return user_input == '5'
+
+    def menu_ten_selected(self, user_input):
+        return user_input == '10'
+
     # initialize machine
-    def __init__(self, session: UssdSession):
+    def __init__(self, session: UssdSession, user: User):
         self.session = session
-        self.machine = Machine(model=self,
-                               states=self.states,
-                               initial=session.state)
+        self.user = user
+        Machine.__init__(self,
+                         model=self,
+                         states=self.states,
+                         initial=session.state)
 
         # event: initial_language_selection transitions
         initial_language_selection_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'complete',
-             'after': 'change_preferred_language'},
+             'after': 'change_preferred_language_to_sw_KE',
+             'conditions': 'menu_one_selected'},
+            {'trigger': 'feed_char',
+             'source': 'initial_language_selection',
+             'dest': 'complete',
+             'after': 'change_preferred_language_to_en_KE',
+             'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'help',
@@ -160,7 +203,7 @@ class KenyaUssdStateMachine:
              'source': 'initial_language_selection',
              'dest': 'exit_invalid_menu_option'}
         ]
-        self.machine.add_transitions(initial_language_selection_transitions)
+        self.add_transitions(initial_language_selection_transitions)
 
         # event: initial_pin_entry transitions
         initial_pin_entry_transitions = [
@@ -172,7 +215,7 @@ class KenyaUssdStateMachine:
              'source': 'initial_pin_entry',
              'dest': 'exit_invalid_pin'}
         ]
-        self.machine.add_transitions(initial_pin_entry_transitions)
+        self.add_transitions(initial_pin_entry_transitions)
 
         # event: initial_pin_confirmation transitions
         initial_pin_confirmation_transitions = [
@@ -184,7 +227,7 @@ class KenyaUssdStateMachine:
              'source': 'initial_pin_confirmation',
              'dest': 'exit_pin_mismatch'}
         ]
-        self.machine.add_transitions(initial_pin_confirmation_transitions)
+        self.add_transitions(initial_pin_confirmation_transitions)
 
         # event: start transitions
         start_transitions = [
@@ -212,7 +255,7 @@ class KenyaUssdStateMachine:
              'source': 'start',
              'dest': 'exit_invalid_menu_option'}
         ]
-        self.machine.add_transitions(start_transitions)
+        self.add_transitions(start_transitions)
 
         # event: send_enter_recipient transitions
         send_enter_recipient_transitions = [
@@ -224,32 +267,19 @@ class KenyaUssdStateMachine:
             {'trigger': 'feed_char',
              'source': 'send_enter_recipient',
              'dest': 'exit_use_exchange_menu',
-             'conditions': 'token_agent_exists',
-             'after': 'save_recipient_phone'},
+             'conditions': 'is_token_agent'},
             {'trigger': 'feed_char',
              'source': 'send_enter_recipient',
              'dest': 'exit_invalid_recipient',
              'after': 'upsell_unregistered_recipient'}
         ]
-        self.machine.add_transitions(send_enter_recipient_transitions)
-
-        # event: send_choose_token transitions
-        send_choose_token_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'send_choose_token',
-             'dest': 'send_token_amount',
-             'after': 'save_community_token_id'}
-        ]
-        self.machine.add_transitions(send_choose_token_transitions)
+        self.add_transitions(send_enter_recipient_transitions)
 
         # event: send_token_amount transitions
-        send_token_amount_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'send_token_amount',
-             'dest': 'send_token_reason',
-             'after': 'save_transaction_amount'}
-        ]
-        self.machine.add_transitions(send_token_amount_transitions)
+        self.add_transition(trigger='feed_char',
+                            source='send_token_amount',
+                            dest='send_token_reason',
+                            after='save_transaction_amount')
 
         # event: send_token_reason transitions
         send_token_reason_transitions = [
@@ -262,16 +292,13 @@ class KenyaUssdStateMachine:
              'dest': 'send_token_pin_authorization',
              'after': 'save_transaction_reason'}
         ]
-        self.machine.add_transitions(send_token_reason_transitions)
+        self.add_transitions(send_token_reason_transitions)
 
-        # event: send_token_reason_other transitions
-        send_token_reason_other_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason_other',
-             'dest': 'send_token_pin_authorization',
-             'after': 'save_transaction_reason_other'}
-        ]
-        self.machine.add_transitions(send_token_reason_other_transitions)
+        # event: send_token_reason_other transition
+        self.add_transition(trigger='feed_char',
+                            source='send_token_reason_other',
+                            dest='send_token_pin_authorization',
+                            after='save_transaction_reason_other')
 
         # event: send_token_pin_authorization transitions
         send_token_pin_authorization_transitions = [
@@ -284,15 +311,15 @@ class KenyaUssdStateMachine:
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
         ]
-        self.machine.add_transitions(send_token_pin_authorization_transitions)
+        self.add_transitions(send_token_pin_authorization_transitions)
 
         # event: send_token_confirmation transitions
         send_token_confirmation_transitions = [
             {'trigger': 'feed_char',
              'source': 'send_token_confirmation',
              'dest': 'complete',
-             'conditions': 'menu_one_selected',
-             'after': 'process_send_token_request'},
+             'after': 'process_send_token_request',
+             'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'send_token_confirmation',
              'dest': 'exit',
@@ -301,24 +328,14 @@ class KenyaUssdStateMachine:
              'source': 'send_token_confirmation',
              'dest': 'exit_invalid_menu_option'}
         ]
-        self.machine.add_transitions(send_token_confirmation_transitions)
-
-        # event: convert_token_from transitions
-        convert_token_from_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'convert_token_from',
-             'dest': 'convert_token_amount',
-             'after': 'save_convert_from_token_id'}
-        ]
-        self.machine.add_transitions(convert_token_from_transitions)
+        self.add_transitions(send_token_confirmation_transitions)
 
         # event: account_management transitions
         account_management_transitions = [
             {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'my_business',
-             'conditions': 'menu_one_selected',
-             'after': 'process_send_token_request'},
+             'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'choose_language',
@@ -326,20 +343,20 @@ class KenyaUssdStateMachine:
             {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'balance_inquiry_pin_authorization',
-             'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_char',
-             'source': 'account_management',
-             'dest': 'current_pin',
              'conditions': 'menu_three_selected'},
             {'trigger': 'feed_char',
              'source': 'account_management',
-             'dest': 'opt_out_of_market_place_pin_authorization',
+             'dest': 'current_pin',
              'conditions': 'menu_four_selected'},
+            {'trigger': 'feed_char',
+             'source': 'account_management',
+             'dest': 'opt_out_of_market_place_pin_authorization',
+             'conditions': 'menu_five_selected'},
             {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'exit_invalid_menu_option'}
         ]
-        self.machine.add_transitions(account_management_transitions)
+        self.add_transitions(account_management_transitions)
 
         # event: my_business transitions
         my_business_transitions = [
@@ -352,16 +369,31 @@ class KenyaUssdStateMachine:
              'dest': 'change_my_business_prompt',
              'conditions': 'menu_two_selected'}
         ]
-        self.machine.add_transitions(my_business_transitions)
+        self.add_transitions(my_business_transitions)
 
-        # event: choose_language transitions
+        # event change_my_business_prompt transition
+        self.add_transition(trigger='feed_char',
+                            source='change_my_business_prompt',
+                            dest='exit',
+                            after='save_business_directory_info')
+
+        # event: choose_language transition
         choose_language_transitions = [
             {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
-             'after': 'change_preferred_language'}
+             'after': 'change_preferred_language_to_sw_KE',
+             'conditions': 'menu_one_selected'},
+            {'trigger': 'feed_char',
+             'source': 'choose_language',
+             'dest': 'complete',
+             'after': 'change_preferred_language_to_en_KE',
+             'conditions': 'menu_two_selected'},
+            {'trigger': 'feed_char',
+             'source': 'choose_language',
+             'dest': 'exit_invalid_menu_option'}
         ]
-        self.machine.add_transitions(choose_language_transitions)
+        self.add_transitions(choose_language_transitions)
 
         # event: balance_inquiry_pin_authorization transitions
         balance_inquiry_pin_authorization_transitions = [
@@ -374,7 +406,7 @@ class KenyaUssdStateMachine:
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
         ]
-        self.machine.add_transitions(balance_inquiry_pin_authorization_transitions)
+        self.add_transitions(balance_inquiry_pin_authorization_transitions)
 
         # event: current_pin transitions
         current_pin_transitions = [
@@ -387,7 +419,7 @@ class KenyaUssdStateMachine:
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
         ]
-        self.machine.add_transitions(current_pin_transitions)
+        self.add_transitions(current_pin_transitions)
 
         # event: new_pin transitions
         new_pin_transitions = [
@@ -399,7 +431,7 @@ class KenyaUssdStateMachine:
              'source': 'new_pin',
              'dest': 'exit_invalid_pin'}
         ]
-        self.machine.add_transitions(new_pin_transitions)
+        self.add_transitions(new_pin_transitions)
 
         # event: new_pin_confirmation transitions
         new_pin_confirmation = [
@@ -411,7 +443,7 @@ class KenyaUssdStateMachine:
              'source': 'new_pin_confirmation',
              'dest': 'exit_pin_mismatch'}
         ]
-        self.machine.add_transitions(new_pin_confirmation)
+        self.add_transitions(new_pin_confirmation)
 
         # event: opt_out_of_market_place_pin_authorization transitions
         opt_out_of_market_place_pin_authorization_transitions = [
@@ -419,13 +451,13 @@ class KenyaUssdStateMachine:
              'source': 'opt_out_of_market_place_pin_authorization',
              'dest': 'complete',
              'conditions': 'is_authorized_pin',
-             'after': 'change_opt_in_market_status'},
+             'after': 'change_opted_in_market_status'},
             {'trigger': 'feed_char',
              'source': 'opt_out_of_market_place_pin_authorization',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
         ]
-        self.machine.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
+        self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
 
         # event: exchange_token transitions
         exchange_token_transitions = [
@@ -433,7 +465,7 @@ class KenyaUssdStateMachine:
              'source': 'exchange_token',
              'dest': 'exchange_rate_pin_authorization',
              'conditions': 'menu_one_selected',
-             'after': 'process_send_token_request'},
+             'after': 'fetch_user_exchange_rate'},
             {'trigger': 'feed_char',
              'source': 'exchange_token',
              'dest': 'exchange_token_agent_number_entry',
@@ -442,7 +474,7 @@ class KenyaUssdStateMachine:
              'source': 'exchange_token',
              'dest': 'exit_invalid_menu_option'}
         ]
-        self.machine.add_transitions(exchange_token_transitions)
+        self.add_transitions(exchange_token_transitions)
 
         # event: exchange_rate_pin_authorization transitions
         exchange_rate_pin_authorization_transitions = [
@@ -456,7 +488,7 @@ class KenyaUssdStateMachine:
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
         ]
-        self.machine.add_transitions(exchange_rate_pin_authorization_transitions)
+        self.add_transitions(exchange_rate_pin_authorization_transitions)
 
         # event: exchange_token_agent_number_entry transitions
         exchange_token_agent_number_entry_transitions = [
@@ -469,7 +501,7 @@ class KenyaUssdStateMachine:
              'source': 'exchange_token_agent_number_entry',
              'dest': 'exit_invalid_token_agent'}
         ]
-        self.machine.add_transitions(exchange_token_agent_number_entry_transitions)
+        self.add_transitions(exchange_token_agent_number_entry_transitions)
 
         # event: exchange_token_amount_entry transitions
         exchange_token_amount_entry_transitions = [
@@ -482,7 +514,7 @@ class KenyaUssdStateMachine:
              'source': 'exchange_token_amount_entry',
              'dest': 'exit_invalid_exchange_amount'}
         ]
-        self.machine.add_transitions(exchange_token_amount_entry_transitions)
+        self.add_transitions(exchange_token_amount_entry_transitions)
 
         # event: exchange_token_pin_authorization transitions
         exchange_token_pin_authorization_transitions = [
@@ -495,7 +527,7 @@ class KenyaUssdStateMachine:
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
         ]
-        self.machine.add_transitions(exchange_token_pin_authorization_transitions)
+        self.add_transitions(exchange_token_pin_authorization_transitions)
 
         # event: exchange_token_confirmation transitions
         exchange_token_confirmation_transitions = [
@@ -512,35 +544,5 @@ class KenyaUssdStateMachine:
              'source': 'exchange_token_confirmation',
              'dest': 'exit_invalid_menu_option'}
         ]
-        self.machine.add_transitions(exchange_token_confirmation_transitions)
+        self.add_transitions(exchange_token_confirmation_transitions)
 
-        # event: help transitions
-        help_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'help',
-             'dest': 'complete'}
-        ]
-        self.machine.add_transitions(help_transitions)
-
-    def menu_one_selected(self, user_input):
-        return user_input == '1'
-
-    def is_valid_recipient(self, char):
-        recipient_validity = recipient_exists(char) \
-                             and recipient_not_initiator(char,
-                                                         self.session.id) \
-                             and user_active(char)
-        return recipient_validity
-
-    def save_recipient_phone(self, char):
-        session = self.session
-        session.session_data = {'recipient_phone': char}
-        db.session.commit()
-
-    def upsell_unregistered_recipient(self, char):
-        if recipient_exists(char):
-            sender = user_object(self.session.msisdn)
-            upsell_msg = f"{sender.full_name} amejaribu kukutumia #{sender.community_token.name} lakini hujasajili. " \
-                         "Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako " \
-                         "kwa 0757628885 "
-            send_generic_message(proccess_phone_number(char), upsell_msg)
