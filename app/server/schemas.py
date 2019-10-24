@@ -10,6 +10,10 @@ class SchemaBase(Schema):
     created = fields.DateTime(dump_only=True)
     updated = fields.DateTime(dump_only=True)
 
+class BlockchainTaskableSchemaBase(SchemaBase):
+
+    blockchain_task_id  = fields.Int(dump_only=True)
+    blockchain_status   = fields.Function(lambda obj: obj.blockchain_status)
 
 class UserSchema(SchemaBase):
     first_name              = fields.Str()
@@ -93,12 +97,17 @@ class UploadedImageSchema(SchemaBase):
     image_url               = fields.Function(lambda obj: obj.image_url)
     credit_transfer_id      = fields.Int()
 
-class CreditTransferSchema(Schema):
 
-    id      = fields.Int(dump_only=True)
-    # created = fields.DateTime(dump_only=True)
+class TokenSchema(SchemaBase):
+    address             = fields.Str()
+    symbol              = fields.Str()
+    name                = fields.Str()
+
+
+class CreditTransferSchema(SchemaBase):
+
     created = fields.DateTime(dump_only= True, attribute='resolved_date')
-    authorising_user_email  = fields.Method('get_authorising_user_email')
+    authorising_user_email = fields.Method('get_authorising_user_email')
 
     uuid = fields.String()
 
@@ -135,8 +144,6 @@ class CreditTransferSchema(Schema):
 
     is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
-    blockchain_status = fields.Function(lambda obj: obj.blockchain_status)
-
     def get_authorising_user_email(self, obj):
         authorising_user_id = obj.authorising_user_id
         if authorising_user_id is None:
@@ -149,10 +156,17 @@ class CreditTransferSchema(Schema):
         return authorising_user.email
 
 
-class TokenSchema(SchemaBase):
-    address = fields.String()
-    name    = fields.String()
-    symbol  = fields.String()
+class ExchangeSchema(BlockchainTaskableSchemaBase):
+
+    to_desired_amount   = fields.Int()
+    user                = fields.Nested(UserSchema)
+
+    from_token          = fields.Nested(TokenSchema)
+    to_token            = fields.Nested(TokenSchema)
+
+    from_transfer       = fields.Nested(CreditTransferSchema)
+    to_transfer         = fields.Nested(CreditTransferSchema)
+
 
 class TransferAccountSchema(SchemaBase):
     is_approved             = fields.Boolean()
@@ -170,7 +184,7 @@ class TransferAccountSchema(SchemaBase):
     payable_epoch           = fields.Str()
     payable_period_epoch    = fields.DateTime()
 
-    blockchain_address = fields.Str()
+    blockchain_address      = fields.Str()
 
     users                   = fields.Nested(UserSchema, attribute='users', many=True, exclude=('transfer_account',))
 
@@ -283,18 +297,6 @@ class OrganisationSchema(SchemaBase):
     org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
 
 
-class TokenSchema(SchemaBase):
-    address             = fields.Str()
-    symbol              = fields.Str()
-    name                = fields.Str()
-
-class ExchangeSchema(SchemaBase):
-    address             = fields.Str()
-    symbol              = fields.Str()
-    name                = fields.Str()
-
-
-
 
 
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
@@ -381,3 +383,5 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
                                                                       "recipient_user",
                                                                       ),
                                                   context={'filter_rejected': True})
+
+me_exchange_schema = ExchangeSchema()

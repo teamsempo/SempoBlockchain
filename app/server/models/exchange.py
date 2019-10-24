@@ -69,18 +69,15 @@ class Exchange(BlockchainTaskableBase):
     __tablename__ = 'exchange'
 
     to_desired_amount = db.Column(db.Integer)
-
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
     # user_transfer_account_id = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
     # transfer_account = relationship("TransferAccount", back_populates="exchanges")
 
     from_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
-
     to_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
 
     from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
-
     to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
 
     def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None):

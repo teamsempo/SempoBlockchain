@@ -4,7 +4,7 @@ from flask.views import MethodView
 from server.utils.auth import requires_auth, show_all
 from server.models.token import Token
 from server.models.exchange import Exchange
-
+from server.schemas import me_exchange_schema
 
 class ExchangeAPI(MethodView):
 
@@ -81,9 +81,9 @@ class ExchangeAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         response_object = {
-            'message': 'Transfer Successful',
+            'message': 'Exchange Successful',
             'data': {
-                'exchange': 'foo',
+                'exchange': me_exchange_schema.dump(exchange).data
             }
         }
 
