@@ -4,7 +4,9 @@ This file (test_auth_api.py) contains the functional tests for the auth blueprin
 These tests use GETs and POSTs to different URLs to check for the proper behavior
 of the auth blueprint.
 """
+from datetime import datetime
 import pytest, json, config, base64
+import pyotp
 
 from server.utils.auth import get_complete_auth_token
 
@@ -77,24 +79,24 @@ def test_get_tfa_url(test_client, activated_sempo_admin_user):
     assert response.json['data']['tfa_url'] == activated_sempo_admin_user.tfa_url
     activated_sempo_admin_user.set_held_role('ADMIN', 'sempoadmin')
 
-@pytest.mark.parametrize("otp,status_code", [
-    (None, 200),
-    ('1230924579324', 400),
+@pytest.mark.parametrize("otp_generator, status_code", [
+    (lambda f: f.now(), 200),
+    (lambda f: f.at(datetime.now(), -1), 200),
+    (lambda f: f.at(datetime.now(), -4), 400),
+    (lambda f: '1230924579324', 400),
 ])
-def test_request_tfa_token(test_client, authed_sempo_admin_user, otp, status_code):
+def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, status_code):
     """
     GIVEN a Flask Application
     WHEN '/api/auth/tfa/' is requested (POST)
     THEN check a tfa token is only returned when OTP is valid
     """
-    import pyotp
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
 
     tfa_url = authed_sempo_admin_user.tfa_url
     tfa_secret = tfa_url.split("secret=")[1].split('&')[0]
-
-    if otp is None:
-        otp = pyotp.TOTP(tfa_secret).now()
+    func = pyotp.TOTP(tfa_secret)
+    otp = otp_generator(func)
 
     otp_expiry_interval = 1
     response = test_client.post('/api/auth/tfa/',

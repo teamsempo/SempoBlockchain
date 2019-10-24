@@ -903,6 +903,7 @@ class TwoFactorAuthAPI(MethodView):
         user = g.user
         otp_token = request_data.get('otp')
         otp_expiry_interval = request_data.get('otp_expiry_interval')
+
         if user.validate_OTP(otp_token):
             tfa_auth_token = user.encode_TFA_token(otp_expiry_interval)
             user.TFA_enabled = True

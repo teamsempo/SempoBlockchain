@@ -3,17 +3,16 @@ This file (test_phone.py) contains the unit tests for the phone.py file in utils
 """
 import pytest
 
-from server.utils.phone import proccess_phone_number
-
-
-@pytest.mark.parametrize("phone,expected", [
-    ("0401391419", "+61401391419"),
-    ("+961401391419", "+961401391419"),
+@pytest.mark.parametrize("phone,expected, region", [
+    ("0401391419", "+61401391419", 'AU'),
+    ("0401391419", "+61401391419", None),
+    ("0401391419", "+961401391419", 'LB'),
+    ("+961401391419", "+961401391419", 'AU'),
 ])
-def test_proccess_phone_number(phone, expected):
+def test_proccess_phone_number(proccess_phone_number_with_ctx, phone, expected, region):
     """
     GIVEN proccess_phone_number function
     WHEN called with a phone_number WITHOUT and WITH country code
     THEN check that default country code is added if required
     """
-    assert proccess_phone_number(phone) == expected
+    assert proccess_phone_number_with_ctx(phone, region) == expected
