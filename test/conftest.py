@@ -150,7 +150,7 @@ def create_credit_transfer(new_credit_transfer):
 
 
 @pytest.fixture(scope='function')
-def proccess_phone_number(test_client):
+def proccess_phone_number_with_ctx(test_client):
     from server.utils.phone import proccess_phone_number
     return proccess_phone_number
 

@@ -447,7 +447,7 @@ class User(ManyOrgBase, ModelBase):
         else:
             secret = self.get_TFA_secret()
             server_otp = pyotp.TOTP(secret)
-            ret = server_otp.verify(p, valid_window=100)
+            ret = server_otp.verify(p, valid_window=2)
             return ret
 
     def set_one_time_code(self, supplied_one_time_code):

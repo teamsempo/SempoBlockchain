@@ -5,11 +5,13 @@ from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 
-
-class UserSchema(Schema):
-    id      = fields.Int(dump_only=True)
+class SchemaBase(Schema):
+    id = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
+    updated = fields.DateTime(dump_only=True)
 
+
+class UserSchema(SchemaBase):
     first_name              = fields.Str()
     last_name               = fields.Str()
     preferred_language      = fields.Str()
@@ -86,8 +88,7 @@ class UserSchema(Schema):
         return processed_profile_pictures
 
 
-class UploadedImageSchema(Schema):
-    id                      = fields.Int(dump_only=True)
+class UploadedImageSchema(SchemaBase):
     filename                = fields.Str()
     image_url               = fields.Function(lambda obj: obj.image_url)
     credit_transfer_id      = fields.Int()
@@ -148,20 +149,12 @@ class CreditTransferSchema(Schema):
         return authorising_user.email
 
 
-class TokenSchema(Schema):
-
-    id      = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-
+class TokenSchema(SchemaBase):
     address = fields.String()
     name    = fields.String()
     symbol  = fields.String()
 
-class TransferAccountSchema(Schema):
-
-    id      = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-
+class TransferAccountSchema(SchemaBase):
     is_approved             = fields.Boolean()
     # balance                 = fields.Int()
 
@@ -192,10 +185,7 @@ class TransferAccountSchema(Schema):
         return sorted(users, key=lambda user: user.created)[0].id
 
 
-class TransferCardSchema(Schema):
-    id = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-
+class TransferCardSchema(SchemaBase):
     public_serial_number = fields.Str()
     nfc_serial_number = fields.Function(lambda obj: obj.nfc_serial_number.upper())
 
@@ -213,21 +203,14 @@ class TransferCardSchema(Schema):
             return None
 
 
-class ReferralSchema(Schema):
-
-    id      = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-
+class ReferralSchema(SchemaBase):
     first_name = fields.Str()
     last_name = fields.Str()
     reason = fields.Str()
     phone = fields.Str()
 
 
-class SavedFilterSchema(Schema):
-    id      = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-
+class SavedFilterSchema(SchemaBase):
     name    = fields.Str()
     filter  = fields.Method('get_filter_json')
 
@@ -235,10 +218,7 @@ class SavedFilterSchema(Schema):
         return obj.filter
 
 
-class BankAccountSchema(Schema):
-    id              = fields.Int(dump_only=True)
-    created         = fields.DateTime(dump_only=True)
-
+class BankAccountSchema(SchemaBase):
     wyre_id                  = fields.Str()
     kyc_application_id = fields.Int()
 
@@ -248,10 +228,7 @@ class BankAccountSchema(Schema):
     currency        = fields.Str()
 
 
-class UploadedDocumentSchema(Schema):
-    id              = fields.Int(dump_only=True)
-    created         = fields.DateTime(dump_only=True)
-
+class UploadedDocumentSchema(SchemaBase):
     kyc_application_id = fields.Int()
 
     filename        = fields.Str()
@@ -261,10 +238,7 @@ class UploadedDocumentSchema(Schema):
     file_url        = fields.Function(lambda obj: obj.file_url)
 
 
-class KycApplicationSchema(Schema):
-    id                  = fields.Int(dump_only=True)
-    created             = fields.DateTime(dump_only=True)
-
+class KycApplicationSchema(SchemaBase):
     type                = fields.Str()
 
     trulioo_id          = fields.Str()
@@ -299,10 +273,7 @@ class KycApplicationSchema(Schema):
         return obj.kyc_actions
 
 
-class OrganisationSchema(Schema):
-    id                  = fields.Int(dump_only=True)
-    created             = fields.DateTime(dump_only=True)
-
+class OrganisationSchema(SchemaBase):
     name                = fields.Str()
 
     users               = fields.Nested('server.schemas.UserSchema', many=True)
@@ -311,13 +282,17 @@ class OrganisationSchema(Schema):
 
     org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
 
-class TokenSchema(Schema):
-    id                  = fields.Int(dump_only=True)
-    created             = fields.DateTime(dump_only=True)
 
+class TokenSchema(SchemaBase):
     address             = fields.Str()
     symbol              = fields.Str()
     name                = fields.Str()
+
+class ExchangeSchema(SchemaBase):
+    address             = fields.Str()
+    symbol              = fields.Str()
+    name                = fields.Str()
+
 
 
 
