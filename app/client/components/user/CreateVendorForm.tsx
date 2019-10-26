@@ -1,10 +1,10 @@
 import React from "react";
 
-import {Field, formValueSelector, reduxForm, InjectedFormProps} from "redux-form";
+import {formValueSelector, reduxForm, InjectedFormProps} from "redux-form";
 import QrReadingModal from "../qrReadingModal";
 import {ErrorMessage, ModuleHeader} from "../styledElements";
 import AsyncButton from "../AsyncButton";
-import TextInput from '../form/TextInput'
+import InputField from '../form/InputField'
 import {connect} from "react-redux";
 import {ICreateUser} from "./CreateUserForm";
 
@@ -60,17 +60,17 @@ class CreateVendorForm extends React.Component<InjectedFormProps<ICreateUser, Pr
 
     if (!window.IS_USING_BITCOIN) {
       uniqueIdentifierInput = (
-        <Field name="publicSerialNumber" component={TextInput} type="text" label={isCashierAccountValue ? 'Cashier Phone Number' : 'Phone Number or ID'}>
+        <InputField name="publicSerialNumber" label={isCashierAccountValue ? 'Cashier Phone Number' : 'Phone Number or ID'} isRequired>
           <QrReadingModal
             updateData={ (data: string) =>  this.setSerialNumber(data) }
           />
-        </Field>
+        </InputField>
       )
     } else {
-      uniqueIdentifierInput = <Field name="blockchainAddress" component={TextInput} type="text" label='Bitcoin Address' />
+      uniqueIdentifierInput = <InputField name="blockchainAddress" label='Bitcoin Address' isRequired />
     }
 
-    const cashierAccount = <Field name="isCashierAccount" component={TextInput} type="checkbox" label={'Create Cashier Account'} />;
+    const cashierAccount = <InputField name="isCashierAccount" type="checkbox" label={'Create Cashier Account'} />;
 
     if (isCashierAccountValue) {
       vendorInput = (
@@ -78,15 +78,15 @@ class CreateVendorForm extends React.Component<InjectedFormProps<ICreateUser, Pr
           <div>
             To create a cashier account, enter the <strong>vendor's</strong> phone and pin.
           </div>
-          <Field name="existingVendorPhone" component={TextInput} type="text" label={'Vendor Phone Number'} />
-          <Field name="existingVendorPin" component={TextInput} type="password" label={'Vendor PIN'} />
+          <InputField name="existingVendorPhone" label={'Vendor Phone Number'} />
+          <InputField name="existingVendorPin" type="password" label={'Vendor PIN'} />
         </div>
       )
     } else {
       vendorInput = (
         <div>
-          <Field name="transferAccountName" component={TextInput} type="text" label={'Store Name'} />
-          <Field name="location" component={TextInput} type="text" label={'Address'} />
+          <InputField name="transferAccountName" label={'Store Name'} />
+          <InputField name="location" label={'Address'} />
         </div>
       )
     }
@@ -100,8 +100,8 @@ class CreateVendorForm extends React.Component<InjectedFormProps<ICreateUser, Pr
             {cashierAccount}
             {vendorInput}
 
-            <Field name="firstName" component={TextInput} type="text" label={'First Name'} />
-            <Field name="lastName" component={TextInput} type="text" label={'Last Name'} />
+            <InputField name="firstName" label={'First Name'} />
+            <InputField name="lastName" label={'Last Name'} />
 
             {uniqueIdentifierInput}
 

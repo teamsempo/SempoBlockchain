@@ -6,6 +6,7 @@ interface CssExports {
   'input': string;
   'inputBlock': string;
   'inputLabel': string;
+  'required': string;
 }
 declare const cssExports: CssExports;
 export = cssExports;

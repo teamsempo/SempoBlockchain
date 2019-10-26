@@ -32,3 +32,9 @@
     color: red;
 }
 
+.required {
+    color: maroon;
+    font-size: 20px;
+    position: absolute;
+    margin-left: 5px;
+}

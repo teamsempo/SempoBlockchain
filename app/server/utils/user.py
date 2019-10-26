@@ -504,6 +504,9 @@ def proccess_create_or_modify_user_request(attribute_dict,
 
         return response_object, 200
 
+    #TODO(admin_create): add enrolled by if passed in
+    #TODO(admin_create): add bio, gender
+    #TODO(admin_create): if passed in default token, use that token for default transfer account
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name, preferred_language=preferred_language,
         phone=phone, email=email, public_serial_number=public_serial_number,

@@ -60,6 +60,8 @@ class CreateUser extends React.Component<Props> {
     this.props.createUser({
       first_name: form.firstName,
       last_name: form.lastName,
+      bio: form.bio,
+      gender: form.gender,
       public_serial_number: publicSerialNumber,
       phone: phone,
       blockchain_address: form.blockchainAddress,

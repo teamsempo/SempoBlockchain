@@ -126,6 +126,7 @@ class UserAPI(MethodView):
 
         post_data = request.get_json()
 
+        # TODO(admin_create): pass in current user
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
             organisation=g.user.get_active_organisation()
