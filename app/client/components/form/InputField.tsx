@@ -1,6 +1,7 @@
 import React from "react";
 import {Field} from "redux-form";
 
+import FormValidation from "./FormValidation";
 import {AdaptedInput} from "./WrappedInput";
 
 //should move checkbox into its own kind? would have diff styling
@@ -13,14 +14,13 @@ interface InputFieldJson {
   children?: React.ReactNode
 }
 
-const requiredValidation =  (value: string | number) => (value !== undefined && value !== "") ? undefined : "This field is required";
 
 export default function InputField(props: InputFieldJson) {
   const { name, label, isRequired, placeholder, type, children} = props;
 
   let validate = [];
   if (isRequired) {
-    validate.push(requiredValidation)
+    validate.push(FormValidation.required)
   }
 
   return <Field

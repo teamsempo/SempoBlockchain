@@ -1,11 +1,12 @@
 import React from "react";
 
-import {reduxForm, InjectedFormProps} from "redux-form";
+import {reduxForm, InjectedFormProps, formValueSelector} from "redux-form";
 import QrReadingModal from "../qrReadingModal";
 import {ErrorMessage, ModuleHeader} from "../styledElements";
 import AsyncButton from "../AsyncButton";
 import InputField from '../form/InputField'
 import SelectField from '../form/SelectField'
+import {connect} from "react-redux";
 
 export interface ICreateUser {
   firstName?: string
@@ -16,33 +17,45 @@ export interface ICreateUser {
   bio?: string
   gender?: string
   location?: string
+  businessUsage?: string
+  defaultToken?: string
 }
 
-const validate = (values: ICreateUser) => {
-  const errors: any = {};
-  if (!values.firstName) {
-    errors.firstName = 'Missing Name'
-  }
-  if (window.IS_USING_BITCOIN && !values.blockchainAddress) {
-    errors.blockchainAddress = 'Missing Blockchain Address';
-  }
-  //TODO(admin_create): do verifications that if it's a phone number, it's correctly formatted?
-  if (!window.IS_USING_BITCOIN && !values.publicSerialNumber) {
-    errors.publicSerialNumber = 'Missing Phone or ID';
-  }
-
-  return errors
-};
+//TODO(admin_create): change these types when figure out the format
+interface StateProps {
+  transferUsages: any[]
+  tokens: any[]
+}
 
 interface OuterProps {
   transferAccountType: string
   users: any
 }
 
-class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, OuterProps> & OuterProps> {
+type Props = StateProps & OuterProps
+
+class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Props> & Props> {
   setSerialNumber(data: string) {
     const cleanedData = data.replace(/^\s+|\s+$/g, '');
     this.props.change('publicSerialNumber', cleanedData);
+  }
+
+  optionizeUsages() {
+    return this.props.transferUsages.map((transferUsage) => {
+      return {
+        name: transferUsage.name,
+        value: transferUsage.id
+      }
+    })
+  }
+
+  optionizeTokens() {
+    return this.props.tokens.map((token) => {
+      return {
+        name: token.name,
+        value: token.id
+      }
+    })
   }
 
   render() {
@@ -50,6 +63,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Oute
     let initialDisbursementAmount;
 
     if (!window.IS_USING_BITCOIN) {
+      //TODO(admin_create): do verifications that if it's a phone number, it's correctly formatted?
       uniqueIdentifierInput = (
         <InputField name="publicSerialNumber" label={'Phone Number or ID'} isRequired>
           <QrReadingModal
@@ -68,8 +82,6 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Oute
       </InputField>
     }
 
-    //TODO(admin_create): add business category dropdown
-    //TODO(admin_create): add default token
     //TODO(admin_create): add button to send SMS about short codes
     return (
       <div>
@@ -80,9 +92,11 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Oute
             {uniqueIdentifierInput}
             <InputField name="firstName" label='Given Name(s)' isRequired />
             <InputField name="lastName" label='Family/Surname' />
+            <SelectField name="defaultToken" label="Default Token" options={this.optionizeTokens()} isRequired />
             <InputField name="bio" label='Directory Entry' />
             <InputField name="location" label='Location' />
             <SelectField name="gender" label='Gender' options={["Male", "Female", "Other"]} />
+            <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
 
             {initialDisbursementAmount}
 
@@ -103,8 +117,18 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Oute
 }
 
 // TODO: can't figure out the typing here...
-export default reduxForm({
+const CreateUserReduxForm = reduxForm({
   form: 'createUser',
-  validate
 // @ts-ignore
 })(CreateUserForm);
+
+export default connect(state => {
+
+  //TODO(admin_create): fetch tokens and default transfer usages
+  return {
+    transferUsages: [],
+    tokens: []
+  }
+// @ts-ignore
+})(CreateUserReduxForm);
+

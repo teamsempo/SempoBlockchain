@@ -20,22 +20,6 @@ export interface ICreateVendor {
   transferAccountName?: string
 }
 
-const validate = (values: ICreateVendor) => {
-  const errors: any = {};
-
-  if (!values.firstName && !values.isCashierAccount) {
-    errors.firstName = 'Missing Name'
-  }
-  if (window.IS_USING_BITCOIN && !values.blockchainAddress) {
-    errors.blockchainAddress = 'Missing Blockchain Address';
-  }
-  if (!window.IS_USING_BITCOIN && !values.publicSerialNumber) {
-    errors.publicSerialNumber = 'Missing Phone or ID';
-  }
-
-  return errors
-};
-
 interface StateProps {
   isCashierAccountValue: boolean
 }
@@ -100,7 +84,7 @@ class CreateVendorForm extends React.Component<InjectedFormProps<ICreateUser, Pr
             {cashierAccount}
             {vendorInput}
 
-            <InputField name="firstName" label={'First Name'} />
+            <InputField name="firstName" label={'First Name'} isRequired={!isCashierAccountValue} />
             <InputField name="lastName" label={'Last Name'} />
 
             {uniqueIdentifierInput}
@@ -123,16 +107,14 @@ class CreateVendorForm extends React.Component<InjectedFormProps<ICreateUser, Pr
 
 const CreateVendorReduxForm = reduxForm({
   form: 'createVendor',
-  validate
 // @ts-ignore
 })(CreateVendorForm);
 
 // TODO: can't figure out the typing here...
 export default connect(state => {
   const selector = formValueSelector('createVendor');
-  const isCashierAccountValue = selector(state, 'isCashierAccount');
   return {
-    isCashierAccountValue,
+    isCashierAccountValue: selector(state, 'isCashierAccount'),
   }
 // @ts-ignore
 })(CreateVendorReduxForm);

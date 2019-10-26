@@ -72,6 +72,8 @@ class CreateUser extends React.Component<Props> {
       existing_vendor_pin: form.existingVendorPin,
       transfer_account_name: form.transferAccountName,
       location: form.location,
+      default_token_id: form.defaultToken,
+      business_usage_id: form.businessUsage
     })
   }
 
