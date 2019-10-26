@@ -5,6 +5,7 @@ from fixtures.user import UserFactory
 from fixtures.ussd_session import UssdSessionFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 
+
 standard_user = partial(UserFactory, first_name="James", phone="254700000000")
 # TODO: [Philip] Find out how token agents are stored
 token_agent = partial(UserFactory, held_roles={"TOKEN_AGENT": "grassroots_token_agent"})
@@ -25,8 +26,7 @@ balance_inquiry_pin_authorization_state = partial(UssdSessionFactory, state="bal
 current_pin_state = partial(UssdSessionFactory, state="current_pin")
 new_pin_state = partial(UssdSessionFactory, state="new_pin")
 new_pin_confirmation_state = partial(UssdSessionFactory, state="new_pin_confirmation", user_input="2222*2222")
-opt_out_of_market_place_pin_authorization_state = partial(UssdSessionFactory,
-                                                          state="opt_out_of_market_place_pin_authorization")
+opt_out_of_market_place_pin_authorization_state = partial(UssdSessionFactory, state="opt_out_of_market_place_pin_authorization")
 exchange_token_state = partial(UssdSessionFactory, state="exchange_token")
 exchange_rate_pin_authorization_state = partial(UssdSessionFactory, state="exchange_rate_pin_authorization")
 exchange_token_agent_number_entry_transitions_state = partial(UssdSessionFactory, state="exchange_token_agent_number_entry_transitions")
@@ -35,8 +35,7 @@ exchange_token_pin_authorization_state = partial(UssdSessionFactory, state="exch
 exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_token_confirmation")
 
 
-@pytest.mark.parametrize("session_factory, user_factory, user_input, expected",
-  [
+@pytest.mark.parametrize("session_factory, user_factory, user_input, expected", [
     # initial_language_selection transitions tests
     (initial_language_selection_state, standard_user, "3", "help"),
     (initial_language_selection_state, standard_user, "5", "exit_invalid_menu_option"),
@@ -76,9 +75,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
     (account_management_state, standard_user, "2", "choose_language"),
     (account_management_state, standard_user, "3", "balance_inquiry_pin_authorization"),
     (account_management_state, standard_user, "4", "current_pin"),
-    (
-            account_management_state, standard_user, "5",
-            "opt_out_of_market_place_pin_authorization"),
+    (account_management_state, standard_user, "5", "opt_out_of_market_place_pin_authorization"),
     (account_management_state, standard_user, "6", "exit_invalid_menu_option"),
     # my_business state tests
     (my_business_state, standard_user, "1", "about_my_business"),
@@ -129,34 +126,34 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     assert state_machine.state == expected
 
 
-@pytest.mark.parametrize("session_factory, user_input, expected, language", [
-  #(choose_language_state, "1", "complete", "en"),
-  #(choose_language_state, "2", "complete", "sw"),
-  #(initial_language_selection_state, "1", "complete", "en"),
-  #(initial_language_selection_state, "2", "complete", "sw"),
+@pytest.mark.parametrize("session_factory, user_input, language", [
+    (initial_language_selection_state, "1", "en"),
+    (initial_language_selection_state, "2", "sw"),
+    (choose_language_state, "1", "en"),
+    (choose_language_state, "2", "sw"),
 ])
-def test_change_language(test_client, init_database, session_factory, user_input, expected, language):
+def test_change_language(mocker, test_client, init_database, session_factory, user_input, language):
     session = session_factory()
     user = standard_user()
     assert user.preferred_language is None
 
-    # TODO(owen): mock send_sms
     state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char(user_input)
-    assert state_machine.state == expected
+    assert state_machine.state == "complete"
     assert user.preferred_language == language
-    # TODO(owen): assert sms received is language_change_sms
+    state_machine.send_sms.assert_called_with("language_change_sms")
 
 
 # TODO: need pin authorisation implemented to do this
-def test_opt_out_of_marketplace(test_client, init_database):
+def test_opt_out_of_marketplace(mocker, test_client, init_database):
     session = opt_out_of_market_place_pin_authorization_state()
     user = standard_user()
-    #state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.send_sms = mocker.MagicMock()
 
     #state_machine.feed_char("0000")
     #assert state_machine.state == "complete"
-    #assert user.custom_attributes.market_enabled = False
-    # TODO(owen): assert sms received is opt_out_of_market_place_sms
-    return
+    #assert user.custom_attributes.market_enabled == False
+    #state_machine.send_sms.assert_called_with("opt_out_of_market_place_sms")

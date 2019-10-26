@@ -5,6 +5,8 @@ from server.utils.blockchain_tasks import (
     create_blockchain_wallet
 )
 from server.models.utils import ModelBase, organisation_association_table
+from server.utils.phone import send_message
+from server.utils.i18n import i18n_for
 
 
 class Organisation(ModelBase):
@@ -47,6 +49,8 @@ class Organisation(ModelBase):
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
 
+    custom_welcome_message_key = db.Column(db.String)
+
 
     def __init__(self, **kwargs):
         super(Organisation, self).__init__(**kwargs)
@@ -55,3 +59,9 @@ class Organisation(ModelBase):
             wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
             wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
         )
+
+    def send_welcome_sms(self, to_user):
+        if self.custom_welcome_message_key:
+            message = i18n_for(to_user, "organisation.{}".format(self.custom_welcome_message_key))
+            send_message(to_user.phone, message)
+        # else we can do a default message

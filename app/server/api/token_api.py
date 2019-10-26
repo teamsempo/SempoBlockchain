@@ -12,7 +12,6 @@ class TokenAPI(MethodView):
 
     @requires_auth(allowed_basic_auth_types=['internal'])
     def get(self):
-
         tokens = Token.query.all()
 
         response_object = {
