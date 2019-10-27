@@ -3,10 +3,9 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 
 import SideBar from '../navBar.jsx'
-import {PageWrapper, ModuleBox} from '../styledElements.js'
-import CreateTransferAccount from '../user/createUser.jsx'
+import {PageWrapper, ModuleBox, StyledSelect} from '../styledElements.js'
+import CreateUser from '../user/CreateUser.tsx'
 import UploadButton from '../uploader/uploadButton.jsx';
-import {StyledSelect} from "../styledElements";
 
 const mapStateToProps = (state) => {
   return {
@@ -28,7 +27,7 @@ class createUserPage extends React.Component {
   }
 
   render() {
-    const is_vendor = this.state.account_type === 'VENDOR';
+    const isVendor = this.state.account_type === 'VENDOR';
 
     return (
         <WrapperDiv>
@@ -43,11 +42,11 @@ class createUserPage extends React.Component {
                     <option name="account_type" value="VENDOR">VENDOR</option>
                   </StyledSelect>
                 </div>
-                <CreateTransferAccount is_vendor={is_vendor}/>
+                <CreateUser isVendor={isVendor} />
               </ModuleBox>
               <p style={{textAlign: 'center'}}>or</p>
               <UploadButtonWrapper style={{marginLeft: 0}}>
-                <UploadButton button={true} uploadButtonText="Upload Spreadsheet" is_vendor={is_vendor} />
+                <UploadButton button={true} uploadButtonText="Upload Spreadsheet" is_vendor={isVendor} />
               </UploadButtonWrapper>
           </PageWrapper>
         </WrapperDiv>

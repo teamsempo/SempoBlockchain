@@ -1,4 +1,5 @@
 import { combineReducers } from 'redux';
+import { reducer as formReducer } from 'redux-form'
 
 import {
   login,
@@ -15,7 +16,6 @@ import { spreadsheetUpload, datasetSave, datasetList } from './spreadsheetReduce
 import { qrCodeCheck, qrCodeTransfer } from './qrCodeReducer'
 import { newExportRequest } from "./exportReducer"
 import { message } from './messageReducer'
-
 import { creditTransfers } from './creditTransferReducer'
 import { transferAccounts } from "./transferAccountReducer"
 import { users } from "./userReducer"
@@ -45,7 +45,8 @@ const rootReducer = combineReducers({
   creditTransfers,
   filters,
   businessVerification,
-  wyre
+  wyre,
+  form: formReducer
 });
 
 export default rootReducer;

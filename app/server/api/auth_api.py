@@ -183,7 +183,7 @@ class RegisterAPI(MethodView):
         exact_match = False
 
         tier = None
-        if '@sempo.ai' in email:
+        if '@sempo.ai' in email or '@withsempo.com' in email:
             email_ok = True
             tier = 'sempoadmin'
 

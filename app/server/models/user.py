@@ -88,6 +88,7 @@ class User(ManyOrgBase, ModelBase):
         "TransferAccount",
         secondary=user_transfer_account_association_table,
         back_populates="users")
+    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
 
     chatbot_state_id = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
     targeting_survey_id = db.Column(
