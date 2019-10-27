@@ -1,35 +1,70 @@
+from typing import Optional, List, Dict
+from functools import partial
 from flask import current_app
 from server import celery_app
 from eth_keys import keys
 from eth_utils import keccak
-import os, random
-eth_worker_name = 'eth_manager'
-celery_tasks_name = 'celery_tasks'
-eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+import os
+import random
 
-def _execute_synchronous_celery(signature):
+
+def eth_endpoint(endpoint):
+    eth_worker_name = 'eth_manager'
+    celery_tasks_name = 'celery_tasks'
+    return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+
+
+def execute_synchronous_celery(signature, timeout=None):
     async_result = signature.delay()
 
     try:
-        response = async_result.get(timeout=20, propagate=True, interval=0.3)
+        response = async_result.get(timeout=timeout or 20, propagate=True, interval=0.3)
     except Exception as e:
         raise e
     finally:
         async_result.forget()
 
     return response
-    
-    
-def execute_synchronous_transaction_task(signature):
+
+
+def execute_synchronous_task(signature):
     if current_app.config['IS_TEST']:
         # TODO: We need a better way of stubbing responses from the blockchain worker during tests
         return random.randint(0, 1000000000)
 
-    return _execute_synchronous_celery(signature)
+    return execute_synchronous_celery(signature)
 
 
-def execute_synchronous_call_task(signature):
-    return _execute_synchronous_celery(signature)
+def synchronous_call(contract_address, contract_type, func, args=None):
+    call_sig = celery_app.signature(
+        eth_endpoint('call_contract_function'),
+        kwargs={
+            'contract_address': contract_address,
+            'abi_type': contract_type,
+            'function': func,
+            'args': args,
+        })
+
+    return execute_synchronous_celery(call_sig)
+
+
+def synchronous_transaction_task(signing_address,
+                                 contract_address, contract_type,
+                                 func, args=None,
+                                 dependent_on_tasks=None):
+
+    signature = celery_app.signature(
+        eth_endpoint('transact_with_contract_function'),
+        kwargs={
+            'signing_address': signing_address,
+            'contract_address': contract_address,
+            'abi_type': contract_type,
+            'function': func,
+            'args': args,
+            'dependent_on_tasks': dependent_on_tasks
+        })
+
+    return execute_synchronous_task(signature)
 
 
 def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
@@ -41,7 +76,7 @@ def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
                                        'wei_topup_threshold': wei_topup_threshold,
                                    })
 
-        return _execute_synchronous_celery(sig)
+        return execute_synchronous_celery(sig)
     else:
         return keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address()
 
@@ -56,7 +91,27 @@ def send_eth(signing_address, recipient_address, amount_wei, dependent_on_tasks=
                                             'dependent_on_tasks': dependent_on_tasks
                                         })
 
-    return execute_synchronous_transaction_task(transfer_sig)
+    return execute_synchronous_task(transfer_sig)
+
+
+def deploy_contract(
+        signing_address: str,
+        contract_name: str,
+        constructor_args: Optional[List] = None,
+        constructor_kwargs: Optional[Dict] = None,
+        dependent_on_tasks: Optional[List[int]] = None) -> int:
+
+    deploy_sig = celery_app.signature(
+        eth_endpoint('deploy_contract'),
+        kwargs={
+            'signing_address': signing_address,
+            'contract_name': contract_name,
+            'args': constructor_args,
+            'kwargs': constructor_kwargs,
+            'dependent_on_tasks': dependent_on_tasks
+        })
+
+    return execute_synchronous_task(deploy_sig)
 
 
 def make_token_transfer(signing_address, token,
@@ -74,63 +129,35 @@ def make_token_transfer(signing_address, token,
     :return: task id for the transfer
     """
 
-    transfer_sig = celery_app.signature(
-        eth_endpoint('transact_with_contract_function'),
-        kwargs={
-            'signing_address': signing_address,
-            'contract_address': token.address,
-            'abi_type': 'ERC20',
-            'function': 'transferFrom',
-            'args': [
-                from_address,
-                to_address,
-                token.system_amount_to_token(amount)
-            ],
-            'dependent_on_tasks': dependent_on_tasks
-        })
-
-    return execute_synchronous_transaction_task(transfer_sig)
+    return synchronous_transaction_task(
+        signing_address=signing_address,
+        contract_address=token.address,
+        contract_type='ERC20',
+        func='transferFrom',
+        args=[
+            from_address,
+            to_address,
+            token.system_amount_to_token(amount)
+        ],
+        dependent_on_tasks=dependent_on_tasks
+    )
 
 
 def make_approval(signing_address, token,
                   spender, amount,
-                  safe_set=False,
                   dependent_on_tasks=None):
 
-    zero_set_id_list = None
-    if safe_set:
-        zero_set_sig = celery_app.signature(
-            eth_endpoint('transact_with_contract_function'),
-            kwargs={
-                'signing_address': signing_address,
-                'contract_address': token.address,
-                'abi_type': 'ERC20',
-                'function': 'approve',
-                'args': [
-                    spender,
-                    0
-                ],
-                'dependent_on_tasks': dependent_on_tasks
-            })
-
-        zero_set_id_list = [execute_synchronous_transaction_task(zero_set_sig)]
-
-    transfer_sig = celery_app.signature(
-        eth_endpoint('transact_with_contract_function'),
-        kwargs={
-            'signing_address': signing_address,
-            'contract_address': token.address,
-            'abi_type': 'ERC20',
-            'function': 'approve',
-            'args': [
-                spender,
-                token.system_amount_to_token(amount)
-            ],
-            'dependent_on_tasks': zero_set_id_list or dependent_on_tasks
-        })
-
-    return execute_synchronous_transaction_task(transfer_sig)
-
+    return synchronous_transaction_task(
+        signing_address=signing_address,
+        contract_address=token.address,
+        contract_type='ERC20',
+        func='approve',
+        args=[
+            spender,
+            token.system_amount_to_token(amount)
+        ],
+        dependent_on_tasks=dependent_on_tasks
+    )
 
 def make_liquid_token_exchange(signing_address,
                                exchange_contract_address,
@@ -153,22 +180,18 @@ def make_liquid_token_exchange(signing_address,
 
     path = _get_path(from_token, to_token, reserve_token)
 
-    transfer_sig = celery_app.signature(
-        eth_endpoint('transact_with_contract_function'),
-        kwargs={
-            'signing_address': signing_address,
-            'contract_address': exchange_contract_address,
-            'abi_type': 'bancor_converter',
-            'function': 'quickConvert',
-            'args': [
-                path,
-                from_token.system_amount_to_token(from_amount),
-                1
-            ],
-            'dependent_on_tasks': dependent_on_tasks
-        })
-
-    return execute_synchronous_transaction_task(transfer_sig)
+    return synchronous_transaction_task(
+        signing_address=signing_address,
+        contract_address=exchange_contract_address,
+        contract_type='bancor_converter',
+        func='quickConvert',
+        args=[
+            path,
+            from_token.system_amount_to_token(from_amount),
+            1
+        ],
+        dependent_on_tasks=dependent_on_tasks
+    )
 
 
 def get_conversion_amount(exchange_contract_address, from_token, to_token, reserve_token, from_amount):
@@ -183,20 +206,15 @@ def get_conversion_amount(exchange_contract_address, from_token, to_token, reser
 
     path = _get_path(from_token, to_token, reserve_token)
 
-    conversion_amount_sig = celery_app.signature(
-        eth_endpoint('call_contract_function'),
-        kwargs={
-            'contract_address': exchange_contract_address,
-            'abi_type': 'bancor_converter',
-            'function': 'quickConvert',
-            'args': [
-                path,
-                from_token.system_amount_to_token(from_amount),
-                1
-            ],
-        })
-
-    raw_conversion_amount = execute_synchronous_call_task(conversion_amount_sig)
+    raw_conversion_amount = synchronous_call(
+        contract_address=exchange_contract_address,
+        contract_type='bancor_converter',
+        func='quickConvert',
+        args=[
+            path,
+            from_token.system_amount_to_token(from_amount),
+            1
+        ])
 
     return to_token.token_amount_to_system(raw_conversion_amount)
 
@@ -229,38 +247,30 @@ def _get_path(from_token, to_token, reserve_token):
 
 def get_token_decimals(token):
 
-    decimals_sig = celery_app.signature(eth_endpoint('call_contract_function'),
-                                         kwargs={
-                                             'contract_address': token.address,
-                                             'abi_type': 'ERC20',
-                                             'function': 'decimals'
-                                         })
-
     if current_app.config['IS_TEST']:
         # TODO: We need a better way of stubbing responses from the blockchain worker during tests
         return 18
 
-    return execute_synchronous_call_task(decimals_sig)
-
+    return synchronous_call(
+        contract_address=token.address,
+        contract_type='ERC20',
+        func='decimals'
+    )
 
 def get_wallet_balance(address, token):
-
-    balance_sig = celery_app.signature(
-        eth_endpoint('call_contract_function'),
-        kwargs={
-            'contract_address': token.address,
-            'abi_type': 'ERC20',
-            'function': 'balanceOf',
-            'args': [address]
-        })
-
-    balance = execute_synchronous_call_task(balance_sig)
 
     if current_app.config['IS_TEST']:
         # TODO: We need a better way of stubbing responses from the blockchain worker during tests
         return 100000000000000
 
+    balance = synchronous_call(
+        contract_address=token.address,
+        contract_type='ERC20',
+        func='balanceOf',
+        args=[address])
+
     return token.token_amount_to_system(balance)
+
 
 def get_blockchain_task(task_id):
     """
@@ -277,4 +287,50 @@ def get_blockchain_task(task_id):
     sig = celery_app.signature(eth_endpoint('get_task'),
                                kwargs={'task_id': task_id})
 
-    return execute_synchronous_call_task(sig)
+    return execute_synchronous_celery(sig)
+
+
+def deploy_reserve_network(deploying_address):
+
+    sig = celery_app.signature(eth_endpoint('deploy_reserve_network'),
+                               args=[deploying_address])
+
+    return execute_synchronous_celery(sig, timeout=900)
+
+
+def deploy_and_fund_reserve_token(deploying_address, fund_amount_wei):
+    sig = celery_app.signature(eth_endpoint('deploy_and_fund_reserve_token'),
+                               args=[deploying_address, fund_amount_wei])
+
+    return execute_synchronous_celery(sig, timeout=900)
+
+
+def deploy_smart_token(deploying_address,
+                       name, symbol, decimals,
+                       issue_amount_wei,
+                       contract_registry_address,
+                       reserve_token_address,
+                       reserve_ratio_ppm):
+
+    sig = celery_app.signature(eth_endpoint('deploy_smart_token'),
+                               args=[deploying_address,
+                                     name, symbol, decimals,
+                                     int(issue_amount_wei),
+                                     contract_registry_address,
+                                     reserve_token_address,
+                                     int(reserve_ratio_ppm)])
+
+    return execute_synchronous_celery(sig, timeout=900)
+
+    # gasPrice = 100000
+    #
+    # deployer = partial(deploy_contract, signing_address)
+    #
+    # reg_deploy = deployer(contract_name='ContractRegistry')
+    # ids_deploy = deployer(contract_name='ContractIds')
+    # features_deploy = deployer(contract_name='ContractFeatures')
+    # price_limit_deploy = deployer(contract_name='BancorGasPriceLimit',
+    #                               constructor_args=[gasPrice])
+    # formula_deploy = deployer(contract_name='BancorFormula')
+    # nst_reg_deploy = deployer(contract_name='NonStandardTokenRegistry')
+    # # network_deploy = deployer(contract_name='BancorNetwork')

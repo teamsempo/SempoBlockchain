@@ -1,3 +1,5 @@
+from sqlalchemy.ext.hybrid import hybrid_property
+
 from server import db
 from server.utils.blockchain_tasks import (
     get_token_decimals,
@@ -44,7 +46,7 @@ class Token(ModelBase):
     exchanges_to = db.relationship('Exchange', backref='to_token', lazy=True,
                                    foreign_keys='Exchange.to_token_id')
 
-    @property
+    @hybrid_property
     def decimals(self):
         if self._decimals:
             return self._decimals
@@ -55,6 +57,10 @@ class Token(ModelBase):
             return decimals_from_contract_definition
 
         raise Exception("Decimals not defined in either database or contract")
+
+    @decimals.setter
+    def decimals(self, value):
+        self._decimals = value
 
     def token_amount_to_system(self, token_amount):
         return int(token_amount) * 100 / 10**self.decimals

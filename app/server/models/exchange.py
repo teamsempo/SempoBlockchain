@@ -28,6 +28,8 @@ class ExchangeContract(ModelBase):
 
     blockchain_address = db.Column(db.String(), index=True)
 
+    contract_registry_blockchain_address = db.Column(db.String())
+
     reserve_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
 
     exchangeable_tokens = db.relationship(
@@ -39,6 +41,10 @@ class ExchangeContract(ModelBase):
         'TransferAccount', backref='exchange_contract',
         lazy=True, foreign_keys='TransferAccount.exchange_contract_id'
     )
+
+    def add_reserve_token(self, reserve_token):
+        self.reserve_token = reserve_token
+        self.add_token(reserve_token)
 
     def add_token(self, token):
 

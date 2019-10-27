@@ -64,9 +64,11 @@ red = redis.Redis.from_url(config.REDIS_URL)
 
 persistence_interface = SQLPersistenceInterface(w3=w3)
 
-blockchain_processor = TransactionProcessor(**eth_config,
-                                            w3=w3,
-                                            persistence_interface=persistence_interface)
+blockchain_processor = TransactionProcessor(
+    **eth_config,
+    w3=w3,
+    persistence_interface=persistence_interface
+)
 
 import eth_manager.celery_tasks
 #
@@ -81,6 +83,7 @@ try:
     persistence_interface.create_blockchain_wallet_from_private_key(config.MASTER_WALLET_PRIVATE_KEY)
 except WalletExistsError:
     pass
+
 
 def register_tokens_from_app(host_address, auth_username, auth_password):
     token_req = requests.get(host_address + '/api/token', auth=HTTPBasicAuth(auth_username, auth_password))
@@ -106,7 +109,6 @@ def register_tokens_from_app(host_address, auth_username, auth_password):
 blockchain_processor.registry.register_abi('ERC20', erc20_abi.abi)
 blockchain_processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
 blockchain_processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
-
 
 # contracts_registered = False
 # attempts = 0

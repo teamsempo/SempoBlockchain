@@ -37,6 +37,7 @@ class SQLPersistenceInterface(object):
         likely_consumed_nonces = (
             session.query(BlockchainTransaction)
                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
+                .filter(BlockchainTransaction.ignore == False)
                 .filter(
                     and_(
                         or_(BlockchainTransaction.nonce_consumed == True,
@@ -65,6 +66,7 @@ class SQLPersistenceInterface(object):
             highest_valid_txn = (
                 session.query(BlockchainTransaction)
                     .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
+                    .filter(BlockchainTransaction.ignore == False)
                     .filter(
                         and_(
                             or_(BlockchainTransaction.nonce_consumed == True,
@@ -74,7 +76,8 @@ class SQLPersistenceInterface(object):
                     )
                     .order_by(BlockchainTransaction.id.desc())
                     .first())
-            highest_valid_id = getattr(highest_valid_txn,'id',0)
+
+            highest_valid_id = getattr(highest_valid_txn, 'id', 0)
 
         # Now find all transactions that are from the same address
         # and have a txn ID bound by the top consumed nonce and the current txn.
@@ -84,6 +87,7 @@ class SQLPersistenceInterface(object):
         live_txns_from_same_address = (
             session.query(BlockchainTransaction)
                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
+                .filter(BlockchainTransaction.ignore == False)
                 .filter(BlockchainTransaction.status == 'PENDING')
                 .filter(and_(BlockchainTransaction.id > highest_valid_id,
                              BlockchainTransaction.id < transaction_id))
@@ -116,12 +120,12 @@ class SQLPersistenceInterface(object):
             # Occasionally two workers will hit the db at the same time and claim the same nonce
 
             nonce_clash_txns = (session.query(BlockchainTransaction)
-                              .filter(BlockchainTransaction.id != transaction_id)
-                              .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
-                              .filter(BlockchainTransaction.status == 'PENDING')
-                              .filter(BlockchainTransaction.nonce == blockchain_transaction.nonce)
-                              .all())
-
+                                .filter(BlockchainTransaction.id != transaction_id)
+                                .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
+                                .filter(BlockchainTransaction.ignore == False)
+                                .filter(BlockchainTransaction.status == 'PENDING')
+                                .filter(BlockchainTransaction.nonce == blockchain_transaction.nonce)
+                                .all())
 
             if len(nonce_clash_txns) > 0:
                 # If there is a clash, just try again
@@ -144,8 +148,6 @@ class SQLPersistenceInterface(object):
 
             else:
                 gauranteed_clash_free = True
-
-        print('@@@@@@@@@@@@@@ tx {} using nonce {} @@@@@@@@@@@@@@'.format(transaction_id, calculated_nonce))
 
         session.commit()
 
@@ -214,12 +216,12 @@ class SQLPersistenceInterface(object):
             dependee_task = session.query(BlockchainTask).get(task_id)
             task.dependees.append(dependee_task)
 
-
     def create_send_eth_task(self, signing_wallet_obj,
                              recipient_address, amount,
                              dependent_on_tasks=None):
 
         task = BlockchainTask(signing_wallet=signing_wallet_obj,
+                              type='SEND_ETH',
                               is_send_eth=True,
                               recipient_address=recipient_address,
                               amount=amount)
@@ -237,11 +239,31 @@ class SQLPersistenceInterface(object):
                              function, args=None, kwargs=None,
                              gas_limit=None, dependent_on_tasks=None):
 
-
         task = BlockchainTask(signing_wallet=signing_wallet_obj,
-                              contract=contract_address,
+                              type='FUNCTION',
+                              contract_address=contract_address,
                               abi_type=abi_type,
                               function=function,
+                              args=args,
+                              kwargs=kwargs,
+                              gas_limit=gas_limit)
+
+        session.add(task)
+
+        self.add_dependent_on_tasks(task, dependent_on_tasks)
+
+        session.commit()
+
+        return task
+
+    def create_deploy_contract_task(self, signing_wallet_obj,
+                                    contract_name,
+                                    args=None, kwargs=None,
+                                    gas_limit=None, dependent_on_tasks=None):
+
+        task = BlockchainTask(signing_wallet=signing_wallet_obj,
+                              type='DEPLOY_CONTRACT',
+                              contract_name=contract_name,
                               args=args,
                               kwargs=kwargs,
                               gas_limit=gas_limit)
@@ -257,10 +279,22 @@ class SQLPersistenceInterface(object):
     def get_serialised_task_from_id(self, id):
         task = self.get_task_from_id(id)
 
-        return {
-            'status': task.status,
-            'dependents': [task.id for task in task.dependents]
-        }
+        if task.successful_transaction:
+
+            return {
+                'status': task.status,
+                'dependents': [task.id for task in task.dependents],
+                'successful_hash': task.successful_transaction.hash,
+                'successful_block': task.successful_transaction.block,
+                'contract_address': task.successful_transaction.contract_address
+            }
+
+        else:
+            return {
+                'status': task.status,
+                'dependents': [task.id for task in task.dependents]
+            }
+
 
     def get_task_from_id(self, task_id):
         return session.query(BlockchainTask).get(task_id)
@@ -287,7 +321,8 @@ class SQLPersistenceInterface(object):
 
     def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0):
 
-        wallet = BlockchainWallet(wei_target_balance=wei_target_balance,wei_topup_threshold=wei_topup_threshold)
+        wallet = BlockchainWallet(wei_target_balance=wei_target_balance,
+                                  wei_topup_threshold=wei_topup_threshold)
 
         session.add(wallet)
 

@@ -52,8 +52,12 @@ class TransactionProcessor(object):
             'value': amount
         }
 
-        return self.process_transaction(transaction_id, partial_txn_dict=partial_txn_dict)
+        return self.process_transaction(transaction_id, partial_txn_dict=partial_txn_dict, gas_limit=100000)
 
+    def typecast_argument(self, argument):
+        if isinstance(argument, dict) and argument.get('type') == 'bytes':
+                return argument.get('data').encode()
+        return argument
 
     def process_function_transaction(self, transaction_id, contract_address, abi_type,
                                      function_name, args=None, kwargs=None, gas_limit=None):
@@ -61,8 +65,10 @@ class TransactionProcessor(object):
         args = args or tuple()
         if not isinstance(args, (list, tuple)):
             args = [args]
+        args = [self.typecast_argument(a) for a in args]
 
         kwargs = kwargs or dict()
+        kwargs = {k: self.typecast_argument(v) for k, v in kwargs.items()}
 
         function = self.registry.get_contract_function(contract_address, function_name, abi_type)
 
@@ -70,9 +76,24 @@ class TransactionProcessor(object):
 
         return self.process_transaction(transaction_id, bound_function, gas_limit=gas_limit)
 
+    def process_deploy_contract_transaction(self, transaction_id, contract_name,
+                                            args=None, kwargs=None, gas_limit=None):
+
+        args = args or tuple()
+        if not isinstance(args, (list, tuple)):
+            args = [args]
+
+        kwargs = kwargs or dict()
+
+        contract = self.registry.get_compiled_contract(contract_name)
+
+        constructor = contract.constructor(*args, **kwargs)
+
+        return self.process_transaction(transaction_id, constructor, gas_limit=gas_limit)
+
     def process_transaction(self,
                             transaction_id,
-                            function=None,
+                            unbuilt_transaction=None,
                             partial_txn_dict=None,
                             gas_limit=None,
                             gas_price=None):
@@ -81,23 +102,31 @@ class TransactionProcessor(object):
 
         nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
 
-        estimated_gas = function.estimateGas({})
+        def estimate_gas():
+            try:
+                return unbuilt_transaction.estimateGas({})
+            except ValueError:
+                raise Exception(
+                    "Estimate Gas Failed. Likely due to msg.sender validation error. Remedy by specifying gas limit"
+                )
 
-        txn = {
+        metadata = {
             'chainId': self.ethereum_chain_id,
-            'gas': gas_limit or int(estimated_gas*2),
+            'gas': gas_limit or int(estimate_gas()*2),
             'gasPrice': gas_price or self.get_gas_price(),
             'nonce': nonce
         }
 
-        if function:
-            txn = function.buildTransaction(txn)
+        if unbuilt_transaction:
+            txn = unbuilt_transaction.buildTransaction(metadata)
         else:
-            txn = {**txn, **partial_txn_dict}
+            txn = {**metadata, **partial_txn_dict}
 
         signed_txn = self.w3.eth.account.signTransaction(txn, private_key=signing_wallet_obj.private_key)
 
         try:
+            print('@@@@@@@@@@@@@@ tx {} using nonce {} @@@@@@@@@@@@@@'.format(transaction_id, nonce))
+
             result = self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
         except ValueError as e:
@@ -149,7 +178,7 @@ class TransactionProcessor(object):
         tx_receipt = self.w3.eth.getTransactionReceipt(tx_hash)
 
         def print_and_return(return_dict):
-            print('{} for txn: {}'.format(return_dict.get('status'),tx_hash))
+            print('{} for txn: {}'.format(return_dict.get('status'), tx_hash))
             return return_dict
 
         if tx_receipt is None:
@@ -162,15 +191,20 @@ class TransactionProcessor(object):
 
         if tx_receipt.status == 1:
 
-            return print_and_return({'status': 'SUCCESS',
-                                      'block': tx_receipt.blockNumber,
-                                      'mined_date': mined_date})
+            return print_and_return({
+                'status': 'SUCCESS',
+                'block': tx_receipt.blockNumber,
+                'contract_address': tx_receipt.contractAddress,
+                'mined_date': mined_date
+            })
 
         else:
-           return print_and_return({'status': 'FAILED',
-                                    'error': 'Blockchain Error',
-                                    'block': tx_receipt.blockNumber,
-                                    'mined_date': mined_date})
+           return print_and_return({
+               'status': 'FAILED',
+               'error': 'Blockchain Error',
+               'block': tx_receipt.blockNumber,
+               'mined_date': mined_date
+           })
 
     def attempt_transaction(self, task_id):
 
@@ -183,22 +217,34 @@ class TransactionProcessor(object):
 
         task_object = self.persistence_interface.get_task_from_id(task_id)
 
-        if task_object.is_send_eth:
+        if task_object.type == 'SEND_ETH':
             print(f'Starting Send Eth Transaction for {task_id}.')
             chain1 = signature(utils.eth_endpoint('_process_send_eth_transaction'),
                           args=(transaction_obj.id,
                                 task_object.recipient_address,
                                 task_object.amount))
-        else:
+
+        elif task_object.type == 'FUNCTION':
             print(f'Starting {task_object.function} Transaction for {task_id}.')
             chain1 = signature(utils.eth_endpoint('_process_function_transaction'),
                                args=(transaction_obj.id,
-                                     task_object.contract,
+                                     task_object.contract_address,
                                      task_object.abi_type,
                                      task_object.function,
                                      task_object.args,
                                      task_object.kwargs,
                                      task_object.gas_limit))
+
+        elif task_object.type == 'DEPLOY_CONTRACT':
+            print(f'Starting Deploy {task_object.contract_name} Contract Transaction for {task_id}.')
+            chain1 = signature(utils.eth_endpoint('_process_deploy_contract_transaction'),
+                               args=(transaction_obj.id,
+                                     task_object.contract_name,
+                                     task_object.args,
+                                     task_object.kwargs,
+                                     task_object.gas_limit))
+        else:
+            raise Exception(f"Task type {task_object.type} not recognised")
 
         chain2 = signature(utils.eth_endpoint('_check_transaction_response'))
 
@@ -266,7 +312,12 @@ class TransactionProcessor(object):
 
         function = function_list(*args, **kwargs)
 
-        return function.call()
+        call_data = function.call()
+
+        if isinstance(call_data, bytes):
+            return call_data.rstrip(b'\x00').decode()
+
+        return call_data
 
     def transact_with_contract_function(
             self,
@@ -286,7 +337,7 @@ class TransactionProcessor(object):
         :param args: arguments for the function
         :param kwargs: keyword arguments for the function
         :param signing_address: address of the wallet signing the txn
-        :param encrypted_private_key: private key of the wallet making the transaction, encrypted usign key from settings
+        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
         :param gas_limit: limit on the amount of gas txn can use. Overrides system default
         :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
         :return: task_id
@@ -317,7 +368,7 @@ class TransactionProcessor(object):
         :param amount_wei: the amount in WEI to send
         :param recipient_address: the recipient address
         :param signing_address: address of the wallet signing the txn
-        :param encrypted_private_key: private key of the wallet making the transaction, encrypted usign key from settings
+        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
         :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
         :return: task_id
         """
@@ -327,6 +378,42 @@ class TransactionProcessor(object):
         task = self.persistence_interface.create_send_eth_task(signing_wallet_obj,
                                                                recipient_address, amount_wei,
                                                                dependent_on_tasks)
+
+        # Attempt Create Async Transaction
+        signature(utils.eth_endpoint('_attempt_transaction'), args=(task.id,)).delay()
+
+        # Immediately return task ID
+        return task.id
+
+    def deploy_contract(
+            self,
+            contract_name: str,
+            args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+            signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
+            gas_limit: Optional[int] = None,
+            dependent_on_tasks: Optional[IdList] = None
+    ) -> int:
+        """
+        The main deploy contract entrypoint for the processor. This task completes quickly,
+        so can be called synchronously in order to retrieve a task ID
+
+        :param contract_name: System will attempt to fetched abi and bytecode from this
+        :param args: arguments for the constructor
+        :param kwargs: keyword arguments for the constructor
+        :param signing_address: address of the wallet signing the txn
+        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
+        :param gas_limit: limit on the amount of gas txn can use. Overrides system default
+        :param dependent_on_tasks: a list of task ids that must succeed before this task will be attempted
+        :return: task_id
+        """
+
+        signing_wallet_obj = self.get_signing_wallet_object(signing_address, encrypted_private_key)
+
+        task = self.persistence_interface.create_deploy_contract_task(signing_wallet_obj,
+                                                                      contract_name,
+                                                                      args, kwargs,
+                                                                      gas_limit,
+                                                                      dependent_on_tasks)
 
         # Attempt Create Async Transaction
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.id,)).delay()

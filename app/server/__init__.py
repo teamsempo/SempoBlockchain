@@ -12,11 +12,9 @@ from raven.contrib.flask import Sentry
 import messagebird
 from datetime import datetime
 import redis
-from eth_utils import to_checksum_address
 
 import sys, os
 sys.path.append('../')
-
 import config
 
 def encrypt_string(raw_string):
@@ -136,6 +134,7 @@ def register_blueprints(app):
     from server.api.exchange_api import exchange_blueprint
     from server.api.slack_api import slack_blueprint
     from server.api.ussd_api import ussd_blueprint
+    from server.api.deploy_contracts_api import deploy_contracts_blueprint
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix='/api/me')
@@ -163,6 +162,7 @@ def register_blueprints(app):
     app.register_blueprint(slack_blueprint, url_prefix='/api')
     app.register_blueprint(ussd_blueprint, url_prefix='/api')
     app.register_blueprint(exchange_blueprint, url_prefix='/api')
+    app.register_blueprint(deploy_contracts_blueprint, url_prefix='/api')
 
     # 404 handled in react
     @app.errorhandler(404)
