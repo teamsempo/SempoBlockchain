@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -30,6 +30,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     transfer_mode   = db.Column(db.Enum(TransferModeEnum))
     transfer_use    = db.Column(JSON)
 
+    transfer_metadata = db.Column(JSONB)
+
     resolution_message = db.Column(db.String())
 
     blockchain_task_id = db.Column(db.Integer)
@@ -47,7 +49,9 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
     blockchain_transactions = db.relationship('BlockchainTransaction', backref='credit_transfer', lazy=True)
 
-    attached_images = db.relationship('UploadedImage', backref='credit_transfer', lazy=True)
+    attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy=True)
+
+    fiat_ramp = db.relationship('FiatRamp', backref='credit_transfer', lazy=True, uselist=False)
 
     @hybrid_property
     def blockchain_status(self):
@@ -166,9 +170,12 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.sender_transfer_account.balance -= self.transfer_amount
         self.recipient_transfer_account.balance += self.transfer_amount
 
-        if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
+        if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_metadata['reason'].astext == 'is_disbursement':
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
+
+        if self.transfer_type == TransferTypeEnum.DEPOSIT and self.fiat_ramp:
+            self.fiat_ramp.resolve_as_completed()
 
         if not existing_blockchain_txn:
             self.send_blockchain_payload_to_worker()
@@ -222,7 +229,10 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                  recipient_user=None,
                  sender_transfer_account=None,
                  recipient_transfer_account=None,
-                 transfer_type=None, uuid=None):
+                 transfer_type=None,
+                 uuid=None,
+                 transfer_metadata=None,
+                 fiat_ramp=None):
 
         self.transfer_amount = amount
 
@@ -234,6 +244,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         self.token = token or self.sender_transfer_account.token
 
+        self.fiat_ramp = fiat_ramp
+
         self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
             recipient_transfer_account, recipient_user, self.token)
 
@@ -244,6 +256,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         if uuid is not None:
             self.uuid = uuid
+
+        self.transfer_metadata = transfer_metadata
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)

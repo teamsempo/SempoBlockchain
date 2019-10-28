@@ -3,7 +3,7 @@ from flask.views import MethodView
 from server import db, sentry
 from server.models.bank_account import BankAccount
 from server.models.kyc_application import KycApplication
-from server.models.upload import UploadedDocument
+from server.models.upload import UploadedResource
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.schemas import kyc_application_schema, kyc_application_state_schema
@@ -23,7 +23,7 @@ def handle_kyc_documents(data=None,document_country=None,document_type=None,kyc_
             try:
                 new_filename = generate_new_filename(original_filename="{}-{}.jpg".format(key, document_country), file_type='jpg')
                 save_to_s3_from_image_base64(image_base64=value, new_filename=new_filename)
-                uploaded_document = UploadedDocument(filename=new_filename, reference=document_type,
+                uploaded_document = UploadedResource(filename=new_filename, reference=document_type,
                                                      user_filename=key)
                 db.session.add(uploaded_document)
                 # tie document to kyc application
@@ -346,7 +346,7 @@ class DocumentUploadAPI(MethodView):
         file_type = filename.rsplit('.', 1)[1].lower()
         new_filename = generate_new_filename(filename, file_type)
 
-        saved_document = UploadedDocument.query.filter_by(filename=new_filename).first()
+        saved_document = UploadedResource.query.filter_by(filename=new_filename).first()
 
         if saved_document:
             return make_response(jsonify({'message': 'Document already exists'})), 400
@@ -356,7 +356,7 @@ class DocumentUploadAPI(MethodView):
         if 'reference' in request.form:
             reference = request.form['reference']
 
-        uploaded_document = UploadedDocument(filename=new_filename, file_type=file_type,
+        uploaded_document = UploadedResource(filename=new_filename, file_type=file_type,
                                              reference=reference, user_filename=filename)
         db.session.add(uploaded_document)
 

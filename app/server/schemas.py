@@ -86,11 +86,20 @@ class UserSchema(Schema):
         return processed_profile_pictures
 
 
-class UploadedImageSchema(Schema):
-    id                      = fields.Int(dump_only=True)
-    filename                = fields.Str()
-    image_url               = fields.Function(lambda obj: obj.image_url)
-    credit_transfer_id      = fields.Int()
+class UploadedResourceSchema(Schema):
+    id = fields.Int(dump_only=True)
+    created = fields.DateTime(dump_only=True)
+
+    kyc_application_id = fields.Int()
+    credit_transfer_id = fields.Int()
+
+    filename = fields.Str()
+    file_type = fields.Str()
+    reference = fields.Str()
+    user_filename = fields.Str()
+
+    file_url = fields.Function(lambda obj: obj.file_url)
+
 
 class CreditTransferSchema(Schema):
 
@@ -118,6 +127,8 @@ class CreditTransferSchema(Schema):
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
+    transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
+
     sender_transfer_account_id = fields.Int()
     recipient_transfer_account_id = fields.Int()
 
@@ -127,7 +138,7 @@ class CreditTransferSchema(Schema):
     sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
     recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
 
-    attached_images         = fields.Nested(UploadedImageSchema, many=True)
+    attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 
     lat               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
@@ -248,19 +259,6 @@ class BankAccountSchema(Schema):
     currency        = fields.Str()
 
 
-class UploadedDocumentSchema(Schema):
-    id              = fields.Int(dump_only=True)
-    created         = fields.DateTime(dump_only=True)
-
-    kyc_application_id = fields.Int()
-
-    filename        = fields.Str()
-    file_type       = fields.Str()
-    reference       = fields.Str()
-    user_filename   = fields.Str()
-    file_url        = fields.Function(lambda obj: obj.file_url)
-
-
 class KycApplicationSchema(Schema):
     id                  = fields.Int(dump_only=True)
     created             = fields.DateTime(dump_only=True)
@@ -290,7 +288,7 @@ class KycApplicationSchema(Schema):
     beneficial_owners   = fields.Method('get_beneficial_owners_json')
 
     bank_accounts       = fields.Nested('server.schemas.BankAccountSchema', many=True, exclude=('kyc_application_id',))
-    uploaded_documents  = fields.Nested('server.schemas.UploadedDocumentSchema', many=True, exclude=('kyc_application_id',))
+    uploaded_documents  = fields.Nested('server.schemas.UploadedResourceSchema', many=True, exclude=('kyc_application_id',))
 
     def get_beneficial_owners_json(self, obj):
         return obj.beneficial_owners
@@ -362,7 +360,7 @@ view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
 
-uploaded_image_schema = UploadedImageSchema()
+uploaded_resource_schema = UploadedResourceSchema()
 
 referral_schema = ReferralSchema()
 referrals_schema = ReferralSchema(many=True)

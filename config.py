@@ -277,6 +277,10 @@ SLACK_HOST      = specific_parser['SLACK']['host']
 SLACK_API_TOKEN = common_parser['SLACK']['token']
 SLACK_SECRET    = common_parser['SLACK']['secret']
 
+POLIPAYMENTS_HOST = specific_parser['POLIPAYMENTS']['host']
+POLIPAYMENTS_MERCHANT = common_parser['POLIPAYMENTS']['merchant_code']
+POLIPAYMENTS_AUTH     = common_parser['POLIPAYMENTS']['auth_code']
+
 try:
     NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
 except KeyError:

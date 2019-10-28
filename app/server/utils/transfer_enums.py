@@ -1,9 +1,11 @@
 import enum
 
 class TransferTypeEnum(enum.Enum):
-    PAYMENT      = "PAYMENT"
-    DISBURSEMENT = "DISBURSEMENT"
-    WITHDRAWAL   = "WITHDRAWAL"
+    PAYMENT     = "PAYMENT"
+    DEPOSIT     = "DEPOSIT"
+    WITHDRAWAL  = "WITHDRAWAL"
+    EXCHANGE    = "EXCHANGE"
+    FEE         = "FEE"
 
 class TransferModeEnum(enum.Enum):
     NFC = "NFC"

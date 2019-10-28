@@ -3,7 +3,7 @@ from factory.alchemy import SQLAlchemyModelFactory
 from server import db
 from server.models.user import User
 from server.models.transfer_account import TransferAccount
-from server.models.upload import UploadedImage
+from server.models.upload import UploadedResource
 from server.models.kyc_application import KycApplication
 from server.models.device_info import DeviceInfo
 from server.models.referral import Referral
@@ -29,9 +29,9 @@ class KycApplicationFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
 
-class UploadedImageFactory(SQLAlchemyModelFactory):
+class UploadedResourceFactory(SQLAlchemyModelFactory):
     class Meta:
-        model = UploadedImage
+        model = UploadedResource
         sqlalchemy_session = db.session
 
 

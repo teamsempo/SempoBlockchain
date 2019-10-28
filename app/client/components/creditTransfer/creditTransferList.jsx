@@ -234,7 +234,7 @@ class CreditTransferList extends React.Component {
           + ' ' +
           this.props.users.byId[item.recipient_user].last_name
         )
-      } else if (item.transfer_type === 'WITHDRAWAL' && item.authorising_user_email) {
+      } else if (item.transfer_type === 'RECLAMATION' && item.authorising_user_email) {
         item.recipient = <div style={{color: '#96DADC'}}> {item.authorising_user_email} </div>
       } else {
         item.recipient = '-'
@@ -280,7 +280,7 @@ class CreditTransferList extends React.Component {
           <option name="transfer_type" value="ALL">ALL TRANSFERS</option>
           <option name="transfer_type" value="PAYMENT">PAYMENTS</option>
           <option name="transfer_type" value="DISBURSEMENT">DISBURSEMENTS</option>
-          <option name="transfer_type" value="WITHDRAWAL">WITHDRAWALS</option>
+          <option name="transfer_type" value="RECLAMATION">RECLAMATION</option>
         </StyledSelect>
       }
 

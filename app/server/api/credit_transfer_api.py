@@ -15,8 +15,6 @@ from server.utils.credit_transfers import calculate_transfer_stats, find_user_wi
 from server.utils.transfer_enums import TransferTypeEnum
 from server.utils.credit_transfers import (
     make_payment_transfer,
-    make_withdrawal_transfer,
-    make_disbursement_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
 
@@ -278,16 +276,18 @@ class CreditTransferAPI(MethodView):
             try:
                 if transfer_type == 'PAYMENT':
                     transfer = make_payment_transfer(
-                        transfer_amount, token, sender_user, recipient_user, transfer_use, uuid=uuid)
+                        transfer_amount, send_user=sender_user, receive_user=recipient_user, transfer_use=transfer_use, uuid=uuid)
 
-                elif transfer_type == 'WITHDRAWAL':
-                    transfer = make_withdrawal_transfer(transfer_amount, token,  sender_user, uuid=uuid)
+                elif transfer_type == 'RECLAIM':
+                    transfer = make_payment_transfer(
+                        transfer_amount, send_user=sender_user, uuid=uuid, is_reclaim=True)
 
                 elif transfer_type == 'DISBURSEMENT':
-                    transfer = make_disbursement_transfer(transfer_amount, token,  recipient_user, uuid=uuid)
+                    transfer = make_payment_transfer(
+                        transfer_amount, receive_user=recipient_user, uuid=uuid, is_disbursement=True)
 
                 elif transfer_type == 'BALANCE':
-                    transfer = make_target_balance_transfer(target_balance, token,  recipient_user, uuid=uuid)
+                    transfer = make_target_balance_transfer(target_balance, recipient_user, uuid=uuid)
 
             except (InsufficientBalanceError,
                     AccountNotApprovedError,
