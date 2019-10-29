@@ -133,4 +133,7 @@ sw:
     exit_not_registered: >
       END Haujasajiliwa kwa hii huduma. Kusajili tuma: jina, nambari ya simu, kitambulisho, eneo, na biashara yako. Kwa 0757628885
     exit_invalid_exchange_amount: END Kiwango ulichoweka hakitoshi. Tafadhali weka kiwango cha 40 au zaidi.
+    language_change_sms: Lugha imebadilishwa.
+    opt_out_of_market_place_sms: Ombi lako la kuondoka sokoni limekamilika.
+
 

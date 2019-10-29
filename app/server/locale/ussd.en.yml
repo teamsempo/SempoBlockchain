@@ -133,4 +133,6 @@ en:
     exit_not_registered: >
       END Haujasajiliwa kwa hii huduma. Kusajili tuma: jina, nambari ya simu, kitambulisho, eneo, na biashara yako. Kwa 0757628885
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
+    language_change_sms: Your preferred language has been changed successfully.
+    opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
 
