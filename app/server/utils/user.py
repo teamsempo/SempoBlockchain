@@ -18,7 +18,7 @@ from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError
 from server import celery_app, sentry
 from server.utils import credit_transfers as CreditTransferUtils
-from server.utils.phone import proccess_phone_number, send_onboarding_message, send_phone_verification_message
+from server.utils.phone import proccess_phone_number, send_message
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 
 
@@ -564,3 +564,29 @@ def proccess_create_or_modify_user_request(attribute_dict,
     }
 
     return response_object, 200
+
+
+def send_onboarding_message(to_phone, first_name, credits, one_time_code):
+    if credits is None:
+        credits = 0
+
+    if to_phone:
+        receiver_message = '{}, you have been registered for {}. You have {} {}. Your one-time code is {}. ' \
+                           'Download Sempo for Android: https://bit.ly/2UVZLqf' \
+            .format(
+            first_name,
+            current_app.config['PROGRAM_NAME'],
+            credits,
+            current_app.config['CURRENCY_NAME'],
+            one_time_code,
+            current_app.config['CURRENCY_NAME']
+        )
+
+        send_message(to_phone, receiver_message)
+
+
+def send_phone_verification_message(to_phone, one_time_code):
+    if to_phone:
+        reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
+
+        send_message(to_phone, reciever_message)
