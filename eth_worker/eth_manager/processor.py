@@ -98,22 +98,27 @@ class TransactionProcessor(object):
                             gas_limit=None,
                             gas_price=None):
 
+        chainId = self.ethereum_chain_id
+        gasPrice = gas_price or self.get_gas_price()
+
         signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
 
         nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
 
         def estimate_gas():
             try:
-                return unbuilt_transaction.estimateGas({})
-            except ValueError:
-                raise Exception(
-                    "Estimate Gas Failed. Likely due to msg.sender validation error. Remedy by specifying gas limit"
-                )
+                return unbuilt_transaction.estimateGas({
+                    'from': signing_wallet_obj.address,
+                    'gasPrice': gasPrice
+                })
+            except ValueError as e:
+                print("Estimate Gas Failed. Remedy by specifying gas limit.")
+                raise e
 
         metadata = {
-            'chainId': self.ethereum_chain_id,
+            'chainId': chainId,
             'gas': gas_limit or int(estimate_gas()*2),
-            'gasPrice': gas_price or self.get_gas_price(),
+            'gasPrice': gasPrice,
             'nonce': nonce
         }
 
@@ -289,7 +294,8 @@ class TransactionProcessor(object):
         return self.persistence_interface.get_serialised_task_from_id(id)
 
     def call_contract_function(self, contract_address: str, abi_type: str, function_name: str,
-                               args: Optional[tuple] = None, kwargs: Optional[dict] = None) -> Any:
+                               args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+                               signing_address: Optional[str] = None) -> Any:
         """
         The main call entrypoint for the transaction. This task completes quickly,
         so can be called synchronously.
@@ -312,7 +318,12 @@ class TransactionProcessor(object):
 
         function = function_list(*args, **kwargs)
 
-        call_data = function.call()
+        txn_meta = {'gasPrice': self.get_gas_price()}
+
+        if signing_address:
+            txn_meta['from'] = signing_address
+
+        call_data = function.call(txn_meta)
 
         if isinstance(call_data, bytes):
             return call_data.rstrip(b'\x00').decode()

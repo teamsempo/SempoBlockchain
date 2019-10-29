@@ -93,6 +93,8 @@ class Setup(object):
 
         if (email and password):
             self.api_token = self.get_api_token(email, password)
+            print("API TOKEN:")
+            print(self.api_token)
         elif api_token:
             self.api_token = api_token
         else:
@@ -101,16 +103,18 @@ class Setup(object):
 
 if __name__ == '__main__':
 
-    s = Setup(api_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzIxNzI1ODQsImlhdCI6MTU3MTU2Nzc4NCwiaWQiOjQsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.BGb3ZUS4Qhq9yh7mqtntiF44MpJhOBFou08O2bvJhjo|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NjY1NDU1MDYsImlhdCI6MTU2NjQ1OTA3NiwidXNlcl9pZCI6N30.fNPfyzLfAkONNjERuW8CMIM5QFTz5sC2Ksq87kOz7qM')
+    s = Setup(api_token=
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzI4MTkzMzUsImlhdCI6MTU3MjIxNDUzNSwiaWQiOjQsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.Q37sVq-bpzQFIf82QVqRptANRgF5p9eyQIZH4OEPNXw'
+    )
 
     result = s.deploy_contracts()
 
     reserve_token_id = result['data']['reserve_token']['id']
     cic1_token_id = result['data']['smart_token']['id']
 
-    s.test_exchange(reserve_token_id, cic1_token_id, 10000000000000*10**(-16))
+    s.test_exchange(reserve_token_id, cic1_token_id, 5*10**-8)
 
-    tt = 5
+    # tt = 5
 
     # reserve_token_id = s.register_blockchain_token(
     #     address=config.RESERVE_TOKEN_ADDRESS,
@@ -127,8 +131,8 @@ if __name__ == '__main__':
     #                                             symbol='CIC2',
     #                                             exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
 
-    org_id = s.create_organisation('Sempo19', reserve_token_id)
-    bind_response = s.bind_this_user_to_organisation(org_id)
-
-    print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))
-
+    # org_id = s.create_organisation('Sempo19', reserve_token_id)
+    # bind_response = s.bind_this_user_to_organisation(org_id)
+    #
+    # print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))
+    #

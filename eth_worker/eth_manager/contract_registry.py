@@ -15,7 +15,7 @@ class ContractRegistry(object):
         return self.w3.eth.contract(abi=abi, bytecode=bytecode)
 
     def get_contract_json(self, contract_name):
-        with open(f'./complete_compiled_contracts/{contract_name}.json') as json_file:
+        with open(f'./eth_manager/stripped_compiled_contracts/{contract_name}.json') as json_file:
             return json.load(json_file)
 
     def register_abi(self, name, abi):

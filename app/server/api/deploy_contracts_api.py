@@ -6,7 +6,12 @@ from server.utils.auth import requires_auth
 from server.models.token import Token
 from server.models.exchange import ExchangeContract
 from server.schemas import token_schema
-from server.utils.blockchain_tasks import deploy_reserve_network, deploy_and_fund_reserve_token, deploy_smart_token
+from server.utils.blockchain_tasks import (
+    deploy_reserve_network,
+    deploy_and_fund_reserve_token,
+    deploy_smart_token,
+    make_liquid_token_exchange
+)
 
 
 deploy_contracts_blueprint = Blueprint('deploy_contracts', __name__)
@@ -18,9 +23,11 @@ class DeployContractsAPI(MethodView):
     def post(self):
         # post_data = request.get_json()
 
-        name = 'CIC Test'
-        symbol = 'CIC1'
+        name = 'CIC Test 2'
+        symbol = 'CIC2'
         decimals = 18
+
+        reserve_ratio_ppm = int(250*10**3)
 
         deploying_address = current_app.config['MASTER_WALLET_ADDRESS']
 
@@ -28,20 +35,20 @@ class DeployContractsAPI(MethodView):
 
         reserve_token_address = deploy_and_fund_reserve_token(
             deploying_address=deploying_address,
-            fund_amount_wei=10000000
+            fund_amount_wei=1*10**18
         )
 
-        reserve_token = Token(address=reserve_token_address, name='RESERVE 1', symbol='R!1')
+        reserve_token = Token(address=reserve_token_address, name='RESERVE 2', symbol='RSV2')
         reserve_token.decimals = 18
         db.session.add(reserve_token)
 
         smart_token_result = deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=decimals,
-            issue_amount_wei=10,
+            issue_amount_wei=1000,
             contract_registry_address=registry_address,
             reserve_token_address=reserve_token_address,
-            reserve_ratio_ppm=int(500*10**3)
+            reserve_ratio_ppm=reserve_ratio_ppm
         )
 
         smart_token_address = smart_token_result['smart_token_address']
@@ -51,9 +58,13 @@ class DeployContractsAPI(MethodView):
         smart_token.decimals = decimals
         db.session.add(smart_token)
 
-        exchange_contract = ExchangeContract(blockchain_address=converter_address)
+        exchange_contract = ExchangeContract(
+            blockchain_address=converter_address,
+            contract_registry_blockchain_address=registry_address
+        )
+
         exchange_contract.add_reserve_token(reserve_token)
-        exchange_contract.add_token(smart_token)
+        exchange_contract.add_token(smart_token, converter_address, reserve_ratio_ppm)
 
         db.session.commit()
 
@@ -74,6 +85,8 @@ class DeployContractsAPI(MethodView):
                 }
             }
         }
+
+        print(response_object)
 
         return make_response(jsonify(response_object)), 201
 

@@ -82,8 +82,10 @@ def register_contract(self, contract_address, abi, contract_name=None, require_n
 
 
 @celery_app.task(**task_config)
-def call_contract_function(self, contract_address, function, abi_type=None, args=None, kwargs=None):
-    return blockchain_processor.call_contract_function(contract_address, abi_type, function, args, kwargs)
+def call_contract_function(self, contract_address, function, abi_type=None, args=None, kwargs=None,
+                           signing_address=None):
+    return blockchain_processor.call_contract_function(contract_address, abi_type, function, args, kwargs,
+                                                       signing_address)
 
 
 @celery_app.task(**task_config)

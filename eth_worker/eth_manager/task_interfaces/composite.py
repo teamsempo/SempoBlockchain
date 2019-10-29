@@ -60,7 +60,7 @@ def topup_if_required(address, wei_target_balance, wei_topup_threshold):
 
 
 def deploy_reserve_network(deploying_address):
-    gasPrice = 100000
+    gasPrice = 2500000000
 
     def deployer(contract_name, args=None):
         return deploy_contract_task(deploying_address, contract_name, args)
@@ -75,12 +75,6 @@ def deploy_reserve_network(deploying_address):
 
         task = await_transaction_result(task_id, timeout=timeout)
         contract_address = task['contract_address']
-
-        owner = synchronous_call(
-            contract_address=registry_contract_address,
-            contract_type='ContractRegistry',
-            func='owner'
-        )
 
         return transaction_task(
             signing_address=deploying_address,
@@ -112,7 +106,7 @@ def deploy_reserve_network(deploying_address):
     network_deploy = deployer(contract_name='BancorNetwork',
                               args=[registry_contract_address])
 
-    factory_deploy = deployer(contract_name='BancorConverterFactory')
+    # factory_deploy = deployer(contract_name='BancorConverterFactory')
 
     factory_upgrader_deploy = deployer(contract_name='BancorConverterUpgrader',
                                        args=[registry_contract_address])
@@ -122,7 +116,7 @@ def deploy_reserve_network(deploying_address):
     register_contract(formula_deploy, 'BANCOR_FORMULA')
     register_contract(nst_reg_deploy, 'NON_STANDARD_TOKEN_REGISTRY')
     register_contract(network_deploy, 'BANCOR_NETWORK')
-    register_contract(factory_deploy, 'BANCOR_CONVERTER_FACTORY')
+    # register_contract(factory_deploy, 'BANCOR_CONVERTER_FACTORY')
     register_contract(factory_upgrader_deploy, 'BANCOR_CONVERTER_UPGRADER')
 
     network_address = get_contract_address(network_deploy)
@@ -139,6 +133,31 @@ def deploy_reserve_network(deploying_address):
     res = await_transaction_result(set_signer_task, timeout=timeout)
 
     return registry_contract_address
+
+
+def deploy_and_fund_reserve_token(deploying_address, fund_amount_wei):
+
+    deploy_task_id = deploy_contract_task(
+        deploying_address,
+        'EtherToken',
+    )
+
+    reserve_token_address = get_contract_address(deploy_task_id)
+
+    send_eth_task_id = send_eth_task(deploying_address, fund_amount_wei, reserve_token_address)
+
+    res = await_transaction_result(send_eth_task_id, timeout=timeout)
+
+    balance = synchronous_call(
+        contract_address=reserve_token_address,
+        contract_type='EtherToken',
+        func='balanceOf',
+        args=[deploying_address]
+    )
+
+    print(f'Account balance is: {balance}')
+
+    return reserve_token_address
 
 
 def deploy_smart_token(
@@ -169,7 +188,7 @@ def deploy_smart_token(
     deploy_converter_task_id = deploy_contract_task(
         deploying_address,
         'BancorConverter',
-        [smart_token_address, contract_registry_address, 0, reserve_token_address, reserve_ratio_ppm]
+        [smart_token_address, contract_registry_address, 30000, reserve_token_address, reserve_ratio_ppm]
     )
 
     converter_address = get_contract_address(deploy_converter_task_id)
@@ -185,8 +204,26 @@ def deploy_smart_token(
 
     transaction_task(
         signing_address=deploying_address,
-        contract_address=smart_token_address,
+        contract_address=reserve_token_address,
         contract_type='EtherToken',
+        func='approve',
+        args=[converter_address, 1000000*10*18],
+        gas_limit=100000
+    )
+
+    transaction_task(
+        signing_address=deploying_address,
+        contract_address=smart_token_address,
+        contract_type='SmartToken',
+        func='approve',
+        args=[converter_address, 1000000*10**18],
+        gas_limit=100000
+    )
+
+    transfer_ownership_id = transaction_task(
+        signing_address=deploying_address,
+        contract_address=smart_token_address,
+        contract_type='SmartToken',
         func='transferOwnership',
         args=[converter_address],
         gas_limit=100000
@@ -197,44 +234,10 @@ def deploy_smart_token(
         contract_address=converter_address,
         contract_type='BancorConverter',
         func='acceptTokenOwnership',
-        gas_limit=100000
-    )
-
-    transaction_task(
-        signing_address=deploying_address,
-        contract_address=reserve_token_address,
-        contract_type='EtherToken',
-        func='approve',
-        args=[converter_address, 1*10*40],
-        gas_limit=100000
-    )
-
-    transaction_task(
-        signing_address=deploying_address,
-        contract_address=smart_token_address,
-        contract_type='SmartToken',
-        func='approve',
-        args=[converter_address, 1 * 10 * 40],
-        gas_limit=100000
+        gas_limit=100000,
+        dependent_on_tasks=[transfer_ownership_id]
     )
 
     return {'smart_token_address': smart_token_address,
             'converter_address': converter_address}
-
-
-def deploy_and_fund_reserve_token(deploying_address, fund_amount_wei):
-
-    deploy_task_id = deploy_contract_task(
-        deploying_address,
-        'EtherToken',
-    )
-
-    reserve_token_address = get_contract_address(deploy_task_id)
-
-    send_eth_task_id = send_eth_task(deploying_address, fund_amount_wei, reserve_token_address)
-
-    res = await_transaction_result(send_eth_task_id, timeout=timeout)
-
-    return reserve_token_address
-
 

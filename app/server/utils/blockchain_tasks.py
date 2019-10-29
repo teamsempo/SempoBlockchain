@@ -1,11 +1,17 @@
 from typing import Optional, List, Dict
 from functools import partial
 from flask import current_app
-from server import celery_app
 from eth_keys import keys
 from eth_utils import keccak
 import os
 import random
+
+from server import celery_app
+from server.utils.exchange import (
+    bonding_curve_tokens_to_reserve,
+    bonding_curve_reserve_to_tokens,
+    bonding_curve_token1_to_token2
+)
 
 
 def eth_endpoint(endpoint):
@@ -35,7 +41,7 @@ def execute_synchronous_task(signature):
     return execute_synchronous_celery(signature)
 
 
-def synchronous_call(contract_address, contract_type, func, args=None):
+def synchronous_call(contract_address, contract_type, func, args=None, signing_address=None):
     call_sig = celery_app.signature(
         eth_endpoint('call_contract_function'),
         kwargs={
@@ -43,6 +49,7 @@ def synchronous_call(contract_address, contract_type, func, args=None):
             'abi_type': contract_type,
             'function': func,
             'args': args,
+            'signing_address': signing_address
         })
 
     return execute_synchronous_celery(call_sig)
@@ -51,6 +58,7 @@ def synchronous_call(contract_address, contract_type, func, args=None):
 def synchronous_transaction_task(signing_address,
                                  contract_address, contract_type,
                                  func, args=None,
+                                 gas_limit=None,
                                  dependent_on_tasks=None):
 
     signature = celery_app.signature(
@@ -61,6 +69,7 @@ def synchronous_transaction_task(signing_address,
             'abi_type': contract_type,
             'function': func,
             'args': args,
+            'gas_limit': gas_limit,
             'dependent_on_tasks': dependent_on_tasks
         })
 
@@ -159,8 +168,9 @@ def make_approval(signing_address, token,
         dependent_on_tasks=dependent_on_tasks
     )
 
+
 def make_liquid_token_exchange(signing_address,
-                               exchange_contract_address,
+                               exchange_contract,
                                from_token,
                                to_token,
                                reserve_token,
@@ -169,7 +179,7 @@ def make_liquid_token_exchange(signing_address,
     """
     Uses a Liquid Token Contract network to exchange between two ERC20 smart tokens.
     :param signing_address: address of wallet signing txn
-    :param exchange_contract_address: the address of the one of the convert contracts used in the network
+    :param exchange_contract: the base convert contract used in the network
     :param from_token: the token being exchanged from
     :param to_token: the token being exchanged to
     :param reserve_token: the reserve token used as a connector in the network
@@ -182,7 +192,7 @@ def make_liquid_token_exchange(signing_address,
 
     return synchronous_transaction_task(
         signing_address=signing_address,
-        contract_address=exchange_contract_address,
+        contract_address=exchange_contract.address,
         contract_type='bancor_converter',
         func='quickConvert',
         args=[
@@ -194,27 +204,88 @@ def make_liquid_token_exchange(signing_address,
     )
 
 
-def get_conversion_amount(exchange_contract_address, from_token, to_token, reserve_token, from_amount):
+def get_conversion_amount(exchange_contract, from_token, to_token, from_amount, signing_address=None):
     """
     Estimates the conversion amount received from a Liquid Token Contract network
-    :param exchange_contract_address: the address of the one of the convert contracts used in the network
+    :param exchange_contract: the base convert contract used in the network
     :param from_token: the token being exchanged from
     :param to_token: the token being exchanged to
-    :param reserve_token: the reserve token used as a connector in the network
     :param from_amount: the amount of the token being exchanged from
     """
+
+    def get_token_exchange_details(token):
+        subexchange_details = exchange_contract.get_subexchange_details(token.address)
+        subexchange_address = subexchange_details['subexchange_address']
+
+        token_supply = synchronous_call(
+            contract_address=token.address,
+            contract_type='ERC20Token',
+            func='totalSupply'
+        )
+
+        subexchange_reserve = synchronous_call(
+            contract_address=reserve_token.address,
+            contract_type='ERC20Token',
+            func='balanceOf',
+            args=[subexchange_address]
+        )
+
+        subexchange_reserve_ratio_ppm = subexchange_details['subexchange_reserve_ratio_ppm']
+
+        return token_supply, subexchange_reserve, subexchange_reserve_ratio_ppm
+
+    reserve_token = exchange_contract.reserve_token
+
+    from_is_reserve = from_token == reserve_token
+    to_is_reserve = to_token == reserve_token
+
+    if (not from_is_reserve) and (not to_is_reserve):
+
+        (from_token_supply,
+         from_subexchange_reserve,
+         from_subexchange_reserve_ratio_ppm) = get_token_exchange_details(from_token)
+
+        (to_token_supply,
+         to_subexchange_reserve,
+         to_subexchange_reserve_ratio_ppm) = get_token_exchange_details(to_token)
+
+        to_amount = bonding_curve_token1_to_token2(from_token_supply, to_token_supply,
+                                                   from_subexchange_reserve, to_subexchange_reserve,
+                                                   from_subexchange_reserve_ratio_ppm, to_subexchange_reserve_ratio_ppm,
+                                                   from_amount)
+
+    elif not from_is_reserve:
+        (from_token_supply,
+         from_subexchange_reserve,
+         from_subexchange_reserve_ratio_ppm) = get_token_exchange_details(from_token)
+
+        to_amount = bonding_curve_tokens_to_reserve(from_token_supply,
+                                                    from_subexchange_reserve,
+                                                    from_subexchange_reserve_ratio_ppm,
+                                                    from_amount)
+
+    else:
+        (to_token_supply,
+         to_subexchange_reserve,
+         to_subexchange_reserve_ratio_ppm) = get_token_exchange_details(to_token)
+
+        to_amount = bonding_curve_reserve_to_tokens(to_token_supply,
+                                                    to_subexchange_reserve,
+                                                    to_subexchange_reserve_ratio_ppm,
+                                                    from_amount)
 
     path = _get_path(from_token, to_token, reserve_token)
 
     raw_conversion_amount = synchronous_call(
-        contract_address=exchange_contract_address,
+        contract_address=exchange_contract.blockchain_address,
         contract_type='bancor_converter',
         func='quickConvert',
         args=[
             path,
             from_token.system_amount_to_token(from_amount),
             1
-        ])
+        ],
+        signing_address=signing_address)
 
     return to_token.token_amount_to_system(raw_conversion_amount)
 
