@@ -16,8 +16,7 @@ class UssdMenu(ModelBase):
         but this system is really bad since we always need 
         all languages defined for all new menu items, no graceful fallback 
     """
-    display_text_en = db.Column(db.String, nullable=False)
-    display_text_sw = db.Column(db.String, nullable=False)
+    display_key = db.Column(db.String, nullable=False)
 
     @staticmethod
     def find_by_name(name: str) -> "UssdMenu":
