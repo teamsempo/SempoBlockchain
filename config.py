@@ -272,6 +272,7 @@ WYRE_HOST_V2 = specific_parser['WYRE']['host_v2']
 IPIFY_API_KEY = common_parser['IPIFY']['api_key']
 
 INTERCOM_ANDROID_SECRET = common_parser['INTERCOM']['android_secret']
+INTERCOM_WEB_SECRET = common_parser['INTERCOM']['web_secret']
 
 SLACK_HOST      = specific_parser['SLACK']['host']
 SLACK_API_TOKEN = common_parser['SLACK']['token']
