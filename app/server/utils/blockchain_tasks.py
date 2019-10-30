@@ -234,6 +234,8 @@ def get_conversion_amount(exchange_contract, from_token, to_token, from_amount, 
 
         return token_supply, subexchange_reserve, subexchange_reserve_ratio_ppm
 
+    raw_from_amount = from_token.system_amount_to_token(from_amount)
+
     reserve_token = exchange_contract.reserve_token
 
     from_is_reserve = from_token == reserve_token
@@ -252,7 +254,7 @@ def get_conversion_amount(exchange_contract, from_token, to_token, from_amount, 
         to_amount = bonding_curve_token1_to_token2(from_token_supply, to_token_supply,
                                                    from_subexchange_reserve, to_subexchange_reserve,
                                                    from_subexchange_reserve_ratio_ppm, to_subexchange_reserve_ratio_ppm,
-                                                   from_amount)
+                                                   raw_from_amount)
 
     elif not from_is_reserve:
         (from_token_supply,
@@ -262,7 +264,7 @@ def get_conversion_amount(exchange_contract, from_token, to_token, from_amount, 
         to_amount = bonding_curve_tokens_to_reserve(from_token_supply,
                                                     from_subexchange_reserve,
                                                     from_subexchange_reserve_ratio_ppm,
-                                                    from_amount)
+                                                    raw_from_amount)
 
     else:
         (to_token_supply,
@@ -272,22 +274,24 @@ def get_conversion_amount(exchange_contract, from_token, to_token, from_amount, 
         to_amount = bonding_curve_reserve_to_tokens(to_token_supply,
                                                     to_subexchange_reserve,
                                                     to_subexchange_reserve_ratio_ppm,
-                                                    from_amount)
+                                                    raw_from_amount)
 
-    path = _get_path(from_token, to_token, reserve_token)
+    to_amount = round(to_amount)
 
-    raw_conversion_amount = synchronous_call(
-        contract_address=exchange_contract.blockchain_address,
-        contract_type='bancor_converter',
-        func='quickConvert',
-        args=[
-            path,
-            from_token.system_amount_to_token(from_amount),
-            1
-        ],
-        signing_address=signing_address)
+    # path = _get_path(from_token, to_token, reserve_token)
+    #
+    # to_amount = synchronous_call(
+    #     contract_address=exchange_contract.blockchain_address,
+    #     contract_type='bancor_converter',
+    #     func='quickConvert',
+    #     args=[
+    #         path,
+    #         from_token.system_amount_to_token(from_amount),
+    #         1
+    #     ],
+    #     signing_address=signing_address)
 
-    return to_token.token_amount_to_system(raw_conversion_amount)
+    return to_token.token_amount_to_system(to_amount)
 
 
 def _get_path(from_token, to_token, reserve_token):
