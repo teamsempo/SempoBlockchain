@@ -1,0 +1,136 @@
+sw:
+  kenya:
+    initial_language_selection: >
+      CON Welcome to Sarafu
+      1. English
+      2. Kiswahili
+      3. Help
+    initial_pin_menu: >
+      CON Tafadhali weka PIN ili kudhibiti akaunti yako.
+      0. Nyuma
+    initial_pin_confirmation: >
+      CON Weka PIN yako tena
+      0. Nyuma
+    start: >
+      CON Karibu Sarafu
+      1. Tuma
+      2. Akaunti Yangu
+      3. Sokoni
+      4. Badilisha
+      5. Usaidizi
+    send_enter_recipient: >
+      CON Weka nambari ya simu
+      0. Nyuma
+    send_token_amount: >
+      CON Weka kiwango
+      0. Nyuma
+    send_token_reason: >
+      CON Chagua kusudi la malipo
+      1. Chakula
+      2. Maji
+      3. Kuni/makaa/mafuta/stima
+      4. Elimu
+      5. Afya
+      6. Uchuuzi
+      7. Mazingira
+      8. Usafiri
+      9. Mfanyakazi
+      10. Nyingine
+      0. Nyuma
+    send_token_reason_other: >
+      CON Fafanua kusudi zaidi
+      0. Nyuma
+    send_token_pin_authorization: >
+      CON Weka nambari ya siri. %remaining_attempts%
+      0. Nyuma
+    send_token_confirmation: >
+      CON Tuma %transaction_amount% %token_name% kwa %recipient_phone%
+      1. Thibitisha
+      2. Futa
+      0. Nyuma
+    directory_listing: >
+      CON Chagua unachotaka Sokoni
+      1. Chakula
+      2. Maji
+      3. Kuni/makaa/mafuta/stima
+      4. Elimu
+      5. Afya
+      6. Duka la jumla
+      7. Mazingira
+      8. Usafiri
+      9. Mfanyakazi
+    complete: END Ombi lako limetumwa. Utapokea uthibitishaji wa SMS kwa muda mfupi.
+    account_management: >
+      CON Akaunti yangu
+      1. Biashara Yangu
+      2. Chagua lugha utakayotumia
+      3. Angalia salio
+      4. Badilisha nambari ya siri
+      5. Ondoka Sokoni
+      0. Nyuma
+    my_business: >
+      CON Biashara Yangu
+      1. Angalia biashara
+      2. Badilisha biashara
+      0. Nyuma
+    about_my_business: END %user_bio%
+    change_my_business_prompt: >
+      CON Tafadhali weka bidhaa ama huduma unauza
+      0. Nyuma
+    balance_inquiry_pin_authorization: >
+      CON Tafadhali ingiza PIN yako. %remaining_attempts%
+      0. Nyuma
+    choose_language: >
+      CON Chagua lugha
+      1. Kingereza
+      2. Kiswahili
+      0. Nyuma
+    opt_out_of_market_place_pin_authorization: >
+      CON Tafadhali weka PIN yako. %remaining_attempts%
+      0. Nyuma
+    current_pin: CON Weka nambari ya siri. %remaining_attempts%
+    new_pin: >
+      CON Weka nambari ya siri mpya
+      0. Nyuma
+    new_pin_confirmation: >
+      CON Rejelea nambari ya siri mpya
+      0. Nyuma
+    help: END Kwa usaidizi piga simu %support_phone%
+    exchange_token: >
+      CON Badilisha
+      1. Kiwango cha ubadilishaji
+      2. Badilisha
+      0. Nyuma
+    exchange_rate_pin_authorization: >
+      CON Tafadhali ingiza PIN yako. %remaining_attempts%
+      0. Nyuma
+    request_exchange_rate: END Ombi lako la kiwango cha ubadilishaji, linashughulikiwa. Utapokea ujumbe wa SMS kwa muda mfupi.
+    exchange_token_agent_number_entry: >
+      CON Weka nambari ya simu ya Agent
+      0. Nyuma
+    exchange_token_amount_entry: >
+      CON Weka kiwango (40 au zaidi)
+      0. Nyuma
+    exchange_token_pin_authorization: >
+      CON Weka nambari ya siri. %remaining_attempts%
+      0. Nyuma
+    exchange_token_confirmation: >
+      CON Badilisha %exchange_amount% %token_name% kutoka kwa Agent %agent_phone%
+      1. Thibitisha
+      2. Futa
+      0. Nyuma
+    exit: END Asante kwa kutumia huduma.
+    exit_invalid_menu_option: END Chaguo lako sio sahihi. Kwa usaidizi piga simu %support_phone%
+    exit_invalid_pin: END PIN uliobonyeza sio sahihi. PIN lazima iwe na nambari nne na lazima iwe tofauti na pin yako ya sasa. Kwa usaidizi piga simu %support_phone%
+    exit_pin_mismatch: END PIN mpya na udhibitisho wa pin mpya hailingani. Tafadhali jaribu tena. Kwa usaidizi piga simu %support_phone%
+    exit_pin_blocked: END PIN yako imefungwa. Kwa usaidizi tafadhali piga simu %support_phone%
+    exit_invalid_request: END Chaguo si sahihi
+    exit_invalid_input: END Chaguo lako halipatikani. Hakuna kilichochaguliwa
+    exit_recipient_not_found: END Mpokeaji hakupatikana
+    exit_invalid_recipient: END Mpokeaji wa nambari hapatikani au sio sahihi
+    exit_use_exchange_menu: END Mpoekeaji wa nambari ni agent. Ili kubadilisha, tumia ubadilishaji
+    exit_invalid_token_agent: END Agent wa nambari hapatikani au sio sahihi
+    exit_not_registered: >
+      END Haujasajiliwa kwa hii huduma. Kusajili tuma: jina, nambari ya simu, kitambulisho, eneo, na biashara yako. Kwa 0757628885
+    exit_invalid_exchange_amount: END Kiwango ulichoweka hakitoshi. Tafadhali weka kiwango cha 40 au zaidi.
+

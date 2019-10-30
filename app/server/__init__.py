@@ -13,6 +13,7 @@ import africastalking
 from datetime import datetime
 import redis
 import config
+import i18n
 
 import sys
 import os
@@ -38,6 +39,10 @@ celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
                     backend=config.REDIS_URL,
                     task_serializer='json')
+
+dirname = os.path.dirname(__file__)
+i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
+i18n.set('fallback', config.LOCALE_FALLBACK)
 
 
 def encrypt_string(raw_string):
