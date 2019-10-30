@@ -13,13 +13,15 @@ from server.models.user import User
 from server.models.ussd import UssdSession
 from server.utils.phone import proccess_phone_number, send_message
 from server.utils.i18n import i18n_for
-from server.utils.user import set_custom_attributes
+from server.utils.user import set_custom_attributes, change_initial_pin
 
 
 def get_user(query_filter):
     user = User.query.filter_by(phone=proccess_phone_number(phone_number=query_filter, region="KE")).first()
     if user is not None:
         return user
+    else:
+        raise Exception('User not found.')
 
 
 class KenyaUssdStateMachine(Machine):
@@ -44,6 +46,7 @@ class KenyaUssdStateMachine(Machine):
               'current_pin',
               'new_pin',
               'new_pin_confirmation',
+              'complete_initial_pin_change',
               'my_business',
               'about_my_business',
               'change_my_business_prompt',
@@ -113,6 +116,9 @@ class KenyaUssdStateMachine(Machine):
             pins_match = True
         return pins_match
 
+    def complete_initial_pin_change(self, user_input):
+        change_initial_pin(user=self.user, new_pin=user_input)
+
     def recipient_exists(self, phone_number):
         pass
 
@@ -124,7 +130,9 @@ class KenyaUssdStateMachine(Machine):
 
     # TODO: [Philip] Add community token when available
     def upsell_unregistered_recipient(self, user_input):
-        upsell_message = f"{self.user.first_name} {self.user.last_name} amejaribu kukutumia {self.user} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
+        upsell_message = f"{self.user.first_name} {self.user.last_name} amejaribu kukutumia {self.user} lakini " \
+                         f"hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya " \
+                         f"biashara yako kwa 0757628885. "
         send_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
 
     def save_transaction_amount(self, user_input):
@@ -452,7 +460,8 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'new_pin_confirmation',
              'dest': 'complete',
-             'conditions': 'new_pins_match'},
+             'conditions': 'new_pins_match',
+             'after': 'complete_initial_pin_change'},
             {'trigger': 'feed_char',
              'source': 'new_pin_confirmation',
              'dest': 'exit_pin_mismatch'}

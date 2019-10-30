@@ -590,3 +590,36 @@ def send_phone_verification_message(to_phone, one_time_code):
         reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
 
         send_message(to_phone, reciever_message)
+
+
+def change_pin(user: User, new_pin):
+    user.pin = new_pin
+    db.session.commit()
+    send_pin_change_messages(user, new_pin)
+
+
+def change_initial_pin(user: User, new_pin):
+    user.pin = new_pin
+    user.is_activated = True
+    # TODO [Philip]: Find out whether reset token should be deleted.
+    db.session.commit()
+    send_pin_change_messages(user, new_pin)
+
+
+def send_pin_change_messages(user: User, new_pin):
+    # TODO [Philip]: Find out if there is a better way to check whether commit succeeded
+    if user.pin == new_pin:
+        if user.preferred_language == 'sw_KE':
+            send_message(user.phone, 'PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0799 100 200 kwa usaidizi.')
+        else:
+            send_message(user.phone,
+                         'Your Sarafu Network PIN change failed. Please call 0799 100 200 to for assistance.')
+    else:
+        if user.preferred_language == 'sw_KE':
+            send_message(user.phone, 'PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0799 100 200 kwa usaidizi.')
+        else:
+            send_message(user.phone,
+                         'Your Sarafu Network PIN change failed. Please call 0799 100 200 to for assistance.')
+
+
+

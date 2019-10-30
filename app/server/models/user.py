@@ -57,6 +57,9 @@ class User(ManyOrgBase, ModelBase):
     secret = db.Column(db.String())
     _TFA_secret = db.Column(db.String(128))
     TFA_enabled = db.Column(db.Boolean, default=False)
+    _encrypted_pin = db.Column(db.String(128))
+
+    failed_pin_attempts = db.Column(db.Integer, default=0)
 
     default_currency = db.Column(db.String())
 
@@ -499,9 +502,16 @@ class User(ManyOrgBase, ModelBase):
         is_resetting = len(self.password_reset_tokens) > 0
         return is_resetting
 
-    # TODO(ussd): change to a field once we figure out what's the deal with resetting
     def pin_failed_attempts(self):
-        return 0
+        return self.failed_pin_attempts
+
+    @property
+    def pin(self):
+        return decrypt_string(self._encrypted_pin)
+
+    @pin.setter
+    def pin(self, pin):
+        self._encrypted_pin = encrypt_string(pin)
 
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)

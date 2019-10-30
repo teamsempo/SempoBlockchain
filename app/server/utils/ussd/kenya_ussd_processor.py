@@ -32,7 +32,7 @@ class KenyaUssdProcessor:
                     return UssdMenu.find_by_name('initial_pin_entry')
             else:
                 return UssdMenu.find_by_name('start')
-            
+
     @staticmethod
     def next_state(session: UssdSession, user_input: str) -> UssdMenu:
         state_machine = KenyaUssdStateMachine(session)
@@ -71,10 +71,31 @@ class KenyaUssdProcessor:
                 # TODO(ussd): replace this with i18n placeholders
                 if user.preferred_language == 'sw_KE':
                     # TODO(ussd): pin_failed_attempts isn't a thing yet!
-                    replacements.append(['%remaining_attempts%', "Una majaribio {} yaliyobaki.".format(3 - user.pin_failed_attempts)])
+                    replacements.append(
+                        ['%remaining_attempts%', "Una majaribio {} yaliyobaki.".format(3 - user.pin_failed_attempts)])
                 else:
-                    replacements.append(['%remaining_attempts%', "You have {} attempts remaining.".format(3 - user.pin_failed_attempts)])
+                    replacements.append(['%remaining_attempts%',
+                                         "You have {} attempts remaining.".format(3 - user.pin_failed_attempts)])
             else:
                 replacements.append(['%remaining_attempts%', ''])
 
         return reduce(lambda text, r: text.replace(r[0], r[1]), replacements, display_text)
+
+    @staticmethod
+    def authorize_pin(user: User, pin):
+        authorized = False
+        if user.pin_failed_attempts == 3:
+            return False
+        if user.pin_failed_attempts < 3:
+            authorized = user.pin = pin
+            if authorized:
+                if user.pin_failed_attempts > 0:
+                    user.pin_failed_attempts = 0
+                    db.session.commit()
+            else:
+                user.pin_failed_attempts += 1
+                db.session.commit()
+        return authorized
+
+
+
