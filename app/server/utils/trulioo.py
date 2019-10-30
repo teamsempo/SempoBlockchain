@@ -1,6 +1,6 @@
 import requests, config
 from requests.auth import HTTPBasicAuth
-from server.utils.phone import send_generic_message
+from server.utils.phone import send_message
 from server.models.user import User
 
 def get_callback_url():
@@ -54,7 +54,7 @@ def handle_trulioo_response(response=None, kyc_application=None):
         kyc_application.kyc_status = 'VERIFIED'
 
         if phone is not None:
-            send_generic_message(to_phone=phone, message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
+            send_message(to_phone=phone, message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
 
     if status == 'nomatch' or status == 'missing':
         # currently only handle 1 datasource (i.e. document)
@@ -69,7 +69,7 @@ def handle_trulioo_response(response=None, kyc_application=None):
                 kyc_application.kyc_actions = ['retry']
 
                 if phone is not None:
-                    send_generic_message(to_phone=phone,
+                    send_message(to_phone=phone,
                                          message="Unfortunately, we couldn't verify your identity with the documents provided. Please open the Sempo app to retry.")
 
         for key in response['Record']['DatasourceResults'][0]['AppendedFields']:
@@ -83,7 +83,7 @@ def handle_trulioo_response(response=None, kyc_application=None):
                         kyc_application.kyc_actions = ['support']
 
                         if phone is not None:
-                            send_generic_message(to_phone=phone,
+                            send_message(to_phone=phone,
                                                  message="Unfortunately, we couldn't verify your identity with the documents provided. Please contact Sempo customer support in the app.")
                     else:
                         # document has been rejected, try again, send text.
@@ -91,7 +91,7 @@ def handle_trulioo_response(response=None, kyc_application=None):
                         kyc_application.kyc_actions = ['retry']
 
                         if phone is not None:
-                            send_generic_message(to_phone=phone,
+                            send_message(to_phone=phone,
                                                  message="Unfortunately, we couldn't verify your identity with the documents provided. Please open the Sempo app to retry.")
 
     # return verification status, document Authenticity Reasons and OCR appended fields

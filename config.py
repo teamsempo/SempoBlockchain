@@ -201,6 +201,9 @@ TWILIO_PHONE = specific_parser['TWILIO']['phone']
 MESSAGEBIRD_KEY = specific_parser['MESSAGEBIRD']['key']
 MESSAGEBIRD_PHONE = specific_parser['MESSAGEBIRD']['phone']
 
+AT_USERNAME = specific_parser["AFRICASTALKING"]["username"]
+AT_API_KEY = specific_parser["AFRICASTALKING"]["api_key"]
+
 try:
     from ecdsa import SigningKey, NIST192p
     ECDSA_SIGNING_KEY = SigningKey.from_string(ECDSA_SECRET, curve=NIST192p)

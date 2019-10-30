@@ -147,12 +147,6 @@ def create_credit_transfer(new_credit_transfer):
 
 
 @pytest.fixture(scope='function')
-def proccess_phone_number(test_client):
-    from server.utils.phone import proccess_phone_number
-    return proccess_phone_number
-
-
-@pytest.fixture(scope='function')
 def save_device_info(test_client, init_database, create_transfer_account_user):
     from server.utils.user import save_device_info
     return save_device_info
