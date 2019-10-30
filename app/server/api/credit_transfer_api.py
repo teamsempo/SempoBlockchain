@@ -278,13 +278,13 @@ class CreditTransferAPI(MethodView):
                     transfer = make_payment_transfer(
                         transfer_amount, send_user=sender_user, receive_user=recipient_user, transfer_use=transfer_use, uuid=uuid)
 
-                elif transfer_type == 'RECLAIM':
+                elif transfer_type == 'RECLAMATION':
                     transfer = make_payment_transfer(
-                        transfer_amount, send_user=sender_user, uuid=uuid, is_reclaim=True)
+                        transfer_amount, send_user=sender_user, uuid=uuid, transfer_subtype='RECLAMATION')
 
                 elif transfer_type == 'DISBURSEMENT':
                     transfer = make_payment_transfer(
-                        transfer_amount, receive_user=recipient_user, uuid=uuid, is_disbursement=True)
+                        transfer_amount, receive_user=recipient_user, uuid=uuid, transfer_subtype='DISBURSEMENT')
 
                 elif transfer_type == 'BALANCE':
                     transfer = make_target_balance_transfer(target_balance, recipient_user, uuid=uuid)

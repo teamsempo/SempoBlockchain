@@ -72,6 +72,5 @@ me_blueprint.add_url_rule(
 me_blueprint.add_url_rule(
     '/poli_payments/',
     view_func=PoliPaymentsAPI.as_view('poli_payments_view'),
-    methods=['GET', 'POST'],
-    defaults={'reference': None}
+    methods=['PUT', 'POST'],
 )

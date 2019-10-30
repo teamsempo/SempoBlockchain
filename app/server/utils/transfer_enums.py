@@ -1,5 +1,6 @@
 import enum
 
+
 class TransferTypeEnum(enum.Enum):
     PAYMENT     = "PAYMENT"
     DEPOSIT     = "DEPOSIT"
@@ -7,12 +8,23 @@ class TransferTypeEnum(enum.Enum):
     EXCHANGE    = "EXCHANGE"
     FEE         = "FEE"
 
+
+class TransferSubTypeEnum(enum.Enum):
+    DISBURSEMENT    = 'DISBURSEMENT'
+    RECLAMATION     = 'RECLAMATION'
+    AGENT_IN        = 'AGENT_IN'
+    AGENT_OUT       = 'AGENT_OUT'
+    FEE             = 'FEE'
+    INCENTIVE       = 'INCENTIVE'
+
+
 class TransferModeEnum(enum.Enum):
     NFC = "NFC"
     SMS = "SMS"
     QR  = "QR"
     INTERNAL = "INTERNAL"
     OTHER    = "OTHER"
+
 
 class TransferStatusEnum(enum.Enum):
     PENDING = 'PENDING'

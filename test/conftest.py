@@ -125,7 +125,7 @@ def create_transfer_account(new_transfer_account):
 @pytest.fixture(scope='module')
 def new_disbursement(create_transfer_account_user):
     from server.utils.credit_transfers import make_payment_transfer
-    disbursement = make_payment_transfer(100, receive_transfer_account=create_transfer_account_user, is_disbursement=True)
+    disbursement = make_payment_transfer(100, receive_transfer_account=create_transfer_account_user, transfer_subtype='DISBURSEMENT')
     return disbursement
 
 @pytest.fixture(scope='function')

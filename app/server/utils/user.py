@@ -344,7 +344,6 @@ def proccess_create_or_modify_user_request(attribute_dict,
     but here it's one layer down because there's multiple entry points for 'create user':
     - The admin api
     - The register api
-
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
     :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
@@ -526,7 +525,7 @@ def proccess_create_or_modify_user_request(attribute_dict,
 
     if custom_initial_disbursement:
         disbursement = CreditTransferUtils.make_payment_transfer(
-            custom_initial_disbursement, organisation.token, receive_user=user, is_disbursement=True)
+            custom_initial_disbursement, organisation.token, receive_user=user, transfer_subtype='DISBURSEMENT')
 
     # Location fires an async task that needs to know user ID
     db.session.flush()

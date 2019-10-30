@@ -18,13 +18,13 @@ from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.blockchain_tasks import get_wallet_balance
-from server.utils.transfer_enums import TransferTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 def calculate_transfer_stats(total_time_series=False):
 
     total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
         .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT)\
-        .filter(CreditTransfer.transfer_metadata['reason'].astext == 'is_disbursement').first().total
+        .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).first().total
 
     total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
         .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
@@ -59,7 +59,7 @@ def calculate_transfer_stats(total_time_series=False):
                                                  func.date_trunc('day', CreditTransfer.created).label('date')) \
         .group_by(func.date_trunc('day', CreditTransfer.created)) \
         .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT) \
-        .filter(CreditTransfer.transfer_metadata['reason'].astext == 'is_disbursement').all()
+        .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).all()
 
     try:
         master_wallet_balance = cached_funds_available()
@@ -111,9 +111,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
         save to cache: [funds available], [ID of highest transfer used in cache], [cache creation datetime]
     ELSE
         return: [funds available at last cache] - [all non-failed transfers since last cache]
-
     Max Txn ID is a simple way to determine whether txn was used in cache or not, and thus needs to be accounted for
-
     :param allowed_cache_age_seconds: how long between checking the blockchain for external funds added or removed
     :return: amount of funds available
     """
@@ -153,7 +151,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
 
     new_dibursements     = (CreditTransfer.query
                             .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT)
-                            .filter(CreditTransfer.transfer_metadata['reason'].astext == 'is_disbursement')
+                            .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT)
                             .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
                             .filter(CreditTransfer.id > highest_transfer_id_checked)
                             .filter(CreditTransfer.created >
@@ -376,11 +374,9 @@ def make_payment_transfer(transfer_amount,
                           require_sufficient_balance=True,
                           automatically_resolve_complete=True,
                           uuid=None,
-                          is_disbursement=False,
-                          is_reclaim=False):
+                          transfer_subtype=None):
     """
     This is used for internal transfers between Sempo wallets.
-
     :param transfer_amount:
     :param send_user:
     :param send_transfer_account:
@@ -393,25 +389,24 @@ def make_payment_transfer(transfer_amount,
     :param require_sufficient_balance:
     :param automatically_resolve_complete:
     :param uuid:
-    :param is_disbursement: Bool. NGO disbursement
-    :param is_reclaim: Bool. NGO reclaim
+    :param transfer_subtype: accepts TransferSubType str.
     :return:
     """
+    if transfer_subtype in TransferSubTypeEnum.__members__:
+        if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
+            require_sender_approved = False
+            require_recipient_approved = False
+            require_sufficient_balance = False
+            # primary NGO wallet to disburse from
+            send_transfer_account = receive_user.default_organisation.org_level_transfer_account
 
-    # used for showing NGO ui
-    transfer_metadata = None
-    if is_disbursement is True:
-        require_sender_approved = False
-        require_recipient_approved = False
-        require_sufficient_balance = False
-        # primary NGO wallet to disburse from
-        send_transfer_account = receive_user.default_organisation.org_level_transfer_account
-        transfer_metadata = {'reason': 'is_disbursement'}
-    if is_reclaim is True:
-        require_sender_approved = False
-        # primary NGO wallet to reclaim to
-        receive_transfer_account = send_user.default_organisation.org_level_transfer_account
-        transfer_metadata = {'reason': 'is_reclaim'}
+        if transfer_subtype is TransferSubTypeEnum.RECLAMATION:
+            require_sender_approved = False
+            # primary NGO wallet to reclaim to
+            receive_transfer_account = send_user.default_organisation.org_level_transfer_account
+
+        if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
+            send_transfer_account = receive_transfer_account.get_float_transfer_account()
 
     transfer = CreditTransfer(transfer_amount,
                               token=token,
@@ -420,7 +415,7 @@ def make_payment_transfer(transfer_amount,
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
-                              transfer_metadata=transfer_metadata)
+                              transfer_subtype=transfer_subtype)
 
     make_cashout_incentive_transaction = False
 
@@ -468,8 +463,7 @@ def make_payment_transfer(transfer_amount,
         try:
             incentive_amount = round(transfer_amount * current_app.config['CASHOUT_INCENTIVE_PERCENT'] / 100)
 
-            # todo: ensure this comes from Sempo float
-            make_payment_transfer(incentive_amount, receive_user=receive_user, is_disbursement=True)
+            make_payment_transfer(incentive_amount, receive_user=receive_user, transfer_subtype='INCENTIVE')
 
         except Exception as e:
             print(e)
@@ -488,7 +482,6 @@ def make_withdrawal_transfer(transfer_amount,
                              uuid=None):
     """
     This is used for a user withdrawing funds from their Sempo wallet. Only interacts with Sempo float.
-
     :param transfer_amount:
     :param token:
     :param send_account:
@@ -500,10 +493,9 @@ def make_withdrawal_transfer(transfer_amount,
     :return:
     """
 
-    # todo: setup sempo float wallet
-    inbound_transfer_account = None
-
-    transfer = CreditTransfer(transfer_amount, token, sender_user=send_account, recipient_transfer_account=inbound_transfer_account, uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL)
+    transfer = CreditTransfer(transfer_amount, token,
+                              sender_user=send_account,
+                              uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL)
 
     transfer.transfer_mode = transfer_mode
 
@@ -533,7 +525,6 @@ def make_deposit_transfer(transfer_amount,
                           fiat_ramp=None):
     """
     This is used for a user depositing funds to their Sempo wallet. Only interacts with Sempo float.
-
     :param transfer_amount:
     :param token:
     :param receive_account:
@@ -544,18 +535,8 @@ def make_deposit_transfer(transfer_amount,
     :return:
     """
 
-    # todo: setup sempo float wallet
-    outbound_transfer_account = g.active_organisation.org_level_transfer_account
-
-    master_wallet_balance = get_wallet_balance(outbound_transfer_account.blockchain_address, token)
-
-    if transfer_amount > master_wallet_balance:
-        message = "Master Wallet has insufficient funds"
-        raise InsufficientBalanceError(message)
-
     transfer = CreditTransfer(amount=transfer_amount,
                               token=token,
-                              sender_transfer_account=outbound_transfer_account,
                               recipient_user=receive_account,
                               transfer_type=TransferTypeEnum.DEPOSIT, uuid=uuid, fiat_ramp=fiat_ramp)
 
@@ -592,14 +573,14 @@ def make_target_balance_transfer(target_balance,
                                             require_sufficient_balance=require_sufficient_balance,
                                             automatically_resolve_complete=automatically_resolve_complete,
                                             uuid=uuid,
-                                            is_reclaim=True)
+                                            transfer_subtype='RECLAMATION')
 
     else:
         transfer = make_payment_transfer(transfer_amount, target_user,
                                             transfer_mode,
                                             automatically_resolve_complete=automatically_resolve_complete,
                                             uuid=uuid,
-                                            is_disbursement=True)
+                                            transfer_subtype='DISBURSEMENT')
 
     return transfer
 

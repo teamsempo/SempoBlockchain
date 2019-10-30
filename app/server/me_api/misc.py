@@ -12,7 +12,7 @@ from server.utils.assembly_payments import create_ap_user, AssemblyPaymentsError
     UserIdentifierNotFoundError, create_bank_account, set_user_disbursement_account
 from server.utils.auth import requires_auth
 from server.utils.mobile_version import check_mobile_version
-from server.utils.poli_payments import PoliPaymentsError, create_poli_link, get_poli_link_status
+from server.utils.poli_payments import PoliPaymentsError, create_poli_link, get_poli_link_status, generate_poli_link_from_url_token
 from server.utils.credit_transfers import make_deposit_transfer, find_user_with_transfer_account_from_identifiers
 
 
@@ -291,17 +291,19 @@ class AssemblyPaymentsPayoutAccountAPI(MethodView):
 
 class PoliPaymentsAPI(MethodView):
     @requires_auth
-    def get(self, reference):
-        reference = request.args.get('reference')
+    def put(self):
+        put_data = request.get_json()
+        reference = put_data.get('reference')
+
         if reference:
 
             fiat_ramp = FiatRamp.query.filter_by(payment_reference=reference).first()
             if fiat_ramp is None:
                 return make_response(jsonify({'message': 'Could not find payment for reference {}'.format(reference)})), 400
 
-            poli_link = fiat_ramp.payment_metadata['poli_link']
+            poli_link_url_token = fiat_ramp.payment_metadata['poli_link_url_token']
             try:
-                get_poli_link_status_response = get_poli_link_status(poli_link=poli_link.split('/')[-1])
+                get_poli_link_status_response = get_poli_link_status(poli_link_url_token=poli_link_url_token)
 
             except PoliPaymentsError as e:
                 response_object = {
@@ -327,13 +329,13 @@ class PoliPaymentsAPI(MethodView):
                     # The POLi link failed for some reason.
                     # e.g. Unused, Activated, PartPaid, Future
                     fiat_ramp.payment_status = FiatRampStatusEnum.FAILED
-                    fiat_ramp.payment_metadata = {'poli_link': poli_link, 'reason': status}
+                    fiat_ramp.payment_metadata = {'poli_link_url_token': poli_link_url_token, 'reason': status}
 
             else:
                 return make_response(jsonify({'message': 'Transfer Already Updated.'})), 400
 
             response_object = {
-                'message': 'Got POLi Link Status',
+                'message': 'Updated POLi Link Status',
                 'data': get_poli_link_status_response
             }
 
@@ -343,7 +345,7 @@ class PoliPaymentsAPI(MethodView):
             return make_response(jsonify({'message': 'Must provide POLi Link to get status'})), 400
 
     @requires_auth
-    def post(self, reference):
+    def post(self):
         post_data = request.get_json()
         amount = post_data.get('amount')
         token_id = post_data.get('token_id')
@@ -377,7 +379,8 @@ class PoliPaymentsAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        fiat_ramp.payment_metadata = {'poli_link': create_poli_link_response['poli_link']}
+        # converts "https://poli.to/XNSBV" into XNSBV to save in DB
+        fiat_ramp.payment_metadata = {'poli_link_url_token': create_poli_link_response['poli_link'].split('/')[-1]}
 
         fiat_ramp.token = token
 

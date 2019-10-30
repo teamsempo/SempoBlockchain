@@ -217,6 +217,7 @@ ETH_CHAIN_ID            = specific_parser['ETHEREUM']['chain_id'] or 1
 ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID), '')
 ETH_OWNER_ADDRESS       = specific_parser['ETHEREUM']['owner_address']
 ETH_OWNER_PRIVATE_KEY   = specific_parser['ETHEREUM']['owner_private_key']
+ETH_FLOAT_PRIVATE_KEY   = specific_parser['ETHEREUM']['float_private_key']
 ETH_CONTRACT_VERSION    = specific_parser['ETHEREUM']['contract_version']
 ETH_GAS_PRICE           = int(specific_parser['ETHEREUM']['gas_price_gwei'] or 0)
 ETH_GAS_LIMIT           = int(specific_parser['ETHEREUM']['gas_limit'] or 0)

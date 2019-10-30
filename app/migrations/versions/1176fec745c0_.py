@@ -1,9 +1,7 @@
 """empty message
-
 Revision ID: 1176fec745c0
 Revises: a82a9b16e320
 Create Date: 2019-10-21 11:14:09.649216
-
 """
 from alembic import op
 import sqlalchemy as sa
@@ -16,8 +14,8 @@ branch_labels = None
 depends_on = None
 
 old_options = ('PAYMENT', 'DISBURSEMENT', 'WITHDRAWAL')
-new_options = ('PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE')
-tmp_options = sorted(old_options + ('DEPOSIT', 'EXCHANGE', 'FEE'))
+new_options = ('PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE')
+tmp_options = sorted(old_options + ('DEPOSIT', 'EXCHANGE'))
 
 old_type = sa.Enum(*old_options, name='transfertypeenum')
 new_type = sa.Enum(*new_options, name='transfertypeenum')
@@ -60,7 +58,6 @@ def downgrade():
     # Convert 'DEPOSIT' transfer_type into 'DISBURSEMENT'
     op.execute(tcr.update().where(tcr.c.transfer_type == u'DEPOSIT').values(transfer_type='DISBURSEMENT'))
     op.execute(tcr.update().where(tcr.c.transfer_type == u'EXCHANGE').values(transfer_type='PAYMENT'))
-    op.execute(tcr.update().where(tcr.c.transfer_type == u'FEE').values(transfer_type='PAYMENT'))
 
     new_type.drop(op.get_bind(), checkfirst=False)
     # Create and convert to the "old" transfer_type type

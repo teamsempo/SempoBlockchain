@@ -14,7 +14,7 @@ from server.utils.blockchain_tasks import (
     make_token_transfer,
     get_blockchain_task
 )
-from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferModeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, TransferModeEnum
 
 
 class CreditTransfer(ManyOrgBase, ModelBase):
@@ -25,10 +25,11 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     resolved_date   = db.Column(db.DateTime)
     transfer_amount = db.Column(db.Integer)
 
-    transfer_type   = db.Column(db.Enum(TransferTypeEnum))
-    transfer_status = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
-    transfer_mode   = db.Column(db.Enum(TransferModeEnum))
-    transfer_use    = db.Column(JSON)
+    transfer_type       = db.Column(db.Enum(TransferTypeEnum))
+    transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
+    transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
+    transfer_mode       = db.Column(db.Enum(TransferModeEnum))
+    transfer_use        = db.Column(JSON)
 
     transfer_metadata = db.Column(JSONB)
 
@@ -170,7 +171,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.sender_transfer_account.balance -= self.transfer_amount
         self.recipient_transfer_account.balance += self.transfer_amount
 
-        if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_metadata['reason'].astext == 'is_disbursement':
+        if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
 
@@ -232,7 +233,8 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                  transfer_type=None,
                  uuid=None,
                  transfer_metadata=None,
-                 fiat_ramp=None):
+                 fiat_ramp=None,
+                 transfer_subtype=None):
 
         self.transfer_amount = amount
 
@@ -249,15 +251,21 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
             recipient_transfer_account, recipient_user, self.token)
 
+        if transfer_type is TransferTypeEnum.DEPOSIT.value:
+            self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()
+
+        if transfer_type is TransferTypeEnum.WITHDRAWAL.value:
+            self.recipient_transfer_account = self.sender_transfer_account.get_float_transfer_account()
+
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:
             raise Exception("Tokens do not match")
 
         self.transfer_type = transfer_type
+        self.transfer_subtype = transfer_subtype
+        self.transfer_metadata = transfer_metadata
 
         if uuid is not None:
             self.uuid = uuid
-
-        self.transfer_metadata = transfer_metadata
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
