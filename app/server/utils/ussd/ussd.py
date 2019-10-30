@@ -1,16 +1,13 @@
 from typing import Optional
-import i18n
 
 from server import db
 from server.models.user import User
 from server.models.ussd import UssdMenu, UssdSession
+from server.utils.i18n import i18n_for
 
 
 def menu_display_text_in_lang(current_menu: UssdMenu, user: Optional[User]) -> str:
-    if user is not None and user.preferred_language is not None:
-        i18n.set('locale', user.preferred_language)
-
-    return i18n.t(current_menu.display_key)
+    return i18n_for(user, current_menu.display_key)
 
 
 def create_or_update_session(session_id: str, user: User, current_menu: UssdMenu, user_input: str, service_code: str) -> UssdSession:
