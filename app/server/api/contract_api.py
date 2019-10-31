@@ -7,17 +7,17 @@ from server.models.token import Token
 from server.models.exchange import ExchangeContract
 from server.schemas import token_schema
 from server.utils.blockchain_tasks import (
-    deploy_reserve_network,
+    deploy_exchange_network,
     deploy_and_fund_reserve_token,
     deploy_smart_token,
     make_liquid_token_exchange
 )
 
 
-deploy_contracts_blueprint = Blueprint('deploy_contracts', __name__)
+deploy_contracts_blueprint = Blueprint('contracts', __name__)
 
 
-class DeployContractsAPI(MethodView):
+class ContractsAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
@@ -34,7 +34,7 @@ class DeployContractsAPI(MethodView):
 
         deploying_address = current_app.config['MASTER_WALLET_ADDRESS']
 
-        registry_address = deploy_reserve_network(deploying_address)
+        registry_address = deploy_exchange_network(deploying_address)
 
         reserve_token_address = deploy_and_fund_reserve_token(
             deploying_address=deploying_address,
@@ -119,7 +119,7 @@ class DeployContractsAPI(MethodView):
 
 
 deploy_contracts_blueprint.add_url_rule(
-    '/contracts/',
-    view_func=DeployContractsAPI.as_view('deploy_contracts_view'),
+    '/contract/',
+    view_func=ContractsAPI.as_view('deploy_contracts_view'),
     methods=['POST']
 )

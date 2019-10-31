@@ -59,7 +59,7 @@ def topup_if_required(address, wei_target_balance, wei_topup_threshold):
         persistence_interface.set_wallet_last_topup_task_id(address, task_id)
 
 
-def deploy_reserve_network(deploying_address):
+def deploy_exchange_network(deploying_address):
     gasPrice = 2500000000
 
     def deployer(contract_name, args=None):
@@ -186,20 +186,20 @@ def deploy_smart_token(
         gas_limit=80000000
     )
 
-    deploy_converter_task_id = deploy_contract_task(
+    deploy_subexchange_task_id = deploy_contract_task(
         deploying_address,
         'BancorConverter',
         [smart_token_address, contract_registry_address, 30000, reserve_token_address, reserve_ratio_ppm]
     )
 
-    converter_address = get_contract_address(deploy_converter_task_id)
+    subexchange_address = get_contract_address(deploy_subexchange_task_id)
 
     transaction_task(
         signing_address=deploying_address,
         contract_address=reserve_token_address,
         contract_type='EtherToken',
         func='transfer',
-        args=[converter_address, 10],
+        args=[subexchange_address, 10],
         gas_limit=100000
     )
 
@@ -208,7 +208,7 @@ def deploy_smart_token(
         contract_address=reserve_token_address,
         contract_type='EtherToken',
         func='approve',
-        args=[converter_address, 1000000*10*18],
+        args=[subexchange_address, 1000000*10*18],
         gas_limit=100000
     )
 
@@ -217,7 +217,7 @@ def deploy_smart_token(
         contract_address=smart_token_address,
         contract_type='SmartToken',
         func='approve',
-        args=[converter_address, 1000000*10**18],
+        args=[subexchange_address, 1000000*10**18],
         gas_limit=100000
     )
 
@@ -226,13 +226,13 @@ def deploy_smart_token(
         contract_address=smart_token_address,
         contract_type='SmartToken',
         func='transferOwnership',
-        args=[converter_address],
+        args=[subexchange_address],
         gas_limit=100000
     )
 
     transaction_task(
         signing_address=deploying_address,
-        contract_address=converter_address,
+        contract_address=subexchange_address,
         contract_type='BancorConverter',
         func='acceptTokenOwnership',
         gas_limit=100000,
@@ -240,5 +240,5 @@ def deploy_smart_token(
     )
 
     return {'smart_token_address': smart_token_address,
-            'converter_address': converter_address}
+            'subexchange_address': subexchange_address}
 

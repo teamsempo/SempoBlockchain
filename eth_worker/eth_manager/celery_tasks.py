@@ -29,8 +29,8 @@ processor_task_config['max_retries'] = 0
 
 
 @celery_app.task(**task_config)
-def deploy_reserve_network(self, deploying_address):
-    return eth_manager.task_interfaces.composite.deploy_reserve_network(deploying_address)
+def deploy_exchange_network(self, deploying_address):
+    return eth_manager.task_interfaces.composite.deploy_exchange_network(deploying_address)
 
 
 @celery_app.task(**task_config)

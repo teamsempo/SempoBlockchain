@@ -365,9 +365,9 @@ def get_blockchain_task(task_id):
     return execute_synchronous_celery(sig)
 
 
-def deploy_reserve_network(deploying_address):
+def deploy_exchange_network(deploying_address):
 
-    sig = celery_app.signature(eth_endpoint('deploy_reserve_network'),
+    sig = celery_app.signature(eth_endpoint('deploy_exchange_network'),
                                args=[deploying_address])
 
     return execute_synchronous_celery(sig, timeout=900)

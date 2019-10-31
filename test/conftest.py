@@ -1,5 +1,6 @@
 import pytest
 from flask import current_app
+import subprocess
 
 import os
 import sys
@@ -7,8 +8,15 @@ app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
 sys.path.append(app_dir)
 sys.path.append(os.getcwd())
 
+from web3 import (
+    Web3,
+    WebsocketProvider,
+    HTTPProvider
+)
+
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
+import config
 # from app.manage import manager
 
 
@@ -60,6 +68,7 @@ def create_unactivated_sempo_admin_user(test_client, init_database, new_sempo_ad
     db.session.commit()
 
     return new_sempo_admin_user
+
 
 @pytest.fixture(scope='module')
 def activated_sempo_admin_user(create_unactivated_sempo_admin_user):
@@ -114,10 +123,12 @@ def create_user_with_existing_transfer_account(test_client, init_database, creat
     db.session.commit()
     return user
 
+
 @pytest.fixture(scope='module')
 def new_transfer_account():
     from server.models.transfer_account import TransferAccount
     return TransferAccount()
+
 
 @pytest.fixture(scope='module')
 def create_transfer_account(new_transfer_account):
@@ -125,11 +136,13 @@ def create_transfer_account(new_transfer_account):
     db.session.commit()
     return new_transfer_account
 
+
 @pytest.fixture(scope='module')
 def new_disbursement(create_transfer_account_user):
     from server.utils.credit_transfers import make_disbursement_transfer
     disbursement = make_disbursement_transfer(100,create_transfer_account_user)
     return disbursement
+
 
 @pytest.fixture(scope='function')
 def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
@@ -141,6 +154,7 @@ def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
         recipient_user=create_transfer_account_user
     )
     return credit_transfer
+
 
 @pytest.fixture(scope='function')
 def create_credit_transfer(new_credit_transfer):
@@ -189,6 +203,33 @@ def create_ip_address(authed_sempo_admin_user):
     db.session.add(ip_address)
     db.session.commit()
     return ip_address
+
+
+@pytest.fixture(scope='module')
+def initialise_blockchain_network(authed_sempo_admin_user):
+
+    w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+
+    def load_account(address):
+
+        tx_hash = w3.eth.sendTransaction(
+            {'to': address, 'from': w3.eth.accounts[0], 'value': 12345})
+
+        return w3.eth.waitForTransactionReceipt(tx_hash)
+
+    # Load admin's *system* blockchain account with Eth
+    load_account(111)
+
+    # Load admin blockchain account with with Eth
+
+    # Create reserve token
+
+    # Initialise an exchange network
+
+    # Create first smart token and add to exchange network
+
+    # Create second smart token and add to exchange network
+
 
 
 @pytest.fixture(scope='module')

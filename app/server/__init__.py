@@ -134,7 +134,7 @@ def register_blueprints(app):
     from server.api.exchange_api import exchange_blueprint
     from server.api.slack_api import slack_blueprint
     from server.api.ussd_api import ussd_blueprint
-    from server.api.deploy_contracts_api import deploy_contracts_blueprint
+    from server.api.contract_api import deploy_contracts_blueprint
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix='/api/me')
