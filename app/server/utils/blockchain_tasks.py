@@ -192,7 +192,7 @@ def make_liquid_token_exchange(signing_address,
 
     return synchronous_transaction_task(
         signing_address=signing_address,
-        contract_address=exchange_contract.address,
+        contract_address=exchange_contract.blockchain_address,
         contract_type='bancor_converter',
         func='quickConvert',
         args=[
@@ -373,9 +373,9 @@ def deploy_reserve_network(deploying_address):
     return execute_synchronous_celery(sig, timeout=900)
 
 
-def deploy_and_fund_reserve_token(deploying_address, fund_amount_wei):
+def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_wei):
     sig = celery_app.signature(eth_endpoint('deploy_and_fund_reserve_token'),
-                               args=[deploying_address, fund_amount_wei])
+                               args=[deploying_address, name, symbol, fund_amount_wei])
 
     return execute_synchronous_celery(sig, timeout=900)
 

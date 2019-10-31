@@ -111,10 +111,17 @@ if __name__ == '__main__':
 
     reserve_token_id = result['data']['reserve_token']['id']
     cic1_token_id = result['data']['smart_token']['id']
+    cic2_token_id = result['data']['smart_token_2']['id']
 
-    s.test_exchange(reserve_token_id, cic1_token_id, 5*10**-8)
 
-    # tt = 5
+    x = s.test_exchange(reserve_token_id, cic1_token_id, 5*10**-8)
+
+    y = s.test_exchange(cic1_token_id, cic2_token_id, 1*10**-14)
+
+    z = s.test_exchange(cic1_token_id, reserve_token_id, 1*10**-14)
+
+
+    tt = 5
 
     # reserve_token_id = s.register_blockchain_token(
     #     address=config.RESERVE_TOKEN_ADDRESS,

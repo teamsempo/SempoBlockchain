@@ -135,11 +135,12 @@ def deploy_reserve_network(deploying_address):
     return registry_contract_address
 
 
-def deploy_and_fund_reserve_token(deploying_address, fund_amount_wei):
+def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_wei):
 
     deploy_task_id = deploy_contract_task(
         deploying_address,
-        'EtherToken',
+        'WrappedDai',
+        [name, symbol]
     )
 
     reserve_token_address = get_contract_address(deploy_task_id)
@@ -150,7 +151,7 @@ def deploy_and_fund_reserve_token(deploying_address, fund_amount_wei):
 
     balance = synchronous_call(
         contract_address=reserve_token_address,
-        contract_type='EtherToken',
+        contract_type='WrappedDai',
         func='balanceOf',
         args=[deploying_address]
     )

@@ -27,6 +27,9 @@ class DeployContractsAPI(MethodView):
         symbol = 'CIC2'
         decimals = 18
 
+        reserve_name = 'RESERVE 3'
+        reserve_symbol = 'RSV3'
+
         reserve_ratio_ppm = int(250*10**3)
 
         deploying_address = current_app.config['MASTER_WALLET_ADDRESS']
@@ -35,10 +38,12 @@ class DeployContractsAPI(MethodView):
 
         reserve_token_address = deploy_and_fund_reserve_token(
             deploying_address=deploying_address,
+            name=reserve_name,
+            symbol=reserve_symbol,
             fund_amount_wei=1*10**18
         )
 
-        reserve_token = Token(address=reserve_token_address, name='RESERVE 2', symbol='RSV2')
+        reserve_token = Token(address=reserve_token_address, name=reserve_name, symbol=reserve_symbol)
         reserve_token.decimals = 18
         db.session.add(reserve_token)
 
@@ -66,6 +71,24 @@ class DeployContractsAPI(MethodView):
         exchange_contract.add_reserve_token(reserve_token)
         exchange_contract.add_token(smart_token, converter_address, reserve_ratio_ppm)
 
+        smart_token_result2 = deploy_smart_token(
+            deploying_address=deploying_address,
+            name='Goop3', symbol='Goop3', decimals=decimals,
+            issue_amount_wei=1000,
+            contract_registry_address=registry_address,
+            reserve_token_address=reserve_token_address,
+            reserve_ratio_ppm=reserve_ratio_ppm
+        )
+
+        smart_token_address2 = smart_token_result2['smart_token_address']
+        converter_address2 = smart_token_result2['converter_address']
+
+        smart_token2 = Token(address=smart_token_address2, name='Goop2', symbol='Goop2')
+        smart_token2.decimals = decimals
+        db.session.add(smart_token2)
+
+        exchange_contract.add_token(smart_token2, converter_address2, reserve_ratio_ppm)
+
         db.session.commit()
 
         response_object = {
@@ -78,6 +101,10 @@ class DeployContractsAPI(MethodView):
                 'smart_token': {
                     'id': smart_token.id,
                     'blockchain_address': smart_token.address,
+                },
+                'smart_token_2': {
+                    'id': smart_token2.id,
+                    'blockchain_address': smart_token2.address,
                 },
                 'exchange_contract': {
                     'id': exchange_contract.id,

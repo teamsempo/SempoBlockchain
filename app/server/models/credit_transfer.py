@@ -28,7 +28,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     uuid            = db.Column(db.String, unique=True)
 
     resolved_date   = db.Column(db.DateTime)
-    transfer_amount = db.Column(db.Integer)
+    _transfer_amount = db.Column(db.BigInteger)
 
     transfer_type   = db.Column(db.Enum(TransferTypeEnum))
     transfer_status = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
@@ -57,6 +57,14 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
+
+    @hybrid_property
+    def transfer_amount(self):
+        return self._transfer_amount / 10**18
+
+    @transfer_amount.setter
+    def transfer_amount(self, val):
+        self._transfer_amount = val * 10**18
 
     @hybrid_property
     def blockchain_status_breakdown(self):

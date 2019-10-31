@@ -1,4 +1,5 @@
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm.attributes import flag_modified
 
 from functools import partial
 from flask import current_app
@@ -60,6 +61,9 @@ class ExchangeContract(ModelBase):
             'subexchange_address': subexchange_address,
             'subexchange_reserve_ratio_ppm': subexchange_reserve_ratio_ppm
         }
+
+        flag_modified(self, "subexchange_address_mapping")
+        db.session.add(self)
 
     def add_reserve_token(self, reserve_token):
         self.reserve_token = reserve_token

@@ -34,10 +34,10 @@ def deploy_reserve_network(self, deploying_address):
 
 
 @celery_app.task(**task_config)
-def deploy_and_fund_reserve_token(self, deploying_address, name):
+def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
     return eth_manager.task_interfaces.composite.deploy_and_fund_reserve_token(
         deploying_address,
-        name)
+        name, symbol, fund_amount_wei)
 
 
 @celery_app.task(**task_config)
