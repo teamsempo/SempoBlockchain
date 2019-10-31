@@ -67,9 +67,10 @@ def test_check_poli_payments_link_status(mocker, test_client, init_database, cre
     if poli_status:
         reference = create_blockchain_token.fiat_ramps[0].payment_reference
 
-    response = test_client.get('/api/me/poli_payments/?reference={}'.format(reference),
-                               headers=dict(Authorization=auth_token.decode(), Accept='application/json'),
-                               content_type='application/json', follow_redirects=True)
+    response = test_client.put('/api/me/poli_payments/',
+                                headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),
+                                data=json.dumps(dict(reference=reference)),
+                                content_type='application/json', follow_redirects=True)
 
     assert response.status_code == status_code
     if status_code == 200:
