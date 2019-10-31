@@ -10,11 +10,13 @@ sys.path.append(os.getcwd())
 
 from server import create_app, db
 from server.models.blockchain_address import BlockchainAddress
+from server.models.transfer_account import TransferAccount, TransferAccountType
 
 class UpdateData(Command):
 
     def run(self):
         with app.app_context():
+            import config
 
             print("~~~~~~~~~~ Searching for Master Address ~~~~~~~~~~")
 
@@ -37,6 +39,17 @@ class UpdateData(Command):
                 db.session.commit()
 
             print(master_address)
+
+            # todo: [Nick] refactor this
+            print("~~~~~~~~~~ Searching for float wallet ~~~~~~~~~~")
+
+            float_wallet = TransferAccount.query.filter(TransferAccount.account_type == TransferAccountType.FLOAT).first()
+
+            if float_wallet is None:
+                print('Creating Float Wallet')
+                float_wallet = TransferAccount(private_key=config.ETH_FLOAT_PRIVATE_KEY)
+                db.session.add(float_wallet)
+                db.session.commit()
 
 
 app = create_app()

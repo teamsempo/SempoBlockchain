@@ -93,7 +93,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                       {timeStatusBlock}
                                     </UserWrapper>
                                 )
-                            } else if (transfer.transfer_type === 'WITHDRAWAL') {
+                            } else if (transfer.transfer_type === 'RECLAMATION') {
                                 return (
                                     <UserWrapper key={transfer.id}>
                                       <UserSVG style={{transform: 'rotate(180deg)'}}

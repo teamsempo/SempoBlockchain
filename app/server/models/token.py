@@ -27,6 +27,9 @@ class Token(ModelBase):
     approvals = db.relationship('SpendApproval', backref='token', lazy=True,
                                 foreign_keys='SpendApproval.token_id')
 
+    fiat_ramps = db.relationship('FiatRamp', backref='token', lazy=True,
+                                 foreign_keys='FiatRamp.token_id')
+
     @property
     def decimals(self):
         if self._decimals:

@@ -103,8 +103,8 @@ class User(ManyOrgBase, ModelBase):
     # roles = db.relationship('UserRole', backref='user', lazy=True,
     #                              foreign_keys='UserRole.user_id')
 
-    uploaded_images = db.relationship('UploadedImage', backref='user', lazy=True,
-                                      foreign_keys='UploadedImage.user_id')
+    uploaded_images = db.relationship('UploadedResource', backref='user', lazy=True,
+                                      foreign_keys='UploadedResource.user_id')
 
     kyc_applications = db.relationship('KycApplication', backref='user', lazy=True,
                                        foreign_keys='KycApplication.user_id')

@@ -35,7 +35,7 @@ class TransferAccountManager extends React.Component {
     this.state = {
         action: 'select',
         transfer_type: 'ALL',
-        create_transfer_type: 'WITHDRAWAL',
+        create_transfer_type: 'RECLAMATION',
         newTransfer: false,
         transfer_amount: '',
         showSpreadsheetData: true,

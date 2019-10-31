@@ -28,7 +28,7 @@ const byId = (state = {}, action) => {
             let updatedTransferAccount = {[transfer.recipient_transfer_account.id]: {credit_receives: [transfer.id]}};
             newState = {...newState, ...updatedTransferAccount};
 
-          } else if (transfer.transfer_type === 'WITHDRAWAL') {
+          } else if (transfer.transfer_type === 'RECLAMATION') {
             let updatedTransferAccount = {[transfer.sender_transfer_account.id]: {credit_sends: [transfer.id]}};
             newState = {...newState, ...updatedTransferAccount};
 
