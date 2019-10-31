@@ -98,6 +98,7 @@
     "react-country-region-selector": "^1.4.3",
     "react-dates": "^18.1.0",
     "react-dom": "^16.6.3",
+    "react-intercom": "^1.0.15",
     "react-keydown": "^1.9.7",
     "react-map-gl": "^3.2.5",
     "react-moment-proptypes": "^1.6.0",
