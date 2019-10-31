@@ -76,8 +76,8 @@ def synchronous_transaction_task(signing_address,
     return execute_synchronous_task(signature)
 
 
-def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
-
+def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0, private_key=None):
+    # TODO: [Nick] to setup float wallet deterministically created from config private key.
     if not current_app.config['IS_TEST']:
         sig = celery_app.signature(eth_endpoint('create_new_blockchain_wallet'),
                                    kwargs={
@@ -91,7 +91,6 @@ def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
 
 
 def send_eth(signing_address, recipient_address, amount_wei, dependent_on_tasks=None):
-
     transfer_sig = celery_app.signature(eth_endpoint('send_eth'),
                                         kwargs={
                                             'signing_address': signing_address,

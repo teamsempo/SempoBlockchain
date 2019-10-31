@@ -67,7 +67,7 @@ class NewTransferManager extends React.Component {
                   target_balance = this.state.transfer_amount * 100;
               }
 
-              if (transfer_type === 'WITHDRAWAL') {
+              if (transfer_type === 'RECLAMATION') {
                   transfer_amount = this.state.transfer_amount * 100;
               }
 
@@ -86,7 +86,7 @@ class NewTransferManager extends React.Component {
                   transfer_amount = this.state.transfer_amount * 100;
               }
 
-              if (transfer_type === 'WITHDRAWAL') {
+              if (transfer_type === 'RECLAMATION') {
                   sender_transfer_account_id = this.props.transfer_account_ids[0];
                   transfer_amount = this.state.transfer_amount * 100;
               }
@@ -129,7 +129,7 @@ class NewTransferManager extends React.Component {
                         <option name="create_transfer_type" value="DISBURSEMENT">DISBURSEMENT</option>
                         <option name="create_transfer_type" value="BALANCE">BALANCE</option>
                         {
-                          window.IS_USING_BITCOIN? null : <option name="create_transfer_type" value="WITHDRAWAL">WITHDRAWAL</option>
+                          window.IS_USING_BITCOIN? null : <option name="create_transfer_type" value="RECLAMATION">RECLAMATION</option>
                         }
                       </StyledSelect>
                       <div style={{margin: '0.8em'}}>

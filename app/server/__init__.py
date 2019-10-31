@@ -2,31 +2,26 @@ from flask import Flask, request, redirect, render_template, make_response, json
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_basicauth import BasicAuth
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from celery import Celery
 from pusher import Pusher
 import boto3
 from twilio.rest import Client as TwilioClient
 from raven.contrib.flask import Sentry
 import messagebird
+import africastalking
 from datetime import datetime
 import redis
+import config
+import i18n
+from eth_utils import to_checksum_address
 
 import sys, os
 sys.path.append('../')
 import config
 
-def encrypt_string(raw_string):
-    import base64
-    from cryptography.fernet import Fernet
-    from eth_utils import keccak
-
-    fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
-    cipher_suite = Fernet(fernet_encryption_key)
-
-    return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
-
+dirname = os.path.dirname(__file__)
+i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
+i18n.set('fallback', config.LOCALE_FALLBACK)
 
 def create_app():
     # create and configure the app
@@ -57,7 +52,8 @@ def register_extensions(app):
         # Workaround to allow unparsed request body to be be read from cache
         # This is required to validate a signature on webhooks
         # This MUST go before Sentry integration as sentry triggers form parsing
-        if request.path.startswith('/api/slack/'):
+        if not config.IS_TEST and (
+                request.path.startswith('/api/slack/') or request.path.startswith('/api/poli_payments_webhook/')):
             if request.content_length > 1024 * 1024:  # 1mb
                 # Payload too large
                 return make_response(jsonify({'message': 'Payload too large'})), 413
@@ -111,13 +107,11 @@ def register_blueprints(app):
     from server.api.auth_api import auth_blueprint
     from server.api.pusher_auth_api import pusher_auth_blueprint
     from server.api.transfer_account_api import transfer_account_blueprint
-    from server.api.whatsapp_api import whatsapp_blueprint
     from server.api.blockchain_transaction_api import blockchain_transaction_blueprint
     from server.api.geolocation_api import geolocation_blueprint
     from server.api.ip_address_api import ip_address_blueprint
     from server.api.dataset_api import dataset_blueprint
     from server.api.credit_transfer_api import credit_transfer_blueprint
-    from server.api.sms_api import sms_blueprint
     from server.api.user_api import user_blueprint
     from server.api.kobo_api import user_kobo_blueprint
     from server.me_api import me_blueprint
@@ -133,6 +127,7 @@ def register_blueprints(app):
     from server.api.token_api import token_blueprint
     from server.api.exchange_api import exchange_blueprint
     from server.api.slack_api import slack_blueprint
+    from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
     from server.api.contract_api import deploy_contracts_blueprint
 
@@ -143,13 +138,11 @@ def register_blueprints(app):
     app.register_blueprint(user_blueprint, url_prefix='/api')
     app.register_blueprint(user_kobo_blueprint, url_prefix='/api')
     app.register_blueprint(transfer_account_blueprint, url_prefix='/api')
-    app.register_blueprint(whatsapp_blueprint, url_prefix='/api')
     app.register_blueprint(blockchain_transaction_blueprint, url_prefix='/api')
     app.register_blueprint(geolocation_blueprint, url_prefix='/api')
     app.register_blueprint(ip_address_blueprint, url_prefix='/api')
     app.register_blueprint(dataset_blueprint, url_prefix='/api')
     app.register_blueprint(credit_transfer_blueprint, url_prefix='/api')
-    app.register_blueprint(sms_blueprint, url_prefix='/api')
     app.register_blueprint(export_blueprint, url_prefix='/api')
     app.register_blueprint(image_uploader_blueprint, url_prefix='/api')
     app.register_blueprint(recognised_face_blueprint, url_prefix='/api')
@@ -160,6 +153,7 @@ def register_blueprints(app):
     app.register_blueprint(organisation_blueprint, url_prefix='/api')
     app.register_blueprint(token_blueprint, url_prefix='/api')
     app.register_blueprint(slack_blueprint, url_prefix='/api')
+    app.register_blueprint(poli_payments_blueprint, url_prefix='/api')
     app.register_blueprint(ussd_blueprint, url_prefix='/api')
     app.register_blueprint(exchange_blueprint, url_prefix='/api')
     app.register_blueprint(deploy_contracts_blueprint, url_prefix='/api')
@@ -168,6 +162,16 @@ def register_blueprints(app):
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('index.html'), 404
+
+def encrypt_string(raw_string):
+    import base64
+    from cryptography.fernet import Fernet
+    from eth_utils import keccak
+
+    fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
+    cipher_suite = Fernet(fernet_encryption_key)
+
+    return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
 
 
 db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
@@ -198,4 +202,9 @@ pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
                        ssl=True)
 
 twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
+
+messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
+africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
+africastalking_client = africastalking.SMS
+
 

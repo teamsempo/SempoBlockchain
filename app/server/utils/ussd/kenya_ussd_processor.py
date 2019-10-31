@@ -1,16 +1,28 @@
+from typing import Optional
 from functools import reduce
 
 from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
 from server.utils.phone import proccess_phone_number
+from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server import db
 
 
 class KenyaUssdProcessor:
     @staticmethod
     def process_request(session_id: str, user_input: str, user: User) -> UssdMenu:
-        sessions = UssdSession.query.filter_by(session_id=session_id)
+        session: Optional[UssdSession] = UssdSession.query.filter_by(session_id=session_id).first()
+        # returning session
+        if session:
+            if user_input == "":
+                return UssdMenu.find_by_name('exit_invalid_input')
+            elif user_input.split('*')[-1] == 0:
+                return UssdMenu.find_by_name(session.state).parent()
+            else:
+                new_state = KenyaUssdProcessor.next_state(session, user_input)
+                return UssdMenu.find_by_name(new_state)
         # new session
-        if sessions.count() == 0:
+        else:
             if user.is_resetting():
                 if user.pin_failed_attempts() >= 3:
                     return UssdMenu.find_by_name('exit_pin_blocked')
@@ -20,18 +32,16 @@ class KenyaUssdProcessor:
                     return UssdMenu.find_by_name('initial_pin_entry')
             else:
                 return UssdMenu.find_by_name('start')
-        # returning session
-        else:
-            session: UssdSession = sessions.first()
-            if user_input == "":
-                return UssdMenu.find_by_name('exit_invalid_input')
-            elif user_input.split('*')[-1] == 0:
-                return UssdMenu.find_by_name(session.state).parent()
-            else:
-                # TODO(ussd): get next state in state machine based on current state + user input
-                # session.send("#{session.aasm.current_state}!", request_hash[:user_input].split('*').last)
-                return UssdMenu.find_by_name('TODO')
+            
+    @staticmethod
+    def next_state(session: UssdSession, user_input: str) -> UssdMenu:
+        state_machine = KenyaUssdStateMachine(session)
+        state_machine.feed_char(user_input.split('*')[-1])
+        new_state = state_machine.state
 
+        session.state = new_state
+        db.session.commit()
+        return new_state
 
     @staticmethod
     def replace_vars(menu: UssdMenu, ussd_session: UssdSession, display_text: str, user: User) -> str:
@@ -58,11 +68,12 @@ class KenyaUssdProcessor:
             replacements.append(['%exchange_amount%', ussd_session.session_data['exchange_amount']])
         elif 'pin_authorization' in menu.name or 'current_pin' in menu.name:
             if user.pin_failed_attempts() > 0:
-                # TODO: not a great way to do i18n...
+                # TODO(ussd): replace this with i18n placeholders
                 if user.preferred_language == 'sw_KE':
-                    replacements.append(['%remaining_attempts%', "Una majaribio #{3 - user.pin_failed_attempts} yaliyobaki."])
+                    # TODO(ussd): pin_failed_attempts isn't a thing yet!
+                    replacements.append(['%remaining_attempts%', "Una majaribio {} yaliyobaki.".format(3 - user.pin_failed_attempts)])
                 else:
-                    replacements.append(['%remaining_attempts%', "You have #{3 - user.pin_failed_attempts} attempts remaining."])
+                    replacements.append(['%remaining_attempts%', "You have {} attempts remaining.".format(3 - user.pin_failed_attempts)])
             else:
                 replacements.append(['%remaining_attempts%', ''])
 

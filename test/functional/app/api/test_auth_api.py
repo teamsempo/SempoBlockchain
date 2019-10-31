@@ -300,3 +300,59 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     from time import sleep
     # This is here to stop tokens having the same timestamp dying
     sleep(1)
+
+
+def test_reset_password_valid_token(test_client, authed_sempo_admin_user):
+    """
+    GIVEN a Flask application
+    WHEN a valid the password reset token is POSTED to '/api/auth/reset_password/'
+    THEN check response is 200 and check if password changed
+    """
+    import bcrypt
+
+    # Explicitly test None case since database migration can result in None instead of []
+    authed_sempo_admin_user.password_reset_tokens = None
+
+    password_reset_token = authed_sempo_admin_user.encode_single_use_JWS('R')
+    authed_sempo_admin_user.save_password_reset_token(password_reset_token)
+    password = 'NewTestPassword'
+
+    response = test_client.post('/api/auth/reset_password/',
+                                data=json.dumps(dict(new_password=password, reset_password_token=password_reset_token)),
+                                content_type='application/json', follow_redirects=True)
+
+    assert bcrypt.checkpw(
+        password.encode(), authed_sempo_admin_user.password_hash.encode())
+    assert authed_sempo_admin_user.password_reset_tokens == []
+    assert response.status_code == 200
+
+
+def test_reset_password_used_token(test_client, authed_sempo_admin_user):
+    # Explicitly test None case since database migration can result in None instead of []
+    """
+    GIVEN a Flask application
+    WHEN a used the password reset token is POSTED to '/api/auth/reset_password/'
+    THEN check response is 401
+    """
+
+    authed_sempo_admin_user.password_reset_tokens = None
+
+    password_reset_token = authed_sempo_admin_user.encode_single_use_JWS('R')
+    authed_sempo_admin_user.save_password_reset_token(password_reset_token)
+    password = 'NewTestPassword'
+
+
+    # Use password for the first time
+    test_client.post('/api/auth/reset_password/',
+                            data=json.dumps(
+                            dict(new_password=password, reset_password_token=password_reset_token)),
+                            content_type='application/json', follow_redirects=True)
+
+    # Use password for the second time
+    response = test_client.post('/api/auth/reset_password/',
+                                data=json.dumps(
+                                dict(new_password=password, reset_password_token=password_reset_token)),
+                                content_type='application/json', follow_redirects=True)
+
+    assert response.status_code == 401
+    assert response.json['message'] == 'Token already used'

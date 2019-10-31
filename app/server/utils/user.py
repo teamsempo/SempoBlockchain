@@ -7,7 +7,7 @@ from eth_utils import to_checksum_address
 
 from server import db
 from server.models.device_info import DeviceInfo
-from server.models.upload import UploadedImage
+from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
@@ -18,7 +18,7 @@ from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError
 from server import celery_app, sentry
 from server.utils import credit_transfers as CreditTransferUtils
-from server.utils.phone import proccess_phone_number, send_onboarding_message, send_phone_verification_message
+from server.utils.phone import proccess_phone_number, send_message
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 
 
@@ -199,6 +199,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     if organisation:
         user.organisations.append(organisation)
+        user.default_organisation = organisation
 
     db.session.add(user)
 
@@ -295,8 +296,7 @@ def set_attachments(attribute_dict, user, custom_attributes):
                 new_filename = generate_new_filename(
                     submitted_filename, type, 'KOBO')
 
-                uploaded_image = UploadedImage(
-                    filename=new_filename, image_type=type)
+                uploaded_image = UploadedResource(filename=new_filename, file_type=type)
 
                 uploaded_image.user = user
 
@@ -347,7 +347,6 @@ def proccess_create_or_modify_user_request(attribute_dict,
     but here it's one layer down because there's multiple entry points for 'create user':
     - The admin api
     - The register api
-
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
     :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
@@ -528,8 +527,8 @@ def proccess_create_or_modify_user_request(attribute_dict,
             'deviceinfo'), user=user)
 
     if custom_initial_disbursement:
-        disbursement = CreditTransferUtils.make_disbursement_transfer(
-            custom_initial_disbursement, organisation.token, user)
+        disbursement = CreditTransferUtils.make_payment_transfer(
+            custom_initial_disbursement, organisation.token, receive_user=user, transfer_subtype='DISBURSEMENT')
 
     # Location fires an async task that needs to know user ID
     db.session.flush()
@@ -567,3 +566,29 @@ def proccess_create_or_modify_user_request(attribute_dict,
     }
 
     return response_object, 200
+
+
+def send_onboarding_message(to_phone, first_name, credits, one_time_code):
+    if credits is None:
+        credits = 0
+
+    if to_phone:
+        receiver_message = '{}, you have been registered for {}. You have {} {}. Your one-time code is {}. ' \
+                           'Download Sempo for Android: https://bit.ly/2UVZLqf' \
+            .format(
+            first_name,
+            current_app.config['PROGRAM_NAME'],
+            credits,
+            current_app.config['CURRENCY_NAME'],
+            one_time_code,
+            current_app.config['CURRENCY_NAME']
+        )
+
+        send_message(to_phone, receiver_message)
+
+
+def send_phone_verification_message(to_phone, one_time_code):
+    if to_phone:
+        reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
+
+        send_message(to_phone, reciever_message)
