@@ -11,7 +11,7 @@ from server.models.email_whitelist import EmailWhitelist
 from server.models.currency_conversion import CurrencyConversion
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_usage import TransferUsage
-from server.utils.intercom import create_intercom_android_secret
+from server.utils.intercom import create_intercom_secret
 from server.utils.auth import requires_auth, tfa_logic
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
@@ -24,9 +24,23 @@ import time, random
 
 auth_blueprint = Blueprint('auth', __name__)
 
+
+def get_user_organisations(user):
+    try:
+        organisation = dict(
+            organisation_name=user.default_organisation.name,
+            organisation_id=user.default_organisation_id
+        )
+    except AttributeError:
+        organisation = dict()
+
+    return organisation
+
+
 def get_denominations():
     currency_name = current_app.config['CURRENCY_NAME']
     return DENOMINATION_DICT.get(currency_name, {})
+
 
 def create_user_response_object(user, auth_token, message):
     if current_app.config['IS_USING_BITCOIN']:
@@ -91,8 +105,12 @@ def create_user_response_object(user, auth_token, message):
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'kyc_active': True,  # todo; kyc active function
-        'android_intercom_hash': create_intercom_android_secret(user_id=user.id)
+        'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
+        'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
     }
+
+    # merge the user and organisation object nicely (handles non-orgs well)
+    response_object = {**response_object, **get_user_organisations(user)}
 
     # todo: fix this (now many to many)
     user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
@@ -181,7 +199,7 @@ class RegisterAPI(MethodView):
         exact_match = False
 
         tier = None
-        if '@sempo.ai' in email:
+        if '@sempo.ai' in email or '@withsempo.com' in email:
             email_ok = True
             tier = 'sempoadmin'
 
@@ -223,7 +241,6 @@ class RegisterAPI(MethodView):
                 'message': 'User already exists. Please Log in.',
             }
             return make_response(jsonify(response_object)), 403
-
 
         if tier is None:
             tier = 'subadmin'
@@ -269,7 +286,6 @@ class RegisterAPI(MethodView):
         }
 
         return make_response(jsonify(response_object)), 201
-
 
 
 class ActivateUserAPI(MethodView):
@@ -596,7 +612,7 @@ class RequestPasswordResetEmailAPI(MethodView):
 
         if user:
             password_reset_token = user.encode_single_use_JWS('R')
-
+            user.save_password_reset_token(password_reset_token)
             send_reset_email(password_reset_token, email)
 
         response_object = {
@@ -728,6 +744,18 @@ class ResetPasswordAPI(MethodView):
 
             user = validity_check['user']
 
+            reuse_check = user.check_reset_token_already_used(
+                reset_password_token)
+
+            
+            if not reuse_check:
+                response_object = {
+                    'status': 'fail',
+                    'message': 'Token already used'
+                }
+
+                return make_response(jsonify(response_object)), 401
+
         if not new_password or len(new_password) < 6:
             response_object = {
                 'status': 'fail',
@@ -737,6 +765,7 @@ class ResetPasswordAPI(MethodView):
             return make_response(jsonify(response_object)), 401
 
         user.hash_password(new_password)
+        user.delete_password_reset_tokens()
         db.session.commit()
 
         response_object = {

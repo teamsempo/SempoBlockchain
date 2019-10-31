@@ -1,7 +1,6 @@
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Command
-from server import create_app, db
 import sys
 import os
 
@@ -9,11 +8,15 @@ parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
+from server import create_app, db
+from server.models.blockchain_address import BlockchainAddress
+from server.models.transfer_account import TransferAccount, TransferAccountType
 
 class UpdateData(Command):
 
     def run(self):
         with app.app_context():
+            import config
 
             print("~~~~~~~~~~ Setting up Reserve Tokens and Contract ~~~~~~~~~~")
 
@@ -47,6 +50,19 @@ class UpdateData(Command):
 
                     db.session.add(exchange_contract)
                     db.session.commit()
+
+            print(master_address)
+
+            # todo: [Nick] refactor this
+            print("~~~~~~~~~~ Searching for float wallet ~~~~~~~~~~")
+
+            float_wallet = TransferAccount.query.filter(TransferAccount.account_type == TransferAccountType.FLOAT).first()
+
+            if float_wallet is None:
+                print('Creating Float Wallet')
+                float_wallet = TransferAccount(private_key=config.ETH_FLOAT_PRIVATE_KEY)
+                db.session.add(float_wallet)
+                db.session.commit()
 
 
 app = create_app()

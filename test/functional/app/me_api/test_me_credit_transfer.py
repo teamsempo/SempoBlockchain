@@ -1,27 +1,3 @@
-"""
-This file (test_me_api.py) contains the functional tests for the me blueprint.
-
-These tests use GETs and POSTs to different URLs to check for the proper behavior
-of the me blueprint.
-"""
-import json, pytest
-
-
-def test_me_api(test_client, create_transfer_account_user):
-    """
-    GIVEN a Flask application
-    WHEN the '/api/me/' page is requested (GET)
-    THEN check the response is valid
-    """
-    create_transfer_account_user.is_activated = True
-    auth_token = create_transfer_account_user.encode_auth_token()
-
-    response = test_client.get('/api/me/',
-                               headers=dict(Authorization=auth_token.decode(), Accept='application/json'),
-                               content_type='application/json', follow_redirects=True)
-    assert response.status_code == 201
-    assert response.json['data']['user'] is not None
-
 
 def test_get_me_credit_transfer_api(test_client, create_credit_transfer, create_transfer_account_user):
     """
@@ -57,18 +33,18 @@ def test_get_me_credit_transfer_api(test_client, create_credit_transfer, create_
 #     create_transfer_account_user.is_activated = True
 #     auth_token = create_transfer_account_user.encode_auth_token()
 #
-#     response = test_client.post('/api/me/credit_transfer/',
-#                                 headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),
-#                                 data=json.dumps(dict(
-#                                         transfer_amount=100,
-#                                         transfer_account_id=transfer_account_id,
-#                                         transfer_random_key=None,
-#                                         qr_data=None,
-#                                         nfc_id=nfc_id,
-#                                         is_sending=is_sending,
-#                                         public_identifier=public_identifier,
-#                                     )),
-#                                 content_type='application/json', follow_redirects=True)
+    # response = test_client.post('/api/me/credit_transfer/',
+    #                             headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),
+    #                             data=json.dumps(dict(
+    #                                     transfer_amount=100,
+    #                                     transfer_account_id=transfer_account_id,
+    #                                     transfer_random_key=None,
+    #                                     qr_data=None,
+    #                                     nfc_id=nfc_id,
+    #                                     is_sending=is_sending,
+    #                                     public_identifier=public_identifier,
+    #                                 )),
+    #                             content_type='application/json', follow_redirects=True)
 #     assert response.status_code == 201
 
 # def test_post_me_credit_transfer_api_offline_qr(test_client, create_transfer_account_user):
@@ -98,4 +74,3 @@ def test_get_me_credit_transfer_api(test_client, create_credit_transfer, create_
 #                                 )),
 #                                 content_type='application/json', follow_redirects=True)
 #     assert response.status_code == 201
-

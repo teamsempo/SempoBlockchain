@@ -52,7 +52,7 @@ class UserSchema(SchemaBase):
                                              exclude=('users','credit_sends','credit_receives'))
 
     def get_json_data(self, obj):
-        
+
         allowed_custom_attributes_objs = CustomAttribute.query.all()
         allowed_custom_attributes = []
 
@@ -92,22 +92,29 @@ class UserSchema(SchemaBase):
         return processed_profile_pictures
 
 
-class UploadedImageSchema(SchemaBase):
-    filename                = fields.Str()
-    image_url               = fields.Function(lambda obj: obj.image_url)
-    credit_transfer_id      = fields.Int()
+class UploadedResourceSchema(SchemaBase):
 
+    kyc_application_id = fields.Int()
+    credit_transfer_id = fields.Int()
+
+    filename = fields.Str()
+    file_type = fields.Str()
+    reference = fields.Str()
+    user_filename = fields.Str()
+
+    file_url = fields.Function(lambda obj: obj.file_url)
 
 class TokenSchema(SchemaBase):
     address             = fields.Str()
     symbol              = fields.Str()
     name                = fields.Str()
 
+class CreditTransferSchema(Schema):
 
-class CreditTransferSchema(SchemaBase):
-
+    id      = fields.Int(dump_only=True)
+    # created = fields.DateTime(dump_only=True)
     created = fields.DateTime(dump_only= True, attribute='resolved_date')
-    authorising_user_email = fields.Method('get_authorising_user_email')
+    authorising_user_email  = fields.Method('get_authorising_user_email')
 
     uuid = fields.String()
 
@@ -128,8 +135,10 @@ class CreditTransferSchema(SchemaBase):
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
-    sender_transfer_account_id = fields.Int()
-    recipient_transfer_account_id = fields.Int()
+    transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
+
+    sender_transfer_account_id      = fields.Int()
+    recipient_transfer_account_id   = fields.Int()
 
     sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
     recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
@@ -139,8 +148,8 @@ class CreditTransferSchema(SchemaBase):
 
     attached_images         = fields.Nested(UploadedImageSchema, many=True)
 
-    lat               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
-    lng               = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
+    lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
+    lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
 
     is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
@@ -200,15 +209,15 @@ class TransferAccountSchema(SchemaBase):
 
 
 class TransferCardSchema(SchemaBase):
-    public_serial_number = fields.Str()
-    nfc_serial_number = fields.Function(lambda obj: obj.nfc_serial_number.upper())
+    public_serial_number    = fields.Str()
+    nfc_serial_number       = fields.Function(lambda obj: obj.nfc_serial_number.upper())
 
-    symbol = fields.Method('get_symbol')
+    symbol                  = fields.Method('get_symbol')
 
-    amount_loaded = fields.Function(lambda obj: obj._amount_loaded)
+    amount_loaded           = fields.Function(lambda obj: obj._amount_loaded)
     amount_loaded_signature = fields.Str()
 
-    user = fields.Nested(UserSchema, only=('first_name', 'last_name'))
+    user                    = fields.Nested(UserSchema, only=('first_name', 'last_name'))
 
     def get_symbol(self, obj):
         try:
@@ -218,28 +227,28 @@ class TransferCardSchema(SchemaBase):
 
 
 class ReferralSchema(SchemaBase):
-    first_name = fields.Str()
-    last_name = fields.Str()
-    reason = fields.Str()
-    phone = fields.Str()
+    first_name      = fields.Str()
+    last_name       = fields.Str()
+    reason          = fields.Str()
+    phone           = fields.Str()
 
 
 class SavedFilterSchema(SchemaBase):
-    name    = fields.Str()
-    filter  = fields.Method('get_filter_json')
+    name            = fields.Str()
+    filter          = fields.Method('get_filter_json')
 
     def get_filter_json(self, obj):
         return obj.filter
 
 
 class BankAccountSchema(SchemaBase):
-    wyre_id                  = fields.Str()
-    kyc_application_id = fields.Int()
+    wyre_id             = fields.Str()
+    kyc_application_id  = fields.Int()
 
-    bank_country    = fields.Str()
-    routing_number  = fields.Str()
-    account_number  = fields.Str()
-    currency        = fields.Str()
+    bank_country        = fields.Str()
+    routing_number      = fields.Str()
+    account_number      = fields.Str()
+    currency            = fields.Str()
 
 
 class UploadedDocumentSchema(SchemaBase):
@@ -297,8 +306,6 @@ class OrganisationSchema(SchemaBase):
     org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
 
 
-
-
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
 
@@ -312,7 +319,7 @@ transfer_account_schema = TransferAccountSchema(
         # "credit_sends.sender_user",
         # "credit_sends.recipient_user",
         "credit_receives.sender_transfer_account",
-         "credit_receives.recipient_transfer_account",
+        "credit_receives.recipient_transfer_account",
         #  "credit_receives.sender_user",
         #  "credit_receives.recipient_user"
     ))
@@ -335,11 +342,12 @@ view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credi
 credit_transfer_schema = CreditTransferSchema()
 credit_transfers_schema = CreditTransferSchema(many=True)
 
-view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_user", "recipient_user", "lat", "lng", "attached_images"))
+view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
+"sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
 
-uploaded_image_schema = UploadedImageSchema()
+uploaded_resource_schema = UploadedResourceSchema()
 
 referral_schema = ReferralSchema()
 referrals_schema = ReferralSchema(many=True)
@@ -348,20 +356,20 @@ filter_schema = SavedFilterSchema()
 filters_schema = SavedFilterSchema(many=True)
 
 kyc_application_schema = KycApplicationSchema()
-kyc_application_state_schema = KycApplicationSchema(exclude=("trulioo_id","wyre_id", "first_name", "last_name", "phone",
-                                                                         "business_legal_name", "business_type",
-                                                                         "tax_id", "website", "date_established",
-                                                                         "country", "street_address", "street_address_2"
-                                                                         "city", "region", "postal_code",
-                                                                         "beneficial_owners", "bank_accounts",
-                                                                         "documents", "dob"
-                                                                         ))
+kyc_application_state_schema = KycApplicationSchema(
+    exclude=("trulioo_id", "wyre_id", "first_name", "last_name", "phone",
+             "business_legal_name", "business_type",
+             "tax_id", "website", "date_established",
+             "country", "street_address", "street_address_2"
+                                          "city", "region", "postal_code",
+             "beneficial_owners", "bank_accounts",
+             "documents", "dob"
+             ))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
-
 
 # Me Schemas
 

@@ -3,6 +3,7 @@ from server import celery_app
 from eth_keys import keys
 from eth_utils import keccak
 import os, random
+
 eth_worker_name = 'eth_manager'
 celery_tasks_name = 'celery_tasks'
 eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
@@ -18,8 +19,7 @@ def _execute_synchronous_celery(signature):
         async_result.forget()
 
     return response
-    
-    
+
 def execute_synchronous_transaction_task(signature):
     if current_app.config['IS_TEST']:
         # TODO: We need a better way of stubbing responses from the blockchain worker during tests
@@ -32,8 +32,8 @@ def execute_synchronous_call_task(signature):
     return _execute_synchronous_celery(signature)
 
 
-def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
-
+def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0, private_key=None):
+    # TODO: [Nick] to setup float wallet deterministically created from config private key.
     if not current_app.config['IS_TEST']:
         sig = celery_app.signature(eth_endpoint('create_new_blockchain_wallet'),
                                    kwargs={
@@ -47,7 +47,6 @@ def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0):
 
 
 def send_eth(signing_address, recipient_address, amount_wei, dependent_on_tasks=None):
-
     transfer_sig = celery_app.signature(eth_endpoint('send_eth'),
                                         kwargs={
                                             'signing_address': signing_address,
@@ -261,6 +260,7 @@ def get_wallet_balance(address, token):
         return 100000000000000
 
     return token.token_amount_to_system(balance)
+
 
 def get_blockchain_task(task_id):
     """

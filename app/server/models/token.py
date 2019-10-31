@@ -44,6 +44,9 @@ class Token(ModelBase):
     exchanges_to = db.relationship('Exchange', backref='to_token', lazy=True,
                                    foreign_keys='Exchange.to_token_id')
 
+    fiat_ramps = db.relationship('FiatRamp', backref='token', lazy=True,
+                                 foreign_keys='FiatRamp.token_id')
+
     @property
     def decimals(self):
         if self._decimals:

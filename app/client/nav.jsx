@@ -18,7 +18,7 @@ const tfaPage = lazy(() => import("./components/pages/settings/tfaPage.jsx"));
 const InvitePage = lazy(() => import("./components/pages/InvitePage.jsx"));
 const BusinessVerificationPage = lazy(() => import("./components/pages/businessVerificationPage.jsx"));
 const FundWalletPage = lazy(() => import("./components/pages/fundWalletPage.jsx"));
-const createTransferAccountPage = lazy(() => import("./components/pages/createUserPage.jsx"));
+const createUserPage = lazy(() => import("./components/pages/createUserPage.jsx"));
 const exportPage = lazy(() => import("./components/pages/exportPage.jsx"));
 const authPage = lazy(() => import('./components/pages/authPage.jsx'));
 const resetPasswordPage = lazy(() => import('./components/pages/resetPasswordPage.jsx'));
@@ -72,7 +72,7 @@ class Nav extends React.Component {
               <PrivateRoute exact path="/settings/fund-wallet" component={FundWalletPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/tfa" component={tfaPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute path="/upload" component={uploadPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute path="/create" component={createTransferAccountPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
+              <PrivateRoute path="/create" component={createUserPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute path="/export" component={exportPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}z/>
 
               {/* PUBLIC PAGES */}

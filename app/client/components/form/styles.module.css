@@ -1,0 +1,34 @@
+.input {
+    color: #555;
+    border: solid #d8dbdd;
+    border-width: 0 0 1px 0;
+    outline: none;
+    max-width: 300px;
+    font-size: 18px;
+}
+
+.input:focus {
+    border-color: #2D9EA0;
+}
+
+.inputBlock {
+    display:block;
+    padding: 1em;
+    font-size: 15px;
+}
+
+.inputLabel {
+    display:block;
+    font-size: 14px;
+}
+
+.code {
+    text-align: center;
+    font-size: 3em;
+    font-weight: 700;
+}
+
+.error {
+    color: red;
+}
+

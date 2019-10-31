@@ -42,6 +42,7 @@ class ProcessKenyaUssd(MethodView):
                 current_menu = KenyaUssdProcessor.process_request(session_id, user_input, user)
                 ussd_session = create_or_update_session(session_id, user, current_menu, user_input, service_code)
                 text = menu_display_text_in_lang(current_menu, user)
+                #TODO(ussd): change this out for i18n placeholders
                 text = KenyaUssdProcessor.replace_vars(current_menu, ussd_session, text, user)
         else:
             current_menu = UssdMenu.find_by_name('exit_invalid_request')

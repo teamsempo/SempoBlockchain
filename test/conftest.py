@@ -25,8 +25,8 @@ def requires_auth(test_client):
 def create_blockchain_token(test_client, init_database):
     from server.models.token import Token
     token = Token(address='0xc1275b7de8af5a38a93548eb8453a498222c4ff2',
-                  name='BAR Token',
-                  symbol='BAR')
+                  name='AUD Token',
+                  symbol='AUD')
 
     db.session.add(token)
     db.session.commit()
@@ -127,8 +127,8 @@ def create_transfer_account(new_transfer_account):
 
 @pytest.fixture(scope='module')
 def new_disbursement(create_transfer_account_user):
-    from server.utils.credit_transfers import make_disbursement_transfer
-    disbursement = make_disbursement_transfer(100,create_transfer_account_user)
+    from server.utils.credit_transfers import make_payment_transfer
+    disbursement = make_payment_transfer(100, receive_transfer_account=create_transfer_account_user, transfer_subtype='DISBURSEMENT')
     return disbursement
 
 @pytest.fixture(scope='function')
@@ -191,6 +191,18 @@ def create_ip_address(authed_sempo_admin_user):
     return ip_address
 
 
+@pytest.fixture(scope='function')
+def create_fiat_ramp():
+    from server.models.fiat_ramp import FiatRamp
+    fiat_ramp = FiatRamp(
+            payment_method='POLI',
+            payment_amount=int(100),
+        )
+    db.session.add(fiat_ramp)
+    db.session.commit()
+    return fiat_ramp
+
+
 @pytest.fixture(scope='module')
 def test_request_context():
     flask_app = create_app()
@@ -227,5 +239,5 @@ def init_database():
     yield db  # this is where the testing happens!
 
     with current_app.app_context():
-        db.session.close_all()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
+        db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
         db.drop_all()

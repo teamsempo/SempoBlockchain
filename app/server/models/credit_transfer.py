@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -19,7 +19,7 @@ from server.utils.blockchain_tasks import (
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
-from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferModeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, TransferModeEnum
 
 
 class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
@@ -30,10 +30,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     resolved_date   = db.Column(db.DateTime)
     transfer_amount = db.Column(db.Integer)
 
-    transfer_type   = db.Column(db.Enum(TransferTypeEnum))
-    transfer_status = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
-    transfer_mode   = db.Column(db.Enum(TransferModeEnum))
-    transfer_use    = db.Column(JSON)
+    transfer_type       = db.Column(db.Enum(TransferTypeEnum))
+    transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
+    transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
+    transfer_mode       = db.Column(db.Enum(TransferModeEnum))
+    transfer_use        = db.Column(JSON)
+
+    transfer_metadata = db.Column(JSONB)
 
     resolution_message = db.Column(db.String())
 
@@ -50,7 +53,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     blockchain_transactions = db.relationship('BlockchainTransaction', backref='credit_transfer', lazy=True)
 
-    attached_images = db.relationship('UploadedImage', backref='credit_transfer', lazy=True)
+    attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy=True)
+
+    fiat_ramp = db.relationship('FiatRamp', backref='credit_transfer', lazy=True, uselist=False)
 
     from_exchange = db.relationship('Exchange', backref='from_transfer', lazy=True, uselist=False,
                                      foreign_keys='Exchange.from_transfer_id')
@@ -151,12 +156,15 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
-        self.sender_transfer_account.add_to_balance(-1 * self.transfer_amount)
-        self.recipient_transfer_account.add_to_balance(self.transfer_amount)
+        self.sender_transfer_account.balance -= self.transfer_amount
+        self.recipient_transfer_account.balance += self.transfer_amount
 
-        if self.transfer_type == TransferTypeEnum.DISBURSEMENT:
+        if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
+
+        if self.transfer_type == TransferTypeEnum.DEPOSIT and self.fiat_ramp:
+            self.fiat_ramp.resolve_as_completed()
 
         if not existing_blockchain_txn:
             self.send_blockchain_payload_to_worker()
@@ -205,7 +213,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  recipient_user=None,
                  sender_transfer_account=None,
                  recipient_transfer_account=None,
-                 transfer_type=None, uuid=None):
+                 transfer_type=None,
+                 uuid=None,
+                 transfer_metadata=None,
+                 fiat_ramp=None,
+                 transfer_subtype=None):
 
         self.transfer_amount = amount
 
@@ -220,16 +232,26 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.token = token or self.sender_transfer_account.token
 
+        self.fiat_ramp = fiat_ramp
+
         self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
             self.token,
             recipient_user,
             recipient_transfer_account
         )
 
+        if transfer_type is TransferTypeEnum.DEPOSIT.value:
+            self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()
+
+        if transfer_type is TransferTypeEnum.WITHDRAWAL.value:
+            self.recipient_transfer_account = self.sender_transfer_account.get_float_transfer_account()
+
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:
             raise Exception("Tokens do not match")
 
         self.transfer_type = transfer_type
+        self.transfer_subtype = transfer_subtype
+        self.transfer_metadata = transfer_metadata
 
         if uuid is not None:
             self.uuid = uuid

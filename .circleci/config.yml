@@ -151,13 +151,13 @@ jobs:
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - restore_cache:
-          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+          key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
       - run:
           name: Setup AWS CLI
           command: |
             pip install -r ~/project/.circleci/requirements.txt
       - save_cache:
-          key: pydeps-v2-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+          key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
@@ -206,6 +206,7 @@ workflows:
       - deploy:
           filters:
             branches:
-              only: master
+              only:
+                - master
           requires:
             - test

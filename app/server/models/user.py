@@ -78,6 +78,8 @@ class User(ManyOrgBase, ModelBase):
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
 
+    password_reset_tokens = db.Column(JSONB, default=[])
+
     terms_accepted = db.Column(db.Boolean, default=True)
 
     matched_profile_pictures = db.Column(JSON)
@@ -93,8 +95,8 @@ class User(ManyOrgBase, ModelBase):
         "TransferAccount",
         secondary=user_transfer_account_association_table,
         back_populates="users")
+    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
 
-    chatbot_state_id = db.Column(db.Integer, db.ForeignKey('chatbot_state.id'))
     targeting_survey_id = db.Column(
         db.Integer, db.ForeignKey('targeting_survey.id'))
 
@@ -108,8 +110,8 @@ class User(ManyOrgBase, ModelBase):
     # roles = db.relationship('UserRole', backref='user', lazy=True,
     #                              foreign_keys='UserRole.user_id')
 
-    uploaded_images = db.relationship('UploadedImage', backref='user', lazy=True,
-                                      foreign_keys='UploadedImage.user_id')
+    uploaded_images = db.relationship('UploadedResource', backref='user', lazy=True,
+                                      foreign_keys='UploadedResource.user_id')
 
     kyc_applications = db.relationship('KycApplication', backref='user', lazy=True,
                                        foreign_keys='KycApplication.user_id')
@@ -417,6 +419,37 @@ class User(ManyOrgBase, ModelBase):
 
             return {'success': False, 'message': e}
 
+    def save_password_reset_token(self, password_reset_token):
+        # make a "clone" of the existing token list
+        self.clear_expired_tokens()
+        current_reset_tokens = self.password_reset_tokens[:]
+        current_reset_tokens.append(password_reset_token)
+        # set db value
+        self.password_reset_tokens = current_reset_tokens
+
+    def check_reset_token_already_used(self, password_reset_token):
+        self.clear_expired_tokens()
+        is_valid = password_reset_token in self.password_reset_tokens
+        return is_valid
+
+    def delete_password_reset_tokens(self):
+        self.password_reset_tokens = []
+
+    def clear_expired_tokens(self):
+
+        # For some reason the existing user get an None instead of a [] 
+        # during migration. This is to ensure no TypeError occurs
+
+        if self.password_reset_tokens is None:
+            self.password_reset_tokens = []
+
+        valid_tokens = []
+        for token in self.password_reset_tokens:
+            validity_check = self.decode_single_use_JWS(token, 'R')
+            if validity_check['success']:
+                valid_tokens.append(token)
+        self.password_reset_tokens = valid_tokens
+
     def create_admin_auth(self, email, password, tier='view'):
         self.email = email
         self.hash_password(password)
@@ -470,9 +503,10 @@ class User(ManyOrgBase, ModelBase):
 
         self.hash_password(pin)
 
-    # TODO(ussd): change to a field once we figure out what's the deal with reset_token
     def is_resetting(self):
-        return False
+        self.clear_expired_tokens()
+        is_resetting = len(self.password_reset_tokens) > 0
+        return is_resetting
 
     # TODO(ussd): change to a field once we figure out what's the deal with resetting
     def pin_failed_attempts(self):

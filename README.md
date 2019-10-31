@@ -70,6 +70,10 @@ cd eth_worker
 celery -A eth_manager worker --loglevel=INFO --concurrency=500 --pool=eventlet
 ```
 
+You can also add a runtime configuration with the `script path` set as the path to your virtual env `/Users/tristancole/Virtual_Envs/SempoBlockchain_env/bin/celery`.
+
+Set the `parameters` to the run line above.
+
 ### Database Migration:
 
 Migrate differs slightly for the main app (uses flask-migrate version of alembic) versus the ethereum worker (uses pure alembic).
