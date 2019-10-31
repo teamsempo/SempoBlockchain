@@ -11,7 +11,7 @@ from server.models.email_whitelist import EmailWhitelist
 from server.models.currency_conversion import CurrencyConversion
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_usage import TransferUsage
-from server.utils.intercom import create_intercom_android_secret
+from server.utils.intercom import create_intercom_secret
 from server.utils.auth import requires_auth, tfa_logic
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
@@ -23,6 +23,18 @@ from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
 import time, random
 
 auth_blueprint = Blueprint('auth', __name__)
+
+
+def get_user_organisations(user):
+    try:
+        organisation = dict(
+            organisation_name=user.default_organisation.name,
+            organisation_id=user.default_organisation_id
+        )
+    except AttributeError:
+        organisation = dict()
+
+    return organisation
 
 
 def get_denominations():
@@ -93,8 +105,12 @@ def create_user_response_object(user, auth_token, message):
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'kyc_active': True,  # todo; kyc active function
-        'android_intercom_hash': create_intercom_android_secret(user_id=user.id)
+        'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
+        'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
     }
+
+    # merge the user and organisation object nicely (handles non-orgs well)
+    response_object = {**response_object, **get_user_organisations(user)}
 
     # todo: fix this (now many to many)
     user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(

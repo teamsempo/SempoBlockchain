@@ -194,12 +194,17 @@ PUSHER_CLUSTER  = common_parser['PUSHER']['cluser']
 PUSHER_ENV_CHANNEL = common_parser['PUSHER']['environment_channel'] + '-' + DEPLOYMENT_NAME
 PUSHER_SUPERADMIN_ENV_CHANNEL = common_parser['PUSHER']['superadmin_environment_channel'] + '-' + DEPLOYMENT_NAME
 
+LOCALE_FALLBACK = 'en'
+
 TWILIO_SID   = common_parser['TWILIO']['sid']
 TWILIO_TOKEN = common_parser['TWILIO']['token']
 TWILIO_PHONE = specific_parser['TWILIO']['phone']
 
 MESSAGEBIRD_KEY = specific_parser['MESSAGEBIRD']['key']
 MESSAGEBIRD_PHONE = specific_parser['MESSAGEBIRD']['phone']
+
+AT_USERNAME = specific_parser["AFRICASTALKING"]["username"]
+AT_API_KEY = specific_parser["AFRICASTALKING"]["api_key"]
 
 try:
     from ecdsa import SigningKey, NIST192p
@@ -273,6 +278,7 @@ WYRE_HOST_V2 = specific_parser['WYRE']['host_v2']
 IPIFY_API_KEY = common_parser['IPIFY']['api_key']
 
 INTERCOM_ANDROID_SECRET = common_parser['INTERCOM']['android_secret']
+INTERCOM_WEB_SECRET = common_parser['INTERCOM']['web_secret']
 
 SLACK_HOST      = specific_parser['SLACK']['host']
 SLACK_API_TOKEN = common_parser['SLACK']['token']

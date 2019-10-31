@@ -68,11 +68,12 @@ class KenyaUssdProcessor:
             replacements.append(['%exchange_amount%', ussd_session.session_data['exchange_amount']])
         elif 'pin_authorization' in menu.name or 'current_pin' in menu.name:
             if user.pin_failed_attempts() > 0:
-                # TODO: not a great way to do i18n...
+                # TODO(ussd): replace this with i18n placeholders
                 if user.preferred_language == 'sw_KE':
-                    replacements.append(['%remaining_attempts%', "Una majaribio #{3 - user.pin_failed_attempts} yaliyobaki."])
+                    # TODO(ussd): pin_failed_attempts isn't a thing yet!
+                    replacements.append(['%remaining_attempts%', "Una majaribio {} yaliyobaki.".format(3 - user.pin_failed_attempts)])
                 else:
-                    replacements.append(['%remaining_attempts%', "You have #{3 - user.pin_failed_attempts} attempts remaining."])
+                    replacements.append(['%remaining_attempts%', "You have {} attempts remaining.".format(3 - user.pin_failed_attempts)])
             else:
                 replacements.append(['%remaining_attempts%', ''])
 

@@ -11,7 +11,9 @@ from transitions import Machine
 from server import db
 from server.models.user import User
 from server.models.ussd import UssdSession
-from server.utils.phone import proccess_phone_number, send_generic_message
+from server.utils.phone import proccess_phone_number, send_message
+from server.utils.i18n import i18n_for
+from server.utils.user import set_custom_attributes
 
 
 def get_user(query_filter):
@@ -72,11 +74,30 @@ class KenyaUssdStateMachine(Machine):
               'complete'
               ]
 
-    def change_preferred_language_to_sw_KE(self, user_input):
-        pass
+    def send_sms(self, message_key):
+        message = i18n_for(self.user, "ussd.kenya.{}".format(message_key))
+        send_message(self.user.phone, message)
 
-    def change_preferred_language_to_en_KE(self, user_input):
-        pass
+    def change_preferred_language_to_sw(self, user_input):
+        self.change_preferred_language_to("sw")
+
+    def change_preferred_language_to_en(self, user_input):
+        self.change_preferred_language_to("en")
+
+    def change_preferred_language_to(self, language):
+        self.user.preferred_language = language
+        db.session.commit()
+        self.send_sms("language_change_sms")
+
+    def change_opted_in_market_status(self):
+        attrs = {
+            "custom_attributes": {
+                "market_enabled": False
+            }
+        }
+        set_custom_attributes(attrs, self.user)
+        db.session.commit()
+        self.send_sms("opt_out_of_market_place_sms")
 
     def is_valid_pin(self, user_input):
         pin_validity = False
@@ -104,7 +125,7 @@ class KenyaUssdStateMachine(Machine):
     # TODO: [Philip] Add community token when available
     def upsell_unregistered_recipient(self, user_input):
         upsell_message = f"{self.user.first_name} {self.user.last_name} amejaribu kukutumia {self.user} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
-        send_generic_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
+        send_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
 
     def save_transaction_amount(self, user_input):
         pass
@@ -127,16 +148,10 @@ class KenyaUssdStateMachine(Machine):
     def save_business_directory_info(self, user_input):
         pass
 
-    def change_opt_in_market_status(self):
-        pass
-
     def process_send_token_request(self):
         pass
 
     def fetch_user_exchange_rate(self):
-        pass
-
-    def change_opted_in_market_status(self):
         pass
 
     def is_valid_token_agent(self, user_input):
@@ -154,7 +169,6 @@ class KenyaUssdStateMachine(Machine):
 
     def process_exchange_token_request(self):
         pass
-
 
     def menu_one_selected(self, user_input):
         return user_input == '1'
@@ -188,12 +202,12 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_sw_KE',
+             'after': 'change_preferred_language_to_sw',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_en_KE',
+             'after': 'change_preferred_language_to_en',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
@@ -382,12 +396,12 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_sw_KE',
+             'after': 'change_preferred_language_to_sw',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_en_KE',
+             'after': 'change_preferred_language_to_en',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'choose_language',
