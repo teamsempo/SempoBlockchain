@@ -86,6 +86,7 @@ class KenyaUssdStateMachine(Machine):
 
     def change_preferred_language_to(self, language):
         self.user.preferred_language = language
+        db.session.commit()
         self.send_sms("language_change_sms")
 
     def change_opted_in_market_status(self):
@@ -95,6 +96,7 @@ class KenyaUssdStateMachine(Machine):
             }
         }
         set_custom_attributes(attrs, self.user)
+        db.session.commit()
         self.send_sms("opt_out_of_market_place_sms")
 
     def is_valid_pin(self, user_input):
