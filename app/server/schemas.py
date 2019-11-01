@@ -146,7 +146,7 @@ class CreditTransferSchema(Schema):
     sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
     recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
 
-    attached_images         = fields.Nested(UploadedImageSchema, many=True)
+    attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 
     lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)

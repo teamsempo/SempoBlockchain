@@ -416,11 +416,6 @@ def make_payment_transfer(transfer_amount,
             send_transfer_account = receive_transfer_account.get_float_transfer_account()
 
     transfer = CreditTransfer(transfer_amount,
-                              sender_user=send_user,
-                              sender_transfer_account=send_transfer_account,
-                              recipient_user=receive_user,
-                              recipient_transfer_account=receive_transfer_account,
-                              uuid=uuid)
                               token=token,
                               sender_user=send_user,
                               sender_transfer_account=send_transfer_account,

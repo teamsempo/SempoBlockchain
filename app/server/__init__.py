@@ -29,7 +29,7 @@ def create_app():
 
     app.config.from_object('config')
     app.config['BASEDIR'] = os.path.abspath(os.path.dirname(__file__))
-    # app.config["SQLALCHEMY_ECHO"] = True
+    app.config["SQLALCHEMY_ECHO"] = True
 
     # ensure the instance folder exists
     try:
@@ -182,8 +182,6 @@ sentry = Sentry()
 
 s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
                   aws_secret_access_key=config.AWS_SES_SECRET)
-
-messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
 
 celery_app = Celery('tasks',
                     broker=config.REDIS_URL,

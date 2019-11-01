@@ -211,7 +211,7 @@ class TransferAccount(OneOrgBase, ModelBase):
         return withdrawal
 
 
-    def __init__(self, blockchain_address=None, organisation=None, private_key=None **kwargs):
+    def __init__(self, blockchain_address=None, organisation=None, private_key=None, **kwargs):
         super(TransferAccount, self).__init__(**kwargs)
 
         # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)

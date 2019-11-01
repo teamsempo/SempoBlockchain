@@ -1,7 +1,6 @@
 import pytest
 from flask import current_app
-import subprocess
-
+from sqlalchemy.exc import ProgrammingError
 import os
 import sys
 app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))

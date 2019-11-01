@@ -6,6 +6,7 @@ The class contains methods responsible for validation of user input and processi
 the services provided by the  ussd app.
 """
 import re
+
 from transitions import Machine
 
 from server import db
