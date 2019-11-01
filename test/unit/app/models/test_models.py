@@ -159,6 +159,11 @@ def test_valid_tfa_token(authed_sempo_admin_user):
             is not None)
 
 
+def test_get_most_relevant_transfer_usage(authed_sempo_admin_user):
+    usages = authed_sempo_admin_user.get_most_relevant_transfer_usage()
+    assert isinstance(usages, list)
+
+
 """ ----- Transfer Account Model ----- """
 
 

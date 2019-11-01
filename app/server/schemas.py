@@ -37,6 +37,7 @@ class UserSchema(Schema):
     ap_bank_id = fields.Str()
     ap_paypal_id = fields.Str()
     kyc_state = fields.Str()
+    business_usage_id = fields.Int()
 
     custom_attributes = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
@@ -313,9 +314,17 @@ class TokenSchema(Schema):
     id = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
 
+<<<<<<< HEAD
     address = fields.Str()
     symbol = fields.Str()
     name = fields.Str()
+=======
+class TransferUsageSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+
+    name                = fields.Str()
+    default             = fields.Boolean()
+>>>>>>> Created seed_dev and added businness usage id
 
 
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
@@ -383,6 +392,11 @@ organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
 
+<<<<<<< HEAD
+=======
+transfer_usages_schema = TransferUsageSchema(many=True)
+
+>>>>>>> Created seed_dev and added businness usage id
 # Me Schemas
 
 me_transfer_accounts_schema = TransferAccountSchema(many=True,

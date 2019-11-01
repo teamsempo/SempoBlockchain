@@ -2,6 +2,7 @@ from server import db, sentry, celery_app
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy import text
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
 from flask import current_app
@@ -10,14 +11,17 @@ import bcrypt
 import jwt
 import random
 import string
+from collections import Counter
 
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
+from server.models.credit_transfer import CreditTransfer
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
+from server.models.transfer_usage import TransferUsage
 from server.exceptions import (
     RoleNotFoundException,
     TierNotFoundException,
@@ -509,6 +513,51 @@ class User(ManyOrgBase, ModelBase):
 
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
+
+    def get_most_relevant_transfer_usage(self):
+        '''Finds the transfer usage/business categories there are most relevant for the user
+        based on the last number of send and completed credit transfers supplemented with the
+        defaul business categories
+        :return: list of most relevant transfer usage objects for the usage
+        """
+        '''
+
+        # I spent way too much time failing to figure out how to write
+        # this query using sqlalchemy if someone could point met how to translate
+        # this query to sqlalchemy please do. 
+        # Can it maybe use the paginate_query function?
+        sql = text('''
+            SELECT u.business_usage_id FROM credit_transfer c
+            LEFT JOIN "user" u ON c.recipient_user_id = u.id
+            WHERE sender_user_id = {} AND c.transfer_status = 'COMPLETE'
+            ORDER BY c.updated DESC
+            LIMIT 20
+        '''.format(self.id))
+        result = db.session.execute(sql)
+        transfer_usage_ids = [row[0] for row in result]
+
+        # Get most common business_usage_id
+        number_of_wanted_business_id = 9
+        c = Counter(transfer_usage_ids)
+        most_common = [key for key, val in c.most_common(number_of_wanted_business_id)]
+        # If less than the wanted nr of usage is found fill up the list with default
+        if len(most_common) < number_of_wanted_business_id:
+            most_relevant_ids = self.refine_with_default_transfer_usage(
+                most_common, number_of_wanted_business_id)
+        most_relevant_transer_usage = TransferUsage.query.filter(
+            TransferUsage.id.in_(most_relevant_ids)).all()
+        print(most_relevant_transer_usage)
+        return most_relevant_transer_usage
+        
+    def refine_with_default_transfer_usage(self, most_common, nr_of_wanted):
+        default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
+            TransferUsage.id).all()
+        for transer_usage_id, in default_transer_usages:
+            if transer_usage_id not in most_common:
+                most_common.append(transer_usage_id)
+            if len(most_common) == nr_of_wanted:
+                break
+        return most_common
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)

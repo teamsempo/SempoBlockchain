@@ -1,7 +1,8 @@
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.hybrid import hybrid_property
 from server.exceptions import (
-    IconNotSupportedException
+    IconNotSupportedException,
+    TransferUsageNameDuplicateException
 )
 from server.constants import (
     MATERIAL_COMMUNITY_ICONS
@@ -30,3 +31,13 @@ class TransferUsage(ModelBase):
         if icon not in MATERIAL_COMMUNITY_ICONS:
             raise IconNotSupportedException('Icon {} not supported or found')
         self._icon = icon
+
+    @classmethod
+    def create_without_duplicate(cls, raw_name, icon, priority, default):
+        name = raw_name.strip().upper()
+        exists = db.session.query(TransferUsage.id).filter_by(
+            name=name).scalar() is not None
+        if exists:
+            raise TransferUsageNameDuplicateException('Transfer usage name {} is duplicate'.format(raw_name))
+        # Currently set default as False here.
+        return cls(name=name, icon=icon, priority=priority, default=default)

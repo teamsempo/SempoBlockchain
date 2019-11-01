@@ -6,7 +6,8 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 
 from server import db, create_app
 from server.models.ussd import UssdMenu
-
+from server.models.transfer_usage import TransferUsage
+from server.exceptions import TransferUsageNameDuplicateException
 
 def update_or_create_menu(name, description, parent_id=None):
     instance = UssdMenu.query.filter_by(name=name).first()
@@ -257,32 +258,32 @@ if __name__ == '__main__':
     print('------------------------------------------------------------')
     print('Done creating USSD Menus')
 
+    
+    
+    print('Creating Business Categories')
+    print('**********************************************************************')
+    business_categories = [
+        {'name': 'Food', 'icon': 'message'},
+        {'name': 'Water', 'icon': 'message'},
+        {'name': 'Energy', 'icon': 'message'},
+        {'name': 'Education', 'icon': 'message'},
+        {'name': 'Health', 'icon': 'message'},
+        {'name': 'General shop', 'icon': 'message'},
+        {'name': 'Environment', 'icon': 'message'},
+        {'name': 'Transport', 'icon': 'message'},
+        {'name': 'Labour', 'icon': 'message'},
+        {'name': 'Other', 'icon': 'message'},
+    ]
+    for business_category in business_categories:
+        try:
+            usage = TransferUsage.create_without_duplicate(
+                business_category['name'], business_category['icon'], 1, True)
+            db.session.add(usage)
+            db.session.commit()
+                
+        except TransferUsageNameDuplicateException as e:
+            print(e)
     ctx.pop()
-
-"""
-print('Creating Business Categories')
-print('**********************************************************************')
-
-business_categories = {
-  '1001' => 'Food',
-  '1002' => 'Water',
-  '1003' => 'Energy',
-  '1004' => 'Education',
-  '1005' => 'Health',
-  '1006' => 'General shop',
-  '1007' => 'Environment',
-  '1008' => 'Transport',
-  '1009' => 'Labour',
-  '1010' => 'Other'
-}
-
-business_categories.each do |code, type|
-  BusinessCategory.where(classification_code: code).first_or_create! do |bc|
-    bc.classification_code = code
-    bc.business_type = type
-  end
-end
-
-print('------------------------------------------------------------')
-print('Done creating Business Categories')
-"""
+    print('------------------------------------------------------------')
+    print('Done creating Business Categories')
+    
