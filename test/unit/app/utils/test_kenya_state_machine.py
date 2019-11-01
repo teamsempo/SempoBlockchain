@@ -1,12 +1,18 @@
 import pytest
 from functools import partial
+from faker.providers import phone_number
+from faker import Faker
 
 from fixtures.user import UserFactory
 from fixtures.ussd_session import UssdSessionFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 
+fake = Faker()
+fake.add_provider(phone_number)
+# why do i get dupes if i put it directly on standard_user...?
+phone = partial(fake.msisdn)
 
-standard_user = partial(UserFactory, first_name="James", phone="254700000000")
+standard_user = partial(UserFactory)
 # TODO: [Philip] Find out how token agents are stored
 token_agent = partial(UserFactory, held_roles={"TOKEN_AGENT": "grassroots_token_agent"})
 initial_language_selection_state = partial(UssdSessionFactory, state="initial_language_selection")
@@ -119,7 +125,8 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
 ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
-    user = user_factory()
+    user = standard_user()
+    user.phone = phone()
     state_machine = KenyaUssdStateMachine(session, user)
 
     state_machine.feed_char(user_input)
@@ -135,6 +142,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 def test_change_language(mocker, test_client, init_database, session_factory, user_input, language):
     session = session_factory()
     user = standard_user()
+    user.phone = phone()
     assert user.preferred_language is None
 
     state_machine = KenyaUssdStateMachine(session, user)
@@ -150,6 +158,7 @@ def test_change_language(mocker, test_client, init_database, session_factory, us
 def test_opt_out_of_marketplace(mocker, test_client, init_database):
     session = opt_out_of_market_place_pin_authorization_state()
     user = standard_user()
+    user.phone = phone()
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
