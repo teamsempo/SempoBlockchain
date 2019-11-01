@@ -310,6 +310,9 @@ class User(ManyOrgBase, ModelBase):
     def verify_password(self, password):
         return self.check_salt_hashed_password(password, self.password_hash)
 
+    def verify_pin(self, pin):
+        return self.check_salt_hashed_password(pin, self._encrypted_pin)
+
     def encode_TFA_token(self, valid_days=1):
         """
         Generates the Auth Token for TFA

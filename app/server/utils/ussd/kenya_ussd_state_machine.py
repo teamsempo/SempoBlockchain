@@ -121,7 +121,7 @@ class KenyaUssdStateMachine(Machine):
         if self.user.failed_pin_attempts == 3:
             return False
         if self.user.failed_pin_attempts < 3:
-            authorized = self.user.check_salt_hashed_password(pin, self.user.pin)
+            authorized = self.user.verify_pin(pin)
             if authorized:
                 if self.user.failed_pin_attempts > 0:
                     self.user.failed_pin_attempts = 0

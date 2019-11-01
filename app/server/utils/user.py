@@ -200,13 +200,14 @@ def create_transfer_account_user(
 
     if organisation:
         user.organisations.append(organisation)
+        user.default_organisation = organisation
 
     db.session.add(user)
 
     if existing_transfer_account:
-        transfer_account = existing_transfer_account
         user.transfer_accounts.append(existing_transfer_account)
     else:
+
         transfer_account = TransferAccount(
             blockchain_address=blockchain_address, organisation=organisation)
         transfer_account.name = transfer_account_name
@@ -222,8 +223,6 @@ def create_transfer_account_user(
 
         if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
             transfer_account.approve()
-
-    user.default_transfer_account_id = transfer_account.id
 
     return user
 
@@ -347,12 +346,10 @@ def proccess_create_or_modify_user_request(
     but here it's one layer down because there's multiple entry points for 'create user':
     - The admin api
     - The register api
-
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
     :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
     :param is_self_sign_up: does the request come from the register api?
-    :param enrolled_by: person calling this method if is an admin
     :return: An http response
     """
 
@@ -506,8 +503,6 @@ def proccess_create_or_modify_user_request(
 
         return response_object, 200
 
-    # TODO(admin_create): or should this just be the organisation's token
-    token = attribute_dict.get('default_token_id', None)
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name, preferred_language=preferred_language,
         phone=phone, email=email, public_serial_number=public_serial_number,
@@ -602,7 +597,7 @@ def send_phone_verification_message(to_phone, one_time_code):
 
 
 def send_sms(user, message_key):
-    message = i18n_for(user, "ussd.kenya.{}".format(message_key))
+    message = i18n_for(user, "user.{}".format(message_key))
     send_message(user.phone, message)
 
 

@@ -6,8 +6,12 @@ from fixtures.ussd_session import UssdSessionFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 
 standard_user = partial(UserFactory, first_name="James", phone="254700000000", pin='0000', failed_pin_attempts=0)
-pin_blocked_standard_user = partial(UserFactory, first_name="James", phone="254700000000", pin='0000',
-                                    failed_pin_attempts=3)
+two_failed_pin_attempts_user = partial(UserFactory, first_name="James", phone="254700000000", pin='0000',
+                                       failed_pin_attempts=2)
+one_failed_pin_attempts_user = partial(UserFactory, first_name="James", phone="254700000000", pin='0000',
+                                       failed_pin_attempts=1)
+pin_blocked_user = partial(UserFactory, first_name="James", phone="254700000000", pin='0000',
+                           failed_pin_attempts=3)
 # TODO: [Philip] Find out how token agents are stored
 token_agent = partial(UserFactory, held_roles={"TOKEN_AGENT": "grassroots_token_agent"})
 initial_language_selection_state = partial(UssdSessionFactory, state="initial_language_selection")
@@ -71,7 +75,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
                              # send_token_pin_authorization state tests
                              (send_token_pin_authorization_state, standard_user, "0000", "send_token_confirmation"),
                              (
-                                     send_token_pin_authorization_state, pin_blocked_standard_user, "1111",
+                                     send_token_pin_authorization_state, pin_blocked_user, "1111",
                                      "exit_pin_blocked"),
                              # send_token_confirmation state tests
                              (send_token_confirmation_state, standard_user, "1", "complete"),
@@ -93,11 +97,11 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
                              (choose_language_state, standard_user, "5", "exit_invalid_menu_option"),
                              # balance_inquiry_pin_authorization state tests
                              (balance_inquiry_pin_authorization_state, standard_user, "0000", "complete"),
-                             (balance_inquiry_pin_authorization_state, pin_blocked_standard_user, "1111",
+                             (balance_inquiry_pin_authorization_state, pin_blocked_user, "1111",
                               "exit_pin_blocked"),
                              # current_pin state tests
                              (current_pin_state, standard_user, "0000", "new_pin"),
-                             (current_pin_state, pin_blocked_standard_user, "1111", "exit_pin_blocked"),
+                             (current_pin_state, pin_blocked_user, "1111", "exit_pin_blocked"),
                              # new_pin state tests
                              (new_pin_state, standard_user, "2222", "new_pin_confirmation"),
                              (new_pin_state, standard_user, "0000", "exit_invalid_pin"),
@@ -105,7 +109,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
                              (new_pin_confirmation_state, standard_user, "2222", "complete"),
                              (new_pin_confirmation_state, standard_user, "1212", "exit_pin_mismatch"),
                              # opt_out_of_market_place_pin_authorization state tests
-                             (opt_out_of_market_place_pin_authorization_state, pin_blocked_standard_user, "1111",
+                             (opt_out_of_market_place_pin_authorization_state, pin_blocked_user, "1111",
                               "exit_pin_blocked"),
                              # exchange_token state tests
                              (exchange_token_state, standard_user, "1", "exchange_rate_pin_authorization"),
@@ -113,7 +117,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
                              (exchange_token_state, standard_user, "3", "exit_invalid_menu_option"),
                              # exchange_rate_pin_authorization state tests
                              (exchange_rate_pin_authorization_state, standard_user, "0000", "complete"),
-                             (exchange_rate_pin_authorization_state, pin_blocked_standard_user, "1111",
+                             (exchange_rate_pin_authorization_state, pin_blocked_user, "1111",
                               "exit_pin_blocked"),
                              # exchange_token_agent_number_entry state tests
                              # (exchange_token_agent_number_entry_transitions_state, standard_user, "0712345678", "exchange_token_amount_entry"),
@@ -125,7 +129,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
                              # exchange_token_pin_authorization state tests
                              (exchange_token_pin_authorization_state, standard_user, "0000",
                               "exchange_token_confirmation"),
-                             (exchange_token_pin_authorization_state, pin_blocked_standard_user, "1111",
+                             (exchange_token_pin_authorization_state, pin_blocked_user, "1111",
                               "exit_pin_blocked"),
                              # exchange_token_confirmation state tests
                              (exchange_token_confirmation_state, standard_user, "1", "complete"),
@@ -175,7 +179,8 @@ def test_opt_out_of_marketplace(test_client, init_database):
 
 
 @pytest.mark.parametrize("session_factory, user_input, expected, failed_pin_attempts", [
-    (send_token_pin_authorization_state, "1212", "send_token_pin_authorization", 1)
+    (send_token_pin_authorization_state, "1212", "send_token_pin_authorization", 1),
+
 ])
 def test_authorize_pin(test_client, init_database, session_factory, user_input, expected, failed_pin_attempts):
     session = session_factory()
@@ -189,13 +194,16 @@ def test_authorize_pin(test_client, init_database, session_factory, user_input, 
     assert user.failed_pin_attempts == failed_pin_attempts
 
 
-@pytest.mark.parametrize("session_factory, user_input, expected, failed_pin_attempts", [
-    (send_token_pin_authorization_state, "1212", "exit_pin_blocked", 3)
+@pytest.mark.parametrize("session_factory, user_factory, user_input, expected, failed_pin_attempts", [
+    (send_token_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3),
+    (send_token_pin_authorization_state, one_failed_pin_attempts_user, "1212", "send_token_pin_authorization", 2),
+    (send_token_pin_authorization_state, one_failed_pin_attempts_user, "0000", "send_token_confirmation", 0),
+    (send_token_pin_authorization_state, two_failed_pin_attempts_user, "1212", "exit_pin_blocked", 3),
+    (send_token_pin_authorization_state, two_failed_pin_attempts_user, "0000", "send_token_confirmation", 0)
 ])
-def test_exit_pin_blocked(test_client, init_database, session_factory, user_input, expected, failed_pin_attempts):
+def test_exit_pin_blocked(test_client, init_database, session_factory, user_factory, user_input, expected, failed_pin_attempts):
     session = session_factory()
-    user = pin_blocked_standard_user()
-    assert user.failed_pin_attempts == 3
+    user = user_factory()
 
     state_machine = KenyaUssdStateMachine(session, user)
 
