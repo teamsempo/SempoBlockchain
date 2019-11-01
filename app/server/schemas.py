@@ -314,18 +314,15 @@ class TokenSchema(Schema):
     id = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
 
-<<<<<<< HEAD
     address = fields.Str()
     symbol = fields.Str()
     name = fields.Str()
-=======
+
 class TransferUsageSchema(Schema):
     id                  = fields.Int(dump_only=True)
 
     name                = fields.Str()
     default             = fields.Boolean()
->>>>>>> Created seed_dev and added businness usage id
-
 
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
