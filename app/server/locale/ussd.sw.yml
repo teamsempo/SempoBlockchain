@@ -135,5 +135,8 @@ sw:
     exit_invalid_exchange_amount: END Kiwango ulichoweka hakitoshi. Tafadhali weka kiwango cha 40 au zaidi.
     language_change_sms: Lugha imebadilishwa.
     opt_out_of_market_place_sms: Ombi lako la kuondoka sokoni limekamilika.
+    successful_pin_change_sms: PIN yako ya Sarafu Network imebadilishwa.
+    unsuccessful_pin_change_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0799 100 200 kwa usaidizi.
+    upsell_message: "%{first_name} %{last_name} amejaribu kukutumia {community_token} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
 
 

@@ -57,7 +57,7 @@ class User(ManyOrgBase, ModelBase):
     secret = db.Column(db.String())
     _TFA_secret = db.Column(db.String(128))
     TFA_enabled = db.Column(db.Boolean, default=False)
-    _encrypted_pin = db.Column(db.String(128))
+    _encrypted_pin = db.Column(db.String())
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
 
@@ -296,12 +296,19 @@ class User(ManyOrgBase, ModelBase):
         else:
             self._last_seen = cur_time
 
+    @staticmethod
+    def salt_hash_password(password):
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    @staticmethod
+    def check_salt_hashed_password(password, hashed_password):
+        return bcrypt.checkpw(password.encode(), hashed_password.encode())
+
     def hash_password(self, password):
-        self.password_hash = bcrypt.hashpw(
-            password.encode(), bcrypt.gensalt()).decode()
+        self.password_hash = self.salt_hash_password(password)
 
     def verify_password(self, password):
-        return bcrypt.checkpw(password.encode(), self.password_hash.encode())
+        return self.check_salt_hashed_password(password, self.password_hash)
 
     def encode_TFA_token(self, valid_days=1):
         """
@@ -502,16 +509,13 @@ class User(ManyOrgBase, ModelBase):
         is_resetting = len(self.password_reset_tokens) > 0
         return is_resetting
 
-    def pin_failed_attempts(self):
-        return self.failed_pin_attempts
-
     @property
     def pin(self):
-        return decrypt_string(self._encrypted_pin)
+        return self._encrypted_pin
 
     @pin.setter
     def pin(self, pin):
-        self._encrypted_pin = encrypt_string(pin)
+        self._encrypted_pin = self.salt_hash_password(pin)
 
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)

@@ -24,7 +24,7 @@ class KenyaUssdProcessor:
         # new session
         else:
             if user.is_resetting():
-                if user.pin_failed_attempts() >= 3:
+                if user.failed_pin_attempts() >= 3:
                     return UssdMenu.find_by_name('exit_pin_blocked')
                 elif user.preferred_language is None:
                     return UssdMenu.find_by_name('initial_language_selection')
@@ -67,35 +67,19 @@ class KenyaUssdProcessor:
             replacements.append(['%token_name%', token.name])
             replacements.append(['%exchange_amount%', ussd_session.session_data['exchange_amount']])
         elif 'pin_authorization' in menu.name or 'current_pin' in menu.name:
-            if user.pin_failed_attempts() > 0:
+            if user.failed_pin_attempts > 0:
                 # TODO(ussd): replace this with i18n placeholders
                 if user.preferred_language == 'sw_KE':
-                    # TODO(ussd): pin_failed_attempts isn't a thing yet!
                     replacements.append(
-                        ['%remaining_attempts%', "Una majaribio {} yaliyobaki.".format(3 - user.pin_failed_attempts)])
+                        ['%remaining_attempts%', "Una majaribio {} yaliyobaki.".format(3 - user.failed_pin_attempts)])
                 else:
                     replacements.append(['%remaining_attempts%',
-                                         "You have {} attempts remaining.".format(3 - user.pin_failed_attempts)])
+                                         "You have {} attempts remaining.".format(3 - user.failed_pin_attempts)])
             else:
                 replacements.append(['%remaining_attempts%', ''])
 
         return reduce(lambda text, r: text.replace(r[0], r[1]), replacements, display_text)
 
-    @staticmethod
-    def authorize_pin(user: User, pin):
-        authorized = False
-        if user.pin_failed_attempts == 3:
-            return False
-        if user.pin_failed_attempts < 3:
-            authorized = user.pin = pin
-            if authorized:
-                if user.pin_failed_attempts > 0:
-                    user.pin_failed_attempts = 0
-                    db.session.commit()
-            else:
-                user.pin_failed_attempts += 1
-                db.session.commit()
-        return authorized
 
 
 

@@ -135,4 +135,7 @@ en:
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
+    successful_pin_change_sms: Your Sarafu Network PIN was successfully changed.
+    unsuccessful_pin_change_sms: Your Sarafu Network PIN change failed. Please call 0799 100 200 to for assistance.
+    upsell_message: "%{first_name} %{last_name} tried to send you {community_token} but you are not registered. Send your information: name, phone number, ID number, area of residence, and the type of business you run 0757628885."
 

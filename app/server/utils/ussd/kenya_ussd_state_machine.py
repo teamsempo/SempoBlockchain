@@ -116,6 +116,21 @@ class KenyaUssdStateMachine(Machine):
             pins_match = True
         return pins_match
 
+    def authorize_pin(self, pin):
+        authorized = False
+        if self.user.failed_pin_attempts == 3:
+            return False
+        if self.user.failed_pin_attempts < 3:
+            authorized = self.user.check_salt_hashed_password(pin, self.user.pin)
+            if authorized:
+                if self.user.failed_pin_attempts > 0:
+                    self.user.failed_pin_attempts = 0
+                    db.session.commit()
+            else:
+                self.user.failed_pin_attempts += 1
+                db.session.commit()
+        return authorized
+
     def complete_initial_pin_change(self, user_input):
         change_initial_pin(user=self.user, new_pin=user_input)
 
@@ -130,9 +145,11 @@ class KenyaUssdStateMachine(Machine):
 
     # TODO: [Philip] Add community token when available
     def upsell_unregistered_recipient(self, user_input):
-        upsell_message = f"{self.user.first_name} {self.user.last_name} amejaribu kukutumia {self.user} lakini " \
-                         f"hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya " \
-                         f"biashara yako kwa 0757628885. "
+        upsell_message = i18n_for(self.user,
+                                  'upsell_message',
+                                  first_name=self.user.first_name,
+                                  last_name=self.user.last_name,
+                                  community_token=self.user.community_token.name)
         send_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
 
     def save_transaction_amount(self, user_input):
@@ -145,21 +162,21 @@ class KenyaUssdStateMachine(Machine):
         pass
 
     def is_authorized_pin(self, user_input):
-        pass
+        return self.authorize_pin(user_input)
 
     def is_blocked_pin(self, user_input):
-        pass
+        return self.user.failed_pin_attempts == 3
 
     def is_valid_new_pin(self, user_input):
-        pass
+        return self.is_valid_pin(user_input) and not self.user.check_salt_hashed_password(user_input, self.user.pin)
 
     def save_business_directory_info(self, user_input):
         pass
 
-    def process_send_token_request(self):
+    def process_send_token_request(self, user_input):
         pass
 
-    def fetch_user_exchange_rate(self):
+    def fetch_user_exchange_rate(self, user_input):
         pass
 
     def is_valid_token_agent(self, user_input):
@@ -175,7 +192,7 @@ class KenyaUssdStateMachine(Machine):
     def save_exchange_amount(self, user_input):
         pass
 
-    def process_exchange_token_request(self):
+    def process_exchange_token_request(self, user_input):
         pass
 
     def menu_one_selected(self, user_input):
