@@ -515,11 +515,10 @@ def proccess_create_or_modify_user_request(
         is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up,
     )
 
-    if attribute_dict.get('custom_attributes', None) is None:
-        attribute_dict['custom_attributes'] = {}
-    attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')
-    attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
-    attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
+    if attribute_dict.get('custom_attributes', None) is None: attribute_dict['custom_attributes'] = {}
+    if attribute_dict.get('business_usage_id'): attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')
+    if attribute_dict.get('gender'): attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
+    if attribute_dict.get('bio'): attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
     set_custom_attributes(attribute_dict, user)
 
     if is_self_sign_up and attribute_dict.get('deviceinfo', None) is not None:

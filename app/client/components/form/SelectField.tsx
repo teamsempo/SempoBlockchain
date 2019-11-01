@@ -16,6 +16,7 @@ const SelectInput = (props: SelectFieldJson & {input: any}) => {
   const {name, input, options} = props;
 
   const field = <select className={styles.select} value={input.value} name={name} {...input}>
+    <option value="" key="default"></option>
     {
       options.map((option) => {
         if (typeof option === "string") {

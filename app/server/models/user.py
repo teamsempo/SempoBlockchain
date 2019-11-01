@@ -48,7 +48,7 @@ class User(ManyOrgBase, ModelBase):
     _last_seen = db.Column(db.DateTime)
 
     email = db.Column(db.String())
-    _phone = db.Column(db.String())
+    _phone = db.Column(db.String(), unique=True)
     _public_serial_number = db.Column(db.String())
     nfc_serial_number = db.Column(db.String())
 
