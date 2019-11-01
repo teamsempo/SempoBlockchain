@@ -388,12 +388,8 @@ organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
-
-<<<<<<< HEAD
-=======
 transfer_usages_schema = TransferUsageSchema(many=True)
 
->>>>>>> Created seed_dev and added businness usage id
 # Me Schemas
 
 me_transfer_accounts_schema = TransferAccountSchema(many=True,
