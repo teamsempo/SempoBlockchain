@@ -68,7 +68,10 @@ function createLoginSuccessObject(token) {
     vendorId: token.vendor_id,
     email: token.email,
     adminTier: token.admin_tier,
-    usdToSatoshiRate: token.usd_to_satoshi_rate
+    usdToSatoshiRate: token.usd_to_satoshi_rate,
+    intercomHash: token.web_intercom_hash,
+    organisationName: token.organisation_name,
+    organisationId: token.organisation_id
   }
 }
 

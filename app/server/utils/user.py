@@ -8,7 +8,7 @@ from eth_utils import to_checksum_address
 
 from server import db
 from server.models.device_info import DeviceInfo
-from server.models.upload import UploadedImage
+from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
@@ -25,6 +25,7 @@ from server.utils.i18n import i18n_for
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
+
     save_to_s3_from_url(url, new_filename)
 
     try:
@@ -39,6 +40,7 @@ def save_photo_and_check_for_duplicate(url, new_filename, image_id):
 
 
 def find_oldest_user_for_transfer_account(transfer_account):
+
     oldest_user = None
     for user in transfer_account.user:
         if oldest_user:
@@ -51,6 +53,7 @@ def find_oldest_user_for_transfer_account(transfer_account):
 
 
 def find_user_from_public_identifier(*public_identifiers):
+
     user = None
 
     for public_identifier in public_identifiers:
@@ -105,6 +108,7 @@ def update_transfer_account_user(user,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
                                  is_vendor=False):
+
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -143,30 +147,27 @@ def update_transfer_account_user(user,
     return user
 
 
-def create_transfer_account_user(
-        first_name=None, last_name=None, preferred_language=None,
-        phone=None, email=None, public_serial_number=None,
-        organisation=None,
-        token=None,
-        blockchain_address=None,
-        transfer_account_name=None,
-        location=None,
-        use_precreated_pin=False,
-        use_last_4_digits_of_id_as_initial_pin=False,
-        existing_transfer_account=None,
-        is_beneficiary=False,
-        is_vendor=False,
-        is_self_sign_up=False,
-):
-    user = User(
-        first_name=first_name,
-        last_name=last_name,
-        preferred_language=preferred_language,
-        phone=phone,
-        email=email,
-        public_serial_number=public_serial_number,
-        is_self_sign_up=is_self_sign_up
-    )
+def create_transfer_account_user(first_name=None, last_name=None, preferred_language=None,
+                                 phone=None, email=None, public_serial_number=None,
+                                 organisation=None,
+                                 token=None,
+                                 blockchain_address=None,
+                                 transfer_account_name=None,
+                                 location=None,
+                                 use_precreated_pin=False,
+                                 use_last_4_digits_of_id_as_initial_pin=False,
+                                 existing_transfer_account=None,
+                                 is_beneficiary=False,
+                                 is_vendor=False,
+                                 is_self_sign_up=False):
+
+    user = User(first_name=first_name,
+                last_name=last_name,
+                preferred_language=preferred_language,
+                phone=phone,
+                email=email,
+                public_serial_number=public_serial_number,
+                is_self_sign_up=is_self_sign_up)
 
     precreated_pin = None
     is_activated = False
@@ -200,7 +201,6 @@ def create_transfer_account_user(
 
     if organisation:
         user.organisations.append(organisation)
-        user.default_organisation = organisation
 
     db.session.add(user)
 
@@ -228,10 +228,10 @@ def create_transfer_account_user(
 
 
 def save_device_info(device_info, user):
+
     add_device = False
 
-    if device_info['serialNumber'] and not DeviceInfo.query.filter_by(
-            serial_number=device_info['serialNumber']).first():
+    if device_info['serialNumber'] and not DeviceInfo.query.filter_by(serial_number=device_info['serialNumber']).first():
         # Add the device if the serial number is defined, and isn't already in db
         add_device = True
     elif not device_info['serialNumber'] and not DeviceInfo.query.filter_by(unique_id=device_info['uniqueId']).first():
@@ -241,6 +241,7 @@ def save_device_info(device_info, user):
         add_device = True
 
     if add_device:
+
         device = DeviceInfo()
 
         device.serial_number = device_info['serialNumber']
@@ -281,6 +282,7 @@ def set_custom_attributes(attribute_dict, user):
 
 
 def set_attachments(attribute_dict, user, custom_attributes):
+
     attachments = attribute_dict.get('_attachments', [])
 
     for attachment in attachments:
@@ -292,8 +294,7 @@ def set_attachments(attribute_dict, user, custom_attributes):
                 new_filename = generate_new_filename(
                     submitted_filename, type, 'KOBO')
 
-                uploaded_image = UploadedImage(
-                    filename=new_filename, image_type=type)
+                uploaded_image = UploadedResource(filename=new_filename, file_type=type)
 
                 uploaded_image.user = user
 
@@ -335,17 +336,16 @@ def send_one_time_code(phone, user):
             'Something went wrong. ERROR: {}'.format(e))
 
 
-def proccess_create_or_modify_user_request(
-        attribute_dict,
-        organisation=None,
-        allow_existing_user_modify=False,
-        is_self_sign_up=False,
-):
+def proccess_create_or_modify_user_request(attribute_dict,
+                                           organisation=None,
+                                           allow_existing_user_modify=False,
+                                           is_self_sign_up=False):
     """
     Takes a create or modify user request and determines the response. Normally what's in the top level API function,
     but here it's one layer down because there's multiple entry points for 'create user':
     - The admin api
     - The register api
+
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
     :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
@@ -426,6 +426,7 @@ def proccess_create_or_modify_user_request(
     # Work out if there's an existing transfer account to bind to
     existing_transfer_account = None
     if primary_user_identifier:
+
         primary_user = find_user_from_public_identifier(
             primary_user_identifier)
 
@@ -434,6 +435,7 @@ def proccess_create_or_modify_user_request(
             return response_object, 400
 
         if not primary_user.verify_password(primary_user_pin):
+
             response_object = {'message': 'Invalid PIN for Primary User'}
             return response_object, 400
 
@@ -465,12 +467,10 @@ def proccess_create_or_modify_user_request(
                 response_object = {'message': 'Transfer card not found'}
                 return response_object, 400
 
-    if custom_initial_disbursement and not custom_initial_disbursement <= current_app.config[
-        'MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']:
+    if custom_initial_disbursement and not custom_initial_disbursement <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']:
         response_object = {
             'message': 'Disbursement more than maximum allowed amount ({} {})'
-                .format(current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT'] / 100,
-                        current_app.config['CURRENCY_NAME'])
+            .format(current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']/100, current_app.config['CURRENCY_NAME'])
         }
         return response_object, 400
 
@@ -478,6 +478,7 @@ def proccess_create_or_modify_user_request(
         email, phone, public_serial_number, blockchain_address)
 
     if existing_user:
+
         if not allow_existing_user_modify:
             response_object = {'message': 'User already exists for Identifier'}
             return response_object, 400
@@ -491,7 +492,8 @@ def proccess_create_or_modify_user_request(
             is_beneficiary=is_beneficiary, is_vendor=is_vendor
         )
 
-        set_custom_attributes(attribute_dict, user)
+        custom_attributes = set_custom_attributes(
+            attribute_dict, user)
         flag_modified(user, "custom_attributes")
 
         db.session.commit()
@@ -513,24 +515,19 @@ def proccess_create_or_modify_user_request(
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
-        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up,
-        token=token
+        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up
     )
 
-    if attribute_dict.get('custom_attributes', None) is None:
-        attribute_dict['custom_attributes'] = {}
-    attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')
-    attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
-    attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
-    set_custom_attributes(attribute_dict, user)
+    custom_attributes = set_custom_attributes(
+        attribute_dict, user)
 
     if is_self_sign_up and attribute_dict.get('deviceinfo', None) is not None:
         save_device_info(device_info=attribute_dict.get(
             'deviceinfo'), user=user)
 
     if custom_initial_disbursement:
-        CreditTransferUtils.make_disbursement_transfer(
-            custom_initial_disbursement, organisation.token, user)
+        disbursement = CreditTransferUtils.make_payment_transfer(
+            custom_initial_disbursement, organisation.token, receive_user=user, transfer_subtype='DISBURSEMENT')
 
     # Location fires an async task that needs to know user ID
     db.session.flush()

@@ -1,4 +1,4 @@
-import datetime
+import datetime, enum
 from sqlalchemy.sql import func
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -13,6 +13,13 @@ from server.utils.blockchain_tasks import (
     create_blockchain_wallet
 )
 from server.utils.transfer_enums import TransferStatusEnum
+
+
+class TransferAccountType(enum.Enum):
+    USER            = 'USER'
+    ORGANISATION    = 'ORGANISATION'
+    FLOAT           = 'FLOAT'
+    CONTRACT        = 'CONTRACT'
 
 
 class TransferAccount(OneOrgBase, ModelBase):
@@ -30,6 +37,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     is_vendor       = db.Column(db.Boolean, default=False)
 
     is_beneficiary = db.Column(db.Boolean, default=False)
+
+    account_type    = db.Column(db.Enum(TransferAccountType))
 
     payable_period_type   = db.Column(db.String(), default='week')
     payable_period_length = db.Column(db.Integer, default=2)
@@ -60,6 +69,15 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             lazy='dynamic', foreign_keys='SpendApproval.giving_transfer_account_id')
+
+    def get_float_transfer_account(self):
+        for transfer_account in self.organisation.transfer_accounts:
+            if transfer_account.account_type == 'FLOAT':
+                return transfer_account
+
+        float_wallet = TransferAccount.query.filter(TransferAccount.account_type == TransferAccountType.FLOAT).first()
+
+        return float_wallet
 
     def get_or_create_system_transfer_approval(self):
 
@@ -159,11 +177,11 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return disbursement
 
     def make_initial_disbursement(self, initial_balance=None):
-        from server.utils.credit_transfers import make_disbursement_transfer
+        from server.utils.credit_transfers import make_payment_transfer
         if not initial_balance:
             initial_balance = current_app.config['STARTING_BALANCE']
 
-        disbursement = make_disbursement_transfer(initial_balance, self)
+        disbursement = make_payment_transfer(initial_balance, self, transfer_subtype='DISBURSEMENT')
 
         return disbursement
 
@@ -174,13 +192,19 @@ class TransferAccount(OneOrgBase, ModelBase):
                                               automatically_resolve_complete=False)
         return withdrawal
 
-    def __init__(self, blockchain_address=None, organisation=None):
+    def __init__(self, blockchain_address=None, organisation=None, private_key=None):
         #
         # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
         # db.session.add(blockchain_address_obj)
 
-        self.blockchain_address = blockchain_address or create_blockchain_wallet()
+        self.blockchain_address = blockchain_address or create_blockchain_wallet(private_key)
 
         if organisation:
             self.organisation = organisation
             self.token = organisation.token
+            self.account_type = TransferAccountType.ORGANISATION
+
+        if private_key is not None:
+            self.account_type = TransferAccountType.FLOAT
+
+        self.account_type = TransferAccountType.USER

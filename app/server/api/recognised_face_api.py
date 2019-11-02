@@ -2,7 +2,7 @@ from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models.upload import UploadedImage
+from server.models.upload import UploadedResource
 from server.utils.auth import requires_auth
 
 from sqlalchemy.orm.attributes import flag_modified
@@ -11,7 +11,7 @@ from sqlalchemy.orm.attributes import flag_modified
 recognised_face_blueprint = Blueprint('recognised_face', __name__)
 
 def get_user_from_image_id(image_id):
-    matching_image = UploadedImage.query.get(image_id)
+    matching_image = UploadedResource.query.get(image_id)
     if matching_image and matching_image.user:
         return matching_image.user
     else:

@@ -20,6 +20,18 @@ export const CREATE_TRANSFER_FAILURE = 'CREATE_TRANSFER_FAILURE';
 const byId = (state = {}, action) => {
   switch (action.type) {
     case UPDATE_CREDIT_TRANSFER_LIST:
+      Object.keys(action.credit_transfers).map(id => {
+          let transfer = action.credit_transfers[id];
+          if (transfer.transfer_subtype !== null) {
+            if (transfer.transfer_subtype === 'DISBURSEMENT') {
+              transfer.transfer_type = 'DISBURSEMENT';
+            } else if (transfer.transfer_subtype === 'RECLAMATION') {
+              transfer.transfer_type = 'RECLAMATION';
+            }
+          }
+        }
+      );
+
       return DEEEEEEP(state, action.credit_transfers);
     default:
       return state;

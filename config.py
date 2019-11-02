@@ -222,6 +222,7 @@ ETH_CHAIN_ID            = specific_parser['ETHEREUM']['chain_id'] or 1
 ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID), '')
 ETH_OWNER_ADDRESS       = specific_parser['ETHEREUM']['owner_address']
 ETH_OWNER_PRIVATE_KEY   = specific_parser['ETHEREUM']['owner_private_key']
+ETH_FLOAT_PRIVATE_KEY   = specific_parser['ETHEREUM']['float_private_key']
 ETH_CONTRACT_VERSION    = specific_parser['ETHEREUM']['contract_version']
 ETH_GAS_PRICE           = int(specific_parser['ETHEREUM']['gas_price_gwei'] or 0)
 ETH_GAS_LIMIT           = int(specific_parser['ETHEREUM']['gas_limit'] or 0)
@@ -277,10 +278,15 @@ WYRE_HOST_V2 = specific_parser['WYRE']['host_v2']
 IPIFY_API_KEY = common_parser['IPIFY']['api_key']
 
 INTERCOM_ANDROID_SECRET = common_parser['INTERCOM']['android_secret']
+INTERCOM_WEB_SECRET = common_parser['INTERCOM']['web_secret']
 
 SLACK_HOST      = specific_parser['SLACK']['host']
 SLACK_API_TOKEN = common_parser['SLACK']['token']
 SLACK_SECRET    = common_parser['SLACK']['secret']
+
+POLIPAYMENTS_HOST = specific_parser['POLIPAYMENTS']['host']
+POLIPAYMENTS_MERCHANT = common_parser['POLIPAYMENTS']['merchant_code']
+POLIPAYMENTS_AUTH     = common_parser['POLIPAYMENTS']['auth_code']
 
 try:
     NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
