@@ -23,7 +23,7 @@ class KenyaUssdProcessor:
                 return UssdMenu.find_by_name(new_state)
         # new session
         else:
-            if user.is_resetting():
+            if user.is_resetting_pin():
                 if user.failed_pin_attempts >= 3:
                     return UssdMenu.find_by_name('exit_pin_blocked')
                 elif user.preferred_language is None:
