@@ -17,6 +17,9 @@ from server.utils.phone import proccess_phone_number
 from server.utils.blockchain_tasks import (
     create_blockchain_wallet
 )
+from server.utils.transfer_account import (
+    find_transfer_accounts_with_matching_token
+)
 
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
@@ -283,6 +286,9 @@ class User(ManyOrgBase, ModelBase):
         if len(self.transfer_accounts) == 1:
             return self.transfer_accounts[0]
         return None
+
+    def get_transfer_account_for_token(self, token):
+        return find_transfer_accounts_with_matching_token(self, token)
 
     def get_active_organisation(self, fallback=None):
         if len(self.organisations) == 0:

@@ -22,29 +22,78 @@ import config
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
 
+w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+
+
+def load_account(address):
+    tx_hash = w3.eth.sendTransaction(
+        {'to': address, 'from': w3.eth.accounts[0], 'value': 5 * 10 ** 18})
+    return w3.eth.waitForTransactionReceipt(tx_hash)
+
+
 @pytest.fixture(scope='function')
 def requires_auth(test_client):
     from server.utils.auth import requires_auth
     return requires_auth
 
+@pytest.fixture(scope='module')
+def loaded_master_wallet_address():
+    """
+    A blockchain address that isn't tracked in the Sempo system like a regular one. Used during testing
+    for deploying blockchain components that are normally controlled by an external entity, eg reserve tokens
+    """
+    from server.utils.blockchain_tasks import (
+        create_blockchain_wallet
+    )
+
+
+
+    deploying_address = create_blockchain_wallet(private_key=config.MASTER_WALLET_PRIVATE_KEY)
+
+    load_account(deploying_address)
+
+    return deploying_address
 
 @pytest.fixture(scope='module')
-def create_blockchain_token(test_client, init_database):
+def external_reserve_token(test_client, init_database, loaded_master_wallet_address):
     from server.models.token import Token
-    token = Token(address='0xc1275b7de8af5a38a93548eb8453a498222c4ff2',
-                  name='AUD Token',
-                  symbol='AUD')
+    from server.utils.blockchain_tasks import (
+        deploy_and_fund_reserve_token,
+    )
 
-    db.session.add(token)
+    name = "Reserve Token"
+    symbol = "RSRV"
+
+    reserve_token_address = deploy_and_fund_reserve_token(
+        deploying_address=loaded_master_wallet_address,
+        name=name,
+        symbol=symbol,
+        fund_amount_wei=4 * 10 ** 18
+    )
+
+    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol)
+    reserve_token.decimals = 18
+
+    db.session.add(reserve_token)
     db.session.commit()
 
-    return token
+    return reserve_token
 
 
 @pytest.fixture(scope='module')
-def create_organisation(test_client, init_database, create_blockchain_token):
+def create_organisation(test_client, init_database, external_reserve_token):
     from server.models.organisation import Organisation
-    organisation = Organisation(name='Sempo', token=create_blockchain_token)
+    from server.models.transfer_account import TransferAccount
+    organisation = Organisation(name='Sempo', token=external_reserve_token)
+
+    transfer_account = TransferAccount(organisation=organisation)
+
+    db.session.add_all([organisation, transfer_account])
+    db.session.commit()
+
+    organisation.org_level_transfer_account_id = transfer_account.id
+
+    db.session.commit()
     db.session.add(organisation)
     db.session.commit()
     return organisation
@@ -62,6 +111,7 @@ def new_sempo_admin_user(test_client):
 def create_unactivated_sempo_admin_user(test_client, init_database, new_sempo_admin_user, create_organisation):
     db.session.add(new_sempo_admin_user)
     new_sempo_admin_user.organisations.append(create_organisation)
+    new_sempo_admin_user.default_organisation = create_organisation
 
     # Commit the changes for the users
     db.session.commit()
@@ -144,11 +194,11 @@ def new_disbursement(create_transfer_account_user):
 
 
 @pytest.fixture(scope='function')
-def new_credit_transfer(create_transfer_account_user, create_blockchain_token):
+def new_credit_transfer(create_transfer_account_user, external_reserve_token):
     from server.models.credit_transfer import CreditTransfer
     credit_transfer = CreditTransfer(
         amount=100,
-        token=create_blockchain_token,
+        token=external_reserve_token,
         sender_user=create_transfer_account_user,
         recipient_user=create_transfer_account_user
     )
@@ -216,32 +266,119 @@ def create_fiat_ramp():
     return fiat_ramp
 
 
+
 @pytest.fixture(scope='module')
-def initialise_blockchain_network(authed_sempo_admin_user):
+def admin_with_org_reserve_balance(authed_sempo_admin_user, external_reserve_token, loaded_master_wallet_address):
+    from server.utils.blockchain_tasks import (
+        make_token_transfer
+    )
 
-    w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+    amount = 100
 
-    def load_account(address):
+    org_transfer_account = authed_sempo_admin_user.default_organisation.org_level_transfer_account
 
-        tx_hash = w3.eth.sendTransaction(
-            {'to': address, 'from': w3.eth.accounts[0], 'value': 12345})
+    org_transfer_account.balance = amount
 
-        return w3.eth.waitForTransactionReceipt(tx_hash)
+    make_token_transfer(loaded_master_wallet_address,
+                        org_transfer_account.token,
+                        loaded_master_wallet_address, org_transfer_account.blockchain_address,
+                        amount)
 
+    return authed_sempo_admin_user
+
+
+@pytest.fixture(scope='module')
+def user_with_reserve_balance(create_transfer_account_user, external_reserve_token, loaded_master_wallet_address):
+    from server.utils.blockchain_tasks import (
+        make_token_transfer
+    )
+
+    amount = 100
+
+    transfer_account = create_transfer_account_user.get_transfer_account_for_token(external_reserve_token)
+
+    make_token_transfer(loaded_master_wallet_address,
+                        transfer_account.token,
+                        loaded_master_wallet_address, transfer_account.blockchain_address,
+                        amount)
+
+    transfer_account.balance = amount
+    create_transfer_account_user.is_activated = True
+
+    return create_transfer_account_user
+
+@pytest.fixture(scope='module')
+def initialised_blockchain_network(admin_with_org_reserve_balance, external_reserve_token):
+    from server.utils.blockchain_tasks import (
+        deploy_exchange_network,
+        deploy_smart_token
+    )
+
+    from server.models.token import Token
+    from server.models.exchange import ExchangeContract
+
+    reserve_token = external_reserve_token
+
+    def deploy_and_add_smart_token(name, symbol, reserve_ratio_ppm, exchange_contract=None):
+        smart_token_result = deploy_smart_token(
+            deploying_address=deploying_address,
+            name=name, symbol=symbol, decimals=18,
+            issue_amount_wei=1000,
+            contract_registry_address=registry_address,
+            reserve_token_address=reserve_token.address,
+            reserve_ratio_ppm=reserve_ratio_ppm
+        )
+
+        smart_token_address = smart_token_result['smart_token_address']
+        subexchange_address = smart_token_result['subexchange_address']
+
+        smart_token = Token(address=smart_token_address, name=name, symbol=symbol)
+        smart_token.decimals = 18
+
+        db.session.add(smart_token)
+
+        if exchange_contract is None:
+
+            exchange_contract = ExchangeContract(
+                blockchain_address=subexchange_address,
+                contract_registry_blockchain_address=registry_address
+            )
+
+        exchange_contract.add_reserve_token(reserve_token)
+        exchange_contract.add_token(smart_token, subexchange_address, reserve_ratio_ppm)
+
+        return smart_token, exchange_contract
+
+    organisation = admin_with_org_reserve_balance.organisations[0]
+    deploying_address = organisation.org_level_transfer_account.blockchain_address
     # Load admin's *system* blockchain account with Eth
-    load_account(111)
+    load_account(organisation.system_blockchain_address)
 
-    # Load admin blockchain account with with Eth
+    # Load admin org blockchain account with with Eth
+    load_account(deploying_address)
 
     # Create reserve token
 
+
     # Initialise an exchange network
+    registry_address = deploy_exchange_network(deploying_address)
 
     # Create first smart token and add to exchange network
+    (smart_token_1,
+     exchange_contract) = deploy_and_add_smart_token('Smart Token 1', 'SM1', 250000)
 
     # Create second smart token and add to exchange network
+    (smart_token_2,
+     exchange_contract) = deploy_and_add_smart_token('Smart Token 2', 'SM1', 250000, exchange_contract)
 
+    db.session.commit()
 
+    return {
+        'exchange_contract': exchange_contract,
+        'reserve_token': reserve_token,
+        'smart_token_1': smart_token_1,
+        'smart_token_2': smart_token_2
+    }
 
 @pytest.fixture(scope='module')
 def test_request_context():

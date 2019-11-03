@@ -22,7 +22,7 @@ class TransactionProcessor(object):
     def private_key_to_address(self, private_key):
 
         if isinstance(private_key, str):
-            private_key = bytearray.fromhex(private_key.replace('0x',''))
+            private_key = bytearray.fromhex(private_key.replace('0x', ''))
 
         return keys.PrivateKey(private_key).public_key.to_checksum_address()
 
@@ -263,7 +263,7 @@ class TransactionProcessor(object):
             signing_wallet_obj = self.persistence_interface.get_wallet_by_address(signing_address)
 
             if signing_wallet_obj is None:
-                raise Exception('Private key for address {} not found'.format(signing_address))
+                raise Exception('Address {} not found'.format(signing_address))
 
         elif encrypted_private_key:
 

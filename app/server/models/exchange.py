@@ -19,7 +19,7 @@ from server.utils.blockchain_tasks import (
     make_liquid_token_exchange,
     make_approval,
     get_conversion_amount,
-    get_wallet_balance
+    topup_wallet_if_required
 )
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
@@ -125,43 +125,49 @@ class Exchange(BlockchainTaskableBase):
             sender_user=user,
             recipient_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, from_token))
 
-        # if not self.from_transfer.check_sender_has_sufficient_balance():
-        #     message = "Sender {} has insufficient balance".format(user)
-        #     self.from_transfer.resolve_as_rejected(message)
-        #
-        #     raise InsufficientBalanceError(message)
-        #
-        # db.session.add(self.from_transfer)
+        if not self.from_transfer.check_sender_has_sufficient_balance():
+            message = "Sender {} has insufficient balance".format(user)
+            self.from_transfer.resolve_as_rejected(message)
 
-        signing_address = current_app.config['MASTER_WALLET_ADDRESS']
+            raise InsufficientBalanceError(message)
 
+        db.session.add(self.from_transfer)
+
+        signing_address = self.from_transfer.sender_transfer_account.blockchain_address
+
+        topup_task_id = topup_wallet_if_required(signing_address)
+
+        dependent = [topup_task_id] if topup_task_id else []
+
+        # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
         # We need to approve all the tokens involved for spend by the exchange contract
         to_approval_id = make_approval(
             signing_address=signing_address,
             token=to_token,
             spender=exchange_contract.blockchain_address,
-            amount=from_amount * 100000
+            amount=from_amount * 100000,
+            dependent_on_tasks=dependent
         )
 
         reserve_approval_id = make_approval(
             signing_address=signing_address,
             token=exchange_contract.reserve_token,
             spender=exchange_contract.blockchain_address,
-            amount=from_amount * 100000
+            amount=from_amount * 100000,
+            dependent_on_tasks=dependent
         )
 
         from_approval_id = make_approval(
             signing_address=signing_address,
             token=from_token,
             spender=exchange_contract.blockchain_address,
-            amount=from_amount*100000
+            amount=from_amount*100000,
+            dependent_on_tasks=dependent
         )
 
         if calculated_to_amount:
             to_amount = calculated_to_amount
         else:
-
-            import time
             to_amount = get_conversion_amount(exchange_contract=exchange_contract,
                                               from_token=from_token,
                                               to_token=to_token,

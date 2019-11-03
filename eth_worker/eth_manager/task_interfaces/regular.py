@@ -67,7 +67,7 @@ def synchronous_call(contract_address, contract_type, func, args=None):
     return utils.execute_synchronous_task(call_sig)
 
 
-def await_transaction_result(task_id, timeout=None, poll_frequency=0.5):
+def await_task_success(task_id, timeout=None, poll_frequency=0.5):
     elapsed = 0
     while timeout is None or elapsed <= timeout:
         task_sig = signature(

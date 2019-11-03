@@ -5,6 +5,7 @@ from eth_keys import keys
 from eth_utils import keccak
 import os
 import random
+from time import sleep
 
 from server import celery_app
 from server.utils.exchange import (
@@ -24,7 +25,7 @@ def execute_synchronous_celery(signature, timeout=None):
     async_result = signature.delay()
 
     try:
-        response = async_result.get(timeout=timeout or 20, propagate=True, interval=0.3)
+        response = async_result.get(timeout=timeout or 4, propagate=True, interval=0.3)
     except Exception as e:
         raise e
     finally:
@@ -34,10 +35,6 @@ def execute_synchronous_celery(signature, timeout=None):
 
 
 def execute_synchronous_task(signature):
-    if current_app.config['IS_TEST']:
-        # TODO: We need a better way of stubbing responses from the blockchain worker during tests
-        return random.randint(0, 1000000000)
-
     return execute_synchronous_celery(signature)
 
 
@@ -76,19 +73,47 @@ def synchronous_transaction_task(signing_address,
     return execute_synchronous_task(signature)
 
 
-def create_blockchain_wallet(wei_target_balance=0, wei_topup_threshold=0, private_key=None):
-    # TODO: [Nick] to setup float wallet deterministically created from config private key.
-    if not current_app.config['IS_TEST']:
-        sig = celery_app.signature(eth_endpoint('create_new_blockchain_wallet'),
-                                   kwargs={
-                                       'wei_target_balance': wei_target_balance,
-                                       'wei_topup_threshold': wei_topup_threshold,
-                                   })
+def await_task_success(task_id, timeout=None, poll_frequency=0.5):
+    elapsed = 0
+    while timeout is None or elapsed <= timeout:
+        task = get_blockchain_task(task_id)
+        if task['status'] == 'SUCCESS':
+            return task
+        else:
+            sleep(poll_frequency)
+            elapsed += poll_frequency
 
-        return execute_synchronous_celery(sig)
-    else:
-        return keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address()
+    raise TimeoutError
 
+
+def get_blockchain_task(task_id):
+    """
+    Used to check the status of a blockchain task
+
+    :param task_id: id of the blockchain
+    :return: Serialised Task Dictionary:
+    {
+        status: enum, one of 'SUCCESS', 'PENDING', 'UNSTARTED', 'FAILED', 'UNKNOWN'
+        dependents: list of dependent task ids
+    }
+    """
+
+    sig = celery_app.signature(eth_endpoint('get_task'),
+                               kwargs={'task_id': task_id})
+
+    return execute_synchronous_celery(sig)
+
+
+# TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
+def create_blockchain_wallet(wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
+    sig = celery_app.signature(eth_endpoint('create_new_blockchain_wallet'),
+                               kwargs={
+                                   'wei_target_balance': wei_target_balance,
+                                   'wei_topup_threshold': wei_topup_threshold,
+                                   'private_key': private_key
+                               })
+
+    return execute_synchronous_celery(sig)
 
 def send_eth(signing_address, recipient_address, amount_wei, dependent_on_tasks=None):
     transfer_sig = celery_app.signature(eth_endpoint('send_eth'),
@@ -136,6 +161,21 @@ def make_token_transfer(signing_address, token,
     :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
     :return: task id for the transfer
     """
+
+    raw_amount = token.system_amount_to_token(amount)
+
+    if signing_address == from_address:
+        return synchronous_transaction_task(
+            signing_address=signing_address,
+            contract_address=token.address,
+            contract_type='ERC20',
+            func='transfer',
+            args=[
+                to_address,
+                raw_amount
+            ],
+            dependent_on_tasks=dependent_on_tasks
+        )
 
     return synchronous_transaction_task(
         signing_address=signing_address,
@@ -187,7 +227,14 @@ def make_liquid_token_exchange(signing_address,
     :return: task id for the exchange
     """
 
+    dependent_on_tasks = dependent_on_tasks or []
+
     path = _get_path(from_token, to_token, reserve_token)
+
+    topup_task_id = topup_wallet_if_required(signing_address)
+
+    if topup_task_id:
+        dependent_on_tasks.append(topup_task_id)
 
     return synchronous_transaction_task(
         signing_address=signing_address,
@@ -320,11 +367,6 @@ def _get_path(from_token, to_token, reserve_token):
 
 
 def get_token_decimals(token):
-
-    if current_app.config['IS_TEST']:
-        # TODO: We need a better way of stubbing responses from the blockchain worker during tests
-        return 18
-
     return synchronous_call(
         contract_address=token.address,
         contract_type='ERC20',
@@ -344,24 +386,6 @@ def get_wallet_balance(address, token):
         args=[address])
 
     return token.token_amount_to_system(balance)
-
-
-def get_blockchain_task(task_id):
-    """
-    Used to check the status of a blockchain task
-
-    :param task_id: id of the blockchain
-    :return: Serialised Task Dictionary:
-    {
-        status: enum, one of 'SUCCESS', 'PENDING', 'UNSTARTED', 'FAILED', 'UNKNOWN'
-        dependents: list of dependent task ids
-    }
-    """
-
-    sig = celery_app.signature(eth_endpoint('get_task'),
-                               kwargs={'task_id': task_id})
-
-    return execute_synchronous_celery(sig)
 
 
 def deploy_exchange_network(deploying_address):
@@ -396,15 +420,9 @@ def deploy_smart_token(deploying_address,
 
     return execute_synchronous_celery(sig, timeout=900)
 
-    # gasPrice = 100000
-    #
-    # deployer = partial(deploy_contract, signing_address)
-    #
-    # reg_deploy = deployer(contract_name='ContractRegistry')
-    # ids_deploy = deployer(contract_name='ContractIds')
-    # features_deploy = deployer(contract_name='ContractFeatures')
-    # price_limit_deploy = deployer(contract_name='BancorGasPriceLimit',
-    #                               constructor_args=[gasPrice])
-    # formula_deploy = deployer(contract_name='BancorFormula')
-    # nst_reg_deploy = deployer(contract_name='NonStandardTokenRegistry')
-    # # network_deploy = deployer(contract_name='BancorNetwork')
+
+def topup_wallet_if_required(wallet_address):
+    sig = celery_app.signature(eth_endpoint('topup_wallet_if_required'),
+                               args=[wallet_address])
+
+    return execute_synchronous_celery(sig)

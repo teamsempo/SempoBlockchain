@@ -95,7 +95,7 @@ class BlockchainWallet(ModelBase):
     @staticmethod
     def address_from_private_key(private_key):
         if isinstance(private_key, str):
-            private_key = bytearray.fromhex(private_key.replace('0x', ''))
+            private_key = bytes.fromhex(private_key.replace('0x', ''))
         return keys.PrivateKey(private_key).public_key.to_checksum_address()
 
     def __init__(self, private_key=None, wei_target_balance=None, wei_topup_threshold=None):

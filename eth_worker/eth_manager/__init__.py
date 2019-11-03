@@ -79,10 +79,7 @@ import eth_manager.celery_tasks
 # )
 
 # Register the master wallet so we can use it for tasks
-try:
-    persistence_interface.create_blockchain_wallet_from_private_key(config.MASTER_WALLET_PRIVATE_KEY)
-except WalletExistsError:
-    pass
+persistence_interface.create_blockchain_wallet_from_private_key(config.MASTER_WALLET_PRIVATE_KEY, allow_existing=True)
 
 
 def register_tokens_from_app(host_address, auth_username, auth_password):

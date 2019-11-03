@@ -5,6 +5,7 @@ from server.utils.auth import requires_auth, show_all
 from server.models.token import Token
 from server.models.exchange import Exchange
 from server.schemas import me_exchange_schema
+from server import db
 
 class ExchangeAPI(MethodView):
 
@@ -52,26 +53,45 @@ class ExchangeAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
         elif from_amount:
+            try:
+                exchange = Exchange()
 
-            exchange = Exchange()
+                exchange.exchange_from_amount(
+                    user=user,
+                    from_token=from_token,
+                    to_token=to_token,
+                    from_amount=from_amount
+                )
 
-            exchange.exchange_from_amount(
-                user=user,
-                from_token=from_token,
-                to_token=to_token,
-                from_amount=from_amount
-            )
+            except Exception as e:
+
+                db.session.commit()
+
+                response_object = {
+                    'message': str(e),
+                }
+                return make_response(jsonify(response_object)), 400
 
         elif to_desired_amount:
 
-            exchange = Exchange()
+            # TODO: Test this
+            try:
+                exchange = Exchange()
 
-            exchange.exchange_to_desired_amount(
-                user=user,
-                from_token=from_token,
-                to_token=to_token,
-                to_desired_amount=to_desired_amount
-            )
+                exchange.exchange_to_desired_amount(
+                    user=user,
+                    from_token=from_token,
+                    to_token=to_token,
+                    to_desired_amount=to_desired_amount
+                )
+            except Exception as e:
+
+                db.session.commit()
+
+                response_object = {
+                    'message': str(e),
+                }
+                return make_response(jsonify(response_object)), 400
 
         else:
 
@@ -87,5 +107,4 @@ class ExchangeAPI(MethodView):
             }
         }
 
-        return make_response(jsonify(response_object)), 201
-
+        return make_response(jsonify(response_object)), 200

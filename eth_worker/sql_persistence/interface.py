@@ -304,14 +304,25 @@ class SQLPersistenceInterface(object):
         private_key = BlockchainWallet.decrypt_private_key(encrypted_private_key)
         self.create_blockchain_wallet_from_private_key(private_key)
 
-    def create_blockchain_wallet_from_private_key(self, private_key):
+    def create_blockchain_wallet_from_private_key(self, private_key,
+                                                  allow_existing,
+                                                  wei_target_balance=0,
+                                                  wei_topup_threshold=0,
+                                                  ):
 
         address = BlockchainWallet.address_from_private_key(private_key)
 
-        if session.query(BlockchainWallet).filter_by(address=address).first():
-            raise WalletExistsError("Account for provided private key already exists")
+        existing_wallet = session.query(BlockchainWallet).filter_by(address=address).first()
+        if existing_wallet:
+            if allow_existing:
+                return existing_wallet
+            else:
+                raise WalletExistsError("Account for provided private key already exists")
 
-        wallet = BlockchainWallet(private_key=private_key)
+        wallet = BlockchainWallet(
+            private_key=private_key,
+            wei_target_balance=wei_target_balance,
+            wei_topup_threshold=wei_topup_threshold)
 
         session.add(wallet)
 
@@ -319,7 +330,15 @@ class SQLPersistenceInterface(object):
 
         return wallet
 
-    def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0):
+    def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
+
+        if private_key:
+            return self.create_blockchain_wallet_from_private_key(
+                private_key,
+                True,
+                wei_target_balance,
+                wei_topup_threshold,
+            )
 
         wallet = BlockchainWallet(wei_target_balance=wei_target_balance,
                                   wei_topup_threshold=wei_topup_threshold)
@@ -329,6 +348,7 @@ class SQLPersistenceInterface(object):
         session.commit()
 
         return wallet
+
 
     def get_all_wallets(self):
         return session.query(BlockchainWallet).all()

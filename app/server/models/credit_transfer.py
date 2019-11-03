@@ -65,11 +65,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     @hybrid_property
     def transfer_amount(self):
-        return self._transfer_amount / 10**18
+        return self._transfer_amount / 10**6
 
     @transfer_amount.setter
     def transfer_amount(self, val):
-        self._transfer_amount = val * 10**18
+        self._transfer_amount = val * 10**6
 
     @hybrid_property
     def blockchain_status_breakdown(self):

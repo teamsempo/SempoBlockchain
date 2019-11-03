@@ -58,9 +58,10 @@ def deploy_smart_token(self, deploying_address,
 
 
 @celery_app.task(**task_config)
-def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0):
+def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
     wallet = persistence_interface.create_new_blockchain_wallet(wei_target_balance=wei_target_balance,
-                                                                wei_topup_threshold=wei_topup_threshold)
+                                                                wei_topup_threshold=wei_topup_threshold,
+                                                                private_key=private_key)
     return wallet.address
 
 
@@ -70,8 +71,8 @@ def topup_wallets(self):
 
 
 @celery_app.task(**task_config)
-def topup_wallet_if_required(self, address, wei_target_balance, wei_topup_threshold):
-    eth_manager.task_interfaces.composite.topup_if_required(address, wei_target_balance, wei_topup_threshold)
+def topup_wallet_if_required(self, address):
+    return eth_manager.task_interfaces.composite.topup_if_required(address)
 
 
 @celery_app.task(**task_config)

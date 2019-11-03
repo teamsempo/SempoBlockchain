@@ -74,8 +74,10 @@ class OrganisationAPI(MethodView):
         if token is None:
             return make_response(jsonify({'message': 'Token not found'})), 404
 
+
         new_organisation = Organisation(name=name, token=token)
 
+        # TODO: Shift this all into being created when an org is created
         transfer_account = TransferAccount(organisation=new_organisation)
 
         db.session.add_all([new_organisation, transfer_account])

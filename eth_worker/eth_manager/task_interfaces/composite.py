@@ -9,14 +9,14 @@ from eth_manager.task_interfaces.regular import (
     transaction_task,
     send_eth_task,
     synchronous_call,
-    await_transaction_result,
+    await_task_success,
 )
 
 timeout = 4
 
 
 def get_contract_address(task_id):
-    await_tr = partial(await_transaction_result, timeout=timeout)
+    await_tr = partial(await_task_success, timeout=timeout)
     return pipe(task_id, await_tr, lambda r: r.get('contract_address'))
 
 
@@ -36,14 +36,16 @@ def topup_wallets():
 
             signature(utils.eth_endpoint('topup_wallet_if_required'),
                       kwargs={
-                          'address': wallet.address,
-                          'wei_target_balance': wallet.wei_target_balance or 0,
-                          'wei_topup_threshold': wallet.wei_topup_threshold
+                          'address': wallet.address
                       }).delay()
 
 
-def topup_if_required(address, wei_target_balance, wei_topup_threshold):
+def topup_if_required(address):
     balance = w3.eth.getBalance(address)
+
+    wallet = persistence_interface.get_wallet_by_address(address)
+    wei_topup_threshold = wallet.wei_topup_threshold
+    wei_target_balance = wallet.wei_target_balance or 0
 
     if balance <= wei_topup_threshold and wei_target_balance > balance:
         sig = signature(utils.eth_endpoint('send_eth'),
@@ -58,9 +60,13 @@ def topup_if_required(address, wei_target_balance, wei_topup_threshold):
 
         persistence_interface.set_wallet_last_topup_task_id(address, task_id)
 
+        return task_id
+
+    return None
+
 
 def deploy_exchange_network(deploying_address):
-    gasPrice = 2500000000
+    gasPrice = 250000000000
 
     def deployer(contract_name, args=None):
         return deploy_contract_task(deploying_address, contract_name, args)
@@ -73,7 +79,7 @@ def deploy_exchange_network(deploying_address):
             func=name
         )
 
-        task = await_transaction_result(task_id, timeout=timeout)
+        task = await_task_success(task_id, timeout=timeout)
         contract_address = task['contract_address']
 
         return transaction_task(
@@ -130,7 +136,7 @@ def deploy_exchange_network(deploying_address):
         gas_limit=80000000
     )
 
-    res = await_transaction_result(set_signer_task, timeout=timeout)
+    res = await_task_success(set_signer_task, timeout=timeout)
 
     return registry_contract_address
 
@@ -147,7 +153,7 @@ def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_w
 
     send_eth_task_id = send_eth_task(deploying_address, fund_amount_wei, reserve_token_address)
 
-    res = await_transaction_result(send_eth_task_id, timeout=timeout)
+    res = await_task_success(send_eth_task_id, timeout=timeout)
 
     balance = synchronous_call(
         contract_address=reserve_token_address,
