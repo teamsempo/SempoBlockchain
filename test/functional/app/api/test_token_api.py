@@ -8,19 +8,16 @@ import json, pytest
 
 
 @pytest.mark.parametrize("status_code", [
-    (201),
-    (400)
+    (201)
 ])
-def test_create_token(test_client, complete_auth_token, status_code):
-    """
-    GIVEN a Flask application
-    WHEN the '/api/token/' page is requested (GET)
-    THEN check the response is valid
-    """
+def test_create_token(test_client, complete_auth_token, initialised_blockchain_network, status_code):
+    exchange_contract_id = initialised_blockchain_network['exchange_contract'].id
 
     response = test_client.post('/api/token/',
                                headers=dict(Authorization=complete_auth_token, Accept='application/json'),
-                               json={'address': '0xc4375b7de8af5a38a93548eb8453a498222c4ff2',
+                               json={'deploy_smart_token_contract': True,
+                                     'exchange_contract_id': exchange_contract_id,
+                                     'reserve_ratio_ppm': 250000,
                                      'name': 'FOO Token',
                                      'symbol': 'FOO'},
                                follow_redirects=True)

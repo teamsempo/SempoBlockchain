@@ -12,8 +12,7 @@ from eth_manager.task_interfaces.regular import (
     await_task_success,
 )
 
-timeout = 4
-
+timeout = config.SYNCRONOUS_TASK_TIMEOUT
 
 def get_contract_address(task_id):
     await_tr = partial(await_task_success, timeout=timeout)

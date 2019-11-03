@@ -25,7 +25,8 @@ class Organisation(ModelBase):
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
     org_level_transfer_account_id    = db.Column(db.Integer,
-                                                 db.ForeignKey('transfer_account.id', name="fk_org_level_account"))
+                                                 db.ForeignKey('transfer_account.id',
+                                                               name="transfer_account_owning_organisation_id_fkey"))
 
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases

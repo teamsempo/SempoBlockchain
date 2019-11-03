@@ -5,7 +5,6 @@ from sql_persistence.models import session
 from eth_manager import celery_app, blockchain_processor, persistence_interface
 from functools import wraps
 
-
 class SqlAlchemyTask(celery.Task):
     """An abstract Celery Task that ensures that the connection the the
     database is closed on task completion"""
@@ -15,7 +14,7 @@ class SqlAlchemyTask(celery.Task):
         session.remove()
 
 
-task_config = {
+base_task_config = {
     'base': SqlAlchemyTask,
     'bind': True,
     'autoretry_for': (Exception,),
@@ -24,23 +23,26 @@ task_config = {
     'retry_backoff': True
 }
 
-processor_task_config = dict(task_config)
-processor_task_config['max_retries'] = 0
+processor_task_config = {
+    **base_task_config,
+    'max_retries': 0,
+    # 'queue': 'processor'
+}
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):
     return eth_manager.task_interfaces.composite.deploy_exchange_network(deploying_address)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
     return eth_manager.task_interfaces.composite.deploy_and_fund_reserve_token(
         deploying_address,
         name, symbol, fund_amount_wei)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def deploy_smart_token(self, deploying_address,
                        name, symbol, decimals,
                        issue_amount_wei,
@@ -57,7 +59,7 @@ def deploy_smart_token(self, deploying_address,
         reserve_ratio_ppm)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
     wallet = persistence_interface.create_new_blockchain_wallet(wei_target_balance=wei_target_balance,
                                                                 wei_topup_threshold=wei_topup_threshold,
@@ -65,31 +67,31 @@ def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold
     return wallet.address
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def topup_wallets(self):
     eth_manager.task_interfaces.composite.topup_wallets()
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def topup_wallet_if_required(self, address):
     return eth_manager.task_interfaces.composite.topup_if_required(address)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
     return blockchain_processor.registry.register_contract(
         contract_address, abi, contract_name, require_name_matches
     )
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def call_contract_function(self, contract_address, function, abi_type=None, args=None, kwargs=None,
                            signing_address=None):
     return blockchain_processor.call_contract_function(contract_address, abi_type, function, args, kwargs,
                                                        signing_address)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def transact_with_contract_function(self, contract_address, function,  abi_type=None, args=None, kwargs=None,
                                     signing_address=None, encrypted_private_key=None,
                                     gas_limit=None, dependent_on_tasks=None):
@@ -99,7 +101,7 @@ def transact_with_contract_function(self, contract_address, function,  abi_type=
                                                                 gas_limit, dependent_on_tasks)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def deploy_contract(self, contract_name, args=None, kwargs=None,
                     signing_address=None, encrypted_private_key=None,
                     gas_limit=None, dependent_on_tasks=None):
@@ -109,7 +111,7 @@ def deploy_contract(self, contract_name, args=None, kwargs=None,
                                                 gas_limit, dependent_on_tasks)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def send_eth(self, amount_wei, recipient_address,
              signing_address=None, encrypted_private_key=None,
              dependent_on_tasks=None):
@@ -119,12 +121,12 @@ def send_eth(self, amount_wei, recipient_address,
                                          dependent_on_tasks)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def get_task(self, task_id):
     return blockchain_processor.get_serialised_task_from_id(task_id)
 
 
-@celery_app.task(**task_config)
+@celery_app.task(**base_task_config)
 def _attempt_transaction(self, task_id):
     return blockchain_processor.attempt_transaction(task_id)
 

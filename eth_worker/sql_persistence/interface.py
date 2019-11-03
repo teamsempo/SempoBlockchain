@@ -38,6 +38,7 @@ class SQLPersistenceInterface(object):
             session.query(BlockchainTransaction)
                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                 .filter(BlockchainTransaction.ignore == False)
+                .filter(BlockchainTransaction.coinbase == self.coinbase)
                 .filter(
                     and_(
                         or_(BlockchainTransaction.nonce_consumed == True,
@@ -67,6 +68,7 @@ class SQLPersistenceInterface(object):
                 session.query(BlockchainTransaction)
                     .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                     .filter(BlockchainTransaction.ignore == False)
+                    .filter(BlockchainTransaction.coinbase == self.coinbase)
                     .filter(
                         and_(
                             or_(BlockchainTransaction.nonce_consumed == True,
@@ -88,6 +90,7 @@ class SQLPersistenceInterface(object):
             session.query(BlockchainTransaction)
                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                 .filter(BlockchainTransaction.ignore == False)
+                .filter(BlockchainTransaction.coinbase == self.coinbase)
                 .filter(BlockchainTransaction.status == 'PENDING')
                 .filter(and_(BlockchainTransaction.id > highest_valid_id,
                              BlockchainTransaction.id < transaction_id))
@@ -123,6 +126,7 @@ class SQLPersistenceInterface(object):
                                 .filter(BlockchainTransaction.id != transaction_id)
                                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                                 .filter(BlockchainTransaction.ignore == False)
+                                .filter(BlockchainTransaction.coinbase == self.coinbase)
                                 .filter(BlockchainTransaction.status == 'PENDING')
                                 .filter(BlockchainTransaction.nonce == blockchain_transaction.nonce)
                                 .all())
@@ -166,7 +170,10 @@ class SQLPersistenceInterface(object):
 
         task = session.query(BlockchainTask).get(task_id)
 
-        blockchain_transaction = BlockchainTransaction(signing_wallet=task.signing_wallet)
+        blockchain_transaction = BlockchainTransaction(
+            signing_wallet=task.signing_wallet,
+            coinbase=self.coinbase
+        )
 
         session.add(blockchain_transaction)
 
@@ -369,5 +376,7 @@ class SQLPersistenceInterface(object):
     def __init__(self, w3, PENDING_TRANSACTION_EXPIRY_SECONDS=300):
 
         self.w3 = w3
+
+        self.coinbase = w3.eth.coinbase
 
         self.PENDING_TRANSACTION_EXPIRY_SECONDS = PENDING_TRANSACTION_EXPIRY_SECONDS

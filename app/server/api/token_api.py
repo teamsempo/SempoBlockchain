@@ -95,11 +95,14 @@ class TokenAPI(MethodView):
             address = smart_token_result['smart_token_address']
             subexchange_address = smart_token_result['subexchange_address']
 
+        token = Token(address=address, name=name, symbol=symbol)
+        db.session.add(token)
+        db.session.commit()
+
+        if deploy_smart_token_contract:
+
             exchange_contract.add_token(token, subexchange_address, reserve_ratio_ppm)
 
-        token = Token(address=address, name=name, symbol=symbol)
-
-        db.session.add(token)
         db.session.commit()
 
         response_object = {

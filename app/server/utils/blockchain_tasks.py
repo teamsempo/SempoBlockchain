@@ -25,7 +25,10 @@ def execute_synchronous_celery(signature, timeout=None):
     async_result = signature.delay()
 
     try:
-        response = async_result.get(timeout=timeout or 4, propagate=True, interval=0.3)
+        response = async_result.get(
+            timeout=timeout or current_app.config['SYNCRONOUS_TASK_TIMEOUT'],
+            propagate=True,
+            interval=0.3)
     except Exception as e:
         raise e
     finally:
@@ -73,8 +76,14 @@ def synchronous_transaction_task(signing_address,
     return execute_synchronous_task(signature)
 
 
-def await_task_success(task_id, timeout=None, poll_frequency=0.5):
+def await_task_success(task_id,
+                       timeout=None,
+                       poll_frequency=0.5):
     elapsed = 0
+
+    if timeout is None:
+        timeout = current_app.config['SYNCRONOUS_TASK_TIMEOUT']
+
     while timeout is None or elapsed <= timeout:
         task = get_blockchain_task(task_id)
         if task['status'] == 'SUCCESS':
@@ -393,14 +402,14 @@ def deploy_exchange_network(deploying_address):
     sig = celery_app.signature(eth_endpoint('deploy_exchange_network'),
                                args=[deploying_address])
 
-    return execute_synchronous_celery(sig, timeout=900)
+    return execute_synchronous_celery(sig, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 20)
 
 
 def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_wei):
     sig = celery_app.signature(eth_endpoint('deploy_and_fund_reserve_token'),
                                args=[deploying_address, name, symbol, fund_amount_wei])
 
-    return execute_synchronous_celery(sig, timeout=900)
+    return execute_synchronous_celery(sig, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10)
 
 
 def deploy_smart_token(deploying_address,
@@ -418,7 +427,7 @@ def deploy_smart_token(deploying_address,
                                      reserve_token_address,
                                      int(reserve_ratio_ppm)])
 
-    return execute_synchronous_celery(sig, timeout=900)
+    return execute_synchronous_celery(sig,timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15)
 
 
 def topup_wallet_if_required(wallet_address):

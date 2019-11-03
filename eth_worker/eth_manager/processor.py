@@ -103,11 +103,11 @@ class TransactionProcessor(object):
 
         signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
 
-        nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
-
-        def estimate_gas():
+        if gas_limit:
+            gas = gas_limit
+        else:
             try:
-                return unbuilt_transaction.estimateGas({
+                gas = unbuilt_transaction.estimateGas({
                     'from': signing_wallet_obj.address,
                     'gasPrice': gasPrice
                 })
@@ -115,9 +115,11 @@ class TransactionProcessor(object):
                 print("Estimate Gas Failed. Remedy by specifying gas limit.")
                 raise e
 
+        nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+
         metadata = {
             'chainId': chainId,
-            'gas': gas_limit or int(estimate_gas()*2),
+            'gas': gas_limit or int(gas*2),
             'gasPrice': gasPrice,
             'nonce': nonce
         }
