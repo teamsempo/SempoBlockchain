@@ -1,5 +1,6 @@
 import sys
 import os
+from sqlalchemy.exc import IntegrityError
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
@@ -7,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from server import db, create_app
 from server.models.ussd import UssdMenu
 from server.models.transfer_usage import TransferUsage
-from server.exceptions import TransferUsageNameDuplicateException
+
 
 def update_or_create_menu(name, description, parent_id=None):
     instance = UssdMenu.query.filter_by(name=name).first()
@@ -276,12 +277,12 @@ if __name__ == '__main__':
     ]
     for business_category in business_categories:
         try:
-            usage = TransferUsage.create_without_duplicate(
-                business_category['name'], business_category['icon'], 1, True)
+            usage = TransferUsage(name=business_category['name'], icon=business_category['icon'], 
+            priority=1, default=True)
             db.session.add(usage)
             db.session.commit()
                 
-        except TransferUsageNameDuplicateException as e:
+        except IntegretyError as e:
             print(e)
     ctx.pop()
     print('------------------------------------------------------------')

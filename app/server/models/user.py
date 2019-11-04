@@ -527,29 +527,32 @@ class User(ManyOrgBase, ModelBase):
         # this query to sqlalchemy please do. 
         # Can it maybe use the paginate_query function?
         sql = text('''
-            SELECT u.business_usage_id FROM credit_transfer c
-            LEFT JOIN "user" u ON c.recipient_user_id = u.id
-            WHERE sender_user_id = {} AND c.transfer_status = 'COMPLETE'
-            ORDER BY c.updated DESC
-            LIMIT 20
+            SELECT *, COUNT(*)  FROM
+                (SELECT u.business_usage_id FROM credit_transfer c
+                LEFT JOIN "user" u ON c.recipient_user_id = u.id
+                WHERE sender_user_id = 4 AND c.transfer_status = 'COMPLETE'
+                ORDER BY c.updated DESC
+                LIMIT 20)
+            C GROUP BY business_usage_id ORDER BY count DESC
         '''.format(self.id))
         result = db.session.execute(sql)
         transfer_usage_ids = [row[0] for row in result]
-
         # Get most common business_usage_id
         number_of_wanted_business_id = 9
-        c = Counter(transfer_usage_ids)
-        most_common = [key for key, val in c.most_common(number_of_wanted_business_id)]
+
+        most_common_ids = transfer_usage_ids[:number_of_wanted_business_id]
         # If less than the wanted nr of usage is found fill up the list with default
-        if len(most_common) < number_of_wanted_business_id:
-            most_relevant_ids = self.refine_with_default_transfer_usage(
-                most_common, number_of_wanted_business_id)
-        most_relevant_transer_usage = TransferUsage.query.filter(
-            TransferUsage.id.in_(most_relevant_ids)).all()
-        print(most_relevant_transer_usage)
-        return most_relevant_transer_usage
+        if len(most_common_ids) < number_of_wanted_business_id:
+            most_relevant_ids = self.refine_with_default_transfer_usages(
+                most_common_ids, number_of_wanted_business_id)
+        relevant_transer_usages = TransferUsage.query.filter(
+            TransferUsage.id.in_(most_common_ids)).all()
+        # Order the transfer usages by the ordered list of id that were ordered by count
+        ordered_tranfer_usages = [
+            next(s for s in relevant_transer_usages if s.id == id) for id in most_common_ids]
+        return ordered_tranfer_usages
         
-    def refine_with_default_transfer_usage(self, most_common, nr_of_wanted):
+    def refine_with_default_transfer_usages(self, most_common, nr_of_wanted):
         default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
             TransferUsage.id).all()
         for transer_usage_id, in default_transer_usages:

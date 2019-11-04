@@ -18,6 +18,7 @@ from server.models.user import User
 from server.models.transfer_usage import TransferUsage
 from server.models.ussd import UssdMenu
 from server.utils import user as UserUtils
+from server.utils.transfer_enums import TransferStatusEnum
 
 def get_or_create_token(address, name, symbol):
     instance = Token.query.filter_by(address=address).first()
@@ -35,16 +36,17 @@ def get_or_create_token(address, name, symbol):
 
 def get_or_create_organisation(name, token):
     instance = Organisation.query.filter_by(name=name).first()
+    print(instance)
     if instance:
         return instance
     else:
         instance = Organisation(name=name, token=token)
 
-        db.session.add(instance)
+        db.session.add(instance)   
         return instance
 
 
-def get_or_create_admin_user(email, new_organisation):
+def get_or_create_admin_user(email):
     instance = User.query.execution_options(show_all=True).filter_by(
         email=str(email).lower()).first()
     if instance:
@@ -53,8 +55,9 @@ def get_or_create_admin_user(email, new_organisation):
         user = User()
         user.create_admin_auth(email=email,
                                password='TestPassword', tier='sempoadmin')
-        user.organisations.append(new_organisation)
+
         user.is_activated = True
+        db.session.add(user)
         return user
    
 
@@ -118,6 +121,7 @@ def create_transfers(sender, user_list, wanted_nr_transfers):
                                     recipient_user=random.choice(user_list),
                                     token=token,
                                     uuid=randomString())
+        transfer.transfer_status = TransferStatusEnum.COMPLETE
         db.session.add(transfer)
         transfer_list.append(transfer)
         i += 1
@@ -130,16 +134,18 @@ if __name__ == '__main__':
     ctx = app.app_context()
     ctx.push()
 
+    print('Creating admin user')
+    admin_user = get_or_create_admin_user('administrator@sempo.ai')
+
     print('Creating token')
     blockchain_address = '0xc1275b7de8af5a38a93548eb8453a498222c4ff2'
     token = get_or_create_token(blockchain_address,
-                                'BAR Token', 'BAR')
+                                'AUD Token', 'AUD')
+
+    db.session.commit()
 
     print('Creating organisation')
     new_organisation = get_or_create_organisation('org1', token)
-
-    print('Creating admin user')
-    admin_user = get_or_create_admin_user('administrator@sempo.ai', new_organisation)
 
     print('Creating user 1')
     user1 = get_or_create_user('sender-user@test.com', 1)
@@ -155,8 +161,5 @@ if __name__ == '__main__':
     # User 1 sends to a random choice of user_list
     create_transfers(user1, user_list, 30)
 
-    db.session.commit()
-    sql = text("""UPDATE credit_transfer SET transfer_status = 'COMPLETE'""")
-    db.session.execute(sql)
     db.session.commit()
     ctx.pop()

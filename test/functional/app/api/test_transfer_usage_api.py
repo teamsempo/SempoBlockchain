@@ -5,6 +5,7 @@ These tests use GETs and POSTs to different URLs to check for the proper behavio
 of the transfer_usage_blueprint.
 """
 import json, pytest
+from server.utils.auth import get_complete_auth_token
 
 
 @pytest.mark.parametrize('name,icon,translations,status_code', [
@@ -46,15 +47,12 @@ def test_transfer_usage_api_get(test_client, authed_sempo_admin_user):
     WHEN the '/api/transfer_usage/' page is requested (GET)
     THEN check the response has status 200 and a list
     """
-    authed_sempo_admin_user.is_activated = True
-    authed_sempo_admin_user.TFA_enabled = True
-    authed_sempo_admin_user.set_held_role('ADMIN', 'admin')
-    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-    tfa_token = authed_sempo_admin_user.encode_TFA_token(9999).decode()
+
+    complete_auth_token = get_complete_auth_token(authed_sempo_admin_user)
 
     response = test_client.get('/api/transfer_usage/',
                                headers=dict(
-                                   Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
+                                   Authorization=complete_auth_token, Accept='application/json'),
                                follow_redirects=True)
 
     assert response.status_code == 200
