@@ -88,13 +88,6 @@ class MockMiscTasker(object):
     def set_ip_location(*args, **kwargs):
         pass
 
-
-class MockEthHelper(object):
-    @staticmethod
-    def set_ip_location(*args, **kwargs):
-        pass
-
-
 @pytest.fixture(scope='module', autouse=True)
 def mock_blockchain_tasks(monkeysession):
     from server import bt
