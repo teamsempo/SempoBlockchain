@@ -24,13 +24,13 @@ i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
 i18n.set('fallback', config.LOCALE_FALLBACK)
 
 
-def create_app(is_unit_testing = False):
+def create_app():
     # create and configure the app
-
     app = Flask(__name__, instance_relative_config=True)
 
     app.config.from_object('config')
     app.config['BASEDIR'] = os.path.abspath(os.path.dirname(__file__))
+    # app.config["SQLALCHEMY_ECHO"] = True
 
     # ensure the instance folder exists
     try:

@@ -50,7 +50,6 @@ class OrganisationAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
-
     @show_all
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self, organisation_id):
@@ -73,7 +72,6 @@ class OrganisationAPI(MethodView):
         token = Token.query.get(token_id)
         if token is None:
             return make_response(jsonify({'message': 'Token not found'})), 404
-
 
         new_organisation = Organisation(name=name, token=token)
 

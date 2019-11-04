@@ -59,6 +59,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
 
+    # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
     def transfer_amount(self):
         return self._transfer_amount / 10**6

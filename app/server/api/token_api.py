@@ -97,10 +97,7 @@ class TokenAPI(MethodView):
         db.session.commit()
 
         if deploy_smart_token_contract:
-
             exchange_contract.add_token(token, subexchange_address, reserve_ratio_ppm)
-
-        db.session.commit()
 
         response_object = {
             'message': 'success',
