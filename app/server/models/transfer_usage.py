@@ -38,3 +38,14 @@ class TransferUsage(ModelBase):
     @name.setter
     def name(self, name):
         self._name = name.strip().upper()
+
+    @classmethod
+    def find_or_create(cls, raw_name, default=False) -> "TransferUsage":
+        name = raw_name.strip().upper()
+        usage = TransferUsage.query.filter_by(
+            name=name).first()
+        if usage is None:
+            usage = cls(name=name, default=default)
+            db.session.add(usage)
+            db.session.commit()
+        return usage

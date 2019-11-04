@@ -1,12 +1,13 @@
 import React from "react";
+import {connect} from "react-redux";
 
-import {reduxForm, InjectedFormProps} from "redux-form";
+import {reduxForm, InjectedFormProps, formValueSelector} from "redux-form";
 import QrReadingModal from "../qrReadingModal";
 import {ErrorMessage, ModuleHeader} from "../styledElements";
 import AsyncButton from "../AsyncButton";
 import InputField from '../form/InputField'
 import SelectField from '../form/SelectField'
-import {connect} from "react-redux";
+import {TransferUsage} from "../../reducers/transferUsage/types";
 
 export interface ICreateUser {
   firstName?: string
@@ -18,19 +19,20 @@ export interface ICreateUser {
   gender?: string
   location?: string
   businessUsage?: string
-}
-
-//TODO(admin_create): change this when figure out the format
-interface StateProps {
-  transferUsages: any[]
+  usageOtherSpecific?: string
 }
 
 interface OuterProps {
   transferAccountType: string
   users: any
+  transferUsages: TransferUsage[]
 }
 
-type Props = StateProps & OuterProps
+interface StateProps {
+  businessUsageValue?: string
+}
+
+type Props = OuterProps & StateProps
 
 const validate = (values: ICreateUser) => {
   const errors: any = {};
@@ -52,7 +54,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     return this.props.transferUsages.map((transferUsage) => {
       return {
         name: transferUsage.name,
-        value: transferUsage.id
+        value: transferUsage.name.toLowerCase()
       }
     })
   }
@@ -67,7 +69,14 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
       </InputField>
     }
     if (this.props.transferUsages.length > 0) {
-      businessUsage = <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
+      if (this.props.businessUsageValue && this.props.businessUsageValue === "other") {
+        businessUsage = <>
+          <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
+          <InputField name="usageOtherSpecific" label='Please specify the category' isRequired />
+        </>
+      } else {
+        businessUsage = <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
+      }
     }
 
     return (
@@ -115,10 +124,9 @@ const CreateUserReduxForm = reduxForm({
 })(CreateUserForm);
 
 export default connect(state => {
-
-  //TODO(admin_create): after ruben adds the API endpoint, fetch default transfer usages
+  const selector = formValueSelector('createUser');
   return {
-    transferUsages: [],
+    businessUsageValue: selector(state, 'businessUsage'),
   }
 // @ts-ignore
 })(CreateUserReduxForm);

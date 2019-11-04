@@ -11,6 +11,7 @@ import watchOnAddFlashMessage from './messageSaga';
 import filterSagas from './filterSaga';
 import businessVerificationSaga from './businessVerificationSaga';
 import wyreSaga from './wyreSaga';
+import transferUsageSagas from "./transferUsageSagas";
 
 export default function* rootSaga() {
   yield all([
@@ -25,5 +26,6 @@ export default function* rootSaga() {
     filterSagas(),
     businessVerificationSaga(),
     wyreSaga(),
+    transferUsageSagas()
   ])
 }
