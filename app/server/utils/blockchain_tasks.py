@@ -346,19 +346,6 @@ class BlockchainTasker(object):
 
         to_amount = round(to_amount)
 
-        # path = _get_path(from_token, to_token, reserve_token)
-        #
-        # to_amount = _synchronous_call(
-        #     contract_address=exchange_contract.blockchain_address,
-        #     contract_type='bancor_converter',
-        #     func='quickConvert',
-        #     args=[
-        #         path,
-        #         from_token.system_amount_to_token(from_amount),
-        #         1
-        #     ],
-        #     signing_address=signing_address)
-
         return to_token.token_amount_to_system(to_amount)
 
     def _get_path(self, from_token, to_token, reserve_token):
