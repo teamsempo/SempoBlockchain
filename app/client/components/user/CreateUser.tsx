@@ -6,15 +6,19 @@ import { StyledButton, ModuleHeader } from '../styledElements'
 import styles from './styles.module.css';
 import CreateUserForm, {ICreateUser} from './CreateUserForm';
 import CreateVendorForm, {ICreateVendor} from './CreateVendorForm';
+import { loadTransferUsages } from '../../reducers/transferUsage/actions'
+import {TransferUsage} from "../../reducers/transferUsage/types";
+import {ReduxState} from "../../reducers/rootReducer";
 
-//TODO(ts): fix types
 interface DispatchProps {
   createUser: (body: any) => void,
   resetCreateUser: () => void
+  loadTransferUsages: () => void
 }
 
 interface StateProps {
-  users: any
+  users: any,
+  transferUsages: TransferUsage[]
 }
 
 interface OuterProps {
@@ -33,6 +37,10 @@ type Form = ICreateUser & ICreateVendor
 type Props = DispatchProps & StateProps & OuterProps
 
 class CreateUser extends React.Component<Props> {
+  componentDidMount() {
+    this.props.loadTransferUsages();
+  }
+
   componentWillUnmount() {
       this.resetCreateUser()
   }
@@ -57,7 +65,8 @@ class CreateUser extends React.Component<Props> {
       existing_vendor_pin: form.existingVendorPin,
       transfer_account_name: form.transferAccountName,
       location: form.location,
-      business_usage_id: form.businessUsage
+      business_usage_name: form.businessUsage,
+      usage_other_specific: form.usageOtherSpecific
     })
   }
 
@@ -107,6 +116,7 @@ class CreateUser extends React.Component<Props> {
         return <CreateUserForm
           users={this.props.users}
           transferAccountType={transferAccountType}
+          transferUsages={this.props.transferUsages}
           onSubmit={(form: Form) => this.onCreateUser(form)}
         />
       }
@@ -114,9 +124,11 @@ class CreateUser extends React.Component<Props> {
   }
 }
 
+//TODO: why doesn't ReduxState work correctly
 const mapStateToProps = (state: any) => {
   return {
-    users: state.users
+    users: state.users,
+    transferUsages: state.transferUsages.transferUsages
   };
 };
 
@@ -124,6 +136,7 @@ const mapDispatchToProps = (dispatch: any) => {
   return {
     createUser: (body: any) => dispatch(createUser({body})),
     resetCreateUser: () => {dispatch({type: RESET_CREATE_USER})},
+    loadTransferUsages: () => {dispatch(loadTransferUsages())}
   };
 };
 

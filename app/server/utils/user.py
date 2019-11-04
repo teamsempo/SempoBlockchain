@@ -7,6 +7,7 @@ from eth_utils import to_checksum_address
 
 from server import db
 from server.models.device_info import DeviceInfo
+from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
@@ -389,7 +390,20 @@ def proccess_create_or_modify_user_request(
     transfer_account_name = attribute_dict.get('transfer_account_name')
     first_name = attribute_dict.get('first_name')
     last_name = attribute_dict.get('last_name')
-    business_usage_id = attribute_dict.get('business_usage_id')
+
+    business_usage_name = attribute_dict.get('business_usage_name')
+    if business_usage_name:
+        usage = TransferUsage.find_or_create(business_usage_name)
+        if usage.name.lower() == "other":
+            usage_other_specific = attribute_dict.get('usage_other_specific')
+            if usage_other_specific:
+                other_usage = TransferUsage.find_or_create(usage_other_specific)
+                business_usage_id = other_usage.id
+            else:
+                response_object = {'message': 'Please specify a category for Other'}
+                return response_object, 400
+        else:
+            business_usage_id = usage.id
 
     preferred_language = attribute_dict.get('preferred_language')
 
