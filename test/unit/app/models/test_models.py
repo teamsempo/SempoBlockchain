@@ -3,7 +3,6 @@ This file (test_models.py) contains the unit tests for the models.py file.
 """
 import pytest
 from server.exceptions import IconNotSupportedException, PaymentMethodException
-from sqlalchemy.exc import IntegrityError
 from server.utils.access_control import AccessControl
 
 """ ----- Organisation Model ----- """

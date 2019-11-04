@@ -282,7 +282,7 @@ if __name__ == '__main__':
             db.session.add(usage)
             db.session.commit()
                 
-        except IntegretyError as e:
+        except IntegrityError as e:
             print(e)
     ctx.pop()
     print('------------------------------------------------------------')
