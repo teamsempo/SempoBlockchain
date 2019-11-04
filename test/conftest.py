@@ -7,11 +7,6 @@ app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
 sys.path.append(app_dir)
 sys.path.append(os.getcwd())
 
-from web3 import (
-    Web3,
-    WebsocketProvider,
-    HTTPProvider
-)
 
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
@@ -22,63 +17,11 @@ import config
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
 
-w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
-
-
-def load_account(address):
-    tx_hash = w3.eth.sendTransaction(
-        {'to': address, 'from': w3.eth.accounts[0], 'value': 5 * 10 ** 18})
-    return w3.eth.waitForTransactionReceipt(tx_hash)
-
 
 @pytest.fixture(scope='function')
 def requires_auth(test_client):
     from server.utils.auth import requires_auth
     return requires_auth
-
-@pytest.fixture(scope='module')
-def loaded_master_wallet_address():
-    """
-    A blockchain address that isn't tracked in the Sempo system like a regular one. Used during testing
-    for deploying blockchain components that are normally controlled by an external entity, eg reserve tokens
-    """
-    from server.utils.blockchain_tasks import (
-        create_blockchain_wallet
-    )
-
-
-
-    deploying_address = create_blockchain_wallet(private_key=config.MASTER_WALLET_PRIVATE_KEY)
-
-    load_account(deploying_address)
-
-    return deploying_address
-
-@pytest.fixture(scope='module')
-def external_reserve_token(test_client, init_database, loaded_master_wallet_address):
-    from server.models.token import Token
-    from server.utils.blockchain_tasks import (
-        deploy_and_fund_reserve_token,
-    )
-
-    name = "Reserve Token"
-    symbol = "RSRV"
-
-    reserve_token_address = deploy_and_fund_reserve_token(
-        deploying_address=loaded_master_wallet_address,
-        name=name,
-        symbol=symbol,
-        fund_amount_wei=4 * 10 ** 18
-    )
-
-    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol)
-    reserve_token.decimals = 18
-
-    db.session.add(reserve_token)
-    db.session.commit()
-
-    return reserve_token
-
 
 @pytest.fixture(scope='module')
 def create_organisation(test_client, init_database, external_reserve_token):
@@ -99,53 +42,48 @@ def create_organisation(test_client, init_database, external_reserve_token):
     return organisation
 
 
+
 @pytest.fixture(scope='module')
-def new_sempo_admin_user(test_client):
+def new_sempo_admin_user(test_client, init_database, create_organisation):
     from server.models.user import User
     user = User()
     user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
+    user.organisations.append(create_organisation)
+    user.default_organisation = create_organisation
+
+
+    db.session.add(user)
+
+    # Commit so it gets an ID
+    db.session.commit()
+
     return user
 
 
 @pytest.fixture(scope='module')
-def create_unactivated_sempo_admin_user(test_client, init_database, new_sempo_admin_user, create_organisation):
-    db.session.add(new_sempo_admin_user)
-    new_sempo_admin_user.organisations.append(create_organisation)
-    new_sempo_admin_user.default_organisation = create_organisation
-
-    # Commit the changes for the users
-    db.session.commit()
-
-    return new_sempo_admin_user
-
-
-@pytest.fixture(scope='module')
-def activated_sempo_admin_user(create_unactivated_sempo_admin_user):
-    """
-    Returns a sempo admin user that is activated but does NOT have TFA set up
-    """
-
-    create_unactivated_sempo_admin_user.is_activated = True
-    # Commit the changes for the users
-    db.session.commit()
-
-    return create_unactivated_sempo_admin_user
-
-
-@pytest.fixture(scope='module')
-def authed_sempo_admin_user(create_unactivated_sempo_admin_user):
+def authed_sempo_admin_user(new_sempo_admin_user):
     """
     Returns a sempo admin user that is activated and has TFA set up
     """
 
-    create_unactivated_sempo_admin_user.is_activated = True
-    create_unactivated_sempo_admin_user.set_TFA_secret()
-    create_unactivated_sempo_admin_user.TFA_enabled = True
+    new_sempo_admin_user.is_activated = True
+    new_sempo_admin_user.set_TFA_secret()
+    new_sempo_admin_user.TFA_enabled = True
 
+
+    return new_sempo_admin_user
+
+@pytest.fixture(scope='module')
+def activated_sempo_admin_user(new_sempo_admin_user):
+    """
+    Returns a sempo admin user that is activated but does NOT have TFA set up
+    """
+
+    new_sempo_admin_user.is_activated = True
     # Commit the changes for the users
     db.session.commit()
 
-    return create_unactivated_sempo_admin_user
+    return new_sempo_admin_user
 
 
 @pytest.fixture(scope='function')
@@ -266,12 +204,9 @@ def create_fiat_ramp():
     return fiat_ramp
 
 
-
 @pytest.fixture(scope='module')
 def admin_with_org_reserve_balance(authed_sempo_admin_user, external_reserve_token, loaded_master_wallet_address):
-    from server.utils.blockchain_tasks import (
-        make_token_transfer
-    )
+    from server import bt
 
     amount = 100
 
@@ -279,25 +214,24 @@ def admin_with_org_reserve_balance(authed_sempo_admin_user, external_reserve_tok
 
     org_transfer_account.balance = amount
 
-    make_token_transfer(loaded_master_wallet_address,
-                        org_transfer_account.token,
-                        loaded_master_wallet_address, org_transfer_account.blockchain_address,
-                        amount)
+    bt.make_token_transfer(
+        loaded_master_wallet_address,
+        org_transfer_account.token,
+        loaded_master_wallet_address, org_transfer_account.blockchain_address,
+        amount)
 
     return authed_sempo_admin_user
 
 
 @pytest.fixture(scope='module')
 def user_with_reserve_balance(create_transfer_account_user, external_reserve_token, loaded_master_wallet_address):
-    from server.utils.blockchain_tasks import (
-        make_token_transfer
-    )
+    from server import bt
 
     amount = 100
 
     transfer_account = create_transfer_account_user.get_transfer_account_for_token(external_reserve_token)
 
-    make_token_transfer(loaded_master_wallet_address,
+    bt.make_token_transfer(loaded_master_wallet_address,
                         transfer_account.token,
                         loaded_master_wallet_address, transfer_account.blockchain_address,
                         amount)
@@ -308,11 +242,8 @@ def user_with_reserve_balance(create_transfer_account_user, external_reserve_tok
     return create_transfer_account_user
 
 @pytest.fixture(scope='module')
-def initialised_blockchain_network(admin_with_org_reserve_balance, external_reserve_token):
-    from server.utils.blockchain_tasks import (
-        deploy_exchange_network,
-        deploy_smart_token
-    )
+def initialised_blockchain_network(admin_with_org_reserve_balance, external_reserve_token, load_account):
+    from server import bt
 
     from server.models.token import Token
     from server.models.exchange import ExchangeContract
@@ -320,7 +251,7 @@ def initialised_blockchain_network(admin_with_org_reserve_balance, external_rese
     reserve_token = external_reserve_token
 
     def deploy_and_add_smart_token(name, symbol, reserve_ratio_ppm, exchange_contract=None):
-        smart_token_result = deploy_smart_token(
+        smart_token_result = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=18,
             issue_amount_wei=1000,
@@ -361,7 +292,7 @@ def initialised_blockchain_network(admin_with_org_reserve_balance, external_rese
 
 
     # Initialise an exchange network
-    registry_address = deploy_exchange_network(deploying_address)
+    registry_address = bt.deploy_exchange_network(deploying_address)
 
     # Create first smart token and add to exchange network
     (smart_token_1,
@@ -418,3 +349,44 @@ def init_database():
     with current_app.app_context():
         db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
         db.drop_all()
+
+
+@pytest.fixture(scope='module')
+def loaded_master_wallet_address(load_account):
+    """
+    A blockchain address that isn't tracked in the Sempo system like a regular one. Used during testing
+    for deploying blockchain components that are normally controlled by an external entity, eg reserve tokens
+    """
+    from server import bt
+
+    deploying_address = bt.create_blockchain_wallet(private_key=config.MASTER_WALLET_PRIVATE_KEY)
+
+    load_account(deploying_address)
+
+    return deploying_address
+
+
+@pytest.fixture(scope='module')
+def external_reserve_token(test_client, init_database, loaded_master_wallet_address):
+    from server.models.token import Token
+    from server import bt
+
+    name = "AUD Reserve Token"
+    symbol = "AUD"
+
+    reserve_token_address = bt.deploy_and_fund_reserve_token(
+        deploying_address=loaded_master_wallet_address,
+        name=name,
+        symbol=symbol,
+        fund_amount_wei=4 * 10 ** 18
+    )
+
+    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol)
+    reserve_token.decimals = 18
+
+    db.session.add(reserve_token)
+    db.session.commit()
+
+    return reserve_token
+
+

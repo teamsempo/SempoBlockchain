@@ -1,12 +1,14 @@
 import json, pytest, config, base64
 
 
-@pytest.mark.parametrize('token_id,amount,status_code', [
-    (None, None, 400),
-    (1, None, 400),
-    (1, 100, 201)
+@pytest.mark.parametrize('token_id_generator,amount,status_code', [
+    (lambda t: None, None, 400),
+    (lambda t: t.id, None, 400),
+    (lambda t: t.id, 100, 201)
 ])
-def test_create_poli_payments_link(mocker, test_client, init_database, external_reserve_token, create_transfer_account_user, token_id, amount, status_code):
+def test_create_poli_payments_link(mocker, test_client, init_database, external_reserve_token,
+                                   create_transfer_account_user,
+                                   token_id_generator, amount, status_code):
     """
     GIVEN a Flask application
     WHEN '/api/me/poli_payments/' (POST)
@@ -25,6 +27,8 @@ def test_create_poli_payments_link(mocker, test_client, init_database, external_
 
     create_transfer_account_user.is_activated = True
     auth_token = create_transfer_account_user.encode_auth_token()
+
+    token_id = token_id_generator(external_reserve_token)
 
     response = test_client.post('/api/me/poli_payments/',
                                 headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),

@@ -1,14 +1,11 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
-from server import db
+from server import db, bt
 from server.utils.auth import requires_auth
 from server.models.token import Token
 from server.models.exchange import ExchangeContract
 from server.schemas import token_schema, tokens_schema
-from server.utils.blockchain_tasks import (
-    deploy_smart_token
-)
 
 token_blueprint = Blueprint('token', __name__)
 
@@ -83,7 +80,7 @@ class TokenAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 400
 
-            smart_token_result = deploy_smart_token(
+            smart_token_result = bt.deploy_smart_token(
                 deploying_address=deploying_address,
                 name=name, symbol=symbol, decimals=decimals,
                 issue_amount_wei=issue_amount_wei,

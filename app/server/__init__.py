@@ -23,8 +23,10 @@ dirname = os.path.dirname(__file__)
 i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
 i18n.set('fallback', config.LOCALE_FALLBACK)
 
-def create_app():
+
+def create_app(is_unit_testing = False):
     # create and configure the app
+
     app = Flask(__name__, instance_relative_config=True)
 
     app.config.from_object('config')
@@ -187,6 +189,7 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 
+
 encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 dependent_on_tasks = None
 
@@ -204,4 +207,9 @@ messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
 africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
 africastalking_client = africastalking.SMS
 
+from server.utils.blockchain_tasks import BlockchainTasker
+bt = BlockchainTasker()
+
+from server.utils.misc_tasks import MiscTasker
+mt = MiscTasker()
 

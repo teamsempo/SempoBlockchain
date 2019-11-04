@@ -20,7 +20,7 @@ services:
     image: eth_worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
-      CONTAINER_TYPE: "WORKER"
+      CONTAINER_TYPE: "PRIMARY"
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}

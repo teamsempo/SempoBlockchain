@@ -2,16 +2,14 @@ import datetime, enum
 from sqlalchemy.sql import func
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
-from server import db
+from server import db, bt
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
-from server.utils.blockchain_tasks import (
-    create_blockchain_wallet
-)
+
 from server.utils.transfer_enums import TransferStatusEnum
 
 
@@ -217,7 +215,7 @@ class TransferAccount(OneOrgBase, ModelBase):
         # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
         # db.session.add(blockchain_address_obj)
 
-        self.blockchain_address = blockchain_address or create_blockchain_wallet(private_key)
+        self.blockchain_address = blockchain_address or bt.create_blockchain_wallet(private_key)
 
         if organisation:
             self.organisation = organisation

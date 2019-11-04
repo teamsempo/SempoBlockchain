@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 sleep 10
-alembic upgrade head
+
 if [ "$CONTAINER_MODE" = 'TEST' ]; then
   echo pass
 elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
@@ -10,6 +10,7 @@ elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
   celery -A eth_manager worker --loglevel=INFO --concurrency=1 --pool=eventlet -Q=processor
 else
+  alembic upgrade head
   celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet
 fi
 

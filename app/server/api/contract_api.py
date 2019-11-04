@@ -1,18 +1,11 @@
 from flask import Blueprint, request, make_response, jsonify, current_app
 from flask.views import MethodView
 
-from server import db
+from server import db, bt
 from server.utils.auth import requires_auth
 from server.models.token import Token
 from server.models.exchange import ExchangeContract
 from server.schemas import token_schema
-from server.utils.blockchain_tasks import (
-    deploy_exchange_network,
-    deploy_and_fund_reserve_token,
-    deploy_smart_token,
-    make_liquid_token_exchange
-)
-
 
 deploy_contracts_blueprint = Blueprint('contracts', __name__)
 
@@ -34,9 +27,9 @@ class ContractsAPI(MethodView):
 
         deploying_address = current_app.config['MASTER_WALLET_ADDRESS']
 
-        registry_address = deploy_exchange_network(deploying_address)
+        registry_address = bt.deploy_exchange_network(deploying_address)
 
-        reserve_token_address = deploy_and_fund_reserve_token(
+        reserve_token_address = bt.deploy_and_fund_reserve_token(
             deploying_address=deploying_address,
             name=reserve_name,
             symbol=reserve_symbol,
@@ -47,7 +40,7 @@ class ContractsAPI(MethodView):
         reserve_token.decimals = 18
         db.session.add(reserve_token)
 
-        smart_token_result = deploy_smart_token(
+        smart_token_result = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=decimals,
             issue_amount_wei=1000,
@@ -71,7 +64,7 @@ class ContractsAPI(MethodView):
         exchange_contract.add_reserve_token(reserve_token)
         exchange_contract.add_token(smart_token, converter_address, reserve_ratio_ppm)
 
-        smart_token_result2 = deploy_smart_token(
+        smart_token_result2 = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name='Goop3', symbol='Goop3', decimals=decimals,
             issue_amount_wei=1000,

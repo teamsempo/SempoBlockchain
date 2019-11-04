@@ -14,7 +14,7 @@ from server.exceptions import (
     BlockchainError
 )
 
-from server import db, sentry, red
+from server import db, sentry, red, bt
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
@@ -24,7 +24,6 @@ from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
-from server.utils.blockchain_tasks import get_wallet_balance
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 def calculate_transfer_stats(total_time_series=False):
@@ -123,7 +122,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
     :return: amount of funds available
     """
 
-    return get_wallet_balance(g.active_organisation.org_level_transfer_account.blockchain_address,
+    return bt.get_wallet_balance(g.active_organisation.org_level_transfer_account.blockchain_address,
                        g.active_organisation.org_level_transfer_account.token)
 
     refresh_cache = False

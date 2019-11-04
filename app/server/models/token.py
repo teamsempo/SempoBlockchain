@@ -1,14 +1,12 @@
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask import current_app
-from server import db
-from server.utils.blockchain_tasks import (
-    get_token_decimals,
-)
+from server import db, bt
 
 from server.models.utils import (
     ModelBase,
     exchange_contract_token_association_table
 )
+
 
 class Token(ModelBase):
     __tablename__ = 'token'
@@ -54,7 +52,7 @@ class Token(ModelBase):
         if self._decimals:
             return self._decimals
 
-        decimals_from_contract_definition = get_token_decimals(self)
+        decimals_from_contract_definition = bt.get_token_decimals(self)
 
         if decimals_from_contract_definition:
             return decimals_from_contract_definition

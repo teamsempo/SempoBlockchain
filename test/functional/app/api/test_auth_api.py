@@ -36,32 +36,32 @@ def test_basic_auth(test_client, username, password, status_code):
     "alsdfjkadsljflk",
     None,
 ])
-def test_invalid_activate_api(test_client, create_unactivated_sempo_admin_user, activation_token):
+def test_invalid_activate_api(test_client, new_sempo_admin_user, activation_token):
     """
     GIVEN a Flask application
     WHEN the '/api/auth/activate/' api is posted to (POST)
     THEN check the response is invalid when activation_token is incorrect or None
     """
-    assert not create_unactivated_sempo_admin_user.is_activated
+    assert not new_sempo_admin_user.is_activated
     response = test_client.post('/api/auth/activate/',
                                 data=json.dumps(dict(activation_token=activation_token)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == 401
-    assert not create_unactivated_sempo_admin_user.is_activated
+    assert not new_sempo_admin_user.is_activated
 
-def test_valid_activate_api(test_client, create_unactivated_sempo_admin_user):
+def test_valid_activate_api(test_client, new_sempo_admin_user):
     """
     GIVEN a Flask application
     WHEN the '/api/auth/activate/' api is posted to (POST)
     THEN check the response is valid when correct activation_token
     """
-    assert not create_unactivated_sempo_admin_user.is_activated
-    activation_token = create_unactivated_sempo_admin_user.encode_single_use_JWS('A')
+    assert not new_sempo_admin_user.is_activated
+    activation_token = new_sempo_admin_user.encode_single_use_JWS('A')
     response = test_client.post('/api/auth/activate/',
                                 data=json.dumps(dict(activation_token=activation_token)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == 201
-    assert create_unactivated_sempo_admin_user.is_activated
+    assert new_sempo_admin_user.is_activated
 
 
 def test_get_tfa_url(test_client, activated_sempo_admin_user):

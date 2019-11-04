@@ -26,7 +26,7 @@ base_task_config = {
 processor_task_config = {
     **base_task_config,
     'max_retries': 0,
-    # 'queue': 'processor'
+    'queue': 'processor'
 }
 
 

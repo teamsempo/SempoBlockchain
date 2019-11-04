@@ -1,9 +1,6 @@
 from flask import current_app
 
-from server import db
-from server.utils.blockchain_tasks import (
-    create_blockchain_wallet
-)
+from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
 
 
@@ -26,7 +23,7 @@ class Organisation(ModelBase):
 
     org_level_transfer_account_id    = db.Column(db.Integer,
                                                  db.ForeignKey('transfer_account.id',
-                                                               name="transfer_account_owning_organisation_id_fkey"))
+                                                               name="fk_org_level_account"))
 
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
@@ -54,7 +51,7 @@ class Organisation(ModelBase):
     def __init__(self, **kwargs):
         super(Organisation, self).__init__(**kwargs)
 
-        self.system_blockchain_address = create_blockchain_wallet(
+        self.system_blockchain_address = bt.create_blockchain_wallet(
             wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
             wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
         )

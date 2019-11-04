@@ -43,9 +43,11 @@ def test_new_sempo_admin_user(new_sempo_admin_user):
     assert new_sempo_admin_user.password_hash != 'TestPassword'
     assert not new_sempo_admin_user.is_activated
     assert AccessControl.has_any_tier(new_sempo_admin_user.roles, 'ADMIN')
-
+    assert isinstance(new_sempo_admin_user.secret, str)
 
 def test_authed_sempo_admin_user(authed_sempo_admin_user):
+
+
     """
     GIVEN a User model
     WHEN a new User is created in DB
@@ -90,18 +92,16 @@ def test_update_password(new_sempo_admin_user):
     assert new_sempo_admin_user.verify_password(new_password)
 
 
-def test_valid_activation_token(authed_sempo_admin_user):
+def test_valid_activation_token(new_sempo_admin_user):
     """
     GIVEN a User model
     WHEN a activation token is created
     THEN check token is valid
     """
-    activation_token = authed_sempo_admin_user.encode_single_use_JWS('A')
+    activation_token = new_sempo_admin_user.encode_single_use_JWS('A')
     assert activation_token is not None
-    validity_check = authed_sempo_admin_user.decode_single_use_JWS(activation_token, 'A')
+    validity_check = new_sempo_admin_user.decode_single_use_JWS(activation_token, 'A')
     assert validity_check['success']
-    authed_sempo_admin_user.is_activated = True
-    assert authed_sempo_admin_user.is_activated
 
 
 def test_valid_auth_token(authed_sempo_admin_user):

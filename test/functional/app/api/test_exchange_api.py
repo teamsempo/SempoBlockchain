@@ -2,7 +2,7 @@ import pytest, json, config, base64
 import pyotp
 
 from server.utils.auth import get_complete_auth_token
-from server.utils.blockchain_tasks import await_task_success
+from server import bt
 
 @pytest.mark.parametrize("from_token, to_token, from_amount, status_code", [
     ("smart_token_2", "smart_token_1", 1e5, 400),
@@ -30,5 +30,5 @@ def test_exchange(test_client, user_with_reserve_balance, initialised_blockchain
     assert response.status_code == status_code
     if status_code == 200:
         task_id = response.json['data']['exchange']['blockchain_task_id']
-        result = await_task_success(task_id)
+        result = bt.await_task_success(task_id, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 15)
         assert result['status'] == 'SUCCESS'

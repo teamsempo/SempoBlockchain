@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from server import db
+from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
@@ -11,10 +11,6 @@ from server.models.transfer_account import TransferAccount
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError
-)
-from server.utils.blockchain_tasks import (
-    make_token_transfer,
-    get_blockchain_task
 )
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
@@ -148,7 +144,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
-        self.blockchain_task_id = make_token_transfer(
+        self.blockchain_task_id = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,

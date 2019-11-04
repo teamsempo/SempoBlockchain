@@ -4,7 +4,10 @@ from sqlalchemy.orm.attributes import flag_modified
 from functools import partial
 from flask import current_app
 
-from server import db
+from server import db, bt
+
+import server.models.credit_transfer
+import server.models.transfer_account
 
 from server.models.utils import (
     ModelBase,
@@ -12,19 +15,8 @@ from server.models.utils import (
     exchange_contract_token_association_table
 )
 
-import server.models.credit_transfer
-import server.models.transfer_account
-
-from server.utils.blockchain_tasks import (
-    make_liquid_token_exchange,
-    make_approval,
-    get_conversion_amount,
-    topup_wallet_if_required
-)
-
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 from server.utils.root_solver import find_monotonic_increasing_bounds, false_position_method
-
 from server.exceptions import InsufficientBalanceError
 
 
@@ -135,13 +127,13 @@ class Exchange(BlockchainTaskableBase):
 
         signing_address = self.from_transfer.sender_transfer_account.blockchain_address
 
-        topup_task_id = topup_wallet_if_required(signing_address)
+        topup_task_id = bt.topup_wallet_if_required(signing_address)
 
         dependent = [topup_task_id] if topup_task_id else []
 
         # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
         # We need to approve all the tokens involved for spend by the exchange contract
-        to_approval_id = make_approval(
+        to_approval_id = bt.make_approval(
             signing_address=signing_address,
             token=to_token,
             spender=exchange_contract.blockchain_address,
@@ -149,7 +141,7 @@ class Exchange(BlockchainTaskableBase):
             dependent_on_tasks=dependent
         )
 
-        reserve_approval_id = make_approval(
+        reserve_approval_id = bt.make_approval(
             signing_address=signing_address,
             token=exchange_contract.reserve_token,
             spender=exchange_contract.blockchain_address,
@@ -157,7 +149,7 @@ class Exchange(BlockchainTaskableBase):
             dependent_on_tasks=dependent
         )
 
-        from_approval_id = make_approval(
+        from_approval_id = bt.make_approval(
             signing_address=signing_address,
             token=from_token,
             spender=exchange_contract.blockchain_address,
@@ -168,13 +160,13 @@ class Exchange(BlockchainTaskableBase):
         if calculated_to_amount:
             to_amount = calculated_to_amount
         else:
-            to_amount = get_conversion_amount(exchange_contract=exchange_contract,
+            to_amount = bt.get_conversion_amount(exchange_contract=exchange_contract,
                                               from_token=from_token,
                                               to_token=to_token,
                                               from_amount=from_amount,
                                               signing_address=signing_address)
 
-        task_id = make_liquid_token_exchange(
+        task_id = bt.make_liquid_token_exchange(
             signing_address=signing_address,
             exchange_contract=exchange_contract,
             from_token=from_token,
@@ -227,7 +219,7 @@ class Exchange(BlockchainTaskableBase):
 
     def _get_conversion_function(self, exchange_contract, from_token, to_token):
         return partial(
-            get_conversion_amount,
+            bt.get_conversion_amount,
             exchange_contract.blockchain_address,
             from_token,
             to_token,

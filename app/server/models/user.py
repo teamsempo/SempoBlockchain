@@ -1,4 +1,4 @@
-from server import db, sentry, celery_app
+from server import db, sentry, celery_app, bt
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
@@ -11,12 +11,11 @@ import jwt
 import random
 import string
 
+from server import bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
-from server.utils.blockchain_tasks import (
-    create_blockchain_wallet
-)
+
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
 )
@@ -527,7 +526,7 @@ class User(ManyOrgBase, ModelBase):
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
 
-        self.primary_blockchain_address = blockchain_address or create_blockchain_wallet()
+        self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
 
 
     def __repr__(self):
