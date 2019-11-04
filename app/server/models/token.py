@@ -68,13 +68,3 @@ class Token(ModelBase):
 
     def system_amount_to_token(self, system_amount):
         return int(float(system_amount) * 10**self.decimals / 100)
-
-    # def __init__(self, address, **kwargs):
-    #     super(Token, self).__init__(**kwargs)
-    #
-    #     existing_token = Token.query.filter(Token.address == address).first()
-    #
-    #     if existing_token and not current_app.config.get('IS_PRODUCTION', True):
-    #         # On non-product versions delete existing tokens.
-    #         # This makes dev-ing way easier because you don't need to worry about clashed addresses
-    #         db.session.delete(existing_token)
