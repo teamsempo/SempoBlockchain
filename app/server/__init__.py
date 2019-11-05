@@ -18,6 +18,8 @@ import i18n
 import sys
 import os
 
+from server.utils.phone import MessageProcessor
+
 # try:
 #     import uwsgi
 #     is_running_uwsgi = True
@@ -43,7 +45,6 @@ celery_app = Celery('tasks',
 dirname = os.path.dirname(__file__)
 i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
 i18n.set('fallback', config.LOCALE_FALLBACK)
-
 
 def encrypt_string(raw_string):
 
@@ -97,7 +98,8 @@ twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
 messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
 africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
 africastalking_client = africastalking.SMS
-
+message_processor = MessageProcessor(
+    twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
 
 def create_app():
     # create and configure the app
