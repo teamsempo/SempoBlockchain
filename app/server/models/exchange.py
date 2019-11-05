@@ -83,10 +83,6 @@ class ExchangeContract(ModelBase):
             self.exchangeable_tokens.append(token)
             self._add_subexchange(token.address, subexchange_address, subexchange_reserve_ratio)
 
-    def __init__(self, blockchain_address, contract_registry_blockchain_address=None):
-
-        self.blockchain_address = blockchain_address
-        self.contract_registry_blockchain_address = contract_registry_blockchain_address
 
 class Exchange(BlockchainTaskableBase):
     __tablename__ = 'exchange'

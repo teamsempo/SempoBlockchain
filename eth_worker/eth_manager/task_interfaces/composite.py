@@ -65,7 +65,7 @@ def topup_if_required(address):
 
 
 def deploy_exchange_network(deploying_address):
-    gasPrice = 250000000000
+    gasPrice = int(2.5e11)
 
     def deployer(contract_name, args=None):
         return deploy_contract_task(deploying_address, contract_name, args)
@@ -132,7 +132,7 @@ def deploy_exchange_network(deploying_address):
         contract_type='BancorNetwork',
         func='setSignerAddress',
         args=[deploying_address],
-        gas_limit=80000000
+        gas_limit=int(8e7)
     )
 
     res = await_task_success(set_signer_task, timeout=timeout)
@@ -213,7 +213,7 @@ def deploy_smart_token(
         contract_address=reserve_token_address,
         contract_type='EtherToken',
         func='approve',
-        args=[subexchange_address, 1000000*10*18],
+        args=[subexchange_address, int(1e30)],
         gas_limit=100000
     )
 
@@ -222,7 +222,7 @@ def deploy_smart_token(
         contract_address=smart_token_address,
         contract_type='SmartToken',
         func='approve',
-        args=[subexchange_address, 1000000*10**18],
+        args=[subexchange_address, int(1e30)],
         gas_limit=100000
     )
 

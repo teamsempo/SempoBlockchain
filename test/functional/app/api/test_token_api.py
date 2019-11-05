@@ -13,7 +13,7 @@ import json, pytest
 def test_create_token(test_client, complete_auth_token, initialised_blockchain_network, status_code):
     exchange_contract_id = initialised_blockchain_network['exchange_contract'].id
 
-    response = test_client.post('/api/token/',
+    response = test_client.post('/api/contract/token/',
                                headers=dict(Authorization=complete_auth_token, Accept='application/json'),
                                json={'deploy_smart_token_contract': True,
                                      'exchange_contract_id': exchange_contract_id,

@@ -165,6 +165,16 @@ class CreditTransferSchema(Schema):
         return authorising_user.email
 
 
+class ExchangeContractSchema(SchemaBase):
+
+    blockchain_address = fields.String()
+    contract_registry_blockchain_address = fields.String()
+    subexchange_address_mapping = fields.Function(lambda obj: obj.subexchange_address_mapping)
+
+    reserve_token = fields.Nested(TokenSchema)
+
+    exchangeable_tokens = fields.Nested(TokenSchema, many=True)
+
 class ExchangeSchema(BlockchainTaskableSchemaBase):
 
     to_desired_amount   = fields.Int()
@@ -370,6 +380,8 @@ organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
+
+exchange_contract_schema = ExchangeContractSchema()
 
 # Me Schemas
 

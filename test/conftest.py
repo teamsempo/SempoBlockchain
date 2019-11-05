@@ -7,7 +7,6 @@ app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
 sys.path.append(app_dir)
 sys.path.append(os.getcwd())
 
-
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
 import config
@@ -16,7 +15,6 @@ import config
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
-
 
 @pytest.fixture(scope='function')
 def requires_auth(test_client):
@@ -311,45 +309,6 @@ def initialised_blockchain_network(admin_with_org_reserve_balance, external_rese
         'smart_token_2': smart_token_2
     }
 
-@pytest.fixture(scope='module')
-def test_request_context():
-    flask_app = create_app()
-
-    # can be used in combination with the WITH statement to activate a request context temporarily.
-    # with this you can access the request, g and session objects in view functions
-    yield flask_app.test_request_context
-
-
-@pytest.fixture(scope='module')
-def test_client():
-    flask_app = create_app()
-
-    # Flask provides a way to test your application by exposing the Werkzeug test Client
-    # and handling the context locals for you.
-    testing_client = flask_app.test_client()
-
-    # Establish an application context before running the tests.
-    ctx = flask_app.app_context()
-    ctx.push()
-
-    yield testing_client  # this is where the testing happens!
-
-    ctx.pop()
-
-
-@pytest.fixture(scope='module')
-def init_database():
-    # Create the database and the database table
-
-    with current_app.app_context():
-        db.create_all()  # todo- use manage.py
-
-    yield db  # this is where the testing happens!
-
-    with current_app.app_context():
-        db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
-        db.drop_all()
-
 
 @pytest.fixture(scope='module')
 def loaded_master_wallet_address(load_account):
@@ -390,3 +349,48 @@ def external_reserve_token(test_client, init_database, loaded_master_wallet_addr
     return reserve_token
 
 
+@pytest.fixture(scope='module')
+def test_request_context():
+    flask_app = create_app()
+
+    # can be used in combination with the WITH statement to activate a request context temporarily.
+    # with this you can access the request, g and session objects in view functions
+    yield flask_app.test_request_context
+
+
+@pytest.fixture(scope='module')
+def test_client():
+    flask_app = create_app()
+
+    # Flask provides a way to test your application by exposing the Werkzeug test Client
+    # and handling the context locals for you.
+    testing_client = flask_app.test_client()
+
+    # Establish an application context before running the tests.
+    ctx = flask_app.app_context()
+    ctx.push()
+
+    yield testing_client  # this is where the testing happens!
+
+    ctx.pop()
+
+
+@pytest.fixture(scope='module')
+def init_database():
+    # Create the database and the database table
+
+    with current_app.app_context():
+        db.create_all()  # todo- use manage.py
+
+    yield db  # this is where the testing happens!
+
+    with current_app.app_context():
+        db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
+        db.drop_all()
+
+@pytest.fixture(scope="module")
+def monkeymodule(request):
+    from _pytest.monkeypatch import MonkeyPatch
+    mpatch = MonkeyPatch()
+    yield mpatch
+    mpatch.undo()

@@ -38,7 +38,6 @@ class UpdateData(Command):
                     db.session.add(reserve_token)
                     db.session.commit()
 
-
                 exchange_contract = ExchangeContract.query.filter_by(
                     blockchain_address=exchange_contract_address).first()
 
@@ -50,8 +49,6 @@ class UpdateData(Command):
 
                     db.session.add(exchange_contract)
                     db.session.commit()
-
-            print(master_address)
 
             # todo: [Nick] refactor this
             print("~~~~~~~~~~ Searching for float wallet ~~~~~~~~~~")

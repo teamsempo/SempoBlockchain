@@ -1,8 +1,8 @@
 import pytest
 from functools import partial
 
-from fixtures.user import UserFactory
-from fixtures.ussd_session import UssdSessionFactory
+from helpers.user import UserFactory
+from helpers.ussd_session import UssdSessionFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 
 standard_user = partial(UserFactory, first_name="James", phone="254700000000")

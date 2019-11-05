@@ -1,10 +1,18 @@
 import pytest
 import os
 import sys
-app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
-sys.path.append(app_dir)
-sys.path.append(os.getcwd())
 
+from helpers.utils import mock_class, will_func_test_blockchain
+from helpers.blockchain_tasker import MockBlockchainTasker
+
+@pytest.fixture(scope='module', autouse=True)
+def mock_blockchain_tasks(monkeymodule):
+    from server import bt
+    if will_func_test_blockchain():
+        print('~~~NOT Mocking Blockchain Endpoints, Eth Worker will be tested~~~')
+    else:
+        print('~~~Mocking Blockchain Endpoints, Eth Worker will NOT be tested~~~')
+        mock_class(bt, MockBlockchainTasker, monkeymodule)
 
 @pytest.fixture(scope='module')
 def load_account():
@@ -15,10 +23,11 @@ def load_account():
     import config
 
     def inner(address):
-        w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+        if will_func_test_blockchain():
+            w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 
-        tx_hash = w3.eth.sendTransaction(
-            {'to': address, 'from': w3.eth.accounts[0], 'value': 5 * 10 ** 18})
-        return w3.eth.waitForTransactionReceipt(tx_hash)
+            tx_hash = w3.eth.sendTransaction(
+                {'to': address, 'from': w3.eth.accounts[0], 'value': 5 * 10 ** 18})
+            return w3.eth.waitForTransactionReceipt(tx_hash)
 
     return inner
