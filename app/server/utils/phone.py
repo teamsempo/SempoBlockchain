@@ -20,6 +20,7 @@ def proccess_phone_number(phone_number, region=None, ignore_region=False):
         return phone_number
 
     if region is None:
+        # TODO(org): add an org level default
         region = current_app.config['DEFAULT_COUNTRY']
 
     if not isinstance(phone_number, str):

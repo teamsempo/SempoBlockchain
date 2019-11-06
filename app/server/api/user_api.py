@@ -9,8 +9,6 @@ from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
-from server.utils.misc import AttributeDictProccessor
-from server.constants import CREATE_USER_SETTINGS
 
 
 user_blueprint = Blueprint('user', __name__)
@@ -125,14 +123,19 @@ class UserAPI(MethodView):
     def post(self, user_id):
 
         post_data = request.get_json()
+        organisation = g.user.get_active_organisation()
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
-            organisation=g.user.get_active_organisation()
+            organisation=organisation
         )
 
         if response_code == 200:
             db.session.commit()
+
+            user = response_object['data']['user']
+            if organisation is not None and user is not None:
+                organisation.send_welcome_sms(user)
 
         return make_response(jsonify(response_object)), response_code
 
