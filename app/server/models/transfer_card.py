@@ -28,8 +28,13 @@ class TransferCard(ModelBase):
 
     @amount_loaded.setter
     def amount_loaded(self, amount):
-        self._amount_loaded = amount
-        message = '{}{}{}'.format(self.nfc_serial_number, amount, self.transfer_account.token.symbol)
+        self._amount_loaded = round(amount)
+        message = '{}{}{}'.format(
+            self.nfc_serial_number,
+            self._amount_loaded,
+            self.transfer_account.token.symbol
+        )
+
         self.amount_loaded_signature = current_app.config['ECDSA_SIGNING_KEY'].sign(message.encode()).hex()
 
     @staticmethod

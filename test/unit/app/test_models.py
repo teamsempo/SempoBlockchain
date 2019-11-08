@@ -169,7 +169,7 @@ def test_create_transfer_account(create_transfer_account):
     WHEN a new transfer account is created
     THEN check a blockchain address is created, default balance is 0
     """
-    assert create_transfer_account.balance is 0
+    assert create_transfer_account.balance == 0
     assert create_transfer_account.blockchain_address is not None
 
 
@@ -196,7 +196,7 @@ def test_approve_vendor_transfer_account(new_transfer_account):
     new_transfer_account.is_vendor = True
     new_transfer_account.approve()
 
-    assert new_transfer_account.balance is 0
+    assert new_transfer_account.balance == 0
 
 
 """ ----- Credit Transfer Model ----- """

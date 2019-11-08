@@ -24,7 +24,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     uuid            = db.Column(db.String, unique=True)
 
     resolved_date   = db.Column(db.DateTime)
-    _transfer_amount = db.Column(db.BigInteger)
+    _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
 
     transfer_type       = db.Column(db.Enum(TransferTypeEnum))
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
@@ -62,11 +62,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
     def transfer_amount(self):
-        return self._transfer_amount / 10**6
+        return (self._transfer_amount_wei or 0) / int(1e16)
 
     @transfer_amount.setter
     def transfer_amount(self, val):
-        self._transfer_amount = val * 10**6
+        self._transfer_amount_wei = val * int(1e16)
 
     @hybrid_property
     def blockchain_status_breakdown(self):

@@ -21,6 +21,28 @@ from server.exceptions import InsufficientBalanceError
 
 
 class ExchangeContract(ModelBase):
+    """
+    class for tracking contracts used for making on-chain exchanges of tokens
+    (rather than using an internal sempo blockchain account that holds and swaps multiple tokens)
+    currently only supports exchanges using liquid token contracts, though could be extended to support
+    a constant-product market maker, continuous-double auction DEX etc.
+
+    @:param blockchain_address:
+    The address to which exchange requests should be sent.
+    @:param contract_registry_blockchain_address:
+    The contract registry is used to add new liquid token sub-exchanges.
+    @:param subexchange_address_mapping:
+    Exchanges made using a liquid token don't use a single on-chain contract, but rather a network of
+    exchange-contracts, one for each token that can be exchanged, which we label 'sub-exchanges'.
+    Each one of these sub-exchanges includes an internal reserve-token balance, and has parameters defined
+    such as the reserve-ratio.
+    @:param reserve_token:
+    The stable token used as the reserve for liquid tokens.
+    @:param exchangeable_tokens:
+    The tokens that are exchangable using this contract
+    @:param transfer_accounts:
+    Accounts used for tracking the sends and receives of the various tokens exchangable by the exchange-network
+    """
     __tablename__ = 'exchange_contract'
 
     blockchain_address = db.Column(db.String(), index=True)

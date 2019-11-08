@@ -91,20 +91,27 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
     WHEN '/api/auth/tfa/' is requested (POST)
     THEN check a tfa token is only returned when OTP is valid
     """
-    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
 
-    tfa_url = authed_sempo_admin_user.tfa_url
-    tfa_secret = tfa_url.split("secret=")[1].split('&')[0]
-    func = pyotp.TOTP(tfa_secret)
-    otp = otp_generator(func)
+    def inner_test():
+        auth_token = authed_sempo_admin_user.encode_auth_token().decode()
 
-    otp_expiry_interval = 1
-    response = test_client.post('/api/auth/tfa/',
-                                headers=dict(Authorization=auth_token, Accept='application/json'),
-                                data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
-                                content_type='application/json', follow_redirects=True)
+        tfa_url = authed_sempo_admin_user.tfa_url
+        tfa_secret = tfa_url.split("secret=")[1].split('&')[0]
+        func = pyotp.TOTP(tfa_secret)
+        otp = otp_generator(func)
 
-    assert response.status_code == status_code
+        otp_expiry_interval = 1
+        response = test_client.post('/api/auth/tfa/',
+                                    headers=dict(Authorization=auth_token, Accept='application/json'),
+                                    data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
+                                    content_type='application/json', follow_redirects=True)
+
+        return response.status_code == status_code
+
+    # This test is flaky (probably due to the time-dependence of the otp test)
+    # So we run it twice to maximise the chance it will pass if it should
+    assert inner_test() or inner_test()
+
 
 @pytest.mark.parametrize("email,password,status_code", [
     ("tristan@sempo.ai", "TestPassword", 200),

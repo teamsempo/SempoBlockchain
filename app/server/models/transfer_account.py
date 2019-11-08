@@ -24,7 +24,7 @@ class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    _balance         = db.Column(db.BigInteger, default=0)
+    _balance_wei    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -52,7 +52,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     users = db.relationship(
         "User",
         secondary=user_transfer_account_association_table,
-        back_populates="transfer_accounts")
+        back_populates="transfer_accounts"
+    )
 
     # owning_organisation_id = db.Column(db.Integer, db.ForeignKey(Organisation.id))
 
@@ -93,11 +94,11 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     @hybrid_property
     def balance(self):
-        return self._balance or 0
+        return (self._balance_wei or 0) / int(1e16)
 
     @balance.setter
     def balance(self, val):
-        self._balance = val
+        self._balance_wei = val * int(1e16)
 
     @hybrid_property
     def total_sent(self):

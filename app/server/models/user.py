@@ -1,4 +1,3 @@
-from server import db, sentry, celery_app, bt
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
@@ -11,7 +10,7 @@ import jwt
 import random
 import string
 
-from server import bt
+from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
