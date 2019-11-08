@@ -19,14 +19,10 @@ def test_transfer_usage_api(test_client, authed_sempo_admin_user,name,icon,trans
     WHEN the '/api/transfer_usage/' page is requested (POST)
     THEN check the response is valid
     """
-    authed_sempo_admin_user.is_activated = True
-    authed_sempo_admin_user.TFA_enabled = True
-    authed_sempo_admin_user.set_held_role('ADMIN', 'admin')
-    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-    tfa_token = authed_sempo_admin_user.encode_TFA_token(9999).decode()
+    tokens = get_complete_auth_token(authed_sempo_admin_user)
 
     response = test_client.post('/api/transfer_usage/',
-                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
+                                headers=dict(Authorization=tokens, Accept='application/json'),
                                 data=json.dumps(dict(name=name, icon=icon, translations=translations)),
                                 content_type='application/json', follow_redirects=True)
 
@@ -34,7 +30,7 @@ def test_transfer_usage_api(test_client, authed_sempo_admin_user,name,icon,trans
 
     # Ensure that the posting a duplicate transfer ussage results in a 400
     response = test_client.post('/api/transfer_usage/',
-                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
+                                headers=dict(Authorization=tokens, Accept='application/json'),
                                 data=json.dumps(dict(name=name, icon=icon, translations=translations)),
                                 content_type='application/json', follow_redirects=True)
 

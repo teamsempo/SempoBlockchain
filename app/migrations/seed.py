@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from server import db, create_app
 from server.models.ussd import UssdMenu
 from server.models.transfer_usage import TransferUsage
+from server.exceptions import TransferUsageNameDuplicateException
 
 
 def update_or_create_menu(name, description, parent_id=None):
@@ -278,12 +279,13 @@ if __name__ == '__main__':
     for business_category in business_categories:
         try:
             usage = TransferUsage(name=business_category['name'], icon=business_category['icon'], 
-            priority=1, default=True)
+                                  priority=1, default=True)
             db.session.add(usage)
             db.session.commit()
                 
-        except IntegrityError as e:
+        except TransferUsageNameDuplicateException as e:
             print(e)
+
     ctx.pop()
     print('------------------------------------------------------------')
     print('Done creating Business Categories')

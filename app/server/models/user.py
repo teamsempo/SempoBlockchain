@@ -88,7 +88,8 @@ class User(ManyOrgBase, ModelBase):
 
     cashout_authorised = db.Column(db.Boolean, default=False)
 
-    business_usage_id = db.Column(db.Integer)
+    business_usage_id = db.Column(
+        db.Integer, db.ForeignKey('transfer_usage.id'))
 
     transfer_accounts = db.relationship(
         "TransferAccount",

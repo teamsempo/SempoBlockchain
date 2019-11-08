@@ -2,6 +2,7 @@ import sys
 import os
 import time
 import random
+from uuid import uuid4
 import string
 from sqlalchemy import text
 
@@ -86,12 +87,6 @@ def get_or_create_transer_account(name, blockchain_address, organisation):
         return instance
 
 
-def randomString(stringLength=10):
-    """Generate a random string of fixed length """
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
-
-
 def create_users_different_transer_usage(wanted_nr_users):
     i = 1
     user_list = []
@@ -117,10 +112,10 @@ def create_transfers(sender, user_list, wanted_nr_transfers):
     while i < wanted_nr_transfers:
         transfer = CreditTransfer(
                                     i,
-                                    sender_user=user1,
+                                    sender_user=sender,
                                     recipient_user=random.choice(user_list),
                                     token=token,
-                                    uuid=randomString())
+                                    uuid=str(uuid4()))
         transfer.transfer_status = TransferStatusEnum.COMPLETE
         db.session.add(transfer)
         transfer_list.append(transfer)
@@ -157,9 +152,10 @@ if __name__ == '__main__':
     print('Create a list of users with a different business usage id ')
     user_list = create_users_different_transer_usage(15)
 
-    print('Creating transactions')
+    number_of_transfers = 30
+    print('Creating %d transactions' % number_of_transfers)
     # User 1 sends to a random choice of user_list
-    create_transfers(user1, user_list, 30)
+    create_transfers(user1, user_list, number_of_transfers)
 
     db.session.commit()
     ctx.pop()

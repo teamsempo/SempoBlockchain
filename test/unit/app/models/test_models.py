@@ -278,7 +278,7 @@ def test_create_transfer_usage(create_transfer_usage):
     assert isinstance(create_transfer_usage.id, int)
     assert isinstance(create_transfer_usage.created, object)
 
-    assert create_transfer_usage.name == 'FOOD'
+    assert create_transfer_usage.name == 'Food'
     assert create_transfer_usage.icon == 'food-apple'
     assert create_transfer_usage.translations == dict(en='Food', fr='aliments')
 

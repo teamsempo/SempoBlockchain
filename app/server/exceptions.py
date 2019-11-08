@@ -16,6 +16,12 @@ class IconNotSupportedException(Exception):
     """
 
 
+class TransferUsageNameDuplicateException(Exception):
+    """
+    Raise if trying to set the name of TransferUsage to a name that already exists in the table
+    """
+
+
 class TypeNotFoundException(Exception):
     """
     Raise if trying to set kyc application type to type that does not exist

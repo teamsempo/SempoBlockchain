@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from server import db
 from server.models.transfer_usage import TransferUsage
 from server.exceptions import IconNotSupportedException
+from server.exceptions import TransferUsageNameDuplicateException
 from server.utils.auth import requires_auth
 from server.schemas import transfer_usages_schema
 
@@ -34,24 +35,21 @@ class TransferUsageAPI(MethodView):
         # MaterialCommunityIcons from https://oblador.github.io/react-native-vector-icons/
         icon = post_data.get('icon')
         priority = post_data.get('priority')
+        translations = post_data.get('translations')
         # EG {'fr': 'fromage'}
 
         if name is None or icon is None:
             return make_response(jsonify({'message': 'Name and Icon must not be None'})), 400
 
         try:
-            usage = TransferUsage(name=name, icon=icon, priority=priority, default=False)
+            usage = TransferUsage(
+                name=name, icon=icon, translations=translations, priority=priority, default=False)
 
-        except IconNotSupportedException as e:
+        except (IconNotSupportedException, TransferUsageNameDuplicateException) as e:
             return make_response(jsonify({'message': str(e)})), 400
 
-        try:
-            db.session.add(usage)
-            db.session.commit()
-            
-        except IntegrityError as e:
-            db.session.rollback()
-            return make_response(jsonify({'message': 'Name must not be duplicate'})), 400
+        db.session.add(usage)
+        db.session.commit()
 
         response_object = {
             'message': 'Created Transfer Usage'
