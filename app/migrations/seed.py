@@ -277,14 +277,17 @@ if __name__ == '__main__':
         {'name': 'Other', 'icon': 'message'},
     ]
     for business_category in business_categories:
-        try:
-            usage = TransferUsage(name=business_category['name'], icon=business_category['icon'], 
-                                  priority=1, default=True)
-            db.session.add(usage)
-            db.session.commit()
-                
-        except TransferUsageNameDuplicateException as e:
-            print(e)
+        usage = TransferUsage.find_or_create(business_category['name'])
+        if usage is not None:
+            usage.icon = business_category['icon']
+        else:
+            try:
+                usage = TransferUsage(name=business_category['name'], icon=business_category['icon'],
+                                      priority=1, default=True)
+            except TransferUsageNameDuplicateException as e:
+                print(e)
+        db.session.add(usage)
+        db.session.commit()
 
     ctx.pop()
     print('------------------------------------------------------------')

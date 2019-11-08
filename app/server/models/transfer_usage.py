@@ -50,3 +50,14 @@ class TransferUsage(ModelBase):
         else:
             raise TransferUsageNameDuplicateException(
                 'Transfer usage name {} is duplicate'.format(name))
+
+    @classmethod
+    def find_or_create(cls, raw_name, default=False) -> "TransferUsage":
+        name = raw_name.strip()
+        usage = db.session.query(TransferUsage).filter(
+            func.lower(TransferUsage.name) == func.lower(name)).first()
+        if usage is None:
+            usage = cls(name=name, default=default)
+            db.session.add(usage)
+            db.session.commit()
+        return usage
