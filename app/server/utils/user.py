@@ -16,9 +16,9 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError
-from server import celery_app, sentry
+from server import celery_app, sentry, message_processor
 from server.utils import credit_transfers as CreditTransferUtils
-from server.utils.phone import proccess_phone_number, send_message
+from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 
 
@@ -580,11 +580,11 @@ def send_onboarding_message(to_phone, first_name, credits, one_time_code):
             current_app.config['CURRENCY_NAME']
         )
 
-        send_message(to_phone, receiver_message)
+        message_processor.send_message(to_phone, receiver_message)
 
 
 def send_phone_verification_message(to_phone, one_time_code):
     if to_phone:
         reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
 
-        send_message(to_phone, reciever_message)
+        message_processor.send_message(to_phone, reciever_message)

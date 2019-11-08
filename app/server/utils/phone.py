@@ -2,8 +2,6 @@ import phonenumbers
 import enum
 from flask import current_app
 
-from server import twilio_client, messagebird_client, africastalking_client
-
 
 def proccess_phone_number(phone_number, region=None, ignore_region=False):
     """
@@ -43,41 +41,43 @@ class ChannelType(enum.Enum):
     MESSAGEBIRD = "mb"
 
 
-# just checking by area code may break down one day since multiple countries share the same country codes...
-def channel_for_number(phone):
-    if phone.startswith("+1"):
-        return ChannelType.TWILIO
-    if phone.startswith("+254"):
-        return ChannelType.AFRICAS_TALKING
-    else:
-        # what should fallback be?
-        return ChannelType.TWILIO
+class MessageProcessor(object):
+    def __init__(self, twilio_client, messagebird_client, africastalking_client):
+        self.twilio_client = twilio_client
+        self.messagebird_client = messagebird_client
+        self.africastalking_client = africastalking_client
 
+    # just checking by area code may break down one day since multiple countries share the same country codes...
+    def channel_for_number(cls, phone):
+        if phone.startswith("+1"):
+            return ChannelType.TWILIO
+        if phone.startswith("+254"):
+            return ChannelType.AFRICAS_TALKING
+        else:
+            # what should fallback be?
+            return ChannelType.TWILIO
 
-def send_message(to_phone, message):
-    if not current_app.config['IS_TEST']:
-        channel = channel_for_number(to_phone)
-        if channel == ChannelType.TWILIO:
-            send_twilio_message(to_phone, message)
-        if channel == ChannelType.MESSAGEBIRD:
-            send_messagebird_message(to_phone, message)
-        if channel == ChannelType.AFRICAS_TALKING:
-            send_at_message(to_phone, message)
+    def send_message(self, to_phone, message):
+        if not current_app.config['IS_TEST']:
+            channel = self.channel_for_number(to_phone)
+            if channel == ChannelType.TWILIO:
+                self.send_twilio_message(to_phone, message)
+            if channel == ChannelType.MESSAGEBIRD:
+                self.send_messagebird_message(to_phone, message)
+            if channel == ChannelType.AFRICAS_TALKING:
+                self.send_at_message(to_phone, message)
 
+    def send_twilio_message(self, to_phone, message):
+        if to_phone:
+            self.twilio_client.api.account.messages.create(
+                to=to_phone,
+                from_=current_app.config['TWILIO_PHONE'],
+                body=message)
 
-def send_twilio_message(to_phone, message):
-    if to_phone:
-        twilio_client.api.account.messages.create(
-            to=to_phone,
-            from_=current_app.config['TWILIO_PHONE'],
-            body=message)
+    def send_messagebird_message(self, to_phone, message):
+        if to_phone:
+            self.messagebird_client.message_create(current_app.config['MESSAGEBIRD_PHONE'], to_phone, message)
 
-
-def send_messagebird_message(to_phone, message):
-    if to_phone:
-        messagebird_client.message_create(current_app.config['MESSAGEBIRD_PHONE'], to_phone, message)
-
-
-def send_at_message(to_phone, message):
-    if to_phone:
-        africastalking_client.send(message, [to_phone])
+    def send_at_message(self, to_phone, message):
+        if to_phone:
+            self.africastalking_client.send(message, [to_phone])

@@ -5,7 +5,7 @@ from server.utils.blockchain_tasks import (
     create_blockchain_wallet
 )
 from server.models.utils import ModelBase, organisation_association_table
-from server.utils.phone import send_message
+from server import message_processor
 from server.utils.i18n import i18n_for
 
 
@@ -63,5 +63,6 @@ class Organisation(ModelBase):
     def send_welcome_sms(self, to_user):
         if self.custom_welcome_message_key:
             message = i18n_for(to_user, "organisation.{}".format(self.custom_welcome_message_key))
-            send_message(to_user.phone, message)
-        # else we can do a default message
+        else:
+            message = i18n_for(to_user, "organisation.generic_welcome_message")
+        message_processor.send_message(to_user.phone, message)
