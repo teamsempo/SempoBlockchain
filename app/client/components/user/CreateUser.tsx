@@ -24,7 +24,6 @@ interface OuterProps {
 declare global {
   interface Window {
     BENEFICIARY_TERM: string
-    IS_USING_BITCOIN: boolean
     MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT: number
     CURRENCY_NAME: string
   }
@@ -43,33 +42,22 @@ class CreateUser extends React.Component<Props> {
   }
 
   onCreateUser(form: Form) {
-    let publicSerialNumber;
-    let phone;
-
-    if (!form.publicSerialNumber) {
-      publicSerialNumber = null;
-      phone = null;
-    } else if (form.publicSerialNumber.length < 7 || form.publicSerialNumber.match(/[a-z]/i)) {
-      publicSerialNumber = form.publicSerialNumber;
-      phone = null
-    } else {
-      publicSerialNumber = null;
-      phone = form.publicSerialNumber;
-    }
-
     this.props.createUser({
       first_name: form.firstName,
       last_name: form.lastName,
-      public_serial_number: publicSerialNumber,
-      phone: phone,
-      blockchain_address: form.blockchainAddress,
+      bio: form.bio,
+      gender: form.gender,
+      public_serial_number: form.publicSerialNumber,
+      phone: form.phone,
       is_vendor: this.props.isVendor,
-      custom_initial_disbursement: (form.customInitialDisbursement || 0) * 100,
+      additional_initial_disbursement: (form.additionalInitialDisbursement || 0) * 100,
+      //TODO(org): make this an organisation level field
       require_transfer_card_exists: true,
       existing_vendor_phone: form.existingVendorPhone,
       existing_vendor_pin: form.existingVendorPin,
       transfer_account_name: form.transferAccountName,
       location: form.location,
+      business_usage_id: form.businessUsage
     })
   }
 

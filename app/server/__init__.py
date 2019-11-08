@@ -14,15 +14,23 @@ import redis
 import config
 import i18n
 from eth_utils import to_checksum_address
+import sys
+import os
 
-import sys, os
+from server.utils.phone import MessageProcessor
+
+# try:
+#     import uwsgi
+#     is_running_uwsgi = True
+# except ImportError:
+#     is_running_uwsgi = False
+
 sys.path.append('../')
 import config
 
 dirname = os.path.dirname(__file__)
 i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
 i18n.set('fallback', config.LOCALE_FALLBACK)
-
 
 def create_app():
     # create and configure the app
@@ -202,10 +210,11 @@ pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
                        ssl=True)
 
 twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
-
 messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
 africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
 africastalking_client = africastalking.SMS
+message_processor = MessageProcessor(
+    twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
 
 from server.utils.blockchain_tasks import BlockchainTasker
 bt = BlockchainTasker()

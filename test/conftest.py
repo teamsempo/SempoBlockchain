@@ -1,5 +1,8 @@
 import pytest
 from flask import current_app
+from faker.providers import phone_number
+from faker import Faker
+
 from sqlalchemy.exc import ProgrammingError
 import os
 import sys
@@ -12,6 +15,8 @@ from server.utils.auth import get_complete_auth_token
 import config
 # from app.manage import manager
 
+fake = Faker()
+fake.add_provider(phone_number)
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
@@ -38,8 +43,6 @@ def create_organisation(test_client, init_database, external_reserve_token):
     db.session.add(organisation)
     db.session.commit()
     return organisation
-
-
 
 @pytest.fixture(scope='module')
 def new_sempo_admin_user(test_client, init_database, create_organisation):
@@ -94,7 +97,7 @@ def create_transfer_account_user(test_client, init_database, create_organisation
     from server.utils.user import create_transfer_account_user
     user = create_transfer_account_user(first_name='Transfer',
                                         last_name='User',
-                                        phone='0400000000',
+                                        phone=fake.msisdn(),
                                         organisation=create_organisation)
     db.session.commit()
     return user
@@ -104,7 +107,8 @@ def create_transfer_account_user(test_client, init_database, create_organisation
 def create_user_with_existing_transfer_account(test_client, init_database, create_transfer_account):
     from server.utils.user import create_transfer_account_user
     user = create_transfer_account_user(first_name='Existing Transfer', last_name='User',
-                                        phone='0400000000', existing_transfer_account=create_transfer_account)
+                                        phone=fake.msisdn(),
+                                        existing_transfer_account=create_transfer_account)
     db.session.commit()
     return user
 

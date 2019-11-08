@@ -9,10 +9,10 @@ import re
 
 from transitions import Machine
 
-from server import db
+from server import db, message_processor
 from server.models.user import User
 from server.models.ussd import UssdSession
-from server.utils.phone import proccess_phone_number, send_message
+from server.utils.phone import proccess_phone_number
 from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes
 
@@ -77,7 +77,7 @@ class KenyaUssdStateMachine(Machine):
 
     def send_sms(self, message_key):
         message = i18n_for(self.user, "ussd.kenya.{}".format(message_key))
-        send_message(self.user.phone, message)
+        message_processor.send_message(self.user.phone, message)
 
     def change_preferred_language_to_sw(self, user_input):
         self.change_preferred_language_to("sw")
@@ -126,7 +126,7 @@ class KenyaUssdStateMachine(Machine):
     # TODO: [Philip] Add community token when available
     def upsell_unregistered_recipient(self, user_input):
         upsell_message = f"{self.user.first_name} {self.user.last_name} amejaribu kukutumia {self.user} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
-        send_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
+        message_processor.send_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
 
     def save_transaction_amount(self, user_input):
         pass
@@ -203,12 +203,12 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_sw',
+             'after': 'change_preferred_language_to_en',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_en',
+             'after': 'change_preferred_language_to_sw',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
@@ -397,12 +397,12 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_sw',
+             'after': 'change_preferred_language_to_en',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_en',
+             'after': 'change_preferred_language_to_sw',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'choose_language',
