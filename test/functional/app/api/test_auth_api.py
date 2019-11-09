@@ -4,6 +4,7 @@ This file (test_auth_api.py) contains the functional tests for the auth blueprin
 These tests use GETs and POSTs to different URLs to check for the proper behavior
 of the auth blueprint.
 """
+from time import sleep
 from datetime import datetime
 import pytest, json, config, base64
 import pyotp
@@ -110,7 +111,14 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
 
     # This test is flaky (probably due to the time-dependence of the otp test)
     # So we run it twice to maximise the chance it will pass if it should
-    assert inner_test() or inner_test()
+    for i in range(0, 5):
+        passed = inner_test()
+        if passed:
+            continue
+        print('Retrying')
+        sleep(1)
+
+    assert passed
 
 
 @pytest.mark.parametrize("email,password,status_code", [
@@ -323,7 +331,6 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     assert response.status_code == 200
     assert BlacklistToken.check_blacklist(auth_token) is True
 
-    from time import sleep
     # This is here to stop tokens having the same timestamp dying
     sleep(1)
 
