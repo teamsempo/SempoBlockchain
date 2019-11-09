@@ -59,6 +59,32 @@ https://www.twilio.com/login
 - Add your ngrok server (e.g. `https://a833f3af.ngrok.io/api/sms/`) and save
 
 ### Blockchain
+Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue.
+This means that a lot of development can be done without actually connecting to a blockchain. Likewise, tests have
+blockchain endpoints mocked by default.
+
+If you do need to develop with a connection to an actual chain, the best option is to use a [ganache-cli](https://github.com/trufflesuite/ganache-cli)
+test-chain running locally, as there are a couple of transaction types (like deploying new token exhanges)
+that burn through gas at a rate that makes getting test-eth from a faucet a bit irritating.
+
+Once ganache is installed, run
+
+```
+ganache-cli -l 80000000 --verbose
+```
+
+The -l 80000000 argument increases the gas-limit, which is required for said token-exchange deployments. You will also
+need to set your local config to match:
+```
+[ETHEREUM]
+http_provider           = http://127.0.0.1:8545
+```
+
+
+Next you'll need to launch redis and celery. The following settings will work 90% of the time, but can be a _little_
+bit flaky because they force all tasks into one worker queue. This is a little annoying to address without running
+everything inside docker.
+
 In terminal run:
 ```
 redis-server
@@ -67,12 +93,14 @@ redis-server
 Start celery:
 ```
 cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=500 --pool=eventlet
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
 ```
 
-You can also add a runtime configuration with the `script path` set as the path to your virtual env `/Users/tristancole/Virtual_Envs/SempoBlockchain_env/bin/celery`.
+You can also add a runtime configuration with the `script path` set as the path to your virtual env `[path-to-your-python-env]/bin/celery`.
 
 Set the `parameters` to the run line above.
+
+Lastly, if you want to run full blockchain tests, set the environment variable `FORCE_BLOCKCHAIN_TESTS` to `True`
 
 ### Database Migration:
 
@@ -144,10 +172,3 @@ create database sempo_blockchain_test;
 Ensure redis-server is running (this is not ideal but necessary atm).
 
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
-
-
-
-## To setup a production deployment
-Follow this guide
-https://docs.google.com/document/d/1PLJgCwRvHDdb_goWl0fMy8eFBfNUk2F3GzLHIiPzV0A/edit
-

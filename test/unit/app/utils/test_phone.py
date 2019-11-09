@@ -13,8 +13,8 @@ def proccess_phone_number(test_client):
 
 @pytest.fixture(scope='function')
 def channel_for_number(test_client):
-    from server.utils.phone import channel_for_number
-    return channel_for_number
+    from server import message_processor
+    return message_processor.channel_for_number
 
 @pytest.mark.parametrize("phone,region,expected", [
     ("0401391419", None, "+61401391419"),

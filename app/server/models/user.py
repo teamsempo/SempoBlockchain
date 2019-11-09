@@ -1,4 +1,3 @@
-from server import db, sentry, celery_app
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
@@ -11,9 +10,15 @@ import jwt
 import random
 import string
 
+from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
+
+from server.utils.transfer_account import (
+    find_transfer_accounts_with_matching_token
+)
+
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -26,6 +31,7 @@ from server.exceptions import (
 from server.constants import (
     ACCESS_ROLES
 )
+
 
 
 class User(ManyOrgBase, ModelBase):
@@ -44,6 +50,8 @@ class User(ManyOrgBase, ModelBase):
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     preferred_language = db.Column(db.String())
+
+    primary_blockchain_address = db.Column(db.String())
 
     _last_seen = db.Column(db.DateTime)
 
@@ -130,6 +138,8 @@ class User(ManyOrgBase, ModelBase):
 
     custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
                                         lazy='dynamic', foreign_keys='CustomAttributeUserStorage.user_id')
+
+    exchanges = db.relationship("Exchange", backref="user")
 
     @hybrid_property
     def phone(self):
@@ -274,6 +284,9 @@ class User(ManyOrgBase, ModelBase):
         if len(self.transfer_accounts) == 1:
             return self.transfer_accounts[0]
         return None
+
+    def get_transfer_account_for_token(self, token):
+        return find_transfer_accounts_with_matching_token(self, token)
 
     def get_active_organisation(self, fallback=None):
         if len(self.organisations) == 0:
@@ -471,7 +484,7 @@ class User(ManyOrgBase, ModelBase):
         else:
             secret = self.get_TFA_secret()
             server_otp = pyotp.TOTP(secret)
-            ret = server_otp.verify(p, valid_window=100)
+            ret = server_otp.verify(p, valid_window=2)
             return ret
 
     def set_one_time_code(self, supplied_one_time_code):
@@ -506,10 +519,14 @@ class User(ManyOrgBase, ModelBase):
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
-    def __init__(self, **kwargs):
+    def __init__(self, blockchain_address=None, **kwargs):
         super(User, self).__init__(**kwargs)
+
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
+
+        self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
+
 
     def __repr__(self):
         if self.has_admin_role:
