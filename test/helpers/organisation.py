@@ -14,9 +14,3 @@ class OrganisationFactory(SQLAlchemyModelFactory):
     class Meta:
         model = Organisation
         sqlalchemy_session = db.session
-
-    session_id = Sequence(lambda n: n)
-    service_code = "123"
-    msisdn = fake.msisdn()
-    # we might want to tie this to an actual ussd menu for some tests?
-    ussd_menu_id = 1
