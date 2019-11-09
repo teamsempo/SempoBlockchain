@@ -85,6 +85,7 @@
     "deck.gl": "^5.1.4",
     "deepmerge": "^2.2.1",
     "history": "^4.7.2",
+    "libphonenumber-js": "^1.7.26",
     "lodash": "^4.17.11",
     "match-sorter": "^2.2.3",
     "moment": "^2.22.2",

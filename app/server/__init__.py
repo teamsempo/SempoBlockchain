@@ -14,10 +14,18 @@ import redis
 import config
 import i18n
 from eth_utils import to_checksum_address
+import sys
+import os
 
-import sys, os
+from server.utils.phone import MessageProcessor
+
+# try:
+#     import uwsgi
+#     is_running_uwsgi = True
+# except ImportError:
+#     is_running_uwsgi = False
+
 sys.path.append('../')
-
 import config
 
 dirname = os.path.dirname(__file__)
@@ -130,6 +138,7 @@ def register_blueprints(app):
     from server.api.slack_api import slack_blueprint
     from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
+    from server.api.contract_api import contracts_blueprint
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix='/api/me')
@@ -156,6 +165,7 @@ def register_blueprints(app):
     app.register_blueprint(poli_payments_blueprint, url_prefix='/api')
     app.register_blueprint(ussd_blueprint, url_prefix='/api')
     app.register_blueprint(exchange_blueprint, url_prefix='/api')
+    app.register_blueprint(contracts_blueprint, url_prefix='/api')
 
     # 404 handled in react
     @app.errorhandler(404)
@@ -182,12 +192,11 @@ sentry = Sentry()
 s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
                   aws_secret_access_key=config.AWS_SES_SECRET)
 
-messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
-
 celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
                     backend=config.REDIS_URL,
                     task_serializer='json')
+
 
 encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 dependent_on_tasks = None
@@ -201,9 +210,15 @@ pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
                        ssl=True)
 
 twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
-
 messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
 africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
 africastalking_client = africastalking.SMS
+message_processor = MessageProcessor(
+    twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
 
+from server.utils.blockchain_tasks import BlockchainTasker
+bt = BlockchainTasker()
+
+from server.utils.misc_tasks import MiscTasker
+mt = MiscTasker()
 

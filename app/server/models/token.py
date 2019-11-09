@@ -1,12 +1,12 @@
-from server import db
-from server.utils.blockchain_tasks import (
-    get_token_decimals,
-)
+from sqlalchemy.ext.hybrid import hybrid_property
+from flask import current_app
+from server import db, bt
 
 from server.models.utils import (
     ModelBase,
     exchange_contract_token_association_table
 )
+
 
 class Token(ModelBase):
     __tablename__ = 'token'
@@ -47,21 +47,24 @@ class Token(ModelBase):
     fiat_ramps = db.relationship('FiatRamp', backref='token', lazy=True,
                                  foreign_keys='FiatRamp.token_id')
 
-    @property
+    @hybrid_property
     def decimals(self):
         if self._decimals:
             return self._decimals
 
-        decimals_from_contract_definition = get_token_decimals(self)
+        decimals_from_contract_definition = bt.get_token_decimals(self)
 
         if decimals_from_contract_definition:
             return decimals_from_contract_definition
 
         raise Exception("Decimals not defined in either database or contract")
 
+    @decimals.setter
+    def decimals(self, value):
+        self._decimals = value
+
     def token_amount_to_system(self, token_amount):
         return int(token_amount) * 100 / 10**self.decimals
 
     def system_amount_to_token(self, system_amount):
         return int(float(system_amount) * 10**self.decimals / 100)
-

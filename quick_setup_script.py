@@ -78,7 +78,14 @@ class Setup(object):
 
         return json
 
+    def deploy_contracts(self):
 
+        r = requests.post(url=self.api_host + 'contracts/',
+                          headers=dict(Authorization=self.api_token, Accept='application/json'),
+                          json={
+                          })
+
+        return r.json()
 
     def __init__(self, email=None, password=None, api_token=None):
 
@@ -86,6 +93,8 @@ class Setup(object):
 
         if (email and password):
             self.api_token = self.get_api_token(email, password)
+            print("API TOKEN:")
+            print(self.api_token)
         elif api_token:
             self.api_token = api_token
         else:
@@ -94,26 +103,43 @@ class Setup(object):
 
 if __name__ == '__main__':
 
-    s = Setup(api_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzIxNzI1ODQsImlhdCI6MTU3MTU2Nzc4NCwiaWQiOjQsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.BGb3ZUS4Qhq9yh7mqtntiF44MpJhOBFou08O2bvJhjo|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NjY1NDU1MDYsImlhdCI6MTU2NjQ1OTA3NiwidXNlcl9pZCI6N30.fNPfyzLfAkONNjERuW8CMIM5QFTz5sC2Ksq87kOz7qM')
+    s = Setup(api_token=
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzI4MTkzMzUsImlhdCI6MTU3MjIxNDUzNSwiaWQiOjQsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.Q37sVq-bpzQFIf82QVqRptANRgF5p9eyQIZH4OEPNXw'
+    )
 
-    reserve_token_id = s.register_blockchain_token(
-        address=config.RESERVE_TOKEN_ADDRESS,
-        name='RESERVE',
-        symbol='RSRV')
+    result = s.deploy_contracts()
 
-    cic1_token_id = s.register_blockchain_token('0xA1678D3ED0fF92C66753472e3A015a16DEA0F10f',
-                                                name='CIC1',
-                                                symbol='CIC1',
-                                                exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
+    reserve_token_id = result['data']['reserve_token']['id']
+    cic1_token_id = result['data']['smart_token']['id']
+    cic2_token_id = result['data']['smart_token_2']['id']
 
-    cic2_token_id = s.register_blockchain_token('0x5CB40AcCE23D33fB28015DFf0C552E4583633996',
-                                                name='CIC2',
-                                                symbol='CIC2',
-                                                exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
 
-    org_id = s.create_organisation('Sempo19', reserve_token_id)
-    bind_response = s.bind_this_user_to_organisation(org_id)
+    x = s.test_exchange(reserve_token_id, cic1_token_id, 5*10**-8)
 
-    print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))
+    y = s.test_exchange(cic1_token_id, cic2_token_id, 1*10**-14)
 
-    s.test_exchange(reserve_token_id, cic1_token_id, 1000000000000000*10**(-16))
+    z = s.test_exchange(cic1_token_id, reserve_token_id, 1*10**-14)
+
+
+    tt = 5
+
+    # reserve_token_id = s.register_blockchain_token(
+    #     address=config.RESERVE_TOKEN_ADDRESS,
+    #     name='RESERVE',
+    #     symbol='RSRV')
+    #
+    # cic1_token_id = s.register_blockchain_token('0xA1678D3ED0fF92C66753472e3A015a16DEA0F10f',
+    #                                             name='CIC1',
+    #                                             symbol='CIC1',
+    #                                             exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
+    #
+    # cic2_token_id = s.register_blockchain_token('0x5CB40AcCE23D33fB28015DFf0C552E4583633996',
+    #                                             name='CIC2',
+    #                                             symbol='CIC2',
+    #                                             exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
+
+    # org_id = s.create_organisation('Sempo19', reserve_token_id)
+    # bind_response = s.bind_this_user_to_organisation(org_id)
+    #
+    # print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))
+    #

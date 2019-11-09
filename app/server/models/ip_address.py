@@ -1,4 +1,4 @@
-from server import db, sentry, celery_app
+from server import db, sentry, celery_app, mt
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import INET
 
@@ -34,10 +34,7 @@ class IpAddress(ModelBase):
         if ip is not None:
 
             try:
-                task = {'ip_address_id': self.id, 'ip': ip}
-                ip_location_task = celery_app.signature('worker.celery_tasks.ip_location', args=(task,))
-
-                ip_location_task.delay()
+                mt.set_ip_location(self.id, ip)
             except Exception as e:
                 print(e)
                 sentry.captureException()

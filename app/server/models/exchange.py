@@ -1,5 +1,13 @@
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm.attributes import flag_modified
+
 from functools import partial
-from server import db
+from flask import current_app
+
+from server import db, bt
+
+import server.models.credit_transfer
+import server.models.transfer_account
 
 from server.models.utils import (
     ModelBase,
@@ -7,26 +15,41 @@ from server.models.utils import (
     exchange_contract_token_association_table
 )
 
-import server.models.credit_transfer
-import server.models.transfer_account
-
-from server.utils.blockchain_tasks import (
-    make_liquid_token_exchange,
-    make_approval,
-    get_conversion_amount,
-    get_wallet_balance
-)
-
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 from server.utils.root_solver import find_monotonic_increasing_bounds, false_position_method
-
 from server.exceptions import InsufficientBalanceError
 
 
 class ExchangeContract(ModelBase):
+    """
+    class for tracking contracts used for making on-chain exchanges of tokens
+    (rather than using an internal sempo blockchain account that holds and swaps multiple tokens)
+    currently only supports exchanges using liquid token contracts, though could be extended to support
+    a constant-product market maker, continuous-double auction DEX etc.
+
+    @:param blockchain_address:
+    The address to which exchange requests should be sent.
+    @:param contract_registry_blockchain_address:
+    The contract registry is used to add new liquid token sub-exchanges.
+    @:param subexchange_address_mapping:
+    Exchanges made using a liquid token don't use a single on-chain contract, but rather a network of
+    exchange-contracts, one for each token that can be exchanged, which we label 'sub-exchanges'.
+    Each one of these sub-exchanges includes an internal reserve-token balance, and has parameters defined
+    such as the reserve-ratio.
+    @:param reserve_token:
+    The stable token used as the reserve for liquid tokens.
+    @:param exchangeable_tokens:
+    The tokens that are exchangable using this contract
+    @:param transfer_accounts:
+    Accounts used for tracking the sends and receives of the various tokens exchangable by the exchange-network
+    """
     __tablename__ = 'exchange_contract'
 
     blockchain_address = db.Column(db.String(), index=True)
+
+    contract_registry_blockchain_address = db.Column(db.String(), index=True)
+
+    subexchange_address_mapping = db.Column(JSON)
 
     reserve_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
 
@@ -40,7 +63,27 @@ class ExchangeContract(ModelBase):
         lazy=True, foreign_keys='TransferAccount.exchange_contract_id'
     )
 
-    def add_token(self, token):
+    def get_subexchange_details(self, token_address):
+        if self.subexchange_address_mapping is None:
+            return None
+        return self.subexchange_address_mapping.get(token_address, None)
+
+    def _add_subexchange(self, token_address, subexchange_address, subexchange_reserve_ratio_ppm):
+        if self.subexchange_address_mapping is None:
+            self.subexchange_address_mapping = {}
+        self.subexchange_address_mapping[token_address] = {
+            'subexchange_address': subexchange_address,
+            'subexchange_reserve_ratio_ppm': subexchange_reserve_ratio_ppm
+        }
+
+        flag_modified(self, "subexchange_address_mapping")
+        db.session.add(self)
+
+    def add_reserve_token(self, reserve_token):
+        self.reserve_token = reserve_token
+        self.add_token(reserve_token, None, None)
+
+    def add_token(self, token, subexchange_address, subexchange_reserve_ratio):
 
         exchange_transfer_account = (server.models.transfer_account.TransferAccount.query
                                      .filter_by(token=token)
@@ -58,11 +101,9 @@ class ExchangeContract(ModelBase):
 
         exchange_transfer_account.exchange_contract = self
 
-        self.exchangeable_tokens.append(token)
-
-    def __init__(self, blockchain_address):
-
-        self.blockchain_address = blockchain_address
+        if subexchange_address:
+            self.exchangeable_tokens.append(token)
+            self._add_subexchange(token.address, subexchange_address, subexchange_reserve_ratio)
 
 
 class Exchange(BlockchainTaskableBase):
@@ -88,16 +129,6 @@ class Exchange(BlockchainTaskableBase):
 
         exchange_contract = self._find_exchange_contract(from_token, to_token)
 
-        if calculated_to_amount:
-            to_amount = calculated_to_amount
-        else:
-            # TODO: Shift this away from an estimate to getting the real number async from the completed task
-            to_amount = get_conversion_amount(exchange_contract.blockchain_address,
-                                              from_token,
-                                              to_token,
-                                              exchange_contract.reserve_token,
-                                              from_amount)
-
         self.from_transfer = server.models.credit_transfer.CreditTransfer(
             from_amount,
             from_token,
@@ -112,6 +143,57 @@ class Exchange(BlockchainTaskableBase):
 
         db.session.add(self.from_transfer)
 
+        signing_address = self.from_transfer.sender_transfer_account.blockchain_address
+
+        topup_task_id = bt.topup_wallet_if_required(signing_address)
+
+        dependent = [topup_task_id] if topup_task_id else []
+
+        # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
+        # We need to approve all the tokens involved for spend by the exchange contract
+        to_approval_id = bt.make_approval(
+            signing_address=signing_address,
+            token=to_token,
+            spender=exchange_contract.blockchain_address,
+            amount=from_amount * 100000,
+            dependent_on_tasks=dependent
+        )
+
+        reserve_approval_id = bt.make_approval(
+            signing_address=signing_address,
+            token=exchange_contract.reserve_token,
+            spender=exchange_contract.blockchain_address,
+            amount=from_amount * 100000,
+            dependent_on_tasks=dependent
+        )
+
+        from_approval_id = bt.make_approval(
+            signing_address=signing_address,
+            token=from_token,
+            spender=exchange_contract.blockchain_address,
+            amount=from_amount*100000,
+            dependent_on_tasks=dependent
+        )
+
+        if calculated_to_amount:
+            to_amount = calculated_to_amount
+        else:
+            to_amount = bt.get_conversion_amount(exchange_contract=exchange_contract,
+                                              from_token=from_token,
+                                              to_token=to_token,
+                                              from_amount=from_amount,
+                                              signing_address=signing_address)
+
+        task_id = bt.make_liquid_token_exchange(
+            signing_address=signing_address,
+            exchange_contract=exchange_contract,
+            from_token=from_token,
+            to_token=to_token,
+            reserve_token=exchange_contract.reserve_token,
+            from_amount=from_amount,
+            dependent_on_tasks=[to_approval_id, reserve_approval_id, from_approval_id]
+        )
+
         self.to_transfer = server.models.credit_transfer.CreditTransfer(
             to_amount,
             to_token,
@@ -120,44 +202,12 @@ class Exchange(BlockchainTaskableBase):
 
         db.session.add(self.to_transfer)
 
-        self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
-        self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)
-
-        # We need to approve all the tokens involved for spend by the exchange contract
-        to_approval_id = make_approval(
-            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
-            token=to_token,
-            spender=exchange_contract.blockchain_address,
-            amount=from_amount * 100000
-        )
-
-        reserve_approval_id = make_approval(
-            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
-            token=exchange_contract.reserve_token,
-            spender=exchange_contract.blockchain_address,
-            amount=from_amount * 100000
-        )
-
-        from_approval_id = make_approval(
-            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
-            token=from_token,
-            spender=exchange_contract.blockchain_address,
-            amount=from_amount*100000
-        )
-
-        task_id = make_liquid_token_exchange(
-            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
-            exchange_contract_address=exchange_contract.blockchain_address,
-            from_token=from_token,
-            to_token=to_token,
-            reserve_token=exchange_contract.reserve_token,
-            from_amount=from_amount,
-            dependent_on_tasks=[to_approval_id, reserve_approval_id, from_approval_id]
-        )
-
         self.blockchain_task_id = task_id
         self.from_transfer.blockchain_task_id = task_id
         self.to_transfer.blockchain_task_id = task_id
+
+        self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
+        self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)
 
     def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount):
         """
@@ -187,7 +237,7 @@ class Exchange(BlockchainTaskableBase):
 
     def _get_conversion_function(self, exchange_contract, from_token, to_token):
         return partial(
-            get_conversion_amount,
+            bt.get_conversion_amount,
             exchange_contract.blockchain_address,
             from_token,
             to_token,

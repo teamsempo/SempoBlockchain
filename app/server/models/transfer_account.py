@@ -2,16 +2,14 @@ import datetime, enum
 from sqlalchemy.sql import func
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
-from server import db
+from server import db, bt
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
-from server.utils.blockchain_tasks import (
-    create_blockchain_wallet
-)
+
 from server.utils.transfer_enums import TransferStatusEnum
 
 
@@ -26,7 +24,7 @@ class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    _balance         = db.Column(db.BigInteger, default=0)
+    _balance_wei    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -54,7 +52,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     users = db.relationship(
         "User",
         secondary=user_transfer_account_association_table,
-        back_populates="transfer_accounts")
+        back_populates="transfer_accounts"
+    )
 
     # owning_organisation_id = db.Column(db.Integer, db.ForeignKey(Organisation.id))
 
@@ -95,11 +94,11 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     @hybrid_property
     def balance(self):
-        return self._balance or 0
+        return (self._balance_wei or 0) / int(1e16)
 
     @balance.setter
     def balance(self, val):
-        self._balance = val
+        self._balance_wei = val * int(1e16)
 
     @hybrid_property
     def total_sent(self):
@@ -211,13 +210,13 @@ class TransferAccount(OneOrgBase, ModelBase):
         return withdrawal
 
 
-    def __init__(self, blockchain_address=None, organisation=None, private_key=None **kwargs):
+    def __init__(self, blockchain_address=None, organisation=None, private_key=None, **kwargs):
         super(TransferAccount, self).__init__(**kwargs)
 
         # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
         # db.session.add(blockchain_address_obj)
 
-        self.blockchain_address = blockchain_address or create_blockchain_wallet(private_key)
+        self.blockchain_address = blockchain_address or bt.create_blockchain_wallet(private_key)
 
         if organisation:
             self.organisation = organisation

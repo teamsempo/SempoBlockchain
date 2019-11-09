@@ -7,6 +7,16 @@
     font-size: 18px;
 }
 
+.select {
+    color: #555;
+    border: solid #d8dbdd;
+    border-width: 0 0 1px 0;
+    outline: none;
+    max-width: 300px;
+    font-size: 16px;
+    margin-top: 7px;
+}
+
 .input:focus {
     border-color: #2D9EA0;
 }
@@ -32,3 +42,9 @@
     color: red;
 }
 
+.required {
+    color: maroon;
+    font-size: 20px;
+    position: absolute;
+    margin-left: 5px;
+}

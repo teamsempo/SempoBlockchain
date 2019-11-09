@@ -22,7 +22,8 @@ def show_all(f):
         return f(*args, **kwargs)
     return wrapper
 
-def requires_auth(f = None,
+
+def requires_auth(f=None,
                   allowed_roles: Optional[Dict]=None,
                   allowed_basic_auth_types: Optional[List]=None,  # currently 'external' or 'internal'
                   ignore_tfa_requirement: bool=False):

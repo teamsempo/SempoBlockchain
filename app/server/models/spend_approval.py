@@ -1,10 +1,5 @@
-from server import db
+from server import db, bt
 from server.models.utils import ModelBase
-from server.utils.blockchain_tasks import (
-    send_eth,
-    make_approval
-)
-
 
 class SpendApproval(ModelBase):
     __tablename__ = 'spend_approval'
@@ -24,11 +19,11 @@ class SpendApproval(ModelBase):
 
         self.receiving_address = address_getting_approved
 
-        eth_send_task_id = send_eth(signing_address=address_getting_approved,
+        eth_send_task_id = bt.send_eth(signing_address=address_getting_approved,
                                     recipient_address=transfer_account_giving_approval.blockchain_address,
                                     amount_wei=0.00184196 * 10**18)
 
-        approval_task_id = make_approval(signing_address=transfer_account_giving_approval.blockchain_address,
+        approval_task_id = bt.make_approval(signing_address=transfer_account_giving_approval.blockchain_address,
                                          token=self.token,
                                          spender=address_getting_approved,
                                          amount=1000000,

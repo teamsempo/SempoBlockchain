@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from server import db
+from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
@@ -11,10 +11,6 @@ from server.models.transfer_account import TransferAccount
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError
-)
-from server.utils.blockchain_tasks import (
-    make_token_transfer,
-    get_blockchain_task
 )
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
@@ -28,7 +24,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     uuid            = db.Column(db.String, unique=True)
 
     resolved_date   = db.Column(db.DateTime)
-    transfer_amount = db.Column(db.Integer)
+    _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
 
     transfer_type       = db.Column(db.Enum(TransferTypeEnum))
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
@@ -62,6 +58,15 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
+
+    # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
+    @hybrid_property
+    def transfer_amount(self):
+        return (self._transfer_amount_wei or 0) / int(1e16)
+
+    @transfer_amount.setter
+    def transfer_amount(self, val):
+        self._transfer_amount_wei = val * int(1e16)
 
     @hybrid_property
     def blockchain_status_breakdown(self):
@@ -140,7 +145,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
-        self.blockchain_task_id = make_token_transfer(
+        self.blockchain_task_id = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,

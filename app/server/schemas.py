@@ -128,7 +128,7 @@ class CreditTransferSchema(Schema):
             return None
 
     resolved                = fields.DateTime(attribute='resolved_date')
-    transfer_amount         = fields.Int()
+    transfer_amount         = fields.Function(lambda obj: obj.transfer_amount)
     transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
     transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
     transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
@@ -146,7 +146,7 @@ class CreditTransferSchema(Schema):
     sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
     recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
 
-    attached_images         = fields.Nested(UploadedImageSchema, many=True)
+    attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 
     lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
@@ -164,6 +164,16 @@ class CreditTransferSchema(Schema):
 
         return authorising_user.email
 
+
+class ExchangeContractSchema(SchemaBase):
+
+    blockchain_address = fields.String()
+    contract_registry_blockchain_address = fields.String()
+    subexchange_address_mapping = fields.Function(lambda obj: obj.subexchange_address_mapping)
+
+    reserve_token = fields.Nested(TokenSchema)
+
+    exchangeable_tokens = fields.Nested(TokenSchema, many=True)
 
 class ExchangeSchema(BlockchainTaskableSchemaBase):
 
@@ -370,6 +380,8 @@ organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
+
+exchange_contract_schema = ExchangeContractSchema()
 
 # Me Schemas
 

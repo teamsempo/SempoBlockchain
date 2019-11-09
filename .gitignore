@@ -35,3 +35,4 @@ ngrok
 /venv/*
 app/server/static/javascript/dist/*
 dump.rdb
+eth_worker/complete_compiled_contracts/

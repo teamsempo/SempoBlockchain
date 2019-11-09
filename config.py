@@ -8,7 +8,7 @@ from web3 import Web3
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
-ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
+ENV_DEPLOYMENT_NAME =  os.environ.get('DEPLOYMENT_NAME') or 'local'
 BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
 
 print('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
@@ -266,6 +266,9 @@ IS_USING_BITCOIN = False
 RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
 EXCHANGE_CONTRACT_ADDRESS = specific_parser['ETHEREUM'].get('exchange_contract_address')
 
+SYNCRONOUS_TASK_TIMEOUT = specific_parser['ETHEREUM'].getint('synchronous_task_timeout', 4)
+CALL_TIMEOUT = specific_parser['ETHEREUM'].getint('call_timeout', 2)
+
 FACEBOOK_TOKEN = common_parser['FACEBOOK']['token']
 FACEBOOK_VERIFY_TOKEN = common_parser['FACEBOOK']['verify_token']
 
@@ -296,3 +299,4 @@ try:
     NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
 except KeyError:
     NAMESCAN_KEY = None
+

@@ -1,4 +1,3 @@
-from server import db, sentry, celery_app
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
@@ -11,11 +10,13 @@ import jwt
 import random
 import string
 
+from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
-from server.utils.blockchain_tasks import (
-    create_blockchain_wallet
+
+from server.utils.transfer_account import (
+    find_transfer_accounts_with_matching_token
 )
 
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
@@ -55,7 +56,7 @@ class User(ManyOrgBase, ModelBase):
     _last_seen = db.Column(db.DateTime)
 
     email = db.Column(db.String())
-    _phone = db.Column(db.String())
+    _phone = db.Column(db.String(), unique=True)
     _public_serial_number = db.Column(db.String())
     nfc_serial_number = db.Column(db.String())
 
@@ -283,6 +284,9 @@ class User(ManyOrgBase, ModelBase):
         if len(self.transfer_accounts) == 1:
             return self.transfer_accounts[0]
         return None
+
+    def get_transfer_account_for_token(self, token):
+        return find_transfer_accounts_with_matching_token(self, token)
 
     def get_active_organisation(self, fallback=None):
         if len(self.organisations) == 0:
@@ -521,7 +525,7 @@ class User(ManyOrgBase, ModelBase):
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
 
-        self.primary_blockchain_address = blockchain_address or create_blockchain_wallet()
+        self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
 
 
     def __repr__(self):

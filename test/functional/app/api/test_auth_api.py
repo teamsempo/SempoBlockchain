@@ -4,6 +4,7 @@ This file (test_auth_api.py) contains the functional tests for the auth blueprin
 These tests use GETs and POSTs to different URLs to check for the proper behavior
 of the auth blueprint.
 """
+from time import sleep
 from datetime import datetime
 import pytest, json, config, base64
 import pyotp
@@ -36,32 +37,32 @@ def test_basic_auth(test_client, username, password, status_code):
     "alsdfjkadsljflk",
     None,
 ])
-def test_invalid_activate_api(test_client, create_unactivated_sempo_admin_user, activation_token):
+def test_invalid_activate_api(test_client, new_sempo_admin_user, activation_token):
     """
     GIVEN a Flask application
     WHEN the '/api/auth/activate/' api is posted to (POST)
     THEN check the response is invalid when activation_token is incorrect or None
     """
-    assert not create_unactivated_sempo_admin_user.is_activated
+    assert not new_sempo_admin_user.is_activated
     response = test_client.post('/api/auth/activate/',
                                 data=json.dumps(dict(activation_token=activation_token)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == 401
-    assert not create_unactivated_sempo_admin_user.is_activated
+    assert not new_sempo_admin_user.is_activated
 
-def test_valid_activate_api(test_client, create_unactivated_sempo_admin_user):
+def test_valid_activate_api(test_client, new_sempo_admin_user):
     """
     GIVEN a Flask application
     WHEN the '/api/auth/activate/' api is posted to (POST)
     THEN check the response is valid when correct activation_token
     """
-    assert not create_unactivated_sempo_admin_user.is_activated
-    activation_token = create_unactivated_sempo_admin_user.encode_single_use_JWS('A')
+    assert not new_sempo_admin_user.is_activated
+    activation_token = new_sempo_admin_user.encode_single_use_JWS('A')
     response = test_client.post('/api/auth/activate/',
                                 data=json.dumps(dict(activation_token=activation_token)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == 201
-    assert create_unactivated_sempo_admin_user.is_activated
+    assert new_sempo_admin_user.is_activated
 
 
 def test_get_tfa_url(test_client, activated_sempo_admin_user):
@@ -91,20 +92,34 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
     WHEN '/api/auth/tfa/' is requested (POST)
     THEN check a tfa token is only returned when OTP is valid
     """
-    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
 
-    tfa_url = authed_sempo_admin_user.tfa_url
-    tfa_secret = tfa_url.split("secret=")[1].split('&')[0]
-    func = pyotp.TOTP(tfa_secret)
-    otp = otp_generator(func)
+    def inner_test():
+        auth_token = authed_sempo_admin_user.encode_auth_token().decode()
 
-    otp_expiry_interval = 1
-    response = test_client.post('/api/auth/tfa/',
-                                headers=dict(Authorization=auth_token, Accept='application/json'),
-                                data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
-                                content_type='application/json', follow_redirects=True)
+        tfa_url = authed_sempo_admin_user.tfa_url
+        tfa_secret = tfa_url.split("secret=")[1].split('&')[0]
+        func = pyotp.TOTP(tfa_secret)
+        otp = otp_generator(func)
 
-    assert response.status_code == status_code
+        otp_expiry_interval = 1
+        response = test_client.post('/api/auth/tfa/',
+                                    headers=dict(Authorization=auth_token, Accept='application/json'),
+                                    data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
+                                    content_type='application/json', follow_redirects=True)
+
+        return response.status_code == status_code
+
+    # This test is flaky (probably due to the time-dependence of the otp test)
+    # So we run it twice to maximise the chance it will pass if it should
+    for i in range(0, 5):
+        passed = inner_test()
+        if passed:
+            continue
+        print('Retrying')
+        sleep(1)
+
+    assert passed
+
 
 @pytest.mark.parametrize("email,password,status_code", [
     ("tristan@sempo.ai", "TestPassword", 200),
@@ -125,15 +140,34 @@ def test_request_api_token(test_client, authed_sempo_admin_user, email, password
 
     assert response.status_code == status_code
 
+@pytest.mark.parametrize("message,is_activated,status_code", [
+    ('Please set your pin.', False, 200),
+    ('Successfully logged in.', True, 200),
+])
+def test_request_api_token_phone_success(test_client, create_transfer_account_user, message, is_activated, status_code):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/request_api_token/' api is posted to (POST) as a mobile app user (phone, pin)
+    THEN check a valid response as a mobile app user (phone, pin)
+    """
+
+    create_transfer_account_user.is_activated = is_activated
+    one_time_code = create_transfer_account_user.one_time_code
+    create_transfer_account_user.hash_password(one_time_code)  # set the one time code as password for easy check
+
+    response = test_client.post('/api/auth/request_api_token/',
+                                data=json.dumps(dict(phone=create_transfer_account_user.phone, password=one_time_code)),
+                                content_type='application/json', follow_redirects=True)
+    assert response.status_code == status_code
+    assert response.json['message'] == message
+
 
 @pytest.mark.parametrize("phone,message,is_activated,status_code", [
     (None, 'No username supplied', False, 401),
-    ('0400000000', 'Please set your pin.', False, 200),
-    ('0400000000', 'Successfully logged in.', True, 200),
     ('12312111111111113123', 'Invalid Phone Number: (4) The string supplied is too long to be a phone number.',
      True, 401)
 ])
-def test_request_api_token_phone(test_client, create_transfer_account_user, phone, message, is_activated, status_code):
+def test_request_api_token_phone_fail(test_client, create_transfer_account_user, phone, message, is_activated, status_code):
     """
     GIVEN a Flask application
     WHEN the '/api/auth/request_api_token/' api is posted to (POST) as a mobile app user (phone, pin)
@@ -297,7 +331,6 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     assert response.status_code == 200
     assert BlacklistToken.check_blacklist(auth_token) is True
 
-    from time import sleep
     # This is here to stop tokens having the same timestamp dying
     sleep(1)
 

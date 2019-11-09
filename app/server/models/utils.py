@@ -10,12 +10,8 @@ from sqlalchemy.orm import Query
 from sqlalchemy import or_
 
 import server
-from server import db
+from server import db, bt
 from server.exceptions import OrganisationNotProvidedException
-
-from server.utils.blockchain_tasks import (
-    get_blockchain_task
-)
 
 
 def get_authorising_user_id():
@@ -180,7 +176,7 @@ class BlockchainTaskableBase(ModelBase):
     @hybrid_property
     def blockchain_status(self):
         if self.blockchain_task_id:
-            task = get_blockchain_task(self.blockchain_task_id)
+            task = bt.get_blockchain_task(self.blockchain_task_id)
 
             return task.get('status', 'ERROR')
         else:

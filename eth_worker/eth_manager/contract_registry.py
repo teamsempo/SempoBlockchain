@@ -1,11 +1,25 @@
+import json
 from eth_utils import to_checksum_address
-
 from eth_manager.exceptions import WrongContractNameError
+
 
 class ContractRegistry(object):
 
-    def register_abi(self, abi_type, abi):
-        self.contract_abis[abi_type] = abi
+    def get_compiled_contract(self, contract_name):
+
+        data  = self.get_contract_json(contract_name)
+
+        bytecode = data['bytecode']
+        abi = data['abi']
+
+        return self.w3.eth.contract(abi=abi, bytecode=bytecode)
+
+    def get_contract_json(self, contract_name):
+        with open(f'./eth_manager/stripped_compiled_contracts/{contract_name}.json') as json_file:
+            return json.load(json_file)
+
+    def register_abi(self, name, abi):
+        self.contract_abis[name] = abi
 
     def register_contract(self, contract_address, abi):
         checksum_address = to_checksum_address(contract_address)
@@ -26,6 +40,13 @@ class ContractRegistry(object):
             abi = self.contract_abis.get(abi_type)
 
             if abi is None:
+                try:
+                    data = self.get_contract_json(abi_type)
+                    abi = data.get('abi')
+                except FileNotFoundError:
+                    abi = None
+
+            if abi is None:
                 raise Exception('ABI not found for type: {}'.format(abi_type))
 
             contract = self.register_contract(contract_address, abi)
@@ -41,3 +62,4 @@ class ContractRegistry(object):
         self.w3 = w3
         self.contracts_by_address = {}
         self.contract_abis = {}
+        self.compiled_contracts = {}
