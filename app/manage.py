@@ -18,27 +18,37 @@ class UpdateData(Command):
         with app.app_context():
             import config
 
-            print("~~~~~~~~~~ Searching for Master Address ~~~~~~~~~~")
+            print("~~~~~~~~~~ Setting up Reserve Tokens and Contract ~~~~~~~~~~")
 
-            master_address_type = "MASTER"
-            master_address = app.config['MASTER_WALLET_ADDRESS']
+            from server.models.token import Token
+            from server.models.exchange import ExchangeContract
 
-            master_address_object = BlockchainAddress.query.filter(BlockchainAddress.type == master_address_type).first()
+            reserve_token_address = app.config.get('RESERVE_TOKEN_ADDRESS')
+            exchange_contract_address = app.config.get('EXCHANGE_CONTRACT_ADDRESS')
 
-            if master_address_object is None:
-                print('Creating Master Address')
-                master_address_object = BlockchainAddress(type=master_address_type)
-                master_address_object.address = master_address
-                db.session.add(master_address_object)
-                db.session.commit()
+            if reserve_token_address and exchange_contract_address:
+                reserve_token = Token.query.filter_by(address=reserve_token_address).first()
 
-            elif master_address_object.address != master_address:
-                print('Updating Master Address')
+                if not reserve_token:
+                    reserve_token = Token(
+                        address=reserve_token_address,
+                        name='RESERVE_TOKEN',
+                        symbol='RSRV'
+                    )
+                    db.session.add(reserve_token)
+                    db.session.commit()
 
-                master_address_object.address = master_address
-                db.session.commit()
+                exchange_contract = ExchangeContract.query.filter_by(
+                    blockchain_address=exchange_contract_address).first()
 
-            print(master_address)
+                if not exchange_contract:
+                    exchange_contract = ExchangeContract(blockchain_address=exchange_contract_address)
+
+                    exchange_contract.reserve_token = reserve_token
+                    exchange_contract.add_token(reserve_token)
+
+                    db.session.add(exchange_contract)
+                    db.session.commit()
 
             # todo: [Nick] refactor this
             print("~~~~~~~~~~ Searching for float wallet ~~~~~~~~~~")

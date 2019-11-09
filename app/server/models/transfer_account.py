@@ -2,16 +2,14 @@ import datetime, enum
 from sqlalchemy.sql import func
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
-from server import db
+from server import db, bt
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table
-from server.models.token import Token
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
-from server.models.credit_transfer import CreditTransfer
+from server.models.exchange import ExchangeContract
+import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
-from server.utils.blockchain_tasks import (
-    create_blockchain_wallet
-)
+
 from server.utils.transfer_enums import TransferStatusEnum
 
 
@@ -26,7 +24,7 @@ class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    balance         = db.Column(db.BigInteger, default=0)
+    _balance_wei    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -44,7 +42,9 @@ class TransferAccount(OneOrgBase, ModelBase):
     payable_period_length = db.Column(db.Integer, default=2)
     payable_epoch         = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
+    token_id        = db.Column(db.Integer, db.ForeignKey("token.id"))
+
+    exchange_contract_id = db.Column(db.Integer, db.ForeignKey(ExchangeContract.id))
 
     transfer_card    = db.relationship('TransferCard', backref='transfer_account', lazy=True, uselist=False)
 
@@ -52,7 +52,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     users = db.relationship(
         "User",
         secondary=user_transfer_account_association_table,
-        back_populates="transfer_accounts")
+        back_populates="transfer_accounts"
+    )
 
     # owning_organisation_id = db.Column(db.Integer, db.ForeignKey(Organisation.id))
 
@@ -87,39 +88,40 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         if not approval:
             approval = self.give_approval_to_address(organisation_blockchain_address)
+    # @hybrid_property
+    # def balance(self):
+    #     return self.total_received - self.total_sent
 
-        return approval
+    @hybrid_property
+    def balance(self):
+        # division/multipication by int(1e16) occurs  because
+        # the db stores amounts in integer WEI: 1 BASE-UNIT (ETH/USD/ETC) * 10^18
+        # while the system passes around amounts in float CENTS: 1 BASE-UNIT (ETH/USD/ETC) * 10^2
+        # Therefore the conversion between db and system is 10^18/10^2c = 10^16
+        # We use cents for historical reasons, and to enable graceful degredation/rounding on
+        # hardware that can only handle small ints (like the transfer cards and old android devices)
 
-    def give_approval_to_address(self, address_getting_approved):
-        approval = SpendApproval(transfer_account_giving_approval=self,
-                                 address_getting_approved=address_getting_approved)
-        return approval
+        return (self._balance_wei or 0) / int(1e16)
 
-    def get_approval(self, receiving_address):
-        for approval in self.spend_approvals_given:
-            if approval.receiving_address == receiving_address:
-                return approval
-        return None
+    @balance.setter
+    def balance(self, val):
+        self._balance_wei = val * int(1e16)
 
     @hybrid_property
     def total_sent(self):
         return int(
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
+            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
+            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+            .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
         )
 
     @hybrid_property
     def total_received(self):
         return int(
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
+            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
+            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
         )
-
-    # @hybrid_property
-    # def balance(self):
-    #     return self.total_received - self.total_sent
 
     @hybrid_property
     def primary_user(self):
@@ -167,6 +169,28 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         return 'NO_REQUEST'
 
+    def get_or_create_system_transfer_approval(self):
+
+        organisation_blockchain_address = self.organisation.system_blockchain_address
+
+        approval = self.get_approval(organisation_blockchain_address)
+
+        if not approval:
+            approval = self.give_approval_to_address(organisation_blockchain_address)
+
+        return approval
+
+    def give_approval_to_address(self, address_getting_approved):
+        approval = SpendApproval(transfer_account_giving_approval=self,
+                                 address_getting_approved=address_getting_approved)
+        return approval
+
+    def get_approval(self, receiving_address):
+        for approval in self.spend_approvals_given:
+            if approval.receiving_address == receiving_address:
+                return approval
+        return None
+
     def approve(self):
 
         if not self.is_approved:
@@ -192,12 +216,14 @@ class TransferAccount(OneOrgBase, ModelBase):
                                               automatically_resolve_complete=False)
         return withdrawal
 
-    def __init__(self, blockchain_address=None, organisation=None, private_key=None):
-        #
+
+    def __init__(self, blockchain_address=None, organisation=None, private_key=None, **kwargs):
+        super(TransferAccount, self).__init__(**kwargs)
+
         # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
         # db.session.add(blockchain_address_obj)
 
-        self.blockchain_address = blockchain_address or create_blockchain_wallet(private_key)
+        self.blockchain_address = blockchain_address or bt.create_blockchain_wallet(private_key)
 
         if organisation:
             self.organisation = organisation

@@ -1,6 +1,5 @@
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
 from flask_cors import CORS
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_basicauth import BasicAuth
 from celery import Celery
@@ -14,7 +13,7 @@ from datetime import datetime
 import redis
 import config
 import i18n
-
+from eth_utils import to_checksum_address
 import sys
 import os
 
@@ -27,79 +26,11 @@ from server.utils.phone import MessageProcessor
 #     is_running_uwsgi = False
 
 sys.path.append('../')
-
-db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
-basic_auth = BasicAuth()
-sentry = Sentry()
-
-# limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
-
-s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
-                  aws_secret_access_key=config.AWS_SES_SECRET)
-
-celery_app = Celery('tasks',
-                    broker=config.REDIS_URL,
-                    backend=config.REDIS_URL,
-                    task_serializer='json')
+import config
 
 dirname = os.path.dirname(__file__)
 i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
 i18n.set('fallback', config.LOCALE_FALLBACK)
-
-def encrypt_string(raw_string):
-
-    import base64
-    from cryptography.fernet import Fernet
-    from eth_utils import keccak
-
-    fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
-    cipher_suite = Fernet(fernet_encryption_key)
-
-    return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
-
-
-encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
-dependent_on_tasks = None
-#
-# for i in range(0,20):
-#     blockchain_task = celery_app.signature('eth_trans_manager.celery_tasks.transact_with_contract_function',
-#                                            kwargs={
-#                                                'encrypted_private_key': encrypted_private_key,
-#                                                'contract': 'Dai Stablecoin v1.0',
-#                                                'function': 'transfer',
-#                                                'args': [
-#                                                    '0x68D3ce90D84B4DD8936908Afd4079797057996bB',
-#                                                    1
-#                                                ],
-#                                                'dependent_on_tasks': dependent_on_tasks
-#                                            })
-#     result = blockchain_task.delay()
-#
-#     try:
-#         task_id = result.get(timeout=3, propagate=True, interval=0.3)
-#     except Exception as e:
-#         raise e
-#     finally:
-#         result.forget()
-#
-#     # if not dependent_on_tasks:
-#     # dependent_on_tasks = [task_id]
-#     print(task_id)
-
-red = redis.Redis.from_url(config.REDIS_URL)
-
-pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
-                       key=config.PUSHER_KEY,
-                       secret=config.PUSHER_SECRET,
-                       cluster=config.PUSHER_CLUSTER,
-                       ssl=True)
-
-twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
-messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
-africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
-africastalking_client = africastalking.SMS
-message_processor = MessageProcessor(
-    twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
 
 def create_app():
     # create and configure the app
@@ -120,7 +51,6 @@ def create_app():
 
     return app
 
-
 def register_extensions(app):
     db.init_app(app)
 
@@ -131,7 +61,8 @@ def register_extensions(app):
         # Workaround to allow unparsed request body to be be read from cache
         # This is required to validate a signature on webhooks
         # This MUST go before Sentry integration as sentry triggers form parsing
-        if not config.IS_TEST and (request.path.startswith('/api/slack/') or request.path.startswith('/api/poli_payments_webhook/')):
+        if not config.IS_TEST and (
+                request.path.startswith('/api/slack/') or request.path.startswith('/api/poli_payments_webhook/')):
             if request.content_length > 1024 * 1024:  # 1mb
                 # Payload too large
                 return make_response(jsonify({'message': 'Payload too large'})), 413
@@ -206,6 +137,7 @@ def register_blueprints(app):
     from server.api.slack_api import slack_blueprint
     from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
+    from server.api.contract_api import contracts_blueprint
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix='/api/me')
@@ -231,8 +163,61 @@ def register_blueprints(app):
     app.register_blueprint(slack_blueprint, url_prefix='/api')
     app.register_blueprint(poli_payments_blueprint, url_prefix='/api')
     app.register_blueprint(ussd_blueprint, url_prefix='/api')
+    app.register_blueprint(contracts_blueprint, url_prefix='/api')
 
     # 404 handled in react
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('index.html'), 404
+
+
+def encrypt_string(raw_string):
+    import base64
+    from cryptography.fernet import Fernet
+    from eth_utils import keccak
+
+    fernet_encryption_key = base64.b64encode(keccak(text=config.SECRET_KEY))
+    cipher_suite = Fernet(fernet_encryption_key)
+
+    return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
+
+
+db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
+basic_auth = BasicAuth()
+sentry = Sentry()
+
+# limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
+
+s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
+                  aws_secret_access_key=config.AWS_SES_SECRET)
+
+celery_app = Celery('tasks',
+                    broker=config.REDIS_URL,
+                    backend=config.REDIS_URL,
+                    task_serializer='json')
+
+
+encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
+dependent_on_tasks = None
+
+red = redis.Redis.from_url(config.REDIS_URL)
+
+pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
+                       key=config.PUSHER_KEY,
+                       secret=config.PUSHER_SECRET,
+                       cluster=config.PUSHER_CLUSTER,
+                       ssl=True)
+
+twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
+messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
+africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
+africastalking_client = africastalking.SMS
+message_processor = MessageProcessor(
+    twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
+
+from server.utils.blockchain_tasks import BlockchainTasker
+bt = BlockchainTasker()
+
+from server.utils.misc_tasks import MiscTasker
+mt = MiscTasker()
+

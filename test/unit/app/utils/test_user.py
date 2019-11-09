@@ -31,7 +31,7 @@ def test_create_user_with_existing_transfer_account(create_user_with_existing_tr
     ("wHaTaRaNdOmSeRiAlNuMbEr", '5'),
     (None, '12'),
 ])
-def test_save_device_info(save_device_info, create_transfer_account_user, serial_number, unique_id):
+def test_save_device_info(save_device_info, new_sempo_admin_user, serial_number, unique_id):
     """
     GIVEN save_device_info function
     WHEN called with device_info and user object
@@ -47,9 +47,9 @@ def test_save_device_info(save_device_info, create_transfer_account_user, serial
             width=None,
             height=None
         ),
-        user=create_transfer_account_user
+        user=new_sempo_admin_user
     )
     db.session.commit()
     assert device is not None
-    assert device.user_id is create_transfer_account_user.id
+    assert device.user_id is new_sempo_admin_user.id
 

@@ -3,8 +3,17 @@ from flask import Blueprint
 from server.me_api.transfer_account import MeTransferAccountAPI
 from server.me_api.credit_transfer import MeCreditTransferAPI, RequestWithdrawalAPI
 from server.me_api.me import MeAPI
-from server.me_api.misc import MeFeedbackAPI, TargetingSurveyAPI, ReferralAPI, VersionAPI, AssemblyPaymentsUserAPI, \
-    AssemblyPaymentsPayoutAccountAPI, PoliPaymentsAPI
+from server.me_api.misc import (
+    MeFeedbackAPI,
+    TargetingSurveyAPI,
+    ReferralAPI,
+    VersionAPI,
+    AssemblyPaymentsUserAPI,
+    AssemblyPaymentsPayoutAccountAPI,
+    PoliPaymentsAPI
+)
+
+from server.me_api.exchange import ExchangeAPI
 
 me_blueprint = Blueprint('me', __name__)
 
@@ -13,6 +22,12 @@ me_blueprint.add_url_rule(
     '/',
     view_func=MeAPI.as_view('me'),
     methods=['GET']
+)
+
+me_blueprint.add_url_rule(
+    '/exchange/',
+    view_func=ExchangeAPI.as_view('exchange_api_view'),
+    methods=['POST']
 )
 
 me_blueprint.add_url_rule(

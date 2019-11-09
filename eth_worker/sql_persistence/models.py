@@ -13,6 +13,7 @@ from web3 import Web3
 
 import config
 
+ALLOWED_TASK_TYPES = ['SEND_ETH', 'FUNCTION', 'DEPLOY_CONTRACT']
 STATUS_STRING_TO_INT = {'SUCCESS': 1, 'PENDING': 2, 'UNSTARTED': 3, 'FAILED': 4, 'UNKNOWN': 99}
 STATUS_INT_TO_STRING = {v: k for k, v in STATUS_STRING_TO_INT.items()}
 
@@ -94,7 +95,7 @@ class BlockchainWallet(ModelBase):
     @staticmethod
     def address_from_private_key(private_key):
         if isinstance(private_key, str):
-            private_key = bytearray.fromhex(private_key.replace('0x', ''))
+            private_key = bytes.fromhex(private_key.replace('0x', ''))
         return keys.PrivateKey(private_key).public_key.to_checksum_address()
 
     def __init__(self, private_key=None, wei_target_balance=None, wei_topup_threshold=None):
@@ -117,7 +118,10 @@ task_dependencies = Table(
 class BlockchainTask(ModelBase):
     __tablename__ = 'blockchain_task'
 
-    contract = Column(String)
+    _type = Column(String)
+    contract_address = Column(String)
+    contract_name = Column(String)
+    abi_type = Column(String)
     function = Column(String)
     args = Column(JSON)
     kwargs = Column(JSON)
@@ -138,6 +142,23 @@ class BlockchainTask(ModelBase):
                              primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
                              secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
                              backref='dependents')
+
+    @hybrid_property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, value):
+        if value not in ALLOWED_TASK_TYPES:
+            raise ValueError(f'{value} not in allow task types')
+        self._type = value
+
+    @hybrid_property
+    def successful_transaction(self):
+        for t in self.transactions:
+            if t.status == 'SUCCESS':
+                return t
+        return None
 
     @hybrid_property
     def status(self):
@@ -168,8 +189,13 @@ class BlockchainTransaction(ModelBase):
     submitted_date = Column(DateTime)
     mined_date = Column(DateTime)
     hash = Column(String)
+    contract_address = Column(String)
     nonce = Column(Integer)
     nonce_consumed = Column(Boolean, default=False)
+
+    ignore = Column(Boolean, default=False)
+
+    coinbase = Column(String)
 
     signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 

@@ -1,12 +1,14 @@
 import json, pytest, config, base64
 
 
-@pytest.mark.parametrize('token_id,amount,status_code', [
-    (None, None, 400),
-    (1, None, 400),
-    (1, 100, 201)
+@pytest.mark.parametrize('token_id_generator,amount,status_code', [
+    (lambda t: None, None, 400),
+    (lambda t: t.id, None, 400),
+    (lambda t: t.id, 100, 201)
 ])
-def test_create_poli_payments_link(mocker, test_client, init_database, create_blockchain_token, create_transfer_account_user, token_id, amount, status_code):
+def test_create_poli_payments_link(mocker, test_client, init_database, external_reserve_token,
+                                   create_transfer_account_user,
+                                   token_id_generator, amount, status_code):
     """
     GIVEN a Flask application
     WHEN '/api/me/poli_payments/' (POST)
@@ -26,6 +28,8 @@ def test_create_poli_payments_link(mocker, test_client, init_database, create_bl
     create_transfer_account_user.is_activated = True
     auth_token = create_transfer_account_user.encode_auth_token()
 
+    token_id = token_id_generator(external_reserve_token)
+
     response = test_client.post('/api/me/poli_payments/',
                                 headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),
                                 data=json.dumps(dict(token_id=token_id, amount=amount)),
@@ -42,7 +46,7 @@ def test_create_poli_payments_link(mocker, test_client, init_database, create_bl
     ("Unused", 200),
     ("Completed", 400),  # should fail as once status is requested once, FiatRampStatus is set.
 ])
-def test_check_poli_payments_link_status(mocker, test_client, init_database, create_blockchain_token, create_transfer_account_user, poli_status, status_code):
+def test_check_poli_payments_link_status(mocker, test_client, init_database, external_reserve_token, create_transfer_account_user, poli_status, status_code):
     """
     GIVEN a Flask application
     WHEN '/api/me/poli_payments/' (GET)
@@ -65,7 +69,7 @@ def test_check_poli_payments_link_status(mocker, test_client, init_database, cre
 
     reference = None
     if poli_status:
-        reference = create_blockchain_token.fiat_ramps[0].payment_reference
+        reference = external_reserve_token.fiat_ramps[0].payment_reference
 
     response = test_client.put('/api/me/poli_payments/',
                                 headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),

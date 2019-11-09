@@ -207,7 +207,10 @@ def create_transfer_account_user(
         user.transfer_accounts.append(existing_transfer_account)
     else:
         transfer_account = TransferAccount(
-            blockchain_address=blockchain_address, organisation=organisation)
+            blockchain_address=blockchain_address or user.primary_blockchain_address,
+            organisation=organisation
+        )
+
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
