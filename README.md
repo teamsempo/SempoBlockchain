@@ -73,7 +73,13 @@ Once ganache is installed, run
 ganache-cli -l 80000000 --verbose
 ```
 
-The -l 80000000 argument increases the gas-limit, which is required for said token-exchange deployments.
+The -l 80000000 argument increases the gas-limit, which is required for said token-exchange deployments. You will also
+need to set your local config to match:
+```
+[ETHEREUM]
+http_provider           = http://127.0.0.1:8545
+```
+
 
 Next you'll need to launch redis and celery. The following settings will work 90% of the time, but can be a _little_
 bit flaky because they force all tasks into one worker queue. This is a little annoying to address without running
@@ -93,6 +99,8 @@ celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=
 You can also add a runtime configuration with the `script path` set as the path to your virtual env `[path-to-your-python-env]/bin/celery`.
 
 Set the `parameters` to the run line above.
+
+Lastly, if you want to run full blockchain tests, set the environment variable `FORCE_BLOCKCHAIN_TESTS` to `True`
 
 ### Database Migration:
 
