@@ -94,6 +94,13 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     @hybrid_property
     def balance(self):
+        # division/multipication by int(1e16) occurs  because
+        # the db stores amounts in integer WEI: 1 BASE-UNIT (ETH/USD/ETC) * 10^18
+        # while the system passes around amounts in float CENTS: 1 BASE-UNIT (ETH/USD/ETC) * 10^2
+        # Therefore the conversion between db and system is 10^18/10^2c = 10^16
+        # We use cents for historical reasons, and to enable graceful degredation/rounding on
+        # hardware that can only handle small ints (like the transfer cards and old android devices)
+
         return (self._balance_wei or 0) / int(1e16)
 
     @balance.setter
