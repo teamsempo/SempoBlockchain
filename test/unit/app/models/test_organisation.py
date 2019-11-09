@@ -1,8 +1,8 @@
 import pytest
 from functools import partial
 
-from fixtures.user import UserFactory
-from fixtures.organisation import OrganisationFactory
+from helpers.user import UserFactory
+from helpers.organisation import OrganisationFactory
 
 standard_user = partial(UserFactory)
 swahili_user = partial(UserFactory, preferred_language='sw')
