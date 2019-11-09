@@ -170,6 +170,7 @@ def register_blueprints(app):
     def page_not_found(e):
         return render_template('index.html'), 404
 
+
 def encrypt_string(raw_string):
     import base64
     from cryptography.fernet import Fernet
