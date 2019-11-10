@@ -236,6 +236,34 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
     assert create_credit_transfer.resolution_message is not None
 
 
+# @pytest.mark.parametrize("session_factory, user_input, language", [
+#     (initial_language_selection_state, "1", "en"),
+#     (initial_language_selection_state, "2", "sw"),
+#     (choose_language_state, "1", "en"),
+#     (choose_language_state, "2", "sw"),
+# ])
+def test_new_credit_transfer_check_sender_txns_limits(create_credit_transfer):
+    """
+    GIVEN a CreditTransfer model
+    WHEN a new credit transfer is created
+    THEN check the correct check_sender_txns_limits apply
+    """
+    from server.utils.transaction_limits import limits
+    from server.models.kyc_application import KycApplication
+
+    assert create_credit_transfer.check_sender_txns_limits() is []
+    create_credit_transfer.sender_user.is_self_signup = True
+    assert create_credit_transfer.check_sender_txns_limits() is limits[:3]  # Sempo Level 0 limits
+
+    create_credit_transfer.sender_user.is_phone_verified = True
+    assert create_credit_transfer.check_sender_txns_limits() is limits[3:6]  # Sempo Level 1 limits
+
+    create_credit_transfer.sender_user.kyc_applications = KycApplication
+    kyc = KycApplication(type='INDIVIDUAL', kyc_status='VERIFIED')
+    kyc.user = create_credit_transfer.sender_user
+
+    assert create_credit_transfer.check_sender_txns_limits() is limits[6:9]  # Sempo Level 2 limits
+
 """ ----- Blacklisted Token Model ----- """
 
 
