@@ -1,6 +1,4 @@
-version: 2.1
-orbs:
-  sops: vranystepan/sops@0.0.2
+version: 2.0
 jobs:
   build:
     working_directory: ~/project
@@ -11,9 +9,11 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - sops/aws_decrypt:
-          input_file_path: ".sempoconfig/test.ini"
-          output_file_path: ".sempoconfig/decrypted_test.ini"
+      - run:
+        name: download SOPS
+        command: |
+          wget https://github.com/mozilla/sops/releases/download/3.4.0/sops-3.4.0.linux -O ./sops
+          chmod +x ./sops
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
