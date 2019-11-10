@@ -13,7 +13,7 @@ jobs:
       - setup_remote_docker
       - sops/aws_decrypt:
           input_file_path: ".sempoconfig/test.ini"
-          output_file_path: ".sempoconfig/decrypted.ini"
+          output_file_path: ".sempoconfig/decrypted_test.ini"
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
