@@ -1,8 +1,5 @@
 # creation rules are evaluated sequentially, the first match wins
 creation_rules:
-  - path_regex: .*/test_config_files/.*
-    kms: 'arn:aws:kms:ap-southeast-2:290492953667:key/76efe185-c961-49cb-be7a-8b140fc0c924'
-    pgp: '0C27750BA15B3AE283591F3FE94556EE82B0CB55'
-  - path_regex: .*/.sempoconfig/.*
+  - path_regex: .*/test_config_files/.*|.*/.sempoconfig/.*
     kms: 'arn:aws:kms:ap-southeast-2:290492953667:key/76efe185-c961-49cb-be7a-8b140fc0c924'
     pgp: '0C27750BA15B3AE283591F3FE94556EE82B0CB55'

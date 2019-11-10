@@ -9,6 +9,10 @@ except FileNotFoundError:
 
 for in_path in glob.glob('../test_config_files/*.ini'):
     head, filename = os.path.split(in_path)
+
+    print('Found file:')
+    print(filename)
+
     out_path = './{}'.format(filename)
 
     with open(out_path, 'w') as f:
