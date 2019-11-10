@@ -520,11 +520,11 @@ class User(ManyOrgBase, ModelBase):
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
-    def get_txn_limits(self):
+    def get_txn_limits(self, credit_transfer=None):
         relevant_limits = []
         for limit in limits:
             applied_when = limit['applied_when']
-            applied = applied_when(self)
+            applied = applied_when(self, credit_transfer)
             if applied:
                 relevant_limits.append(limit['rule'])
 
