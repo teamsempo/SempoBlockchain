@@ -23,7 +23,6 @@ from server.utils.transfer_account import (
 
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
-from server.models.credit_transfer import CreditTransfer
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
 from server.models.transfer_usage import TransferUsage
