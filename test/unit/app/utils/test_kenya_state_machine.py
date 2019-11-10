@@ -3,8 +3,8 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 
-from fixtures.user import UserFactory
-from fixtures.ussd_session import UssdSessionFactory
+from helpers.user import UserFactory
+from helpers.ussd_session import UssdSessionFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 
 fake = Faker()

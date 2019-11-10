@@ -43,9 +43,11 @@ def test_new_sempo_admin_user(new_sempo_admin_user):
     assert new_sempo_admin_user.password_hash != 'TestPassword'
     assert not new_sempo_admin_user.is_activated
     assert AccessControl.has_any_tier(new_sempo_admin_user.roles, 'ADMIN')
-
+    assert isinstance(new_sempo_admin_user.secret, str)
 
 def test_authed_sempo_admin_user(authed_sempo_admin_user):
+
+
     """
     GIVEN a User model
     WHEN a new User is created in DB
@@ -77,6 +79,7 @@ def test_update_admin_user_tier(new_sempo_admin_user):
     assert AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'admin')
     assert AccessControl.has_sufficient_tier(new_sempo_admin_user.roles, 'ADMIN', 'superadmin')
 
+
 def test_update_password(new_sempo_admin_user):
     """
     GIVEN a User model
@@ -89,18 +92,16 @@ def test_update_password(new_sempo_admin_user):
     assert new_sempo_admin_user.verify_password(new_password)
 
 
-def test_valid_activation_token(authed_sempo_admin_user):
+def test_valid_activation_token(new_sempo_admin_user):
     """
     GIVEN a User model
     WHEN a activation token is created
     THEN check token is valid
     """
-    activation_token = authed_sempo_admin_user.encode_single_use_JWS('A')
+    activation_token = new_sempo_admin_user.encode_single_use_JWS('A')
     assert activation_token is not None
-    validity_check = authed_sempo_admin_user.decode_single_use_JWS(activation_token, 'A')
+    validity_check = new_sempo_admin_user.decode_single_use_JWS(activation_token, 'A')
     assert validity_check['success']
-    authed_sempo_admin_user.is_activated = True
-    assert authed_sempo_admin_user.is_activated
 
 
 def test_valid_auth_token(authed_sempo_admin_user):
@@ -181,7 +182,7 @@ def test_create_transfer_account(create_transfer_account):
     WHEN a new transfer account is created
     THEN check a blockchain address is created, default balance is 0
     """
-    assert create_transfer_account.balance is 0
+    assert create_transfer_account.balance == 0
     assert create_transfer_account.blockchain_address is not None
 
 
@@ -208,7 +209,7 @@ def test_approve_vendor_transfer_account(new_transfer_account):
     new_transfer_account.is_vendor = True
     new_transfer_account.approve()
 
-    assert new_transfer_account.balance is 0
+    assert new_transfer_account.balance == 0
 
 
 """ ----- Credit Transfer Model ----- """
@@ -223,7 +224,7 @@ def test_new_credit_transfer_complete(create_credit_transfer):
     from server.utils.transfer_enums import TransferStatusEnum
     from flask import g
     g.celery_tasks = []
-    assert isinstance(create_credit_transfer.transfer_amount, int)
+    assert isinstance(create_credit_transfer.transfer_amount, float)
     assert create_credit_transfer.transfer_amount == 100
     assert create_credit_transfer.transfer_status is TransferStatusEnum.PENDING
     create_credit_transfer.resolve_as_completed()  # complete credit transfer

@@ -50,7 +50,6 @@ class OrganisationAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
-
     @show_all
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self, organisation_id):
@@ -76,6 +75,7 @@ class OrganisationAPI(MethodView):
 
         new_organisation = Organisation(name=name, token=token)
 
+        # TODO: Shift this all into being created when an org is created
         transfer_account = TransferAccount(organisation=new_organisation)
 
         db.session.add_all([new_organisation, transfer_account])

@@ -1,12 +1,14 @@
-from flask import Blueprint, request, make_response, jsonify
+from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
-from server import db
+from server import db, bt
 from server.utils.auth import requires_auth
 from server.models.token import Token
+from server.models.exchange import ExchangeContract
 from server.schemas import token_schema, tokens_schema
 
 token_blueprint = Blueprint('token', __name__)
+
 
 class TokenAPI(MethodView):
 
@@ -23,14 +25,19 @@ class TokenAPI(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
-
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
+        """
+        This endpoint is for registering a token with an existing smart contract on the system,
+        rather than creating a new contract.
+        To create a new token contract, use api/contract/token/.
+        """
+        # TODO: Requires tests
         post_data = request.get_json()
-
-        address = post_data['address']
         name = post_data['name']
         symbol = post_data['symbol']
+        decimals = post_data.get('decimals', 18)
+        address = post_data.get('address')
 
         token = Token.query.filter_by(address=address).first()
 
@@ -44,21 +51,18 @@ class TokenAPI(MethodView):
 
             return make_response(jsonify(response_object)), 400
 
-        token = Token(address=address, name=name, symbol=symbol)
-
+        token = Token(address=address, name=name, symbol=symbol, decimals=decimals)
         db.session.add(token)
-        db.session.commit()
 
         response_object = {
             'message': 'success',
             'data': {
-                'token': {
-                    'id': token.id
-                }
+                'token': token_schema.dump(token).data
             }
         }
 
         return make_response(jsonify(response_object)), 201
+
 
 token_blueprint.add_url_rule(
     '/token/',

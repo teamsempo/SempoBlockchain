@@ -5,17 +5,19 @@ import datetime
 
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query
+from sqlalchemy import or_
 
 import server
-from server import db
+from server import db, bt
 from server.exceptions import OrganisationNotProvidedException
 
 
 def get_authorising_user_id():
-    if hasattr(g,'user'):
+    if hasattr(g, 'user'):
         return g.user.id
-    elif hasattr(g,'authorising_user_id'):
+    elif hasattr(g, 'authorising_user_id'):
         return g.authorising_user_id
     else:
         return None
@@ -96,13 +98,16 @@ def before_compile(query):
 
                     if issubclass(mapper.class_, ManyOrgBase):
                         # filters many-to-many
-                        query = query.enable_assertions(False).filter(
-                            ent['entity'].organisations.any(server.models.organisation.Organisation.id.in_(member_organisations))
-                        )
+                        query = query.enable_assertions(False).filter(or_(
+                            ent['entity'].organisations.any(
+                                server.models.organisation.Organisation.id.in_(member_organisations)),
+                            ent['entity'].is_public == True,
+                        ))
                     else:
-                        query = query.enable_assertions(False).filter(
-                            ent['entity'].organisation_id == active_organisation
-                        )
+                        query = query.enable_assertions(False).filter(or_(
+                            ent['entity'].organisation_id == active_organisation,
+                            ent['entity'].is_public == True,
+                        ))
 
                 except AttributeError:
                     raise
@@ -146,6 +151,13 @@ organisation_association_table = db.Table(
     db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id')),
 )
 
+exchange_contract_token_association_table = db.Table(
+    'exchange_contract_token_association_table',
+    db.Model.metadata,
+    db.Column('exchange_contract_id', db.Integer, db.ForeignKey("exchange_contract.id")),
+    db.Column('token_id', db.Integer, db.ForeignKey('token.id'))
+)
+
 
 class ModelBase(db.Model):
     __abstract__ = True
@@ -156,12 +168,30 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
+class BlockchainTaskableBase(ModelBase):
+    __abstract__ = True
+
+    blockchain_task_id = db.Column(db.Integer)
+
+    @hybrid_property
+    def blockchain_status(self):
+        if self.blockchain_task_id:
+            task = bt.get_blockchain_task(self.blockchain_task_id)
+
+            return task.get('status', 'ERROR')
+        else:
+            return 'UNKNOWN'
+
+
+
 class OneOrgBase(object):
     """
     Mixin that automatically associates object(s) to organisation(s) many-to-one.
 
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
+
+    is_public = db.Column(db.Boolean, default=False)
 
     @declared_attr
     def organisation_id(cls):
@@ -174,6 +204,8 @@ class ManyOrgBase(object):
 
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
+
+    is_public = db.Column(db.Boolean, default=False)
 
     @declared_attr
     def organisations(cls):

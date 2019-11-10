@@ -4,27 +4,28 @@ from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Index
 
-from server import db
-from server.models.utils import ModelBase, ManyOrgBase
+from server import db, bt
+from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
+from server.models.transfer_account import TransferAccount
+
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError
 )
-from server.utils.blockchain_tasks import (
-    make_token_transfer,
-    get_blockchain_task
-)
+
+from server.utils.transfer_account import find_transfer_accounts_with_matching_token
+
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, TransferModeEnum
 
 
-class CreditTransfer(ManyOrgBase, ModelBase):
+class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     __tablename__ = 'credit_transfer'
 
     uuid            = db.Column(db.String, unique=True)
 
     resolved_date   = db.Column(db.DateTime)
-    transfer_amount = db.Column(db.Integer)
+    _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
 
     transfer_type       = db.Column(db.Enum(TransferTypeEnum))
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
@@ -35,8 +36,6 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     transfer_metadata = db.Column(JSONB)
 
     resolution_message = db.Column(db.String())
-
-    blockchain_task_id = db.Column(db.Integer)
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
@@ -58,26 +57,20 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     __table_args__ = (Index('updated_index', "updated"), )
 
 
+    from_exchange = db.relationship('Exchange', backref='from_transfer', lazy=True, uselist=False,
+                                     foreign_keys='Exchange.from_transfer_id')
+
+    to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
+                                  foreign_keys='Exchange.to_transfer_id')
+
+    # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
-    def blockchain_status(self):
-        if self.blockchain_task_id:
-            task = get_blockchain_task(self.blockchain_task_id)
+    def transfer_amount(self):
+        return (self._transfer_amount_wei or 0) / int(1e16)
 
-            return task.get('status', 'ERROR')
-        else:
-            return 'UNKNOWN'
-
-        # if len(self.uncompleted_blockchain_tasks) == 0:
-        #     return 'COMPLETE'
-        #
-        # if len(self.pending_blockchain_tasks) > 0:
-        #     return 'PENDING'
-        #
-        # if len(self.failed_blockchain_tasks) > 0:
-        #     return 'ERROR'
-        #
-        # return 'UNKNOWN'
-
+    @transfer_amount.setter
+    def transfer_amount(self, val):
+        self._transfer_amount_wei = val * int(1e16)
 
     @hybrid_property
     def blockchain_status_breakdown(self):
@@ -156,7 +149,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
-        self.blockchain_task_id = make_token_transfer(
+        self.blockchain_task_id = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,
@@ -201,19 +194,7 @@ class CreditTransfer(ManyOrgBase, ModelBase):
     def check_recipient_is_approved(self):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
-    def find_user_transfer_accounts_with_matching_token(self, user, token):
-        matching_transfer_accounts = []
-        for transfer_account in user.transfer_accounts:
-            if transfer_account.token == token:
-                matching_transfer_accounts.append(transfer_account)
-        if len(matching_transfer_accounts) == 0:
-            raise NoTransferAccountError("No transfer account for user {} and token".format(user, token))
-        if len(matching_transfer_accounts) > 1:
-            raise Exception(f"User has multiple transfer accounts for token {token}")
-
-        return matching_transfer_accounts[0]
-
-    def _select_transfer_account(self, supplied_transfer_account, user, token):
+    def _select_transfer_account(self, token, user, supplied_transfer_account = None):
         if token is None:
             raise Exception("Token must be specified")
         if supplied_transfer_account:
@@ -221,10 +202,17 @@ class CreditTransfer(ManyOrgBase, ModelBase):
                 raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
             return supplied_transfer_account
 
-        return self.find_user_transfer_accounts_with_matching_token(user, token)
+        try:
+            return find_transfer_accounts_with_matching_token(user, token)
+        except NoTransferAccountError:
+            transfer_account = TransferAccount(blockchain_address=user.primary_blockchain_address)
+            transfer_account.token = token
+            user.transfer_accounts.append(transfer_account)
+            db.session.add(transfer_account)
+            return transfer_account
 
     def append_organisation_if_required(self, organisation):
-        if organisation not in self.organisations:
+        if organisation and organisation not in self.organisations:
             self.organisations.append(organisation)
 
     def __init__(self,
@@ -246,14 +234,20 @@ class CreditTransfer(ManyOrgBase, ModelBase):
         self.recipient_user = recipient_user
 
         self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
-            sender_transfer_account, sender_user, token)
+            token,
+            sender_user,
+            sender_transfer_account
+        )
 
         self.token = token or self.sender_transfer_account.token
 
         self.fiat_ramp = fiat_ramp
 
         self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
-            recipient_transfer_account, recipient_user, self.token)
+            self.token,
+            recipient_user,
+            recipient_transfer_account
+        )
 
         if transfer_type is TransferTypeEnum.DEPOSIT.value:
             self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()
@@ -273,4 +267,3 @@ class CreditTransfer(ManyOrgBase, ModelBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
-

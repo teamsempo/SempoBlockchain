@@ -2,23 +2,24 @@ import pytest
 from functools import partial
 
 from server import db
-from fixtures.user import UserFactory
+from helpers.user import UserFactory
 from server.models.ussd import UssdMenu, UssdSession
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
 
 @pytest.mark.parametrize("user_factory,expected", [
-    (None, "END Invalid request"),
-    (partial(UserFactory), "END Invalid request"),
-    (partial(UserFactory, preferred_language="en"), "END Invalid request"),
     (partial(UserFactory, preferred_language="jp"), "END Invalid request"),
     (partial(UserFactory, preferred_language="sw"), "END Chaguo si sahihi"),
+    (partial(UserFactory, preferred_language="en"), "END Invalid request"),
+    (partial(UserFactory), "END Invalid request"),
+    (None, "END Invalid request"),
 ])
 def test_menu_display_text_in_lang(test_client, init_database, user_factory, expected):
     user = user_factory() if user_factory else None
 
     menu = UssdMenu(display_key="ussd.kenya.exit_invalid_request")
-    assert menu_display_text_in_lang(menu, user) == expected
+    result = menu_display_text_in_lang(menu, user)
+    assert result == expected
 
 
 def test_create_or_update_session(test_client, init_database):
