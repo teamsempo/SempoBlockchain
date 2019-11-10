@@ -15,12 +15,11 @@ jobs:
             wget https://github.com/mozilla/sops/releases/download/3.4.0/sops-3.4.0.linux -O ./sops
             chmod +x ./sops
       - run:
-          name: Extract SOPS Secrets
+          name: Decrypt SOPS Secrets
           command: |
-            ./sops --decrypt .sempoconfig/test.ini > .sempoconfig/test_decrypted.ini
-            cd .sempoconfig
-            cat test.ini
-            cat test_decrypted.ini
+            mkdir config_files
+            ./sops --decrypt .sempoconfig/common_config.ini > ./config_files/common_config.ini
+            ./sops --decrypt .sempoconfig/docker_test_config.ini > ./config_files/docker_test_config.ini
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache

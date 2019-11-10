@@ -7,15 +7,13 @@ try:
 except FileNotFoundError:
     pass
 
-print('Attempting SOPS Config load')
-
-for in_path in glob.glob('./*.ini'):
+for in_path in glob.glob('../config_files/*.ini'):
     head, filename = os.path.split(in_path)
 
     print('Found file:')
     print(filename)
 
-    out_path = '../test_config_files/{}'.format(filename)
+    out_path = './{}'.format(filename)
 
     with open(out_path, 'w') as f:
-        subprocess.call(['sops', '-d', in_path], stdout=f)
+        subprocess.call(['sops', '-e', in_path], stdout=f)
