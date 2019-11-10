@@ -1,3 +1,9 @@
+class NameScanException(Exception):
+    """
+    Raise if namescan api returns an error
+    """
+    pass
+
 class PaymentMethodException(Exception):
     """
     Raise if trying to set a payment method that is not supported

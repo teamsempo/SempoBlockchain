@@ -2,6 +2,7 @@ import datetime
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import func
 
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
@@ -180,6 +181,23 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         if message:
             self.resolution_message = message
+
+    def check_sender_txns_limits(self, user):
+        relevant_txn_limits = [txn for txn in user.get_txn_limits() if str(self.transfer_type) in txn.get('txn_type')]
+        print(relevant_txn_limits)
+
+        filter_after = datetime.datetime.today() - datetime.datetime.timedelta(days=30)
+
+        daily_transaction_volume = \
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+            func.date_trunc('day', CreditTransfer.created).label('date')) \
+            .group_by(func.date_trunc('day', CreditTransfer.created)) \
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).all()
+
+        total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')) \
+            .filter(CreditTransfer.transfer_type == self.transfer_type).first().total
+
+        return
 
     def check_sender_has_sufficient_balance(self):
         return self.sender_user and self.sender_transfer_account.balance - self.transfer_amount >= 0
