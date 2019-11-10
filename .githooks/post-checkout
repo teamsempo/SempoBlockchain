@@ -1,4 +1,0 @@
-#!/bin/sh
-
-python ./.githooks/post_checkout.py
-    
