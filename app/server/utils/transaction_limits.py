@@ -1,36 +1,27 @@
-from server.models import user, token, credit_transfer
+from server.models import user, token
 
 
-def user_is_phone_verified_but_no_kyc(object, credit_transfer):
-    if not isinstance(object, user.User):
-        return False
-
-    kyc = object.kyc_applications
+def user_is_phone_verified_but_no_kyc(user, credit_transfer):
+    kyc = user.kyc_applications
     if len(kyc) > 0:
         if kyc[0].kyc_status == 'VERIFIED':
             return False
 
-    if not object.is_self_sign_up:
+    if not user.is_self_sign_up:
         return True
 
-    return object.is_phone_verified
+    return user.is_phone_verified
 
 
-def check_user_kyc_and_phone(object, credit_transfer):
-    if not isinstance(object, user.User):
-        return False
-
-    if len(object.kyc_applications) == 0 and not user_is_phone_verified_but_no_kyc(object, None):
+def check_user_kyc_and_phone(user, credit_transfer):
+    if len(user.kyc_applications) == 0 and not user_is_phone_verified_but_no_kyc(user, None):
         return True
 
     return False
 
 
-def check_user_kyc_verified(object, credit_transfer):
-    if not isinstance(object, user.User):
-        return False
-
-    kyc = object.kyc_applications
+def check_user_kyc_verified(user, credit_transfer):
+    kyc = user.kyc_applications
     if len(kyc) == 0:
         return False
 
@@ -40,11 +31,8 @@ def check_user_kyc_verified(object, credit_transfer):
     return False
 
 
-def check_user_kyc_two_id_verified(object, credit_transfer):
-    if not isinstance(object, user.User):
-        return False
-
-    kyc = object.kyc_applications
+def check_user_kyc_two_id_verified(user, credit_transfer):
+    kyc = user.kyc_applications
     if len(kyc) == 0:
         return False
 
@@ -54,24 +42,16 @@ def check_user_kyc_two_id_verified(object, credit_transfer):
     return False
 
 
-def check_user_liquid_token_type(object, credit_transfer):
-    if not isinstance(credit_transfer, credit_transfer.CreditTransfer):
-        return False
-
-    t = token.Token.query.get(credit_transfer.token_id)
+def check_user_liquid_token_type(user, credit_transfer):
+    t = token.Token.query.get(credit_transfer.token.id)
     if t is not None and t.token_type == token.TokenType.LIQUID:
         return True
 
     return False
 
 
-def check_group_user_liquid_token_type(object, credit_transfer):
-    if not isinstance(object, user.User):
-        return False
-    if not isinstance(credit_transfer, credit_transfer.CreditTransfer):
-        return False
-
-    t = token.Token.query.get(credit_transfer.token_id)
+def check_group_user_liquid_token_type(user, credit_transfer):
+    t = token.Token.query.get(credit_transfer.token.id)
     if t is not None and t.token_type == token.TokenType.LIQUID:
         # TODO: add group account check
         return True

@@ -187,6 +187,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.resolution_message = message
 
     def check_sender_txns_limits(self):
+        if self.sender_user is None:
+            # skip if an exchange
+            return
+
         relevant_txn_limits = [txn for txn in self.sender_user.get_txn_limits(credit_transfer=self) if str(self.transfer_type) in txn.get('txn_type')]
 
         for limit in relevant_txn_limits:
