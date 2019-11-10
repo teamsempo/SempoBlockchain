@@ -39,10 +39,11 @@ class UserSchema(SchemaBase):
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_any_admin            = fields.Boolean(attribute='is_any_admin')
 
-    ap_user_id              = fields.Str()
-    ap_bank_id              = fields.Str()
-    ap_paypal_id            = fields.Str()
-    kyc_state               = fields.Str()
+    ap_user_id = fields.Str()
+    ap_bank_id = fields.Str()
+    ap_paypal_id = fields.Str()
+    kyc_state = fields.Str()
+    business_usage_id = fields.Int()
 
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
@@ -315,6 +316,11 @@ class OrganisationSchema(SchemaBase):
 
     org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
 
+class TransferUsageSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+
+    name                = fields.Str()
+    default             = fields.Boolean()
 
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
@@ -380,6 +386,7 @@ organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
+transfer_usages_schema = TransferUsageSchema(many=True)
 
 exchange_contract_schema = ExchangeContractSchema()
 

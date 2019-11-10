@@ -2,6 +2,7 @@ import datetime
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Index
 
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
@@ -44,7 +45,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
     recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
 
-    sender_user_id    = db.Column(db.Integer, db.ForeignKey("user.id"))
+    sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
     blockchain_transactions = db.relationship('BlockchainTransaction', backref='credit_transfer', lazy=True)
@@ -52,6 +53,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy=True)
 
     fiat_ramp = db.relationship('FiatRamp', backref='credit_transfer', lazy=True, uselist=False)
+    
+    __table_args__ = (Index('updated_index', "updated"), )
+
 
     from_exchange = db.relationship('Exchange', backref='from_transfer', lazy=True, uselist=False,
                                      foreign_keys='Exchange.from_transfer_id')
