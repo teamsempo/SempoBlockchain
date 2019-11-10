@@ -7,7 +7,7 @@ try:
 except FileNotFoundError:
     pass
 
-print('Attempting SOPS Confgif load')
+print('Attempting SOPS Config load')
 
 for in_path in glob.glob('./*.ini'):
     head, filename = os.path.split(in_path)
