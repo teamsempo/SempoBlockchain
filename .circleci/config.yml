@@ -17,7 +17,7 @@ jobs:
       - run:
           name: Extract SOPS Secrets
           command: |
-            sops --decrypt .sempoconfig/test.ini > .sempoconfig/test_decrypted.ini
+            ./sops --decrypt .sempoconfig/test.ini > .sempoconfig/test_decrypted.ini
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
