@@ -11,7 +11,8 @@ from server.models.transfer_account import TransferAccount
 
 from server.exceptions import (
     NoTransferAccountError,
-    UserNotFoundError
+    UserNotFoundError,
+    AccountLimitError
 )
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
@@ -169,35 +170,41 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
 
-        if self.transfer_type == TransferTypeEnum.DEPOSIT and self.fiat_ramp:
+        if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_completed()
 
         if not existing_blockchain_txn:
             self.send_blockchain_payload_to_worker()
 
     def resolve_as_rejected(self, message=None):
+        if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
+            self.fiat_ramp.resolve_as_rejected()
+
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.REJECTED
 
         if message:
             self.resolution_message = message
 
-    def check_sender_txns_limits(self, user):
-        relevant_txn_limits = [txn for txn in user.get_txn_limits() if str(self.transfer_type) in txn.get('txn_type')]
-        print(relevant_txn_limits)
+    def check_sender_txns_limits(self):
+        relevant_txn_limits = [txn for txn in self.sender_user.get_txn_limits() if str(self.transfer_type) in txn.get('txn_type')]
 
-        filter_after = datetime.datetime.today() - datetime.datetime.timedelta(days=30)
+        for limit in relevant_txn_limits:
 
-        daily_transaction_volume = \
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
-            func.date_trunc('day', CreditTransfer.created).label('date')) \
-            .group_by(func.date_trunc('day', CreditTransfer.created)) \
-            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).all()
+            filter_before = datetime.datetime.today() - datetime.datetime.timedelta(days=limit.time_period_days)
 
-        total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')) \
-            .filter(CreditTransfer.transfer_type == self.transfer_type).first().total
+            transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
+                .filter(CreditTransfer.created <= filter_before)\
+                .filter(CreditTransfer.transfer_type == self.transfer_type).first().total
 
-        return
+            amount_avail = limit.total_amount - transaction_volume
+
+            if amount_avail < 0:
+                message = 'Account Limit "{}" reached. Only {} available'.format(limit.name, amount_avail)
+                self.resolve_as_rejected(message=message)
+                raise AccountLimitError(message)
+
+        return relevant_txn_limits
 
     def check_sender_has_sufficient_balance(self):
         return self.sender_user and self.sender_transfer_account.balance - self.transfer_amount >= 0
@@ -281,3 +288,5 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
+
+        self.check_sender_txns_limits()

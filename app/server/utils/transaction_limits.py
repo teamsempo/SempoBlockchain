@@ -56,11 +56,11 @@ def check_user_kyc_two_id_verified(object):
 
 limits = [
     {
-        'rule': {'name': 'Sempo Level 0', 'total_amount': 50, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 0', 'total_amount': 5000, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
         'applied_when': check_user_kyc_and_phone,
     },
     {
-        'rule': {'name': 'Sempo Level 0', 'total_amount': 100, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 0', 'total_amount': 10000, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
         'applied_when': check_user_kyc_and_phone,
     },
     {
@@ -68,11 +68,11 @@ limits = [
         'applied_when': check_user_kyc_and_phone,
     },
     {
-        'rule': {'name': 'Sempo Level 1', 'total_amount': 50, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 1', 'total_amount': 5000, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
         'applied_when': user_is_phone_verified_but_no_kyc,
     },
     {
-        'rule': {'name': 'Sempo Level 1', 'total_amount': 200, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 1', 'total_amount': 20000, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
         'applied_when': user_is_phone_verified_but_no_kyc,
     },
     {
@@ -80,35 +80,35 @@ limits = [
         'applied_when': user_is_phone_verified_but_no_kyc,
     },
     {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 500, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 2', 'total_amount': 50000, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
         'applied_when': check_user_kyc_verified,
     },
     {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 1000, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 2', 'total_amount': 100000, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
         'applied_when': check_user_kyc_verified,
     },
     {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 500, 'time_period_days': 7, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
+        'rule': {'name': 'Sempo Level 2', 'total_amount': 50000, 'time_period_days': 7, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
         'applied_when': check_user_kyc_verified,
     },
     {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 1000, 'time_period_days': 30, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
+        'rule': {'name': 'Sempo Level 2', 'total_amount': 100000, 'time_period_days': 30, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
         'applied_when': check_user_kyc_verified,
     },
     {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 5000, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 3', 'total_amount': 500000, 'time_period_days': 7, 'txn_type': 'PAYMENT'},
         'applied_when': check_user_kyc_two_id_verified,
     },
     {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 10000, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
+        'rule': {'name': 'Sempo Level 3', 'total_amount': 1000000, 'time_period_days': 30, 'txn_type': 'PAYMENT'},
         'applied_when': check_user_kyc_two_id_verified,
     },
     {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 5000, 'time_period_days': 7, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
+        'rule': {'name': 'Sempo Level 3', 'total_amount': 500000, 'time_period_days': 7, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
         'applied_when': check_user_kyc_two_id_verified,
     },
     {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 10000, 'time_period_days': 30, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
+        'rule': {'name': 'Sempo Level 3', 'total_amount': 1000000, 'time_period_days': 30, 'txn_type': ['WITHDRAWAL', 'DEPOSIT']},
         'applied_when': check_user_kyc_two_id_verified,
-    },
+    }
 ]

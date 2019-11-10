@@ -1,8 +1,16 @@
+class AccountLimitError(Exception):
+    """
+    Raise if account limits have been reached when transfer is attempted
+    """
+    pass
+
+
 class NameScanException(Exception):
     """
     Raise if namescan api returns an error
     """
     pass
+
 
 class PaymentMethodException(Exception):
     """
