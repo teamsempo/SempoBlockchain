@@ -9,13 +9,18 @@ except FileNotFoundError:
 
 os.environ['AWS_PROFILE'] = "sempo"
 
-for in_path in glob.glob('./*.ini'):
-    head, filename = os.path.split(in_path)
+i = input('You are about to replace your LOCAL config files with those from git - are you sure? (y/n)')
 
-    print('Found file:')
-    print(filename)
+if i == 'y':
+    for in_path in glob.glob('./*.ini'):
+        head, filename = os.path.split(in_path)
 
-    out_path = '../config_files/{}'.format(filename)
+        print('Found file:')
+        print(filename)
 
-    with open(out_path, 'w') as f:
-        subprocess.call(['sops', '-d', in_path], stdout=f)
+        out_path = '../config_files/{}'.format(filename)
+
+        with open(out_path, 'w') as f:
+            subprocess.call(['sops', '-d', in_path], stdout=f)
+else:
+    print('Aborting')
