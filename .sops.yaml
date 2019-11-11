@@ -1,3 +1,3 @@
 creation_rules:
   - path_regex: .*/config_files/.*|.*/.sempoconfig/.*
-    kms: arn:aws:kms:ap-southeast-2:290492953667:key/76efe185-c961-49cb-be7a-8b140fc0c924
+    kms: 'arn:aws:kms:ap-southeast-2:290492953667:key/76efe185-c961-49cb-be7a-8b140fc0c924,arn:aws:kms:eu-west-1:290492953667:key/7051a942-c667-40c7-ac31-5f38a5018f0c'
