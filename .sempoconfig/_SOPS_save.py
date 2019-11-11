@@ -47,7 +47,7 @@ for in_path in glob.glob('../config_files/*.ini'):
         pass
 
     if not skip:
-
+        print('encrypting')
         with open(out_path, 'w') as f:
             subprocess.call(['sops', '-e', in_path], stdout=f)
 

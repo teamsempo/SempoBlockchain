@@ -51,6 +51,7 @@ if i == 'y':
                 pass
 
             if not skip:
+                print('decrypting')
                 with open(out_path, 'w') as f:
                     subprocess.call(['sops', '-d', in_path], stdout=f)
 else:
