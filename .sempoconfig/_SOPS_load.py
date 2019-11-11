@@ -39,20 +39,22 @@ if i == 'y':
             new_hash = shahash(out_path)
 
             skip = False
-            try:
-                meta_parser = configparser.ConfigParser()
-                meta_parser.read(meta_path)
-                orginal_hash = meta_parser['HASHES'][filename]
-
-                if orginal_hash == new_hash:
-                    print('File contents are identical, skipping')
-                    skip = True
-            except KeyError:
-                pass
+            # This doesn't work during a merge, so ignore for now
+            # try:
+            #     meta_parser = configparser.ConfigParser()
+            #     meta_parser.read(meta_path)
+            #     orginal_hash = meta_parser['HASHES'][filename]
+            #
+            #     if orginal_hash == new_hash:
+            #         print('File contents are identical, skipping')
+            #         skip = True
+            # except KeyError:
+            #     pass
 
             if not skip:
                 print('decrypting')
                 with open(out_path, 'w') as f:
+                    t = None
                     subprocess.call(['sops', '-d', in_path], stdout=f)
 else:
     print('Aborting')
