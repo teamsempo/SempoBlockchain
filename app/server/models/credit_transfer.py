@@ -194,34 +194,38 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         relevant_txn_limits = [txn for txn in self.sender_user.get_txn_limits(credit_transfer=self) if str(self.transfer_type) in txn.get('txn_type')]
 
         for limit in relevant_txn_limits:
-            filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.time_period_days)
+            filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.get('time_period_days', 0))
 
-            if limit.total_amount is None:
+            if limit.get('total_amount', None) is None:
                 # GE Limits
-                transaction_count = db.session.query(func.sum(CreditTransfer).label('count'))\
-                    .filter(CreditTransfer.created <= filter_before)\
-                    .filter(CreditTransfer.transfer_type == self.transfer_type).first().count
+                transaction_count = db.session.query(func.count(CreditTransfer.id).label('count'))\
+                    .filter(CreditTransfer.created >= filter_before)\
+                    .filter(CreditTransfer.transfer_type == self.transfer_type) \
+                    .filter(CreditTransfer.sender_user == self.sender_user) \
+                    .execution_options(show_all=True).first().count
 
-                if transaction_count >= limit.txn_count:
-                    message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'.format(limit.name, limit.txn_count, limit.time_period_days)
+                if (transaction_count or 0) > limit.get('txn_count', 0):
+                    message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'.format(limit.get('name', None), limit.get('txn_count', None), limit.get('time_period_days', None))
                     self.resolve_as_rejected(message=message)
                     raise AccountLimitError(message)
 
-                amount_avail = limit.txn_balance_percentage*self.sender_transfer_account.balance
+                amount_avail = limit.get('txn_balance_percentage', 0)*self.sender_transfer_account.balance
                 if self.transfer_amount > amount_avail:
-                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, amount_avail)
+                    message = 'Account Limit "{}" reached. {} available'.format(limit.get('name', None), amount_avail)
                     self.resolve_as_rejected(message=message)
                     raise AccountLimitError(message)
 
             else:
                 # Sempo Account Limits
                 transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
-                    .filter(CreditTransfer.created <= filter_before)\
-                    .filter(CreditTransfer.transfer_type == self.transfer_type).first().total
+                    .filter(CreditTransfer.created >= filter_before)\
+                    .filter(CreditTransfer.transfer_type == self.transfer_type)\
+                    .filter(CreditTransfer.sender_user == self.sender_user)\
+                    .execution_options(show_all=True).first().total
 
-                amount_avail = limit.total_amount - transaction_volume
-                if (amount_avail - self.transfer_amount) < 0:
-                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
+                amount_avail = limit.get('total_amount', 0) - (transaction_volume or 0)
+                if (float(amount_avail) - self.transfer_amount) < 0:
+                    message = 'Account Limit "{}" reached. {} available'.format(limit.get('name', None), max(amount_avail, 0))
                     self.resolve_as_rejected(message=message)
                     raise AccountLimitError(message)
 
