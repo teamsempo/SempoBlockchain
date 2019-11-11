@@ -1,6 +1,7 @@
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy import text
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
 from flask import current_app
@@ -9,6 +10,7 @@ import bcrypt
 import jwt
 import random
 import string
+from collections import Counter
 
 from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -23,6 +25,7 @@ from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_as
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
+from server.models.transfer_usage import TransferUsage
 from server.exceptions import (
     RoleNotFoundException,
     TierNotFoundException,
@@ -91,6 +94,9 @@ class User(ManyOrgBase, ModelBase):
     kyc_state = db.Column(db.String())
 
     cashout_authorised = db.Column(db.Boolean, default=False)
+
+    business_usage_id = db.Column(
+        db.Integer, db.ForeignKey('transfer_usage.id'))
 
     transfer_accounts = db.relationship(
         "TransferAccount",
@@ -518,6 +524,54 @@ class User(ManyOrgBase, ModelBase):
 
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
+
+    def get_most_relevant_transfer_usage(self):
+        '''Finds the transfer usage/business categories there are most relevant for the user
+        based on the last number of send and completed credit transfers supplemented with the
+        defaul business categories
+        :return: list of most relevant transfer usage objects for the usage
+        """
+        '''
+
+        # I spent way too much time failing to figure out how to write
+        # this query using sqlalchemy if someone could point met how to translate
+        # this query to sqlalchemy please do. 
+        # Can it maybe use the paginate_query function?
+        sql = text('''
+            SELECT *, COUNT(*)  FROM
+                (SELECT u.business_usage_id FROM credit_transfer c
+                LEFT JOIN "user" u ON c.recipient_user_id = u.id
+                WHERE sender_user_id = 4 AND c.transfer_status = 'COMPLETE'
+                ORDER BY c.updated DESC
+                LIMIT 20)
+            C GROUP BY business_usage_id ORDER BY count DESC
+        '''.format(self.id))
+        result = db.session.execute(sql)
+        transfer_usage_ids = [row[0] for row in result]
+        # Get most common business_usage_id
+        number_of_wanted_business_id = 9
+
+        most_common_ids = transfer_usage_ids[:number_of_wanted_business_id]
+        # If less than the wanted nr of usage is found fill up the list with default
+        if len(most_common_ids) < number_of_wanted_business_id:
+            most_relevant_ids = self.refine_with_default_transfer_usages(
+                most_common_ids, number_of_wanted_business_id)
+        relevant_transer_usages = TransferUsage.query.filter(
+            TransferUsage.id.in_(most_common_ids)).all()
+        # Order the transfer usages by the ordered list of id that were ordered by count
+        ordered_tranfer_usages = [
+            next(s for s in relevant_transer_usages if s.id == id) for id in most_common_ids]
+        return ordered_tranfer_usages
+        
+    def refine_with_default_transfer_usages(self, most_common, nr_of_wanted):
+        default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
+            TransferUsage.id).all()
+        for transer_usage_id, in default_transer_usages:
+            if transer_usage_id not in most_common:
+                most_common.append(transer_usage_id)
+            if len(most_common) == nr_of_wanted:
+                break
+        return most_common
 
     def __init__(self, blockchain_address=None, **kwargs):
         super(User, self).__init__(**kwargs)
