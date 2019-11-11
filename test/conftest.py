@@ -342,11 +342,10 @@ def external_reserve_token(test_client, init_database, loaded_master_wallet_addr
         deploying_address=loaded_master_wallet_address,
         name=name,
         symbol=symbol,
-        token_type='RESERVE',
         fund_amount_wei=4 * 10 ** 18
     )
 
-    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol)
+    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol, token_type='RESERVE')
     reserve_token.decimals = 18
 
     db.session.add(reserve_token)
