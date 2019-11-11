@@ -4,13 +4,18 @@ import os
 import hashlib
 import configparser
 
-
 def shahash(fpath):
     hash_sha = hashlib.sha1()
-    with open(fpath, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_sha.update(chunk)
-    return hash_sha.hexdigest()
+
+    try:
+        hash_parser = configparser.ConfigParser()
+        hash_parser.read(fpath)
+        for each_section in hash_parser.sections():
+            for (each_key, each_val) in hash_parser.items(each_section):
+                hash_sha.update('{}{}'.format(each_key, each_val).encode())
+        return hash_sha.hexdigest()
+    except FileNotFoundError:
+        return None
 
 try:
     os.chdir('./.sempoconfig')
@@ -21,19 +26,19 @@ os.environ['AWS_PROFILE'] = "sempo"
 
 for in_path in glob.glob('../config_files/*.ini'):
     head, filename = os.path.split(in_path)
+    print('---Found file: {}'.format(filename))
 
-    print('Found file:')
-    print(filename)
+    out_path = './{}'.format(filename)
+    meta_path = './meta.ini'
 
     new_hash = shahash(in_path)
 
-    out_path = './{}'.format(filename)
-
     skip = False
+
     try:
-        pre_paser = configparser.ConfigParser()
-        pre_paser.read(out_path)
-        orginal_hash = pre_paser['META']['data_hash']
+        meta_parser = configparser.ConfigParser()
+        meta_parser.read(meta_path)
+        orginal_hash = meta_parser['HASHES'][filename]
 
         if orginal_hash == new_hash:
             print('File contents are identical, skipping')
@@ -46,10 +51,15 @@ for in_path in glob.glob('../config_files/*.ini'):
         with open(out_path, 'w') as f:
             subprocess.call(['sops', '-e', in_path], stdout=f)
 
-        post_paser = configparser.ConfigParser()
-        post_paser.read(out_path)
-        post_paser['META'] = {}
-        post_paser['META']['data_hash'] = new_hash
+        meta_parser = configparser.ConfigParser()
+        meta_parser.read(meta_path)
+        try:
+            meta_parser['HASHES']
+        except KeyError:
+            meta_parser['HASHES'] = {}
 
-        with open(out_path, 'w') as f:
-            post_paser.write(f)
+        meta_parser['HASHES'][filename] = new_hash
+
+        with open(meta_path, 'w') as f:
+            meta_parser.write(f)
+
