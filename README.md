@@ -172,3 +172,19 @@ create database sempo_blockchain_test;
 Ensure redis-server is running (this is not ideal but necessary atm).
 
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
+
+## Sempo Specific Setup
+
+We use [Mozilla Sops](https://github.com/mozilla/sops/) for sharing low-risk dev keys and secrets.
+
+If you're working on a sempo-specfic deployment, contact nick or tristan to gain decryption access. You will be given an
+AWS account - set up your credentials locally using [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html).
+
+Once you've been authorised, you can access config settings by running `_SOPS_load.py` inside `.sempoconfig`.
+This will extract all keys into the config_files folder. To encrypt them again for sharing on git, run
+`_SOPS_save.py`.
+
+Not that SOPS doesn't handle merge conflicts currently - if you try and merge an encrypted file, it will break in a bad way!
+
+Instead, if you need to merge in two config files, you need to save the old config, load the new one and merge them by hand.
+

@@ -25,6 +25,7 @@ app/server/static/javascript/bundle.*
 
 #Config
 /config_files/*
+/test_config_files/*
 
 # Misc
 /random_files/
