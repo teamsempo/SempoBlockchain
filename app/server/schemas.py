@@ -39,10 +39,6 @@ class UserSchema(SchemaBase):
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_any_admin            = fields.Boolean(attribute='is_any_admin')
 
-    ap_user_id = fields.Str()
-    ap_bank_id = fields.Str()
-    ap_paypal_id = fields.Str()
-    kyc_state = fields.Str()
     business_usage_id = fields.Int()
 
     custom_attributes        = fields.Method("get_json_data")

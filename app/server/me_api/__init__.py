@@ -7,8 +7,6 @@ from server.me_api.misc import (
     MeFeedbackAPI,
     ReferralAPI,
     VersionAPI,
-    AssemblyPaymentsUserAPI,
-    AssemblyPaymentsPayoutAccountAPI,
     PoliPaymentsAPI
 )
 
@@ -56,18 +54,6 @@ me_blueprint.add_url_rule(
 me_blueprint.add_url_rule(
     '/version/',
     view_func=VersionAPI.as_view('version_view'),
-    methods=['POST']
-)
-
-me_blueprint.add_url_rule(
-    '/ap_user/',
-    view_func=AssemblyPaymentsUserAPI.as_view('ap_user_view'),
-    methods=['POST']
-)
-
-me_blueprint.add_url_rule(
-    '/ap_payout_account/',
-    view_func=AssemblyPaymentsPayoutAccountAPI.as_view('ap_payout_account_view'),
     methods=['POST']
 )
 
