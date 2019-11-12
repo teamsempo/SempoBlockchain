@@ -2,7 +2,6 @@ from flask import request, g, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
-from server.models.targeting_survey import TargetingSurvey
 from server.models.feedback import Feedback
 from server.models.referral import Referral
 from server.models.fiat_ramp import FiatRamp, FiatRampStatusEnum, Token
@@ -46,34 +45,6 @@ class MeFeedbackAPI(MethodView):
 
         response_object = {
             'message': 'Feedback Received',
-        }
-
-        return make_response(jsonify(response_object)), 201
-
-
-class TargetingSurveyAPI(MethodView):
-    @requires_auth
-    def post(self):
-        post_data = request.get_json()
-
-        targeting_survey = TargetingSurvey()
-
-        targeting_survey.number_people_household = post_data.get('number_people_household')
-        targeting_survey.number_below_adult_age_household = post_data.get('number_below_adult_age_household')
-        targeting_survey.number_people_women_household = post_data.get('number_people_women_household')
-        targeting_survey.number_people_men_household = post_data.get('number_people_men_household')
-        targeting_survey.number_people_work_household = post_data.get('number_people_work_household')
-        targeting_survey.disabilities_household = post_data.get('disabilities_household')
-        targeting_survey.long_term_illnesses_household = post_data.get('long_term_illnesses_household')
-
-        targeting_survey.user = g.user
-
-        db.session.add(targeting_survey)
-
-        db.session.commit()
-
-        response_object = {
-            'message': 'Survey Created',
         }
 
         return make_response(jsonify(response_object)), 201

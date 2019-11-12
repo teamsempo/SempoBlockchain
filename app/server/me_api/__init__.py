@@ -5,7 +5,6 @@ from server.me_api.credit_transfer import MeCreditTransferAPI, RequestWithdrawal
 from server.me_api.me import MeAPI
 from server.me_api.misc import (
     MeFeedbackAPI,
-    TargetingSurveyAPI,
     ReferralAPI,
     VersionAPI,
     AssemblyPaymentsUserAPI,
@@ -45,12 +44,6 @@ me_blueprint.add_url_rule(
 me_blueprint.add_url_rule(
     '/feedback/',
     view_func=MeFeedbackAPI.as_view('new_feedback_view'),
-    methods=['POST']
-)
-
-me_blueprint.add_url_rule(
-    '/targeting_survey/',
-    view_func=TargetingSurveyAPI.as_view('targeting_survey_view'),
     methods=['POST']
 )
 

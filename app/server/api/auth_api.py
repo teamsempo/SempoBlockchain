@@ -51,10 +51,6 @@ def create_user_response_object(user, auth_token, message):
     else:
         usd_to_satoshi_rate = None
 
-    must_answer_targeting_survey = False
-    if user.has_beneficiary_role and current_app.config['REQUIRE_TARGETING_SURVEY'] and not user.targeting_survey_id:
-        must_answer_targeting_survey = True
-
     conversion_rate = 1
     currency_name = current_app.config['CURRENCY_NAME']
     if user.default_currency:
@@ -93,7 +89,6 @@ def create_user_response_object(user, auth_token, message):
         'secret': user.secret,
         'first_name': user.first_name,
         'last_name': user.last_name,
-        'must_answer_targeting_survey': must_answer_targeting_survey,
         'deployment_name': current_app.config['DEPLOYMENT_NAME'],
         'ap_is_active': current_app.config['AP_IS_ACTIVE'],
         'denominations': get_denominations(),

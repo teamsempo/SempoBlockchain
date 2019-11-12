@@ -104,9 +104,6 @@ class User(ManyOrgBase, ModelBase):
         back_populates="users")
     default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
 
-    targeting_survey_id = db.Column(
-        db.Integer, db.ForeignKey('targeting_survey.id'))
-
     default_organisation_id = db.Column(
         db.Integer, db.ForeignKey('organisation.id'))
     default_organisation = db.relationship('Organisation',
