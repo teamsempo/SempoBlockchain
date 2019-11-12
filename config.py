@@ -19,7 +19,13 @@ CONFIG_FILENAME = "{}_config.ini".format(ENV_DEPLOYMENT_NAME.lower())
 common_parser = configparser.ConfigParser()
 specific_parser = configparser.ConfigParser()
 
-if os.environ.get('AWS_ACCESS_KEY_ID'):
+if os.environ.get('LOAD_FROM_S3') is not None:
+    load_from_s3 = str(os.environ.get('LOAD_FROM_S3')).lower() in ['1', 'true']
+    if load_from_s3:
+        print("ATTEMPT LOAD S3 CONFIG (FORCED FROM ENV VAR)")
+    else:
+        print("ATTEMPT LOAD LOCAL CONFIG (FORCED FROM ENV VAR)")
+elif os.environ.get('AWS_ACCESS_KEY_ID'):
     print("ATTEMPT LOAD S3 CONFIG (AWS ACCESS KEY FOUND)")
     load_from_s3 = True
 elif os.environ.get('SERVER_HAS_S3_AUTH'):
@@ -299,4 +305,3 @@ try:
     NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
 except KeyError:
     NAMESCAN_KEY = None
-
