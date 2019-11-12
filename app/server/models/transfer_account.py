@@ -1,3 +1,4 @@
+from typing import Optional
 import datetime, enum
 from sqlalchemy.sql import func
 from flask import current_app
@@ -7,6 +8,7 @@ from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_ass
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
+from server.models.organisation import Organisation
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
 
@@ -217,20 +219,24 @@ class TransferAccount(OneOrgBase, ModelBase):
         return withdrawal
 
 
-    def __init__(self, blockchain_address=None, organisation=None, private_key=None, **kwargs):
+    def __init__(self,
+                 blockchain_address: Optional[str]=None,
+                 private_key: Optional[str]=None,
+                 organisation: Optional[Organisation]=None,
+                 account_type: Optional[TransferAccountType]=None,
+                 **kwargs):
+
         super(TransferAccount, self).__init__(**kwargs)
 
-        # blockchain_address_obj = BlockchainAddress(type="TRANSFER_ACCOUNT", blockchain_address=blockchain_address)
-        # db.session.add(blockchain_address_obj)
+        self.blockchain_address = blockchain_address or bt.create_blockchain_wallet(private_key=private_key)
 
-        self.blockchain_address = blockchain_address or bt.create_blockchain_wallet(private_key)
+        self.account_type = TransferAccountType.USER
 
         if organisation:
             self.organisation = organisation
             self.token = organisation.token
             self.account_type = TransferAccountType.ORGANISATION
 
-        if private_key is not None:
-            self.account_type = TransferAccountType.FLOAT
+        if account_type:
+            self.account_type = account_type
 
-        self.account_type = TransferAccountType.USER
