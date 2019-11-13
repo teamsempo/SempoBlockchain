@@ -11,6 +11,12 @@ elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
   celery -A eth_manager worker --loglevel=INFO --concurrency=1 --pool=eventlet -Q=processor
 else
   alembic upgrade head
+
+  ret=$?
+  if [ "$ret" -ne 0 ]; then
+    exit $ret
+  fi
+
   celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet
 fi
 
