@@ -32,16 +32,9 @@ def create_organisation(test_client, init_database, external_reserve_token):
     from server.models.transfer_account import TransferAccount
     organisation = Organisation(name='Sempo', token=external_reserve_token)
 
-    transfer_account = TransferAccount(organisation=organisation)
-
-    db.session.add_all([organisation, transfer_account])
-    db.session.commit()
-
-    organisation.org_level_transfer_account_id = transfer_account.id
-
-    db.session.commit()
     db.session.add(organisation)
     db.session.commit()
+
     return organisation
 
 @pytest.fixture(scope='module')
@@ -88,7 +81,7 @@ def activated_sempo_admin_user(new_sempo_admin_user):
 
 
 @pytest.fixture(scope='function')
-def complete_auth_token(authed_sempo_admin_user):
+def complete_admin_auth_token(authed_sempo_admin_user):
     return get_complete_auth_token(authed_sempo_admin_user)
 
 

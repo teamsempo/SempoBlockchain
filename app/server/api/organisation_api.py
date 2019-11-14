@@ -26,7 +26,7 @@ class OrganisationAPI(MethodView):
                     'message': 'No such organisation: {}'.format(organisation_id),
                 }
 
-                return make_response(jsonify(response_object)), 400
+                return make_response(jsonify(response_object)), 404
 
             response_object = {
                 'message': 'Successfully Loaded Organisation',
@@ -59,7 +59,7 @@ class OrganisationAPI(MethodView):
         token_id = post_data.get('token_id')
 
         if name is None:
-            return make_response(jsonify({'message': 'Must provide name to create organisation.'})), 401
+            return make_response(jsonify({'message': 'Must provide name to create organisation.'})), 400
 
         existing_organisation = Organisation.query.filter_by(name=name).execution_options(show_all=True).first()
         if existing_organisation is not None:
@@ -74,15 +74,7 @@ class OrganisationAPI(MethodView):
             return make_response(jsonify({'message': 'Token not found'})), 404
 
         new_organisation = Organisation(name=name, token=token)
-
-        # TODO: Shift this all into being created when an org is created
-        transfer_account = TransferAccount(organisation=new_organisation)
-
-        db.session.add_all([new_organisation, transfer_account])
-        db.session.commit()
-
-        new_organisation.org_level_transfer_account_id = transfer_account.id
-
+        db.session.add(new_organisation)
         db.session.commit()
 
         response_object = {
@@ -141,7 +133,7 @@ organisation_blueprint.add_url_rule(
 )
 
 organisation_blueprint.add_url_rule(
-    '/organisation/<int:organisation_id>/',
+    '/organisation/<int:organisation_id>',
     view_func=OrganisationAPI.as_view('single_organisation_view'),
     methods=['GET', 'PUT']
 )

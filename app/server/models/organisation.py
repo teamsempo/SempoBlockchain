@@ -2,6 +2,7 @@ from flask import current_app
 
 from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
+import server.models.transfer_account
 from server import message_processor
 from server.utils.i18n import i18n_for
 
@@ -59,6 +60,12 @@ class Organisation(ModelBase):
             wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
             wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
         )
+
+        # TODO: Shift this all into being created when an org is created
+        transfer_account = server.models.transfer_account.TransferAccount(organisation=self)
+
+        db.session.add(transfer_account)
+        self.org_level_transfer_account = transfer_account
 
     def send_welcome_sms(self, to_user):
         if self.custom_welcome_message_key:
