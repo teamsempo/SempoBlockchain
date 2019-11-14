@@ -533,15 +533,11 @@ class User(ManyOrgBase, ModelBase):
         """
         '''
 
-        # I spent way too much time failing to figure out how to write
-        # this query using sqlalchemy if someone could point met how to translate
-        # this query to sqlalchemy please do. 
-        # Can it maybe use the paginate_query function?
         sql = text('''
             SELECT *, COUNT(*)  FROM
                 (SELECT u.business_usage_id FROM credit_transfer c
                 LEFT JOIN "user" u ON c.recipient_user_id = u.id
-                WHERE sender_user_id = 4 AND c.transfer_status = 'COMPLETE'
+                WHERE sender_user_id = {} AND c.transfer_status = 'COMPLETE'
                 ORDER BY c.updated DESC
                 LIMIT 20)
             C GROUP BY business_usage_id ORDER BY count DESC
