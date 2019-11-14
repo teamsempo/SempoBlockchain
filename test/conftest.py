@@ -45,7 +45,6 @@ def new_sempo_admin_user(test_client, init_database, create_organisation):
     user.organisations.append(create_organisation)
     user.default_organisation = create_organisation
 
-
     db.session.add(user)
 
     # Commit so it gets an ID

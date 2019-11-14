@@ -1,13 +1,12 @@
 import sys
 import os
-import time
 import random
 from uuid import uuid4
-import string
-from sqlalchemy import text
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
+
+import config
 
 from server import create_app, db, bt
 from server.models.token import Token
@@ -21,17 +20,16 @@ from server.models.ussd import UssdMenu
 from server.utils import user as UserUtils
 from server.utils.transfer_enums import TransferStatusEnum
 
-def load_account(address):
+def load_account(address, amount_wei):
     from web3 import (
         Web3,
         HTTPProvider
     )
-    import config
 
     w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 
     tx_hash = w3.eth.sendTransaction(
-        {'to': address, 'from': w3.eth.accounts[0], 'value': 5 * 10 ** 18})
+        {'to': address, 'from': w3.eth.accounts[0], 'value': amount_wei})
     return w3.eth.waitForTransactionReceipt(tx_hash)
 
 
@@ -46,7 +44,7 @@ def get_or_create_reserve_token(deploying_address, name, symbol):
             deploying_address=deploying_address,
             name=name,
             symbol=symbol,
-            fund_amount_wei=4 * 10 ** 18
+            fund_amount_wei=0
         )
 
         reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol)
@@ -55,10 +53,6 @@ def get_or_create_reserve_token(deploying_address, name, symbol):
         db.session.add(reserve_token)
 
         return reserve_token
-
-
-def get_or_create_transfer_usage(name):
-    return _get_or_create_model_object(TransferUsage, {'name': name})
 
 
 def get_or_create_organisation(name, org_token):
@@ -83,34 +77,39 @@ def get_or_create_admin_user(email, admin_organisation):
 
         return user
 
-def get_or_create_user(email, business_usage_id):
+
+def get_or_create_transfer_usage(name):
+    return _get_or_create_model_object(TransferUsage, {'name': name})
+
+
+
+def get_or_create_transfer_user(email, business_usage):
     instance = User.query.execution_options(show_all=True).filter_by(
         email=str(email).lower()).first()
     if instance:
         return instance
     else:
-        instance = User(email=email, business_usage_id=business_usage_id)
+        instance = User(email=email, business_usage=business_usage)
 
         db.session.add(instance)
         return instance
 
 
-def get_or_create_transer_account(name, blockchain_address, organisation):
+def get_or_create_transer_account(name, organisation):
     return _get_or_create_model_object(
-        TransferAccount, {'name': name}, blockchain_address=blockchain_address, organisation=organisation
-    )
+        TransferAccount, {'name': name}, organisation=organisation)
 
-def create_users_different_transer_usage(wanted_nr_users, blockchain_address, new_organisation):
+def create_users_different_transer_usage(wanted_nr_users, new_organisation):
     i = 1
     user_list = []
     transer_usages_ids = TransferUsage.query.with_entities(
         TransferUsage.id).all()
     while i < wanted_nr_users:
         random_usage_id = random.choice(transer_usages_ids)[0]
-        new_user = get_or_create_user(
+        new_user = get_or_create_transfer_user(
             'user-nr-' + str(i) + '@test.com', random_usage_id)
         new_transer_account = get_or_create_transer_account(
-            'transfer-account-nr-' + str(i), blockchain_address, new_organisation)
+            'transfer-account-nr-' + str(i), new_organisation)
 
         if len(new_user.transfer_accounts) < 1:
             new_user.transfer_accounts.append(new_transer_account)
@@ -155,32 +154,40 @@ def run_setup():
     ctx = app.app_context()
     ctx.push()
 
-    print('Creating token')
-    blockchain_address = '0xc1275b7de8af5a38a93548eb8453a498222c4ff2'
-    token = get_or_create_reserve_token(blockchain_address,
-                                'AUD Token', 'AUD')
+    print('Creating reserve token')
 
-    print('Creating Transfer Usage')
-    usage = get_or_create_transfer_usage('Test Usage 2')
+    master_address = bt.create_blockchain_wallet(private_key=config.MASTER_WALLET_PRIVATE_KEY)
 
-    db.session.commit()
-
-    print('Creating admin user')
-    admin_user = get_or_create_admin_user('administrator@sempo.ai')
+    load_account(master_address, int(1e18))
+    token = get_or_create_reserve_token(master_address, 'AUD Token', 'AUD')
 
     print('Creating organisation')
     new_organisation = get_or_create_organisation('org1', token)
 
-    print('Creating user 1')
-    user1 = get_or_create_user('sender-user@test.com', usage.id)
+    print('Creating admin user')
+    admin_user = get_or_create_admin_user('admin@sempo.ai', new_organisation)
+    admin_transfer_account = admin_user.transfer_account
+    load_account(master_address, int(5e18))
+    send_eth_task = bt.send_eth(
+        signing_address=admin_transfer_account.blockchain_address,
+        recipient_address=token.address,
+        amount_wei=4e18)
+
+    bt.await_task_success(send_eth_task)
+
+    print('Creating Transfer Usage')
+    usage = get_or_create_transfer_usage('Test Usage')
+
+    print('Creating User 1')
+    user1 = get_or_create_transfer_user('user-1@test.com', usage)
 
     transer_account1 = get_or_create_transer_account(
-        'transfer-account', blockchain_address, new_organisation)
+        'transfer-account', new_organisation)
     if len(user1.transfer_accounts) < 1:
         user1.transfer_accounts.append(transer_account1)
 
     print('Create a list of users with a different business usage id ')
-    user_list = create_users_different_transer_usage(15, blockchain_address, new_organisation)
+    user_list = create_users_different_transer_usage(15, new_organisation)
 
     number_of_transfers = 30
     print('Creating %d transactions' % number_of_transfers)

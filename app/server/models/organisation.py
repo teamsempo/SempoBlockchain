@@ -61,9 +61,7 @@ class Organisation(ModelBase):
             wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
         )
 
-        # TODO: Shift this all into being created when an org is created
         transfer_account = server.models.transfer_account.TransferAccount(organisation=self)
-
         db.session.add(transfer_account)
         self.org_level_transfer_account = transfer_account
 
