@@ -10,13 +10,11 @@ import bcrypt
 import jwt
 import random
 import string
-from collections import Counter
 
 from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
-from server.utils.transaction_limits import limits
 
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
@@ -574,16 +572,6 @@ class User(ManyOrgBase, ModelBase):
                 break
         return most_common
 
-    def get_txn_limits(self, credit_transfer=None):
-        relevant_limits = []
-        for limit in limits:
-            applied_when = limit['applied_when']
-            applied = applied_when(self, credit_transfer)
-            if applied:
-                relevant_limits.append(limit['rule'])
-
-        return relevant_limits
-
     def __init__(self, blockchain_address=None, **kwargs):
         super(User, self).__init__(**kwargs)
 
@@ -591,7 +579,6 @@ class User(ManyOrgBase, ModelBase):
             string.ascii_letters + string.digits, k=16))
 
         self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
-
 
     def __repr__(self):
         if self.has_admin_role:

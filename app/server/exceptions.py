@@ -1,6 +1,6 @@
 class AccountLimitError(Exception):
     """
-    Raise if account limits have been reached when transfer is attempted
+    Raise if account LIMITS have been reached when transfer is attempted
     """
     pass
 

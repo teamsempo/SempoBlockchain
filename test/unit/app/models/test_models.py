@@ -249,58 +249,78 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
     assert create_credit_transfer.resolution_message is not None
 
 
-def test_new_credit_transfer_check_sender_txns_limits(create_credit_transfer):
+def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer):
     """
     GIVEN a CreditTransfer model
     WHEN a new credit transfer is created
-    THEN check the correct check_sender_txns_limits apply
+    THEN check the correct check_sender_transfer_limits apply
     """
-    from server.utils.transaction_limits import limits
+    from server.utils.transaction_limits import LIMITS
     from server.models.kyc_application import KycApplication
     from server.models import token
 
-    # Sempo Level 0 limits (payment only)
-    assert create_credit_transfer.check_sender_txns_limits() == [limit['rule'] for limit in limits[:2]]
+    # Sempo Level 0 LIMITS (payment only)
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit['rule'] for limit in LIMITS
+        if limit['rule']['name'] == 'Sempo Level 0'
+        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+    ]
 
-    # Check Sempo Level 1 limits (payment only)
+    # Check Sempo Level 1 LIMITS (payment only)
     create_credit_transfer.sender_user.is_phone_verified = True
-    assert create_credit_transfer.check_sender_txns_limits() == [limit['rule'] for limit in limits[3:5]]
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit['rule'] for limit in LIMITS
+        if limit['rule']['name'] == 'Sempo Level 1'
+        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+    ]
 
-    # Check Sempo Level 2 limits (payment only)
+    # Check Sempo Level 2 LIMITS (payment only)
     kyc = KycApplication(type='INDIVIDUAL')
     kyc.user = create_credit_transfer.sender_user
     kyc.kyc_status = 'VERIFIED'
-    assert create_credit_transfer.check_sender_txns_limits() == [limit['rule'] for limit in limits[6:8]]
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit['rule'] for limit in LIMITS
+        if limit['rule']['name'] == 'Sempo Level 2'
+        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+    ]
 
-    # Check Sempo Level 3 limits (payment only)
+    # Check Sempo Level 3 LIMITS (payment only)
     kyc.type = 'BUSINESS'
-    assert create_credit_transfer.check_sender_txns_limits() == [limit['rule'] for limit in limits[10:12]]
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit['rule'] for limit in LIMITS
+        if limit['rule']['name'] == 'Sempo Level 3'
+        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+    ]
 
-    # Check GE limits for Liquid Token (withdrawal only)
+    # Check GE LIMITS for Liquid Token (withdrawal only)
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
     create_credit_transfer.transfer_type = "WITHDRAWAL"
     create_credit_transfer.sender_transfer_account.balance = 10000
-    assert create_credit_transfer.check_sender_txns_limits() == [limit['rule'] for limit in limits[-1:]]
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit['rule'] for limit in LIMITS
+        if limit['rule']['name'] == 'GE Liquid Token - Standard User'
+        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+    ]
 
     # Check Limits skipped if no sender user (exchange)
     create_credit_transfer.sender_user = None
-    assert create_credit_transfer.check_sender_txns_limits() is None
+    assert create_credit_transfer.check_sender_transfer_limits() is None
 
 
-def test_new_credit_transfer_check_sender_txns_limits_exception(external_reserve_token, create_credit_transfer):
+def test_new_credit_transfer_check_sender_transfer_limits_exception(external_reserve_token, create_credit_transfer):
     """
     GIVEN a CreditTransfer model
     WHEN a new credit transfer is created
-    THEN check the correct check_sender_txns_limits raises AccountLimitError
+    THEN check the correct check_sender_transfer_limits raises AccountLimitError
     """
-    from server.utils.transaction_limits import limits
+    from server.utils.transaction_limits import LIMITS
     from server.models import credit_transfer, token
     from server import db
 
     create_credit_transfer.token.token_type = token.TokenType.RESERVE
     create_credit_transfer.sender_user.kyc_applications = []
 
-    # Sempo Level 0 limits (payment only) on init
+    # Sempo Level 0 LIMITS (payment only) on init
     with pytest.raises(AccountLimitError):
         c = credit_transfer.CreditTransfer(
             amount=1000000,
@@ -312,16 +332,16 @@ def test_new_credit_transfer_check_sender_txns_limits_exception(external_reserve
         db.session.add(c)
         db.session.flush()
 
-    # Sempo Level 0 limits (payment only) on check limits
+    # Sempo Level 0 LIMITS (payment only) on check LIMITS
     with pytest.raises(AccountLimitError):
-        create_credit_transfer.check_sender_txns_limits()
+        create_credit_transfer.check_sender_transfer_limits()
 
-    # Check GE limits for Liquid Token (withdrawal only) on check limits
+    # Check GE LIMITS for Liquid Token (withdrawal only) on check LIMITS
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
     create_credit_transfer.transfer_type = "WITHDRAWAL"
     create_credit_transfer.sender_transfer_account.balance = 1000
     with pytest.raises(AccountLimitError):
-        assert create_credit_transfer.check_sender_txns_limits() == [limit['rule'] for limit in limits[-1:]]
+        assert create_credit_transfer.check_sender_transfer_limits() == [limit['rule'] for limit in LIMITS[-1:]]
 
 
 """ ----- Blacklisted Token Model ----- """
