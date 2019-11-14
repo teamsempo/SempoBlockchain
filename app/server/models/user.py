@@ -68,6 +68,9 @@ class User(ManyOrgBase, ModelBase):
     secret = db.Column(db.String())
     _TFA_secret = db.Column(db.String(128))
     TFA_enabled = db.Column(db.Boolean, default=False)
+    pin_hash = db.Column(db.String())
+
+    failed_pin_attempts = db.Column(db.Integer, default=0)
 
     default_currency = db.Column(db.String())
 
@@ -83,6 +86,7 @@ class User(ManyOrgBase, ModelBase):
     is_self_sign_up = db.Column(db.Boolean, default=True)
 
     password_reset_tokens = db.Column(JSONB, default=[])
+    pin_reset_tokens = db.Column(JSONB, default=[])
 
     terms_accepted = db.Column(db.Boolean, default=True)
 
@@ -312,12 +316,22 @@ class User(ManyOrgBase, ModelBase):
         else:
             self._last_seen = cur_time
 
+    @staticmethod
+    def salt_hash_secret(password):
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    @staticmethod
+    def check_salt_hashed_password(password, hashed_password):
+        return bcrypt.checkpw(password.encode(), hashed_password.encode())
+
     def hash_password(self, password):
-        self.password_hash = bcrypt.hashpw(
-            password.encode(), bcrypt.gensalt()).decode()
+        self.password_hash = self.salt_hash_secret(password)
 
     def verify_password(self, password):
-        return bcrypt.checkpw(password.encode(), self.password_hash.encode())
+        return self.check_salt_hashed_password(password, self.password_hash)
+
+    def verify_pin(self, pin):
+        return self.check_salt_hashed_password(pin, self.pin_hash)
 
     def encode_TFA_token(self, valid_days=1):
         """
@@ -431,21 +445,32 @@ class User(ManyOrgBase, ModelBase):
 
     def save_password_reset_token(self, password_reset_token):
         # make a "clone" of the existing token list
-        self.clear_expired_tokens()
-        current_reset_tokens = self.password_reset_tokens[:]
-        current_reset_tokens.append(password_reset_token)
+        self.clear_expired_password_reset_tokens()
+        current_password_reset_tokens = self.password_reset_tokens[:]
+        current_password_reset_tokens.append(password_reset_token)
         # set db value
-        self.password_reset_tokens = current_reset_tokens
+        self.password_reset_tokens = current_password_reset_tokens
+
+    def save_pin_reset_token(self, pin_reset_token):
+        self.clear_expired_password_reset_tokens()
+
+        current_pin_reset_tokens = self.pin_reset_tokens[:]
+        current_pin_reset_tokens.append(pin_reset_token)
+
+        self.pin_reset_tokens = current_pin_reset_tokens
 
     def check_reset_token_already_used(self, password_reset_token):
-        self.clear_expired_tokens()
+        self.clear_expired_password_reset_tokens()
         is_valid = password_reset_token in self.password_reset_tokens
         return is_valid
 
     def delete_password_reset_tokens(self):
         self.password_reset_tokens = []
 
-    def clear_expired_tokens(self):
+    def delete_pin_reset_tokens(self):
+        self.pin_reset_tokens = []
+
+    def clear_expired_password_reset_tokens(self):
 
         # For some reason the existing user get an None instead of a [] 
         # during migration. This is to ensure no TypeError occurs
@@ -459,6 +484,18 @@ class User(ManyOrgBase, ModelBase):
             if validity_check['success']:
                 valid_tokens.append(token)
         self.password_reset_tokens = valid_tokens
+
+    def clear_expired_pin_reset_tokens(self):
+
+        if self.pin_reset_tokens is None:
+            self.pin_reset_tokens = []
+
+        valid_tokens = []
+        for token in self.pin_reset_tokens:
+            validity_check = self.decode_single_use_JWS(token, 'R')
+            if validity_check['success']:
+                valid_tokens.append(token)
+        self.pin_reset_tokens = valid_tokens
 
     def create_admin_auth(self, email, password, tier='view'):
         self.email = email
@@ -513,14 +550,23 @@ class User(ManyOrgBase, ModelBase):
 
         self.hash_password(pin)
 
-    def is_resetting(self):
-        self.clear_expired_tokens()
+    def is_resetting_password(self):
+        self.clear_expired_password_reset_tokens()
         is_resetting = len(self.password_reset_tokens) > 0
         return is_resetting
 
-    # TODO(ussd): change to a field once we figure out what's the deal with resetting
-    def pin_failed_attempts(self):
-        return 0
+    def is_resetting_pin(self):
+        self.clear_expired_pin_reset_tokens()
+        is_resetting = len(self.pin_reset_tokens) > 0
+        return is_resetting
+
+    @property
+    def pin(self):
+        return self.pin_hash
+
+    @pin.setter
+    def pin(self, pin):
+        self.pin_hash = self.salt_hash_secret(pin)
 
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
