@@ -1,5 +1,6 @@
 import threading
 from phonenumbers.phonenumberutil import NumberParseException
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app
@@ -21,6 +22,7 @@ from server import celery_app, sentry, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
+from server.utils.i18n import i18n_for
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -348,6 +350,7 @@ def proccess_create_or_modify_user_request(
     but here it's one layer down because there's multiple entry points for 'create user':
     - The admin api
     - The register api
+
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
     :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
@@ -595,5 +598,27 @@ def send_onboarding_message(to_phone, first_name, credits, one_time_code):
 def send_phone_verification_message(to_phone, one_time_code):
     if to_phone:
         reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
-
         message_processor.send_message(to_phone, reciever_message)
+
+
+def send_sms(user, message_key):
+    message = i18n_for(user, "user.{}".format(message_key))
+    message_processor.send_message(user.phone, message)
+
+
+def change_pin(user, new_pin):
+    try:
+        user.hash_pin(new_pin)
+        db.session.commit()
+        send_sms(user, 'successful_pin_change_sms')
+    except InvalidRequestError:
+        send_sms(user, 'unsuccessful_pin_change_sms')
+
+
+def change_initial_pin(user: User, new_pin):
+    user.is_activated = True
+    change_pin(user, new_pin)
+
+
+def change_current_pin(user: User, new_pin):
+    change_pin(user, new_pin)
