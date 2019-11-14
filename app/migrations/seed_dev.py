@@ -21,6 +21,8 @@ from server.models.ussd import UssdMenu
 from server.utils import user as UserUtils
 from server.utils.transfer_enums import TransferStatusEnum
 
+# def get_or_create_db_object(obj_class, *args, *kwargs)
+
 def get_or_create_token(address, name, symbol):
     instance = Token.query.filter_by(address=address).first()
     print(instance)
@@ -34,7 +36,6 @@ def get_or_create_token(address, name, symbol):
         db.session.add(instance)
         return instance
 
-
 def get_or_create_organisation(name, token):
     instance = Organisation.query.filter_by(name=name).first()
     print(instance)
@@ -44,6 +45,18 @@ def get_or_create_organisation(name, token):
         instance = Organisation(name=name, token=token)
 
         db.session.add(instance)   
+        return instance
+
+def get_or_create_transfer_usage(name):
+    instance = TransferUsage.query.filter_by(name=name).first()
+
+    if instance:
+        return instance
+    else:
+        instance = TransferUsage(name=name)
+
+        db.session.add(instance)
+
         return instance
 
 
@@ -71,6 +84,7 @@ def get_or_create_user(email, business_usage_id):
         instance = User(email=email, business_usage_id=business_usage_id)
 
         db.session.add(instance)
+
         return instance
 
 
@@ -129,6 +143,9 @@ if __name__ == '__main__':
     ctx = app.app_context()
     ctx.push()
 
+    print('Creating Transfer Usage')
+    org = get_or_create_transfer_usage('Test Usage')
+
     print('Creating admin user')
     admin_user = get_or_create_admin_user('administrator@sempo.ai')
 
@@ -144,6 +161,7 @@ if __name__ == '__main__':
 
     print('Creating user 1')
     user1 = get_or_create_user('sender-user@test.com', 1)
+
     transer_account1 = get_or_create_transer_account(
         'transfer-account', blockchain_address, new_organisation)
     if len(user1.transfer_accounts) < 1:
