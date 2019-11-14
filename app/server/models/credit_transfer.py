@@ -194,10 +194,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def get_transfer_limits(self):
         relevant_limits = []
         for limit in LIMITS:
-            applied_when = limit['applied_when']
-            applied = applied_when(self)
-            if applied and str(self.transfer_type) in limit['rule'].get('applied_to_transfer_types'):
-                relevant_limits.append(limit['rule'])
+            applied = limit.application_filter(self)
+            if applied and str(self.transfer_type) in limit.applied_to_transfer_types:
+                relevant_limits.append(limit)
 
         return relevant_limits
 
@@ -209,9 +208,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         relevant_transfer_limits = self.get_transfer_limits()
 
         for limit in relevant_transfer_limits:
-            filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.get('time_period_days', 0))
+            filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.time_period_days)
 
-            if limit.get('transfer_count') is not None:
+            if limit.transfer_count is not None:
                 # GE Limits
                 transaction_count = db.session.query(func.count(CreditTransfer.id).label('count'))\
                     .filter(CreditTransfer.created >= filter_before)\
@@ -219,15 +218,15 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     .filter(CreditTransfer.sender_user == self.sender_user) \
                     .execution_options(show_all=True).first().count
 
-                if (transaction_count or 0) > limit.get('transfer_count', 0):
+                if (transaction_count or 0) > limit.transfer_count:
                     message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'\
-                        .format(limit.get('name', None), limit.get('transfer_count', None), limit.get('time_period_days', None))
+                        .format(limit.name, limit.transfer_count, limit.time_period_days)
                     self.resolve_as_rejected(message=message)
                     raise AccountLimitError(message)
 
-                amount_avail = limit.get('transfer_balance_percentage', 0)*self.sender_transfer_account.balance
+                amount_avail = limit.transfer_balance_percentage*self.sender_transfer_account.balance
                 if self.transfer_amount > amount_avail:
-                    message = 'Account Limit "{}" reached. {} available'.format(limit.get('name', None), amount_avail)
+                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, amount_avail)
                     self.resolve_as_rejected(message=message)
                     raise AccountLimitError(message)
 
@@ -239,9 +238,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     .filter(CreditTransfer.sender_user == self.sender_user)\
                     .execution_options(show_all=True).first().total
 
-                amount_avail = limit.get('total_amount', 0) - (transaction_volume or 0)
+                amount_avail = limit.total_amount - (transaction_volume or 0)
                 if (float(amount_avail) - self.transfer_amount) < 0:
-                    message = 'Account Limit "{}" reached. {} available'.format(limit.get('name', None), max(amount_avail, 0))
+                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
                     self.resolve_as_rejected(message=message)
                     raise AccountLimitError(message)
 

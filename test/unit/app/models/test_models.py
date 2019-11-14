@@ -261,17 +261,17 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
 
     # Sempo Level 0 LIMITS (payment only)
     assert create_credit_transfer.check_sender_transfer_limits() == [
-        limit['rule'] for limit in LIMITS
-        if limit['rule']['name'] == 'Sempo Level 0'
-        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+        limit for limit in LIMITS
+        if limit.name == 'Sempo Level 0'
+        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
     ]
 
     # Check Sempo Level 1 LIMITS (payment only)
     create_credit_transfer.sender_user.is_phone_verified = True
     assert create_credit_transfer.check_sender_transfer_limits() == [
-        limit['rule'] for limit in LIMITS
-        if limit['rule']['name'] == 'Sempo Level 1'
-        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+        limit for limit in LIMITS
+        if limit.name == 'Sempo Level 1'
+        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
     ]
 
     # Check Sempo Level 2 LIMITS (payment only)
@@ -279,17 +279,17 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     kyc.user = create_credit_transfer.sender_user
     kyc.kyc_status = 'VERIFIED'
     assert create_credit_transfer.check_sender_transfer_limits() == [
-        limit['rule'] for limit in LIMITS
-        if limit['rule']['name'] == 'Sempo Level 2'
-        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+        limit for limit in LIMITS
+        if limit.name == 'Sempo Level 2'
+        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
     ]
 
     # Check Sempo Level 3 LIMITS (payment only)
     kyc.type = 'BUSINESS'
     assert create_credit_transfer.check_sender_transfer_limits() == [
-        limit['rule'] for limit in LIMITS
-        if limit['rule']['name'] == 'Sempo Level 3'
-        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+        limit for limit in LIMITS
+        if limit.name == 'Sempo Level 3'
+        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
     ]
 
     # Check GE LIMITS for Liquid Token (withdrawal only)
@@ -297,9 +297,9 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.transfer_type = "WITHDRAWAL"
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
-        limit['rule'] for limit in LIMITS
-        if limit['rule']['name'] == 'GE Liquid Token - Standard User'
-        and str(create_credit_transfer.transfer_type) in limit['rule'].get('applied_to_transfer_types')
+        limit for limit in LIMITS
+        if limit.name == 'GE Liquid Token - Standard User'
+        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
     ]
 
     # Check Limits skipped if no sender user (exchange)
@@ -341,7 +341,11 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
     create_credit_transfer.transfer_type = "WITHDRAWAL"
     create_credit_transfer.sender_transfer_account.balance = 1000
     with pytest.raises(AccountLimitError):
-        assert create_credit_transfer.check_sender_transfer_limits() == [limit['rule'] for limit in LIMITS[-1:]]
+        assert create_credit_transfer.check_sender_transfer_limits() == [
+            limit for limit in LIMITS
+            if limit.name == 'GE Liquid Token - Standard User'
+            and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
+        ]
 
 
 """ ----- Blacklisted Token Model ----- """

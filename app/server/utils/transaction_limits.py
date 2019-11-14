@@ -1,3 +1,5 @@
+from typing import List, Callable, Optional
+
 from server.models import token
 
 
@@ -81,69 +83,37 @@ def check_user_kyc_two_id_verified(credit_transfer):
     return False
 
 
+class TransferLimit(object):
+    def __init__(self, name: str, total_amount: int=None, time_period_days: int=None,
+                 transfer_balance_percentage: float=None, transfer_count: int=None,
+                 applied_to_transfer_types: List=None, application_filter: Callable=None):
+        self.name = name
+        self.total_amount = total_amount
+        self.time_period_days = time_period_days
+        self.transfer_balance_percentage = transfer_balance_percentage
+        self.transfer_count = transfer_count
+        self.applied_to_transfer_types = applied_to_transfer_types
+        self.application_filter = application_filter
+
+
 LIMITS = [
-    {
-        'rule': {'name': 'Sempo Level 0', 'total_amount': 5000, 'time_period_days': 7, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_but_no_phone_verified_and_no_kyc,
-    },
-    {
-        'rule': {'name': 'Sempo Level 0', 'total_amount': 10000, 'time_period_days': 30, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_but_no_phone_verified_and_no_kyc,
-    },
-    {
-        'rule': {'name': 'Sempo Level 0', 'total_amount': 0, 'time_period_days': 30, 'applied_to_transfer_types': ['WITHDRAWAL', 'DEPOSIT']},
-        'applied_when': check_user_but_no_phone_verified_and_no_kyc,
-    },
-    {
-        'rule': {'name': 'Sempo Level 1', 'total_amount': 5000, 'time_period_days': 7, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_is_phone_verified_but_no_kyc,
-    },
-    {
-        'rule': {'name': 'Sempo Level 1', 'total_amount': 20000, 'time_period_days': 30, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_is_phone_verified_but_no_kyc,
-    },
-    {
-        'rule': {'name': 'Sempo Level 1', 'total_amount': 0, 'time_period_days': 30, 'applied_to_transfer_types': ['WITHDRAWAL', 'DEPOSIT']},
-        'applied_when': check_user_is_phone_verified_but_no_kyc,
-    },
-    {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 50000, 'time_period_days': 7, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_kyc_verified,
-    },
-    {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 100000, 'time_period_days': 30, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_kyc_verified,
-    },
-    {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 50000, 'time_period_days': 7, 'applied_to_transfer_types': ['WITHDRAWAL', 'DEPOSIT']},
-        'applied_when': check_user_kyc_verified,
-    },
-    {
-        'rule': {'name': 'Sempo Level 2', 'total_amount': 100000, 'time_period_days': 30, 'applied_to_transfer_types': ['WITHDRAWAL', 'DEPOSIT']},
-        'applied_when': check_user_kyc_verified,
-    },
-    {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 500000, 'time_period_days': 7, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_kyc_two_id_verified,
-    },
-    {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 1000000, 'time_period_days': 30, 'applied_to_transfer_types': ['PAYMENT']},
-        'applied_when': check_user_kyc_two_id_verified,
-    },
-    {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 500000, 'time_period_days': 7, 'applied_to_transfer_types': ['WITHDRAWAL', 'DEPOSIT']},
-        'applied_when': check_user_kyc_two_id_verified,
-    },
-    {
-        'rule': {'name': 'Sempo Level 3', 'total_amount': 1000000, 'time_period_days': 30, 'applied_to_transfer_types': ['WITHDRAWAL', 'DEPOSIT']},
-        'applied_when': check_user_kyc_two_id_verified,
-    },
-    {
-        'rule': {'name': 'GE Liquid Token - Standard User', 'total_amount': None, 'transfer_balance_percentage': 0.1, 'transfer_count': 1, 'time_period_days': 7, 'applied_to_transfer_types': ['WITHDRAWAL']},
-        'applied_when': check_user_liquid_token_type,
-    },
-    # {
-    #     'rule': {'name': 'GE Liquid Token - Group User', 'total_amount': None, 'transfer_balance_percentage': 0.5, 'transfer_count': 1, 'time_period_days': 30, 'applied_to_transfer_types': ['WITHDRAWAL']},
-    #     'applied_when': check_group_user_liquid_token_type,
-    # }
+    TransferLimit('Sempo Level 0', 5000, 7, None, None, ['PAYMENT'], check_user_but_no_phone_verified_and_no_kyc),
+    TransferLimit('Sempo Level 0', 10000, 30, None, None, ['PAYMENT'], check_user_but_no_phone_verified_and_no_kyc),
+    TransferLimit('Sempo Level 0', 0, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_but_no_phone_verified_and_no_kyc),
+
+    TransferLimit('Sempo Level 1', 5000, 7, None, None, ['PAYMENT'], check_user_is_phone_verified_but_no_kyc),
+    TransferLimit('Sempo Level 1', 20000, 30, None, None, ['PAYMENT'], check_user_is_phone_verified_but_no_kyc),
+    TransferLimit('Sempo Level 1', 0, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_is_phone_verified_but_no_kyc),
+
+    TransferLimit('Sempo Level 2', 50000, 7, None, None, ['PAYMENT'], check_user_kyc_verified),
+    TransferLimit('Sempo Level 2', 100000, 30, None, None, ['PAYMENT'], check_user_kyc_verified),
+    TransferLimit('Sempo Level 2', 50000, 7, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_verified),
+    TransferLimit('Sempo Level 2', 100000, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_verified),
+
+    TransferLimit('Sempo Level 3', 500000, 7, None, None, ['PAYMENT'], check_user_kyc_two_id_verified),
+    TransferLimit('Sempo Level 3', 1000000, 30, None, None, ['PAYMENT'], check_user_kyc_two_id_verified),
+    TransferLimit('Sempo Level 3', 500000, 7, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_two_id_verified),
+    TransferLimit('Sempo Level 3', 1000000, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_two_id_verified),
+
+    TransferLimit('GE Liquid Token - Standard User', None, 7, 0.1, 1, ['WITHDRAWAL'], check_user_liquid_token_type)
 ]
