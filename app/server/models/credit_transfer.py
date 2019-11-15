@@ -202,14 +202,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
             return supplied_transfer_account
 
-        try:
-            return find_transfer_accounts_with_matching_token(user, token)
-        except NoTransferAccountError:
-            transfer_account = TransferAccount(blockchain_address=user.primary_blockchain_address)
-            transfer_account.token = token
-            user.transfer_accounts.append(transfer_account)
-            db.session.add(transfer_account)
-            return transfer_account
+        return find_transfer_accounts_with_matching_token(user, token)
 
     def append_organisation_if_required(self, organisation):
         if organisation and organisation not in self.organisations:
@@ -243,11 +236,19 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.fiat_ramp = fiat_ramp
 
-        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
-            self.token,
-            recipient_user,
-            recipient_transfer_account
-        )
+        try:
+            self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
+                self.token,
+                recipient_user,
+                recipient_transfer_account
+            )
+        except NoTransferAccountError:
+            transfer_account = TransferAccount(blockchain_address=recipient_user.primary_blockchain_address)
+            transfer_account.token = token
+            recipient_user.transfer_accounts.append(transfer_account)
+            db.session.add(transfer_account)
+
+            self.recipient_transfer_account = transfer_account
 
         if transfer_type is TransferTypeEnum.DEPOSIT.value:
             self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()

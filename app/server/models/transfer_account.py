@@ -180,18 +180,21 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     def get_or_create_system_transfer_approval(self):
 
-        organisation_blockchain_address = self.organisation.system_blockchain_address
+        sys_blockchain_address = self.organisation.system_blockchain_address
 
-        approval = self.get_approval(organisation_blockchain_address)
+        approval = self.get_approval(sys_blockchain_address)
 
         if not approval:
-            approval = self.give_approval_to_address(organisation_blockchain_address)
+            approval = self.give_approval_to_address(sys_blockchain_address)
 
         return approval
 
     def give_approval_to_address(self, address_getting_approved):
         approval = SpendApproval(transfer_account_giving_approval=self,
                                  address_getting_approved=address_getting_approved)
+
+        db.session.add(approval)
+
         return approval
 
     def get_approval(self, receiving_address):

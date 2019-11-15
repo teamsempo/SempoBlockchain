@@ -445,7 +445,7 @@ class User(ManyOrgBase, ModelBase):
 
     def clear_expired_tokens(self):
 
-        # For some reason the existing user get an None instead of a [] 
+        # For some reason the existing user get an None instead of a []
         # during migration. This is to ensure no TypeError occurs
 
         if self.password_reset_tokens is None:
@@ -458,10 +458,16 @@ class User(ManyOrgBase, ModelBase):
                 valid_tokens.append(token)
         self.password_reset_tokens = valid_tokens
 
-    def create_admin_auth(self, email, password, tier='view'):
+    def create_admin_auth(self, email, password, tier='view', organisation=None):
         self.email = email
         self.hash_password(password)
         self.set_held_role('ADMIN', tier)
+
+        if organisation:
+            self.organisations.append(organisation)
+            self.default_organisation = organisation
+
+        self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
         for tier in current_app.config['TFA_REQUIRED_ROLES']:
@@ -533,7 +539,7 @@ class User(ManyOrgBase, ModelBase):
 
         # I spent way too much time failing to figure out how to write
         # this query using sqlalchemy if someone could point met how to translate
-        # this query to sqlalchemy please do. 
+        # this query to sqlalchemy please do.
         # Can it maybe use the paginate_query function?
         sql = text('''
             SELECT *, COUNT(*)  FROM
@@ -560,7 +566,7 @@ class User(ManyOrgBase, ModelBase):
         ordered_tranfer_usages = [
             next(s for s in relevant_transer_usages if s.id == id) for id in most_common_ids]
         return ordered_tranfer_usages
-        
+
     def refine_with_default_transfer_usages(self, most_common, nr_of_wanted):
         default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
             TransferUsage.id).all()

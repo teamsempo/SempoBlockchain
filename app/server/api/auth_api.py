@@ -246,13 +246,17 @@ class RegisterAPI(MethodView):
             tier = 'subadmin'
 
         user = User()
-        user.create_admin_auth(email, password, tier)
+
+        if selected_whitelist_item:
+            organisation = selected_whitelist_item.organisation
+        else:
+            organisation = None
+
+        user.create_admin_auth(email, password, tier, organisation)
 
         # insert the user
         db.session.add(user)
 
-        if selected_whitelist_item:
-            user.organisations.append(selected_whitelist_item.organisation)
 
         db.session.flush()
 
