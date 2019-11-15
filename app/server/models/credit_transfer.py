@@ -165,8 +165,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
-        self.sender_transfer_account.balance -= self.transfer_amount
-        self.recipient_transfer_account.balance += self.transfer_amount
+        self.sender_transfer_account.increment_balance(-1 * self.transfer_amount)
+        self.recipient_transfer_account.increment_balance(self.transfer_amount)
 
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:

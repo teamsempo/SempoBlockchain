@@ -211,6 +211,32 @@ def test_approve_vendor_transfer_account(new_transfer_account):
 
     assert new_transfer_account.balance == 0
 
+@pytest.mark.parametrize("initial_bal, increment_amount, expected_final_bal", [
+    (0, 0.0, 0.0),
+    (5, 0.5, 5.5),
+    (0.1, 0.00001, 0.10001),
+    (0, -0.0, 0.0),
+    (5, -0.5, 4.5),
+    (0.1, - 0.00001, 0.09999),
+])
+def test_increment_balance(test_client, init_database, initial_bal, increment_amount, expected_final_bal):
+    """
+    Tests to ensure that adding and subtracting floats doesn't destroy decimal amounts
+    """
+    import server.models.transfer_account
+    from server import db
+    ta = server.models.transfer_account.TransferAccount()
+    ta.balance = initial_bal
+    db.session.add(ta)
+    db.session.commit()
+    db.session.expire(ta)
+
+    ta.increment_balance(increment_amount)
+
+    db.session.commit()
+    db.session.expire(ta)
+
+    assert ta.balance == expected_final_bal
 
 """ ----- Credit Transfer Model ----- """
 

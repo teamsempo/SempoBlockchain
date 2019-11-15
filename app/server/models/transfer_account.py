@@ -1,4 +1,5 @@
 from typing import Optional
+from decimal import Decimal
 import datetime, enum
 from sqlalchemy.sql import func
 from flask import current_app
@@ -90,9 +91,7 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         if not approval:
             approval = self.give_approval_to_address(organisation_blockchain_address)
-    # @hybrid_property
-    # def balance(self):
-    #     return self.total_received - self.total_sent
+
 
     @hybrid_property
     def balance(self):
@@ -103,11 +102,19 @@ class TransferAccount(OneOrgBase, ModelBase):
         # We use cents for historical reasons, and to enable graceful degredation/rounding on
         # hardware that can only handle small ints (like the transfer cards and old android devices)
 
-        return (self._balance_wei or 0) / int(1e16)
+        return float((self._balance_wei or 0) / int(1e16))
 
     @balance.setter
     def balance(self, val):
         self._balance_wei = val * int(1e16)
+
+    def increment_balance(self, val):
+        # self.balance += val
+        val_wei = val * int(1e16)
+        if isinstance(val_wei, float):
+            val_wei = Decimal(val_wei).quantize(Decimal('1'))
+
+        self._balance_wei = (self._balance_wei or 0) + val_wei
 
     @hybrid_property
     def total_sent(self):
