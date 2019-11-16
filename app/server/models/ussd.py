@@ -43,3 +43,14 @@ class UssdSession(ModelBase):
     ussd_menu_id = db.Column(db.Integer, nullable=False)
     state = db.Column(db.String, nullable=False)
     session_data = db.Column(JSON)
+
+    def set_data(self, key, value):
+        if self.session_data is None:
+            self.session_data = {}
+        self.session_data[key] = value
+
+    def get_data(self, key):
+        if self.session_data is not None:
+            return self.session_data[key]
+        else:
+            return None

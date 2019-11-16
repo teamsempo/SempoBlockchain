@@ -537,15 +537,12 @@ class User(ManyOrgBase, ModelBase):
 
         self.hash_password(pin)
 
-    def is_resetting_password(self):
-        self.clear_expired_password_reset_tokens()
-        is_resetting = len(self.password_reset_tokens) > 0
-        return is_resetting
-
-    def is_resetting_pin(self):
+    def has_valid_pin(self):
+        # not in the process of resetting pin and has a pin
         self.clear_expired_pin_reset_tokens()
-        is_resetting = len(self.pin_reset_tokens) > 0
-        return is_resetting
+        not_resetting = len(self.pin_reset_tokens) == 0
+
+        return self.pin is not None and not_resetting
 
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
