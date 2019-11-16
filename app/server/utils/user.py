@@ -609,7 +609,6 @@ def send_sms(user, message_key):
 def change_pin(user, new_pin):
     try:
         user.hash_pin(new_pin)
-        db.session.commit()
         send_sms(user, 'successful_pin_change_sms')
     except InvalidRequestError:
         send_sms(user, 'unsuccessful_pin_change_sms')

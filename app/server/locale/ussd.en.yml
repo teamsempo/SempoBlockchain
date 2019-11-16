@@ -1,30 +1,30 @@
 en:
   kenya:
-    initial_language_selection: >
+    initial_language_selection: |
       CON Welcome to Sarafu
       1. English
       2. Kiswahili
       3. Help
-    initial_pin_menu: >
+    initial_pin_entry: |
       CON Please enter a PIN to manage your account.
       0. Back
-    initial_pin_confirmation: >
+    initial_pin_confirmation: |
       CON Enter your PIN again
       0. Back
-    start: >
+    start: |
       CON Welcome to Sarafu
       1. Send
       2. My Account
       3. Market Place
       4. Exchange
       5. Help
-    send_enter_recipient: >
+    send_enter_recipient: |
       CON Enter Phone Number
       0. Back
-    send_token_amount: >
+    send_token_amount: |
       CON Enter Amount
       0. Back
-    send_token_reason: >
+    send_token_reason: |
       CON Select Transfer reason
       1. Food
       2. Water
@@ -37,18 +37,18 @@ en:
       9. Labour
       10. Other
       0. Back
-    send_token_reason_other: >
+    send_token_reason_other: |
       CON Please specify
       0. Back
-    send_token_pin_authorization: >
+    send_token_pin_authorization: |
       CON Please enter your PIN. %remaining_attempts%
       0. Back
-    send_token_confirmation: >
+    send_token_confirmation: |
       CON Send %transaction_amount% %token_name% to %recipient_phone% for %transaction_reason%
       1. Confirm
       2. Cancel
       0. Back
-    directory_listing: >
+    directory_listing: |
       CON Choose Market Category
       1. Food
       2. Water
@@ -60,7 +60,7 @@ en:
       8. Transport
       9. Labour
     complete: END Your request has been sent. You will receive an SMS shortly.
-    account_management: >
+    account_management: |
       CON My account
       1. My Business
       2. Change language
@@ -68,53 +68,53 @@ en:
       4. Change PIN
       5. Opt Out of Market Place
       0. Back
-    my_business: >
+    my_business: |
       CON My Business
       1. See my business
       2. Change my business
       0. Back
     about_my_business: END %user_bio%
-    change_my_business_prompt: >
+    change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back
-    balance_inquiry_pin_authorization: >
+    balance_inquiry_pin_authorization: |
       CON Please enter your PIN. %remaining_attempts%
       0. Back
-    choose_language: >
+    choose_language: |
       CON Choose language
       1. English
       2. Kiswahili
       0. Back
-    opt_out_of_market_place_pin_authorization: >
+    opt_out_of_market_place_pin_authorization: |
       CON Please enter your PIN. %remaining_attempts%
       0. Back
     current_pin: CON Enter current PIN. %remaining_attempts%
-    new_pin: >
+    new_pin: |
       CON Enter new PIN
       0. Back
-    new_pin_confirmation: >
+    new_pin_confirmation: |
       CON Enter new PIN again
       0. Back
     help: END For assistance call %support_phone%
-    exchange_token: >
+    exchange_token: |
       CON Exchange
       1. Check Exchange Rate
       2. Exchange
       0. Back
-    exchange_rate_pin_authorization: >
+    exchange_rate_pin_authorization: |
       CON Please enter your PIN. %remaining_attempts%
       0. Back
     request_exchange_rate: END We are processing your request for your exchange rate. You will receive an SMS shortly.
-    exchange_token_agent_number_entry: >
+    exchange_token_agent_number_entry: |
       CON Enter Agent Phone Number
       0. Back
-    exchange_token_amount_entry: >
+    exchange_token_amount_entry: |
       CON Enter Amount (40 or more)
       0. Back
-    exchange_token_pin_authorization: >
+    exchange_token_pin_authorization: |
       CON Please enter your PIN. %remaining_attempts%
       0. Back
-    exchange_token_confirmation: >
+    exchange_token_confirmation: |
       CON Exchange %exchange_amount% %token_name% from Agent %agent_phone%
       1. Confirm
       2. Cancel
@@ -130,7 +130,7 @@ en:
     exit_invalid_recipient: END Recipient phone number is incorrect
     exit_use_exchange_menu: END Recipient phone number is an agent. To exchange, use exchange menu
     exit_invalid_token_agent: END Agent phone number is incorrect
-    exit_not_registered: >
+    exit_not_registered: |
       END Haujasajiliwa kwa hii huduma. Kusajili tuma: jina, nambari ya simu, kitambulisho, eneo, na biashara yako. Kwa 0757628885
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
