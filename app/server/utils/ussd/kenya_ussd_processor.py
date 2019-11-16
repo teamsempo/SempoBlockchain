@@ -5,7 +5,6 @@ from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
 from server.utils.phone import proccess_phone_number
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
-from server import db
 
 
 class KenyaUssdProcessor:
@@ -16,31 +15,30 @@ class KenyaUssdProcessor:
         if session:
             if user_input == "":
                 return UssdMenu.find_by_name('exit_invalid_input')
-            elif user_input.split('*')[-1] == 0:
+            elif user_input == '0':
                 return UssdMenu.find_by_name(session.state).parent()
             else:
-                new_state = KenyaUssdProcessor.next_state(session, user_input)
+                new_state = KenyaUssdProcessor.next_state(session, user_input, user)
                 return UssdMenu.find_by_name(new_state)
         # new session
         else:
-            if user.is_resetting_pin():
-                if user.failed_pin_attempts >= 3:
+            if user.has_valid_pin():
+                return UssdMenu.find_by_name('start')
+            else:
+                if user.failed_pin_attempts is not None and user.failed_pin_attempts >= 3:
                     return UssdMenu.find_by_name('exit_pin_blocked')
                 elif user.preferred_language is None:
                     return UssdMenu.find_by_name('initial_language_selection')
                 else:
                     return UssdMenu.find_by_name('initial_pin_entry')
-            else:
-                return UssdMenu.find_by_name('start')
 
     @staticmethod
-    def next_state(session: UssdSession, user_input: str) -> UssdMenu:
-        state_machine = KenyaUssdStateMachine(session)
-        state_machine.feed_char(user_input.split('*')[-1])
+    def next_state(session: UssdSession, user_input: str, user: User) -> UssdMenu:
+        state_machine = KenyaUssdStateMachine(session, user)
+        state_machine.feed_char(user_input)
         new_state = state_machine.state
 
         session.state = new_state
-        db.session.commit()
         return new_state
 
     @staticmethod

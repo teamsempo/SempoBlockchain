@@ -9,12 +9,12 @@ import re
 
 from transitions import Machine
 
-from server import db, message_processor
+from server import message_processor
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.utils.phone import proccess_phone_number
 from server.utils.i18n import i18n_for
-from server.utils.user import set_custom_attributes, change_initial_pin
+from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin
 
 
 def get_user(query_filter):
@@ -47,7 +47,6 @@ class KenyaUssdStateMachine(Machine):
               'current_pin',
               'new_pin',
               'new_pin_confirmation',
-              'complete_initial_pin_change',
               'my_business',
               'about_my_business',
               'change_my_business_prompt',
@@ -90,7 +89,6 @@ class KenyaUssdStateMachine(Machine):
 
     def change_preferred_language_to(self, language):
         self.user.preferred_language = language
-        db.session.commit()
         self.send_sms("language_change_sms")
 
     def change_opted_in_market_status(self, user_input):
@@ -100,8 +98,10 @@ class KenyaUssdStateMachine(Machine):
             }
         }
         set_custom_attributes(attrs, self.user)
-        db.session.commit()
         self.send_sms("opt_out_of_market_place_sms")
+
+    def set_pin_data(self, user_input):
+        self.session.set_data('initial_pin', user_input)
 
     def is_valid_pin(self, user_input):
         pin_validity = False
@@ -112,7 +112,7 @@ class KenyaUssdStateMachine(Machine):
     def new_pins_match(self, user_input):
         pins_match = False
         # get previous pin input
-        initial_pin = self.session.user_input.split('*')[-2]
+        initial_pin = self.session.get_data('initial_pin')
         if user_input == initial_pin:
             pins_match = True
         return pins_match
@@ -128,14 +128,15 @@ class KenyaUssdStateMachine(Machine):
             if authorized:
                 if self.user.failed_pin_attempts > 0:
                     self.user.failed_pin_attempts = 0
-                    db.session.commit()
             else:
                 self.user.failed_pin_attempts += 1
-                db.session.commit()
         return authorized
 
     def complete_initial_pin_change(self, user_input):
         change_initial_pin(user=self.user, new_pin=user_input)
+
+    def complete_pin_change(self, user_input):
+        change_current_pin(user=self.user, new_pin=user_input)
 
     def recipient_exists(self, phone_number):
         pass
@@ -168,7 +169,7 @@ class KenyaUssdStateMachine(Machine):
         return self.authorize_pin(user_input)
 
     def is_blocked_pin(self, user_input):
-        return self.user.failed_pin_attempts == 3
+        return self.user.failed_pin_attempts is not None and self.user.failed_pin_attempts == 3
 
     def is_valid_new_pin(self, user_input):
         return self.is_valid_pin(user_input) and not self.user.check_salt_hashed_password(user_input, self.user.pin)
@@ -252,6 +253,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_pin_entry',
              'dest': 'initial_pin_confirmation',
+             'after': 'set_pin_data',
              'conditions': 'is_valid_pin'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_entry',
@@ -264,6 +266,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'complete',
+             'after': 'complete_initial_pin_change',
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
@@ -468,6 +471,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'new_pin',
              'dest': 'new_pin_confirmation',
+             'after': 'set_pin_data',
              'conditions': 'is_valid_new_pin'},
             {'trigger': 'feed_char',
              'source': 'new_pin',
@@ -481,7 +485,7 @@ class KenyaUssdStateMachine(Machine):
              'source': 'new_pin_confirmation',
              'dest': 'complete',
              'conditions': 'new_pins_match',
-             'after': 'complete_initial_pin_change'},
+             'after': 'complete_pin_change'},
             {'trigger': 'feed_char',
              'source': 'new_pin_confirmation',
              'dest': 'exit_pin_mismatch'}

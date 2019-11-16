@@ -2,6 +2,7 @@ import pytest
 from functools import partial
 from faker.providers import phone_number
 from faker import Faker
+import json
 
 from helpers.user import UserFactory
 from helpers.ussd_session import UssdSessionFactory
@@ -21,7 +22,8 @@ token_agent = partial(UserFactory, held_roles={"TOKEN_AGENT": "grassroots_token_
 
 initial_language_selection_state = partial(UssdSessionFactory, state="initial_language_selection")
 initial_pin_entry_state = partial(UssdSessionFactory, state="initial_pin_entry")
-initial_pin_confirmation_state = partial(UssdSessionFactory, state="initial_pin_confirmation", user_input="0000*0000")
+initial_pin_confirmation_state = partial(UssdSessionFactory, state="initial_pin_confirmation", user_input="0000",
+                                         session_data=json.loads('{"initial_pin": "0000"}'))
 start_state = partial(UssdSessionFactory, state="start")
 send_enter_recipient_state = partial(UssdSessionFactory, state="send_enter_recipient")
 send_token_amount_state = partial(UssdSessionFactory, state="send_token_amount")
@@ -36,7 +38,8 @@ choose_language_state = partial(UssdSessionFactory, state="choose_language")
 balance_inquiry_pin_authorization_state = partial(UssdSessionFactory, state="balance_inquiry_pin_authorization")
 current_pin_state = partial(UssdSessionFactory, state="current_pin")
 new_pin_state = partial(UssdSessionFactory, state="new_pin")
-new_pin_confirmation_state = partial(UssdSessionFactory, state="new_pin_confirmation", user_input="2222*2222")
+new_pin_confirmation_state = partial(UssdSessionFactory, state="new_pin_confirmation", user_input="2222",
+                                     session_data=json.loads('{"initial_pin": "2222"}'))
 opt_out_of_market_place_pin_authorization_state = partial(UssdSessionFactory, state="opt_out_of_market_place_pin_authorization")
 exchange_token_state = partial(UssdSessionFactory, state="exchange_token")
 exchange_rate_pin_authorization_state = partial(UssdSessionFactory, state="exchange_rate_pin_authorization")
@@ -56,6 +59,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
      (initial_pin_entry_state, standard_user, "0000", "initial_pin_confirmation"),
      (initial_pin_entry_state, standard_user, "AAAA", "exit_invalid_pin"),
      # initial_pin_confirmation transitions tests
+     #TODO: remove these tests and the other testing of pin, they're redundant
      (initial_pin_confirmation_state, standard_user, "0000", "complete"),
      (initial_pin_confirmation_state, standard_user, "1212", "exit_pin_mismatch"),
      # start state transition tests
@@ -167,7 +171,6 @@ def test_change_language(mocker, test_client, init_database, session_factory, us
     state_machine.send_sms.assert_called_with("language_change_sms")
 
 
-# TODO: need pin authorisation implemented to do this
 def test_opt_out_of_marketplace(mocker, test_client, init_database):
     session = opt_out_of_market_place_pin_authorization_state()
     user = standard_user()
@@ -183,6 +186,7 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
     state_machine.send_sms.assert_called_with("opt_out_of_market_place_sms")
 
 
+#TODO: also test that users pin becomes the correct thing after
 @pytest.mark.parametrize("session_factory, user_input, expected, failed_pin_attempts", [
     (send_token_pin_authorization_state, "1212", "send_token_pin_authorization", 1),
 
@@ -199,6 +203,7 @@ def test_authorize_pin(test_client, init_database, session_factory, user_input, 
     assert user.failed_pin_attempts == failed_pin_attempts
 
 
+#TODO: also test that users pin does not become the new thing after
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected, failed_pin_attempts", [
     (send_token_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3),
     (send_token_pin_authorization_state, one_failed_pin_attempts_user, "1212", "send_token_pin_authorization", 2),
