@@ -77,7 +77,7 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         return float_wallet
 
-    @hybrid_property
+    @property
     def balance(self):
         # division/multipication by int(1e16) occurs  because
         # the db stores amounts in integer WEI: 1 BASE-UNIT (ETH/USD/ETC) * 10^18

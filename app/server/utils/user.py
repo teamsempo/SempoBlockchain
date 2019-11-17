@@ -214,7 +214,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
-        user.transfer_accounts.append(transfer_account)
 
         if transfer_card:
             transfer_account.transfer_card = transfer_card

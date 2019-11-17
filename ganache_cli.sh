@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+ganache-cli -l 80000000 -i 42 --db './ganacheDB' \
+--account="0xc0d863808bc05e06a481622f9e8c1a6c3474320d71736afa3aff7f668284d804,10000000000000000000000000"

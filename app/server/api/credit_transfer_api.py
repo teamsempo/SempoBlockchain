@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import or_
 
+import json
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
@@ -22,7 +23,6 @@ from server.exceptions import NoTransferAccountError, UserNotFoundError, Insuffi
     InvalidTargetBalanceError, BlockchainError
 
 credit_transfer_blueprint = Blueprint('credit_transfer', __name__)
-
 
 class CreditTransferAPI(MethodView):
 

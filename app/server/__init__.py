@@ -1,4 +1,5 @@
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
+import json
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_basicauth import BasicAuth
@@ -32,6 +33,14 @@ dirname = os.path.dirname(__file__)
 i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
 i18n.set('fallback', config.LOCALE_FALLBACK)
 
+class ExtendedJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        from decimal import Decimal
+        if isinstance(obj, Decimal):
+            return float(obj)
+
+        return json.JSONEncoder.default(self, obj)
+
 def create_app():
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -48,6 +57,8 @@ def create_app():
 
     register_extensions(app)
     register_blueprints(app)
+
+    app.json_encoder = ExtendedJSONEncoder
 
     return app
 

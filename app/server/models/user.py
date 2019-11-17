@@ -99,6 +99,8 @@ class User(ManyOrgBase, ModelBase):
         "TransferAccount",
         secondary=user_transfer_account_association_table,
         back_populates="users")
+
+    # TODO: work out if this should be deprecated
     default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
 
     targeting_survey_id = db.Column(

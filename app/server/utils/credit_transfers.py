@@ -28,12 +28,16 @@ from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 def calculate_transfer_stats(total_time_series=False):
 
-    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT)\
-        .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).first().total
+    total_distributed = (
+        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT)
+            .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).first().total
+    )
 
-    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
+    total_spent = (
+        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
+    )
 
     total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
 

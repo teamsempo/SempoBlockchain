@@ -17,7 +17,9 @@ from server.models.transfer_account import TransferAccount
 from server.models.exchange import ExchangeContract, Exchange
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
+from server.utils.user import create_transfer_account_user
 
 def load_account(address, amount_wei):
     from web3 import (
@@ -115,7 +117,7 @@ def get_or_create_organisation(name, org_token):
     return _get_or_create_model_object(Organisation, {'name': name}, token=org_token)
 
 
-def get_or_create_admin_user(email, admin_organisation):
+def get_or_create_admin_user(email, password, admin_organisation):
     instance = User.query.filter_by(
         email=str(email).lower()).first()
     if instance:
@@ -124,7 +126,7 @@ def get_or_create_admin_user(email, admin_organisation):
         user = User()
         user.create_admin_auth(
             email=email,
-            password='TestPassword',
+            password=password,
             tier='sempoadmin',
             organisation=admin_organisation
         )
@@ -140,20 +142,29 @@ def get_or_create_transfer_usage(name):
 
 
 def get_or_create_transfer_user(email, business_usage, organisation):
+
     user = User.query.filter_by(
         email=str(email).lower()).first()
     if user:
         return user
     else:
-        user = User(email=email,
-                        business_usage=business_usage,
-                        default_organisation=organisation)
-        db.session.add(user)
+        first_name = random.choice(['Magnificent', 'Questionable', 'Bold', 'Hungry', 'Trustworthy', 'Valued', 'Free'])
+        last_name = random.choice(['Panda', 'Birb', 'Doggo', 'Otter', 'Swearwolf', 'Kitty', 'Lion', 'Chimp', 'Cthulhu'])
+        is_beneficiary = random.choice([True, False])
 
-        user.organisations.append(organisation)
+        phone = ''.join([str(random.randint(0,10)) for i in range(0, 10)])
 
-        transfer_account = TransferAccount(bind_to_entity=user)
-        db.session.add(transfer_account)
+        user = create_transfer_account_user(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone=phone,
+            organisation=organisation,
+            is_beneficiary=is_beneficiary,
+            is_vendor=not is_beneficiary
+        )
+
+        user.business_usage = business_usage
 
         return user
 
@@ -170,7 +181,8 @@ def seed_transfers(user_list, admin_user, token):
             amount=50,
             sender_user=admin_user,
             recipient_user=user,
-            token=token
+            token=token,
+            subtype=TransferSubTypeEnum.DISBURSEMENT
         )
 
     number_of_transfers = 30
@@ -186,9 +198,9 @@ def create_users_different_transer_usage(wanted_nr_users, new_organisation):
         random_usage = random.choice(transer_usages)
 
         new_user = get_or_create_transfer_user(
-            f'user-nr-{i}@test.com',
-            random_usage,
-            new_organisation
+            email=f'user-nr-{i}@test.com',
+            business_usage=random_usage,
+            organisation=new_organisation
         )
 
         user_list.append(new_user)
@@ -196,15 +208,20 @@ def create_users_different_transer_usage(wanted_nr_users, new_organisation):
     return user_list
 
 
-def create_transfer(amount, sender_user, recipient_user, token):
+def create_transfer(amount, sender_user, recipient_user, token, subtype=None):
     transfer = CreditTransfer(
         amount=amount,
         sender_user=sender_user,
         recipient_user=recipient_user,
         token=token,
         uuid=str(uuid4()))
+
     db.session.add(transfer)
+
     transfer.resolve_as_completed()
+
+    transfer.transfer_type = TransferTypeEnum.PAYMENT
+    transfer.transfer_subtype = subtype
 
     return transfer
 
@@ -271,7 +288,7 @@ def run_setup():
 
     print('Creating admin user')
     amount_to_load = 1000
-    admin_user = get_or_create_admin_user('admin@sempo.ai', new_organisation)
+    admin_user = get_or_create_admin_user('admin@sempo.ai', 'TestPassword', new_organisation)
     admin_transfer_account = admin_user.transfer_account
     load_account(admin_transfer_account.blockchain_address, int(20e18))
     send_eth_task = bt.send_eth(
