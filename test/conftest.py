@@ -250,6 +250,7 @@ def initialised_blockchain_network(admin_with_org_reserve_balance, external_rese
         smart_token_result = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=18,
+            reserve_deposit_wei=10,
             issue_amount_wei=1000,
             contract_registry_address=registry_address,
             reserve_token_address=reserve_token.address,

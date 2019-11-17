@@ -60,12 +60,14 @@ class TokenAPI(MethodView):
         To create a new token contract, use api/token/.
         """
         # TODO: Work out the proper way to determine the issue amount
-        issue_amount_wei = 1000
         post_data = request.get_json()
 
         name = post_data['name']
         symbol = post_data['symbol']
         decimals = post_data.get('decimals', 18)
+
+        issue_amount_wei = post_data['issue_amount_wei']
+        reserve_deposit_wei = post_data['reserve_deposit_wei']
 
         exchange_contract_id = post_data['exchange_contract_id']
         reserve_ratio_ppm = post_data.get('reserve_ratio_ppm', 250000)
@@ -88,9 +90,19 @@ class TokenAPI(MethodView):
 
             return make_response(jsonify(response_object)), 400
 
+        balance_wei = bt.get_wallet_balance(deploying_address, exchange_contract.reserve_token)
+
+        if balance_wei < reserve_deposit_wei:
+            response_object = {
+                'message': f'Insufficient reserve funds (balance in wei: {balance_wei}'
+            }
+
+            return make_response(jsonify(response_object)), 400
+
         smart_token_result = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=decimals,
+            reserve_deposit_wei=reserve_deposit_wei,
             issue_amount_wei=issue_amount_wei,
             contract_registry_address=exchange_contract.contract_registry_blockchain_address,
             reserve_token_address=exchange_contract.reserve_token.address,

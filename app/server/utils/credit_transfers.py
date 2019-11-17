@@ -121,9 +121,14 @@ def cached_funds_available(allowed_cache_age_seconds=60):
     :param allowed_cache_age_seconds: how long between checking the blockchain for external funds added or removed
     :return: amount of funds available
     """
+    token = g.active_organisation.org_level_transfer_account.token
 
-    return bt.get_wallet_balance(g.active_organisation.org_level_transfer_account.blockchain_address,
-                       g.active_organisation.org_level_transfer_account.token)
+    balance_wei = bt.get_wallet_balance(
+        g.active_organisation.org_level_transfer_account.blockchain_address,
+        token
+    )
+
+    return token.token_amount_to_system(balance_wei)
 
     refresh_cache = False
     funds_available_cache = red.get('funds_available_cache')

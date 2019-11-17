@@ -84,22 +84,8 @@ class ExchangeContract(ModelBase):
         self.add_token(reserve_token, None, None)
 
     def add_token(self, token, subexchange_address, subexchange_reserve_ratio):
-
-        exchange_transfer_account = (server.models.transfer_account.TransferAccount.query
-                                     .filter_by(token=token)
-                                     .filter_by(exchange_contract=self)
-                                     .first())
-
-        if not exchange_transfer_account:
-            exchange_transfer_account = server.models.transfer_account.TransferAccount(
-                blockchain_address=self.blockchain_address,
-                is_public=True
-            )
-
-            exchange_transfer_account.token = token
-            db.session.add(exchange_transfer_account)
-
-        exchange_transfer_account.exchange_contract = self
+        exchange_transfer_account = server.models.transfer_account.TransferAccount(bind_to_entity=self, token=token)
+        db.session.add(exchange_transfer_account)
 
         if subexchange_address:
             self.exchangeable_tokens.append(token)
@@ -111,6 +97,7 @@ class Exchange(BlockchainTaskableBase):
 
     to_desired_amount = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    exchange_rate = db.Column(db.FLOAT)
 
     # user_transfer_account_id = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
     # transfer_account = relationship("TransferAccount", back_populates="exchanges")
@@ -120,6 +107,7 @@ class Exchange(BlockchainTaskableBase):
 
     from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
     to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
+
 
     def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None):
 
@@ -183,6 +171,8 @@ class Exchange(BlockchainTaskableBase):
                                               to_token=to_token,
                                               from_amount=from_amount,
                                               signing_address=signing_address)
+
+        self.exchange_rate = to_amount/from_amount
 
         task_id = bt.make_liquid_token_exchange(
             signing_address=signing_address,

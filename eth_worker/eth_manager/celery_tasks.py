@@ -45,6 +45,7 @@ def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_am
 @celery_app.task(**base_task_config)
 def deploy_smart_token(self, deploying_address,
                        name, symbol, decimals,
+                       reserve_deposit_wei,
                        issue_amount_wei,
                        contract_registry_address,
                        reserve_token_address,
@@ -53,6 +54,7 @@ def deploy_smart_token(self, deploying_address,
     return eth_manager.task_interfaces.composite.deploy_smart_token(
         deploying_address,
         name, symbol, decimals,
+        reserve_deposit_wei,
         issue_amount_wei,
         contract_registry_address,
         reserve_token_address,
