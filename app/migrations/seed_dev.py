@@ -123,7 +123,7 @@ def get_or_create_admin_user(email, password, admin_organisation):
     if instance:
         return instance
     else:
-        user = User()
+        user = User(first_name='Admin', last_name='user')
         user.create_admin_auth(
             email=email,
             password=password,
@@ -148,7 +148,8 @@ def get_or_create_transfer_user(email, business_usage, organisation):
     if user:
         return user
     else:
-        first_name = random.choice(['Magnificent', 'Questionable', 'Bold', 'Hungry', 'Trustworthy', 'Valued', 'Free'])
+        first_name = random.choice(['Magnificent', 'Questionable', 'Bold', 'Hungry', 'Trustworthy', 'Valued', 'Free',
+                                    'Obtuse', 'Frequentist', 'Long', 'Sinister', 'Happy', 'Safe', 'Open', 'Cool'])
         last_name = random.choice(['Panda', 'Birb', 'Doggo', 'Otter', 'Swearwolf', 'Kitty', 'Lion', 'Chimp', 'Cthulhu'])
         is_beneficiary = random.choice([True, False])
 

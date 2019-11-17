@@ -198,7 +198,7 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return disbursement
 
     def make_initial_disbursement(self, initial_balance=None):
-        from server.utils.credit_transfers import make_payment_transfer
+        from server.utils.credit_transfer import make_payment_transfer
         if not initial_balance:
             initial_balance = current_app.config['STARTING_BALANCE']
 
@@ -207,7 +207,7 @@ class TransferAccount(OneOrgBase, ModelBase):
         return disbursement
 
     def initialise_withdrawal(self, withdrawal_amount):
-        from server.utils.credit_transfers import make_withdrawal_transfer
+        from server.utils.credit_transfer import make_withdrawal_transfer
         withdrawal = make_withdrawal_transfer(withdrawal_amount,
                                               send_account=self,
                                               automatically_resolve_complete=False)

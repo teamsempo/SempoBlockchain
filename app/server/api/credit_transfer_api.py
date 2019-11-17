@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import or_
-
+from functools import partial
 import json
 from server import db
 from server.models.token import Token
@@ -12,9 +12,9 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
-from server.utils.credit_transfers import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
+from server.utils.credit_transfer import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
 from server.utils.transfer_enums import TransferTypeEnum
-from server.utils.credit_transfers import (
+from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
@@ -247,7 +247,7 @@ class CreditTransferAPI(MethodView):
 
                 transfer_user_list = [(individual_sender_user, individual_recipient_user)]
 
-            except (NoTransferAccountError, UserNotFoundError) as e:
+            except Exception as e:
                 response_object = {
                     'message': str(e),
                 }
@@ -276,15 +276,28 @@ class CreditTransferAPI(MethodView):
             try:
                 if transfer_type == 'PAYMENT':
                     transfer = make_payment_transfer(
-                        transfer_amount, send_user=sender_user, receive_user=recipient_user, transfer_use=transfer_use, uuid=uuid)
+                        transfer_amount,
+                        token=token,
+                        send_user=sender_user,
+                        receive_user=recipient_user,
+                        transfer_use=transfer_use,
+                        uuid=uuid)
 
                 elif transfer_type == 'RECLAMATION':
                     transfer = make_payment_transfer(
-                        transfer_amount, send_user=sender_user, uuid=uuid, transfer_subtype='RECLAMATION')
+                        transfer_amount,
+                        token=token,
+                        send_user=sender_user,
+                        uuid=uuid,
+                        transfer_subtype='RECLAMATION')
 
                 elif transfer_type == 'DISBURSEMENT':
                     transfer = make_payment_transfer(
-                        transfer_amount, receive_user=recipient_user, uuid=uuid, transfer_subtype='DISBURSEMENT')
+                        transfer_amount,
+                        token=token,
+                        receive_user=recipient_user,
+                        uuid=uuid,
+                        transfer_subtype='DISBURSEMENT')
 
                 elif transfer_type == 'BALANCE':
                     transfer = make_target_balance_transfer(target_balance, recipient_user, uuid=uuid)
