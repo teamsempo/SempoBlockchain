@@ -69,7 +69,9 @@ class UpdateData(Command):
                 print('Creating Float Wallet')
                 float_wallet = TransferAccount(
                     private_key=config.ETH_FLOAT_PRIVATE_KEY,
-                    account_type=TransferAccountType.FLOAT)
+                    account_type=TransferAccountType.FLOAT,
+                    is_approved=True
+                )
                 db.session.add(float_wallet)
 
             db.session.commit()

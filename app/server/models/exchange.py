@@ -84,12 +84,27 @@ class ExchangeContract(ModelBase):
         self.add_token(reserve_token, None, None)
 
     def add_token(self, token, subexchange_address, subexchange_reserve_ratio):
-        exchange_transfer_account = server.models.transfer_account.TransferAccount(bind_to_entity=self, token=token)
-        db.session.add(exchange_transfer_account)
+
+        exchange_transfer_account = (server.models.transfer_account.TransferAccount.query
+                                     .filter_by(token=token)
+                                     .filter_by(exchange_contract=self)
+                                     .first())
+
+        if not exchange_transfer_account:
+
+            exchange_transfer_account = server.models.transfer_account.TransferAccount(
+                bind_to_entity=self,
+                token=token,
+                is_approved=True)
+
+            db.session.add(exchange_transfer_account)
 
         if subexchange_address:
             self.exchangeable_tokens.append(token)
             self._add_subexchange(token.address, subexchange_address, subexchange_reserve_ratio)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 
 class Exchange(BlockchainTaskableBase):

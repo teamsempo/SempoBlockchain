@@ -27,6 +27,19 @@ def requires_auth(test_client):
     return requires_auth
 
 @pytest.fixture(scope='module')
+def create_master_organisation(test_client, init_database):
+    from server.models.organisation import Organisation
+    master_organisation = Organisation.query.filter_by(is_master=True).first()
+    if master_organisation is None:
+        print('Creating master organisation')
+        master_organisation = Organisation(is_master=True)
+        db.session.add(master_organisation)
+
+        db.session.commit()
+
+    return master_organisation
+
+@pytest.fixture(scope='module')
 def create_organisation(test_client, init_database, external_reserve_token):
     from server.models.organisation import Organisation
     from server.models.transfer_account import TransferAccount
@@ -106,7 +119,7 @@ def create_user_with_existing_transfer_account(test_client, init_database, creat
 
 
 @pytest.fixture(scope='module')
-def new_transfer_account():
+def new_transfer_account(create_master_organisation):
     from server.models.transfer_account import TransferAccount
     return TransferAccount()
 
@@ -238,7 +251,9 @@ def user_with_reserve_balance(create_transfer_account_user, external_reserve_tok
     return create_transfer_account_user
 
 @pytest.fixture(scope='module')
-def initialised_blockchain_network(admin_with_org_reserve_balance, external_reserve_token, load_account):
+def initialised_blockchain_network(
+        create_master_organisation, admin_with_org_reserve_balance, external_reserve_token, load_account):
+
     from server import bt
 
     from server.models.token import Token

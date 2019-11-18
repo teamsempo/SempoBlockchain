@@ -17,6 +17,8 @@ def test_create_token(test_client, complete_admin_auth_token, initialised_blockc
                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                json={'deploy_smart_token_contract': True,
                                      'exchange_contract_id': exchange_contract_id,
+                                     'issue_amount_wei': 1000,
+                                     'reserve_deposit_wei': 10,
                                      'reserve_ratio_ppm': 250000,
                                      'name': 'FOO Token',
                                      'symbol': 'FOO'},

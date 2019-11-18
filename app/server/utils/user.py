@@ -222,7 +222,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
             transfer_account.token = token
 
         if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
-            transfer_account.approve()
+            transfer_account.approve_and_disburse()
 
     user.default_transfer_account_id = transfer_account.id
 

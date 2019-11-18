@@ -172,7 +172,7 @@ def get_or_create_transfer_user(email, business_usage, organisation):
 
 def get_or_create_transer_account(name, user):
     return _get_or_create_model_object(
-        TransferAccount, {'name': name}, bind_to_entity=user)
+        TransferAccount, {'name': name}, bind_to_entity=user, is_approved=True)
 
 
 def seed_transfers(user_list, admin_user, token):

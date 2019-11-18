@@ -469,7 +469,7 @@ class User(ManyOrgBase, ModelBase):
             self.organisations.append(organisation)
             self.default_organisation = organisation
 
-        self.transfer_accounts.append(organisation.org_level_transfer_account)
+            self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
         for tier in current_app.config['TFA_REQUIRED_ROLES']:

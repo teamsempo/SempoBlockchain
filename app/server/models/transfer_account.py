@@ -188,7 +188,7 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return approval
         return None
 
-    def approve(self):
+    def approve_and_disburse(self):
 
         if not self.is_approved:
             self.is_approved = True

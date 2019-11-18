@@ -243,7 +243,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 recipient_transfer_account
             )
         except NoTransferAccountError:
-            self.recipient_transfer_account = TransferAccount(bind_to_entity=recipient_user, token=token)
+            self.recipient_transfer_account = TransferAccount(
+                bind_to_entity=recipient_user,
+                token=token,
+                is_approved=True
+            )
             db.session.add(self.recipient_transfer_account)
 
         if transfer_type is TransferTypeEnum.DEPOSIT.value:

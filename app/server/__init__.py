@@ -33,11 +33,15 @@ dirname = os.path.dirname(__file__)
 i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
 i18n.set('fallback', config.LOCALE_FALLBACK)
 
+
 class ExtendedJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         from decimal import Decimal
+        from datetime import datetime
         if isinstance(obj, Decimal):
             return float(obj)
+        if isinstance(obj, datetime):
+            return str(obj)
 
         return json.JSONEncoder.default(self, obj)
 

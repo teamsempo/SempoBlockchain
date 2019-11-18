@@ -295,6 +295,7 @@ class CreditTransferAPI(MethodView):
                     transfer = make_payment_transfer(
                         transfer_amount,
                         token=token,
+                        send_user=g.user,
                         receive_user=recipient_user,
                         uuid=uuid,
                         transfer_subtype='DISBURSEMENT')
