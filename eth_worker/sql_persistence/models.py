@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON
+from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON, Numeric
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import select, func, case
 import datetime, base64, os
@@ -129,7 +129,7 @@ class BlockchainTask(ModelBase):
 
     is_send_eth = Column(Boolean, default=False)
     recipient_address = Column(String)
-    amount = Column(BigInteger)
+    _amount = Column(Numeric(27))
 
     signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 
@@ -152,6 +152,14 @@ class BlockchainTask(ModelBase):
         if value not in ALLOWED_TASK_TYPES:
             raise ValueError(f'{value} not in allow task types')
         self._type = value
+
+    @hybrid_property
+    def amount(self):
+        return self._amount
+
+    @amount.setter
+    def amount(self, val):
+        self._amount = val
 
     @hybrid_property
     def successful_transaction(self):

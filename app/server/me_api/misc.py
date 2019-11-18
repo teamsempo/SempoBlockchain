@@ -13,7 +13,7 @@ from server.utils.assembly_payments import create_ap_user, AssemblyPaymentsError
 from server.utils.auth import requires_auth
 from server.utils.mobile_version import check_mobile_version
 from server.utils.poli_payments import PoliPaymentsError, create_poli_link, get_poli_link_status, generate_poli_link_from_url_token
-from server.utils.credit_transfers import make_deposit_transfer, find_user_with_transfer_account_from_identifiers
+from server.utils.credit_transfer import make_deposit_transfer, find_user_with_transfer_account_from_identifiers
 
 
 class MeFeedbackAPI(MethodView):

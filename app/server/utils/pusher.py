@@ -1,7 +1,7 @@
 from flask import current_app
 from server import pusher_client, sentry
 from server.schemas import credit_transfer_schema
-from server.utils import credit_transfers
+from server.utils import credit_transfer
 
 
 def push_admin_credit_transfer(transfer):

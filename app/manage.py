@@ -9,8 +9,9 @@ sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 from server import create_app, db
-from server.models.blockchain_address import BlockchainAddress
 from server.models.transfer_account import TransferAccount, TransferAccountType
+from server.models.organisation import Organisation
+
 
 class UpdateData(Command):
 
@@ -51,8 +52,15 @@ class UpdateData(Command):
             #         db.session.commit()
 
             # todo: [Nick] refactor this, create full seed script
-            print("~~~~~~~~~~ Searching for float wallet ~~~~~~~~~~")
+            print("~~~~~~~~~~ Searching for master organisation ~~~~~~~~~~")
 
+            master_organisation = Organisation.query.filter_by(is_master=True).first()
+            if master_organisation is None:
+                print('Creating master organisation')
+                master_organisation = Organisation(is_master=True)
+                db.session.add(master_organisation)
+
+            print("~~~~~~~~~~ Searching for float wallet ~~~~~~~~~~")
             float_wallet = TransferAccount.query.filter(
                 TransferAccount.account_type == TransferAccountType.FLOAT
             ).first()
@@ -61,9 +69,12 @@ class UpdateData(Command):
                 print('Creating Float Wallet')
                 float_wallet = TransferAccount(
                     private_key=config.ETH_FLOAT_PRIVATE_KEY,
-                    account_type=TransferAccountType.FLOAT)
+                    account_type=TransferAccountType.FLOAT,
+                    is_approved=True
+                )
                 db.session.add(float_wallet)
-                db.session.commit()
+
+            db.session.commit()
 
 
 app = create_app()

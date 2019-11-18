@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Optional, Union
+from decimal import Decimal
 import datetime, enum
 from sqlalchemy.sql import func
 from flask import current_app
@@ -9,6 +10,7 @@ from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
+from server.models.token import Token
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
 
@@ -57,13 +59,6 @@ class TransferAccount(OneOrgBase, ModelBase):
         back_populates="transfer_accounts"
     )
 
-    # owning_organisation_id = db.Column(db.Integer, db.ForeignKey(Organisation.id))
-
-    # owning_organisation = db.relationship("Organsisation", backref='org_level_transfer_account',
-    #                                       lazy='dynamic', foreign_keys=Organisation.org_level_transfer_account_id)
-
-    # blockchain_address = db.relationship('BlockchainAddress', backref='transfer_account', lazy=True, uselist=False)
-
     credit_sends       = db.relationship('CreditTransfer', backref='sender_transfer_account',
                                          lazy='dynamic', foreign_keys='CreditTransfer.sender_transfer_account_id')
 
@@ -82,19 +77,7 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         return float_wallet
 
-    def get_or_create_system_transfer_approval(self):
-
-        organisation_blockchain_address = self.organisation.system_blockchain_address
-
-        approval = self.get_approval(organisation_blockchain_address)
-
-        if not approval:
-            approval = self.give_approval_to_address(organisation_blockchain_address)
-    # @hybrid_property
-    # def balance(self):
-    #     return self.total_received - self.total_sent
-
-    @hybrid_property
+    @property
     def balance(self):
         # division/multipication by int(1e16) occurs  because
         # the db stores amounts in integer WEI: 1 BASE-UNIT (ETH/USD/ETC) * 10^18
@@ -103,11 +86,19 @@ class TransferAccount(OneOrgBase, ModelBase):
         # We use cents for historical reasons, and to enable graceful degredation/rounding on
         # hardware that can only handle small ints (like the transfer cards and old android devices)
 
-        return (self._balance_wei or 0) / int(1e16)
+        return float((self._balance_wei or 0) / int(1e16))
 
     @balance.setter
     def balance(self, val):
         self._balance_wei = val * int(1e16)
+
+    def increment_balance(self, val):
+        # self.balance += val
+        val_wei = val * int(1e16)
+        if isinstance(val_wei, float):
+            val_wei = Decimal(val_wei).quantize(Decimal('1'))
+
+        self._balance_wei = (self._balance_wei or 0) + val_wei
 
     @hybrid_property
     def total_sent(self):
@@ -171,20 +162,24 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         return 'NO_REQUEST'
 
+
     def get_or_create_system_transfer_approval(self):
 
-        organisation_blockchain_address = self.organisation.system_blockchain_address
+        sys_blockchain_address = self.organisation.system_blockchain_address
 
-        approval = self.get_approval(organisation_blockchain_address)
+        approval = self.get_approval(sys_blockchain_address)
 
         if not approval:
-            approval = self.give_approval_to_address(organisation_blockchain_address)
+            approval = self.give_approval_to_address(sys_blockchain_address)
 
         return approval
 
     def give_approval_to_address(self, address_getting_approved):
         approval = SpendApproval(transfer_account_giving_approval=self,
                                  address_getting_approved=address_getting_approved)
+
+        db.session.add(approval)
+
         return approval
 
     def get_approval(self, receiving_address):
@@ -193,7 +188,7 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return approval
         return None
 
-    def approve(self):
+    def approve_and_disburse(self):
 
         if not self.is_approved:
             self.is_approved = True
@@ -203,7 +198,7 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return disbursement
 
     def make_initial_disbursement(self, initial_balance=None):
-        from server.utils.credit_transfers import make_payment_transfer
+        from server.utils.credit_transfer import make_payment_transfer
         if not initial_balance:
             initial_balance = current_app.config['STARTING_BALANCE']
 
@@ -212,30 +207,61 @@ class TransferAccount(OneOrgBase, ModelBase):
         return disbursement
 
     def initialise_withdrawal(self, withdrawal_amount):
-        from server.utils.credit_transfers import make_withdrawal_transfer
+        from server.utils.credit_transfer import make_withdrawal_transfer
         withdrawal = make_withdrawal_transfer(withdrawal_amount,
                                               send_account=self,
                                               automatically_resolve_complete=False)
         return withdrawal
 
+    def _bind_to_organisation(self, organisation):
+        if not self.organisation:
+            self.organisation = organisation
+        if not self.token:
+            self.token = organisation.token
 
     def __init__(self,
                  blockchain_address: Optional[str]=None,
-                 private_key: Optional[str]=None,
-                 organisation: Optional[Organisation]=None,
+                 bind_to_entity: Optional[Union[Organisation, User]]=None,
                  account_type: Optional[TransferAccountType]=None,
+                 private_key: Optional[str] = None,
                  **kwargs):
 
         super(TransferAccount, self).__init__(**kwargs)
 
-        self.blockchain_address = blockchain_address or bt.create_blockchain_wallet(private_key=private_key)
+        if bind_to_entity:
+            bind_to_entity.transfer_accounts.append(self)
 
-        self.account_type = TransferAccountType.USER
+            if isinstance(bind_to_entity, Organisation):
+                self.account_type = TransferAccountType.ORGANISATION
+                self._bind_to_organisation(bind_to_entity)
 
-        if organisation:
-            self.organisation = organisation
-            self.token = organisation.token
-            self.account_type = TransferAccountType.ORGANISATION
+            elif isinstance(bind_to_entity, User):
+                self.account_type = TransferAccountType.USER
+                if bind_to_entity.default_organisation:
+                    self._bind_to_organisation(bind_to_entity.default_organisation)
+
+                self.blockchain_address = bind_to_entity.primary_blockchain_address
+
+            elif isinstance(bind_to_entity, ExchangeContract):
+                self.account_type = TransferAccountType.CONTRACT
+                self.blockchain_address = bind_to_entity.blockchain_address
+                self.is_public = True
+                self.exchange_contact = self
+
+        if not self.organisation:
+            master_organisation = Organisation.query.filter_by(is_master=True).first()
+            if not master_organisation:
+                raise Exception('master_organisation not found')
+
+            self._bind_to_organisation(master_organisation)
+
+        if blockchain_address:
+            self.blockchain_address = blockchain_address
+
+
+        if not self.blockchain_address:
+            self.blockchain_address = bt.create_blockchain_wallet(private_key=private_key)
+
 
         if account_type:
             self.account_type = account_type

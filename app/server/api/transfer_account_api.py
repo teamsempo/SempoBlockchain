@@ -107,7 +107,7 @@ class TransferAccountAPI(MethodView):
                 transfer_account.payable_epoch = payable_epoch
 
             if not approve == transfer_account.is_approved and transfer_account.is_approved is not True:
-                transfer_account.approve()
+                transfer_account.approve_and_disburse()
 
             db.session.commit()
 
@@ -138,7 +138,7 @@ class TransferAccountAPI(MethodView):
                     continue
 
                 if not transfer_account.is_approved and approve:
-                    transfer_account.approve()
+                    transfer_account.approve_and_disburse()
 
                 transfer_accounts.append(transfer_account)
 

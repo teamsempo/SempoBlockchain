@@ -28,12 +28,16 @@ from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 def calculate_transfer_stats(total_time_series=False):
 
-    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT)\
-        .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).first().total
+    total_distributed = (
+        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT)
+            .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).first().total
+    )
 
-    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
+    total_spent = (
+        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
+    )
 
     total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
 
@@ -121,9 +125,14 @@ def cached_funds_available(allowed_cache_age_seconds=60):
     :param allowed_cache_age_seconds: how long between checking the blockchain for external funds added or removed
     :return: amount of funds available
     """
+    token = g.active_organisation.org_level_transfer_account.token
 
-    return bt.get_wallet_balance(g.active_organisation.org_level_transfer_account.blockchain_address,
-                       g.active_organisation.org_level_transfer_account.token)
+    balance_wei = bt.get_wallet_balance(
+        g.active_organisation.org_level_transfer_account.blockchain_address,
+        token
+    )
+
+    return token.token_amount_to_system(balance_wei)
 
     refresh_cache = False
     funds_available_cache = red.get('funds_available_cache')

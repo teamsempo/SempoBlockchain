@@ -27,21 +27,27 @@ def requires_auth(test_client):
     return requires_auth
 
 @pytest.fixture(scope='module')
+def create_master_organisation(test_client, init_database):
+    from server.models.organisation import Organisation
+    master_organisation = Organisation.query.filter_by(is_master=True).first()
+    if master_organisation is None:
+        print('Creating master organisation')
+        master_organisation = Organisation(is_master=True)
+        db.session.add(master_organisation)
+
+        db.session.commit()
+
+    return master_organisation
+
+@pytest.fixture(scope='module')
 def create_organisation(test_client, init_database, external_reserve_token):
     from server.models.organisation import Organisation
     from server.models.transfer_account import TransferAccount
     organisation = Organisation(name='Sempo', token=external_reserve_token)
 
-    transfer_account = TransferAccount(organisation=organisation)
-
-    db.session.add_all([organisation, transfer_account])
-    db.session.commit()
-
-    organisation.org_level_transfer_account_id = transfer_account.id
-
-    db.session.commit()
     db.session.add(organisation)
     db.session.commit()
+
     return organisation
 
 @pytest.fixture(scope='module')
@@ -51,7 +57,6 @@ def new_sempo_admin_user(test_client, init_database, create_organisation):
     user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
     user.organisations.append(create_organisation)
     user.default_organisation = create_organisation
-
 
     db.session.add(user)
 
@@ -88,7 +93,7 @@ def activated_sempo_admin_user(new_sempo_admin_user):
 
 
 @pytest.fixture(scope='function')
-def complete_auth_token(authed_sempo_admin_user):
+def complete_admin_auth_token(authed_sempo_admin_user):
     return get_complete_auth_token(authed_sempo_admin_user)
 
 
@@ -114,7 +119,7 @@ def create_user_with_existing_transfer_account(test_client, init_database, creat
 
 
 @pytest.fixture(scope='module')
-def new_transfer_account():
+def new_transfer_account(create_master_organisation):
     from server.models.transfer_account import TransferAccount
     return TransferAccount()
 
@@ -128,7 +133,7 @@ def create_transfer_account(new_transfer_account):
 
 @pytest.fixture(scope='module')
 def new_disbursement(create_transfer_account_user):
-    from server.utils.credit_transfers import make_payment_transfer
+    from server.utils.credit_transfer import make_payment_transfer
     disbursement = make_payment_transfer(100, receive_transfer_account=create_transfer_account_user, transfer_subtype='DISBURSEMENT')
     return disbursement
 
@@ -246,7 +251,9 @@ def user_with_reserve_balance(create_transfer_account_user, external_reserve_tok
     return create_transfer_account_user
 
 @pytest.fixture(scope='module')
-def initialised_blockchain_network(admin_with_org_reserve_balance, external_reserve_token, load_account):
+def initialised_blockchain_network(
+        create_master_organisation, admin_with_org_reserve_balance, external_reserve_token, load_account):
+
     from server import bt
 
     from server.models.token import Token
@@ -258,6 +265,7 @@ def initialised_blockchain_network(admin_with_org_reserve_balance, external_rese
         smart_token_result = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=18,
+            reserve_deposit_wei=10,
             issue_amount_wei=1000,
             contract_registry_address=registry_address,
             reserve_token_address=reserve_token.address,

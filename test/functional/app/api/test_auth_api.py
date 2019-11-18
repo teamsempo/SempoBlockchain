@@ -257,14 +257,14 @@ def test_blockchain_key_api(test_client, authed_sempo_admin_user, tier, status_c
     assert response.status_code == status_code
 
 
-def test_get_permissions_api(test_client, complete_auth_token):
+def test_get_permissions_api(test_client, complete_admin_auth_token):
     """
     GIVEN a Flask application
     WHEN '/api/auth/permissions/' is requested (GET)
     THEN check a list of admins is returned
     """
     response = test_client.get('/api/auth/permissions/',
-                               headers=dict(Authorization=complete_auth_token, Accept='application/json'),
+                               headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
     assert response.json['admin_list'] is not None

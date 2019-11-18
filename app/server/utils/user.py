@@ -17,7 +17,7 @@ from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError
 from server import celery_app, sentry, message_processor
-from server.utils import credit_transfers as CreditTransferUtils
+from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 
@@ -206,14 +206,14 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         user.transfer_accounts.append(existing_transfer_account)
     else:
         transfer_account = TransferAccount(
-            blockchain_address=blockchain_address or user.primary_blockchain_address,
+            bind_to_entity=user,
+            blockchain_address=blockchain_address,
             organisation=organisation
         )
 
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
-        user.transfer_accounts.append(transfer_account)
 
         if transfer_card:
             transfer_account.transfer_card = transfer_card
@@ -222,7 +222,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
             transfer_account.token = token
 
         if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
-            transfer_account.approve()
+            transfer_account.approve_and_disburse()
 
     user.default_transfer_account_id = transfer_account.id
 

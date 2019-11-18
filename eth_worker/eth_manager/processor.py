@@ -52,6 +52,10 @@ class TransactionProcessor(object):
             'value': amount
         }
 
+        print(f'##Tx {transaction_id}: Sending Eth \n'
+              f'to: {recipient_address} \n'
+              f'amount: {amount}')
+
         return self.process_transaction(transaction_id, partial_txn_dict=partial_txn_dict, gas_limit=100000)
 
     def typecast_argument(self, argument):
@@ -70,6 +74,10 @@ class TransactionProcessor(object):
         kwargs = kwargs or dict()
         kwargs = {k: self.typecast_argument(v) for k, v in kwargs.items()}
 
+        print(f'##Tx {transaction_id}: Transacting with Function {function_name} \n'
+              f'Args: {args} \n'
+              f'Kwargs: {kwargs}')
+
         function = self.registry.get_contract_function(contract_address, function_name, abi_type)
 
         bound_function = function(*args, **kwargs)
@@ -84,6 +92,10 @@ class TransactionProcessor(object):
             args = [args]
 
         kwargs = kwargs or dict()
+
+        print(f'##Tx {transaction_id}: Deploying Contract {contract_name} \n'
+              f'Args: {args} \n'
+              f'Kwargs: {kwargs}')
 
         contract = self.registry.get_compiled_contract(contract_name)
 
@@ -225,11 +237,14 @@ class TransactionProcessor(object):
         task_object = self.persistence_interface.get_task_from_id(task_id)
 
         if task_object.type == 'SEND_ETH':
+
+            transfer_amount = int(task_object.amount)
+
             print(f'Starting Send Eth Transaction for {task_id}.')
             chain1 = signature(utils.eth_endpoint('_process_send_eth_transaction'),
                           args=(transaction_obj.id,
                                 task_object.recipient_address,
-                                task_object.amount))
+                                transfer_amount))
 
         elif task_object.type == 'FUNCTION':
             print(f'Starting {task_object.function} Transaction for {task_id}.')
