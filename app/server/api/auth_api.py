@@ -852,6 +852,10 @@ class PermissionsAPI(MethodView):
 
         db.session.commit()
 
+        all_invites = EmailWhitelist.query.all()
+
+        print(all_invites)
+
         response_object = {
             'message': 'An invite has been sent!',
             'referral_code': invite.referral_code

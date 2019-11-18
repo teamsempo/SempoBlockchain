@@ -19,3 +19,8 @@ class EmailWhitelist(OneOrgBase, ModelBase):
         super(EmailWhitelist, self).__init__(**kwargs)
         self.referral_code = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
+
+    def __repr__(self):
+        return f'<EmailWhitelist {self.id}: {self.email}, {self.tier}, {"used" if self.used else "unused"}>'
+
+
