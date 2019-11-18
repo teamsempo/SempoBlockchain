@@ -271,7 +271,7 @@ def test_get_permissions_api(test_client, complete_admin_auth_token):
 
 @pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id, response_code", [
     ('admin', 'foo@acme.com', 'admin', 1, 401),
-    ('sempoadmin', 'foo@acme.com', 'admin', 2, 404),
+    ('sempoadmin', 'foo@acme.com', 'admin', 123221, 404),
     ('sempoadmin',  None, 'admin', 1, 400),
     ('sempoadmin', 'foo@acme.com', None, 1, 400),
     ('sempoadmin', 'foo@acme.com', 'admin', 1, 200),
