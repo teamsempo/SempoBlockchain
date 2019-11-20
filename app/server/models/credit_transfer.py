@@ -202,7 +202,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def check_sender_transfer_limits(self):
         if self.sender_user is None:
-            # skip if an exchange
+            # skip if there is no sender, which implies system send
             return
 
         relevant_transfer_limits = self.get_transfer_limits()
@@ -210,6 +210,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         for limit in relevant_transfer_limits:
             filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.time_period_days)
 
+            amount_avail = 0
             if limit.transfer_count is not None:
                 # GE Limits
                 transaction_count = db.session.query(func.count(CreditTransfer.id).label('count'))\
@@ -224,14 +225,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     self.resolve_as_rejected(message=message)
                     raise AccountLimitError(message)
 
-                amount_avail = limit.transfer_balance_percentage*self.sender_transfer_account.balance
-                if self.transfer_amount > amount_avail:
-                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, amount_avail)
-                    self.resolve_as_rejected(message=message)
-                    raise AccountLimitError(message)
+            if limit.transfer_balance_percentage is not None:
+                amount_avail = limit.transfer_balance_percentage * self.sender_transfer_account.balance
 
-            else:
-                # Sempo Account Limits
+            if limit.total_amount is not None:
+                # Sempo Compliance Account Limits
                 transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
                     .filter(CreditTransfer.created >= filter_before)\
                     .filter(CreditTransfer.transfer_type == self.transfer_type)\
@@ -239,10 +237,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     .execution_options(show_all=True).first().total
 
                 amount_avail = limit.total_amount - (transaction_volume or 0)
-                if (float(amount_avail) - self.transfer_amount) < 0:
-                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
-                    self.resolve_as_rejected(message=message)
-                    raise AccountLimitError(message)
+
+            if self.transfer_amount > amount_avail:
+                message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
+                self.resolve_as_rejected(message=message)
+                raise AccountLimitError(message)
 
         return relevant_transfer_limits
 

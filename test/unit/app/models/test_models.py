@@ -258,6 +258,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     from server.utils.transaction_limits import LIMITS
     from server.models.kyc_application import KycApplication
     from server.models import token
+    from server.utils.transfer_enums import TransferTypeEnum
 
     # Sempo Level 0 LIMITS (payment only)
     assert create_credit_transfer.check_sender_transfer_limits() == [
@@ -304,6 +305,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
 
     # Check Limits skipped if no sender user (exchange)
     create_credit_transfer.sender_user = None
+    create_credit_transfer.transfer_type = TransferTypeEnum.EXCHANGE
     assert create_credit_transfer.check_sender_transfer_limits() is None
 
 
