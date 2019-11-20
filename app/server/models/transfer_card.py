@@ -11,7 +11,7 @@ from server.exceptions import NoTransferCardError
 class TransferCard(ModelBase):
     __tablename__ = 'transfer_card'
 
-    public_serial_number = db.Column(db.String)
+    public_serial_number = db.Column(db.String, index=True, unique=True, nullable=False)
     nfc_serial_number    = db.Column(db.String)
     PIN                  = db.Column(db.String)
 
