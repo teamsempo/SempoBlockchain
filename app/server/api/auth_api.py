@@ -90,13 +90,10 @@ def create_user_response_object(user, auth_token, message):
         'first_name': user.first_name,
         'last_name': user.last_name,
         'deployment_name': current_app.config['DEPLOYMENT_NAME'],
-        'ap_is_active': current_app.config['AP_IS_ACTIVE'],
         'denominations': get_denominations(),
         'terms_accepted': user.terms_accepted,
         'request_feedback_questions': request_feedback_questions(user),
         'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
-        # This is here to stop the old release from dying
-        'feedback_questions': request_feedback_questions(user),
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'kyc_active': True,  # todo; kyc active function
