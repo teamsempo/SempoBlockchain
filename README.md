@@ -70,11 +70,18 @@ that burn through gas at a rate that makes getting test-eth from a faucet a bit 
 Once ganache is installed, run
 
 ```
-ganache-cli -l 80000000 --verbose
+ganache-cli -l 80000000 -i 42 --db './ganacheDB' \
+--account="0xc0d863808bc05e06a481622f9e8c1a6c3474320d71736afa3aff7f668284d804,10000000000000000000000000"
 ```
 
-The -l 80000000 argument increases the gas-limit, which is required for said token-exchange deployments. You will also
-need to set your local config to match:
+Here:
+- the -l 80000000 argument increases the gas-limit, which is required for token-exchange deployments.
+- the --db argument persists your data to a local folder
+- the --account argument creates an account with LOTS of test ether, to stop you running out too quickly
+
+gacnache_cli.sh can be used to run this quickly.
+
+You will also need to set your local config to match:
 ```
 [ETHEREUM]
 http_provider           = http://127.0.0.1:8545
@@ -172,6 +179,15 @@ create database sempo_blockchain_test;
 Ensure redis-server is running (this is not ideal but necessary atm).
 
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
+
+
+## Seed Data
+You can quickly create seed data for a local machine, including exchanges and blockchain transactions:
+1. Clear all data out of ur databases by running /app/migrations/clear_seed_dev.py
+2. Launch Redis, ganache & Celery as per above.
+3. Create new data by running seed_dev.py No guarantees for anything if you try and run this more than once
+without clearing your databases!
+
 
 ## Sempo Specific Setup
 

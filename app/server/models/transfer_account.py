@@ -92,6 +92,9 @@ class TransferAccount(OneOrgBase, ModelBase):
     def balance(self, val):
         self._balance_wei = val * int(1e16)
 
+    def decrement_balance(self, val):
+        self.increment_balance(-1 * val)
+
     def increment_balance(self, val):
         # self.balance += val
         val_wei = val * int(1e16)

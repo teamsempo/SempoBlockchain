@@ -67,8 +67,11 @@ class Organisation(ModelBase):
         super(Organisation, self).__init__(**kwargs)
 
         if is_master:
-            self.is_master = True
 
+            if Organisation.query.filter_by(is_master=True).first():
+                raise Exception("A master organisation already exists")
+
+            self.is_master = True
             self.system_blockchain_address = bt.create_blockchain_wallet(
                 private_key=current_app.config['MASTER_WALLET_PRIVATE_KEY']
             )
