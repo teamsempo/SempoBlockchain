@@ -524,9 +524,9 @@ def proccess_create_or_modify_user_request(
     if attribute_dict.get('bio'): attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
     set_custom_attributes(attribute_dict, user)
 
-    if is_self_sign_up and attribute_dict.get('deviceinfo', None) is not None:
+    if is_self_sign_up and attribute_dict.get('deviceInfo', None) is not None:
         save_device_info(device_info=attribute_dict.get(
-            'deviceinfo'), user=user)
+            'deviceInfo'), user=user)
 
     if additional_initial_disbursement:
         CreditTransferUtils.make_payment_transfer(
