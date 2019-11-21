@@ -7,8 +7,9 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 
+
 import config
-from app.server.models.utils import ModelBase as ServerModelBase
+from server.models.utils import ModelBase as ServerModelBase
 from eth_worker.sql_persistence.models import ModelBase as EthModelBase
 
 
@@ -27,8 +28,8 @@ def clear_all():
 
     print('Resetting Ganache')
 
-    subprocess.Popen(["rm", "-R", "../../ganacheDB"])
-    subprocess.Popen(["mkdir", "../../ganacheDB"])
+    subprocess.Popen(["rm", "-R", "./ganacheDB"])
+    subprocess.Popen(["mkdir", "./ganacheDB"])
 
 
 if __name__ == '__main__':
