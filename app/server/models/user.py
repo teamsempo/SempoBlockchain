@@ -10,7 +10,6 @@ import bcrypt
 import jwt
 import random
 import string
-from collections import Counter
 
 from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -550,7 +549,7 @@ class User(ManyOrgBase, ModelBase):
         ordered_tranfer_usages = [
             next(s for s in relevant_transer_usages if s.id == id) for id in most_common_ids]
         return ordered_tranfer_usages
-        
+
     def refine_with_default_transfer_usages(self, most_common, nr_of_wanted):
         default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
             TransferUsage.id).all()
@@ -568,7 +567,6 @@ class User(ManyOrgBase, ModelBase):
             string.ascii_letters + string.digits, k=16))
 
         self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
-
 
     def __repr__(self):
         if self.has_admin_role:

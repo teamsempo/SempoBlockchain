@@ -137,10 +137,11 @@ def new_disbursement(create_transfer_account_user):
 def new_credit_transfer(create_transfer_account_user, external_reserve_token):
     from server.models.credit_transfer import CreditTransfer
     credit_transfer = CreditTransfer(
-        amount=100,
+        amount=1000,
         token=external_reserve_token,
         sender_user=create_transfer_account_user,
-        recipient_user=create_transfer_account_user
+        recipient_user=create_transfer_account_user,
+        transfer_type='PAYMENT'
     )
     return credit_transfer
 
@@ -346,7 +347,7 @@ def external_reserve_token(test_client, init_database, loaded_master_wallet_addr
         fund_amount_wei=4 * 10 ** 18
     )
 
-    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol)
+    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol, token_type='RESERVE')
     reserve_token.decimals = 18
 
     db.session.add(reserve_token)

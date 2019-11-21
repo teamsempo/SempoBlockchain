@@ -3,6 +3,7 @@ from server import db, message_processor
 from server.models.kyc_application import KycApplication
 from server.models.user import User
 from server.utils.namescan import run_namescam_aml_check
+from server.exceptions import NameScanException
 
 import config, slack, json
 
@@ -419,8 +420,11 @@ def slack_controller(payload):
                 country=kyc.country
             )
 
-            aml_result = json.loads(result.text)
-            kyc.namescan_scan_id = aml_result['scan_id']
+            if result.status_code >= 200:
+                aml_result = json.loads(result.text)
+                kyc.namescan_scan_id = aml_result['scan_id']
+            else:
+                raise NameScanException('Unknown NameScan error: {}'.format(result))
 
             match_rates = [x['match_rate'] for x in aml_result.get('persons', [])]
             avg_match_rate = 0

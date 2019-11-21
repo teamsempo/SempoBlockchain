@@ -3,15 +3,18 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Index
+from sqlalchemy.sql import func
 
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
+from server.utils.transaction_limits import LIMITS
 
 from server.exceptions import (
     NoTransferAccountError,
-    UserNotFoundError
+    UserNotFoundError,
+    AccountLimitError
 )
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
@@ -53,7 +56,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy=True)
 
     fiat_ramp = db.relationship('FiatRamp', backref='credit_transfer', lazy=True, uselist=False)
-    
+
     __table_args__ = (Index('updated_index', "updated"), )
 
 
@@ -172,18 +175,82 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
 
-        if self.transfer_type == TransferTypeEnum.DEPOSIT and self.fiat_ramp:
+        if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_completed()
 
         if not existing_blockchain_txn:
             self.send_blockchain_payload_to_worker()
 
     def resolve_as_rejected(self, message=None):
+        if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
+            self.fiat_ramp.resolve_as_rejected()
+
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.REJECTED
 
         if message:
             self.resolution_message = message
+
+    def get_transfer_limits(self):
+        relevant_limits = []
+        for limit in LIMITS:
+            applied = limit.application_filter(self)
+            if applied and str(self.transfer_type) in limit.applied_to_transfer_types:
+                relevant_limits.append(limit)
+
+        return relevant_limits
+
+    def check_sender_transfer_limits(self):
+        if self.sender_user is None:
+            # skip if there is no sender, which implies system send
+            return
+
+        relevant_transfer_limits = self.get_transfer_limits()
+
+        for limit in relevant_transfer_limits:
+            filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.time_period_days)
+
+            if limit.transfer_count is not None:
+                # GE Limits
+                transaction_count = db.session.query(func.count(CreditTransfer.id).label('count'))\
+                    .filter(CreditTransfer.created >= filter_before)\
+                    .filter(CreditTransfer.transfer_type == self.transfer_type) \
+                    .filter(CreditTransfer.sender_user == self.sender_user) \
+                    .execution_options(show_all=True).first().count
+
+                if (transaction_count or 0) > limit.transfer_count:
+                    message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'\
+                        .format(limit.name, limit.transfer_count, limit.time_period_days)
+                    self.resolve_as_rejected(message=message)
+                    raise AccountLimitError(message)
+
+            if limit.transfer_balance_percentage is not None:
+                allowed_percent_transfer = limit.transfer_balance_percentage * self.sender_transfer_account.balance
+
+                if self.transfer_amount > allowed_percent_transfer:
+                    message = 'Account % Limit "{}" reached. {} available'.format(
+                        limit.name,
+                        max(allowed_percent_transfer, 0)
+                    )
+                    self.resolve_as_rejected(message=message)
+                    raise AccountLimitError(message)
+
+            if limit.total_amount is not None:
+                # Sempo Compliance Account Limits
+                transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
+                    .filter(CreditTransfer.created >= filter_before)\
+                    .filter(CreditTransfer.transfer_type == self.transfer_type)\
+                    .filter(CreditTransfer.sender_user == self.sender_user)\
+                    .execution_options(show_all=True).first().total
+
+                amount_avail = limit.total_amount - (transaction_volume or 0)
+
+                if self.transfer_amount > amount_avail:
+                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
+                    self.resolve_as_rejected(message=message)
+                    raise AccountLimitError(message)
+
+        return relevant_transfer_limits
 
     def check_sender_has_sufficient_balance(self):
         return self.sender_user and self.sender_transfer_account.balance - self.transfer_amount >= 0
@@ -267,3 +334,5 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
+
+        self.check_sender_transfer_limits()
