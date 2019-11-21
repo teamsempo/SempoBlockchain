@@ -238,13 +238,17 @@ class RegisterAPI(MethodView):
             tier = 'subadmin'
 
         user = User()
-        user.create_admin_auth(email, password, tier)
+
+        if selected_whitelist_item:
+            organisation = selected_whitelist_item.organisation
+        else:
+            organisation = None
+
+        user.create_admin_auth(email, password, tier, organisation)
 
         # insert the user
         db.session.add(user)
 
-        if selected_whitelist_item:
-            user.organisations.append(selected_whitelist_item.organisation)
 
         db.session.flush()
 
@@ -839,6 +843,10 @@ class PermissionsAPI(MethodView):
         send_invite_email(invite, organisation)
 
         db.session.commit()
+
+        all_invites = EmailWhitelist.query.all()
+
+        print(all_invites)
 
         response_object = {
             'message': 'An invite has been sent!',

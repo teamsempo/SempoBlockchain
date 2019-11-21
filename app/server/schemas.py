@@ -125,7 +125,7 @@ class CreditTransferSchema(Schema):
             return None
 
     resolved                = fields.DateTime(attribute='resolved_date')
-    transfer_amount         = fields.Function(lambda obj: obj.transfer_amount)
+    transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
     transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
     transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
     transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
@@ -188,7 +188,7 @@ class TransferAccountSchema(SchemaBase):
     is_approved             = fields.Boolean()
     # balance                 = fields.Int()
 
-    balance                 = fields.Function(lambda obj: obj.balance)
+    balance                 = fields.Function(lambda obj: int(obj.balance))
 
     primary_user_id         = fields.Int()
 

@@ -169,6 +169,7 @@ def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_w
 def deploy_smart_token(
         deploying_address,
         name, symbol, decimals,
+        reserve_deposit_wei,
         issue_amount_wei,
         contract_registry_address,
         reserve_token_address,
@@ -204,7 +205,7 @@ def deploy_smart_token(
         contract_address=reserve_token_address,
         contract_type='EtherToken',
         func='transfer',
-        args=[subexchange_address, 10],
+        args=[subexchange_address, reserve_deposit_wei],
         gas_limit=100000
     )
 

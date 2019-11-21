@@ -91,19 +91,20 @@ class ExchangeContract(ModelBase):
                                      .first())
 
         if not exchange_transfer_account:
+
             exchange_transfer_account = server.models.transfer_account.TransferAccount(
-                blockchain_address=self.blockchain_address,
-                is_public=True
-            )
+                bind_to_entity=self,
+                token=token,
+                is_approved=True)
 
-            exchange_transfer_account.token = token
             db.session.add(exchange_transfer_account)
-
-        exchange_transfer_account.exchange_contract = self
 
         if subexchange_address:
             self.exchangeable_tokens.append(token)
             self._add_subexchange(token.address, subexchange_address, subexchange_reserve_ratio)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 
 class Exchange(BlockchainTaskableBase):
@@ -111,6 +112,7 @@ class Exchange(BlockchainTaskableBase):
 
     to_desired_amount = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    exchange_rate = db.Column(db.FLOAT)
 
     # user_transfer_account_id = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
     # transfer_account = relationship("TransferAccount", back_populates="exchanges")
@@ -120,6 +122,7 @@ class Exchange(BlockchainTaskableBase):
 
     from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
     to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
+
 
     def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None):
 
@@ -183,6 +186,8 @@ class Exchange(BlockchainTaskableBase):
                                               to_token=to_token,
                                               from_amount=from_amount,
                                               signing_address=signing_address)
+
+        self.exchange_rate = to_amount/from_amount
 
         task_id = bt.make_liquid_token_exchange(
             signing_address=signing_address,

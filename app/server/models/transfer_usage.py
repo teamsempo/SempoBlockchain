@@ -23,8 +23,7 @@ class TransferUsage(ModelBase):
     translations = db.Column(JSON)
     default = db.Column(db.Boolean)
 
-    user = db.relationship(
-        'User', backref='transfer_usage', lazy=True, uselist=False)
+    users = db.relationship('User', backref='business_usage', lazy=True)
 
     @hybrid_property
     def icon(self):

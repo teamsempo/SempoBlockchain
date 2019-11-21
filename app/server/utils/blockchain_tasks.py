@@ -382,13 +382,13 @@ class BlockchainTasker(object):
 
     def get_wallet_balance(self, address, token):
 
-        balance = self._synchronous_call(
+        balance_wei = self._synchronous_call(
             contract_address=token.address,
             contract_type='ERC20',
             func='balanceOf',
             args=[address])
 
-        return token.token_amount_to_system(balance)
+        return balance_wei
 
     def deploy_exchange_network(self, deploying_address):
         """
@@ -400,7 +400,7 @@ class BlockchainTasker(object):
         sig = celery_app.signature(self._eth_endpoint('deploy_exchange_network'),
                                    args=[deploying_address])
 
-        return self._execute_synchronous_celery(sig, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 20)
+        return self._execute_synchronous_celery(sig, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
         sig = celery_app.signature(self._eth_endpoint('deploy_and_fund_reserve_token'),
@@ -411,6 +411,7 @@ class BlockchainTasker(object):
     def deploy_smart_token(self,
                            deploying_address,
                            name, symbol, decimals,
+                           reserve_deposit_wei,
                            issue_amount_wei,
                            contract_registry_address,
                            reserve_token_address,
@@ -419,6 +420,7 @@ class BlockchainTasker(object):
         sig = celery_app.signature(self._eth_endpoint('deploy_smart_token'),
                                    args=[deploying_address,
                                          name, symbol, decimals,
+                                         int(reserve_deposit_wei),
                                          int(issue_amount_wei),
                                          contract_registry_address,
                                          reserve_token_address,

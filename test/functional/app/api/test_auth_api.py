@@ -257,35 +257,42 @@ def test_blockchain_key_api(test_client, authed_sempo_admin_user, tier, status_c
     assert response.status_code == status_code
 
 
-def test_get_permissions_api(test_client, complete_auth_token):
+def test_get_permissions_api(test_client, complete_admin_auth_token):
     """
     GIVEN a Flask application
     WHEN '/api/auth/permissions/' is requested (GET)
     THEN check a list of admins is returned
     """
     response = test_client.get('/api/auth/permissions/',
-                               headers=dict(Authorization=complete_auth_token, Accept='application/json'),
+                               headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
     assert response.json['admin_list'] is not None
 
-@pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id, response_code", [
-    ('admin', 'foo@acme.com', 'admin', 1, 401),
-    ('sempoadmin', 'foo@acme.com', 'admin', 2, 404),
-    ('sempoadmin',  None, 'admin', 1, 400),
-    ('sempoadmin', 'foo@acme.com', None, 1, 400),
-    ('sempoadmin', 'foo@acme.com', 'admin', 1, 200),
-    ('sempoadmin', 'foo@acme.com', 'admin', 1, 400),
+
+def get_admin_default_org_id(admin_user):
+    return admin_user.default_organisation_id
+
+
+@pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id_selector, response_code", [
+    ('admin', 'foo@acme.com', 'admin', get_admin_default_org_id, 401),
+    ('sempoadmin', 'foo@acme.com', 'admin', lambda o: 12332, 404),
+    ('sempoadmin',  None, 'admin', get_admin_default_org_id, 400),
+    ('sempoadmin', 'foo@acme.com', None, get_admin_default_org_id, 400),
+    ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 200),
+    ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 400),
 ])
 
 def test_create_permissions_api(test_client, authed_sempo_admin_user,
-                                creator_tier, email, invitee_tier, organisation_id, response_code):
+                                creator_tier, email, invitee_tier, organisation_id_selector, response_code):
     """
     GIVEN a Flask application
     WHEN A new email is POSTED to '/api/auth/permissions/'
     THEN check it is added successfully
     """
     authed_sempo_admin_user.set_held_role('ADMIN', creator_tier)
+
+    organisation_id = organisation_id_selector(authed_sempo_admin_user)
 
     response = test_client.post('/api/auth/permissions/',
                                 headers=dict(

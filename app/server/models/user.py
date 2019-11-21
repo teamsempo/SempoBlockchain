@@ -34,8 +34,6 @@ from server.constants import (
     ACCESS_ROLES
 )
 
-
-
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
@@ -89,17 +87,19 @@ class User(ManyOrgBase, ModelBase):
 
     cashout_authorised = db.Column(db.Boolean, default=False)
 
-    business_usage_id = db.Column(
-        db.Integer, db.ForeignKey('transfer_usage.id'))
+    business_usage_id = db.Column(db.Integer, db.ForeignKey(TransferUsage.id))
 
     transfer_accounts = db.relationship(
         "TransferAccount",
         secondary=user_transfer_account_association_table,
         back_populates="users")
+
+    # TODO: work out if this should be deprecated
     default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
 
     default_organisation_id = db.Column(
         db.Integer, db.ForeignKey('organisation.id'))
+
     default_organisation = db.relationship('Organisation',
                                            primaryjoin=Organisation.id == default_organisation_id,
                                            lazy=True,
@@ -438,7 +438,7 @@ class User(ManyOrgBase, ModelBase):
 
     def clear_expired_tokens(self):
 
-        # For some reason the existing user get an None instead of a [] 
+        # For some reason the existing user get an None instead of a []
         # during migration. This is to ensure no TypeError occurs
 
         if self.password_reset_tokens is None:
@@ -451,10 +451,16 @@ class User(ManyOrgBase, ModelBase):
                 valid_tokens.append(token)
         self.password_reset_tokens = valid_tokens
 
-    def create_admin_auth(self, email, password, tier='view'):
+    def create_admin_auth(self, email, password, tier='view', organisation=None):
         self.email = email
         self.hash_password(password)
         self.set_held_role('ADMIN', tier)
+
+        if organisation:
+            self.organisations.append(organisation)
+            self.default_organisation = organisation
+
+            self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
         for tier in current_app.config['TFA_REQUIRED_ROLES']:

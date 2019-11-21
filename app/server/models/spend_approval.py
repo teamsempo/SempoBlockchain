@@ -19,15 +19,17 @@ class SpendApproval(ModelBase):
 
         self.receiving_address = address_getting_approved
 
-        eth_send_task_id = bt.send_eth(signing_address=address_getting_approved,
-                                    recipient_address=transfer_account_giving_approval.blockchain_address,
-                                    amount_wei=0.00184196 * 10**18)
+        eth_send_task_id = bt.send_eth(
+            signing_address=transfer_account_giving_approval.organisation.system_blockchain_address,
+            recipient_address=transfer_account_giving_approval.blockchain_address,
+            amount_wei=0.00184196 * 10**18)
 
-        approval_task_id = bt.make_approval(signing_address=transfer_account_giving_approval.blockchain_address,
-                                         token=self.token,
-                                         spender=address_getting_approved,
-                                         amount=1000000,
-                                         dependent_on_tasks=[eth_send_task_id])
+        approval_task_id = bt.make_approval(
+            signing_address=transfer_account_giving_approval.blockchain_address,
+            token=self.token,
+            spender=address_getting_approved,
+            amount=1000000,
+            dependent_on_tasks=[eth_send_task_id])
 
         self.eth_send_task_id = eth_send_task_id
         self.approval_task_id = approval_task_id

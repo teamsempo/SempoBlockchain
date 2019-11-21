@@ -168,8 +168,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
-        self.sender_transfer_account.balance -= self.transfer_amount
-        self.recipient_transfer_account.balance += self.transfer_amount
+        self.sender_transfer_account.decrement_balance(self.transfer_amount)
+        self.recipient_transfer_account.increment_balance(self.transfer_amount)
 
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -269,14 +269,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
             return supplied_transfer_account
 
-        try:
-            return find_transfer_accounts_with_matching_token(user, token)
-        except NoTransferAccountError:
-            transfer_account = TransferAccount(blockchain_address=user.primary_blockchain_address)
-            transfer_account.token = token
-            user.transfer_accounts.append(transfer_account)
-            db.session.add(transfer_account)
-            return transfer_account
+        return find_transfer_accounts_with_matching_token(user, token)
 
     def append_organisation_if_required(self, organisation):
         if organisation and organisation not in self.organisations:
@@ -310,11 +303,19 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.fiat_ramp = fiat_ramp
 
-        self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
-            self.token,
-            recipient_user,
-            recipient_transfer_account
-        )
+        try:
+            self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
+                self.token,
+                recipient_user,
+                recipient_transfer_account
+            )
+        except NoTransferAccountError:
+            self.recipient_transfer_account = TransferAccount(
+                bind_to_entity=recipient_user,
+                token=token,
+                is_approved=True
+            )
+            db.session.add(self.recipient_transfer_account)
 
         if transfer_type is TransferTypeEnum.DEPOSIT.value:
             self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()
