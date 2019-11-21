@@ -37,7 +37,7 @@ class ProcessKenyaUssd(MethodView):
 
         if phone_number:
             msisdn = proccess_phone_number(phone_number, 'KE')
-            user = User.query.filter_by(phone=msisdn).first()
+            user = User.query.execution_options(show_all=True).filter_by(phone=msisdn).first()
             # api chains all inputs that came through with *
             latest_input = user_input.split('*')[-1]
             # TODO(ussd): 'exit_not_registered' if no user

@@ -9,9 +9,10 @@ import re
 
 from transitions import Machine
 
-from server import message_processor
+from server import message_processor, sentry, ussd_tasker
 from server.models.user import User
 from server.models.ussd import UssdSession
+from server.models.transfer_usage import TransferUsage
 from server.utils.phone import proccess_phone_number
 from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin
@@ -183,6 +184,17 @@ class KenyaUssdStateMachine(Machine):
 
     def fetch_user_exchange_rate(self, user_input):
         pass
+
+    def send_directory_listing(self, user_input):
+        #TODO: replace with ruben's method when merge
+        chosen_transfer_usage = TransferUsage.find_or_create("Food")
+
+        try:
+            ussd_tasker.send_directory_listing(self.user, chosen_transfer_usage)
+        except Exception as e:
+            print(e)
+            sentry.captureException()
+            pass
 
     def is_valid_token_agent(self, user_input):
         user = get_user(user_input)
@@ -507,6 +519,12 @@ class KenyaUssdStateMachine(Machine):
         ]
         self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
 
+        # event: directory_listing transitions
+        self.add_transition(trigger='feed_char',
+                            source='directory_listing',
+                            dest='complete',
+                            after='send_directory_listing')
+
         # event: exchange_token transitions
         exchange_token_transitions = [
             {'trigger': 'feed_char',
@@ -593,4 +611,3 @@ class KenyaUssdStateMachine(Machine):
              'dest': 'exit_invalid_menu_option'}
         ]
         self.add_transitions(exchange_token_confirmation_transitions)
-
