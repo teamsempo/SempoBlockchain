@@ -179,18 +179,16 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
     state_machine.send_sms.assert_called_with("opt_out_of_market_place_sms")
 
 
-@pytest.mark.parametrize("session_factory, user_input, expected, failed_pin_attempts",
-                         [(send_token_pin_authorization_state, "1212", "send_token_pin_authorization", 1)])
-def test_authorize_pin(test_client, init_database, session_factory, user_input, expected, failed_pin_attempts):
-    session = session_factory()
+def test_authorize_pin(test_client, init_database):
+    session = send_token_pin_authorization_state()
     user = standard_user()
     assert user.failed_pin_attempts == 0
 
     state_machine = KenyaUssdStateMachine(session, user)
 
-    state_machine.feed_char(user_input)
-    assert state_machine.state == expected
-    assert user.failed_pin_attempts == failed_pin_attempts
+    state_machine.feed_char("1212")
+    assert state_machine.state == "send_token_pin_authorization"
+    assert user.failed_pin_attempts == 1
 
 
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected, failed_pin_attempts",
@@ -217,12 +215,9 @@ def test_exit_pin_blocked(test_client, init_database, session_factory, user_fact
     assert user.failed_pin_attempts == failed_pin_attempts
 
 
-@pytest.mark.parametrize("session_factory, user_factory, user_input, expected_new_pin, expected_activation_status",
-                         [(initial_pin_confirmation_state, unactivated_user, '0000', '0000', True)])
-def test_change_initial_pin(mocker, test_client, init_database, session_factory, user_factory, user_input,
-                            expected_new_pin, expected_activation_status):
-    session = session_factory()
-    user = user_factory()
+def test_change_initial_pin(mocker, test_client, init_database):
+    session = initial_pin_confirmation_state()
+    user = unactivated_user()
 
     state_machine = KenyaUssdStateMachine(session, user)
     user_utils.send_sms = mocker.MagicMock()
@@ -230,24 +225,21 @@ def test_change_initial_pin(mocker, test_client, init_database, session_factory,
     assert user.pin is None
     assert user.is_activated is False
 
-    state_machine.feed_char(user_input)
+    state_machine.feed_char("0000")
 
-    assert user.verify_pin(expected_new_pin) is True
-    assert user.is_activated is expected_activation_status
+    assert user.verify_pin("0000") is True
+    assert user.is_activated is True
     user_utils.send_sms.assert_called_with(user, 'successful_pin_change_sms')
 
 
-@pytest.mark.parametrize("session_factory, user_factory, user_input, expected_new_pin",
-                         [(new_pin_confirmation_state, standard_user, '2222', '2222')])
-def test_change_current_pin(mocker, test_client, init_database, session_factory, user_factory,
-                            user_input, expected_new_pin):
-    session = session_factory()
-    user = user_factory()
+def test_change_current_pin(mocker, test_client, init_database):
+    session = new_pin_confirmation_state()
+    user = standard_user()
 
     state_machine = KenyaUssdStateMachine(session, user)
     user_utils.send_sms = mocker.MagicMock()
 
-    state_machine.feed_char(user_input)
+    state_machine.feed_char("2222")
 
-    assert user.verify_pin(expected_new_pin) is True
+    assert user.verify_pin("2222") is True
     user_utils.send_sms.assert_called_with(user, 'successful_pin_change_sms')
