@@ -10,7 +10,6 @@ import bcrypt
 import jwt
 import random
 import string
-from collections import Counter
 
 from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -574,7 +573,6 @@ class User(ManyOrgBase, ModelBase):
             string.ascii_letters + string.digits, k=16))
 
         self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
-
 
     def __repr__(self):
         if self.has_admin_role:

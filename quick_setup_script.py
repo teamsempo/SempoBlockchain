@@ -104,7 +104,7 @@ class Setup(object):
 if __name__ == '__main__':
 
     s = Setup(api_token=
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzI4MTkzMzUsImlhdCI6MTU3MjIxNDUzNSwiaWQiOjQsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.Q37sVq-bpzQFIf82QVqRptANRgF5p9eyQIZH4OEPNXw'
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzM5NTk2NjYsImlhdCI6MTU3MzM1NDg2NiwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.WjLnhelhfXfEpnSCiXwFOqWEYqwrUVXfpTDn-mfJnvI'
     )
 
     result = s.deploy_contracts()
@@ -132,12 +132,12 @@ if __name__ == '__main__':
     #                                             name='CIC1',
     #                                             symbol='CIC1',
     #                                             exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
-    #
+
     # cic2_token_id = s.register_blockchain_token('0x5CB40AcCE23D33fB28015DFf0C552E4583633996',
     #                                             name='CIC2',
     #                                             symbol='CIC2',
     #                                             exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
-
+    #
     # org_id = s.create_organisation('Sempo19', reserve_token_id)
     # bind_response = s.bind_this_user_to_organisation(org_id)
     #

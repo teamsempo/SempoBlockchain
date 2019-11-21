@@ -1,3 +1,4 @@
+import enum
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask import current_app
 from server import db, bt
@@ -8,6 +9,11 @@ from server.models.utils import (
 )
 
 
+class TokenType(enum.Enum):
+    LIQUID      = 'LIQUID'
+    RESERVE     = 'RESERVE'
+
+
 class Token(ModelBase):
     __tablename__ = 'token'
 
@@ -15,6 +21,8 @@ class Token(ModelBase):
     name = db.Column(db.String)
     symbol = db.Column(db.String)
     _decimals = db.Column(db.Integer)
+
+    token_type = db.Column(db.Enum(TokenType))
 
     organisations = db.relationship('Organisation',
                                     backref='token',
