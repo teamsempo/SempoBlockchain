@@ -1,9 +1,15 @@
 import subprocess
 from sqlalchemy import create_engine
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 
 import config
-from server.models.utils import ModelBase as ServerModelBase
-from sql_persistence.models import ModelBase as EthModelBase
+from app.server.models.utils import ModelBase as ServerModelBase
+from eth_worker.sql_persistence.models import ModelBase as EthModelBase
 
 
 def drop_and_rebuild_sql(base, uri):
