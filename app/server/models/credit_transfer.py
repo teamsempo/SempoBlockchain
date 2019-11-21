@@ -210,7 +210,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         for limit in relevant_transfer_limits:
             filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.time_period_days)
 
-            amount_avail = 0
             if limit.transfer_count is not None:
                 # GE Limits
                 transaction_count = db.session.query(func.count(CreditTransfer.id).label('count'))\
@@ -226,7 +225,15 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     raise AccountLimitError(message)
 
             if limit.transfer_balance_percentage is not None:
-                amount_avail = limit.transfer_balance_percentage * self.sender_transfer_account.balance
+                allowed_percent_transfer = limit.transfer_balance_percentage * self.sender_transfer_account.balance
+
+                if self.transfer_amount > allowed_percent_transfer:
+                    message = 'Account % Limit "{}" reached. {} available'.format(
+                        limit.name,
+                        max(allowed_percent_transfer, 0)
+                    )
+                    self.resolve_as_rejected(message=message)
+                    raise AccountLimitError(message)
 
             if limit.total_amount is not None:
                 # Sempo Compliance Account Limits
@@ -238,10 +245,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
                 amount_avail = limit.total_amount - (transaction_volume or 0)
 
-            if self.transfer_amount > amount_avail:
-                message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
-                self.resolve_as_rejected(message=message)
-                raise AccountLimitError(message)
+                if self.transfer_amount > amount_avail:
+                    message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
+                    self.resolve_as_rejected(message=message)
+                    raise AccountLimitError(message)
 
         return relevant_transfer_limits
 
