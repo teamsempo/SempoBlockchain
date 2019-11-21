@@ -51,10 +51,6 @@ def create_user_response_object(user, auth_token, message):
     else:
         usd_to_satoshi_rate = None
 
-    must_answer_targeting_survey = False
-    if user.has_beneficiary_role and current_app.config['REQUIRE_TARGETING_SURVEY'] and not user.targeting_survey_id:
-        must_answer_targeting_survey = True
-
     conversion_rate = 1
     currency_name = current_app.config['CURRENCY_NAME']
     if user.default_currency:
@@ -93,15 +89,11 @@ def create_user_response_object(user, auth_token, message):
         'secret': user.secret,
         'first_name': user.first_name,
         'last_name': user.last_name,
-        'must_answer_targeting_survey': must_answer_targeting_survey,
         'deployment_name': current_app.config['DEPLOYMENT_NAME'],
-        'ap_is_active': current_app.config['AP_IS_ACTIVE'],
         'denominations': get_denominations(),
         'terms_accepted': user.terms_accepted,
         'request_feedback_questions': request_feedback_questions(user),
         'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
-        # This is here to stop the old release from dying
-        'feedback_questions': request_feedback_questions(user),
         'transfer_usages': transfer_usages,
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'kyc_active': True,  # todo; kyc active function

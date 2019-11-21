@@ -5,11 +5,8 @@ from server.me_api.credit_transfer import MeCreditTransferAPI, RequestWithdrawal
 from server.me_api.me import MeAPI
 from server.me_api.misc import (
     MeFeedbackAPI,
-    TargetingSurveyAPI,
     ReferralAPI,
     VersionAPI,
-    AssemblyPaymentsUserAPI,
-    AssemblyPaymentsPayoutAccountAPI,
     PoliPaymentsAPI
 )
 
@@ -49,12 +46,6 @@ me_blueprint.add_url_rule(
 )
 
 me_blueprint.add_url_rule(
-    '/targeting_survey/',
-    view_func=TargetingSurveyAPI.as_view('targeting_survey_view'),
-    methods=['POST']
-)
-
-me_blueprint.add_url_rule(
     '/referral/',
     view_func=ReferralAPI.as_view('referral_view'),
     methods=['GET', 'POST']
@@ -63,18 +54,6 @@ me_blueprint.add_url_rule(
 me_blueprint.add_url_rule(
     '/version/',
     view_func=VersionAPI.as_view('version_view'),
-    methods=['POST']
-)
-
-me_blueprint.add_url_rule(
-    '/ap_user/',
-    view_func=AssemblyPaymentsUserAPI.as_view('ap_user_view'),
-    methods=['POST']
-)
-
-me_blueprint.add_url_rule(
-    '/ap_payout_account/',
-    view_func=AssemblyPaymentsPayoutAccountAPI.as_view('ap_payout_account_view'),
     methods=['POST']
 )
 

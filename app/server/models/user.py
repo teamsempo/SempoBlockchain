@@ -86,11 +86,6 @@ class User(ManyOrgBase, ModelBase):
 
     matched_profile_pictures = db.Column(JSON)
 
-    ap_user_id = db.Column(db.String())
-    ap_bank_id = db.Column(db.String())
-    ap_paypal_id = db.Column(db.String())
-    kyc_state = db.Column(db.String())
-
     cashout_authorised = db.Column(db.Boolean, default=False)
 
     business_usage_id = db.Column(db.Integer, db.ForeignKey(TransferUsage.id))
@@ -102,9 +97,6 @@ class User(ManyOrgBase, ModelBase):
 
     # TODO: work out if this should be deprecated
     default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
-
-    targeting_survey_id = db.Column(
-        db.Integer, db.ForeignKey('targeting_survey.id'))
 
     default_organisation_id = db.Column(
         db.Integer, db.ForeignKey('organisation.id'))
