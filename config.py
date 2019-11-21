@@ -277,11 +277,6 @@ CALL_TIMEOUT = specific_parser['ETHEREUM'].getint('call_timeout', 2)
 FACEBOOK_TOKEN = common_parser['FACEBOOK']['token']
 FACEBOOK_VERIFY_TOKEN = common_parser['FACEBOOK']['verify_token']
 
-AP_IS_ACTIVE             = specific_parser['ASSEMBLYPAYMENTS'].getboolean('ap_is_active')
-ASSEMBLYPAYMENTS_HOST = specific_parser['ASSEMBLYPAYMENTS']['host']
-ASSEMBLYPAYMENTS_EMAIL = common_parser['ASSEMBLYPAYMENTS']['email']
-ASSEMBLYPAYMENTS_KEY = common_parser['ASSEMBLYPAYMENTS']['key']
-
 WYRE_PUBLIC_KEY = common_parser['WYRE']['public_key']
 WYRE_SECRET_KEY = common_parser['WYRE']['secret_key']
 WYRE_HOST = specific_parser['WYRE']['host']
