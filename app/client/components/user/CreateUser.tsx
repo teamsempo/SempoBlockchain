@@ -50,6 +50,11 @@ class CreateUser extends React.Component<Props> {
   }
 
   onCreateUser(form: Form) {
+    let businessUsage = form.businessUsage;
+    if (businessUsage && businessUsage.toLowerCase() === "other") {
+      businessUsage = form.usageOtherSpecific;
+    }
+
     this.props.createUser({
       first_name: form.firstName,
       last_name: form.lastName,
@@ -65,9 +70,11 @@ class CreateUser extends React.Component<Props> {
       existing_vendor_pin: form.existingVendorPin,
       transfer_account_name: form.transferAccountName,
       location: form.location,
-      business_usage_name: form.businessUsage,
-      usage_other_specific: form.usageOtherSpecific
+      business_usage_name: businessUsage,
     })
+
+    //how to trigger this after createUser finishes? so that we can load the new transfer usages
+    //this.props.loadTransferUsages();
   }
 
   render() {

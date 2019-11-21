@@ -392,18 +392,10 @@ def proccess_create_or_modify_user_request(
     last_name = attribute_dict.get('last_name')
 
     business_usage_name = attribute_dict.get('business_usage_name')
+    business_usage_id = None
     if business_usage_name:
         usage = TransferUsage.find_or_create(business_usage_name)
-        if usage.name.lower() == "other":
-            usage_other_specific = attribute_dict.get('usage_other_specific')
-            if usage_other_specific:
-                other_usage = TransferUsage.find_or_create(usage_other_specific)
-                business_usage_id = other_usage.id
-            else:
-                response_object = {'message': 'Please specify a category for Other'}
-                return response_object, 400
-        else:
-            business_usage_id = usage.id
+        business_usage_id = usage.id
 
     preferred_language = attribute_dict.get('preferred_language')
 

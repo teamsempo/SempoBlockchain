@@ -58,5 +58,4 @@ class TransferUsage(ModelBase):
         if usage is None:
             usage = cls(name=name, default=default)
             db.session.add(usage)
-            db.session.commit()
         return usage

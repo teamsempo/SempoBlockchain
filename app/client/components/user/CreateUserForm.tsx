@@ -54,9 +54,14 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     return this.props.transferUsages.map((transferUsage) => {
       return {
         name: transferUsage.name,
-        value: transferUsage.name.toLowerCase()
+        value: transferUsage.name
       }
-    })
+    }).concat(
+      {
+        name: "Other",
+        value: "other"
+      }
+    )
   }
 
   render() {
@@ -69,7 +74,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
       </InputField>
     }
     if (this.props.transferUsages.length > 0) {
-      if (this.props.businessUsageValue && this.props.businessUsageValue === "other") {
+      if (this.props.businessUsageValue && this.props.businessUsageValue.toLowerCase() === "other") {
         businessUsage = <>
           <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
           <InputField name="usageOtherSpecific" label='Please specify the category' isRequired />
