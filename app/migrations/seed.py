@@ -274,7 +274,6 @@ if __name__ == '__main__':
         {'name': 'Environment', 'icon': 'message'},
         {'name': 'Transport', 'icon': 'message'},
         {'name': 'Labour', 'icon': 'message'},
-        {'name': 'Other', 'icon': 'message'},
     ]
     for business_category in business_categories:
         usage = TransferUsage.find_or_create(business_category['name'])

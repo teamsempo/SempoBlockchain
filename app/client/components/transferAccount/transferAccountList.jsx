@@ -175,10 +175,10 @@ class TransferAccountList extends React.Component {
     if (this.state.account_type !== 'ALL') {
       // a vendor/recipient filter is applied
       if (this.state.account_type === 'VENDORS') {
-        filteredData = filteredData.filter(account => (account.is_vendor === true))
+        filteredData = filteredData.filter(account => account.is_vendor)
       }
       if (this.state.account_type === window.BENEFICIARY_TERM_PLURAL) {
-        filteredData = filteredData.filter(account => (account.is_beneficiary === true))
+        filteredData = filteredData.filter(account => !account.is_vendor)
       }
     }
 
