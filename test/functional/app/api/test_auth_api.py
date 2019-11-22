@@ -83,6 +83,9 @@ def test_get_tfa_url(test_client, activated_sempo_admin_user):
 @pytest.mark.parametrize("otp_generator, status_code", [
     (lambda f: f.now(), 200),
     (lambda f: f.at(datetime.now(), -1), 200),
+    (lambda f: 'not a numeric str', 400),
+    (lambda f: 123456, 400),
+    (lambda f: '1234567', 400),
     (lambda f: f.at(datetime.now(), -4), 400),
     (lambda f: '1230924579324', 400),
 ])
@@ -93,33 +96,23 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
     THEN check a tfa token is only returned when OTP is valid
     """
 
-    def inner_test():
-        auth_token = authed_sempo_admin_user.encode_auth_token().decode()
+    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
 
-        tfa_url = authed_sempo_admin_user.tfa_url
-        tfa_secret = tfa_url.split("secret=")[1].split('&')[0]
-        func = pyotp.TOTP(tfa_secret)
-        otp = otp_generator(func)
+    tfa_url = authed_sempo_admin_user.tfa_url
+    tfa_secret = tfa_url.split("secret=")[1].split('&')[0]
+    func = pyotp.TOTP(tfa_secret)
+    otp = otp_generator(func)
 
-        otp_expiry_interval = 1
-        response = test_client.post('/api/auth/tfa/',
-                                    headers=dict(Authorization=auth_token, Accept='application/json'),
-                                    data=json.dumps(dict(otp=otp, otp_expiry_interval=otp_expiry_interval)),
-                                    content_type='application/json', follow_redirects=True)
+    otp_expiry_interval = 1
+    response = test_client.post('/api/auth/tfa/',
+                                headers=dict(Authorization=auth_token, Accept='application/json'),
+                                json=dict(
+                                    otp=otp,
+                                    otp_expiry_interval=otp_expiry_interval
+                                ),
+                                content_type='application/json', follow_redirects=True)
 
-        return response.status_code == status_code
-
-    # This test is flaky (probably due to the time-dependence of the otp test)
-    # So we run it twice to maximise the chance it will pass if it should
-    for i in range(0, 5):
-        passed = inner_test()
-        if passed:
-            continue
-        print('Retrying')
-        sleep(1)
-
-    assert passed
-
+    assert response.status_code == status_code
 
 @pytest.mark.parametrize("email,password,status_code", [
     ("tristan@sempo.ai", "TestPassword", 200),

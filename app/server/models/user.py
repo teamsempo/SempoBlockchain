@@ -480,15 +480,10 @@ class User(ManyOrgBase, ModelBase):
         return decrypt_string(self._TFA_secret)
 
     def validate_OTP(self, input_otp):
-        try:
-            p = int(input_otp)
-        except ValueError:
-            return False
-        else:
-            secret = self.get_TFA_secret()
-            server_otp = pyotp.TOTP(secret)
-            ret = server_otp.verify(p, valid_window=2)
-            return ret
+        secret = self.get_TFA_secret()
+        server_otp = pyotp.TOTP(secret)
+        ret = server_otp.verify(input_otp, valid_window=2)
+        return ret
 
     def set_one_time_code(self, supplied_one_time_code):
         if supplied_one_time_code is None:
