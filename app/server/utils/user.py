@@ -8,6 +8,7 @@ from eth_utils import to_checksum_address
 
 from server import db
 from server.models.device_info import DeviceInfo
+from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
 from server.models.user import User
@@ -624,3 +625,19 @@ def change_initial_pin(user: User, new_pin):
 
 def change_current_pin(user: User, new_pin):
     change_pin(user, new_pin)
+
+
+def default_token(user: User) -> Token:
+    token = None
+    if user.default_transfer_account_id is not None:
+        transfer_account = TransferAccount.query.get(user.default_transfer_account_id)
+        token = transfer_account.token
+
+    if token is None and user.default_organisation_id is not None:
+        token = user.default_organisation.token
+
+    if token is None:
+        raise Exception('no default token for user')
+    else:
+        return token
+

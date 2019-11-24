@@ -256,6 +256,10 @@ class User(ManyOrgBase, ModelBase):
         return cls._held_roles.has_key('BENEFICIARY')
 
     @hybrid_property
+    def has_token_agent_role(self):
+        return AccessControl.has_any_tier(self.roles, 'TOKEN_AGENT')
+
+    @hybrid_property
     def admin_tier(self):
         return self._held_roles.get('ADMIN', None)
 
