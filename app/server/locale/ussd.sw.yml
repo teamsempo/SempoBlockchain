@@ -40,11 +40,15 @@ sw:
     send_token_reason_other: |
       CON Fafanua kusudi zaidi
       0. Nyuma
-    send_token_pin_authorization: |
-      CON Weka nambari ya siri. %remaining_attempts%
-      0. Nyuma
+    send_token_pin_authorization:
+      first:
+        CON Weka nambari ya siri.
+        0. Nyuma
+      retry:
+        CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
+        0. Nyuma
     send_token_confirmation: |
-      CON Tuma %transaction_amount% %token_name% kwa %recipient_phone%
+      CON Tuma %{transaction_amount} %{token_name} kwa %{recipient_phone}
       1. Thibitisha
       2. Futa
       0. Nyuma
@@ -73,37 +77,51 @@ sw:
       1. Angalia biashara
       2. Badilisha biashara
       0. Nyuma
-    about_my_business: END %user_bio%
+    about_my_business: "END %{user_bio}"
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
-    balance_inquiry_pin_authorization: |
-      CON Tafadhali ingiza PIN yako. %remaining_attempts%
-      0. Nyuma
+    balance_inquiry_pin_authorization:
+      first:
+        CON Tafadhali ingiza PIN yako.
+        0. Nyuma
+      retry:
+        CON Tafadhali ingiza PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
+        0. Nyuma
     choose_language: |
       CON Chagua lugha
       1. Kingereza
       2. Kiswahili
       0. Nyuma
-    opt_out_of_market_place_pin_authorization: |
-      CON Tafadhali weka PIN yako. %remaining_attempts%
-      0. Nyuma
-    current_pin: CON Weka nambari ya siri. %remaining_attempts%
+    opt_out_of_market_place_pin_authorization:
+      first:
+        CON Tafadhali weka PIN yako.
+        0. Nyuma
+      retry:
+        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
+        0. Nyuma
+    current_pin:
+      first: CON Weka nambari ya siri.
+      retry: CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
     new_pin: |
       CON Weka nambari ya siri mpya
       0. Nyuma
     new_pin_confirmation: |
       CON Rejelea nambari ya siri mpya
       0. Nyuma
-    help: END Kwa usaidizi piga simu %support_phone%
+    help: END Kwa usaidizi piga simu %{support_phone}
     exchange_token: |
       CON Badilisha
       1. Kiwango cha ubadilishaji
       2. Badilisha
       0. Nyuma
-    exchange_rate_pin_authorization: |
-      CON Tafadhali ingiza PIN yako. %remaining_attempts%
-      0. Nyuma
+    exchange_rate_pin_authorization:
+      first:
+        CON Tafadhali ingiza PIN yako.
+        0. Nyuma
+      retry:
+        CON Tafadhali ingiza PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
+        0. Nyuma
     request_exchange_rate: END Ombi lako la kiwango cha ubadilishaji, linashughulikiwa. Utapokea ujumbe wa SMS kwa muda mfupi.
     exchange_token_agent_number_entry: |
       CON Weka nambari ya simu ya Agent
@@ -111,19 +129,23 @@ sw:
     exchange_token_amount_entry: |
       CON Weka kiwango (40 au zaidi)
       0. Nyuma
-    exchange_token_pin_authorization: |
-      CON Weka nambari ya siri. %remaining_attempts%
-      0. Nyuma
+    exchange_token_pin_authorization:
+      first:
+        CON Weka nambari ya siri.
+        0. Nyuma
+      retry:
+        CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
+        0. Nyuma
     exchange_token_confirmation: |
-      CON Badilisha %exchange_amount% %token_name% kutoka kwa Agent %agent_phone%
+      CON Badilisha %{exchange_amount} %{token_name} kutoka kwa Agent %{agent_phone}
       1. Thibitisha
       2. Futa
       0. Nyuma
     exit: END Asante kwa kutumia huduma.
-    exit_invalid_menu_option: END Chaguo lako sio sahihi. Kwa usaidizi piga simu %support_phone%
-    exit_invalid_pin: END PIN uliobonyeza sio sahihi. PIN lazima iwe na nambari nne na lazima iwe tofauti na pin yako ya sasa. Kwa usaidizi piga simu %support_phone%
-    exit_pin_mismatch: END PIN mpya na udhibitisho wa pin mpya hailingani. Tafadhali jaribu tena. Kwa usaidizi piga simu %support_phone%
-    exit_pin_blocked: END PIN yako imefungwa. Kwa usaidizi tafadhali piga simu %support_phone%
+    exit_invalid_menu_option: END Chaguo lako sio sahihi. Kwa usaidizi piga simu %{support_phone}
+    exit_invalid_pin: END PIN uliobonyeza sio sahihi. PIN lazima iwe na nambari nne na lazima iwe tofauti na pin yako ya sasa. Kwa usaidizi piga simu %{support_phone}
+    exit_pin_mismatch: END PIN mpya na udhibitisho wa pin mpya hailingani. Tafadhali jaribu tena. Kwa usaidizi piga simu %{support_phone}
+    exit_pin_blocked: END PIN yako imefungwa. Kwa usaidizi tafadhali piga simu %{support_phone}
     exit_invalid_request: END Chaguo si sahihi
     exit_invalid_input: END Chaguo lako halipatikani. Hakuna kilichochaguliwa
     exit_recipient_not_found: END Mpokeaji hakupatikana

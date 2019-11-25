@@ -1,4 +1,5 @@
 import threading
+from typing import Optional
 from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
@@ -641,3 +642,15 @@ def default_token(user: User) -> Token:
     else:
         return token
 
+
+def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[User]:
+    user = User.query.execution_options(show_all=True).filter_by(
+        phone=proccess_phone_number(phone_number=phone, region=region)
+    ).first()
+    if user is not None:
+        return user
+    else:
+        if should_raise:
+            raise Exception('User not found.')
+        else:
+            return None

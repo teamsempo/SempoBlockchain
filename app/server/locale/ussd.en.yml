@@ -40,11 +40,15 @@ en:
     send_token_reason_other: |
       CON Please specify
       0. Back
-    send_token_pin_authorization: |
-      CON Please enter your PIN. %remaining_attempts%
-      0. Back
+    send_token_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
     send_token_confirmation: |
-      CON Send %transaction_amount% %token_name% to %recipient_phone% for %transaction_reason%
+      CON Send %{transaction_amount} %{token_name} to %{recipient_phone} for %{transaction_reason}
       1. Confirm
       2. Cancel
       0. Back
@@ -73,37 +77,51 @@ en:
       1. See my business
       2. Change my business
       0. Back
-    about_my_business: END %user_bio%
+    about_my_business: "END %{user_bio}"
     change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back
-    balance_inquiry_pin_authorization: |
-      CON Please enter your PIN. %remaining_attempts%
-      0. Back
+    balance_inquiry_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
     choose_language: |
       CON Choose language
       1. English
       2. Kiswahili
       0. Back
-    opt_out_of_market_place_pin_authorization: |
-      CON Please enter your PIN. %remaining_attempts%
-      0. Back
-    current_pin: CON Enter current PIN. %remaining_attempts%
+    opt_out_of_market_place_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
+    current_pin:
+      first: CON Enter current PIN.
+      retry: CON Enter current PIN. You have %{remaining_attempts} attempts remaining.
     new_pin: |
       CON Enter new PIN
       0. Back
     new_pin_confirmation: |
       CON Enter new PIN again
       0. Back
-    help: END For assistance call %support_phone%
+    help: END For assistance call %{support_phone}
     exchange_token: |
       CON Exchange
       1. Check Exchange Rate
       2. Exchange
       0. Back
-    exchange_rate_pin_authorization: |
-      CON Please enter your PIN. %remaining_attempts%
-      0. Back
+    exchange_rate_pin_authorization:
+      first:
+        CON Please enter your PIN.
+        0. Back
+      retry:
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
     request_exchange_rate: END We are processing your request for your exchange rate. You will receive an SMS shortly.
     exchange_token_agent_number_entry: |
       CON Enter Agent Phone Number
@@ -111,19 +129,23 @@ en:
     exchange_token_amount_entry: |
       CON Enter Amount (40 or more)
       0. Back
-    exchange_token_pin_authorization: |
-      CON Please enter your PIN. %remaining_attempts%
-      0. Back
+    exchange_token_pin_authorization:
+      first:
+        CON Please enter your PIN.
+        0. Back
+      retry:
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
     exchange_token_confirmation: |
-      CON Exchange %exchange_amount% %token_name% from Agent %agent_phone%
+      CON Exchange %{exchange_amount} %{token_name} from Agent %{agent_phone}
       1. Confirm
       2. Cancel
       0. Back
     exit: END Thank you for using the service.
-    exit_invalid_menu_option: END Invalid menu option. For help, call %support_phone%
-    exit_invalid_pin: END The PIN you have entered is Invalid. PIN must consist of 4 digits and must be different from your current PIN. For help, call %support_phone%
-    exit_pin_mismatch: END The new PIN and the new PIN confirmation do not match. Please try again. For help, call %support_phone%
-    exit_pin_blocked: END Your PIN has been blocked. For help, please call %support_phone%
+    exit_invalid_menu_option: END Invalid menu option. For help, call %{support_phone}
+    exit_invalid_pin: END The PIN you have entered is Invalid. PIN must consist of 4 digits and must be different from your current PIN. For help, call %{support_phone}
+    exit_pin_mismatch: END The new PIN and the new PIN confirmation do not match. Please try again. For help, call %{support_phone}
+    exit_pin_blocked: END Your PIN has been blocked. For help, please call %{support_phone}
     exit_invalid_request: END Invalid request
     exit_invalid_input: END Invalid input. Nothing selected
     exit_recipient_not_found: END Recipient not found

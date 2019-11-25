@@ -8,28 +8,13 @@ the services provided by the  ussd app.
 import re
 
 from transitions import Machine
-from typing import Optional
 
 from server import message_processor, sentry, ussd_tasker
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
-from server.utils.phone import proccess_phone_number
 from server.utils.i18n import i18n_for
-from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token
-
-
-def get_user(phone: str, should_raise=False) -> Optional[User]:
-    user = User.query.execution_options(show_all=True).filter_by(
-        phone=proccess_phone_number(phone_number=phone, region="KE")
-    ).first()
-    if user is not None:
-        return user
-    else:
-        if should_raise:
-            raise Exception('User not found.')
-        else:
-            return None
+from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, get_user_by_phone
 
 
 class KenyaUssdStateMachine(Machine):
@@ -171,11 +156,11 @@ class KenyaUssdStateMachine(Machine):
             user.has_token_agent_role == should_be_agent
 
     def is_user(self, user_input):
-        user = get_user(user_input)
+        user = get_user_by_phone(user_input, "KE")
         return self.is_expected_recipient(user, True, False)
 
     def is_token_agent(self, user_input):
-        user = get_user(user_input)
+        user = get_user_by_phone(user_input, "KE")
         return self.is_expected_recipient(user, True, True)
 
     def save_recipient_phone(self, user_input):
@@ -192,13 +177,13 @@ class KenyaUssdStateMachine(Machine):
         self.session.set_data('transaction_reason', user_input)
 
     def process_send_token_request(self, user_input):
-        user = get_user(self.session.get_data('recipient_phone'))
+        user = get_user_by_phone(self.session.get_data('recipient_phone'), "KE")
         amount = float(self.session.get_data('transaction_amount'))
         reason = self.session.get_data('transaction_reason')
         ussd_tasker.send_token(self.user, user, amount, reason)
 
     def upsell_unregistered_recipient(self, user_input):
-        user = get_user(user_input)
+        user = get_user_by_phone(user_input, "KE")
         if self.is_expected_recipient(user, False, False):
             self.send_sms(
                 user.phone,
@@ -226,7 +211,7 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.fetch_user_exchange_rate(self.user)
 
     def is_valid_token_agent(self, user_input):
-        user = get_user(user_input, True)
+        user = get_user_by_phone(user_input, "KE", True)
         return user.has_token_agent_role
 
     def save_exchange_agent_phone(self, user_input):
@@ -239,7 +224,7 @@ class KenyaUssdStateMachine(Machine):
         self.session.set_data('exchange_amount', user_input)
 
     def process_exchange_token_request(self, user_input):
-        agent = get_user(self.session.get_data('agent_phone'))
+        agent = get_user_by_phone(self.session.get_data('agent_phone'), "KE")
         amount = float(self.session.get_data('exchange_amount'))
         ussd_tasker.exchange_token(self.user, agent, amount)
 

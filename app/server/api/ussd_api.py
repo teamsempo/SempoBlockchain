@@ -47,9 +47,9 @@ class ProcessKenyaUssd(MethodView):
             else:
                 current_menu = KenyaUssdProcessor.process_request(session_id, latest_input, user)
                 ussd_session = create_or_update_session(session_id, user, current_menu, user_input, service_code)
-                text = menu_display_text_in_lang(current_menu, user)
-                #TODO(ussd): change this out for i18n placeholders
-                text = KenyaUssdProcessor.replace_vars(current_menu, ussd_session, text, user)
+                text = KenyaUssdProcessor.custom_display_text(current_menu, ussd_session, user)
+                if text is None:
+                    text = menu_display_text_in_lang(current_menu, user)
 
                 db.session.commit()
         else:
