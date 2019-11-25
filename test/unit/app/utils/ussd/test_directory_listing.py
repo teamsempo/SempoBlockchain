@@ -4,7 +4,7 @@ from faker.providers import phone_number
 from faker import Faker
 
 from helpers.user import UserFactory
-from server.utils.ussd.directory_listing import DirectoryListingProcessor
+from server.utils.ussd.directory_listing_processor import DirectoryListingProcessor
 from server.models.transfer_account import TransferAccount
 
 fake = Faker()

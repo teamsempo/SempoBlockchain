@@ -1,6 +1,7 @@
 from typing import List, Callable, Optional
 
 from server.models import token
+from server.models.credit_transfer import CreditTransfer
 
 
 def check_user_liquid_token_type(credit_transfer):
@@ -11,11 +12,11 @@ def check_user_liquid_token_type(credit_transfer):
     return False
 
 
-def check_group_user_liquid_token_type(credit_transfer):
+def check_group_user_liquid_token_type(credit_transfer: CreditTransfer):
     t = credit_transfer.token
-    if t is not None and t.token_type == token.TokenType.LIQUID:
-        # TODO: add group account check
-        raise NotImplementedError
+    if t is not None and t.token_type == token.TokenType.LIQUID and \
+            credit_transfer.sender_user.has_group_account_role():
+        return True
 
     return False
 
@@ -115,5 +116,6 @@ LIMITS = [
     TransferLimit('Sempo Level 3', 500000, 7, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_two_id_verified),
     TransferLimit('Sempo Level 3', 1000000, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_two_id_verified),
 
-    TransferLimit('GE Liquid Token - Standard User', None, 7, 0.1, 1, ['WITHDRAWAL'], check_user_liquid_token_type)
+    TransferLimit('GE Liquid Token - Standard User', None, 7, 0.1, 1, ['WITHDRAWAL', 'EXCHANGE'], check_user_liquid_token_type),
+    TransferLimit('GE Liquid Token - Group Account User', None, 30, 0.5, 1, ['WITHDRAWAL', 'EXCHANGE'], check_group_user_liquid_token_type)
 ]

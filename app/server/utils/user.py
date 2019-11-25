@@ -628,6 +628,13 @@ def change_current_pin(user: User, new_pin):
     change_pin(user, new_pin)
 
 
+def default_transfer_account(user: User) -> TransferAccount:
+    if user.default_transfer_account_id is not None:
+        return TransferAccount.query.get(user.default_transfer_account_id)
+    else:
+        raise Exception("no default transfer account set")
+
+
 def default_token(user: User) -> Token:
     token = None
     if user.default_transfer_account_id is not None:

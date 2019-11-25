@@ -123,7 +123,8 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
             "{" +
             f'"recipient_phone": "{recipient.phone}",'
             '"transaction_amount": "10",'
-            '"transaction_reason": "A reason"'
+            '"transaction_reason_translated": "A reason",'
+            '"transaction_reason_id": "1"'
             + "}"
         )
     )
@@ -137,4 +138,4 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
 
     state_machine.feed_char("1")
     assert state_machine.state == "complete"
-    send_token.assert_called_with(user, recipient, 10, "A reason")
+    send_token.assert_called_with(user, recipient, 10, "A reason", 1)

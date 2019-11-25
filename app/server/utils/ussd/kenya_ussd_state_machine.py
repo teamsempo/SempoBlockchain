@@ -10,6 +10,7 @@ import re
 from transitions import Machine
 
 from server import message_processor, sentry, ussd_tasker
+from server.models.organisation import Organisation
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
@@ -171,16 +172,19 @@ class KenyaUssdStateMachine(Machine):
 
     def save_transaction_reason(self, user_input):
         #TODO: use ruben's dynamic code to convert number to reason
-        self.session.set_data('transaction_reason', user_input)
+        self.session.set_data('transaction_reason_translated', user_input)
+        self.session.set_data('transaction_reason_id', "1")
 
     def save_transaction_reason_other(self, user_input):
-        self.session.set_data('transaction_reason', user_input)
+        self.session.set_data('transaction_reason_translated', user_input)
+        self.session.set_data('transaction_reason_id', "1")
 
     def process_send_token_request(self, user_input):
         user = get_user_by_phone(self.session.get_data('recipient_phone'), "KE")
         amount = float(self.session.get_data('transaction_amount'))
-        reason = self.session.get_data('transaction_reason')
-        ussd_tasker.send_token(self.user, user, amount, reason)
+        reason_str = self.session.get_data('transaction_reason_translated')
+        reason_id = float(self.session.get_data('transaction_reason_id'))
+        ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
 
     def upsell_unregistered_recipient(self, user_input):
         user = get_user_by_phone(user_input, "KE")

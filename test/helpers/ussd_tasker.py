@@ -8,11 +8,11 @@ class MockUssdTasker(object):
         pass
 
     @staticmethod
-    def send_token(user: User, amount: float, reason: str):
+    def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):
         pass
 
     @staticmethod
-    def exchange_token(user: User, amount: float):
+    def exchange_token(sender: User, agent: User, amount: float):
         pass
 
     @staticmethod

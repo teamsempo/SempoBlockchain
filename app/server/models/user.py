@@ -260,6 +260,10 @@ class User(ManyOrgBase, ModelBase):
         return AccessControl.has_any_tier(self.roles, 'TOKEN_AGENT')
 
     @hybrid_property
+    def has_group_account_role(self):
+        return AccessControl.has_any_tier(self.roles, 'GROUP_ACCOUNT')
+
+    @hybrid_property
     def admin_tier(self):
         return self._held_roles.get('ADMIN', None)
 
@@ -595,6 +599,10 @@ class User(ManyOrgBase, ModelBase):
             if len(most_common) == nr_of_wanted:
                 break
         return most_common
+
+    def get_reserve_token(self):
+        # reserve token is master token for now
+        return Organisation.query.filter(is_master=True).first().token
 
     def __init__(self, blockchain_address=None, **kwargs):
         super(User, self).__init__(**kwargs)

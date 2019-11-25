@@ -1,6 +1,8 @@
+from server.models.token import Token
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
-from server.utils.ussd.directory_listing import DirectoryListingProcessor
+from server.utils.ussd.directory_listing_processor import DirectoryListingProcessor
+from server.utils.ussd.token_processor import TokenProcessor
 
 
 class UssdTasker(object):
@@ -10,25 +12,17 @@ class UssdTasker(object):
         processor.start()
 
     @staticmethod
-    def send_token(user: User, amount: float, reason: str):
-        print("send token for user {}, amount {}, reason {}".format(user.id, amount, reason))
-        # TODO
-        pass
+    def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):
+        TokenProcessor.send_token(sender, recipient, amount, reason_str, reason_id)
 
     @staticmethod
-    def exchange_token(user: User, amount: float):
-        print("exchange token for user {}, amount {}".format(user.id, amount))
-        # TODO
-        pass
+    def exchange_token(sender: User, agent: User, amount: float):
+        TokenProcessor.exchange_token(sender, agent, amount)
 
     @staticmethod
     def inquire_balance(user: User):
-        print("inquire balance for user {}".format(user.id))
-        # TODO
-        pass
+        TokenProcessor.send_balance_sms(user)
 
     @staticmethod
     def fetch_user_exchange_rate(user: User):
-        print("fetch exchange rate for user {}".format(user.id))
-        # TODO
-        pass
+        TokenProcessor.fetch_exchange_rate(user)

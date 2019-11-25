@@ -59,7 +59,7 @@ class KenyaUssdProcessor:
             recipient_phone = recipient.user_details()
             token = default_token(user)
             transaction_amount = ussd_session.get_data('transaction_amount')
-            transaction_reason = ussd_session.get_data('transaction_reason')
+            transaction_reason = ussd_session.get_data('transaction_reason_translated')
             return i18n_for(
                 user, menu.display_key,
                 recipient_phone=recipient_phone,
@@ -81,7 +81,7 @@ class KenyaUssdProcessor:
             )
 
         # in matching is scary since it might pick up unintentional ones
-        if ['exit'] in menu.name or 'help' == menu.name:
+        if 'exit' in menu.name or 'help' == menu.name:
             return i18n_for(
                 user, menu.display_key,
                 support_phone='+254757628885'
