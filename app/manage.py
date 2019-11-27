@@ -54,7 +54,7 @@ class UpdateData(Command):
             # todo: [Nick] refactor this, create full seed script
             print("~~~~~~~~~~ Searching for master organisation ~~~~~~~~~~")
 
-            master_organisation = Organisation.query.filter_by(is_master=True).first()
+            master_organisation = Organisation.master_organisation()
             if master_organisation is None:
                 print('Creating master organisation')
                 master_organisation = Organisation(is_master=True)

@@ -1,7 +1,6 @@
-from typing import List, Callable, Optional
+from typing import List, Callable
 
 from server.models import token
-from server.models.credit_transfer import CreditTransfer
 
 
 def check_user_liquid_token_type(credit_transfer):
@@ -12,10 +11,10 @@ def check_user_liquid_token_type(credit_transfer):
     return False
 
 
-def check_group_user_liquid_token_type(credit_transfer: CreditTransfer):
+def check_group_user_liquid_token_type(credit_transfer):
     t = credit_transfer.token
     if t is not None and t.token_type == token.TokenType.LIQUID and \
-            credit_transfer.sender_user.has_group_account_role():
+            credit_transfer.sender_user.has_group_account_role:
         return True
 
     return False

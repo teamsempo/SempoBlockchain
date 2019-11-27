@@ -150,7 +150,7 @@ class KenyaUssdStateMachine(Machine):
         return self.is_valid_pin(user_input) and not self.user.verify_pin(user_input)
 
     # recipient exists, is not initiator, matches active and agent requirements
-    def is_expected_recipient(self, user, should_be_active, should_be_agent):
+    def is_valid_recipient(self, user, should_be_active, should_be_agent):
         return user is not None and \
             user.phone != self.user.phone and \
             user.is_disabled != should_be_active and \
@@ -158,11 +158,11 @@ class KenyaUssdStateMachine(Machine):
 
     def is_user(self, user_input):
         user = get_user_by_phone(user_input, "KE")
-        return self.is_expected_recipient(user, True, False)
+        return self.is_valid_recipient(user, True, False)
 
     def is_token_agent(self, user_input):
         user = get_user_by_phone(user_input, "KE")
-        return self.is_expected_recipient(user, True, True)
+        return self.is_valid_recipient(user, True, True)
 
     def save_recipient_phone(self, user_input):
         self.session.set_data('recipient_phone', user_input)
@@ -188,7 +188,7 @@ class KenyaUssdStateMachine(Machine):
 
     def upsell_unregistered_recipient(self, user_input):
         user = get_user_by_phone(user_input, "KE")
-        if self.is_expected_recipient(user, False, False):
+        if self.is_valid_recipient(user, False, False):
             self.send_sms(
                 user.phone,
                 'upsell_message',

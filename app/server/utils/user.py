@@ -9,6 +9,7 @@ from eth_utils import to_checksum_address
 
 from server import db
 from server.models.device_info import DeviceInfo
+from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
@@ -19,7 +20,7 @@ from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
-from server.exceptions import PhoneVerificationError
+from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app, sentry, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
@@ -632,22 +633,23 @@ def default_transfer_account(user: User) -> TransferAccount:
     if user.default_transfer_account_id is not None:
         return TransferAccount.query.get(user.default_transfer_account_id)
     else:
-        raise Exception("no default transfer account set")
+        raise TransferAccountNotFoundError("no default transfer account set")
 
 
 def default_token(user: User) -> Token:
-    token = None
-    if user.default_transfer_account_id is not None:
-        transfer_account = TransferAccount.query.get(user.default_transfer_account_id)
+    try:
+        transfer_account = default_transfer_account(user)
         token = transfer_account.token
+    except TransferAccountNotFoundError:
+        if user.default_organisation_id is not None:
+            token = user.default_organisation.token
+        else:
+            token = Organisation.master_organisation().token
 
-    if token is None and user.default_organisation_id is not None:
-        token = user.default_organisation.token
+        if token is None:
+            raise Exception('no default token for user')
 
-    if token is None:
-        raise Exception('no default token for user')
-    else:
-        return token
+    return token
 
 
 def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[User]:

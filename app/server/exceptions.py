@@ -18,11 +18,13 @@ class PaymentMethodException(Exception):
     """
     pass
 
+
 class OrganisationNotProvidedException(Exception):
     """
     Raise if trying to query database without providing an organisation ID or SHOW_ALL flag.
     """
     pass
+
 
 class IconNotSupportedException(Exception):
     """
@@ -42,11 +44,13 @@ class TypeNotFoundException(Exception):
     """
     pass
 
+
 class TierNotFoundException(Exception):
     """
     Raise if trying reference role tier that does not exist
     """
     pass
+
 
 class RoleNotFoundException(Exception):
     """
@@ -54,11 +58,13 @@ class RoleNotFoundException(Exception):
     """
     pass
 
+
 class InvalidTransferTypeException(Exception):
     """
     Raise if the transfer type string isn't one of the enumerated transfer types
     """
     pass
+
 
 class InsufficientBalanceException(Exception):
     """
@@ -102,4 +108,8 @@ class NoTransferCardError(Exception):
 
 
 class PhoneVerificationError(Exception):
+    pass
+
+
+class TransferAccountNotFoundError(Exception):
     pass
