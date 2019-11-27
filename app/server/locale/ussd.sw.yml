@@ -136,5 +136,5 @@ sw:
     language_change_sms: Lugha imebadilishwa.
     opt_out_of_market_place_sms: Ombi lako la kuondoka sokoni limekamilika.
     upsell_message: "%{first_name} %{last_name} amejaribu kukutumia {community_token} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
-
-
+    send_directory_listing_message: "%{community_token_name} Soko ya %{business_type}"
+    no_directory_listing_found_message: Samahani hatukuweza kupata biashara kutoka kwa jumuiya yako inayofanana na utafutaji wako.

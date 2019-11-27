@@ -1,24 +1,13 @@
 from bit import Key, PrivateKeyTestnet
 from bit.network import currency_to_satoshi_cached
-
-from time import sleep
-
-import json, base64
-from web3 import Web3, HTTPProvider
-
-from ethereum import utils
-from cryptography.fernet import Fernet
-
+import json
 from celery import chain
-
+import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 
 from worker import celery_tasks, red
-
 import config
-
-import datetime
 
 
 class PreBlockchainError(Exception):

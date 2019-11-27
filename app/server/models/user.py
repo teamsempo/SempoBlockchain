@@ -34,6 +34,7 @@ from server.constants import (
     ACCESS_ROLES
 )
 
+
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
