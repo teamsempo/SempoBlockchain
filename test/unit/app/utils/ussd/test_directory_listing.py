@@ -4,7 +4,8 @@ from faker.providers import phone_number
 from faker import Faker
 
 from helpers.user import UserFactory
-from server.utils.ussd.directory_listing import DirectoryListingProcessor
+from server.utils.user import default_transfer_account
+from server.utils.ussd.directory_listing_processor import DirectoryListingProcessor
 from server.models.transfer_account import TransferAccount
 
 fake = Faker()
@@ -45,7 +46,7 @@ def test_get_business_category_translation(test_client, init_database, dl_proces
 
 def test_send_directory_listing(mocker, test_client, init_database, dl_processor):
     user = dl_processor.recipient
-    transfer_account = TransferAccount.query.get(user.default_transfer_account_id)
+    transfer_account = default_transfer_account(user)
     transfer_account.token.name = "A Token"
 
     # TODO: add bio

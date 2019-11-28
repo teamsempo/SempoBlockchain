@@ -54,6 +54,10 @@ class Organisation(ModelBase):
 
     custom_welcome_message_key = db.Column(db.String)
 
+    @staticmethod
+    def master_organisation():
+        return Organisation.query.filter_by(is_master=True).first()
+
     def send_welcome_sms(self, to_user):
         if self.custom_welcome_message_key:
             message = i18n_for(to_user, "organisation.{}".format(self.custom_welcome_message_key))
@@ -67,7 +71,6 @@ class Organisation(ModelBase):
         super(Organisation, self).__init__(**kwargs)
 
         if is_master:
-
             if Organisation.query.filter_by(is_master=True).first():
                 raise Exception("A master organisation already exists")
 

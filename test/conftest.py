@@ -29,7 +29,7 @@ def requires_auth(test_client):
 @pytest.fixture(scope='module')
 def create_master_organisation(test_client, init_database):
     from server.models.organisation import Organisation
-    master_organisation = Organisation.query.filter_by(is_master=True).first()
+    master_organisation = Organisation.master_organisation()
     if master_organisation is None:
         print('Creating master organisation')
         master_organisation = Organisation(is_master=True)

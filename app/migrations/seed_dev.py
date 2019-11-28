@@ -270,7 +270,7 @@ def run_setup():
     # To simplify creation, we set the flask context to show all model data
     g.show_all = True
 
-    master_organisation = Organisation.query.filter_by(is_master=True).first()
+    master_organisation = Organisation.master_organisation()
     if master_organisation is None:
         print('Creating master organisation')
         master_organisation = Organisation(is_master=True)

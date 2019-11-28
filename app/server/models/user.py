@@ -256,6 +256,14 @@ class User(ManyOrgBase, ModelBase):
         return cls._held_roles.has_key('BENEFICIARY')
 
     @hybrid_property
+    def has_token_agent_role(self):
+        return AccessControl.has_any_tier(self.roles, 'TOKEN_AGENT')
+
+    @hybrid_property
+    def has_group_account_role(self):
+        return AccessControl.has_any_tier(self.roles, 'GROUP_ACCOUNT')
+
+    @hybrid_property
     def admin_tier(self):
         return self._held_roles.get('ADMIN', None)
 
@@ -543,7 +551,7 @@ class User(ManyOrgBase, ModelBase):
         self.clear_expired_pin_reset_tokens()
         not_resetting = len(self.pin_reset_tokens) == 0
 
-        return self.pin is not None and not_resetting
+        return self.pin_hash is not None and not_resetting
 
     def user_details(self):
         "{} {} {}".format(self.first_name, self.last_name, self.phone)
@@ -591,6 +599,10 @@ class User(ManyOrgBase, ModelBase):
             if len(most_common) == nr_of_wanted:
                 break
         return most_common
+
+    def get_reserve_token(self):
+        # reserve token is master token for now
+        return Organisation.master_organisation().token
 
     def __init__(self, blockchain_address=None, **kwargs):
         super(User, self).__init__(**kwargs)

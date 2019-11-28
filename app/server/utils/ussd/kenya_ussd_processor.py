@@ -4,7 +4,9 @@ from functools import reduce
 from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
 from server.utils.phone import proccess_phone_number
+from server.utils.user import get_user_by_phone, default_token
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.utils.i18n import i18n_for
 
 
 class KenyaUssdProcessor:
@@ -42,41 +44,60 @@ class KenyaUssdProcessor:
         return new_state
 
     @staticmethod
-    def replace_vars(menu: UssdMenu, ussd_session: UssdSession, display_text: str, user: User) -> str:
-        replacements = [['%support_phone%', '+254757628885']]
+    def custom_display_text(menu: UssdMenu, ussd_session: UssdSession, user: User) -> Optional[str]:
 
         if menu.name == 'about_my_business':
-            replacements.append(['%user_bio%', user.bio])
-        elif menu.name == 'send_token_confirmation':
-            phone = proccess_phone_number(ussd_session.session_data['recipient_phone'], 'KE')
-            recipient = User.query.filter_by(phone=phone).first()
-            replacements.append(['%recipient_phone%', recipient.user_details()])
-            # TODO(ussd): this is not a thing yet!!
-            token = ussd_session.user.community_token
-            replacements.append(['%token_name%', token.name])
-            replacements.append(['%transaction_amount%', ussd_session.session_data['transaction_amount']])
-            replacements.append(['%transaction_reason%', ussd_session.session_data['transaction_reason']])
-        elif menu.name == 'exchange_token_confirmation':
-            phone = proccess_phone_number(ussd_session.session_data['agent_phone'], 'KE')
-            agent = User.query.filter_by(phone=phone).first()
-            replacements.append(['%agent_phone%', agent.user_details])
-            # TODO(ussd): this is not a thing yet!!
-            token = ussd_session.user.community_token
-            replacements.append(['%token_name%', token.name])
-            replacements.append(['%exchange_amount%', ussd_session.session_data['exchange_amount']])
-        elif 'pin_authorization' in menu.name or 'current_pin' in menu.name:
-            if user.failed_pin_attempts is not None and user.failed_pin_attempts > 0:
-                # TODO(ussd): replace this with i18n placeholders
-                if user.preferred_language == 'sw_KE':
-                    replacements.append(
-                        ['%remaining_attempts%', "Una majaribio {} yaliyobaki.".format(3 - user.failed_pin_attempts)])
-                else:
-                    replacements.append(['%remaining_attempts%',
-                                         "You have {} attempts remaining.".format(3 - user.failed_pin_attempts)])
+            bio = user.custom_attributes.filter_by(name='bio').first()
+            if bio is None:
+                # TODO: replace this with a no bio message?
+                return i18n_for(user, menu.display_key, user_bio=bio)
             else:
-                replacements.append(['%remaining_attempts%', ''])
+                return i18n_for(user, menu.display_key, user_bio=bio)
 
-        return reduce(lambda text, r: text.replace(r[0], r[1]), replacements, display_text)
+        if menu.name == 'send_token_confirmation':
+            recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)
+            recipient_phone = recipient.user_details()
+            token = default_token(user)
+            transaction_amount = ussd_session.get_data('transaction_amount')
+            transaction_reason = ussd_session.get_data('transaction_reason_translated')
+            return i18n_for(
+                user, menu.display_key,
+                recipient_phone=recipient_phone,
+                token_name=token.name,
+                transaction_amount=transaction_amount,
+                transaction_reason=transaction_reason
+            )
+
+        if menu.name == 'exchange_token_confirmation':
+            agent = get_user_by_phone(ussd_session.get_data('agent_phone'), 'KE', True)
+            agent_phone = agent.user_details()
+            token = default_token(user)
+            exchange_amount = ussd_session.get_data('exchange_amount')
+            return i18n_for(
+                user, menu.display_key,
+                agent_phone=agent_phone,
+                token_name=token.name,
+                exchange_amount=exchange_amount
+            )
+
+        # in matching is scary since it might pick up unintentional ones
+        if 'exit' in menu.name or 'help' == menu.name:
+            return i18n_for(
+                user, menu.display_key,
+                support_phone='+254757628885'
+            )
+
+        # in matching is scary since it might pick up unintentional ones
+        if 'pin_authorization' in menu.name or 'current_pin' == menu.name:
+            if user.failed_pin_attempts is not None and user.failed_pin_attempts > 0:
+                return i18n_for(
+                    user, "{}.retry".format(menu.display_key),
+                    remaining_attempts=3 - user.failed_pin_attempts
+                )
+            else:
+                return i18n_for(user, "{}.first".format(menu.display_key))
+
+        return None
 
 
 
