@@ -5,7 +5,8 @@ from server.models import token
 
 def check_user_liquid_token_type(credit_transfer):
     t = credit_transfer.token
-    if t is not None and t.token_type == token.TokenType.LIQUID:
+    if t is not None and t.token_type == token.TokenType.LIQUID and not \
+            credit_transfer.sender_user.has_group_account_role:
         return True
 
     return False

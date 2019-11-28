@@ -153,7 +153,7 @@ en:
     exit_use_exchange_menu: END Recipient phone number is an agent. To exchange, use exchange menu
     exit_invalid_token_agent: END Agent phone number is incorrect
     exit_not_registered: |
-      END Haujasajiliwa kwa hii huduma. Kusajili tuma: jina, nambari ya simu, kitambulisho, eneo, na biashara yako. Kwa 0757628885
+      END You hasn't registered for this service. To register send: name, phone number, ID, location, and business to 0757628885
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
@@ -164,5 +164,21 @@ en:
     send_token_recipient_sms: Successfully received a payment of %{amount} %{token_name} from %{other_user} for %{reason} on %{date} at %{time}. New %{token_name} balance is %{balance}
     exchange_token_sender_sms: Successfully sent a payment of %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} to %{other_user} on %{date} at %{time}. New %{own_token_name} balance is %{balance}
     exchange_token_agent_sms: Successfully received a payment of %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} from %{other_user} on %{date} at %{time}. New %{own_token_name} balance is %{balance}
+    exchange_rate_sms: |
+      Exchange Rate:
+      For 1 %{token_name} you get %{exchange_rate} KSH
+      1000 %{token_name} = %{exchange_sample_value} KSH
+      Send %{token_name} to 0757628885 for MPESA.
+      You can transfer a maximum of %{exchange_limit} %{token_name} at an agent every %{limit_period} days.
+    exchange_count_error_sms: Sorry you have exceeded your exchange token limit. You are allowed %{transaction_count} transaction per %{limit_period} days
+    exchange_amount_error_sms: Sorry you have exceeded your transaction amount limit. You are allowed up to %{limit} of your balance
+    send_token_error_sms: Payment of %{amount} %{token_name} to %{recipient} has failed. Please try again later.
+    send_balance_sms: |
+      Your Sarafu-Network balances are as follows:
+      %{token_balances}
+      You are eligible to exchange as follows:
+      %{token_exchanges}
+      at an agent per %{exchange_period} days
+      Call 0757628885 for more info
 
 

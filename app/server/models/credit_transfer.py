@@ -1,4 +1,6 @@
 import datetime
+from typing import List
+
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -9,13 +11,13 @@ from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
-from server.utils.transaction_limits import LIMITS
+from server.utils.transaction_limits import LIMITS, TransferLimit
 
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError,
-    AccountLimitError
-)
+    AccountLimitError,
+    TransactionCountLimitError, TransactionPercentLimitError)
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
@@ -191,7 +193,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if message:
             self.resolution_message = message
 
-    def get_transfer_limits(self):
+    def get_transfer_limits(self) -> List[TransferLimit]:
         relevant_limits = []
         for limit in LIMITS:
             applied = limit.application_filter(self)
@@ -222,7 +224,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'\
                         .format(limit.name, limit.transfer_count, limit.time_period_days)
                     self.resolve_as_rejected(message=message)
-                    raise AccountLimitError(message)
+                    raise TransactionCountLimitError(message, limit.time_period_days, limit.transfer_count)
 
             if limit.transfer_balance_percentage is not None:
                 allowed_percent_transfer = limit.transfer_balance_percentage * self.sender_transfer_account.balance
@@ -233,7 +235,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                         max(allowed_percent_transfer, 0)
                     )
                     self.resolve_as_rejected(message=message)
-                    raise AccountLimitError(message)
+                    raise TransactionPercentLimitError(message, limit.transfer_balance_percentage)
 
             if limit.total_amount is not None:
                 # Sempo Compliance Account Limits
