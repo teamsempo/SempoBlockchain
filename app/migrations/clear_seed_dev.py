@@ -3,10 +3,9 @@ from sqlalchemy import create_engine
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
-
+dirname = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(dirname, "..", "..")))
+sys.path.append(os.path.abspath(os.path.join(dirname, "..")))
 
 import config
 from server.models.utils import ModelBase as ServerModelBase
