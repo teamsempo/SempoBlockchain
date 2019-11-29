@@ -49,8 +49,7 @@ class KenyaUssdProcessor:
         if menu.name == 'about_my_business':
             bio = user.custom_attributes.filter_by(name='bio').first()
             if bio is None:
-                # TODO: replace this with a no bio message?
-                return i18n_for(user, menu.display_key, user_bio=bio)
+                return i18n_for(user, 'about_my_business_none')
             else:
                 return i18n_for(user, menu.display_key, user_bio=bio)
 
