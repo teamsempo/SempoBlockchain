@@ -6,9 +6,9 @@ import json
 
 from helpers.user import UserFactory
 from helpers.ussd_session import UssdSessionFactory
+from helpers.ussd_utils import make_kenyan_phone
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
-from unit.app.utils.ussd.kenya.test_send import make_kenyan_phone
 
 fake = Faker()
 fake.add_provider(phone_number)

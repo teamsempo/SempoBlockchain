@@ -55,7 +55,7 @@ class Organisation(ModelBase):
     custom_welcome_message_key = db.Column(db.String)
 
     @staticmethod
-    def master_organisation():
+    def master_organisation() -> "Organisation":
         return Organisation.query.filter_by(is_master=True).first()
 
     def send_welcome_sms(self, to_user):
