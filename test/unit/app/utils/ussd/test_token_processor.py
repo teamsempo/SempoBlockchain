@@ -30,9 +30,9 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
 
 @pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
     ("standard", 0.1, "en", "per 7"),
-    ("standard", 0.1, "sw", "tarehe 7"),
+    ("standard", 0.1, "sw", "siku 7"),
     ("group", 0.5, "en", "per 30"),
-    ("group", 0.5, "sw", "tarehe 30"),
+    ("group", 0.5, "sw", "siku 30"),
 ])
 def test_send_balance_sms(mocker, test_client, init_database, initialised_blockchain_network, user_type, limit,
                      preferred_language, sample_text):
@@ -68,7 +68,7 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
 
 @pytest.mark.parametrize("user_type,preferred_language,exchange_text,limit_text", [
     ("standard", "en", "For 1 SM1 you get 1.2 KSH", "a maximum of 20.0 SM1 at an agent every 7 days"),
-    ("group", "sw", "Kwa kila 1 SM1 utapata 1.2 KSH", "wa 100.0 SM1 kwa wakala kuanzia tarehe 30"),
+    ("group", "sw", "Kwa kila 1 SM1 utapata 1.2 KSH", "100.0 SM1 kwa wakala baada ya siku 30"),
 ])
 def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blockchain_network, user_type,
                              preferred_language, exchange_text, limit_text):
@@ -124,6 +124,7 @@ def test_exchange_token(mocker, test_client, init_database, initialised_blockcha
 
     agent = UserFactory(phone=phone(), first_name="Joe", last_name="Bar")
     agent.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+    # this is under the assumption that token agent would have default token being the reserve token. is this the case?
     reserve = Token.query.filter_by(symbol="AUD").first()
     create_transfer_account_for_user(agent, reserve, 300)
 

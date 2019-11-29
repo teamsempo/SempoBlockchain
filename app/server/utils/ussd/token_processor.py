@@ -68,15 +68,15 @@ class TokenProcessor(object):
         transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
                                          require_sender_approved=False, require_recipient_approved=False)
-        received_amount = amount
+        exchanged_amount = None
 
         if sent_token.id != received_token.id:
             exchange = Exchange()
             exchange.exchange_from_amount(user=recipient, from_token=sent_token, to_token=received_token,
                                           from_amount=amount, dependent_task_ids=[transfer.blockchain_task_id])
-            received_amount = exchange.to_transfer.transfer_amount
+            exchanged_amount = exchange.to_transfer.transfer_amount
 
-        return received_amount
+        return exchanged_amount
 
     @staticmethod
     def send_balance_sms(user: User):
@@ -101,7 +101,7 @@ class TokenProcessor(object):
         exchange_period = TokenProcessor.get_limit(user, default_token(user)).time_period_days
 
         TokenProcessor.send_sms(user, "send_balance_sms", token_balances=token_balances,
-                                token_exchanges=token_exchanges, exchange_period=exchange_period)
+                                token_exchanges=token_exchanges, limit_period=exchange_period)
 
     @staticmethod
     def fetch_exchange_rate(user: User):
@@ -118,15 +118,21 @@ class TokenProcessor(object):
     @staticmethod
     def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):
         try:
-            TokenProcessor.transfer_token(sender, recipient, amount, reason_id)
+            exchanged_amount = TokenProcessor.transfer_token(sender, recipient, amount, reason_id)
 
             tx_time = datetime.datetime.now()
             sender_balance = TokenProcessor.get_balance(sender)
             recipient_balance = TokenProcessor.get_balance(recipient)
-            TokenProcessor.send_success_sms("send_token_sender_sms", amount, sender, recipient, reason_str, tx_time,
-                                            sender_balance)
-            TokenProcessor.send_success_sms("send_token_recipient_sms", amount, recipient, sender, reason_str, tx_time,
-                                            recipient_balance)
+            if exchanged_amount is None:
+                TokenProcessor.send_success_sms("send_token_sender_sms", amount, sender, recipient, reason_str, tx_time,
+                                                sender_balance)
+                TokenProcessor.send_success_sms("send_token_recipient_sms", amount, recipient, sender, reason_str,
+                                                tx_time, recipient_balance)
+            else:
+                TokenProcessor.exchange_success_sms("exchange_token_sender_sms", sender, recipient, amount,
+                                                    exchanged_amount, tx_time, sender_balance)
+                TokenProcessor.exchange_success_sms("exchange_token_agent_sms", recipient, sender, exchanged_amount,
+                                                    amount, tx_time, recipient_balance)
         except Exception as e:
             TokenProcessor.send_sms(sender, "send_token_error_sms", amount=amount,
                                     token_name=default_token(sender).name, recipient=recipient.user_details())
