@@ -77,16 +77,17 @@ sw:
       1. Angalia biashara
       2. Badilisha biashara
       0. Nyuma
-    about_my_business: "END %{user_bio}"
+    about_my_business: END %{user_bio}
+    about_my_business_none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
     balance_inquiry_pin_authorization:
       first:
-        CON Tafadhali ingiza PIN yako.
+        CON Tafadhali weka PIN yako.
         0. Nyuma
       retry:
-        CON Tafadhali ingiza PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
+        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
         0. Nyuma
     choose_language: |
       CON Chagua lugha
@@ -120,11 +121,11 @@ sw:
         CON Tafadhali weka PIN yako.
         0. Nyuma
       retry:
-        CON Tafadhali ingiza PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
+        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
         0. Nyuma
     request_exchange_rate: END Ombi lako la kiwango cha ubadilishaji, linashughulikiwa. Utapokea ujumbe wa SMS kwa muda mfupi.
     exchange_token_agent_number_entry: |
-      CON Weka nambari ya simu ya Agent
+      CON Weka nambari ya simu ya wakala
       0. Nyuma
     exchange_token_amount_entry: |
       CON Weka kiwango (40 au zaidi)
@@ -137,46 +138,45 @@ sw:
         CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
         0. Nyuma
     exchange_token_confirmation: |
-      CON Badilisha %{exchange_amount} %{token_name} kutoka kwa Agent %{agent_phone}
+      CON Badilisha %{exchange_amount} %{token_name} kutoka kwa wakala %{agent_phone}
       1. Thibitisha
       2. Futa
       0. Nyuma
     exit: END Asante kwa kutumia huduma.
     exit_invalid_menu_option: END Chaguo lako sio sahihi. Kwa usaidizi piga simu %{support_phone}
-    exit_invalid_pin: END PIN uliobonyeza sio sahihi. PIN lazima iwe na nambari nne na lazima iwe tofauti na pin yako ya sasa. Kwa usaidizi piga simu %{support_phone}
-    exit_pin_mismatch: END PIN mpya na udhibitisho wa pin mpya hailingani. Tafadhali jaribu tena. Kwa usaidizi piga simu %{support_phone}
+    exit_invalid_pin: END PIN uliyobonyeza sio sahihi. PIN lazima iwe na nambari nne na lazima iwe tofauti na pin yako ya sasa. Kwa usaidizi piga simu %{support_phone}
+    exit_pin_mismatch: END PIN mpya na udhibitisho wa pin mpya hazilingani. Tafadhali jaribu tena. Kwa usaidizi piga simu %{support_phone}
     exit_pin_blocked: END PIN yako imefungwa. Kwa usaidizi tafadhali piga simu %{support_phone}
     exit_invalid_request: END Chaguo si sahihi
     exit_invalid_input: END Chaguo lako halipatikani. Hakuna kilichochaguliwa
-    exit_recipient_not_found: END Mpokeaji hakupatikana
+    exit_recipient_not_found: END Mpokeaji hapatikani
     exit_invalid_recipient: END Mpokeaji wa nambari hapatikani au sio sahihi
-    exit_use_exchange_menu: END Mpokeaji wa nambari ni agent. Ili kubadilisha, tumia ubadilishaji
-    exit_invalid_token_agent: END Agent wa nambari hapatikani au sio sahihi
+    exit_use_exchange_menu: END Mpokeaji wa nambari ni wakala. Ili kubadilisha, tumia ubadilishaji
+    exit_invalid_token_agent: END wakala wa nambari hapatikani au sio sahihi
     exit_not_registered: |
-      END Haujasajiliwa kwa hii huduma. Kusajili tuma: jina, nambari ya simu, eneo, na biashara yako. Kwa 0757628885
+      END Haujasajiliwa kwa Sarafu. Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
     exit_invalid_exchange_amount: END Kiwango ulichoweka hakitoshi. Tafadhali weka kiwango cha 40 au zaidi.
     language_change_sms: Lugha imebadilishwa.
     opt_out_of_market_place_sms: Ombi lako la kuondoka sokoni limekamilika.
-    upsell_message: "%{first_name} %{last_name} amejaribu kukutumia {community_token} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
+    upsell_message: "%{first_name} %{last_name} amejaribu kukutumia {community_token} lakini hujasajili. Tuma maelezo yako: jina, eneo, na aina ya biashara yako kwa 0757628885."
     send_directory_listing_message: "%{community_token_name} Soko ya %{business_type}"
     no_directory_listing_found_message: Samahani hatukuweza kupata biashara kutoka kwa jumuiya yako inayofanana na utafutaji wako.
-    send_token_sender_sms: Umetuma %{amount} ${token_name} kwa %{recipient} tarehe %{date} kusudi %{reason} saa %{time}. Salio lako la %{token_name} ni %{balance}
-    send_token_recipient_sms: Umepokea %{amount} %{token_name} kutoka kwa %{sender} tarehe %{date} kusudi %{reason} saa %{time}. Salio lako la %{token_name} ni %{balance}
+    send_token_sender_sms: Umetuma %{amount} ${token_name} kwa %{other_user} tarehe %{date} kusudi %{reason} saa %{time}. Salio lako la %{token_name} ni %{balance}
+    send_token_recipient_sms: Umepokea %{amount} %{token_name} kutoka kwa %{other_user} tarehe %{date} kusudi %{reason} saa %{time}. Salio lako la %{token_name} ni %{balance}
     exchange_token_sender_sms: Umetuma %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} kwa %{other_user} tarehe %{date} saa %{time}. Salio lako la %{own_token_name} ni %{balance}
     exchange_token_agent_sms: Umepokea %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} kutoka kwa %{other_user} tarehe %{date} saa %{time}. Salio lako la %{own_token_name} ni %{balance}
     exchange_rate_sms: |
       Kiwango cha ubadilishaji:
       Kwa kila 1 %{token_name} utapata %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
-      Tuma %{token_name} kwa 0757628885 upate MPESA.
-      Waweza tuma upeo wa %{exchange_limit} %{token_name} kwa wakala kuanzia tarehe %{limit_period}.
-    exchange_count_error_sms: Samahani umepitisha kikomo ya kubadilisha sarafu. Unakubaliwa kubadilisha mara moja kwa %{limit_period} pekee
-    exchange_amount_error_sms: Samahani umepitisha kiwango ya kubadilisha Sarafu. Unakubaliwa kubadilisha %{limit} ya salio lak
+      Waweza kubadilisha %{exchange_limit} %{token_name} kwa wakala baada ya siku %{limit_period}.
+    exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha sarafu. Unakubaliwa kubadilisha mara moja kwa siku %{limit_period} pekee
+    exchange_amount_error_sms: Samahani umepitisha kiwango ya kubadilisha Sarafu. Unakubaliwa kubadilisha %{limit} ya salio lako
     send_token_error_sms: Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika. Jaribu tena baadaye.
     send_balance_sms: |
       Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
       %{token_balances}
       Waweza badilisha kwa viwango vifuatavyo:
       %{token_exchanges}
-      kwa wakili, kuanzia tarehe %{exchange_period}.
-      Piga 0757628885 kwa usaidizi zaidi.
+      Mara moja kwa siku %{limit_period}
+      Piga 0757628885 kwa usaidizi zaidi
