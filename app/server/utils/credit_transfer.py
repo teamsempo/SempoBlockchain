@@ -389,7 +389,8 @@ def make_payment_transfer(transfer_amount,
                           require_sufficient_balance=True,
                           automatically_resolve_complete=True,
                           uuid=None,
-                          transfer_subtype=None):
+                          transfer_subtype=None,
+                          is_ghost_transfer=False):
     """
     This is used for internal transfers between Sempo wallets.
     :param transfer_amount:
@@ -405,6 +406,7 @@ def make_payment_transfer(transfer_amount,
     :param automatically_resolve_complete:
     :param uuid:
     :param transfer_subtype: accepts TransferSubType str.
+    :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
     :return:
     """
     if transfer_subtype in TransferSubTypeEnum.__members__:
@@ -430,7 +432,8 @@ def make_payment_transfer(transfer_amount,
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
-                              transfer_subtype=transfer_subtype)
+                              transfer_subtype=transfer_subtype,
+                              is_ghost_transfer=is_ghost_transfer)
 
     make_cashout_incentive_transaction = False
 

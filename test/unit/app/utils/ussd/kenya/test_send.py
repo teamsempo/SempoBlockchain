@@ -6,7 +6,6 @@ import json
 
 from helpers.user import UserFactory
 from helpers.ussd_session import UssdSessionFactory
-from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
 
