@@ -23,19 +23,21 @@ class TokenProcessor(object):
     @staticmethod
     def send_success_sms(message_key: str, amount: float, user: User, other_user: User, reason: str, tx_time: datetime,
                          balance: float):
-        # TODO: convert amounts - truncate? need to turn from cents to dollar?
+        rounded_balance = str(round(balance, 2))
         TokenProcessor.send_sms(user, message_key, amount=amount, token_name=default_token(user).symbol,
                                 other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'), reason=reason,
-                                time=tx_time.strftime('%I:%M %p'), balance=balance)
+                                time=tx_time.strftime('%I:%M %p'), balance=rounded_balance)
 
     @staticmethod
     def exchange_success_sms(message_key: str, user: User, other_user: User, own_amount: float, other_amount: float,
                              tx_time: datetime, balance: float):
-        # TODO: convert amounts - truncate? need to turn from cents to dollar?
-        TokenProcessor.send_sms(user, message_key, own_amount=own_amount, other_amount=other_amount,
+        rounded_own_amount = str(round(own_amount, 2))
+        rounded_other_amount = str(round(other_amount, 2))
+        rounded_balance = str(round(balance, 2))
+        TokenProcessor.send_sms(user, message_key, own_amount=rounded_own_amount, other_amount=rounded_other_amount,
                                 own_token_name=default_token(user).symbol, other_token_name=default_token(other_user).symbol,
                                 other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'),
-                                time=tx_time.strftime('%I:%M %p'), balance=balance)
+                                time=tx_time.strftime('%I:%M %p'), balance=rounded_balance)
 
     @staticmethod
     def get_balance(user: User):
@@ -64,7 +66,7 @@ class TokenProcessor(object):
 
         transfer_use = None
         if reason_id is not None:
-            transfer_use = str(reason_id)
+            transfer_use = str(int(reason_id))
         transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
                                          require_sender_approved=False, require_recipient_approved=False)
@@ -88,16 +90,18 @@ class TokenProcessor(object):
                 "name": token.symbol,
                 "balance": transfer_account.balance,
                 "limit": limit.transfer_balance_percentage,
-                "exchange_rate": exchange_rate
+                "exchange_rate": str(round(exchange_rate, 2))
             }
 
-        # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
-        transfer_accounts = filter(lambda x: x.is_ghost is False, user.transfer_accounts)
         reserve_token = user.get_reserve_token()
+        # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
+        # could there be multiple reserve? should we filter out all reserve tokens?
+        transfer_accounts = filter(lambda x: x.is_ghost is not True and x.token_id != reserve_token.id,
+                                   user.transfer_accounts)
         token_info = list(map(get_token_info, transfer_accounts))
-        token_balances = "\n".join(map(lambda x: f"{x['name']} {x['balance']}", token_info))
+        token_balances = "\n".join(map(lambda x: f"{x['name']} {str(round(x['balance'], 2))}", token_info))
         token_exchanges = "\n".join(map(
-            lambda x: f"{x['limit'] * x['balance']} {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})", token_info))
+            lambda x: f"{str(round(x['limit'] * x['balance'], 2))} {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})", token_info))
         exchange_period = TokenProcessor.get_limit(user, default_token(user)).time_period_days
 
         TokenProcessor.send_sms(user, "send_balance_sms", token_balances=token_balances,
@@ -108,11 +112,12 @@ class TokenProcessor(object):
         from_token = default_token(user)
 
         limit = TokenProcessor.get_limit(user, from_token)
-        exchange_limit = limit.transfer_balance_percentage * default_transfer_account(user).balance
+        exchange_limit = str(round(limit.transfer_balance_percentage * default_transfer_account(user).balance, 2))
         exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
 
-        TokenProcessor.send_sms(user, "exchange_rate_sms", token_name=from_token.symbol, exchange_rate=exchange_rate,
-                                exchange_sample_value=exchange_rate * float(1000), exchange_limit=exchange_limit,
+        TokenProcessor.send_sms(user, "exchange_rate_sms", token_name=from_token.symbol,
+                                exchange_rate=str(round(exchange_rate, 2)), exchange_limit=exchange_limit,
+                                exchange_sample_value=str(round(exchange_rate * float(1000), 2)),
                                 limit_period=limit.time_period_days)
 
     @staticmethod

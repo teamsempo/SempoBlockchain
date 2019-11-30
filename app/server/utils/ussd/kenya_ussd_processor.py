@@ -1,9 +1,8 @@
 from typing import Optional
-from functools import reduce
 
+from server import db
 from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
-from server.utils.phone import proccess_phone_number
 from server.utils.user import get_user_by_phone, default_token
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.utils.i18n import i18n_for
@@ -45,7 +44,6 @@ class KenyaUssdProcessor:
 
     @staticmethod
     def custom_display_text(menu: UssdMenu, ussd_session: UssdSession, user: User) -> Optional[str]:
-
         if menu.name == 'about_my_business':
             bio = user.custom_attributes.filter_by(name='bio').first()
             if bio is None:
