@@ -341,10 +341,10 @@ class SQLPersistenceInterface(object):
 
         if private_key:
             return self.create_blockchain_wallet_from_private_key(
-                private_key,
-                True,
-                wei_target_balance,
-                wei_topup_threshold,
+                private_key=private_key,
+                allow_existing=True,
+                wei_target_balance=wei_target_balance,
+                wei_topup_threshold=wei_topup_threshold,
             )
 
         wallet = BlockchainWallet(wei_target_balance=wei_target_balance,
