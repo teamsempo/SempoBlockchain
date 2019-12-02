@@ -8,7 +8,7 @@ from web3 import Web3
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
-ENV_DEPLOYMENT_NAME =  os.environ.get('DEPLOYMENT_NAME') or 'local'
+ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
 BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
 
 print('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
