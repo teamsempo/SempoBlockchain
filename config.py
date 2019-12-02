@@ -255,6 +255,11 @@ MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
 MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
 print(f'Master Wallet address: {MASTER_WALLET_ADDRESS}')
 
+RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
+RESERVE_TOKEN_NAME = specific_parser['ETHEREUM'].get('reserve_token_name')
+RESERVE_TOKEN_SYMBOL = specific_parser['ETHEREUM'].get('reserve_token_symbol')
+# RESERVE_TOKEN_DECIMALS = int(specific_parser['ETHEREUM'].get('reserve_token_decimals', 18))
+
 SYSTEM_WALLET_TARGET_BALANCE = int(specific_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
 SYSTEM_WALLET_TOPUP_THRESHOLD = int(specific_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))
 
@@ -268,7 +273,6 @@ if specific_parser['ETHEREUM'].get('dai_contract_address'):
 
 IS_USING_BITCOIN = False
 
-RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
 EXCHANGE_CONTRACT_ADDRESS = specific_parser['ETHEREUM'].get('exchange_contract_address')
 
 SYNCRONOUS_TASK_TIMEOUT = specific_parser['ETHEREUM'].getint('synchronous_task_timeout', 4)
