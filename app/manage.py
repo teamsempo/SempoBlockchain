@@ -25,10 +25,9 @@ class UpdateData(Command):
 
             create_ussd_menus()
             create_business_categories()
-            create_float_wallet(app)
             reserve_token = create_reserve_token(app)
             create_master_organisation(reserve_token)
-
+            create_float_wallet(app)
 
 app = create_app()
 manager = Manager(app)
