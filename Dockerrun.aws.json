@@ -42,7 +42,7 @@
       ]
     },
     {
-      "name": "Eth Worker",
+      "name": "eth_worker",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": false,
       "memory": 256,
@@ -65,7 +65,7 @@
       ]
     },
     {
-      "name": "Eth Processor",
+      "name": "eth_processor",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": false,
       "memory": 256,
