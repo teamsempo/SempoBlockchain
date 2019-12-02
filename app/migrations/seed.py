@@ -310,6 +310,8 @@ def create_reserve_token(app):
     if reserve_token_address:
         reserve_token = Token.query.filter_by(address=reserve_token_address).first()
 
+        print('Existing token not found, creating')
+
         if not reserve_token:
             reserve_token = Token(
                 address=reserve_token_address,
@@ -318,6 +320,8 @@ def create_reserve_token(app):
             )
             db.session.add(reserve_token)
             db.session.commit()
+
+        print(f'Reserve token: {reserve_token}')
 
         return reserve_token
 
@@ -381,11 +385,10 @@ if __name__ == '__main__':
 
     create_ussd_menus()
     create_business_categories()
-    create_float_wallet(current_app)
 
     reserve_token = create_reserve_token(current_app)
     create_master_organisation(reserve_token)
 
-    ctx.pop()
+    create_float_wallet(current_app)
 
-    
+    ctx.pop()
