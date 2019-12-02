@@ -1,6 +1,5 @@
 import sys
 import os
-from sqlalchemy.exc import IntegrityError
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
@@ -11,7 +10,6 @@ from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.organisation import Organisation
 from server.models.token import Token
-from server.models.exchange import ExchangeContract
 from server.exceptions import TransferUsageNameDuplicateException
 
 
@@ -338,6 +336,8 @@ def create_reserve_token(app):
         #     db.session.add(exchange_contract)
         #     db.session.commit()
 
+    print('No token address, skipping')
+
     return None
 
 
@@ -362,7 +362,7 @@ def create_master_organisation(reserve_token):
 
 def create_float_wallet(app):
     print_section_title('Creating/Updating Float Wallet')
-    float_wallet = TransferAccount.query.filter(
+    float_wallet = TransferAccount.query.execution_options(show_all=True).filter(
         TransferAccount.account_type == TransferAccountType.FLOAT
     ).first()
 
