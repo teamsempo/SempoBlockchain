@@ -9,7 +9,7 @@ sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 from server import create_app, db
-from app.migrations.seed import (
+from migrations.seed import (
     create_ussd_menus,
     create_business_categories,
     create_float_wallet,

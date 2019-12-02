@@ -45,7 +45,7 @@
       "name": "eth_worker",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": false,
-      "memory": 256,
+      "memory": 128,
       "links": [
       ],
       "mountPoints": [],
@@ -68,7 +68,7 @@
       "name": "eth_processor",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": false,
-      "memory": 256,
+      "memory": 128,
       "links": [
       ],
       "mountPoints": [],
