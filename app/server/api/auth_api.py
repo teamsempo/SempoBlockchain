@@ -242,7 +242,7 @@ class RegisterAPI(MethodView):
         if selected_whitelist_item:
             organisation = selected_whitelist_item.organisation
         else:
-            organisation = None
+            organisation = Organisation.master_organisation()
 
         user.create_admin_auth(email, password, tier, organisation)
 
