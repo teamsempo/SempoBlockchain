@@ -5,12 +5,26 @@ from server import db, bt
 from server.utils.auth import requires_auth
 from server.models.token import Token
 from server.models.exchange import ExchangeContract
-from server.schemas import exchange_contract_schema, token_schema
+from server.schemas import exchange_contract_schema, exchange_contracts_schema, token_schema
 
 contracts_blueprint = Blueprint('contracts', __name__)
 
 
 class ExchangeContractAPI(MethodView):
+
+    @requires_auth
+    def get(self):
+
+        exchange_contracts = ExchangeContract.query.all()
+
+        response_object = {
+            'message': 'success',
+            'data': {
+                'exchange_contracts': exchange_contracts_schema.dump(exchange_contracts).data
+            }
+        }
+
+        return make_response(jsonify(response_object)), 201
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
@@ -43,7 +57,7 @@ class ExchangeContractAPI(MethodView):
         response_object = {
             'message': 'success',
             'data': {
-                'exchange_contract': exchange_contract_schema.dump(exchange_contract)
+                'exchange_contract': exchange_contract_schema.dump(exchange_contract).data
             }
         }
 
@@ -59,7 +73,6 @@ class TokenAPI(MethodView):
         rather registering a token with an existing smart contract on the system.
         To create a new token contract, use api/token/.
         """
-        # TODO: Work out the proper way to determine the issue amount
         post_data = request.get_json()
 
         name = post_data['name']

@@ -8,7 +8,7 @@ elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
 elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
   python ethereum_filter_test.py
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
-  celery -A eth_manager worker --loglevel=INFO --concurrency=1 --pool=eventlet -Q=processor
+  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet
 else
   alembic upgrade head
 

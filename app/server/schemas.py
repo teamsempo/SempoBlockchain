@@ -385,6 +385,8 @@ tokens_schema = TokenSchema(many=True)
 transfer_usages_schema = TransferUsageSchema(many=True)
 
 exchange_contract_schema = ExchangeContractSchema()
+exchange_contracts_schema = ExchangeContractSchema(many=True)
+
 
 # Me Schemas
 
