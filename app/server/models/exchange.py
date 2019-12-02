@@ -123,9 +123,25 @@ class Exchange(BlockchainTaskableBase):
     from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
     to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
 
+    def get_exchange_rate(self, from_token, to_token):
+        if self.exchange_rate is not None:
+            return self.exchange_rate
 
-    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None):
+        from_amount = 1
+        self.from_token = from_token
+        self.to_token = to_token
 
+        exchange_contract = self._find_exchange_contract(from_token, to_token)
+
+        to_amount = bt.get_conversion_amount(
+            exchange_contract=exchange_contract,
+            from_token=from_token,
+            to_token=to_token,
+            from_amount=from_amount)
+        self.exchange_rate = to_amount/from_amount
+        return self.exchange_rate
+
+    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None, dependent_task_ids=[]):
         self.user = user
         self.from_token = from_token
         self.to_token = to_token
@@ -196,7 +212,7 @@ class Exchange(BlockchainTaskableBase):
             to_token=to_token,
             reserve_token=exchange_contract.reserve_token,
             from_amount=from_amount,
-            dependent_on_tasks=[to_approval_id, reserve_approval_id, from_approval_id]
+            dependent_on_tasks=[to_approval_id, reserve_approval_id, from_approval_id] + dependent_task_ids
         )
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(

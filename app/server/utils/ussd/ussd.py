@@ -16,11 +16,9 @@ def create_or_update_session(session_id: str, user: User, current_menu: UssdMenu
         session.user_input = user_input
         session.ussd_menu_id = current_menu.id
         session.state = current_menu.name
-        db.session.commit()
     else:
         session = UssdSession(session_id=session_id, user_id=user.id, msisdn=user.phone, user_input=user_input,
                               ussd_menu_id=current_menu.id, state=current_menu.name, service_code=service_code)
         db.session.add(session)
-        db.session.commit()
 
     return session

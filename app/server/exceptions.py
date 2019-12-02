@@ -5,6 +5,25 @@ class AccountLimitError(Exception):
     pass
 
 
+class TransactionCountLimitError(AccountLimitError):
+    def __init__(self, message, time_period_days: int, transfer_count: int):
+        self.message = message
+        self.time_period_days = time_period_days
+        self.transfer_count = transfer_count
+
+    def __repr__(self):
+        return self.message
+
+
+class TransactionPercentLimitError(AccountLimitError):
+    def __init__(self, message, transfer_balance_percent: float):
+        self.message = message
+        self.transfer_balance_percent = transfer_balance_percent
+
+    def __repr__(self):
+        return self.message
+
+
 class NameScanException(Exception):
     """
     Raise if namescan api returns an error
@@ -18,11 +37,13 @@ class PaymentMethodException(Exception):
     """
     pass
 
+
 class OrganisationNotProvidedException(Exception):
     """
     Raise if trying to query database without providing an organisation ID or SHOW_ALL flag.
     """
     pass
+
 
 class IconNotSupportedException(Exception):
     """
@@ -42,11 +63,13 @@ class TypeNotFoundException(Exception):
     """
     pass
 
+
 class TierNotFoundException(Exception):
     """
     Raise if trying reference role tier that does not exist
     """
     pass
+
 
 class RoleNotFoundException(Exception):
     """
@@ -54,11 +77,13 @@ class RoleNotFoundException(Exception):
     """
     pass
 
+
 class InvalidTransferTypeException(Exception):
     """
     Raise if the transfer type string isn't one of the enumerated transfer types
     """
     pass
+
 
 class InsufficientBalanceException(Exception):
     """
@@ -80,7 +105,6 @@ class InsufficientBalanceError(Exception):
 
 
 class AccountNotApprovedError(Exception):
-
     def __init__(self, message, is_sender=None):
         self.message = message
         self.is_sender = is_sender
@@ -102,4 +126,8 @@ class NoTransferCardError(Exception):
 
 
 class PhoneVerificationError(Exception):
+    pass
+
+
+class TransferAccountNotFoundError(Exception):
     pass

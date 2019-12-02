@@ -236,3 +236,6 @@ bt = BlockchainTasker()
 from server.utils.misc_tasks import MiscTasker
 mt = MiscTasker()
 
+from server.utils.ussd.ussd_tasks import UssdTasker
+ussd_tasker = UssdTasker()
+

@@ -1,5 +1,7 @@
 import threading
+from typing import Optional
 from phonenumbers.phonenumberutil import NumberParseException
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app
@@ -7,6 +9,9 @@ from eth_utils import to_checksum_address
 
 from server import db
 from server.models.device_info import DeviceInfo
+from server.models.organisation import Organisation
+from server.models.token import Token
+from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
@@ -15,11 +20,12 @@ from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
-from server.exceptions import PhoneVerificationError
+from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app, sentry, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
+from server.utils.i18n import i18n_for
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -224,6 +230,9 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
             transfer_account.approve_and_disburse()
 
+        db.session.add(transfer_account)
+        db.session.commit()
+
     user.default_transfer_account_id = transfer_account.id
 
     return user
@@ -347,6 +356,7 @@ def proccess_create_or_modify_user_request(
     but here it's one layer down because there's multiple entry points for 'create user':
     - The admin api
     - The register api
+
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
     :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
@@ -389,7 +399,12 @@ def proccess_create_or_modify_user_request(
     transfer_account_name = attribute_dict.get('transfer_account_name')
     first_name = attribute_dict.get('first_name')
     last_name = attribute_dict.get('last_name')
-    business_usage_id = attribute_dict.get('business_usage_id')
+
+    business_usage_name = attribute_dict.get('business_usage_name')
+    business_usage_id = None
+    if business_usage_name:
+        usage = TransferUsage.find_or_create(business_usage_name)
+        business_usage_id = usage.id
 
     preferred_language = attribute_dict.get('preferred_language')
 
@@ -589,5 +604,62 @@ def send_onboarding_message(to_phone, first_name, credits, one_time_code):
 def send_phone_verification_message(to_phone, one_time_code):
     if to_phone:
         reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
-
         message_processor.send_message(to_phone, reciever_message)
+
+
+def send_sms(user, message_key):
+    message = i18n_for(user, "user.{}".format(message_key))
+    message_processor.send_message(user.phone, message)
+
+
+def change_pin(user, new_pin):
+    try:
+        user.hash_pin(new_pin)
+        send_sms(user, 'successful_pin_change_sms')
+    except InvalidRequestError:
+        send_sms(user, 'unsuccessful_pin_change_sms')
+
+
+def change_initial_pin(user: User, new_pin):
+    user.is_activated = True
+    change_pin(user, new_pin)
+
+
+def change_current_pin(user: User, new_pin):
+    change_pin(user, new_pin)
+
+
+def default_transfer_account(user: User) -> TransferAccount:
+    if user.default_transfer_account_id is not None:
+        return TransferAccount.query.get(user.default_transfer_account_id)
+    else:
+        raise TransferAccountNotFoundError("no default transfer account set")
+
+
+def default_token(user: User) -> Token:
+    try:
+        transfer_account = default_transfer_account(user)
+        token = transfer_account.token
+    except TransferAccountNotFoundError:
+        if user.default_organisation_id is not None:
+            token = user.default_organisation.token
+        else:
+            token = Organisation.master_organisation().token
+
+        if token is None:
+            raise Exception('no default token for user')
+
+    return token
+
+
+def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[User]:
+    user = User.query.execution_options(show_all=True).filter_by(
+        phone=proccess_phone_number(phone_number=phone, region=region)
+    ).first()
+    if user is not None:
+        return user
+    else:
+        if should_raise:
+            raise Exception('User not found.')
+        else:
+            return None

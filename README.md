@@ -194,7 +194,7 @@ without clearing your databases!
 We use [Mozilla Sops](https://github.com/mozilla/sops/) for sharing low-risk dev keys and secrets.
 
 If you're working on a sempo-specfic deployment, contact nick or tristan to gain decryption access. You will be given an
-AWS account - set up your credentials locally using [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html).
+AWS account - set up your credentials locally using [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), setting the profile name to `sempo` inside the [credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
 
 Once you've been authorised, you can access config settings by running `_SOPS_load.py` inside `.sempoconfig`.
 This will extract all keys into the config_files folder. To encrypt them again for sharing on git, run

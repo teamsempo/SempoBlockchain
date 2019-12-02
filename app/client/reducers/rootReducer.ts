@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import { reducer as formReducer } from 'redux-form'
+import { reducer as FormReducer } from 'redux-form'
 
 import {
   login,
@@ -22,6 +22,8 @@ import { users } from "./userReducer"
 import { filters } from "./filterReducer"
 import { businessVerification } from "./businessVerificationReducer"
 import { wyre } from "./wyreReducer"
+import {TransferUsageReducer} from "./transferUsage/reducers";
+import {OrganisationReducer} from "./organisation/reducers";
 
 const rootReducer = combineReducers({
   login,
@@ -46,7 +48,10 @@ const rootReducer = combineReducers({
   filters,
   businessVerification,
   wyre,
-  form: formReducer
+  transferUsages: TransferUsageReducer,
+  organisation: OrganisationReducer,
+  form: FormReducer
 });
 
 export default rootReducer;
+export type ReduxState = ReturnType<typeof rootReducer>

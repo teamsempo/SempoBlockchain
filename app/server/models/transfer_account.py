@@ -252,7 +252,7 @@ class TransferAccount(OneOrgBase, ModelBase):
                 self.exchange_contact = self
 
         if not self.organisation:
-            master_organisation = Organisation.query.filter_by(is_master=True).first()
+            master_organisation = Organisation.master_organisation()
             if not master_organisation:
                 raise Exception('master_organisation not found')
 

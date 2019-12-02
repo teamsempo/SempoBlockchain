@@ -9,75 +9,71 @@ import re
 
 from transitions import Machine
 
-from server import db, message_processor
+from server import message_processor, sentry, ussd_tasker
+from server.models.organisation import Organisation
 from server.models.user import User
 from server.models.ussd import UssdSession
-from server.utils.phone import proccess_phone_number
+from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
-from server.utils.user import set_custom_attributes
-
-
-def get_user(query_filter):
-    user = User.query.filter_by(phone=proccess_phone_number(phone_number=query_filter, region="KE")).first()
-    if user is not None:
-        return user
+from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, get_user_by_phone
 
 
 class KenyaUssdStateMachine(Machine):
     # define machine states
-    states = ['feed_char',
-              'start',
-              'initial_language_selection',
-              'initial_pin_entry',
-              'initial_pin_confirmation',
-              # send token states
-              'send_enter_recipient',
-              'send_token_amount',
-              'send_token_reason',
-              'send_token_reason_other',
-              'send_token_pin_authorization',
-              'send_token_confirmation',
-              # account management states
-              'account_management',
-              'balance_inquiry_pin_authorization',
-              'choose_language',
-              'pin_change',
-              'current_pin',
-              'new_pin',
-              'new_pin_confirmation',
-              'my_business',
-              'about_my_business',
-              'change_my_business_prompt',
-              'opt_out_of_market_place_pin_authorization',
-              # directory listing state
-              'directory_listing',
-              # exchange token states
-              'exchange_token',
-              'exchange_rate_pin_authorization',
-              'exchange_token_agent_number_entry',
-              'exchange_token_amount_entry',
-              'exchange_token_pin_authorization',
-              'exchange_token_confirmation',
-              # help state
-              'help',
-              # exit states
-              'exit',
-              'exit_not_registered',
-              'exit_invalid_menu_option',
-              'exit_invalid_recipient',
-              'exit_use_exchange_menu',
-              'exit_wrong_pin',
-              'exit_invalid_pin',
-              'exit_pin_mismatch',
-              'exit_pin_blocked',
-              'exit_invalid_token_agent',
-              'exit_invalid_exchange_amount',
-              'complete'
-              ]
+    states = [
+        'feed_char',
+        'start',
+        'initial_language_selection',
+        'initial_pin_entry',
+        'initial_pin_confirmation',
+        # send token states
+        'send_enter_recipient',
+        'send_token_amount',
+        'send_token_reason',
+        'send_token_reason_other',
+        'send_token_pin_authorization',
+        'send_token_confirmation',
+        # account management states
+        'account_management',
+        'balance_inquiry_pin_authorization',
+        'choose_language',
+        'pin_change',
+        'current_pin',
+        'new_pin',
+        'new_pin_confirmation',
+        'my_business',
+        'about_my_business',
+        'change_my_business_prompt',
+        'opt_out_of_market_place_pin_authorization',
+        # directory listing state
+        'directory_listing',
+        # exchange token states
+        'exchange_token',
+        'exchange_rate_pin_authorization',
+        'exchange_token_agent_number_entry',
+        'exchange_token_amount_entry',
+        'exchange_token_pin_authorization',
+        'exchange_token_confirmation',
+        # help state
+        'help',
+        # exit states
+        'exit',
+        'exit_not_registered',
+        'exit_invalid_menu_option',
+        'exit_invalid_recipient',
+        'exit_use_exchange_menu',
+        'exit_wrong_pin',
+        'exit_invalid_pin',
+        'exit_pin_mismatch',
+        'exit_pin_blocked',
+        'exit_invalid_token_agent',
+        'exit_invalid_exchange_amount',
+        'complete'
+    ]
 
-    def send_sms(self, message_key):
-        message = i18n_for(self.user, "ussd.kenya.{}".format(message_key))
-        message_processor.send_message(self.user.phone, message)
+    def send_sms(self, phone, message_key, **kwargs):
+        message = i18n_for(self.user, "ussd.kenya.{}".format(message_key), **kwargs)
+        message_processor.send_message(phone, message)
 
     def change_preferred_language_to_sw(self, user_input):
         self.change_preferred_language_to("sw")
@@ -87,18 +83,27 @@ class KenyaUssdStateMachine(Machine):
 
     def change_preferred_language_to(self, language):
         self.user.preferred_language = language
-        db.session.commit()
-        self.send_sms("language_change_sms")
+        self.send_sms(self.user.phone, "language_change_sms")
 
-    def change_opted_in_market_status(self):
+    def save_business_directory_info(self, user_input):
+        attrs = {
+            "custom_attributes": {
+                "bio": user_input
+            }
+        }
+        set_custom_attributes(attrs, self.user)
+
+    def change_opted_in_market_status(self, user_input):
         attrs = {
             "custom_attributes": {
                 "market_enabled": False
             }
         }
         set_custom_attributes(attrs, self.user)
-        db.session.commit()
-        self.send_sms("opt_out_of_market_place_sms")
+        self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
+
+    def save_pin_data(self, user_input):
+        self.session.set_data('initial_pin', user_input)
 
     def is_valid_pin(self, user_input):
         pin_validity = False
@@ -109,67 +114,123 @@ class KenyaUssdStateMachine(Machine):
     def new_pins_match(self, user_input):
         pins_match = False
         # get previous pin input
-        initial_pin = self.session.user_input.split('*')[-2]
+        initial_pin = self.session.get_data('initial_pin')
         if user_input == initial_pin:
             pins_match = True
         return pins_match
 
-    def recipient_exists(self, phone_number):
-        pass
+    def authorize_pin(self, pin):
+        authorized = False
+        if self.user.failed_pin_attempts is None:
+            self.user.failed_pin_attempts = 0
+        if self.user.failed_pin_attempts >= 3:
+            return False
+        if self.user.failed_pin_attempts < 3:
+            authorized = self.user.verify_pin(pin)
+            if authorized:
+                if self.user.failed_pin_attempts > 0:
+                    self.user.failed_pin_attempts = 0
+            else:
+                self.user.failed_pin_attempts += 1
+        return authorized
 
-    def is_valid_recipient(self, user_input):
-        pass
+    def complete_initial_pin_change(self, user_input):
+        change_initial_pin(user=self.user, new_pin=user_input)
 
-    def is_token_agent(self, user_input):
-        pass
-
-    # TODO: [Philip] Add community token when available
-    def upsell_unregistered_recipient(self, user_input):
-        upsell_message = f"{self.user.first_name} {self.user.last_name} amejaribu kukutumia {self.user} lakini hujasajili. Tuma information yako: jina, nambari ya simu, kitambulisho, eneo, na aina ya biashara yako kwa 0757628885."
-        message_processor.send_message(proccess_phone_number(phone_number=user_input, region="KE"), upsell_message)
-
-    def save_transaction_amount(self, user_input):
-        pass
-
-    def save_transaction_reason(self, user_input):
-        pass
-
-    def save_transaction_reason_other(self, user_input):
-        pass
+    def complete_pin_change(self, user_input):
+        change_current_pin(user=self.user, new_pin=user_input)
 
     def is_authorized_pin(self, user_input):
-        pass
+        return self.authorize_pin(user_input)
 
     def is_blocked_pin(self, user_input):
-        pass
+        return self.user.failed_pin_attempts is not None and self.user.failed_pin_attempts == 3
 
     def is_valid_new_pin(self, user_input):
-        pass
+        return self.is_valid_pin(user_input) and not self.user.verify_pin(user_input)
 
-    def save_business_directory_info(self, user_input):
-        pass
+    # recipient exists, is not initiator, matches active and agent requirements
+    def is_valid_recipient(self, user, should_be_active, should_be_agent):
+        return user is not None and \
+            user.phone != self.user.phone and \
+            user.is_disabled != should_be_active and \
+            user.has_token_agent_role == should_be_agent
 
-    def process_send_token_request(self):
-        pass
+    def is_user(self, user_input):
+        user = get_user_by_phone(user_input, "KE")
+        return self.is_valid_recipient(user, True, False)
 
-    def fetch_user_exchange_rate(self):
-        pass
+    def is_token_agent(self, user_input):
+        user = get_user_by_phone(user_input, "KE")
+        return self.is_valid_recipient(user, True, True)
+
+    def save_recipient_phone(self, user_input):
+        self.session.set_data('recipient_phone', user_input)
+
+    def save_transaction_amount(self, user_input):
+        self.session.set_data('transaction_amount', user_input)
+
+    def save_transaction_reason(self, user_input):
+        #TODO: use ruben's dynamic code to convert number to reason
+        self.session.set_data('transaction_reason_translated', user_input)
+        self.session.set_data('transaction_reason_id', "1")
+
+    def save_transaction_reason_other(self, user_input):
+        self.session.set_data('transaction_reason_translated', user_input)
+        self.session.set_data('transaction_reason_id', "1")
+
+    def process_send_token_request(self, user_input):
+        user = get_user_by_phone(self.session.get_data('recipient_phone'), "KE")
+        amount = float(self.session.get_data('transaction_amount'))
+        reason_str = self.session.get_data('transaction_reason_translated')
+        reason_id = float(self.session.get_data('transaction_reason_id'))
+        ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
+
+    def upsell_unregistered_recipient(self, user_input):
+        user = get_user_by_phone(user_input, "KE")
+        if self.is_valid_recipient(user, False, False):
+            self.send_sms(
+                user.phone,
+                'upsell_message',
+                first_name=user.first_name,
+                last_name=user.last_name,
+                community_token=default_token(user).name
+            )
+
+    def inquire_balance(self, user_input):
+        ussd_tasker.inquire_balance(self.user)
+
+    def send_directory_listing(self, user_input):
+        #TODO: replace with ruben's method when merge
+        chosen_transfer_usage = TransferUsage.find_or_create("Food")
+
+        try:
+            ussd_tasker.send_directory_listing(self.user, chosen_transfer_usage)
+        except Exception as e:
+            print(e)
+            sentry.captureException()
+            pass
+
+    def fetch_user_exchange_rate(self, user_input):
+        ussd_tasker.fetch_user_exchange_rate(self.user)
 
     def is_valid_token_agent(self, user_input):
-        user = get_user(user_input)
-        return 'TOKEN_AGENT' in user.held_roles
+        user = get_user_by_phone(user_input, "KE", True)
+        return user.has_token_agent_role
 
     def save_exchange_agent_phone(self, user_input):
-        pass
+        self.session.set_data('agent_phone', user_input)
 
     def is_valid_token_exchange_amount(self, user_input):
         return int(user_input) >= 40
 
     def save_exchange_amount(self, user_input):
-        pass
+        self.session.set_data('exchange_amount', user_input)
 
-    def process_exchange_token_request(self):
-        pass
+    def process_exchange_token_request(self, user_input):
+        agent = get_user_by_phone(self.session.get_data('agent_phone'), "KE")
+        amount = float(self.session.get_data('exchange_amount'))
+        ussd_tasker.exchange_token(self.user, agent, amount)
 
     def menu_one_selected(self, user_input):
         return user_input == '1'
@@ -193,10 +254,12 @@ class KenyaUssdStateMachine(Machine):
     def __init__(self, session: UssdSession, user: User):
         self.session = session
         self.user = user
-        Machine.__init__(self,
-                         model=self,
-                         states=self.states,
-                         initial=session.state)
+        Machine.__init__(
+            self,
+            model=self,
+            states=self.states,
+            initial=session.state
+        )
 
         # event: initial_language_selection transitions
         initial_language_selection_transitions = [
@@ -225,6 +288,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_pin_entry',
              'dest': 'initial_pin_confirmation',
+             'after': 'save_pin_data',
              'conditions': 'is_valid_pin'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_entry',
@@ -237,6 +301,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'complete',
+             'after': 'complete_initial_pin_change',
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
@@ -277,7 +342,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'send_enter_recipient',
              'dest': 'send_token_amount',
-             'conditions': 'is_valid_recipient',
+             'conditions': 'is_user',
              'after': 'save_recipient_phone'},
             {'trigger': 'feed_char',
              'source': 'send_enter_recipient',
@@ -415,7 +480,9 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'balance_inquiry_pin_authorization',
              'dest': 'complete',
-             'conditions': 'is_authorized_pin'},
+             'conditions': 'is_authorized_pin',
+             'after': 'inquire_balance'
+             },
             {'trigger': 'feed_char',
              'source': 'balance_inquiry_pin_authorization',
              'dest': 'exit_pin_blocked',
@@ -441,6 +508,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'new_pin',
              'dest': 'new_pin_confirmation',
+             'after': 'save_pin_data',
              'conditions': 'is_valid_new_pin'},
             {'trigger': 'feed_char',
              'source': 'new_pin',
@@ -453,7 +521,8 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'new_pin_confirmation',
              'dest': 'complete',
-             'conditions': 'new_pins_match'},
+             'conditions': 'new_pins_match',
+             'after': 'complete_pin_change'},
             {'trigger': 'feed_char',
              'source': 'new_pin_confirmation',
              'dest': 'exit_pin_mismatch'}
@@ -473,6 +542,12 @@ class KenyaUssdStateMachine(Machine):
              'conditions': 'is_blocked_pin'}
         ]
         self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
+
+        # event: directory_listing transitions
+        self.add_transition(trigger='feed_char',
+                            source='directory_listing',
+                            dest='complete',
+                            after='send_directory_listing')
 
         # event: exchange_token transitions
         exchange_token_transitions = [
@@ -560,4 +635,3 @@ class KenyaUssdStateMachine(Machine):
              'dest': 'exit_invalid_menu_option'}
         ]
         self.add_transitions(exchange_token_confirmation_transitions)
-

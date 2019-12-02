@@ -933,6 +933,23 @@ class TwoFactorAuthAPI(MethodView):
         otp_token = request_data.get('otp')
         otp_expiry_interval = request_data.get('otp_expiry_interval')
 
+        malformed_otp = False
+        try:
+            int(otp_token)
+        except ValueError:
+            malformed_otp = True
+
+        if not isinstance(otp_token, str) or len(otp_token) != 6:
+            malformed_otp = True
+
+        if malformed_otp:
+            response_object = {
+                'status': "Failed",
+                'message': "OTP must be a 6 digit numeric string"
+            }
+
+            return make_response(jsonify(response_object)), 400
+
         if user.validate_OTP(otp_token):
             tfa_auth_token = user.encode_TFA_token(otp_expiry_interval)
             user.TFA_enabled = True
