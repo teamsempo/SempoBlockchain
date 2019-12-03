@@ -223,8 +223,8 @@ except ImportError:
 
 ETH_HTTP_PROVIDER       = specific_parser['ETHEREUM']['http_provider']
 ETH_WEBSOCKET_PROVIDER  = specific_parser['ETHEREUM'].get('websocket_provider')
-ETH_CHAIN_ID            = specific_parser['ETHEREUM']['chain_id'] or 1
-ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID), '')
+ETH_CHAIN_ID            = specific_parser['ETHEREUM'].get('chain_id')
+ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID or 1))
 ETH_OWNER_ADDRESS       = specific_parser['ETHEREUM']['owner_address']
 ETH_OWNER_PRIVATE_KEY   = specific_parser['ETHEREUM']['owner_private_key']
 ETH_FLOAT_PRIVATE_KEY   = specific_parser['ETHEREUM']['float_private_key']
@@ -238,7 +238,7 @@ ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME,str(ETH_CON
 ETH_CHECK_TRANSACTION_BASE_TIME = 20
 ETH_CHECK_TRANSACTION_RETRIES = int(specific_parser['ETHEREUM']['check_transaction_retries'])
 ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = sum(
-    [ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** i for i in range(1,ETH_CHECK_TRANSACTION_RETRIES + 1)]
+    [ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** i for i in range(1, ETH_CHECK_TRANSACTION_RETRIES + 1)]
 )
 
 INTERNAL_TO_TOKEN_RATIO = float(specific_parser['ETHEREUM'].get('internal_to_token_ratio', 1))
@@ -250,10 +250,17 @@ if unchecksummed_withdraw_to_address:
 else:
     WITHDRAW_TO_ADDRESS = None
 
-master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
-MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
-MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
-print(f'Master Wallet address: {MASTER_WALLET_ADDRESS}')
+# master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
+# MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
+# MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
+# print(f'Master Wallet address: {MASTER_WALLET_ADDRESS}')
+
+MASTER_WALLET_PRIVATE_KEY = specific_parser['ETHEREUM'].get('master_wallet_private_key')
+if MASTER_WALLET_PRIVATE_KEY:
+    master_wallet_private_key = bytes.fromhex(MASTER_WALLET_PRIVATE_KEY.replace('0x', ''))
+else:
+    master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
+    MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
 
 RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
 RESERVE_TOKEN_NAME = specific_parser['ETHEREUM'].get('reserve_token_name')

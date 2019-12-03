@@ -76,7 +76,9 @@ class Organisation(ModelBase):
 
             self.is_master = True
             self.system_blockchain_address = bt.create_blockchain_wallet(
-                private_key=current_app.config['MASTER_WALLET_PRIVATE_KEY']
+                private_key=current_app.config['MASTER_WALLET_PRIVATE_KEY'],
+                wei_target_balance=0,
+                wei_topup_threshold=0,
             )
 
         else:

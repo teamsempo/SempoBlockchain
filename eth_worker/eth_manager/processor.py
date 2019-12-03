@@ -130,11 +130,13 @@ class TransactionProcessor(object):
         nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
 
         metadata = {
-            'chainId': chainId,
             'gas': gas_limit or int(gas*2),
             'gasPrice': gasPrice,
             'nonce': nonce
         }
+
+        if chainId:
+            metadata[chainId] = chainId
 
         if unbuilt_transaction:
             txn = unbuilt_transaction.buildTransaction(metadata)
@@ -458,7 +460,7 @@ class TransactionProcessor(object):
 
             self.registry = ContractRegistry(w3)
 
-            self.ethereum_chain_id = int(ethereum_chain_id)
+            self.ethereum_chain_id = int(ethereum_chain_id) if ethereum_chain_id else None
             self.w3 = w3
 
             self.gas_price = self.w3.toWei(gas_price_gwei, 'gwei')
