@@ -136,7 +136,7 @@ class TransactionProcessor(object):
         }
 
         if chainId:
-            metadata[chainId] = chainId
+            metadata['chainId'] = chainId
 
         if unbuilt_transaction:
             txn = unbuilt_transaction.buildTransaction(metadata)
