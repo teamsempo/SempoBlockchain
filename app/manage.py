@@ -29,6 +29,7 @@ class UpdateData(Command):
             create_master_organisation(reserve_token)
             create_float_wallet(app)
 
+
 app = create_app()
 manager = Manager(app)
 
