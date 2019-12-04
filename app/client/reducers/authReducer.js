@@ -69,6 +69,7 @@ export const login = (state = initialLoginState, action) => {
         intercomHash: action.intercomHash,
         organisationName: action.organisationName,
         organisationId: action.organisationId,
+        organisations: action.organisations,
         email: action.email,
         adminTier: action.adminTier,
         usdToSatoshiRate: action.usdToSatoshiRate,
@@ -83,6 +84,7 @@ export const login = (state = initialLoginState, action) => {
         intercomHash: null,
         organisationName: null,
         organisationId: null,
+        organisations: null,
         tfaURL: action.tfaURL,
         tfaFailure: action.tfaFailure,
         error: action.error || 'unknown error'};

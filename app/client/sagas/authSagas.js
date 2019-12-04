@@ -70,8 +70,9 @@ function createLoginSuccessObject(token) {
     adminTier: token.admin_tier,
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
-    organisationName: token.organisation_name,
-    organisationId: token.organisation_id
+    organisationName: token.default_organisation_name,
+    organisationId: token.default_organisation_id,
+    organisations: token.organisations,
   }
 }
 

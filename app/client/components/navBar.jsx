@@ -6,16 +6,19 @@ import styled from 'styled-components';
 import { Link, NavLink } from 'react-router-dom';
 
 import { loginRequest, logout } from '../reducers/authReducer'
+import {editUser} from "../reducers/userReducer";
 
 const mapStateToProps = (state) => {
   return {
     loggedIn: (state.login.token != null),
+    login: state.login,
     email: state.login.email
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    editUser: (body, path) => dispatch(editUser({body, path})),
   };
 };
 
@@ -23,9 +26,10 @@ class NavBar extends React.Component {
     constructor() {
         super();
         this.state = {
-            iconURL: '/static/media/sempo_icon.svg',
-            mobileMenuOpen: false,
-            isOrgSwitcherActive: false,
+          iconURL: '/static/media/sempo_icon.svg',
+          mobileMenuOpen: false,
+          isOrgSwitcherActive: false,
+          selectedOrg: null,
         };
     }
 
@@ -55,6 +59,26 @@ class NavBar extends React.Component {
         this.setState(prevState => ({
           mobileMenuOpen: !prevState.mobileMenuOpen
         }));
+    }
+
+    editUser() {
+      const default_organisation_id = this.state.selectedOrg;
+
+      this.props.editUser({default_organisation_id}, this.props.login.userId);
+    }
+
+    selectOrg(orgId) {
+      this.setState({selectedOrg: orgId}, () => this.editUser())
+    }
+
+    toggleSwitchOrgDropdown() {
+      if (this.props.login.organisations.length <= 1) {
+        return
+      }
+
+      this.setState(prevState => ({
+          isOrgSwitcherActive: !prevState.isOrgSwitcherActive
+      }));
     }
 
     imageExists(url, callback) {
@@ -103,17 +127,22 @@ class NavBar extends React.Component {
                               <MediaQuery minWidth={768}>
                                   <div style={{display: 'flex', flexDirection: 'row', cursor: 'pointer'}}>
                                       <StyledLogoLink to='/' onClick={() => this._closeMobileMenu()}><SVG src={this.state.iconURL}/></StyledLogoLink>
-                                      <div style={{display: 'flex', width: '100%', justifyContent: 'space-between'}}>
+                                      <div style={{display: 'flex', width: '100%', justifyContent: 'space-between'}} onClick={() => this.toggleSwitchOrgDropdown()}>
                                           <div style={{margin: 'auto 0'}}>
-                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{deploymentName}</p>
+                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{this.props.login.organisationName}</p>
                                               <p style={{color: '#fff', margin: '0', fontSize: '12px', textDecoration: 'none'}}>{this.props.email}</p>
                                           </div>
-                                          <SVG style={{padding: '0 0.5em 0 0', width: '30px'}} src={'/static/media/angle-down.svg'}/>
+                                          {this.props.login.organisations.length <= 1 ? null : <SVG style={{padding: '0 0.5em 0 0', width: '30px'}} src={'/static/media/angle-down.svg'}/>}
                                       </div>
                                   </div>
+                                  <DropdownContent style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', zIndex: 99}}>
+                                    {this.props.login.organisations.map(org => {
+                                      return <DropdownContentText key={org.id} onClick={() => this.selectOrg(org.id)}>{org.name}</DropdownContentText>
+                                    })}
+                                  </DropdownContent>
+                                  <div style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', position: 'absolute', top: 0, left: 0, zIndex: 98, width: '100vw', height: '100vh'}} onClick={() => this.toggleSwitchOrgDropdown()}/>
                               </MediaQuery>
 
-                              {this.state.isOrgSwitcherActive ? <div><p>switch org</p></div> : null}
                               <NavWrapper mobileMenuOpen={this.state.mobileMenuOpen}>
                                   <div style={{display: 'flex', flexDirection: 'column'}}>
                                     <StyledLink to='/' exact onClick={() => this._closeMobileMenu()}>Dashboard</StyledLink>
@@ -249,5 +278,27 @@ const ContractAddress = styled.a`
   left: 0;
   right: 0;
   color: #85898c;
+  }
+`;
+
+const DropdownContent = styled.div`
+  display: none;
+  position: absolute;
+  top: 74px;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  width: 234px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+`;
+
+const DropdownContentText = styled.p`
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  margin: 0;
+  &:hover {
+  background-color: #f1f1f1
   }
 `;
