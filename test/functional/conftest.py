@@ -29,6 +29,6 @@ def load_account():
             tx_hash = w3.eth.sendTransaction(
                 {'to': address, 'from': w3.eth.accounts[0], 'value': 5 * 10 ** 18})
             hash = w3.eth.waitForTransactionReceipt(tx_hash)
-            print(f' Load account result {hash}')
+            # print(f' Load account result {hash}')
             return hash
     return inner

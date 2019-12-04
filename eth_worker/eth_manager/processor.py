@@ -45,14 +45,14 @@ class TransactionProcessor(object):
         return gas_price
 
     def process_send_eth_transaction(self, transaction_id,
-                                     recipient_address, amount):
+                                     recipient_address, amount, task_id=None):
 
         partial_txn_dict = {
             'to': recipient_address,
             'value': amount
         }
 
-        print(f'##Tx {transaction_id}: Sending Eth \n'
+        print(f'\n##Tx {transaction_id}, task {task_id}: Sending Eth \n'
               f'to: {recipient_address} \n'
               f'amount: {amount}')
 
@@ -64,7 +64,7 @@ class TransactionProcessor(object):
         return argument
 
     def process_function_transaction(self, transaction_id, contract_address, abi_type,
-                                     function_name, args=None, kwargs=None, gas_limit=None):
+                                     function_name, args=None, kwargs=None, gas_limit=None, task_id=None):
 
         args = args or tuple()
         if not isinstance(args, (list, tuple)):
@@ -74,7 +74,7 @@ class TransactionProcessor(object):
         kwargs = kwargs or dict()
         kwargs = {k: self.typecast_argument(v) for k, v in kwargs.items()}
 
-        print(f'##Tx {transaction_id}: Transacting with Function {function_name} \n'
+        print(f'\n##Tx {transaction_id}, task {task_id}: Transacting with Function {function_name} \n'
               f'Args: {args} \n'
               f'Kwargs: {kwargs}')
 
@@ -85,7 +85,7 @@ class TransactionProcessor(object):
         return self.process_transaction(transaction_id, bound_function, gas_limit=gas_limit)
 
     def process_deploy_contract_transaction(self, transaction_id, contract_name,
-                                            args=None, kwargs=None, gas_limit=None):
+                                            args=None, kwargs=None, gas_limit=None, task_id=None):
 
         args = args or tuple()
         if not isinstance(args, (list, tuple)):
@@ -93,7 +93,7 @@ class TransactionProcessor(object):
 
         kwargs = kwargs or dict()
 
-        print(f'##Tx {transaction_id}: Deploying Contract {contract_name} \n'
+        print(f'\n##Tx {transaction_id}, task {task_id}: Deploying Contract {contract_name} \n'
               f'Args: {args} \n'
               f'Kwargs: {kwargs}')
 
@@ -246,7 +246,8 @@ class TransactionProcessor(object):
             chain1 = signature(utils.eth_endpoint('_process_send_eth_transaction'),
                           args=(transaction_obj.id,
                                 task_object.recipient_address,
-                                transfer_amount))
+                                transfer_amount,
+                                task_object.id))
 
         elif task_object.type == 'FUNCTION':
             print(f'Starting {task_object.function} Transaction for {task_id}.')
@@ -257,7 +258,8 @@ class TransactionProcessor(object):
                                      task_object.function,
                                      task_object.args,
                                      task_object.kwargs,
-                                     task_object.gas_limit))
+                                     task_object.gas_limit,
+                                     task_object.id))
 
         elif task_object.type == 'DEPLOY_CONTRACT':
             print(f'Starting Deploy {task_object.contract_name} Contract Transaction for {task_id}.')
@@ -266,7 +268,8 @@ class TransactionProcessor(object):
                                      task_object.contract_name,
                                      task_object.args,
                                      task_object.kwargs,
-                                     task_object.gas_limit))
+                                     task_object.gas_limit,
+                                     task_object.id))
         else:
             raise Exception(f"Task type {task_object.type} not recognised")
 

@@ -134,24 +134,24 @@ def _attempt_transaction(self, task_id):
 
 
 @celery_app.task(**processor_task_config)
-def _process_send_eth_transaction(self, transaction_id, recipient_address, amount):
-    return blockchain_processor.process_send_eth_transaction(transaction_id, recipient_address, amount)
+def _process_send_eth_transaction(self, transaction_id, recipient_address, amount, task_id=None):
+    return blockchain_processor.process_send_eth_transaction(transaction_id, recipient_address, amount, task_id)
 
 
 @celery_app.task(**processor_task_config)
 def _process_function_transaction(self, transaction_id, contract_address, abi_type,
-                                  function, args=None, kwargs=None,  gas_limit=None):
+                                  function, args=None, kwargs=None,  gas_limit=None, task_id=None):
 
     return blockchain_processor.process_function_transaction(transaction_id, contract_address, abi_type,
-                                                             function, args, kwargs, gas_limit)
+                                                             function, args, kwargs, gas_limit, task_id)
 
 
 @celery_app.task(**processor_task_config)
 def _process_deploy_contract_transaction(self, transaction_id, contract_name,
-                                         args=None, kwargs=None,  gas_limit=None):
+                                         args=None, kwargs=None,  gas_limit=None, task_id=None):
 
     return blockchain_processor.process_deploy_contract_transaction(transaction_id, contract_name,
-                                                                    args, kwargs, gas_limit)
+                                                                    args, kwargs, gas_limit, task_id)
 
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
