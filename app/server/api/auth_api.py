@@ -250,7 +250,6 @@ class RegisterAPI(MethodView):
         # insert the user
         db.session.add(user)
 
-
         db.session.flush()
 
         if exact_match:

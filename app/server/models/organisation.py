@@ -65,8 +65,16 @@ class Organisation(ModelBase):
             message = i18n_for(to_user, "organisation.generic_welcome_message")
         message_processor.send_message(to_user.phone, message)
 
+    def _setup_org_transfer_account(self):
+        transfer_account = server.models.transfer_account.TransferAccount(bind_to_entity=self, is_approved=True)
+        db.session.add(transfer_account)
+        self.org_level_transfer_account = transfer_account
 
-    def __init__(self, is_master=False, **kwargs):
+    def bind_token(self, token):
+        self.token = token
+        self._setup_org_transfer_account()
+
+    def __init__(self, token=None, is_master=False, **kwargs):
 
         super(Organisation, self).__init__(**kwargs)
 
@@ -89,6 +97,5 @@ class Organisation(ModelBase):
                 wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
             )
 
-        transfer_account = server.models.transfer_account.TransferAccount(bind_to_entity=self, is_approved=True)
-        db.session.add(transfer_account)
-        self.org_level_transfer_account = transfer_account
+        if token:
+            self.bind_token(token)

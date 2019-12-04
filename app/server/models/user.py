@@ -501,6 +501,8 @@ class User(ManyOrgBase, ModelBase):
             self.organisations.append(organisation)
             self.default_organisation = organisation
 
+            print(f'org level transfer account is {organisation.org_level_transfer_account}')
+
             self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
