@@ -73,7 +73,7 @@ def calculate_transfer_stats(total_time_series=False):
 
     try:
         master_wallet_balance = cached_funds_available()
-    except BlockchainError:
+    except:
         master_wallet_balance = 0
 
 
@@ -126,10 +126,6 @@ def cached_funds_available(allowed_cache_age_seconds=60):
     :return: amount of funds available
     """
     token = g.active_organisation.org_level_transfer_account.token
-
-    print(f'token id {g.active_organisation.org_level_transfer_account.token_id}')
-    print(f'org ta  {g.active_organisation.org_level_transfer_account}')
-
 
     balance_wei = bt.get_wallet_balance(
         g.active_organisation.org_level_transfer_account.blockchain_address,

@@ -222,6 +222,7 @@ class BlockchainTasker(object):
             contract_address=token.address,
             contract_type='ERC20',
             func='approve',
+            gas_limit=100000,
             args=[
                 spender,
                 token.system_amount_to_token(amount)
