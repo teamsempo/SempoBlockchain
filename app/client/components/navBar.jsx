@@ -23,8 +23,9 @@ class NavBar extends React.Component {
     constructor() {
         super();
         this.state = {
-          iconURL: '/static/media/sempo_icon.svg',
-          mobileMenuOpen: false,
+            iconURL: '/static/media/sempo_icon.svg',
+            mobileMenuOpen: false,
+            isOrgSwitcherActive: false,
         };
     }
 
@@ -100,12 +101,19 @@ class NavBar extends React.Component {
                       <SideBarNavigationItems>
                           <div style={{display: 'flex', flexDirection: 'column'}}>
                               <MediaQuery minWidth={768}>
-                                  <StyledLogoLink to='/' onClick={() => this._closeMobileMenu()}><SVG src={this.state.iconURL}/></StyledLogoLink>
-                                  <div>
-                                      <p style={{color: '#fff', margin: '1em 2em 0em', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{deploymentName}</p>
-                                      <p style={{color: '#fff', margin: '0em 2em 1em', fontSize: '12px', textDecoration: 'none'}}>{this.props.email}</p>
+                                  <div style={{display: 'flex', flexDirection: 'row', cursor: 'pointer'}}>
+                                      <StyledLogoLink to='/' onClick={() => this._closeMobileMenu()}><SVG src={this.state.iconURL}/></StyledLogoLink>
+                                      <div style={{display: 'flex', width: '100%', justifyContent: 'space-between'}}>
+                                          <div style={{margin: 'auto 0'}}>
+                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{deploymentName}</p>
+                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', textDecoration: 'none'}}>{this.props.email}</p>
+                                          </div>
+                                          <SVG style={{padding: '0 0.5em 0 0', width: '30px'}} src={'/static/media/angle-down.svg'}/>
+                                      </div>
                                   </div>
                               </MediaQuery>
+
+                              {this.state.isOrgSwitcherActive ? <div><p>switch org</p></div> : null}
                               <NavWrapper mobileMenuOpen={this.state.mobileMenuOpen}>
                                   <div style={{display: 'flex', flexDirection: 'column'}}>
                                     <StyledLink to='/' exact onClick={() => this._closeMobileMenu()}>Dashboard</StyledLink>
@@ -118,10 +126,6 @@ class NavBar extends React.Component {
                                      target="_blank">
                                     { window.USING_EXTERNAL_ERC20? 'Master Wallet Tracker' : 'Contract Tracker'}
                                   </ContractAddress>
-                                {/*<GetVerified to='/settings/verification'>*/}
-                                  {/*Get Verified to send funds*/}
-                                  {/*<SVG style={{padding: '0 1em', width: '20px', height: '20px'}} src='/static/media/right-arrow.svg'/>*/}
-                                {/*</GetVerified>*/}
                               </NavWrapper>
 
                           </div>
@@ -185,7 +189,7 @@ const SideBarNavigationItems = styled.div`
 
 const SVG = styled.img`
   width: 35px;
-  padding: 1em 0 0.5em;
+  padding: 1em 0;
   display: flex;
   @media (max-width: 767px) {
   padding: 0;
@@ -245,28 +249,5 @@ const ContractAddress = styled.a`
   left: 0;
   right: 0;
   color: #85898c;
-  }
-`;
-
-const GetVerified = styled(NavLink)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1em;
-  width: calc(100% - 2em);
-  margin: 0;
-  bottom: 0;
-  background-color: #475a66;
-  font-weight: 600;
-  color: #fff;
-  font-size: 12px;
-  text-decoration: none;
-  position: absolute;
-  @media (max-width: 767px) {
-  text-align: center;
-  font-size: 16px;
-  left: 0;
-  right: 0;
-  color: #FFF;
   }
 `;
