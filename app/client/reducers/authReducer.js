@@ -1,5 +1,6 @@
 export const REAUTH_REQUEST = 'REAUTH_REQUEST';
 
+export const UPDATE_ACTIVE_ORG = 'UPDATE_ACTIVE_ORG';
 export const LOGIN_REQUEST = 'LOGIN_REQUEST';
 export const LOGIN_PARTIAL = 'LOGIN_PARTIAL';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
@@ -60,6 +61,8 @@ export const login = (state = initialLoginState, action) => {
     case REAUTH_REQUEST:
     case LOGIN_REQUEST:
       return {...state, isLoggingIn: true};
+    case UPDATE_ACTIVE_ORG:
+      return {...state, organisationName: action.payload.organisationName, organisationId: action.payload.organisationId};
     case LOGIN_SUCCESS:
       return {...state,
         isLoggingIn: false,
@@ -253,6 +256,13 @@ export const validateTFA = (state = initialValidateTFAstate, action) => {
 };
 
 // ACTIONS
+export const updateActiveOrgRequest = (payload) => (
+  {
+    type: UPDATE_ACTIVE_ORG,
+    payload
+  }
+);
+
 export const loginRequest = (payload) => (
   {
     type: LOGIN_REQUEST,

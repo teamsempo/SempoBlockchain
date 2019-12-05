@@ -28,8 +28,8 @@ auth_blueprint = Blueprint('auth', __name__)
 def get_user_organisations(user):
     try:
         organisation = dict(
-            default_organisation_name=user.default_organisation.name,
-            default_organisation_id=user.default_organisation_id,
+            active_organisation_name=g.active_organisation.name,
+            active_organisation_id=g.active_organisation_id,
             organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
         )
     except AttributeError:

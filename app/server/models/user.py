@@ -20,6 +20,7 @@ from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
 )
 
+import server.models.transfer_account
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -496,12 +497,19 @@ class User(ManyOrgBase, ModelBase):
         self.email = email
         self.hash_password(password)
         self.set_held_role('ADMIN', tier)
+        self.add_user_to_organisation(organisation)
 
-        if organisation:
-            self.organisations.append(organisation)
-            self.default_organisation = organisation
+    # todo: [NICK] refactor into Event Hook on .append?
+    def add_user_to_organisation(self, organisation: Organisation=None):
+        if organisation is None:
+            raise Exception('Organisation cannot be None')
+        self.organisations.append(organisation)
+        self.default_organisation = organisation
 
-            self.transfer_accounts.append(organisation.org_level_transfer_account)
+        if organisation.org_level_transfer_account is None:
+            organisation.org_level_transfer_account = db.session.query(server.models.transfer_account.TransferAccount).execution_options(show_all=True).get(organisation.org_level_transfer_account_id)
+
+        self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
         for tier in current_app.config['TFA_REQUIRED_ROLES']:

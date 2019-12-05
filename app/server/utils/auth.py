@@ -3,6 +3,7 @@ from flask import request, g, make_response, jsonify, current_app
 from server import db
 from server.models.user import User
 from server.models.ip_address import IpAddress
+from server.models.organisation import Organisation
 from server.utils.access_control import AccessControl
 import config, hmac, hashlib, json, urllib
 from typing import Optional, List, Dict
@@ -95,9 +96,14 @@ def requires_auth(f=None,
                         return make_response(jsonify(response_object)), 401
 
                     g.user = user
-                    # g.member_organisations = [org.id for org in user.organisations]
+                    g.member_organisations = [org.id for org in user.organisations]
                     try:
                         active_organisation = user.get_active_organisation()
+                        query_org = request.args.get('org', None)
+                        if query_org is not None and int(query_org) in g.member_organisations:
+                            # override user org
+                            active_organisation = Organisation.query.get(query_org)
+
                         if active_organisation is not None:
                             g.active_organisation_id = active_organisation.id
                             g.active_organisation = active_organisation

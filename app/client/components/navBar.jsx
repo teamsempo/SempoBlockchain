@@ -1,12 +1,10 @@
 import React from 'react';
 import MediaQuery from 'react-responsive'
-import classNames from 'classnames';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Link, NavLink } from 'react-router-dom';
 
-import { loginRequest, logout } from '../reducers/authReducer'
-import {editUser} from "../reducers/userReducer";
+import { updateActiveOrgRequest } from '../reducers/authReducer'
 
 const mapStateToProps = (state) => {
   return {
@@ -18,7 +16,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    editUser: (body, path) => dispatch(editUser({body, path})),
+    updateActiveOrgRequest: (organisationName, organisationId) => dispatch(updateActiveOrgRequest({organisationName, organisationId})),
   };
 };
 
@@ -29,7 +27,6 @@ class NavBar extends React.Component {
           iconURL: '/static/media/sempo_icon.svg',
           mobileMenuOpen: false,
           isOrgSwitcherActive: false,
-          selectedOrg: null,
         };
     }
 
@@ -61,14 +58,8 @@ class NavBar extends React.Component {
         }));
     }
 
-    editUser() {
-      const default_organisation_id = this.state.selectedOrg;
-
-      this.props.editUser({default_organisation_id}, this.props.login.userId);
-    }
-
-    selectOrg(orgId) {
-      this.setState({selectedOrg: orgId}, () => this.editUser())
+    selectOrg(org) {
+      this.setState({isOrgSwitcherActive: false}, () => this.props.updateActiveOrgRequest(org.name, org.id));
     }
 
     toggleSwitchOrgDropdown() {
@@ -137,7 +128,7 @@ class NavBar extends React.Component {
                                   </div>
                                   <DropdownContent style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', zIndex: 99}}>
                                     {this.props.login.organisations.map(org => {
-                                      return <DropdownContentText key={org.id} onClick={() => this.selectOrg(org.id)}>{org.name}</DropdownContentText>
+                                      return <DropdownContentText key={org.id} onClick={() => this.selectOrg(org)}>{org.name}</DropdownContentText>
                                     })}
                                   </DropdownContent>
                                   <div style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', position: 'absolute', top: 0, left: 0, zIndex: 98, width: '100vw', height: '100vh'}} onClick={() => this.toggleSwitchOrgDropdown()}/>
