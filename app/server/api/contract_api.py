@@ -1,11 +1,12 @@
-from flask import Blueprint, request, make_response, jsonify, current_app, g
+from flask import Blueprint, request, make_response, jsonify, current_app, g, copy_current_request_context
 from flask.views import MethodView
+import threading
 
 from server import db, bt
 from server.utils.auth import requires_auth
 from server.models.token import Token
 from server.models.exchange import ExchangeContract
-from server.schemas import exchange_contract_schema, exchange_contracts_schema, token_schema
+from server.schemas import exchange_contract_schema, exchange_contracts_schema, token_schema, tokens_schema
 
 contracts_blueprint = Blueprint('contracts', __name__)
 
@@ -43,16 +44,27 @@ class ExchangeContractAPI(MethodView):
 
             return make_response(jsonify(response_object)), 404
 
-        contract_registry_address = bt.deploy_exchange_network(deploying_address)
+        exchange_contract = ExchangeContract()
 
-        exchange_contract = ExchangeContract(
-            contract_registry_blockchain_address=contract_registry_address
-        )
-
+        exchange_contract.add_reserve_token(reserve_token)
         db.session.add(exchange_contract)
         db.session.flush()
 
-        exchange_contract.add_reserve_token(reserve_token)
+        exchange_contract_id = exchange_contract.id
+
+        @copy_current_request_context
+        def deploy(_deploying_address, _exchange_contract_id):
+            contract_registry_address = bt.deploy_exchange_network(_deploying_address)
+
+            _exchange_contract = ExchangeContract.query.get(_exchange_contract_id)
+            _exchange_contract.contract_registry_blockchain_address = contract_registry_address
+
+            db.session.commit()
+
+        t = threading.Thread(target=deploy,
+                             args=(deploying_address, exchange_contract_id))
+        t.daemon = True
+        t.start()
 
         response_object = {
             'message': 'success',
@@ -65,6 +77,20 @@ class ExchangeContractAPI(MethodView):
 
 
 class TokenAPI(MethodView):
+
+    @requires_auth
+    def get(self):
+
+        tokens = Token.query.all()
+
+        response_object = {
+            'message': 'success',
+            'data': {
+                'tokens': tokens_schema.dump(tokens).data
+            }
+        }
+
+        return make_response(jsonify(response_object)), 201
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
@@ -112,7 +138,11 @@ class TokenAPI(MethodView):
 
             return make_response(jsonify(response_object)), 400
 
-        smart_token_result = bt.deploy_smart_token(
+        token = Token(name=name, symbol=symbol)
+        db.session.add(token)
+        db.session.flush()
+
+        deploy_data = dict(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=decimals,
             reserve_deposit_wei=reserve_deposit_wei,
@@ -122,19 +152,31 @@ class TokenAPI(MethodView):
             reserve_ratio_ppm=reserve_ratio_ppm
         )
 
-        address = smart_token_result['smart_token_address']
-        subexchange_address = smart_token_result['subexchange_address']
+        @copy_current_request_context
+        def deploy(_deploy_data, _token_id, _exchange_contract_id):
+            smart_token_result = bt.deploy_smart_token(**_deploy_data)
 
-        token = Token(address=address, name=name, symbol=symbol)
-        db.session.add(token)
-        db.session.flush()
+            address = smart_token_result['smart_token_address']
+            subexchange_address = smart_token_result['subexchange_address']
 
-        exchange_contract.add_token(token, subexchange_address, reserve_ratio_ppm)
+            _token = Token.query.get(_token_id)
+            _token.address = address
+
+            _exchange_contract = ExchangeContract.query.get(_exchange_contract_id)
+
+            _exchange_contract.add_token(_token, subexchange_address, reserve_ratio_ppm)
+
+            db.session.commit()
+
+        t = threading.Thread(target=deploy,
+                             args=(deploy_data, token.id, exchange_contract_id))
+        t.daemon = True
+        t.start()
 
         response_object = {
             'message': 'success',
             'data': {
-                'token': token_schema.dump(token).data
+                'token_id': token.id
             }
         }
 
@@ -144,11 +186,11 @@ class TokenAPI(MethodView):
 contracts_blueprint.add_url_rule(
     '/contract/exchange/',
     view_func=ExchangeContractAPI.as_view('contracts_view'),
-    methods=['POST']
+    methods=['POST', 'GET']
 )
 
 contracts_blueprint.add_url_rule(
     '/contract/token/',
     view_func=TokenAPI.as_view('token_view'),
-    methods=['POST']
+    methods=['POST', 'GET']
 )
