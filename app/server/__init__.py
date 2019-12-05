@@ -96,28 +96,6 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
-    # https://flask.palletsprojects.com/en/1.1.x/patterns/urlprocessors/
-    # @app.url_defaults
-    # def add_org_id(endpoint, values):
-    #     if 'org_id' in values:
-    #         return
-    #     if app.url_map.is_endpoint_expecting(endpoint, 'org_id'):
-    #         values['org_id'] = g.active_organisation_id
-    #
-    # @app.url_value_preprocessor
-    # def pull_org_id(endpoint, values):
-    #     b = None
-    #     # endpoint
-    #     try:
-    #         g.active_organisation_id = values.pop('org_id', None)
-    #     except AttributeError:
-    #         if values is None:
-    #             # default org
-    #             request.path.replace('/o/', '/o/0/')
-    #             values = dict(org_id=0)
-    #         else:
-    #             values = {**values, **dict(org_id=0)}
-
     @app.before_request
     def before_request():
         # Celery task list. Tasks are added here so that they can be completed after db commit
