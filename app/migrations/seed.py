@@ -100,6 +100,11 @@ if __name__ == '__main__':
         parent_id=start_menu.id
     )
     update_or_create_menu(
+        name='directory_listing_other',
+        description='Listing of Market place other categories for a user to choose',
+        parent_id=start_menu.id
+    )
+    update_or_create_menu(
         name='complete',
         description='Complete menu. Last step of any menu',
     )
@@ -264,24 +269,34 @@ if __name__ == '__main__':
     print('Creating Business Categories')
     print('**********************************************************************')
     business_categories = [
-        {'name': 'Food', 'icon': 'message'},
-        {'name': 'Water', 'icon': 'message'},
-        {'name': 'Energy', 'icon': 'message'},
-        {'name': 'Education', 'icon': 'message'},
-        {'name': 'Health', 'icon': 'message'},
-        {'name': 'General shop', 'icon': 'message'},
-        {'name': 'Environment', 'icon': 'message'},
-        {'name': 'Transport', 'icon': 'message'},
-        {'name': 'Labour', 'icon': 'message'},
+        {'name': 'Food', 'icon': 'message', 'translations': {
+            'en': 'Food', 'sw': 'Chakula'}},
+        {'name': 'Water', 'icon': 'message',
+            'translations': {'en': 'Water', 'sw': 'Maji'}},
+        {'name': 'Energy', 'icon': 'message', 'translations': {
+            'en': 'Energy', 'sw': 'Kuni/makaa/mafuta/stima'}},
+        {'name': 'Education', 'icon': 'message',
+            'translations': {'en': 'Education', 'sw': 'Elimu'}},
+        {'name': 'Health', 'icon': 'message',
+            'translations': {'en': 'Health', 'sw': 'Afya'}},
+        {'name': 'General shop', 'icon': 'message', 'translations': {
+            'en': 'General shop', 'sw': 'Duka la jumla'}},
+        {'name': 'Environment', 'icon': 'message', 'translations': {
+            'en': 'Environment', 'sw': 'Mazingira'}},
+        {'name': 'Transport', 'icon': 'message', 'translations': {
+            'en': 'Transport', 'sw': 'Usafiri'}},
+        {'name': 'Labour', 'icon': 'message', 'translations': {
+            'en': 'Labour', 'sw': 'Mfanyakazi'}},
     ]
     for business_category in business_categories:
         usage = TransferUsage.find_or_create(business_category['name'])
         if usage is not None:
             usage.icon = business_category['icon']
+            usage.translations = business_category['translations']
         else:
             try:
                 usage = TransferUsage(name=business_category['name'], icon=business_category['icon'],
-                                      priority=1, default=True)
+                                      priority=1, default=1, translations=business_category['translations'])
             except TransferUsageNameDuplicateException as e:
                 print(e)
         db.session.add(usage)

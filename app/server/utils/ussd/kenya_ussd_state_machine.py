@@ -6,6 +6,7 @@ The class contains methods responsible for validation of user input and processi
 the services provided by the  ussd app.
 """
 import re
+import math
 
 from transitions import Machine
 
@@ -47,6 +48,7 @@ class KenyaUssdStateMachine(Machine):
         'opt_out_of_market_place_pin_authorization',
         # directory listing state
         'directory_listing',
+        'directory_listing_other',
         # exchange token states
         'exchange_token',
         'exchange_rate_pin_authorization',
@@ -171,18 +173,32 @@ class KenyaUssdStateMachine(Machine):
         self.session.set_data('transaction_amount', user_input)
 
     def save_transaction_reason(self, user_input):
-        #TODO: use ruben's dynamic code to convert number to reason
-        self.session.set_data('transaction_reason_translated', user_input)
-        self.session.set_data('transaction_reason_id', "1")
+        chosen_transfer_usage = self.get_select_transfer_usage(user_input)
+        if self.user.preferred_language is not None and chosen_transfer_usage.translations is not None:
+            transfer_reason = chosen_transfer_usage.translations[self.user.preferred_language]
+        else:
+            transfer_reason = chosen_transfer_usage.name
+        self.session.set_data('transaction_reason_i18n', transfer_reason)
+        self.session.set_data('transaction_reason_id', chosen_transfer_usage.id)
 
     def save_transaction_reason_other(self, user_input):
         self.session.set_data('transaction_reason_translated', user_input)
         self.session.set_data('transaction_reason_id', "1")
 
+    def set_usage_menu_number(self, user_input):
+        current_menu_nr = self.session.get_data('usage_menu')
+        if int(user_input) == 9:
+            max_menu = self.session.get_data('usage_menu_max')
+            current_menu_nr = current_menu_nr + 1 if current_menu_nr < max_menu else max_menu
+            self.session.set_data('usage_menu', current_menu_nr)
+        elif int(user_input) == 10:
+            current_menu_nr = current_menu_nr - 1 if current_menu_nr > 0 else 0
+            self.session.set_data('usage_menu', current_menu_nr)
+
     def process_send_token_request(self, user_input):
         user = get_user_by_phone(self.session.get_data('recipient_phone'), "KE")
         amount = float(self.session.get_data('transaction_amount'))
-        reason_str = self.session.get_data('transaction_reason_translated')
+        reason_str = self.session.get_data('transaction_reason_i18n')
         reason_id = float(self.session.get_data('transaction_reason_id'))
         ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
 
@@ -201,9 +217,7 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.inquire_balance(self.user)
 
     def send_directory_listing(self, user_input):
-        #TODO: replace with ruben's method when merge
-        chosen_transfer_usage = TransferUsage.find_or_create("Food")
-
+        chosen_transfer_usage = self.get_select_transfer_usage(user_input)
         ussd_tasker.send_directory_listing(self.user, chosen_transfer_usage)
 
     def fetch_user_exchange_rate(self, user_input):
@@ -227,6 +241,24 @@ class KenyaUssdStateMachine(Machine):
         amount = float(self.session.get_data('exchange_amount'))
         ussd_tasker.exchange_token(self.user, agent, amount)
 
+    def store_transfer_usage(self, user_input):
+        items_per_menu = 8
+        usages = self.user.get_most_relevant_transfer_usage()
+        transfer_usage_id_order = []
+        for usage in usages:
+            transfer_usage_id_order.append(usage.id)
+        if self.session.session_data is None:
+            self.session.session_data = {'transfer_usage_mapping': transfer_usage_id_order}
+        elif type(self.session.session_data) is dict:
+            self.session.session_data['transfer_usage_mapping'] = transfer_usage_id_order
+        self.session.set_data('usage_menu', 1)
+        self.session.set_data('usage_menu_max', math.floor(len(usages)/items_per_menu))
+
+    def get_select_transfer_usage(self, user_input):
+        selected_tranfer_usage_id = self.session.session_data['transfer_usage_mapping'][int(
+                    user_input)-1]
+        return TransferUsage.query.filter_by(id=selected_tranfer_usage_id).first()
+
     def menu_one_selected(self, user_input):
         return user_input == '1'
 
@@ -241,6 +273,9 @@ class KenyaUssdStateMachine(Machine):
 
     def menu_five_selected(self, user_input):
         return user_input == '5'
+
+    def menu_nine_selected(self, user_input):
+        return user_input == '9'
 
     def menu_ten_selected(self, user_input):
         return user_input == '10'
@@ -304,7 +339,7 @@ class KenyaUssdStateMachine(Machine):
         ]
         self.add_transitions(initial_pin_confirmation_transitions)
 
-        # event: start transitions
+        # event: directory_listing
         start_transitions = [
             {'trigger': 'feed_char',
              'source': 'start',
@@ -317,7 +352,8 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'directory_listing',
-             'conditions': 'menu_three_selected'},
+             'conditions': 'menu_three_selected',
+             'after': 'store_transfer_usage'},
             {'trigger': 'feed_char',
              'source': 'start',
              'dest': 'exchange_token',
@@ -354,26 +390,60 @@ class KenyaUssdStateMachine(Machine):
         self.add_transition(trigger='feed_char',
                             source='send_token_amount',
                             dest='send_token_reason',
-                            after='save_transaction_amount')
+                            after=['save_transaction_amount', 'store_transfer_usage'])
 
         # event: send_token_reason transitions
         send_token_reason_transitions = [
             {'trigger': 'feed_char',
              'source': 'send_token_reason',
              'dest': 'send_token_reason_other',
-             'conditions': 'menu_ten_selected'},
+             'conditions': 'menu_nine_selected'},
             {'trigger': 'feed_char',
              'source': 'send_token_reason',
              'dest': 'send_token_pin_authorization',
-             'after': 'save_transaction_reason'}
+             'after': 'save_transaction_reason'},
+            {'trigger': 'feed_char',
+             'source': 'send_token_reason_other',
+             'dest': 'send_token_reason_other',
+             'conditions': 'menu_nine_selected',
+             'after': 'set_usage_menu_number'},
+            {'trigger': 'feed_char',
+             'source': 'send_token_reason_other',
+             'dest': 'send_token_reason_other',
+             'conditions': 'menu_ten_selected',
+             'after': 'set_usage_menu_number'},
+            {'trigger': 'feed_char',
+             'source': 'send_token_reason_other',
+             'dest': 'send_token_pin_authorization',
+             'after': 'set_usage_menu_number'},
         ]
         self.add_transitions(send_token_reason_transitions)
 
-        # event: send_token_reason_other transition
-        self.add_transition(trigger='feed_char',
-                            source='send_token_reason_other',
-                            dest='send_token_pin_authorization',
-                            after='save_transaction_reason_other')
+        directory_listing_transitions = [
+            {'trigger': 'feed_char',
+             'source': 'directory_listing',
+             'dest': 'directory_listing_other',
+             'conditions': 'menu_nine_selected'},
+            {'trigger': 'feed_char',
+             'source': 'directory_listing',
+             'dest': 'complete',
+             'after': 'send_directory_listing'},
+            {'trigger': 'feed_char',
+             'source': 'directory_listing_other',
+             'dest': 'directory_listing_other',
+             'conditions': 'menu_nine_selected',
+             'after': 'set_usage_menu_number'},
+            {'trigger': 'feed_char',
+             'source': 'directory_listing_other',
+             'dest': 'directory_listing_other',
+             'conditions': 'menu_ten_selected',
+             'after': 'set_usage_menu_number'},
+            {'trigger': 'feed_char',
+             'source': 'directory_listing_other',
+             'dest': 'complete',
+             'after': 'send_directory_listing'},
+        ]
+        self.add_transitions(directory_listing_transitions)
 
         # event: send_token_pin_authorization transitions
         send_token_pin_authorization_transitions = [
@@ -537,12 +607,6 @@ class KenyaUssdStateMachine(Machine):
              'conditions': 'is_blocked_pin'}
         ]
         self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
-
-        # event: directory_listing transitions
-        self.add_transition(trigger='feed_char',
-                            source='directory_listing',
-                            dest='complete',
-                            after='send_directory_listing')
 
         # event: exchange_token transitions
         exchange_token_transitions = [

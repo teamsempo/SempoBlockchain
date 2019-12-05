@@ -25,21 +25,27 @@ en:
       CON Enter Amount
       0. Back
     send_token_reason: |
-      CON Select Transfer reason
-      1. Food
-      2. Water
-      3. Energy
-      4. Education
-      5. Health
-      6. General shop
-      7. Environment
-      8. Transport
-      9. Labour
-      10. Other
+      CON Select Transfer reason 
+      %{options}
+      9. Show other options
       0. Back
-    send_token_reason_other: |
-      CON Please specify
-      0. Back
+    send_token_reason_other:
+      first: |
+        CON Please specify
+        %{other_options}
+        9. Show other options
+        0. Back
+      middle: |
+        CON Please specify 
+        %{other_options}
+        9. Show other options
+        10. Show previous options
+        0. Back
+      last: |
+        CON Please specify
+        %{other_options}
+        10. Show previous options
+        0. Back
     send_token_pin_authorization:
       first: |
         CON Please enter your PIN.
@@ -53,17 +59,28 @@ en:
       2. Cancel
       0. Back
     directory_listing: |
-      CON Choose Market Category
-      1. Food
-      2. Water
-      3. Energy
-      4. Education
-      5. Health
-      6. General shop
-      7. Environment
-      8. Transport
-      9. Labour
+      CON Choose Market Category 
+      %{options}
+      9. Show other options
+      0. Back
     complete: END Your request has been sent. You will receive an SMS shortly.
+    directory_listing_other:
+      first: |
+        CON Choose Market Category 
+        %{other_options}
+        9. Show other options
+        0. Back
+      middle: |
+        CON Choose Market Category 
+        %{other_options}
+        9. Show other options
+        10. Show previous options
+        0. Back
+      last: |
+        CON Choose Market Category 
+        %{other_options}
+        10. Show previous options
+        0. Back
     account_management: |
       CON My account
       1. My Business

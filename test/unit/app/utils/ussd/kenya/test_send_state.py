@@ -8,6 +8,7 @@ from helpers.user import UserFactory
 from helpers.ussd_session import UssdSessionFactory
 from helpers.ussd_utils import make_kenyan_phone
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 
 fake = Faker()
@@ -30,10 +31,10 @@ send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_co
      # send_token_amount state test
      (send_token_amount_state, standard_user, "500", "send_token_reason"),
      # send_token_reasons state tests
-     (send_token_reason_state, standard_user, "10", "send_token_reason_other"),
+     (send_token_reason_state, standard_user, "9", "send_token_reason_other"),
      (send_token_reason_state, standard_user, "5", "send_token_pin_authorization"),
      # send_token_reason_other state tests
-     (send_token_reason_other_state, standard_user, "Some reason",
+     (send_token_reason_other_state, standard_user, "1",
       "send_token_pin_authorization"),
      # send_token_pin_authorization state tests
      (send_token_pin_authorization_state, standard_user, "0000", "send_token_confirmation"),
@@ -43,6 +44,8 @@ send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_co
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
+    session.session_data = {'transfer_usage_mapping': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 'usage_menu': 1}
+    transfer_usage = TransferUsage.find_or_create("Food")
     user = user_factory()
     user.phone = phone()
     state_machine = KenyaUssdStateMachine(session, user)

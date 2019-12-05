@@ -5,7 +5,7 @@ from functools import partial
 
 from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_phone
 from server import db
-from helpers.user import UserFactory
+from helpers.user import UserFactory, TransferUsageFactory
 from server.models.token import Token
 from server.models.user import User
 from server.models.ussd import UssdSession, UssdMenu
@@ -77,6 +77,8 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
 
     recipient = UserFactory(preferred_language="sw", phone=make_kenyan_phone(phone()), first_name="Joe", last_name="Bar")
     create_transfer_account_for_user(recipient, token, 200)
+
+    transferUsage = TransferUsageFactory(name='Food', id=1, default=True)
 
     messages = []
     session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa'

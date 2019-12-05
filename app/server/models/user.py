@@ -575,19 +575,15 @@ class User(ManyOrgBase, ModelBase):
                 LEFT JOIN "user" u ON c.recipient_user_id = u.id
                 WHERE sender_user_id = {} AND c.transfer_status = 'COMPLETE'
                 ORDER BY c.updated DESC
-                LIMIT 20)
+                )
             C GROUP BY business_usage_id ORDER BY count DESC
         '''.format(self.id))
         result = db.session.execute(sql)
-        transfer_usage_ids = [row[0] for row in result]
+        most_common_ids = [row[0] for row in result]
         # Get most common business_usage_id
-        number_of_wanted_business_id = 9
 
-        most_common_ids = transfer_usage_ids[:number_of_wanted_business_id]
-        # If less than the wanted nr of usage is found fill up the list with default
-        if len(most_common_ids) < number_of_wanted_business_id:
-            most_relevant_ids = self.refine_with_default_transfer_usages(
-                most_common_ids, number_of_wanted_business_id)
+        most_relevant_ids = self.refine_with_default_transfer_usages(
+            most_common_ids)
         relevant_transer_usages = TransferUsage.query.filter(
             TransferUsage.id.in_(most_common_ids)).all()
         # Order the transfer usages by the ordered list of id that were ordered by count
@@ -595,14 +591,12 @@ class User(ManyOrgBase, ModelBase):
             next(s for s in relevant_transer_usages if s.id == id) for id in most_common_ids]
         return ordered_tranfer_usages
 
-    def refine_with_default_transfer_usages(self, most_common, nr_of_wanted):
+    def refine_with_default_transfer_usages(self, most_common):
         default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
             TransferUsage.id).all()
         for transer_usage_id, in default_transer_usages:
             if transer_usage_id not in most_common:
                 most_common.append(transer_usage_id)
-            if len(most_common) == nr_of_wanted:
-                break
         return most_common
 
     def get_reserve_token(self):

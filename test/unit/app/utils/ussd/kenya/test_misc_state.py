@@ -124,6 +124,7 @@ def test_balance_inquiry(mocker, test_client, init_database):
 
 def test_send_directory_listing(mocker, test_client, init_database):
     session = UssdSessionFactory(state="directory_listing")
+    session.session_data = {'transfer_usage_mapping': [1, 1, 1, 1, 1]}
     user = standard_user()
     user.phone = phone()
     state_machine = KenyaUssdStateMachine(session, user)
@@ -132,6 +133,6 @@ def test_send_directory_listing(mocker, test_client, init_database):
     send_directory_listing = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.send_directory_listing', send_directory_listing)
 
-    state_machine.feed_char('5')
+    state_machine.feed_char('2')
     assert state_machine.state == 'complete'
     send_directory_listing.assert_called_with(user, transfer_usage)

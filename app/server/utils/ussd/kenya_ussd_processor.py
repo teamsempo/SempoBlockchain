@@ -1,8 +1,9 @@
 from typing import Optional
+import math
 
-from server import db
 from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
+from server.models.transfer_usage import TransferUsage
 from server.utils.user import get_user_by_phone, default_token
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.utils.i18n import i18n_for
@@ -56,7 +57,7 @@ class KenyaUssdProcessor:
             recipient_phone = recipient.user_details()
             token = default_token(user)
             transaction_amount = ussd_session.get_data('transaction_amount')
-            transaction_reason = ussd_session.get_data('transaction_reason_translated')
+            transaction_reason = ussd_session.get_data('transaction_reason_i18n')
             return i18n_for(
                 user, menu.display_key,
                 recipient_phone=recipient_phone,
@@ -94,8 +95,69 @@ class KenyaUssdProcessor:
             else:
                 return i18n_for(user, "{}.first".format(menu.display_key))
 
+        if menu.name == 'directory_listing' or menu.name == 'send_token_reason':
+            items_per_menu = 8
+
+            most_relevant_usage_ids = ussd_session.session_data['transfer_usage_mapping']
+            current_usage_ids = most_relevant_usage_ids[:items_per_menu]
+            usages = TransferUsage.query.filter(
+                TransferUsage.id.in_(current_usage_ids)).all()
+            menu_options = KenyaUssdProcessor.create_usages_list(usages[:items_per_menu], user)
+            return i18n_for(
+                user, menu.display_key,
+                options=menu_options
+            )
+
+        if menu.name == 'directory_listing_other' or menu.name == 'send_token_reason_other':
+            items_per_menu = 8
+
+            most_relevant_usage_ids = ussd_session.session_data['transfer_usage_mapping']
+            usage_menu_nr = ussd_session.get_data('usage_menu')
+            start_of_list = (items_per_menu * usage_menu_nr)
+            end_of_list = items_per_menu + (items_per_menu * usage_menu_nr)
+            if end_of_list > len(most_relevant_usage_ids):
+                end_of_list = len(most_relevant_usage_ids)      
+            current_usage_ids = most_relevant_usage_ids[start_of_list:end_of_list]
+            usages = TransferUsage.query.filter(
+                TransferUsage.id.in_(current_usage_ids)).all()
+
+            menu_options = KenyaUssdProcessor.create_usages_list(usages, user)
+            if usage_menu_nr == 0:
+                menu_usage_part = 'first'
+            elif end_of_list == len(most_relevant_usage_ids):
+                menu_usage_part = 'last'
+            else:
+                menu_usage_part = 'middle'
+            translated_menu = i18n_for(
+                user, "{}.{}".format(menu.display_key, menu_usage_part),
+                other_options=menu_options
+            )
+            return translated_menu
         return None
 
-
-
-
+    @staticmethod
+    def create_usages_list(usages, user):
+        menu_options = ''
+        for i, usage in enumerate(usages):
+            business_usage_string = None
+            if usage.translations is not None and user.preferred_language is not None:
+                business_usage_string = usage.translations.get(
+                    user.preferred_language)
+            if business_usage_string is None:
+                business_usage_string = usage.name
+            message_option = '%d. %s' % (i+1, business_usage_string)
+            if i < len(usages):
+                message_option += '\n'
+            menu_options += message_option
+        return menu_options[:-1]
+    
+    @staticmethod
+    def store_transfer_usage(ussd_session: UssdSession, usages):
+        transfer_usage_id_order = []
+        for usage in usages:
+            transfer_usage_id_order.append(usage.id)
+        if ussd_session.session_data is None:
+            ussd_session.session_data = {'transfer_usage_mapping': transfer_usage_id_order}
+        elif type(ussd_session.session_data) is dict:
+            ussd_session.session_data['transfer_usage_mapping'] = transfer_usage_id_order
+        pass
