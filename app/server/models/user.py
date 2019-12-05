@@ -497,12 +497,12 @@ class User(ManyOrgBase, ModelBase):
         self.email = email
         self.hash_password(password)
         self.set_held_role('ADMIN', tier)
-        self.add_user_to_organisation(organisation)
+
+        if organisation:
+            self.add_user_to_organisation(organisation)
 
     # todo: [NICK] refactor into Event Hook on .append?
     def add_user_to_organisation(self, organisation: Organisation=None):
-        if organisation is None:
-            raise Exception('Organisation cannot be None')
         self.organisations.append(organisation)
         self.default_organisation = organisation
 
