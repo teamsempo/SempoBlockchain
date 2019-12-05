@@ -412,3 +412,5 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
                                                   context={'filter_rejected': True})
 
 me_exchange_schema = ExchangeSchema()
+me_exchanges_schema = ExchangeSchema(many=True)
+

@@ -14,7 +14,20 @@ contracts_blueprint = Blueprint('contracts', __name__)
 class ExchangeContractAPI(MethodView):
 
     @requires_auth
-    def get(self):
+    def get(self, exchange_contract_id):
+
+        if exchange_contract_id:
+            exchange_contract = ExchangeContract.query.get(exchange_contract_id)
+
+            response_object = {
+                'message': 'success',
+                'data': {
+                    'exchange_contract': exchange_contract_schema.dump(exchange_contract).data
+                }
+            }
+
+            return make_response(jsonify(response_object)), 201
+
 
         exchange_contracts = ExchangeContract.query.all()
 
@@ -28,7 +41,7 @@ class ExchangeContractAPI(MethodView):
         return make_response(jsonify(response_object)), 201
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
-    def post(self):
+    def post(self, exchange_contract_id):
         post_data = request.get_json()
 
         reserve_token_id = post_data['reserve_token_id']
@@ -79,7 +92,19 @@ class ExchangeContractAPI(MethodView):
 class TokenAPI(MethodView):
 
     @requires_auth
-    def get(self):
+    def get(self, token_id):
+
+        if token_id:
+            token = Token.query.get(token_id)
+
+            response_object = {
+                'message': 'success',
+                'data': {
+                    'token': token_schema.dump(token).data
+                }
+            }
+
+            return make_response(jsonify(response_object)), 201
 
         tokens = Token.query.all()
 
@@ -93,7 +118,7 @@ class TokenAPI(MethodView):
         return make_response(jsonify(response_object)), 201
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
-    def post(self):
+    def post(self, token_id):
         """
         This endpoint is for creating a new contract,
         rather registering a token with an existing smart contract on the system.
@@ -185,12 +210,28 @@ class TokenAPI(MethodView):
 
 contracts_blueprint.add_url_rule(
     '/contract/exchange/',
-    view_func=ExchangeContractAPI.as_view('contracts_view'),
+    view_func=ExchangeContractAPI.as_view('contract_view'),
+    methods=['POST', 'GET'],
+    defaults={'exchange_contract_id': None}
+
+)
+
+contracts_blueprint.add_url_rule(
+    '/contract/exchange/<int:exchange_contract_id>/',
+    view_func=ExchangeContractAPI.as_view('single_contract_view'),
     methods=['POST', 'GET']
 )
+
 
 contracts_blueprint.add_url_rule(
     '/contract/token/',
     view_func=TokenAPI.as_view('token_view'),
-    methods=['POST', 'GET']
+    methods=['POST', 'GET'],
+    defaults={'token_id': None}
+)
+
+contracts_blueprint.add_url_rule(
+    '/contract/token/<int:token_id>/',
+    view_func=TokenAPI.as_view('single_token_view'),
+    methods=['GET']
 )
