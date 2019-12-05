@@ -231,7 +231,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
             transfer_account.approve_and_disburse()
 
         db.session.add(transfer_account)
-        db.session.commit()
+        #TODO: if i don't have this, default_transfer_account_id is null, if i do, API crashes...
+        #db.session.commit()
 
     user.default_transfer_account_id = transfer_account.id
 
