@@ -123,7 +123,7 @@ class UserAPI(MethodView):
     def post(self, user_id):
 
         post_data = request.get_json()
-        organisation = g.user.get_active_organisation()
+        organisation = g.active_organisation
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,

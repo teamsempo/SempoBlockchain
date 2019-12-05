@@ -127,22 +127,22 @@ def register_blueprints(app):
 
         return response
 
-    from .views.index import index_view  #web
-    from server.api.auth_api import auth_blueprint  #auth
-    from server.api.pusher_auth_api import pusher_auth_blueprint  #web
-    from server.api.transfer_account_api import transfer_account_blueprint  #web
+    from .views.index import index_view
+    from server.api.auth_api import auth_blueprint
+    from server.api.pusher_auth_api import pusher_auth_blueprint
+    from server.api.transfer_account_api import transfer_account_blueprint
     from server.api.blockchain_transaction_api import blockchain_transaction_blueprint
     from server.api.geolocation_api import geolocation_blueprint
     from server.api.ip_address_api import ip_address_blueprint
-    from server.api.dataset_api import dataset_blueprint  #web
-    from server.api.credit_transfer_api import credit_transfer_blueprint  #web
+    from server.api.dataset_api import dataset_blueprint
+    from server.api.credit_transfer_api import credit_transfer_blueprint
     from server.api.user_api import user_blueprint
     from server.api.kobo_api import user_kobo_blueprint
     from server.me_api import me_blueprint
-    from server.api.export_api import export_blueprint  #web
+    from server.api.export_api import export_blueprint
     from server.api.image_uploader_api import image_uploader_blueprint
     from server.api.recognised_face_api import recognised_face_blueprint
-    from server.api.filter_api import filter_blueprint  #web
+    from server.api.filter_api import filter_blueprint
     from server.api.kyc_application_api import kyc_application_blueprint
     from server.api.wyre_api import wyre_blueprint
     from server.api.transfer_usage_api import transfer_usage_blueprint
@@ -169,6 +169,7 @@ def register_blueprints(app):
     app.register_blueprint(export_blueprint, url_prefix='/api')
     app.register_blueprint(image_uploader_blueprint, url_prefix='/api')
     app.register_blueprint(recognised_face_blueprint, url_prefix='/api')
+    app.register_blueprint(filter_blueprint, url_prefix='/api')
     app.register_blueprint(kyc_application_blueprint, url_prefix='/api')
     app.register_blueprint(wyre_blueprint, url_prefix='/api')
     app.register_blueprint(transfer_usage_blueprint, url_prefix='/api')

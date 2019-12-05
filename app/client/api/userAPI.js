@@ -29,7 +29,10 @@ export const loadUserAPI = ({query, path}) => {
 
 // Create at User with Auth
 export const createUserAPI = ({body}) => {
-  return fetch('/api/user/', {
+  const query_string = generateQueryString();
+  var URL = `/api/user/${query_string}`;
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

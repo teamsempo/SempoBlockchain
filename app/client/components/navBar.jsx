@@ -134,6 +134,7 @@ class NavBar extends React.Component {
                                       </div>
                                   </div>
                                   <DropdownContent style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', zIndex: 99}}>
+                                    <DropdownContentTitle>Switch Organisation</DropdownContentTitle>
                                     {orgs.map(org => {
                                       return <DropdownContentText key={org.id} onClick={() => this.selectOrg(org)}>{org.name}</DropdownContentText>
                                     })}
@@ -296,7 +297,16 @@ const DropdownContentText = styled.p`
   text-decoration: none;
   display: block;
   margin: 0;
+  border-bottom: 0.5px solid #80808059;
   &:hover {
   background-color: #f1f1f1
   }
+`;
+
+const DropdownContentTitle = styled(DropdownContentText)`
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: bold;
+  color: grey;
+  padding: 5px 16px;
 `;
