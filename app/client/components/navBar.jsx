@@ -100,6 +100,13 @@ class NavBar extends React.Component {
           )
         }
 
+        var orgs = this.props.login.organisations;
+        if (orgs === null || typeof orgs === "undefined") {
+          orgs = []
+        }
+
+        console.log('orgs',orgs);
+
         if (this.props.loggedIn) {
 
             return (
@@ -123,11 +130,11 @@ class NavBar extends React.Component {
                                               <p style={{color: '#fff', margin: '0', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{this.props.login.organisationName}</p>
                                               <p style={{color: '#fff', margin: '0', fontSize: '12px', textDecoration: 'none'}}>{this.props.email}</p>
                                           </div>
-                                          {this.props.login.organisations.length <= 1 ? null : <SVG style={{padding: '0 0.5em 0 0', width: '30px'}} src={'/static/media/angle-down.svg'}/>}
+                                          {orgs.length <= 1 ? null : <SVG style={{padding: '0 0.5em 0 0', width: '30px'}} src={'/static/media/angle-down.svg'}/>}
                                       </div>
                                   </div>
                                   <DropdownContent style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', zIndex: 99}}>
-                                    {this.props.login.organisations.map(org => {
+                                    {orgs.map(org => {
                                       return <DropdownContentText key={org.id} onClick={() => this.selectOrg(org)}>{org.name}</DropdownContentText>
                                     })}
                                   </DropdownContent>
