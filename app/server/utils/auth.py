@@ -100,9 +100,14 @@ def requires_auth(f=None,
                     try:
                         active_organisation = user.get_active_organisation()
                         query_org = request.args.get('org', None)
-                        if query_org is not None and int(query_org) in g.member_organisations:
-                            # override user org
-                            active_organisation = Organisation.query.get(query_org)
+                        if query_org is not None:
+                            try:
+                                query_org = int(query_org)
+                                if query_org in g.member_organisations:
+                                    # override user org
+                                    active_organisation = Organisation.query.get(query_org)
+                            except ValueError:
+                                pass
 
                         if active_organisation is not None:
                             g.active_organisation_id = active_organisation.id

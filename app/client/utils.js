@@ -42,7 +42,10 @@ export const generateQueryString = (query) => {
   }
 
   let orgId = getOrgId();
-  var response_string = query_string + `org=${orgId}&`;
+  var response_string = query_string;
+  if (orgId !== null && typeof orgId !== "undefined") {
+    response_string = query_string + `org=${orgId}&`;
+  }
 
   return response_string.slice(0, -1);
 };
