@@ -204,12 +204,7 @@ class KenyaUssdStateMachine(Machine):
         #TODO: replace with ruben's method when merge
         chosen_transfer_usage = TransferUsage.find_or_create("Food")
 
-        try:
-            ussd_tasker.send_directory_listing(self.user, chosen_transfer_usage)
-        except Exception as e:
-            print(e)
-            sentry.captureException()
-            pass
+        ussd_tasker.send_directory_listing(self.user, chosen_transfer_usage)
 
     def fetch_user_exchange_rate(self, user_input):
         ussd_tasker.fetch_user_exchange_rate(self.user)

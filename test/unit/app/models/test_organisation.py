@@ -21,6 +21,6 @@ def test_send_welcome_sms(mocker, test_client, init_database, user_factory, orga
     send_message = mocker.MagicMock()
     mocker.patch('server.message_processor.send_message', send_message)
 
-    organisation.send_welcome_sms(user)
+    organisation.send_welcome_sms({'phone': user.phone, 'preferred_language': user.preferred_language})
 
     send_message.assert_called_with(None, expected)
