@@ -38,3 +38,6 @@ ngrok
 app/server/static/javascript/dist/*
 dump.rdb
 eth_worker/complete_compiled_contracts/
+
+# This is temporary: secrets should be included in AWS?
+app/migrations/fromGE/secrets.py
