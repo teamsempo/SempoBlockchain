@@ -1,3 +1,4 @@
+import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
@@ -561,7 +562,7 @@ class User(ManyOrgBase, ModelBase):
         # should drop the country code from phone number?
         return "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
-    def get_most_relevant_transfer_usage(self):
+    def get_most_relevant_transfer_usages(self):
         '''Finds the transfer usage/business categories there are most relevant for the user
         based on the last number of send and completed credit transfers supplemented with the
         defaul business categories
@@ -570,34 +571,20 @@ class User(ManyOrgBase, ModelBase):
         '''
 
         sql = text('''
-            SELECT *, COUNT(*)  FROM
-                (SELECT u.business_usage_id FROM credit_transfer c
-                LEFT JOIN "user" u ON c.recipient_user_id = u.id
-                WHERE sender_user_id = {} AND c.transfer_status = 'COMPLETE'
+            SELECT *, COUNT(*) FROM
+                (SELECT c.transfer_use::text FROM credit_transfer c
+                WHERE c.sender_user_id = {} AND c.transfer_status = 'COMPLETE'
                 ORDER BY c.updated DESC
-                )
-            C GROUP BY business_usage_id ORDER BY count DESC
+                LIMIT 20)
+            C GROUP BY transfer_use ORDER BY count DESC
         '''.format(self.id))
         result = db.session.execute(sql)
-        most_common_ids = [row[0] for row in result]
-        # Get most common business_usage_id
+        most_common_uses = {}
+        for row in result:
+            for use in json.loads(row[0]):
+                most_common_uses[use] = row[1]
 
-        most_relevant_ids = self.refine_with_default_transfer_usages(
-            most_common_ids)
-        relevant_transer_usages = TransferUsage.query.filter(
-            TransferUsage.id.in_(most_common_ids)).all()
-        # Order the transfer usages by the ordered list of id that were ordered by count
-        ordered_tranfer_usages = [
-            next(s for s in relevant_transer_usages if s.id == id) for id in most_common_ids]
-        return ordered_tranfer_usages
-
-    def refine_with_default_transfer_usages(self, most_common):
-        default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
-            TransferUsage.id).all()
-        for transer_usage_id, in default_transer_usages:
-            if transer_usage_id not in most_common:
-                most_common.append(transer_usage_id)
-        return most_common
+        return most_common_uses
 
     def get_reserve_token(self):
         # reserve token is master token for now

@@ -10,13 +10,16 @@ import math
 
 from transitions import Machine
 
-from server import message_processor, sentry, ussd_tasker
-from server.models.organisation import Organisation
+from server import message_processor, ussd_tasker
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
-from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, get_user_by_phone
+from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
+    get_user_by_phone, transfer_usages_for_user
+
+
+ITEMS_PER_MENU = 8
 
 
 class KenyaUssdStateMachine(Machine):
@@ -174,16 +177,15 @@ class KenyaUssdStateMachine(Machine):
 
     def save_transaction_reason(self, user_input):
         chosen_transfer_usage = self.get_select_transfer_usage(user_input)
+
+        transfer_reason = None
         if self.user.preferred_language is not None and chosen_transfer_usage.translations is not None:
-            transfer_reason = chosen_transfer_usage.translations[self.user.preferred_language]
-        else:
+            transfer_reason = chosen_transfer_usage.translations.get(self.user.preferred_language)
+        if transfer_reason is None:
             transfer_reason = chosen_transfer_usage.name
+
         self.session.set_data('transaction_reason_i18n', transfer_reason)
         self.session.set_data('transaction_reason_id', chosen_transfer_usage.id)
-
-    def save_transaction_reason_other(self, user_input):
-        self.session.set_data('transaction_reason_translated', user_input)
-        self.session.set_data('transaction_reason_id', "1")
 
     def set_usage_menu_number(self, user_input):
         current_menu_nr = self.session.get_data('usage_menu')
@@ -241,23 +243,23 @@ class KenyaUssdStateMachine(Machine):
         amount = float(self.session.get_data('exchange_amount'))
         ussd_tasker.exchange_token(self.user, agent, amount)
 
+    @staticmethod
+    def make_usage_mapping(usage: TransferUsage):
+        return {'id': usage.id, 'translations': usage.translations, 'name': usage.name}
+
     def store_transfer_usage(self, user_input):
-        items_per_menu = 8
-        usages = self.user.get_most_relevant_transfer_usage()
-        transfer_usage_id_order = []
-        for usage in usages:
-            transfer_usage_id_order.append(usage.id)
-        if self.session.session_data is None:
-            self.session.session_data = {'transfer_usage_mapping': transfer_usage_id_order}
-        elif type(self.session.session_data) is dict:
-            self.session.session_data['transfer_usage_mapping'] = transfer_usage_id_order
-        self.session.set_data('usage_menu', 1)
-        self.session.set_data('usage_menu_max', math.floor(len(usages)/items_per_menu))
+        usages = transfer_usages_for_user(self.user)
+        transfer_usage_map = list(map(KenyaUssdStateMachine.make_usage_mapping, usages))
+
+        self.session.set_data('transfer_usage_mapping', transfer_usage_map)
+        self.session.set_data('usage_menu', 0)
+        self.session.set_data('usage_menu_max', math.floor(len(usages)/ITEMS_PER_MENU))
 
     def get_select_transfer_usage(self, user_input):
-        selected_tranfer_usage_id = self.session.session_data['transfer_usage_mapping'][int(
-                    user_input)-1]
-        return TransferUsage.query.filter_by(id=selected_tranfer_usage_id).first()
+        menu_page = self.session.get_data('usage_menu')
+        idx = menu_page * ITEMS_PER_MENU + int(user_input) - 1
+        selected_tranfer_usage_id = self.session.get_data('transfer_usage_mapping')[idx]['id']
+        return TransferUsage.query.get(selected_tranfer_usage_id)
 
     def menu_one_selected(self, user_input):
         return user_input == '1'
@@ -397,7 +399,8 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'send_token_reason',
              'dest': 'send_token_reason_other',
-             'conditions': 'menu_nine_selected'},
+             'conditions': 'menu_nine_selected',
+             'after': 'set_usage_menu_number'},
             {'trigger': 'feed_char',
              'source': 'send_token_reason',
              'dest': 'send_token_pin_authorization',
@@ -415,7 +418,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'send_token_reason_other',
              'dest': 'send_token_pin_authorization',
-             'after': 'set_usage_menu_number'},
+             'after': 'save_transaction_reason'},
         ]
         self.add_transitions(send_token_reason_transitions)
 

@@ -1,5 +1,6 @@
 import threading
-from typing import Optional
+from functools import cmp_to_key
+from typing import Optional, List
 from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
@@ -662,3 +663,32 @@ def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[U
             raise Exception('User not found.')
         else:
             return None
+
+
+def transfer_usages_for_user(user: User) -> List[TransferUsage]:
+    most_common_uses = user.get_most_relevant_transfer_usages()
+
+    def usage_sort(a, b):
+        ma = most_common_uses.get(a.name)
+        mb = most_common_uses.get(b.name)
+
+        # return most used, then default, then everything else
+        if ma is not None and mb is not None:
+            if ma >= mb:
+                return -1
+            else:
+                return 1
+        elif ma is not None:
+            return -1
+        elif mb is not None:
+            return 1
+        elif a.default or b.default:
+            if a.default:
+                return -1
+            else:
+                return 1
+        else:
+            return -1
+
+    ordered_transfer_usages = sorted(TransferUsage.query.all(), key=cmp_to_key(usage_sort))
+    return ordered_transfer_usages

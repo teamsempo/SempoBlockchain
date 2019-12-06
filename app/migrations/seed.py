@@ -30,12 +30,7 @@ def update_or_create_menu(name, description, parent_id=None):
     return instance
 
 
-# from app folder: python ./migations/seed.py
-if __name__ == '__main__':
-    app = create_app()
-    ctx = app.app_context()
-    ctx.push()
-
+def create_ussd_menus():
     print('Creating Sarafu Network USSD Menu')
     print('**********************************************************************')
     print('Creating Initial Language Selection menu')
@@ -264,21 +259,21 @@ if __name__ == '__main__':
     print('------------------------------------------------------------')
     print('Done creating USSD Menus')
 
-    
-    
+
+def create_business_categories():
     print('Creating Business Categories')
     print('**********************************************************************')
     business_categories = [
         {'name': 'Food', 'icon': 'message', 'translations': {
             'en': 'Food', 'sw': 'Chakula'}},
         {'name': 'Water', 'icon': 'message',
-            'translations': {'en': 'Water', 'sw': 'Maji'}},
+         'translations': {'en': 'Water', 'sw': 'Maji'}},
         {'name': 'Energy', 'icon': 'message', 'translations': {
             'en': 'Energy', 'sw': 'Kuni/makaa/mafuta/stima'}},
         {'name': 'Education', 'icon': 'message',
-            'translations': {'en': 'Education', 'sw': 'Elimu'}},
+         'translations': {'en': 'Education', 'sw': 'Elimu'}},
         {'name': 'Health', 'icon': 'message',
-            'translations': {'en': 'Health', 'sw': 'Afya'}},
+         'translations': {'en': 'Health', 'sw': 'Afya'}},
         {'name': 'General shop', 'icon': 'message', 'translations': {
             'en': 'General shop', 'sw': 'Duka la jumla'}},
         {'name': 'Environment', 'icon': 'message', 'translations': {
@@ -296,12 +291,23 @@ if __name__ == '__main__':
         else:
             try:
                 usage = TransferUsage(name=business_category['name'], icon=business_category['icon'],
-                                      priority=1, default=1, translations=business_category['translations'])
+                                      priority=1, default=True, translations=business_category['translations'])
             except TransferUsageNameDuplicateException as e:
                 print(e)
         db.session.add(usage)
         db.session.commit()
 
+
+# from app folder: python ./migations/seed.py
+if __name__ == '__main__':
+    app = create_app()
+    ctx = app.app_context()
+    ctx.push()
+
+    create_ussd_menus()
+
+    create_business_categories()
+    
     ctx.pop()
     print('------------------------------------------------------------')
     print('Done creating Business Categories')

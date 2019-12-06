@@ -6,7 +6,7 @@ import json
 
 from helpers.user import UserFactory
 from helpers.ussd_session import UssdSessionFactory
-from helpers.ussd_utils import make_kenyan_phone
+from helpers.ussd_utils import make_kenyan_phone, fake_transfer_mapping
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User
@@ -44,8 +44,7 @@ send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_co
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
-    session.session_data = {'transfer_usage_mapping': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 'usage_menu': 1}
-    transfer_usage = TransferUsage.find_or_create("Food")
+    session.session_data = {'transfer_usage_mapping': fake_transfer_mapping(10), 'usage_menu': 1}
     user = user_factory()
     user.phone = phone()
     state_machine = KenyaUssdStateMachine(session, user)
@@ -119,7 +118,7 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
             "{" +
             f'"recipient_phone": "{recipient.phone}",'
             '"transaction_amount": "10",'
-            '"transaction_reason_translated": "A reason",'
+            '"transaction_reason_i18n": "A reason",'
             '"transaction_reason_id": "1"'
             + "}"
         )
