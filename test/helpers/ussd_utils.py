@@ -1,5 +1,6 @@
 from typing import Optional
 
+from server import db
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User
@@ -30,6 +31,7 @@ def make_kenyan_phone(phone_str):
 def fake_transfer_mapping(length: int):
     mapping = []
     transfer_usage = TransferUsage.find_or_create("Food")
+    db.session.commit()
     for i in range(length):
         mapping.append(KenyaUssdStateMachine.make_usage_mapping(transfer_usage))
 
