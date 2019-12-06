@@ -9,7 +9,7 @@ from server.models.transfer_account import TransferAccount
 from server.utils.user import default_token
 
 
-def user_directory_listing(user):
+def user_directory_listing(user: User) -> str:
     bio = user.custom_attributes.filter_by(name='bio').first()
     if bio is None:
         return user.phone
