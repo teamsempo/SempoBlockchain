@@ -291,7 +291,7 @@ class User(ManyOrgBase, ModelBase):
 
     @property
     def transfer_account(self):
-        active_organisation = getattr(g, "active_organisation") or self.fallback_active_organisation()
+        active_organisation = getattr(g, "active_organisation", None) or self.fallback_active_organisation()
         if active_organisation:
             return active_organisation.org_level_transfer_account
 
