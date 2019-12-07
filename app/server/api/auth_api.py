@@ -26,15 +26,15 @@ auth_blueprint = Blueprint('auth', __name__)
 
 
 def get_user_organisations(user):
-    try:
-        organisation = dict(
-            organisation_name=user.default_organisation.name,
-            organisation_id=user.default_organisation_id
-        )
-    except AttributeError:
-        organisation = dict()
+    active_organisation = getattr(g, "active_organisation") or user.fallback_active_organisation()
 
-    return organisation
+    organisations = dict(
+        active_organisation_name=active_organisation.name,
+        active_organisation_id=active_organisation.id,
+        organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
+    )
+
+    return organisations
 
 
 def get_denominations():

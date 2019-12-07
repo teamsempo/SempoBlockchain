@@ -169,6 +169,7 @@ def register_blueprints(app):
     app.register_blueprint(export_blueprint, url_prefix='/api')
     app.register_blueprint(image_uploader_blueprint, url_prefix='/api')
     app.register_blueprint(recognised_face_blueprint, url_prefix='/api')
+    app.register_blueprint(filter_blueprint, url_prefix='/api')
     app.register_blueprint(kyc_application_blueprint, url_prefix='/api')
     app.register_blueprint(wyre_blueprint, url_prefix='/api')
     app.register_blueprint(transfer_usage_blueprint, url_prefix='/api')

@@ -1,7 +1,10 @@
-import { getToken, handleResponse } from '../utils'
+import {generateQueryString, getToken, handleResponse} from '../utils'
 
 export const exportAPI = (export_type, include_transfers, user_type, date_range, payable_period_start_date, payable_period_end_date, selected) => {
-  return fetch('/api/export/', {
+  const query_string = generateQueryString();
+  var URL = `/api/export/${query_string}`;
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

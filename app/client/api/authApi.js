@@ -1,4 +1,4 @@
-import { handleResponse, storeSessionToken, removeSessionToken, getToken, getTFAToken, generateQueryString } from '../utils'
+import { handleResponse, storeSessionToken, removeSessionToken, getToken, getTFAToken, generateQueryString, getOrgId } from '../utils'
 import { startConfiguration } from 'pusher-redux';
 
 //Auth API Call
@@ -21,7 +21,14 @@ export const requestApiToken = ({body}) => {
 };
 
 export const refreshApiToken = () => {
-  return fetch('/api/auth/refresh_api_token/' ,{
+  let orgId = getOrgId();
+  if (orgId !== null) {
+    var URL = `/api/auth/refresh_api_token/?org=${orgId}`
+  } else {
+    URL = '/api/auth/refresh_api_token/'
+  }
+
+  return fetch(URL ,{
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json'
@@ -157,7 +164,10 @@ export const authenticatePusher = () => {
 };
 
 export const getUserList = () => {
-  return fetch('/api/auth/permissions/', {
+  const query_string = generateQueryString();
+  var URL = `/api/auth/permissions/${query_string}`;
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -171,7 +181,6 @@ export const getUserList = () => {
 };
 
 export const updateUserAPI = ({body, query}) => {
-
   const query_string = generateQueryString(query);
   var URL = `/api/auth/permissions/${query_string}`;
 
@@ -192,7 +201,8 @@ export const updateUserAPI = ({body, query}) => {
 };
 
 export const inviteUserAPI = ({body}) => {
-  var URL = `/api/auth/permissions/`;
+  const query_string = generateQueryString();
+  var URL = `/api/auth/permissions/${query_string}`;
 
   return fetch(URL, {
     headers: {

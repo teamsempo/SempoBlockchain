@@ -3,6 +3,7 @@ from flask import request, g, make_response, jsonify, current_app
 from server import db
 from server.models.user import User
 from server.models.ip_address import IpAddress
+from server.models.organisation import Organisation
 from server.utils.access_control import AccessControl
 import config, hmac, hashlib, json, urllib
 from typing import Optional, List, Dict
@@ -95,17 +96,25 @@ def requires_auth(f=None,
                         return make_response(jsonify(response_object)), 401
 
                     g.user = user
-                    # g.member_organisations = [org.id for org in user.organisations]
+                    g.member_organisations = [org.id for org in user.organisations]
                     try:
-                        active_organisation = user.get_active_organisation()
-                        if active_organisation is not None:
-                            g.active_organisation_id = active_organisation.id
-                            g.active_organisation = active_organisation
-                        else:
-                            g.active_organisation_id = None
-                            g.active_organisation = None
+                        g.active_organisation = None
+
+                        # First try to set the active org from the query
+                        query_org = request.args.get('org', None)
+                        if query_org is not None:
+                            try:
+                                query_org = int(query_org)
+                                if query_org in g.member_organisations:
+                                    g.active_organisation = Organisation.query.get(query_org)
+                            except ValueError:
+                                pass
+
+                        # Then get the fallback organisation
+                        if g.active_organisation is None:
+                            g.active_organisation = user.fallback_active_organisation()
+
                     except NotImplementedError:
-                        g.active_organisation_id = None
                         g.active_organisation = None
 
                     if not user.is_activated:
@@ -114,7 +123,6 @@ def requires_auth(f=None,
                             'message': 'user not activated'
                         }
                         return make_response(jsonify(response_object)), 401
-
 
                     if user.is_disabled:
                         response_object = {

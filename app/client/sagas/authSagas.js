@@ -1,6 +1,6 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken} from '../utils'
+import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId} from '../utils'
 
 import {
   requestApiToken,
@@ -18,6 +18,7 @@ import {
 
 import {
   REAUTH_REQUEST,
+  UPDATE_ACTIVE_ORG,
   LOGIN_REQUEST,
   LOGIN_SUCCESS,
   LOGIN_PARTIAL,
@@ -56,8 +57,22 @@ import {
 import {browserHistory} from "../app.jsx";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 
+function* saveOrgId({payload}) {
+  try {
+    yield call(storeOrgid, payload.organisationId.toString());
+
+    window.location.reload()
+  } catch (e) {
+    removeOrgId()
+  }
+}
+
+function* watchSaveOrgId() {
+  yield takeEvery(UPDATE_ACTIVE_ORG, saveOrgId);
+}
 export function* logout() {
-    yield call(removeSessionToken)
+    yield call(removeSessionToken);
+    yield call(removeOrgId);
 }
 
 function createLoginSuccessObject(token) {
@@ -70,8 +85,9 @@ function createLoginSuccessObject(token) {
     adminTier: token.admin_tier,
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
-    organisationName: token.organisation_name,
-    organisationId: token.organisation_id
+    organisationName: token.active_organisation_name,
+    organisationId: token.active_organisation_id,
+    organisations: token.organisations,
   }
 }
 
@@ -287,6 +303,7 @@ function* watchValidateTFA() {
 
 export default function* authSagas() {
   yield all([
+    watchSaveOrgId(),
     watchRegisterRequest(),
     watchLoginRequest(),
     watchLogoutRequest(),
