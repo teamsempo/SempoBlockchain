@@ -76,7 +76,6 @@ def calculate_transfer_stats(total_time_series=False):
     except BlockchainError:
         master_wallet_balance = 0
 
-
     try:
         last_day = daily_transaction_volume[0].date
         last_day_volume = daily_transaction_volume[0].volume

@@ -26,15 +26,15 @@ auth_blueprint = Blueprint('auth', __name__)
 
 
 def get_user_organisations(user):
-    try:
-        organisation = dict(
-            organisation_name=user.default_organisation.name,
-            organisation_id=user.default_organisation_id
-        )
-    except AttributeError:
-        organisation = dict()
+    active_organisation = getattr(g, "active_organisation") or user.fallback_active_organisation()
 
-    return organisation
+    organisations = dict(
+        active_organisation_name=active_organisation.name,
+        active_organisation_id=active_organisation.id,
+        organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
+    )
+
+    return organisations
 
 
 def get_denominations():
@@ -814,7 +814,7 @@ class PermissionsAPI(MethodView):
             response_object = {'message': 'Not Authorised to set organisation ID'}
             return make_response(jsonify(response_object)), 401
 
-        target_organisation_id = organisation_id or g.active_organisation
+        target_organisation_id = organisation_id or g.active_organisation.id
         if not target_organisation_id:
             response_object = {'message': 'Must provide an organisation to bind user to'}
             return make_response(jsonify(response_object)), 400

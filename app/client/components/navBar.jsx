@@ -1,21 +1,22 @@
 import React from 'react';
 import MediaQuery from 'react-responsive'
-import classNames from 'classnames';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Link, NavLink } from 'react-router-dom';
 
-import { loginRequest, logout } from '../reducers/authReducer'
+import { updateActiveOrgRequest } from '../reducers/authReducer'
 
 const mapStateToProps = (state) => {
   return {
     loggedIn: (state.login.token != null),
+    login: state.login,
     email: state.login.email
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    updateActiveOrgRequest: (organisationName, organisationId) => dispatch(updateActiveOrgRequest({organisationName, organisationId})),
   };
 };
 
@@ -25,6 +26,7 @@ class NavBar extends React.Component {
         this.state = {
           iconURL: '/static/media/sempo_icon.svg',
           mobileMenuOpen: false,
+          isOrgSwitcherActive: false,
         };
     }
 
@@ -56,6 +58,20 @@ class NavBar extends React.Component {
         }));
     }
 
+    selectOrg(org) {
+      this.setState({isOrgSwitcherActive: false}, () => this.props.updateActiveOrgRequest(org.name, org.id));
+    }
+
+    toggleSwitchOrgDropdown() {
+      if (this.props.login.organisations.length <= 1) {
+        return
+      }
+
+      this.setState(prevState => ({
+          isOrgSwitcherActive: !prevState.isOrgSwitcherActive
+      }));
+    }
+
     imageExists(url, callback) {
       var img = new Image();
       img.onload = function() { callback(true); };
@@ -84,6 +100,13 @@ class NavBar extends React.Component {
           )
         }
 
+        var orgs = this.props.login.organisations;
+        if (orgs === null || typeof orgs === "undefined") {
+          orgs = []
+        }
+
+        console.log('orgs',orgs);
+
         if (this.props.loggedIn) {
 
             return (
@@ -100,12 +123,25 @@ class NavBar extends React.Component {
                       <SideBarNavigationItems>
                           <div style={{display: 'flex', flexDirection: 'column'}}>
                               <MediaQuery minWidth={768}>
-                                  <StyledLogoLink to='/' onClick={() => this._closeMobileMenu()}><SVG src={this.state.iconURL}/></StyledLogoLink>
-                                  <div>
-                                      <p style={{color: '#fff', margin: '1em 2em 0em', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{deploymentName}</p>
-                                      <p style={{color: '#fff', margin: '0em 2em 1em', fontSize: '12px', textDecoration: 'none'}}>{this.props.email}</p>
+                                  <div style={{display: 'flex', flexDirection: 'row', cursor: 'pointer'}}>
+                                      <StyledLogoLink to='/' onClick={() => this._closeMobileMenu()}><SVG src={this.state.iconURL}/></StyledLogoLink>
+                                      <div style={{display: 'flex', width: '100%', justifyContent: 'space-between'}} onClick={() => this.toggleSwitchOrgDropdown()}>
+                                          <div style={{margin: 'auto 0'}}>
+                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{this.props.login.organisationName}</p>
+                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', textDecoration: 'none'}}>{this.props.email}</p>
+                                          </div>
+                                          {orgs.length <= 1 ? null : <SVG style={{padding: '0 0.5em 0 0', width: '30px'}} src={'/static/media/angle-down.svg'}/>}
+                                      </div>
                                   </div>
+                                  <DropdownContent style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', zIndex: 99}}>
+                                    <DropdownContentTitle>Switch Organisation</DropdownContentTitle>
+                                    {orgs.map(org => {
+                                      return <DropdownContentText key={org.id} onClick={() => this.selectOrg(org)}>{org.name}</DropdownContentText>
+                                    })}
+                                  </DropdownContent>
+                                  <div style={{display: this.state.isOrgSwitcherActive ? 'block' : 'none', position: 'absolute', top: 0, left: 0, zIndex: 98, width: '100vw', height: '100vh'}} onClick={() => this.toggleSwitchOrgDropdown()}/>
                               </MediaQuery>
+
                               <NavWrapper mobileMenuOpen={this.state.mobileMenuOpen}>
                                   <div style={{display: 'flex', flexDirection: 'column'}}>
                                     <StyledLink to='/' exact onClick={() => this._closeMobileMenu()}>Dashboard</StyledLink>
@@ -118,10 +154,6 @@ class NavBar extends React.Component {
                                      target="_blank">
                                     { window.USING_EXTERNAL_ERC20? 'Master Wallet Tracker' : 'Contract Tracker'}
                                   </ContractAddress>
-                                {/*<GetVerified to='/settings/verification'>*/}
-                                  {/*Get Verified to send funds*/}
-                                  {/*<SVG style={{padding: '0 1em', width: '20px', height: '20px'}} src='/static/media/right-arrow.svg'/>*/}
-                                {/*</GetVerified>*/}
                               </NavWrapper>
 
                           </div>
@@ -185,7 +217,7 @@ const SideBarNavigationItems = styled.div`
 
 const SVG = styled.img`
   width: 35px;
-  padding: 1em 0 0.5em;
+  padding: 1em 0;
   display: flex;
   @media (max-width: 767px) {
   padding: 0;
@@ -248,25 +280,33 @@ const ContractAddress = styled.a`
   }
 `;
 
-const GetVerified = styled(NavLink)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1em;
-  width: calc(100% - 2em);
-  margin: 0;
-  bottom: 0;
-  background-color: #475a66;
-  font-weight: 600;
-  color: #fff;
-  font-size: 12px;
-  text-decoration: none;
+const DropdownContent = styled.div`
+  display: none;
   position: absolute;
-  @media (max-width: 767px) {
-  text-align: center;
-  font-size: 16px;
-  left: 0;
-  right: 0;
-  color: #FFF;
+  top: 74px;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  width: 234px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+`;
+
+const DropdownContentText = styled.p`
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  margin: 0;
+  border-bottom: 0.5px solid #80808059;
+  &:hover {
+  background-color: #f1f1f1
   }
+`;
+
+const DropdownContentTitle = styled(DropdownContentText)`
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: bold;
+  color: grey;
+  padding: 5px 16px;
 `;

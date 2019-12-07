@@ -6,7 +6,6 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.utils import paginate_query
 from server.models.user import User
-from server.models.transfer_account import TransferAccount
 from server.schemas import organisation_schema, organisations_schema
 from server.utils.auth import requires_auth, show_all
 
@@ -111,9 +110,7 @@ class OrganisationUserAPI(MethodView):
                 diagnostics.append({'user': user_id, 'message': 'No user exists'})
 
             else:
-                user.organisations.append(organisation)
-                user.default_organisation = organisation
-                db.session.commit()
+                user.add_user_to_organisation(organisation)
 
         response_object = {
             'message': 'Tied users to organisation {}'.format(organisation_id),

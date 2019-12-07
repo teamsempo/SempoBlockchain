@@ -261,7 +261,7 @@ class CreditTransferAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 404
         else:
-            active_organisation = g.user.get_active_organisation()
+            active_organisation = g.active_organisation
             if active_organisation is None:
                 response_object = {
                     'message': 'Must provide token_id'

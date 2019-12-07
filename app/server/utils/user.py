@@ -149,7 +149,7 @@ def update_transfer_account_user(user,
 
 def create_transfer_account_user(first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
-                                 organisation=None,
+                                 organisation: Organisation=None,
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
@@ -202,8 +202,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if organisation:
-        user.organisations.append(organisation)
-        user.default_organisation = organisation
+        user.add_user_to_organisation(organisation, is_admin=False)
 
     db.session.add(user)
 
