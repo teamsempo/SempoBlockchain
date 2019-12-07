@@ -814,7 +814,7 @@ class PermissionsAPI(MethodView):
             response_object = {'message': 'Not Authorised to set organisation ID'}
             return make_response(jsonify(response_object)), 401
 
-        target_organisation_id = organisation_id or g.active_organisation
+        target_organisation_id = organisation_id or g.active_organisation.id
         if not target_organisation_id:
             response_object = {'message': 'Must provide an organisation to bind user to'}
             return make_response(jsonify(response_object)), 400
