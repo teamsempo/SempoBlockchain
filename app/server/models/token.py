@@ -1,6 +1,5 @@
 import enum
 from sqlalchemy.ext.hybrid import hybrid_property
-from flask import current_app
 from server import db, bt
 
 from server.models.utils import (

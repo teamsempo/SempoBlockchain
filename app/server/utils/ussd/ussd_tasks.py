@@ -9,7 +9,7 @@ class UssdTasker(object):
     @staticmethod
     def send_directory_listing(user: User, chosen_transfer_usage: TransferUsage):
         processor = DirectoryListingProcessor(user, chosen_transfer_usage)
-        processor.start()
+        processor.send_directory_listing()
 
     @staticmethod
     def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):

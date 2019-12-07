@@ -288,7 +288,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  uuid=None,
                  transfer_metadata=None,
                  fiat_ramp=None,
-                 transfer_subtype=None):
+                 transfer_subtype=None,
+                 is_ghost_transfer=False):
 
         self.transfer_amount = amount
 
@@ -311,11 +312,15 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 recipient_user,
                 recipient_transfer_account
             )
+
+            if is_ghost_transfer is False:
+                self.recipient_transfer_account.is_ghost = False
         except NoTransferAccountError:
             self.recipient_transfer_account = TransferAccount(
                 bind_to_entity=recipient_user,
                 token=token,
-                is_approved=True
+                is_approved=True,
+                is_ghost=is_ghost_transfer
             )
             db.session.add(self.recipient_transfer_account)
 

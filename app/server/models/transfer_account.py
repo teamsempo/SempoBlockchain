@@ -40,6 +40,8 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     is_beneficiary = db.Column(db.Boolean, default=False)
 
+    is_ghost = db.Column(db.Boolean, default=False)
+
     account_type    = db.Column(db.Enum(TransferAccountType))
 
     payable_period_type   = db.Column(db.String(), default='week')
