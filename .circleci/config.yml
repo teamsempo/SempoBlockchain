@@ -219,6 +219,5 @@ workflows:
             branches:
               only:
                 - master
-                - dev_deploy
           requires:
-            - build
+            - test
