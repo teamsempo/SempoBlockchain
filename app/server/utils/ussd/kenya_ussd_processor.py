@@ -60,7 +60,7 @@ class KenyaUssdProcessor:
             return i18n_for(
                 user, menu.display_key,
                 recipient_phone=recipient_phone,
-                token_name=token.name,
+                token_name=token.symbol,
                 transaction_amount=transaction_amount,
                 transaction_reason=transaction_reason
             )
@@ -73,7 +73,7 @@ class KenyaUssdProcessor:
             return i18n_for(
                 user, menu.display_key,
                 agent_phone=agent_phone,
-                token_name=token.name,
+                token_name=token.symbol,
                 exchange_amount=exchange_amount
             )
 

@@ -6,6 +6,7 @@ import json
 
 from helpers.user import UserFactory
 from helpers.ussd_session import UssdSessionFactory
+from helpers.ussd_utils import make_kenyan_phone
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
 
@@ -22,13 +23,6 @@ send_token_reason_state = partial(UssdSessionFactory, state="send_token_reason")
 send_token_reason_other_state = partial(UssdSessionFactory, state="send_token_reason_other")
 send_token_pin_authorization_state = partial(UssdSessionFactory, state="send_token_pin_authorization")
 send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_confirmation")
-
-
-def make_kenyan_phone(phone_str):
-    phone_list = list(phone_str)
-    phone_list[0] = "6"
-    phone_list[1] = "1"
-    return ''.join(phone_list)
 
 
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected",

@@ -1,6 +1,5 @@
 from server import db
 from server.models.utils import ModelBase
-from server.models.user import User
 
 
 class CustomAttributeUserStorage(ModelBase):

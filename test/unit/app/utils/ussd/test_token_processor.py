@@ -4,6 +4,7 @@ from faker.providers import phone_number
 from faker import Faker
 
 from helpers.user import UserFactory
+from helpers.ussd_utils import create_transfer_account_for_user
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.models.user import User
@@ -106,15 +107,24 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
             return from_amount * 0.75
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
-    # TODO: how test the two different sms messages?
+    messages = []
+
     def mock_send_message(phone, message):
-        print(message)
+        messages.append({'phone': phone, 'message': message})
     mocker.patch('server.message_processor.send_message', mock_send_message)
 
     TokenProcessor.send_token(sender, recipient, 10, "A reason", 1)
     assert default_transfer_account(sender).balance == 190
     # TODO: shouldn't it double convert from the reserve to be 320..?
     assert default_transfer_account(recipient).balance == 315
+
+    assert len(messages) == 2
+    sent_message = messages[0]
+    assert sent_message['phone'] == sender.phone
+    assert 'sent a payment of 10 SM1 = 15.0 SM2' in sent_message['message']
+    received_message = messages[1]
+    assert received_message['phone'] == recipient.phone
+    assert 'received a payment of 15.0 SM2 = 10 SM1' in received_message['message']
 
 
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
@@ -129,15 +139,24 @@ def test_exchange_token(mocker, test_client, init_database, initialised_blockcha
     create_transfer_account_for_user(agent, reserve, 300)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount, signing_address):
-        return from_amount * 1.5
+        return from_amount * 1.2
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
-    # TODO: how test the two different sms messages?
+    messages = []
+
     def mock_send_message(phone, message):
-        print(message)
+        messages.append({'phone': phone, 'message': message})
     mocker.patch('server.message_processor.send_message', mock_send_message)
 
     TokenProcessor.exchange_token(sender, agent, 10)
     assert default_transfer_account(sender).balance == 190
-    assert default_transfer_account(agent).balance == 315
+    assert default_transfer_account(agent).balance == 312
+
+    assert len(messages) == 2
+    sent_message = messages[0]
+    assert sent_message['phone'] == sender.phone
+    assert 'sent a payment of 10 SM1 = 12.0 AUD' in sent_message['message']
+    received_message = messages[1]
+    assert received_message['phone'] == agent.phone
+    assert 'received a payment of 12.0 AUD = 10 SM1' in received_message['message']
 
