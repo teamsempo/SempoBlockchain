@@ -56,7 +56,7 @@ class ProcessKenyaUssd(MethodView):
             current_menu = UssdMenu.find_by_name('exit_invalid_request')
             text = menu_display_text_in_lang(current_menu, None)
 
-        return make_response(text, 200)
+        return make_response(text), 200
 
 
 ussd_blueprint.add_url_rule(

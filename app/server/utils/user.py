@@ -202,7 +202,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if organisation:
-        user.add_user_to_organisation(organisation)
+        user.add_user_to_organisation(organisation, is_admin=False)
 
     db.session.add(user)
 
@@ -230,9 +230,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
             transfer_account.approve_and_disburse()
 
         db.session.add(transfer_account)
-        db.session.commit()
 
-    user.default_transfer_account_id = transfer_account.id
+    user.default_transfer_account = transfer_account
 
     return user
 

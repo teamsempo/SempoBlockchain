@@ -1,4 +1,5 @@
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm.attributes import flag_modified
 
 from server import db, sentry
 from server.models.utils import ModelBase
@@ -48,6 +49,10 @@ class UssdSession(ModelBase):
         if self.session_data is None:
             self.session_data = {}
         self.session_data[key] = value
+
+        # https://stackoverflow.com/questions/42559434/updates-to-json-field-dont-persist-to-db
+        flag_modified(self, "session_data")
+        db.session.add(self)
 
     def get_data(self, key):
         if self.session_data is not None:
