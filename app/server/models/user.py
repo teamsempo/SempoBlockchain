@@ -499,17 +499,18 @@ class User(ManyOrgBase, ModelBase):
         self.set_held_role('ADMIN', tier)
 
         if organisation:
-            self.add_user_to_organisation(organisation)
+            self.add_user_to_organisation(organisation, is_admin=True)
 
     # todo: [NICK] refactor into Event Hook on .append?
-    def add_user_to_organisation(self, organisation: Organisation=None):
+    def add_user_to_organisation(self, organisation: Organisation=None, is_admin=False):
         self.organisations.append(organisation)
         self.default_organisation = organisation
 
         if organisation.org_level_transfer_account is None:
             organisation.org_level_transfer_account = db.session.query(server.models.transfer_account.TransferAccount).execution_options(show_all=True).get(organisation.org_level_transfer_account_id)
 
-        self.transfer_accounts.append(organisation.org_level_transfer_account)
+        if is_admin:
+            self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
         for tier in current_app.config['TFA_REQUIRED_ROLES']:

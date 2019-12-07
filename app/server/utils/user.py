@@ -202,7 +202,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if organisation:
-        user.add_user_to_organisation(organisation)
+        user.add_user_to_organisation(organisation, is_admin=False)
 
     db.session.add(user)
 
