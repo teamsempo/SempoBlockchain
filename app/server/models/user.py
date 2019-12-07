@@ -581,8 +581,9 @@ class User(ManyOrgBase, ModelBase):
         result = db.session.execute(sql)
         most_common_uses = {}
         for row in result:
-            for use in json.loads(row[0]):
-                most_common_uses[use] = row[1]
+            if row[0] is not None:
+                for use in json.loads(row[0]):
+                    most_common_uses[use] = row[1]
 
         return most_common_uses
 
