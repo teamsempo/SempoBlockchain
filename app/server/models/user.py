@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy import text
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
-from flask import current_app
+from flask import current_app, g
 import datetime
 import bcrypt
 import jwt
@@ -21,6 +21,7 @@ from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
 )
 
+import server.models.transfer_account
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -291,7 +292,7 @@ class User(ManyOrgBase, ModelBase):
 
     @property
     def transfer_account(self):
-        active_organisation = self.get_active_organisation()
+        active_organisation = getattr(g, "active_organisation", None) or self.fallback_active_organisation()
         if active_organisation:
             return active_organisation.org_level_transfer_account
 
@@ -303,9 +304,9 @@ class User(ManyOrgBase, ModelBase):
     def get_transfer_account_for_token(self, token):
         return find_transfer_accounts_with_matching_token(self, token)
 
-    def get_active_organisation(self, fallback=None):
+    def fallback_active_organisation(self):
         if len(self.organisations) == 0:
-            return fallback
+            return None
 
         if len(self.organisations) > 1:
             return self.default_organisation
@@ -503,9 +504,16 @@ class User(ManyOrgBase, ModelBase):
         self.set_held_role('ADMIN', tier)
 
         if organisation:
-            self.organisations.append(organisation)
-            self.default_organisation = organisation
+            self.add_user_to_organisation(organisation, is_admin=True)
 
+    def add_user_to_organisation(self, organisation: Organisation, is_admin=False):
+        self.organisations.append(organisation)
+        self.default_organisation = organisation
+
+        if organisation.org_level_transfer_account is None:
+            organisation.org_level_transfer_account = db.session.query(server.models.transfer_account.TransferAccount).execution_options(show_all=True).get(organisation.org_level_transfer_account_id)
+
+        if is_admin:
             self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):

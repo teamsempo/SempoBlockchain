@@ -123,7 +123,7 @@ class UserAPI(MethodView):
     def post(self, user_id):
 
         post_data = request.get_json()
-        organisation = g.user.get_active_organisation()
+        organisation = g.active_organisation
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
@@ -151,6 +151,8 @@ class UserAPI(MethodView):
         public_serial_number = put_data.get('public_serial_number')
         location = put_data.get('location')
 
+        default_organisation_id = put_data.get('default_organisation_id')
+
         user = User.query.get(user_id)
 
         if not user:
@@ -176,6 +178,9 @@ class UserAPI(MethodView):
 
         if location and not location == user.location:
             user.location = location
+
+        if default_organisation_id:
+            user.default_organisation_id = default_organisation_id
 
         db.session.commit()
 

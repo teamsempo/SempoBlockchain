@@ -1,5 +1,5 @@
-import { take, fork, put, takeEvery, call, all, cancelled, cancel, race} from 'redux-saga/effects'
-import { store, browserHistory } from '../app.jsx'
+import { put, takeEvery, call, all } from 'redux-saga/effects'
+import { browserHistory } from '../app.jsx'
 
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 

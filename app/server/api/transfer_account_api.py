@@ -3,7 +3,7 @@ from flask.views import MethodView
 
 from server import db
 from server.models.utils import paginate_query
-from server.models.transfer_account import TransferAccount
+from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
 from server.utils.auth import requires_auth
@@ -47,7 +47,8 @@ class TransferAccountAPI(MethodView):
             elif account_type_filter == 'beneficiary':
                 transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=False)
             else:
-                transfer_accounts_query = TransferAccount.query
+                # Filter Contract, Float and Organisation Transfer Accounts
+                transfer_accounts_query = TransferAccount.query.filter(TransferAccount.account_type == TransferAccountType.USER)
 
             transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
 

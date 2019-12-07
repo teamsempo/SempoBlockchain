@@ -12,7 +12,7 @@ user_kobo_blueprint = Blueprint('user_kobo', __name__)
 
 
 class UserKoboAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_basic_auth_types=('external'))
     def post(self, user_id):
         post_data = request.get_json()
 
@@ -27,9 +27,10 @@ class UserKoboAPI(MethodView):
 
         post_data = UserUtils.extract_kobo_custom_attributes(post_data)
 
+        #  TODO: Kobo should have a more intelligent way of specifying the organisation
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
-            organisation=g.user.get_active_organisation()
+            organisation=g.user.fallback_active_organisation()
         )
 
         if response_code == 200:
