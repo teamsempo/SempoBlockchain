@@ -26,7 +26,7 @@ auth_blueprint = Blueprint('auth', __name__)
 
 
 def get_user_organisations(user):
-    active_organisation = g.getattr('active_organisation') or user.fallback_active_organisation()
+    active_organisation = getattr(g, "active_organisation") or user.fallback_active_organisation()
 
     organisations = dict(
         active_organisation_name=active_organisation.name,
