@@ -510,10 +510,13 @@ class User(ManyOrgBase, ModelBase):
         self.organisations.append(organisation)
         self.default_organisation = organisation
 
-        if organisation.org_level_transfer_account is None:
-            organisation.org_level_transfer_account = db.session.query(server.models.transfer_account.TransferAccount).execution_options(show_all=True).get(organisation.org_level_transfer_account_id)
-
         if is_admin:
+            if organisation.org_level_transfer_account is None:
+                organisation.org_level_transfer_account = (
+                    db.session.query(server.models.transfer_account.TransferAccount)
+                    .execution_options(show_all=True)
+                    .get(organisation.org_level_transfer_account_id))
+
             self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):

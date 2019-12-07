@@ -90,7 +90,7 @@ def deploy_exchange_network(deploying_address):
                 {'type': 'bytes', 'data': contract_to_be_registered_id},
                 contract_address
             ],
-            gas_limit=80000000
+            gas_limit=8000000
         )
 
     reg_deploy = deployer(contract_name='ContractRegistry')
@@ -132,7 +132,7 @@ def deploy_exchange_network(deploying_address):
         contract_type='BancorNetwork',
         func='setSignerAddress',
         args=[deploying_address],
-        gas_limit=int(8e7)
+        gas_limit=8000000
     )
 
     res = await_task_success(set_signer_task, timeout=timeout)
@@ -189,7 +189,7 @@ def deploy_smart_token(
         contract_type='SmartToken',
         func='issue',
         args=[deploying_address, issue_amount_wei],
-        gas_limit=80000000
+        gas_limit=8000000
     )
 
     deploy_subexchange_task_id = deploy_contract_task(
