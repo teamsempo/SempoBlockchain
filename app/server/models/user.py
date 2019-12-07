@@ -291,7 +291,7 @@ class User(ManyOrgBase, ModelBase):
 
     @property
     def transfer_account(self):
-        active_organisation = g.active_organisation or self.fallback_active_organisation()
+        active_organisation = g.getattr('active_organisation') or self.fallback_active_organisation()
         if active_organisation:
             return active_organisation.org_level_transfer_account
 
@@ -505,8 +505,7 @@ class User(ManyOrgBase, ModelBase):
         if organisation:
             self.add_user_to_organisation(organisation, is_admin=True)
 
-    # todo: [NICK] refactor into Event Hook on .append?
-    def add_user_to_organisation(self, organisation: Organisation=None, is_admin=False):
+    def add_user_to_organisation(self, organisation: Organisation, is_admin=False):
         self.organisations.append(organisation)
         self.default_organisation = organisation
 
