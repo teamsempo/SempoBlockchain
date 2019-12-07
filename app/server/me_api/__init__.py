@@ -24,8 +24,16 @@ me_blueprint.add_url_rule(
 me_blueprint.add_url_rule(
     '/exchange/',
     view_func=ExchangeAPI.as_view('exchange_api_view'),
-    methods=['POST']
+    methods=['GET', 'POST'],
+    defaults={'exchange_id': None}
 )
+
+me_blueprint.add_url_rule(
+    '/exchange/<int:exchange_id>/',
+    view_func=ExchangeAPI.as_view('single_exchange_api_view'),
+    methods=['GET']
+)
+
 
 me_blueprint.add_url_rule(
     '/credit_transfer/',

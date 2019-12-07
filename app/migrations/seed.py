@@ -7,7 +7,20 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from server import db, create_app
 from server.models.ussd import UssdMenu
 from server.models.transfer_usage import TransferUsage
+from server.models.transfer_account import TransferAccount, TransferAccountType
+from server.models.organisation import Organisation
+from server.models.token import Token
 from server.exceptions import TransferUsageNameDuplicateException
+
+
+def print_section_title(text):
+    print(text)
+    print('**********************************************************************')
+
+
+def print_section_conclusion(text):
+    print(text)
+    print('------------------------------------------------------------')
 
 
 def update_or_create_menu(name, description, parent_id=None):
@@ -30,14 +43,8 @@ def update_or_create_menu(name, description, parent_id=None):
     return instance
 
 
-# from app folder: python ./migations/seed.py
-if __name__ == '__main__':
-    app = create_app()
-    ctx = app.app_context()
-    ctx.push()
-
-    print('Creating Sarafu Network USSD Menu')
-    print('**********************************************************************')
+def create_ussd_menus():
+    print_section_title('Creating Sarafu Network USSD Menu')
     print('Creating Initial Language Selection menu')
 
     initial_lang_setup_menu = update_or_create_menu(
@@ -256,13 +263,12 @@ if __name__ == '__main__':
         description='The token exchange amount is insufficient',
     )
 
-    print('------------------------------------------------------------')
-    print('Done creating USSD Menus')
+    print_section_conclusion('Done creating USSD Menus')
 
-    
-    
-    print('Creating Business Categories')
-    print('**********************************************************************')
+
+def create_business_categories():
+
+    print_section_title('Creating Business Categories')
     business_categories = [
         {'name': 'Food', 'icon': 'message'},
         {'name': 'Water', 'icon': 'message'},
@@ -287,7 +293,99 @@ if __name__ == '__main__':
         db.session.add(usage)
         db.session.commit()
 
+    print_section_conclusion('Done creating Business Categories')
+
+
+def create_reserve_token(app):
+
+    print_section_title("Setting up Reserve Token")
+
+    reserve_token_address = app.config.get('RESERVE_TOKEN_ADDRESS')
+    reserve_token_name = app.config.get('RESERVE_TOKEN_NAME')
+    reserve_token_symbol = app.config.get('RESERVE_TOKEN_SYMBOL')
+    # reserve_token_decimals = app.config.get('RESERVE_TOKEN_DECIMALS')
+
+    if reserve_token_address:
+        reserve_token = Token.query.filter_by(address=reserve_token_address).first()
+
+        print('Existing token not found, creating')
+
+        if not reserve_token:
+            reserve_token = Token(
+                address=reserve_token_address,
+                name=reserve_token_name,
+                symbol=reserve_token_symbol
+            )
+            db.session.add(reserve_token)
+            db.session.commit()
+
+        print(f'Reserve token: {reserve_token}')
+
+        return reserve_token
+
+        #
+        # exchange_contract = ExchangeContract.query.filter_by(
+        #     blockchain_address=exchange_contract_address).first()
+        #
+        # if not exchange_contract:
+        #     exchange_contract = ExchangeContract(blockchain_address=exchange_contract_address)
+        #
+        #     exchange_contract.reserve_token = reserve_token
+        #     exchange_contract.add_token(reserve_token)
+        #
+        #     db.session.add(exchange_contract)
+        #     db.session.commit()
+
+    print('No token address, skipping')
+
+    return None
+
+
+def create_master_organisation(reserve_token):
+
+    print_section_title('Creating/Updating Master Organisation')
+
+    master_organisation = Organisation.master_organisation()
+    if master_organisation is None:
+        print('Creating master organisation')
+        if reserve_token:
+            print('Binding to reserve token')
+        master_organisation = Organisation(is_master=True, token=reserve_token)
+        db.session.add(master_organisation)
+
+        db.session.commit()
+
+    print_section_conclusion('Done creating master organisation')
+
+def create_float_wallet(app):
+    print_section_title('Creating/Updating Float Wallet')
+    float_wallet = TransferAccount.query.execution_options(show_all=True).filter(
+        TransferAccount.account_type == TransferAccountType.FLOAT
+    ).first()
+
+    if float_wallet is None:
+        print('Creating Float Wallet')
+        float_wallet = TransferAccount(
+            private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
+            account_type=TransferAccountType.FLOAT,
+            is_approved=True
+        )
+        db.session.add(float_wallet)
+
+        db.session.commit()
+
+# from app folder: python ./migations/seed.py
+if __name__ == '__main__':
+    current_app = create_app()
+    ctx = current_app.app_context()
+    ctx.push()
+
+    create_ussd_menus()
+    create_business_categories()
+
+    reserve_token = create_reserve_token(current_app)
+    create_master_organisation(reserve_token)
+
+    create_float_wallet(current_app)
+
     ctx.pop()
-    print('------------------------------------------------------------')
-    print('Done creating Business Categories')
-    

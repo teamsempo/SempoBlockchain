@@ -77,6 +77,9 @@ class ExchangeContract(ModelBase):
             'subexchange_reserve_ratio_ppm': subexchange_reserve_ratio_ppm
         }
 
+        if self.blockchain_address is None:
+            self.blockchain_address = subexchange_address
+
         flag_modified(self, "subexchange_address_mapping")
         db.session.add(self)
 

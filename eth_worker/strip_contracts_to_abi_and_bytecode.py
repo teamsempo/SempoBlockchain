@@ -12,5 +12,3 @@ for path in glob.glob('./complete_compiled_contracts/*.json'):
 
         with open(f'./eth_manager/stripped_compiled_contracts/{filename}', 'w') as outfile:
             json.dump({'abi': abi, 'bytecode': bytecode}, outfile)
-
-

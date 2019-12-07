@@ -12,7 +12,7 @@ from server.models.currency_conversion import CurrencyConversion
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_usage import TransferUsage
 from server.utils.intercom import create_intercom_secret
-from server.utils.auth import requires_auth, tfa_logic
+from server.utils.auth import requires_auth, tfa_logic, show_all
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
@@ -159,6 +159,7 @@ class RegisterAPI(MethodView):
     User Registration Resource
     """
 
+    @show_all
     def post(self):
         # get the post data
         post_data = request.get_json()
@@ -242,13 +243,12 @@ class RegisterAPI(MethodView):
         if selected_whitelist_item:
             organisation = selected_whitelist_item.organisation
         else:
-            organisation = None
+            organisation = Organisation.master_organisation()
 
         user.create_admin_auth(email, password, tier, organisation)
 
         # insert the user
         db.session.add(user)
-
 
         db.session.flush()
 
