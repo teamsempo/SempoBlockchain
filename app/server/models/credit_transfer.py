@@ -61,7 +61,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     __table_args__ = (Index('updated_index', "updated"), )
 
-
     from_exchange = db.relationship('Exchange', backref='from_transfer', lazy=True, uselist=False,
                                      foreign_keys='Exchange.from_transfer_id')
 

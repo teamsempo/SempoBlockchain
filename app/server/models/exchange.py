@@ -8,6 +8,7 @@ from server import db, bt
 
 import server.models.credit_transfer
 import server.models.transfer_account
+from server.utils.transfer_enums import TransferTypeEnum
 
 from server.models.utils import (
     ModelBase,
@@ -155,7 +156,9 @@ class Exchange(BlockchainTaskableBase):
             from_amount,
             from_token,
             sender_user=user,
-            recipient_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, from_token))
+            recipient_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, from_token),
+            transfer_type=TransferTypeEnum.EXCHANGE
+        )
 
         if not self.from_transfer.check_sender_has_sufficient_balance():
             message = "Sender {} has insufficient balance".format(user)
@@ -222,7 +225,9 @@ class Exchange(BlockchainTaskableBase):
             to_amount,
             to_token,
             sender_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, to_token),
-            recipient_user=user)
+            recipient_user=user,
+            transfer_type=TransferTypeEnum.EXCHANGE
+        )
 
         db.session.add(self.to_transfer)
 
