@@ -353,7 +353,7 @@ def create_master_organisation(reserve_token):
         master_organisation = Organisation(is_master=True, token=reserve_token)
         db.session.add(master_organisation)
 
-    db.session.commit()
+        db.session.commit()
 
     print_section_conclusion('Done creating master organisation')
 
@@ -372,7 +372,7 @@ def create_float_wallet(app):
         )
         db.session.add(float_wallet)
 
-    db.session.commit()
+        db.session.commit()
 
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
