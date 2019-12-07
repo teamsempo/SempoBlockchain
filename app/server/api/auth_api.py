@@ -29,7 +29,7 @@ def get_user_organisations(user):
     try:
         organisations = dict(
             active_organisation_name=g.active_organisation.name,
-            active_organisation_id=g.active_organisation_id,
+            active_organisation_id=g.active_organisation.id,
             organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
         )
     except AttributeError:

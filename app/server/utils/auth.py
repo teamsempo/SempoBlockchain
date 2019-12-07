@@ -98,25 +98,23 @@ def requires_auth(f=None,
                     g.user = user
                     g.member_organisations = [org.id for org in user.organisations]
                     try:
-                        active_organisation = user.get_active_organisation()
+                        g.active_organisation = None
+
+                        # First try to set the active org from the query
                         query_org = request.args.get('org', None)
                         if query_org is not None:
                             try:
                                 query_org = int(query_org)
                                 if query_org in g.member_organisations:
-                                    # override user org
-                                    active_organisation = Organisation.query.get(query_org)
+                                    g.active_organisation = Organisation.query.get(query_org)
                             except ValueError:
                                 pass
 
-                        if active_organisation is not None:
-                            g.active_organisation_id = active_organisation.id
-                            g.active_organisation = active_organisation
-                        else:
-                            g.active_organisation_id = None
-                            g.active_organisation = None
+                        # Then get the fallback organisation
+                        if g.active_organisation is None:
+                            g.active_organisation = user.fallback_active_organisation()
+
                     except NotImplementedError:
-                        g.active_organisation_id = None
                         g.active_organisation = None
 
                     if not user.is_activated:
@@ -125,7 +123,6 @@ def requires_auth(f=None,
                             'message': 'user not activated'
                         }
                         return make_response(jsonify(response_object)), 401
-
 
                     if user.is_disabled:
                         response_object = {
