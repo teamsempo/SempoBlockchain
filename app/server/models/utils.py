@@ -93,19 +93,19 @@ def before_compile(query):
 
                 try:
                     # member_organisations = getattr(g, "member_organisations", [])
-                    active_organisation = getattr(g, "active_organisation_id", None)
-                    member_organisations = [active_organisation] if active_organisation else []
+                    active_organisation = getattr(g, "active_organisation", None)
+                    member_organisation_ids = [active_organisation.id] if active_organisation else []
 
                     if issubclass(mapper.class_, ManyOrgBase):
                         # filters many-to-many
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisations.any(
-                                server.models.organisation.Organisation.id.in_(member_organisations)),
+                                server.models.organisation.Organisation.id.in_(member_organisation_ids)),
                             ent['entity'].is_public == True,
                         ))
                     else:
                         query = query.enable_assertions(False).filter(or_(
-                            ent['entity'].organisation_id == active_organisation,
+                            ent['entity'].organisation_id == active_organisation.id,
                             ent['entity'].is_public == True,
                         ))
 

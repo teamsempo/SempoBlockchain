@@ -268,7 +268,8 @@ def get_admin_default_org_id(admin_user):
 
 
 @pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id_selector, response_code", [
-    ('admin', 'foo@acme.com', 'admin', get_admin_default_org_id, 401),
+    ('admin', 'foo1@acme.com', 'admin', lambda o: 2, 401),
+    ('admin', 'foo1@acme.com', 'admin', lambda o: None, 200),
     ('sempoadmin', 'foo@acme.com', 'admin', lambda o: 12332, 404),
     ('sempoadmin',  None, 'admin', get_admin_default_org_id, 400),
     ('sempoadmin', 'foo@acme.com', None, get_admin_default_org_id, 400),
@@ -287,7 +288,9 @@ def test_create_permissions_api(test_client, authed_sempo_admin_user,
 
     organisation_id = organisation_id_selector(authed_sempo_admin_user)
 
-    response = test_client.post('/api/auth/permissions/',
+    default_org_id = get_admin_default_org_id(authed_sempo_admin_user)
+
+    response = test_client.post(f'/api/auth/permissions/?org={default_org_id}',
                                 headers=dict(
                                     Authorization=get_complete_auth_token(authed_sempo_admin_user),
                                     Accept='application/json'
