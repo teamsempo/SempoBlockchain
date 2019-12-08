@@ -5,12 +5,14 @@ import ReactPasswordStrength from 'react-password-strength';
 import { registerRequest } from '../../reducers/authReducer'
 
 import AsyncButton from './../AsyncButton.jsx'
+import TFAForm from "./TFAForm.jsx";
 
 import { Input, ErrorMessage } from './../styledElements'
 
 const mapStateToProps = (state) => {
   return {
-    register_status: state.register
+    register_status: state.register,
+    login_status: state.login
   };
 };
 
@@ -114,6 +116,17 @@ class RegisterFormContainer extends React.Component {
 
 
   render() {
+    if (this.props.login_status.tfaURL || this.props.login_status.tfaFailure ) {
+      return (
+        <div style={{margin: '1em'}}>
+          <div style={{textAlign: 'center'}}>
+          Two-Step Authentication Required
+          </div>
+          <TFAForm tfaURL={this.props.login_status.tfaURL}/>
+        </div>
+      )
+    }
+
     if (this.props.register_status.registerSuccess) {
       return (
         <div>
