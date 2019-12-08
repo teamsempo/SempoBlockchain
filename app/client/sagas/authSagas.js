@@ -73,6 +73,7 @@ function* watchSaveOrgId() {
 export function* logout() {
     yield call(removeSessionToken);
     yield call(removeOrgId);
+    yield put({ type: 'RESET' });
 }
 
 function createLoginSuccessObject(token) {
