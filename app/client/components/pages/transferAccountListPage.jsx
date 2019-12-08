@@ -14,7 +14,9 @@ import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
 const mapStateToProps = (state) => {
   return {
     transferAccounts: state.transferAccounts,
-    mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId).map((id) => {return {...{id, ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]}, ...state.transferAccounts.byId[id]}}),
+    mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
+      .map((id) => {return {...{id, ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]}, ...state.transferAccounts.byId[id]}})
+      .filter(mergedObj => Object.keys(mergedObj).length > 2),  // added to remove {id: 1, balance: 12} objects
     users: state.users,
   };
 };
