@@ -1,10 +1,7 @@
-import { getToken, handleResponse, generateQueryString } from '../utils'
+import {getToken, handleResponse, generateQueryString, generateFormattedURL} from '../utils'
 
 export const loadBusinessVerificationAPI = () => {
-    const query_string = generateQueryString();
-    const URL = `/api/kyc_application/${query_string}`;
-
-    return fetch(URL, {
+    return fetch(generateFormattedURL('/api/kyc_application/'), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -21,10 +18,7 @@ export const loadBusinessVerificationAPI = () => {
 };
 
 export const createBusinessVerificationAPI = ({body}) => {
-  const query_string = generateQueryString();
-  const URL = `/api/kyc_application/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/kyc_application/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -40,14 +34,7 @@ export const createBusinessVerificationAPI = ({body}) => {
 };
 
 export const editBusinessVerificationAPI = ({body, path}) => {
-  var query_string = generateQueryString();
-  if (path) {
-    var URL = `/api/kyc_application/${path}/${query_string}`;
-  } else {
-    URL = `/api/kyc_application/${query_string}`;
-  }
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/kyc_application/', null , path), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -70,10 +57,7 @@ export const uploadDocumentAPI = ({ body }) => {
   formData.append('reference', body.reference);
   formData.append('kyc_application_id', body.kyc_application_id);
 
-  const query_string = generateQueryString();
-  const URL = `/api/document_upload/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/document_upload/'), {
     headers: {
       'Authorization': getToken()
     },
@@ -88,10 +72,7 @@ export const uploadDocumentAPI = ({ body }) => {
 
 
 export const createBankAccountAPI = ({body}) => {
-  const query_string = generateQueryString();
-  const URL = `/api/bank_account/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/bank_account/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -107,14 +88,7 @@ export const createBankAccountAPI = ({body}) => {
 };
 
 export const editBankAccountAPI = ({body, path}) => {
-  var query_string = generateQueryString();
-  if (path) {
-    var URL = `/api/bank_account/${path}/${query_string}`;
-  } else {
-    URL = `/api/bank_account/${query_string}`;
-  }
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/bank_account/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

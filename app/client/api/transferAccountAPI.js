@@ -1,17 +1,8 @@
-import { getToken, handleResponse, generateQueryString } from '../utils'
+import {getToken, handleResponse, generateFormattedURL} from '../utils'
 
 // Load Transfer Account Details
 export const loadTransferAccountListAPI = ({query, path}) => {
-    var query_string = generateQueryString(query);
-    if (query) {
-        var URL = `/api/transfer_account/${query_string}`;
-    } else if (path) {
-        URL = `/api/transfer_account/${path}/${query_string}`;
-    } else {
-        URL = `/api/transfer_account/${query_string}`;
-    }
-
-    return fetch(URL, {
+    return fetch(generateFormattedURL('/api/transfer_account/', query , path), {
         headers: {
             'Authorization': getToken()
         },
@@ -27,14 +18,7 @@ export const loadTransferAccountListAPI = ({query, path}) => {
 
 // Edit Transfer Account Details
 export const editTransferAccountAPI = ({body, path}) => {
-    var query_string = generateQueryString();
-    if (path) {
-        var URL = `/api/transfer_account/${path}/${query_string}`;
-    } else {
-        URL = `/api/transfer_account/${query_string}`;
-    }
-
-    return fetch(URL, {
+    return fetch(generateFormattedURL('/api/transfer_account/', null , path), {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',

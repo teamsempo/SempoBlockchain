@@ -1,11 +1,8 @@
-import {generateQueryString, getToken, handleResponse} from '../utils'
+import {generateFormattedURL, getToken, handleResponse} from '../utils'
 
 //Request QR Code API Call
 export const qrCodeCheckAPI = (qr_data, transfer_amount) => {
-  const query_string = generateQueryString();
-  const URL = `/api/qr_check/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/qr_check/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -22,10 +19,7 @@ export const qrCodeCheckAPI = (qr_data, transfer_amount) => {
 
 //Confirm QR Code Transaction API Call
 export const qrCodeTransferAPI = (qr_data, transfer_amount, pin) => {
-  const query_string = generateQueryString();
-  const URL = `/api/qr_transfer/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/qr_transfer/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

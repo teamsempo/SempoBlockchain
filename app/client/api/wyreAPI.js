@@ -1,10 +1,7 @@
-import { getToken, handleResponse, generateQueryString } from '../utils'
+import {getToken, handleResponse, generateFormattedURL} from '../utils'
 
 export const loadExchangeRates = () => {
-    const query_string = generateQueryString();
-    const URL = `/api/wyre_rates/${query_string}`;
-
-    return fetch(URL, {
+    return fetch(generateFormattedURL('/api/wyre_rates/'), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -21,10 +18,7 @@ export const loadExchangeRates = () => {
 };
 
 export const loadWyreAccountBalance = () => {
-    const query_string = generateQueryString();
-    const URL = `/api/wyre_account/${query_string}`;
-
-    return fetch(URL, {
+    return fetch(generateFormattedURL('/api/wyre_account/'), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -42,10 +36,7 @@ export const loadWyreAccountBalance = () => {
 
 
 export const createWyreTransferRequest = ({body}) => {
-  const query_string = generateQueryString();
-  const URL = `/api/wyre_transfer/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/wyre_transfer/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
