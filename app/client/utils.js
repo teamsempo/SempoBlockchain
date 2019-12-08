@@ -33,12 +33,21 @@ export function addCreditTransferIdsToTransferAccount(parent_object, child_objec
 
 export const generateQueryString = (query) => {
   let query_string = '?';
-  Object.keys(query).map(query_key => {
-    let string_term = query_key + '=' + query[query_key] + '&';
-    query_string = query_string.concat(string_term)
-  });
 
-  return query_string.slice(0, -1);
+  if (query) {
+    Object.keys(query).map(query_key => {
+      let string_term = query_key + '=' + query[query_key] + '&';
+      query_string = query_string.concat(string_term)
+    });
+  }
+
+  let orgId = getOrgId();
+  var response_string = query_string;
+  if (orgId !== null && typeof orgId !== "undefined") {
+    response_string = query_string + `org=${orgId}&`;
+  }
+
+  return response_string.slice(0, -1);
 };
 
 
@@ -70,6 +79,23 @@ export function* handleError(error)  {
 
 const extractJson = (error) => {
     return error.json()
+};
+
+export const storeOrgid = (orgId) => {
+  localStorage.setItem('orgId', orgId);
+};
+
+export const removeOrgId = (orgId) => {
+  localStorage.removeItem('orgId')
+};
+
+export const getOrgId = () => {
+  try {
+    return localStorage.getItem('orgId')
+  } catch (err) {
+    removeOrgId();
+    return null
+  }
 };
 
 export const storeSessionToken = (token) => {

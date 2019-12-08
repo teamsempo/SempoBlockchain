@@ -73,9 +73,8 @@ def calculate_transfer_stats(total_time_series=False):
 
     try:
         master_wallet_balance = cached_funds_available()
-    except BlockchainError:
+    except:
         master_wallet_balance = 0
-
 
     try:
         last_day = daily_transaction_volume[0].date

@@ -105,6 +105,7 @@ class TokenSchema(SchemaBase):
     address             = fields.Str()
     symbol              = fields.Str()
     name                = fields.Str()
+    # exchange_contracts  = fields.Nested("server.schemas.ExchangeContractSchema", many=True)
 
 class CreditTransferSchema(Schema):
 
@@ -382,9 +383,12 @@ organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
+
 transfer_usages_schema = TransferUsageSchema(many=True)
 
 exchange_contract_schema = ExchangeContractSchema()
+exchange_contracts_schema = ExchangeContractSchema(many=True)
+
 
 # Me Schemas
 
@@ -408,3 +412,5 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
                                                   context={'filter_rejected': True})
 
 me_exchange_schema = ExchangeSchema()
+me_exchanges_schema = ExchangeSchema(many=True)
+

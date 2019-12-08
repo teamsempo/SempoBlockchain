@@ -1,8 +1,7 @@
-import { take, fork, put, takeEvery, call, all, cancelled, cancel, race, delay } from 'redux-saga/effects'
-import { schema, arrayOf, normalize } from 'normalizr';
+import { put, takeEvery, call, all, delay } from 'redux-saga/effects'
+import { arrayOf, normalize } from 'normalizr';
 import {handleError} from "../utils";
 
-import { store } from '../app.jsx'
 import { transferAccountSchema } from '../schemas'
 
 import {

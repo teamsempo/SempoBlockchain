@@ -54,7 +54,7 @@ celery_app = Celery('tasks',
 celery_app.conf.beat_schedule = {
     "maintain_eth_balances": {
         "task": utils.eth_endpoint('topup_wallets'),
-        "schedule": 10.0
+        "schedule": 20.0
     },
 }
 

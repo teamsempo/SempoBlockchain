@@ -8,7 +8,8 @@ export const loadTransferAccountListAPI = ({query, path}) => {
     } else if (path) {
         URL = `/api/transfer_account/${path}/`;
     } else {
-        URL = '/api/transfer_account/';
+        const query_string = generateQueryString();
+        URL = `/api/transfer_account/${query_string}`;
     }
 
     return fetch(URL, {

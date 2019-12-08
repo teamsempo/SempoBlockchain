@@ -1,5 +1,4 @@
-import { take, fork, put, takeEvery, call, all, cancelled, cancel, race} from 'redux-saga/effects'
-import { store } from '../app.jsx'
+import { put, takeEvery, call, all } from 'redux-saga/effects'
 import { normalize } from 'normalizr'
 
 import {

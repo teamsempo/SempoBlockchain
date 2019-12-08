@@ -4,12 +4,42 @@ from flask.views import MethodView
 from server.utils.auth import requires_auth, show_all
 from server.models.token import Token
 from server.models.exchange import Exchange
-from server.schemas import me_exchange_schema
+from server.schemas import me_exchange_schema, me_exchanges_schema
 from server import db
 
 class ExchangeAPI(MethodView):
 
-    """
+    @requires_auth
+    def get(self, exchange_id):
+
+        if exchange_id:
+            exchange = Exchange.query.get(exchange_id)
+
+            response_object = {
+                'message': 'success',
+                'data': {
+                    'exchange': me_exchange_schema.dump(exchange).data
+                }
+            }
+
+            return make_response(jsonify(response_object)), 201
+
+        exchanges = Exchange.query.all()
+
+        response_object = {
+            'message': 'success',
+            'data': {
+                'exchanges': me_exchanges_schema.dump(exchanges).data
+            }
+        }
+
+        return make_response(jsonify(response_object)), 201
+
+
+    @requires_auth
+    @show_all
+    def post(self, exchange_id):
+        """
         Exchange Entry Point Method
         Method: POST
 
@@ -18,10 +48,8 @@ class ExchangeAPI(MethodView):
         :param from_amount: the amount of the token being exchanged from
 
         :return: status of exchange, and serialised exchange object if successful
-    """
-    @requires_auth
-    @show_all
-    def post(self):
+        """
+
         post_data = request.get_json()
 
         user = g.user

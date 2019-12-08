@@ -1,8 +1,11 @@
-import { getToken, handleResponse } from '../utils'
+import {generateQueryString, getToken, handleResponse} from '../utils'
 
 // Load Filters
 export const loadFiltersAPI = () => {
-    return fetch('/api/filters/', {
+    const query_string = generateQueryString();
+    var URL = `/api/filters/${query_string}`;
+
+    return fetch(URL, {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -20,7 +23,10 @@ export const loadFiltersAPI = () => {
 
 // Create Filter
 export const createFilterAPI = ({body}) => {
-  return fetch('/api/filters/', {
+  const query_string = generateQueryString();
+  var URL = `/api/filters/${query_string}`;
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
