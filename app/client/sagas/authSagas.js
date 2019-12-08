@@ -168,11 +168,8 @@ function* watchLogoutRequest() {
 
 // Create Account Saga
 function* register({payload}) {
-  console.log('register saga')
   try {
-    console.log('pre-register api')
     const registered_account = yield call(registerAPI, payload);
-    console.log('a',registered_account.status, registered_account.tfa_url)
 
     if (registered_account.status === 'success') {
       yield put(createLoginSuccessObject(registered_account));
@@ -181,7 +178,6 @@ function* register({payload}) {
       yield put({type: REGISTER_SUCCESS, registered_account});
 
     } else if (registered_account.tfa_url) {
-      console.log('inside tfa register')
       yield call(storeSessionToken, registered_account.auth_token );
       yield put({
         type: LOGIN_PARTIAL,
