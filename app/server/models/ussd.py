@@ -33,6 +33,9 @@ class UssdMenu(ModelBase):
     def parent(self):
         return UssdMenu.query.filter_by(id=self.parent_id).first()
 
+    def __repr__(self):
+        return f"<UssdMenu {self.id}: {self.name} - {self.description}>"
+
 
 class UssdSession(ModelBase):
     __tablename__ = 'ussd_sessions'

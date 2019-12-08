@@ -23,6 +23,10 @@ ITEMS_PER_MENU = 8
 
 
 class KenyaUssdStateMachine(Machine):
+
+    def __repr__(self):
+        return f"<KenyaUssdStateMachine: {self.state}>"
+
     # define machine states
     states = [
         'feed_char',
