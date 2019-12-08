@@ -1,13 +1,13 @@
 import { getToken, handleResponse, generateQueryString } from '../utils'
 
 export const loadCreditTransferListAPI = ({query , path}) => {
+    var query_string = generateQueryString(query);
     if (query) {
-        const query_string = generateQueryString(query);
         var URL = `/api/credit_transfer/${query_string}`;
     } else if (path) {
-        URL = `/api/credit_transfer/${path}/`;
+        URL = `/api/credit_transfer/${path}/${query_string}`;
     } else {
-        URL = '/api/credit_transfer/';
+        URL = `/api/credit_transfer/${query_string}`;
     }
 
     return fetch(URL, {
@@ -28,7 +28,14 @@ export const loadCreditTransferListAPI = ({query , path}) => {
 };
 
 export const modifyTransferAPI = ({body, path}) => {
-  return fetch('/api/credit_transfer/' + path + '/', {
+  var query_string = generateQueryString();
+  if (path) {
+      var URL = `/api/credit_transfer/${path}/${query_string}`;
+  } else {
+      URL = `/api/credit_transfer/${query_string}`;
+  }
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -44,7 +51,10 @@ export const modifyTransferAPI = ({body, path}) => {
 };
 
 export const newTransferAPI = ({body}) => {
-  return fetch('/api/credit_transfer/', {
+  const query_string = generateQueryString();
+  var URL = `/api/credit_transfer/${query_string}`;
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

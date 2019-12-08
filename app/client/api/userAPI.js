@@ -2,13 +2,13 @@ import { getToken, handleResponse, generateQueryString } from '../utils'
 
 // Load User Details
 export const loadUserAPI = ({query, path}) => {
+    var query_string = generateQueryString(query);
     if (query) {
-        const query_string = generateQueryString(query);
         var URL = `/api/user/${query_string}`;
     } else if (path) {
-        URL = `/api/user/${path}/`;
+        URL = `/api/user/${path}/${query_string}`;
     } else {
-        URL = '/api/user/';
+        URL = `/api/user/${query_string}`;
     }
 
     return fetch(URL, {
@@ -51,10 +51,11 @@ export const createUserAPI = ({body}) => {
 
 // Edit Transfer Account Details
 export const editUserAPI = ({body, path}) => {
+    var query_string = generateQueryString();
     if (path) {
-        var URL = `/api/user/${path}/`;
+        var URL = `/api/user/${path}/${query_string}`;
     } else {
-        URL = '/api/user/';
+        URL = `/api/user/${query_string}`;
     }
 
     return fetch(URL, {

@@ -1,12 +1,15 @@
-import { getToken, handleResponse } from '../utils'
+import {generateQueryString, getToken, handleResponse} from '../utils'
 
 export const uploadSpreadsheetAPI= (spreadsheet, preview_id) => {
 
   const formData = new FormData();
-    formData.append('spreadsheet', spreadsheet);
-    formData.append('preview_id', preview_id);
+  formData.append('spreadsheet', spreadsheet);
+  formData.append('preview_id', preview_id);
 
-  return fetch("/api/spreadsheet/upload/", {
+  const query_string = generateQueryString();
+  const URL = `/api/spreadsheet/upload/${query_string}`;
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken()
     },
@@ -20,7 +23,10 @@ export const uploadSpreadsheetAPI= (spreadsheet, preview_id) => {
 };
 
 export const saveDatasetAPI= (dataset) => {
-  return fetch("/api/dataset/", {
+  const query_string = generateQueryString();
+  const URL = `/api/dataset/${query_string}`;
+
+  return fetch(URL, {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -36,7 +42,10 @@ export const saveDatasetAPI= (dataset) => {
 };
 
 export const loadDatasetListAPI= () => {
-  return fetch('/api/dataset/' , {
+  const query_string = generateQueryString();
+  const URL = `/api/dataset/${query_string}`;
+
+  return fetch(URL , {
     headers: {
       'Authorization': getToken()
     },

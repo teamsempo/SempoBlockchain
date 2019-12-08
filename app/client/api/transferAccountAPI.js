@@ -2,13 +2,12 @@ import { getToken, handleResponse, generateQueryString } from '../utils'
 
 // Load Transfer Account Details
 export const loadTransferAccountListAPI = ({query, path}) => {
+    var query_string = generateQueryString(query);
     if (query) {
-        const query_string = generateQueryString(query);
         var URL = `/api/transfer_account/${query_string}`;
     } else if (path) {
-        URL = `/api/transfer_account/${path}/`;
+        URL = `/api/transfer_account/${path}/${query_string}`;
     } else {
-        const query_string = generateQueryString();
         URL = `/api/transfer_account/${query_string}`;
     }
 
@@ -28,10 +27,11 @@ export const loadTransferAccountListAPI = ({query, path}) => {
 
 // Edit Transfer Account Details
 export const editTransferAccountAPI = ({body, path}) => {
+    var query_string = generateQueryString();
     if (path) {
-        var URL = `/api/transfer_account/${path}/`;
+        var URL = `/api/transfer_account/${path}/${query_string}`;
     } else {
-        URL = '/api/transfer_account/';
+        URL = `/api/transfer_account/${query_string}`;
     }
 
     return fetch(URL, {

@@ -1,7 +1,8 @@
-import {getToken, handleResponse} from "../utils";
+import {generateQueryString, getToken, handleResponse} from "../utils";
 
 export const loadTransferUsagesAPI = () => {
-  const URL = '/api/transfer_usage/';
+  const query_string = generateQueryString();
+  const URL = `/api/transfer_usage/${query_string}`;
 
   return fetch(URL, {
     headers: {
