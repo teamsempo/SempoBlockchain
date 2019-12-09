@@ -104,70 +104,64 @@ class SingleUserManagement extends React.Component {
       }
     }
 
+    var profilePicture = null;
+    var custom_attribute_list = null;
+    if (this.props.user.custom_attributes !== null && typeof this.props.user.custom_attributes !== "undefined") {
 
-
-
-    if (this.props.user.custom_attributes.profile_picture) {
-
-      console.log(this.props.user.custom_attributes.profile_picture);
-
-      if (this.props.user.custom_attributes.profile_picture.roll) {
-        var quantised_roll = Math.floor(this.props.user.custom_attributes.profile_picture.roll/90 + 0.5) * -90
-      } else {
-        quantised_roll = 0
-      }
-      var profilePicture = (
-        <ProfilePicture
-          label={"Profile Picture:"}
-          roll={this.props.user.custom_attributes.profile_picture.roll}
-          url={this.props.user.custom_attributes.profile_picture.url}
-        />
-      )
-    } else {
-      profilePicture = null
-    }
-
-    if (this.props.user.matched_profile_pictures.length > 0) {
-      var matched_profiles = this.props.user.matched_profile_pictures.map(match => (
-        <Link to={"/users/" + match.user_id}
-              key={match.user_id}
-              style={{
-                color: 'inherit',
-                textDecoration: 'inherit',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'}}>
-
+      if (this.props.user.custom_attributes.profile_picture) {
+        profilePicture = (
           <ProfilePicture
-            label={"Possible Duplicate User:"}
-            sublabel ={'User ' + match.user_id}
-            roll={match.roll}
-            url={match.url}
+            label={"Profile Picture:"}
+            roll={this.props.user.custom_attributes.profile_picture.roll}
+            url={this.props.user.custom_attributes.profile_picture.url}
           />
-
-        </Link>
         )
-      )
-    } else {
-      matched_profiles = null
-    }
-
-    console.log(this.props.user.custom_attributes);
-
-    var custom_attribute_list = Object.keys(this.props.user.custom_attributes).map( key =>
-      {
-        if (!this.props.user.custom_attributes[key].uploaded_image_id) {
-          return (
-            <SubRow key={key}>
-              <InputLabel>{replaceUnderscores(key)}: </InputLabel>
-              <div style={{marginLeft: '0.5em', marginRight: '4em'}}>
-                {replaceUnderscores(this.props.user.custom_attributes[key].value)}
-              </div>
-            </SubRow>
-          )
-        }
+      } else {
+        profilePicture = null
       }
-    );
+
+      if (this.props.user.matched_profile_pictures.length > 0) {
+        var matched_profiles = this.props.user.matched_profile_pictures.map(match => (
+            <Link to={"/users/" + match.user_id}
+                  key={match.user_id}
+                  style={{
+                    color: 'inherit',
+                    textDecoration: 'inherit',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                  }}>
+
+              <ProfilePicture
+                label={"Possible Duplicate User:"}
+                sublabel={'User ' + match.user_id}
+                roll={match.roll}
+                url={match.url}
+              />
+
+            </Link>
+          )
+        )
+      } else {
+        matched_profiles = null
+      }
+
+      console.log(this.props.user.custom_attributes);
+
+      custom_attribute_list = Object.keys(this.props.user.custom_attributes).map(key => {
+          if (!this.props.user.custom_attributes[key].uploaded_image_id) {
+            return (
+              <SubRow key={key}>
+                <InputLabel>{replaceUnderscores(key)}: </InputLabel>
+                <div style={{marginLeft: '0.5em', marginRight: '4em'}}>
+                  {replaceUnderscores(this.props.user.custom_attributes[key].value)}
+                </div>
+              </SubRow>
+            )
+          }
+        }
+      );
+    }
 
       return (
           <div style={{display: 'flex', flexDirection: 'column'}}>
@@ -232,11 +226,11 @@ class SingleUserManagement extends React.Component {
                         </SubRow>
                       </Row>
                       <Row style={{margin: '0em 1em', flexWrap: 'wrap'}}>
-                        {custom_attribute_list}
+                        {custom_attribute_list || null}
                       </Row>
                       <Row style={{margin: '0em 1em'}}>
                         <SubRow>
-                        { profilePicture }
+                        { profilePicture || null }
                         </SubRow>
                         <SubRow>
                         { matched_profiles }

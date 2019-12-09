@@ -50,6 +50,20 @@ export const generateQueryString = (query) => {
   return response_string.slice(0, -1);
 };
 
+export const generateFormattedURL = (url, query, path) => {
+  var query_string = generateQueryString(query);
+  if (url === null || typeof url === "undefined") {
+    return console.log('URL cannot be null')
+  } else if (query) {
+      var URL = `${url}${query_string}`;
+  } else if (path) {
+      URL = `${url}${path}/${query_string}`;
+  } else {
+      URL = `${url}${query_string}`;
+  }
+  return URL
+};
+
 
 export const handleResponse = (response) => {
   if (response.ok) {

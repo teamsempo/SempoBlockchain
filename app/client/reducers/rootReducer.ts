@@ -25,7 +25,7 @@ import { wyre } from "./wyreReducer"
 import {TransferUsageReducer} from "./transferUsage/reducers";
 import {OrganisationReducer} from "./organisation/reducers";
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   login,
   register,
   activate,
@@ -52,6 +52,13 @@ const rootReducer = combineReducers({
   organisation: OrganisationReducer,
   form: FormReducer
 });
+
+const rootReducer = (state: any, action: any) => {
+    if (action.type === 'RESET') {
+        state = undefined
+    }
+    return appReducer(state, action)
+};
 
 export default rootReducer;
 export type ReduxState = ReturnType<typeof rootReducer>
