@@ -68,9 +68,7 @@ class SingleUserPage extends React.Component {
               </ModuleBox>
       }
 
-      if (this.props.loggedIn &&
-        (this.props.users.loadStatus.isRequesting === true ||
-          !(this.props.users.byId[userId] && this.props.users.byId[userId].custom_attributes))) {
+      if (this.props.loggedIn && (this.props.users.loadStatus.isRequesting === true)) {
           return (
               <WrapperDiv>
 
@@ -94,14 +92,6 @@ class SingleUserPage extends React.Component {
                       </ThemeProvider>
                   </PageWrapper>
 
-              </WrapperDiv>
-          );
-      } else if (this.state.loading) {
-          return (
-              <WrapperDiv>
-                  <CenterLoading>
-                      <LoadingSpinner/>
-                  </CenterLoading>
               </WrapperDiv>
           );
       } else {

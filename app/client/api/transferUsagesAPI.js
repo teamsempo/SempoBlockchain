@@ -1,9 +1,7 @@
-import {getToken, handleResponse} from "../utils";
+import {generateFormattedURL, getToken, handleResponse} from "../utils";
 
 export const loadTransferUsagesAPI = () => {
-  const URL = '/api/transfer_usage/';
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/transfer_usage/'), {
     headers: {
       'Authorization': getToken()
     },

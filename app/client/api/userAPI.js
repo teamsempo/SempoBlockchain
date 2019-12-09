@@ -1,17 +1,8 @@
-import { getToken, handleResponse, generateQueryString } from '../utils'
+import {getToken, handleResponse, generateFormattedURL} from '../utils'
 
 // Load User Details
 export const loadUserAPI = ({query, path}) => {
-    if (query) {
-        const query_string = generateQueryString(query);
-        var URL = `/api/user/${query_string}`;
-    } else if (path) {
-        URL = `/api/user/${path}/`;
-    } else {
-        URL = '/api/user/';
-    }
-
-    return fetch(URL, {
+    return fetch(generateFormattedURL('/api/user/', query, path), {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -29,10 +20,7 @@ export const loadUserAPI = ({query, path}) => {
 
 // Create at User with Auth
 export const createUserAPI = ({body}) => {
-  const query_string = generateQueryString();
-  var URL = `/api/user/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/user/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -51,13 +39,7 @@ export const createUserAPI = ({body}) => {
 
 // Edit Transfer Account Details
 export const editUserAPI = ({body, path}) => {
-    if (path) {
-        var URL = `/api/user/${path}/`;
-    } else {
-        URL = '/api/user/';
-    }
-
-    return fetch(URL, {
+    return fetch(generateFormattedURL('/api/user/', null, path), {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',

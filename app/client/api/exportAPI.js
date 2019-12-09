@@ -1,10 +1,7 @@
-import {generateQueryString, getToken, handleResponse} from '../utils'
+import {generateFormattedURL, getToken} from '../utils'
 
 export const exportAPI = (export_type, include_transfers, user_type, date_range, payable_period_start_date, payable_period_end_date, selected) => {
-  const query_string = generateQueryString();
-  var URL = `/api/export/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/export/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

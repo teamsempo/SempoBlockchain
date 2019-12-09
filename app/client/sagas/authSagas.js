@@ -73,6 +73,7 @@ function* watchSaveOrgId() {
 export function* logout() {
     yield call(removeSessionToken);
     yield call(removeOrgId);
+    yield put({ type: 'RESET' });
 }
 
 function createLoginSuccessObject(token) {
@@ -169,12 +170,25 @@ function* watchLogoutRequest() {
 function* register({payload}) {
   try {
     const registered_account = yield call(registerAPI, payload);
-    if (registered_account.auth_token) {
+
+    if (registered_account.status === 'success') {
       yield put(createLoginSuccessObject(registered_account));
       yield call(storeSessionToken, registered_account.auth_token );
       yield call (authenticatePusher);
+      yield put({type: REGISTER_SUCCESS, registered_account});
+
+    } else if (registered_account.tfa_url) {
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: registered_account.message,
+        tfaURL: registered_account.tfa_url,
+        tfaFailure: true
+      });
+    } else {
+      yield put({type: REGISTER_FAILURE, error: registered_account.message});
+      yield put({type: LOGIN_FAILURE, error: registered_account.message})
     }
-    yield put({type: REGISTER_SUCCESS, registered_account});
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
