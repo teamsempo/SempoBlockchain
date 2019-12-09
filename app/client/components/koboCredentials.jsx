@@ -13,7 +13,7 @@ class koboCredentials extends React.Component {
 
   getKoboCredentials() {
       const query_string = generateQueryString();
-      var URL = `/api/auth/kobo/${query_string}`;
+      var URL = `/api/v1/auth/kobo/${query_string}`;
 
       return fetch(URL, {
           headers: {

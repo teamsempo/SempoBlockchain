@@ -2,7 +2,7 @@ import {getToken, handleResponse, generateFormattedURL} from '../utils'
 
 // Load Transfer Account Details
 export const loadTransferAccountListAPI = ({query, path}) => {
-    return fetch(generateFormattedURL('/api/transfer_account/', query , path), {
+    return fetch(generateFormattedURL('/transfer_account/', query , path), {
         headers: {
             'Authorization': getToken()
         },
@@ -18,7 +18,7 @@ export const loadTransferAccountListAPI = ({query, path}) => {
 
 // Edit Transfer Account Details
 export const editTransferAccountAPI = ({body, path}) => {
-    return fetch(generateFormattedURL('/api/transfer_account/', null , path), {
+    return fetch(generateFormattedURL('/transfer_account/', null , path), {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',

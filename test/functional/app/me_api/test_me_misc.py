@@ -30,7 +30,7 @@ def test_create_poli_payments_link(mocker, test_client, init_database, external_
 
     token_id = token_id_generator(external_reserve_token)
 
-    response = test_client.post('/api/me/poli_payments/',
+    response = test_client.post('/api/v1/me/poli_payments/',
                                 headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),
                                 data=json.dumps(dict(token_id=token_id, amount=amount)),
                                 content_type='application/json', follow_redirects=True)
@@ -71,7 +71,7 @@ def test_check_poli_payments_link_status(mocker, test_client, init_database, ext
     if poli_status:
         reference = external_reserve_token.fiat_ramps[0].payment_reference
 
-    response = test_client.put('/api/me/poli_payments/',
+    response = test_client.put('/api/v1/me/poli_payments/',
                                 headers=dict(Authorization=auth_token.decode(), Accept='application/json', ContentType='application/json'),
                                 data=json.dumps(dict(reference=reference)),
                                 content_type='application/json', follow_redirects=True)

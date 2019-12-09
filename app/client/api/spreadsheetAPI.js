@@ -6,7 +6,7 @@ export const uploadSpreadsheetAPI= (spreadsheet, preview_id) => {
   formData.append('spreadsheet', spreadsheet);
   formData.append('preview_id', preview_id);
 
-  return fetch(generateFormattedURL('/api/spreadsheet/upload/'), {
+  return fetch(generateFormattedURL('/spreadsheet/upload/'), {
     headers: {
       'Authorization': getToken()
     },
@@ -20,7 +20,7 @@ export const uploadSpreadsheetAPI= (spreadsheet, preview_id) => {
 };
 
 export const saveDatasetAPI= (dataset) => {
-  return fetch(generateFormattedURL('/api/dataset/'), {
+  return fetch(generateFormattedURL('/dataset/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -36,7 +36,7 @@ export const saveDatasetAPI= (dataset) => {
 };
 
 export const loadDatasetListAPI= () => {
-  return fetch(generateFormattedURL('/api/dataset/') , {
+  return fetch(generateFormattedURL('/dataset/') , {
     headers: {
       'Authorization': getToken()
     },
