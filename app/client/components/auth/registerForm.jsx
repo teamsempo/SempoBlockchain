@@ -179,11 +179,13 @@ const RegisterForm = function(props) {
 
       <div style={{display: 'block'}}>
 
-        <ErrorMessage>
-          {error_message}
-        </ErrorMessage>
+        <p style={props.state.invite ? { margin: '1em 0.5em', textAlign: 'center' } : { display: 'none' }}>
+          {props.state.username}
+        </p>
 
-        <p style={props.state.invite ? { margin: '1em 0.5em', textAlign: 'center' } : { display: 'none' }}>{props.state.username}</p>
+        <p style={props.state.invite ? { margin: '1em 0.5em', textAlign: 'center', fontWeight: 600} : { display: 'none' }}>
+          Please choose a password
+        </p>
 
         <Input type="email"
                onKeyUp={props.onUserFieldKeyPress}
@@ -201,8 +203,12 @@ const RegisterForm = function(props) {
 
         <Input type="password"
                  onKeyUp={props.onReenterPasswordFieldKeyPress}
-                 placeholder="Retype Passwords"
+                 placeholder="Retype Password"
           />
+
+        <ErrorMessage>
+          {error_message}
+        </ErrorMessage>
 
       </div>
 
