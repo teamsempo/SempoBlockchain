@@ -585,6 +585,9 @@ def make_target_balance_transfer(target_balance,
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
 
+    # TODO: Yep Fix
+    raise NotImplementedError("target_user.transfer account needs to be fixed")
+
     transfer_amount = target_balance - target_user.transfer_account.balance
 
     if transfer_amount < 0 and not allow_withdrawal:

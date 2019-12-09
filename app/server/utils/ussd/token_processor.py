@@ -73,7 +73,14 @@ class TokenProcessor(object):
                                           amount=0)
 
         limits = example_transfer.get_transfer_limits()
-        db.session.delete(example_transfer)
+
+        try:
+            # Sometimes some weird db behaviour cause the above transfer to be persisted.
+            # This is here to make sure it definitely doesn't hang around
+            db.session.delete(example_transfer)
+        except Exception as e:
+            pass
+
         if len(limits) == 0:
             return None
         else:
@@ -83,6 +90,8 @@ class TokenProcessor(object):
     @staticmethod
     def get_exchange_rate(user: User, from_token: Token):
         to_token = user.get_reserve_token()
+        if from_token == to_token:
+            return None
         exchange = Exchange()
         return exchange.get_exchange_rate(from_token, to_token)
 
@@ -122,26 +131,42 @@ class TokenProcessor(object):
             }
 
         def filter_incorrect_limit(token_info):
-            return token_info['limit'] is not None and token_info['limit'].transfer_balance_percentage is not None
+            return (token_info['exchange_rate'] is not None
+                    and token_info['limit'] is not None
+                    and token_info['limit'].transfer_balance_percentage is not None)
 
         # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
         transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
-        token_info = list(map(get_token_info, transfer_accounts))
+        token_info_list = list(map(get_token_info, transfer_accounts))
+
         token_balances_dollars = "\n".join(map(lambda x: f"{x['name']} {TokenProcessor.rounded_dollars(x['balance'])}",
-                                               token_info))
+                                               token_info_list))
 
         reserve_token = user.get_reserve_token()
-
-        exchangeable_tokens = filter(filter_incorrect_limit, token_info)
+        exchangeable_tokens = filter(filter_incorrect_limit, token_info_list)
         token_exchanges = "\n".join(
             map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_percentage * x['balance'])}"
                           f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
                 exchangeable_tokens))
 
-        exchange_period = TokenProcessor.get_limit(user, default_token(user)).time_period_days
+        default_limit = TokenProcessor.get_limit(user, default_token(user))
+        if default_limit:
+            TokenProcessor.send_sms(
+                user,
+                "send_balance_limit_sms",
+                token_balances=token_balances_dollars,
+                token_exchanges=token_exchanges,
+                limit_period=default_limit.time_period_days)
+        else:
+            TokenProcessor.send_sms(
+                user,
+                "send_balance_sms",
+                token_balances=token_balances_dollars,
+                token_exchanges=token_exchanges
+            )
 
-        TokenProcessor.send_sms(user, "send_balance_sms", token_balances=token_balances_dollars,
-                                token_exchanges=token_exchanges, limit_period=exchange_period)
+
+
 
     @staticmethod
     def fetch_exchange_rate(user: User):
