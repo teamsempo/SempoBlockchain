@@ -6,6 +6,7 @@ from server.models.user import User
 from server.utils.user import get_user_by_phone, default_token
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine, ITEMS_PER_MENU
 from server.utils.i18n import i18n_for
+from server.utils.credit_transfer import cents_to_dollars
 
 
 class KenyaUssdProcessor:
@@ -61,7 +62,7 @@ class KenyaUssdProcessor:
                 user, menu.display_key,
                 recipient_phone=recipient_phone,
                 token_name=token.symbol,
-                transaction_amount=transaction_amount,
+                transaction_amount=cents_to_dollars(transaction_amount),
                 transaction_reason=transaction_reason
             )
 
@@ -74,7 +75,7 @@ class KenyaUssdProcessor:
                 user, menu.display_key,
                 agent_phone=agent_phone,
                 token_name=token.symbol,
-                exchange_amount=exchange_amount
+                exchange_amount=cents_to_dollars(exchange_amount)
             )
 
         # in matching is scary since it might pick up unintentional ones

@@ -103,13 +103,12 @@ class TokenProcessor(object):
         def get_token_info(transfer_account: TransferAccount):
             token = transfer_account.token
             exchange_rate = TokenProcessor.get_exchange_rate(user, token)
-            # Limit doesn't appear to be used?
-            # limit = TokenProcessor.get_limit(user, token)
+            limit = TokenProcessor.get_limit(user, token)
             return {
                 "name": token.symbol,
                 "balance": transfer_account.balance,
-                "exchange_rate": TokenProcessor.format_amount(exchange_rate)
-                # "limit": limit.transfer_balance_percentage,
+                "exchange_rate": TokenProcessor.format_amount(exchange_rate),
+                "limit": limit.transfer_balance_percentage,
             }
 
         reserve_token = user.get_reserve_token()

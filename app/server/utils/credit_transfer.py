@@ -27,10 +27,10 @@ from server.utils import pusher
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 def cents_to_dollars(amount_cents):
-    return amount_cents / 100
+    return float(amount_cents) / 100
 
 def dollars_to_cents(amount_dollars):
-    return amount_dollars * 100
+    return float(amount_dollars) * 100
 
 
 def calculate_transfer_stats(total_time_series=False):
