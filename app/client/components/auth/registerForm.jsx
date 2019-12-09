@@ -5,12 +5,14 @@ import ReactPasswordStrength from 'react-password-strength';
 import { registerRequest } from '../../reducers/authReducer'
 
 import AsyncButton from './../AsyncButton.jsx'
+import TFAForm from "./TFAForm.jsx";
 
 import { Input, ErrorMessage } from './../styledElements'
 
 const mapStateToProps = (state) => {
   return {
-    register_status: state.register
+    register_status: state.register,
+    login_status: state.login
   };
 };
 
@@ -114,6 +116,17 @@ class RegisterFormContainer extends React.Component {
 
 
   render() {
+    if (this.props.login_status.tfaURL || this.props.login_status.tfaFailure ) {
+      return (
+        <div style={{margin: '1em'}}>
+          <div style={{textAlign: 'center'}}>
+          Two-Step Authentication Required
+          </div>
+          <TFAForm tfaURL={this.props.login_status.tfaURL}/>
+        </div>
+      )
+    }
+
     if (this.props.register_status.registerSuccess) {
       return (
         <div>
@@ -166,11 +179,13 @@ const RegisterForm = function(props) {
 
       <div style={{display: 'block'}}>
 
-        <ErrorMessage>
-          {error_message}
-        </ErrorMessage>
+        <p style={props.state.invite ? { margin: '1em 0.5em', textAlign: 'center' } : { display: 'none' }}>
+          {props.state.username}
+        </p>
 
-        <p style={props.state.invite ? { margin: '1em 0.5em', textAlign: 'center' } : { display: 'none' }}>{props.state.username}</p>
+        <p style={props.state.invite ? { margin: '1em 0.5em', textAlign: 'center', fontWeight: 600} : { display: 'none' }}>
+          Please choose a password
+        </p>
 
         <Input type="email"
                onKeyUp={props.onUserFieldKeyPress}
@@ -188,8 +203,12 @@ const RegisterForm = function(props) {
 
         <Input type="password"
                  onKeyUp={props.onReenterPasswordFieldKeyPress}
-                 placeholder="Retype Passwords"
+                 placeholder="Retype Password"
           />
+
+        <ErrorMessage>
+          {error_message}
+        </ErrorMessage>
 
       </div>
 

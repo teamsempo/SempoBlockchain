@@ -1,4 +1,4 @@
-import { handleResponse, storeSessionToken, removeSessionToken, getToken, getTFAToken, generateQueryString, getOrgId } from '../utils'
+import {handleResponse, getToken, getTFAToken, generateQueryString, getOrgId, generateFormattedURL} from '../utils'
 import { startConfiguration } from 'pusher-redux';
 
 //Auth API Call
@@ -54,7 +54,7 @@ export const registerAPI = ({body}) => {
     body: JSON.stringify(body)
     })
     .then(response => {
-      return handleResponse(response)
+      return response.json();
     })
     .catch(error => {
       throw error;
@@ -111,7 +111,7 @@ export const GetTFAAPI = () => {
   }).catch(error => {
       throw error;
   })
-}
+};
 
 
 export const ValidateTFAAPI = (payload) => {
@@ -164,10 +164,7 @@ export const authenticatePusher = () => {
 };
 
 export const getUserList = () => {
-  const query_string = generateQueryString();
-  var URL = `/api/auth/permissions/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/auth/permissions/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -181,10 +178,7 @@ export const getUserList = () => {
 };
 
 export const updateUserAPI = ({body, query}) => {
-  const query_string = generateQueryString(query);
-  var URL = `/api/auth/permissions/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/auth/permissions/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -201,10 +195,7 @@ export const updateUserAPI = ({body, query}) => {
 };
 
 export const inviteUserAPI = ({body}) => {
-  const query_string = generateQueryString();
-  var URL = `/api/auth/permissions/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/api/auth/permissions/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

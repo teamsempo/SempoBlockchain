@@ -142,6 +142,9 @@ class RefreshTokenAPI(MethodView):
 
             response_object = create_user_response_object(g.user, auth_token, 'Token refreshed successfully.')
 
+            # Update the last_seen TS for this user
+            g.user.update_last_seen_ts()
+
             return make_response(jsonify(response_object)), 201
 
         except Exception as e:
@@ -256,6 +259,19 @@ class RegisterAPI(MethodView):
             user.is_activated = True
 
             auth_token = user.encode_auth_token()
+
+            # Possible Outcomes:
+            # TFA required, but not set up
+            # TFA not required
+
+            tfa_response_oject = tfa_logic(user, tfa_token=None)
+            if tfa_response_oject:
+                tfa_response_oject['auth_token'] = auth_token.decode()
+
+                return make_response(jsonify(tfa_response_oject)), 401
+
+            # Update the last_seen TS for this user
+            user.update_last_seen_ts()
 
             response_object = {
                 'status': 'success',

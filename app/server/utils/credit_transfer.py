@@ -416,19 +416,19 @@ def make_payment_transfer(transfer_amount,
     :return:
     """
     if transfer_subtype in TransferSubTypeEnum.__members__:
-        if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
+        if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT.name:
             require_sender_approved = False
             require_recipient_approved = False
             require_sufficient_balance = False
             # primary NGO wallet to disburse from
             send_transfer_account = receive_user.default_organisation.org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.RECLAMATION:
+        if transfer_subtype is TransferSubTypeEnum.RECLAMATION.name:
             require_sender_approved = False
             # primary NGO wallet to reclaim to
             receive_transfer_account = send_user.default_organisation.org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
+        if transfer_subtype is TransferSubTypeEnum.INCENTIVE.name:
             send_transfer_account = receive_transfer_account.get_float_transfer_account()
 
     transfer = CreditTransfer(transfer_amount,
@@ -438,6 +438,7 @@ def make_payment_transfer(transfer_amount,
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
+                              transfer_type=TransferTypeEnum.PAYMENT,
                               transfer_subtype=transfer_subtype,
                               is_ghost_transfer=is_ghost_transfer)
 
