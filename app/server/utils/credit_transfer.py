@@ -26,6 +26,13 @@ from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
+def cents_to_dollars(amount_cents):
+    return float(amount_cents) / 100
+
+def dollars_to_cents(amount_dollars):
+    return float(amount_dollars) * 100
+
+
 def calculate_transfer_stats(total_time_series=False):
 
     total_distributed = (

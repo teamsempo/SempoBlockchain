@@ -272,6 +272,7 @@ def create_ussd_menus():
 
 
 def create_business_categories():
+
     print_section_title('Creating Business Categories')
     business_categories = [
         {'name': 'Food', 'icon': 'message', 'translations': {
@@ -305,7 +306,8 @@ def create_business_categories():
             except TransferUsageNameDuplicateException as e:
                 print(e)
         db.session.add(usage)
-        db.session.commit()
+
+    db.session.commit()
 
     print_section_conclusion('Done creating Business Categories')
 
@@ -337,19 +339,6 @@ def create_reserve_token(app):
 
         return reserve_token
 
-        #
-        # exchange_contract = ExchangeContract.query.filter_by(
-        #     blockchain_address=exchange_contract_address).first()
-        #
-        # if not exchange_contract:
-        #     exchange_contract = ExchangeContract(blockchain_address=exchange_contract_address)
-        #
-        #     exchange_contract.reserve_token = reserve_token
-        #     exchange_contract.add_token(reserve_token)
-        #
-        #     db.session.add(exchange_contract)
-        #     db.session.commit()
-
     print('No token address, skipping')
 
     return None
@@ -371,7 +360,6 @@ def create_master_organisation(reserve_token):
 
     print_section_conclusion('Done creating master organisation')
 
-
 def create_float_wallet(app):
     print_section_title('Creating/Updating Float Wallet')
     float_wallet = TransferAccount.query.execution_options(show_all=True).filter(
@@ -388,7 +376,6 @@ def create_float_wallet(app):
         db.session.add(float_wallet)
 
         db.session.commit()
-
 
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':

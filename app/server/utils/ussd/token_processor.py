@@ -10,11 +10,16 @@ from server.models.transfer_account import TransferAccount
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.models.user import User
-from server.utils.transaction_limits import TransferLimit
 from server.utils.user import default_token, default_transfer_account
+from server.utils.credit_transfer import cents_to_dollars
 
 
 class TokenProcessor(object):
+
+    @staticmethod
+    def format_amount(amount):
+        return str(round(cents_to_dollars(amount), 2))
+
     @staticmethod
     def send_sms(user, message_key, **kwargs):
         # if we use token processor similarly for other countries later, can generalize country to init
@@ -22,12 +27,15 @@ class TokenProcessor(object):
         message_processor.send_message(user.phone, message)
 
     @staticmethod
-    def send_success_sms(message_key: str, amount: float, user: User, other_user: User, reason: str, tx_time: datetime,
+    def send_success_sms(message_key: str, user: User, other_user: User, amount: float, reason: str, tx_time: datetime,
                          balance: float):
-        rounded_balance = str(round(balance, 2))
-        TokenProcessor.send_sms(user, message_key, amount=amount, token_name=default_token(user).symbol,
+
+        amount_dollars = TokenProcessor.format_amount(amount)
+        rounded_balance_dollars = TokenProcessor.format_amount(balance)
+
+        TokenProcessor.send_sms(user, message_key, amount=amount_dollars, token_name=default_token(user).symbol,
                                 other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'), reason=reason,
-                                time=tx_time.strftime('%I:%M %p'), balance=rounded_balance)
+                                time=tx_time.strftime('%I:%M %p'), balance=rounded_balance_dollars)
 
     @staticmethod
     def exchange_success_sms(message_key: str, user: User, other_user: User, own_amount: float, other_amount: float,
@@ -74,9 +82,7 @@ class TokenProcessor(object):
         transfer_use = None
         if reason_id is not None:
             transfer_use = str(int(reason_id))
-        # what's stored in backend is cents
-        amount_cents = amount * 100
-        transfer = make_payment_transfer(amount_cents, token=sent_token, send_user=sender, receive_user=recipient,
+        transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
                                          require_sender_approved=False, require_recipient_approved=False)
         exchanged_amount = None
@@ -84,9 +90,8 @@ class TokenProcessor(object):
         if sent_token.id != received_token.id:
             exchange = Exchange()
             exchange.exchange_from_amount(user=recipient, from_token=sent_token, to_token=received_token,
-                                          from_amount=amount_cents, dependent_task_ids=[transfer.blockchain_task_id])
-            # convert what comes back out from backend to dollars
-            exchanged_amount = exchange.to_transfer.transfer_amount / 100
+                                          from_amount=amount, dependent_task_ids=[transfer.blockchain_task_id])
+            exchanged_amount = exchange.to_transfer.transfer_amount
 
         return exchanged_amount
 
@@ -163,7 +168,7 @@ class TokenProcessor(object):
             example_transfer.check_sender_transfer_limits()
             db.session.delete(example_transfer)
 
-            # TODO: do agents have default token being reserve? if not, change transfer_token to take recipient_token
+            # TODO: do agents have default token being reserve?
             to_amount = TokenProcessor.transfer_token(sender, agent, amount)
             tx_time = datetime.datetime.now()
             sender_balance = TokenProcessor.get_balance(sender)
@@ -172,6 +177,7 @@ class TokenProcessor(object):
                                                 sender_balance)
             TokenProcessor.exchange_success_sms("exchange_token_agent_sms", agent, sender, to_amount, amount, tx_time,
                                                 agent_balance)
+
         except TransactionPercentLimitError as e:
             TokenProcessor.send_sms(sender, "exchange_amount_error_sms", limit=f"{e.transfer_balance_percent * 100}%")
         except TransactionCountLimitError as e:
