@@ -20,7 +20,7 @@ def test_transfer_usage_api(test_client, complete_admin_auth_token, name, icon, 
     THEN check the response is valid
     """
 
-    response = test_client.post('/api/transfer_usage/',
+    response = test_client.post('/api/v1/transfer_usage/',
                                 headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                 data=json.dumps(dict(name=name, icon=icon, translations=translations)),
                                 content_type='application/json', follow_redirects=True)
@@ -28,7 +28,7 @@ def test_transfer_usage_api(test_client, complete_admin_auth_token, name, icon, 
     assert response.status_code == status_code
 
     # Ensure that the posting a duplicate transfer ussage results in a 400
-    response = test_client.post('/api/transfer_usage/',
+    response = test_client.post('/api/v1/transfer_usage/',
                                 headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                 data=json.dumps(dict(name=name, icon=icon, translations=translations)),
                                 content_type='application/json', follow_redirects=True)
@@ -43,7 +43,7 @@ def test_transfer_usage_api_get(test_client, complete_admin_auth_token):
     THEN check the response has status 200 and a list
     """
 
-    response = test_client.get('/api/transfer_usage/',
+    response = test_client.get('/api/v1/transfer_usage/',
                                headers=dict(
                                    Authorization=complete_admin_auth_token, Accept='application/json'),
                                follow_redirects=True)
