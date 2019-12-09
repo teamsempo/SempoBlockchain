@@ -40,26 +40,27 @@ class TokenProcessor(object):
     @staticmethod
     def exchange_success_sms(message_key: str, user: User, other_user: User, own_amount: float, other_amount: float,
                              tx_time: datetime, balance: float):
-        rounded_own_amount = str(round(own_amount, 2))
-        rounded_other_amount = str(round(other_amount, 2))
-        rounded_balance = str(round(balance, 2))
-        TokenProcessor.send_sms(user, message_key, own_amount=rounded_own_amount, other_amount=rounded_other_amount,
-                                own_token_name=default_token(user).symbol, other_token_name=default_token(other_user).symbol,
-                                other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'),
-                                time=tx_time.strftime('%I:%M %p'), balance=rounded_balance)
+
+        rounded_own_amount_dollars = TokenProcessor.format_amount(own_amount)
+        rounded_other_amount_dollars = TokenProcessor.format_amount(other_amount)
+        rounded_balance_dollars = TokenProcessor.format_amount(balance)
+
+        TokenProcessor.send_sms(
+            user, message_key,
+            own_amount=rounded_own_amount_dollars, other_amount=rounded_other_amount_dollars,
+            own_token_name=default_token(user).symbol, other_token_name=default_token(other_user).symbol,
+            other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'),
+            time=tx_time.strftime('%I:%M %p'), balance=rounded_balance_dollars)
 
     @staticmethod
     def get_balance(user: User):
         return TokenProcessor.balance_for_transfer_account(default_transfer_account(user))
 
     @staticmethod
-    def balance_for_transfer_account(transfer_account: TransferAccount):
-        # convert what comes back out from backend to dollars
-        return transfer_account.balance / 100
-
-    @staticmethod
     def get_limit(user: User, token: Token) -> Optional[TransferLimit]:
-        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=user, recipient_user=user, token=token, amount=0)
+        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=user, recipient_user=user, token=token,
+                                          amount=0)
+
         limits = example_transfer.get_transfer_limits()
         db.session.delete(example_transfer)
         if len(limits) == 0:
@@ -103,9 +104,9 @@ class TokenProcessor(object):
             exchange_rate = TokenProcessor.get_exchange_rate(user, token)
             return {
                 "name": token.symbol,
-                "balance": TokenProcessor.balance_for_transfer_account(transfer_account),
-                "limit": limit,
-                "exchange_rate": str(round(exchange_rate, 2))
+                "balance": transfer_account.balance,
+                "exchange_rate": TokenProcessor.format_amount(exchange_rate),
+                "limit": limit.transfer_balance_percentage,
             }
 
         def filter_incorrect_limit(token_info):
@@ -120,8 +121,8 @@ class TokenProcessor(object):
         token_exchanges = "\n".join(map(lambda x: f"{str(round(x['limit'].transfer_balance_percentage * x['balance'], 2))} {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})", exchangeable_tokens))
         exchange_period = TokenProcessor.get_limit(user, default_token(user)).time_period_days
 
-        TokenProcessor.send_sms(user, "send_balance_sms", token_balances=token_balances,
-                                token_exchanges=token_exchanges, limit_period=exchange_period)
+        TokenProcessor.send_sms(user, "send_balance_sms", token_balances=token_balances_dollars,
+                                token_exchanges=token_exchanges_dollars, limit_period=exchange_period)
 
     @staticmethod
     def fetch_exchange_rate(user: User):
@@ -132,10 +133,15 @@ class TokenProcessor(object):
             exchange_limit = str(round(limit.transfer_balance_percentage * TokenProcessor.get_balance(user), 2))
             exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
 
-            TokenProcessor.send_sms(user, "exchange_rate_sms", token_name=from_token.symbol,
-                                    exchange_rate=str(round(exchange_rate, 2)), exchange_limit=exchange_limit,
-                                    exchange_sample_value=str(round(exchange_rate * float(1000), 2)),
-                                    limit_period=limit.time_period_days)
+        TokenProcessor.send_sms(
+            user,
+            "exchange_rate_sms",
+            token_name=from_token.symbol,
+            exchange_rate=TokenProcessor.format_amount(exchange_rate),
+            exchange_limit=exchange_limit,
+            exchange_sample_value=TokenProcessor.format_amount(exchange_rate * float(1000)),
+            limit_period=limit.time_period_days
+        )
 
     @staticmethod
     def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):
@@ -146,17 +152,34 @@ class TokenProcessor(object):
             sender_balance = TokenProcessor.get_balance(sender)
             recipient_balance = TokenProcessor.get_balance(recipient)
             if exchanged_amount is None:
-                TokenProcessor.send_success_sms("send_token_sender_sms", amount, sender, recipient, reason_str, tx_time,
-                                                sender_balance)
-                TokenProcessor.send_success_sms("send_token_recipient_sms", amount, recipient, sender, reason_str,
-                                                tx_time, recipient_balance)
+                TokenProcessor.send_success_sms(
+                    "send_token_sender_sms",
+                    sender, recipient, amount,
+                    reason_str, tx_time,
+                    sender_balance)
+
+                TokenProcessor.send_success_sms(
+                    "send_token_recipient_sms",
+                    recipient, sender, amount,
+                    reason_str, tx_time,
+                    recipient_balance)
             else:
-                TokenProcessor.exchange_success_sms("exchange_token_sender_sms", sender, recipient, amount,
-                                                    exchanged_amount, tx_time, sender_balance)
-                TokenProcessor.exchange_success_sms("exchange_token_agent_sms", recipient, sender, exchanged_amount,
-                                                    amount, tx_time, recipient_balance)
+                TokenProcessor.exchange_success_sms(
+                    "exchange_token_sender_sms",
+                    sender, recipient,
+                    amount, exchanged_amount,
+                    tx_time, sender_balance)
+
+                TokenProcessor.exchange_success_sms(
+                    "exchange_token_agent_sms",
+                    recipient, sender,
+                    exchanged_amount,
+                    amount, tx_time,
+                    recipient_balance)
+
         except Exception as e:
-            TokenProcessor.send_sms(sender, "send_token_error_sms", amount=amount,
+            # TODO: SLAP? all the others take input in cents
+            TokenProcessor.send_sms(sender, "send_token_error_sms", amount=cents_to_dollars(amount),
                                     token_name=default_token(sender).name, recipient=recipient.user_details())
             raise e
 

@@ -43,6 +43,7 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
                           receive_user=recipient,
                           transfer_use=str(int(usage.id)), is_ghost_transfer=False,
                           require_sender_approved=False, require_recipient_approved=False)
+
     make_payment_transfer(100, token=token, send_user=sender,
                           receive_user=recipient,
                           transfer_use=str(int(usage.id)), is_ghost_transfer=False,
@@ -100,8 +101,8 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
     resp = req("1")
     assert "END Your request has been sent." in resp
 
-    assert default_transfer_account(sender).balance == 38750
-    assert default_transfer_account(recipient).balance == 21250
+    assert default_transfer_account(sender).balance == (4220 - 100 - 100 - 1250)
+    assert default_transfer_account(recipient).balance == (1980 + 100 + 100 + 1250)
 
     assert len(messages) == 2
     sent_message = messages[0]
