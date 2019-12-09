@@ -431,6 +431,7 @@ def make_payment_transfer(transfer_amount,
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
+                              transfer_type=TransferTypeEnum.PAYMENT,
                               transfer_subtype=transfer_subtype,
                               is_ghost_transfer=is_ghost_transfer)
 
