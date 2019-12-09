@@ -54,11 +54,11 @@ def test_get_directory_listing_users(test_client, init_database, dl_processor):
     shown_user = create_user(category, token1)
     # user did more transactions
     more_transactions_user = create_user(category, token1)
-    make_payment_transfer(1, token=token1, send_user=different_business_category_user,
+    make_payment_transfer(100, token=token1, send_user=different_business_category_user,
                           receive_user=more_transactions_user,
                           transfer_use=str(int(category.id)), is_ghost_transfer=False,
                           require_sender_approved=False, require_recipient_approved=False)
-    make_payment_transfer(1, token=token1, send_user=different_business_category_user,
+    make_payment_transfer(100, token=token1, send_user=different_business_category_user,
                           receive_user=more_transactions_user,
                           transfer_use=str(int(category.id)), is_ghost_transfer=False,
                           require_sender_approved=False, require_recipient_approved=False)

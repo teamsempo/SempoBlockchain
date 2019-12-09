@@ -44,8 +44,8 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
     token1 = Token.query.filter_by(symbol="SM1").first()
     token2 = Token.query.filter_by(symbol="SM2").first()
     token3 = Token.query.filter_by(symbol="SM3").first()
-    create_transfer_account_for_user(user, token1, 200)
-    create_transfer_account_for_user(user, token2, 350, is_default=False)
+    create_transfer_account_for_user(user, token1, 20000)
+    create_transfer_account_for_user(user, token2, 35000, is_default=False)
     # this one should not show up in balance
     create_transfer_account_for_user(user, token3, 0, is_default=False, is_ghost=True)
 
@@ -78,7 +78,7 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
         user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
     token1 = Token.query.filter_by(symbol="SM1").first()
-    create_transfer_account_for_user(user, token1, 200)
+    create_transfer_account_for_user(user, token1, 20000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount):
             return from_amount * 1.2
@@ -94,11 +94,11 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
 def test_send_token(mocker, test_client, init_database, initialised_blockchain_network):
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo")
     token1 = Token.query.filter_by(symbol="SM1").first()
-    create_transfer_account_for_user(sender, token1, 200)
+    create_transfer_account_for_user(sender, token1, 20000)
 
     recipient = UserFactory(phone=phone(), first_name="Joe", last_name="Bar")
     token2 = Token.query.filter_by(symbol="SM2").first()
-    create_transfer_account_for_user(recipient, token2, 300)
+    create_transfer_account_for_user(recipient, token2, 30000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount, signing_address):
         if from_token.symbol == "SM1":
@@ -114,9 +114,9 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
     mocker.patch('server.message_processor.send_message', mock_send_message)
 
     TokenProcessor.send_token(sender, recipient, 10, "A reason", 1)
-    assert default_transfer_account(sender).balance == 190
-    # TODO: shouldn't it double convert from the reserve to be 320..?
-    assert default_transfer_account(recipient).balance == 315
+    assert default_transfer_account(sender).balance == 19000
+    # TODO: shouldn't it double convert from the reserve to be 32000..?
+    assert default_transfer_account(recipient).balance == 31500
 
     assert len(messages) == 2
     sent_message = messages[0]
@@ -130,13 +130,13 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo")
     token1 = Token.query.filter_by(symbol="SM1").first()
-    create_transfer_account_for_user(sender, token1, 200)
+    create_transfer_account_for_user(sender, token1, 20000)
 
     agent = UserFactory(phone=phone(), first_name="Joe", last_name="Bar")
     agent.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
     # this is under the assumption that token agent would have default token being the reserve token. is this the case?
     reserve = Token.query.filter_by(symbol="AUD").first()
-    create_transfer_account_for_user(agent, reserve, 300)
+    create_transfer_account_for_user(agent, reserve, 30000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount, signing_address):
         return from_amount * 1.2
@@ -149,8 +149,8 @@ def test_exchange_token(mocker, test_client, init_database, initialised_blockcha
     mocker.patch('server.message_processor.send_message', mock_send_message)
 
     TokenProcessor.exchange_token(sender, agent, 10)
-    assert default_transfer_account(sender).balance == 190
-    assert default_transfer_account(agent).balance == 312
+    assert default_transfer_account(sender).balance == 19000
+    assert default_transfer_account(agent).balance == 31200
 
     assert len(messages) == 2
     sent_message = messages[0]

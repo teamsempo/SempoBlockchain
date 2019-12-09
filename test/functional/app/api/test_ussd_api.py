@@ -29,21 +29,21 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
     token = Token.query.filter_by(symbol="SM1").first()
     sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
                          pin_hash=User.salt_hash_secret('0000'))
-    create_transfer_account_for_user(sender, token, 402)
+    create_transfer_account_for_user(sender, token, 40200)
 
     recipient = UserFactory(preferred_language="sw", phone=make_kenyan_phone(phone()), first_name="Joe", last_name="Bar")
-    create_transfer_account_for_user(recipient, token, 198)
+    create_transfer_account_for_user(recipient, token, 19800)
 
     messages = []
     session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa'
 
     usage = TransferUsage.query.filter_by(name="Education").first()
     # do two of these transfers to ensure education is the first shown
-    make_payment_transfer(1, token=token, send_user=sender,
+    make_payment_transfer(100, token=token, send_user=sender,
                           receive_user=recipient,
                           transfer_use=str(int(usage.id)), is_ghost_transfer=False,
                           require_sender_approved=False, require_recipient_approved=False)
-    make_payment_transfer(1, token=token, send_user=sender,
+    make_payment_transfer(100, token=token, send_user=sender,
                           receive_user=recipient,
                           transfer_use=str(int(usage.id)), is_ghost_transfer=False,
                           require_sender_approved=False, require_recipient_approved=False)
@@ -100,8 +100,8 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
     resp = req("1")
     assert "END Your request has been sent." in resp
 
-    assert default_transfer_account(sender).balance == 387.5
-    assert default_transfer_account(recipient).balance == 212.5
+    assert default_transfer_account(sender).balance == 38750
+    assert default_transfer_account(recipient).balance == 21250
 
     assert len(messages) == 2
     sent_message = messages[0]

@@ -10,6 +10,7 @@ from server.models.transfer_account import TransferAccount
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.models.user import User
+from server.utils.transaction_limits import TransferLimit
 from server.utils.user import default_token, default_transfer_account
 
 
@@ -41,16 +42,22 @@ class TokenProcessor(object):
 
     @staticmethod
     def get_balance(user: User):
-        return default_transfer_account(user).balance
+        return TokenProcessor.balance_for_transfer_account(default_transfer_account(user))
 
     @staticmethod
-    def get_limit(user: User, token: Token):
+    def balance_for_transfer_account(transfer_account: TransferAccount):
+        # convert what comes back out from backend to dollars
+        return transfer_account.balance / 100
+
+    @staticmethod
+    def get_limit(user: User, token: Token) -> Optional[TransferLimit]:
         example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=user, recipient_user=user, token=token, amount=0)
         limits = example_transfer.get_transfer_limits()
         db.session.delete(example_transfer)
-        if len(limits) != 1:
-            raise Exception("Unexpected limit count for user {} exchanging {}".format(user.id, token.name))
+        if len(limits) == 0:
+            return None
         else:
+            # might want to do something different if there's more than one limit...
             return limits[0]
 
     @staticmethod
@@ -67,7 +74,9 @@ class TokenProcessor(object):
         transfer_use = None
         if reason_id is not None:
             transfer_use = str(int(reason_id))
-        transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
+        # what's stored in backend is cents
+        amount_cents = amount * 100
+        transfer = make_payment_transfer(amount_cents, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
                                          require_sender_approved=False, require_recipient_approved=False)
         exchanged_amount = None
@@ -75,8 +84,9 @@ class TokenProcessor(object):
         if sent_token.id != received_token.id:
             exchange = Exchange()
             exchange.exchange_from_amount(user=recipient, from_token=sent_token, to_token=received_token,
-                                          from_amount=amount, dependent_task_ids=[transfer.blockchain_task_id])
-            exchanged_amount = exchange.to_transfer.transfer_amount
+                                          from_amount=amount_cents, dependent_task_ids=[transfer.blockchain_task_id])
+            # convert what comes back out from backend to dollars
+            exchanged_amount = exchange.to_transfer.transfer_amount / 100
 
         return exchanged_amount
 
@@ -88,20 +98,21 @@ class TokenProcessor(object):
             exchange_rate = TokenProcessor.get_exchange_rate(user, token)
             return {
                 "name": token.symbol,
-                "balance": transfer_account.balance,
-                "limit": limit.transfer_balance_percentage,
+                "balance": TokenProcessor.balance_for_transfer_account(transfer_account),
+                "limit": limit,
                 "exchange_rate": str(round(exchange_rate, 2))
             }
 
+        def filter_incorrect_limit(token_info):
+            return token_info['limit'] is not None and token_info['limit'].transfer_balance_percentage is not None
+
         reserve_token = user.get_reserve_token()
         # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
-        # could there be multiple reserve? should we filter out all reserve tokens?
-        transfer_accounts = filter(lambda x: x.is_ghost is not True and x.token_id != reserve_token.id,
-                                   user.transfer_accounts)
+        transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
         token_info = list(map(get_token_info, transfer_accounts))
         token_balances = "\n".join(map(lambda x: f"{x['name']} {str(round(x['balance'], 2))}", token_info))
-        token_exchanges = "\n".join(map(
-            lambda x: f"{str(round(x['limit'] * x['balance'], 2))} {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})", token_info))
+        exchangeable_tokens = filter(filter_incorrect_limit, token_info)
+        token_exchanges = "\n".join(map(lambda x: f"{str(round(x['limit'].transfer_balance_percentage * x['balance'], 2))} {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})", exchangeable_tokens))
         exchange_period = TokenProcessor.get_limit(user, default_token(user)).time_period_days
 
         TokenProcessor.send_sms(user, "send_balance_sms", token_balances=token_balances,
@@ -112,13 +123,14 @@ class TokenProcessor(object):
         from_token = default_token(user)
 
         limit = TokenProcessor.get_limit(user, from_token)
-        exchange_limit = str(round(limit.transfer_balance_percentage * default_transfer_account(user).balance, 2))
-        exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
+        if limit is not None and limit.transfer_balance_percentage is not None:
+            exchange_limit = str(round(limit.transfer_balance_percentage * TokenProcessor.get_balance(user), 2))
+            exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
 
-        TokenProcessor.send_sms(user, "exchange_rate_sms", token_name=from_token.symbol,
-                                exchange_rate=str(round(exchange_rate, 2)), exchange_limit=exchange_limit,
-                                exchange_sample_value=str(round(exchange_rate * float(1000), 2)),
-                                limit_period=limit.time_period_days)
+            TokenProcessor.send_sms(user, "exchange_rate_sms", token_name=from_token.symbol,
+                                    exchange_rate=str(round(exchange_rate, 2)), exchange_limit=exchange_limit,
+                                    exchange_sample_value=str(round(exchange_rate * float(1000), 2)),
+                                    limit_period=limit.time_period_days)
 
     @staticmethod
     def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):
@@ -151,7 +163,7 @@ class TokenProcessor(object):
             example_transfer.check_sender_transfer_limits()
             db.session.delete(example_transfer)
 
-            # TODO: do agents have default token being reserve?
+            # TODO: do agents have default token being reserve? if not, change transfer_token to take recipient_token
             to_amount = TokenProcessor.transfer_token(sender, agent, amount)
             tx_time = datetime.datetime.now()
             sender_balance = TokenProcessor.get_balance(sender)
