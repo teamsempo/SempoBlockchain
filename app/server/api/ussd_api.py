@@ -60,7 +60,7 @@ class ProcessKenyaUssd(MethodView):
 
 
 ussd_blueprint.add_url_rule(
-    '/v1/ussd/kenya',
+    '/ussd/kenya',
     view_func=ProcessKenyaUssd.as_view('ussd_kenya__view'),
     methods=['POST']
 )
