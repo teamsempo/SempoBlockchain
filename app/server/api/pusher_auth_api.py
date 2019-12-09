@@ -17,7 +17,7 @@ class PusherAuthAPI(MethodView):
         channel = request.form['channel_name']
 
         if (channel == 'private-user-{}-{}'.format(current_app.config['DEPLOYMENT_NAME'], g.user.id)
-            or (AccessControl.has_suffient_role(g.user.roles,{'ADMIN': 'admin'})
+            or (AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'admin'})
                 and channel == current_app.config['PUSHER_ENV_CHANNEL'])):
 
             auth = pusher_client.authenticate(

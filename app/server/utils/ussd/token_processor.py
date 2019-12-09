@@ -102,19 +102,20 @@ class TokenProcessor(object):
     def send_balance_sms(user: User):
         def get_token_info(transfer_account: TransferAccount):
             token = transfer_account.token
-            limit = TokenProcessor.get_limit(user, token)
             exchange_rate = TokenProcessor.get_exchange_rate(user, token)
+            # Limit doesn't appear to be used?
+            # limit = TokenProcessor.get_limit(user, token)
             return {
                 "name": token.symbol,
                 "balance": transfer_account.balance,
-                "limit": limit.transfer_balance_percentage,
                 "exchange_rate": TokenProcessor.format_amount(exchange_rate)
+                # "limit": limit.transfer_balance_percentage,
             }
 
         reserve_token = user.get_reserve_token()
         # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
         # could there be multiple reserve? should we filter out all reserve tokens?
-        transfer_accounts = filter(lambda x: x.is_ghost is not True and x.token_id != reserve_token.id,
+        transfer_accounts = filter(lambda x: x.is_ghost is not True,  # and x.token_id != reserve_token.id,
                                    user.transfer_accounts)
         token_info = list(map(get_token_info, transfer_accounts))
 
@@ -125,7 +126,10 @@ class TokenProcessor(object):
             lambda x: f"{TokenProcessor.format_amount(x['limit'] * x['balance'])} {x['name']} (1 {x['name']} "
                       f"= {x['exchange_rate']} {reserve_token.symbol})", token_info))
 
-        exchange_period = TokenProcessor.get_limit(user, default_token(user)).time_period_days
+        try:
+            exchange_period = TokenProcessor.get_limit(user, default_token(user)).time_period_days
+        except Exception as e:
+            exchange_period = None
 
         TokenProcessor.send_sms(user, "send_balance_sms", token_balances=token_balances_dollars,
                                 token_exchanges=token_exchanges_dollars, limit_period=exchange_period)
