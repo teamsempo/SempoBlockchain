@@ -22,7 +22,7 @@ const composeSetup = process.env.NODE_ENV !== 'prod' && typeof window === 'objec
   window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
   window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : compose
 
-const store = createStore(
+export const store = createStore(
   appReducer,
   composeSetup(
     applyMiddleware(sagaMiddleware)
@@ -35,7 +35,7 @@ Sentry.init({ dsn: window.SENTRY_REACT_DSN });
 // Pusher Options
 const pusherOptions = {
   cluster: 'ap1',
-  authEndpoint: '/api/pusher/auth'
+  authEndpoint: `/api/v1/pusher/auth`
 };
 
 delayConfiguration(store, window.PUSHER_KEY, pusherOptions);

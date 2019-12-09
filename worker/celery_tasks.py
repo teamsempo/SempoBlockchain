@@ -289,7 +289,7 @@ def geolocate_address(geo_task):
     geo_result = geolocation.parse_geo_task(geo_task)
 
     if geo_result.get('status') == 'success':
-        r = requests.post(app_host + '/api/geolocation/',
+        r = requests.post(app_host + '/api/v1/geolocation/',
                           json={'user_id': geo_result.get('user_id'),
                                 'lat': geo_result.get('lat'),
                                 'lng': geo_result.get('lng')
@@ -305,7 +305,7 @@ def ip_location(ip_task):
     ip_result = ip_location.ip_location_task(ip_task)
 
     if ip_result.get('status') == 'success':
-        r = requests.post(app_host, '/api/ip_address_location/',
+        r = requests.post(app_host, '/api/v1/ip_address_location/',
                           json={'ip_address_id': ip_result.get('ip_address_id'),
                                 'country': ip_result.get('country'),
                                 },
@@ -321,7 +321,7 @@ def check_for_duplicate_person(image_name, image_id):
     rekognised_faces = rekogniser.facial_recognition(image_name)
 
     if len(rekognised_faces) > 0:
-        r = requests.put(app_host + '/api/recognised_face/',
+        r = requests.put(app_host + '/api/v1/recognised_face/',
                          json={'image_id': image_id, 'recognised_faces': rekognised_faces},
                          auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                                             config.INTERNAL_AUTH_PASSWORD)
@@ -330,7 +330,7 @@ def check_for_duplicate_person(image_name, image_id):
     upload_resp = rekogniser.upload_face(image_name, image_id)
 
     if upload_resp['success']:
-        r = requests.post(app_host + '/api/recognised_face/',
+        r = requests.post(app_host + '/api/v1/recognised_face/',
                           json={'image_id': image_id, 'roll': upload_resp['roll']},
                           auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                                              config.INTERNAL_AUTH_PASSWORD)

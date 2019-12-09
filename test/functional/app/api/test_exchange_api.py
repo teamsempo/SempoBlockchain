@@ -20,7 +20,7 @@ def test_exchange(test_client, user_with_reserve_balance, initialised_blockchain
     to_token_obj = initialised_blockchain_network[to_token]
 
     response = test_client.post(
-        '/api/me/exchange/',
+        '/api/v1/me/exchange/',
         headers=dict(
             Authorization=get_complete_auth_token(user_with_reserve_balance),
             Accept='application/json'

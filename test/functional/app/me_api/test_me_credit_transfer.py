@@ -8,7 +8,7 @@ def test_get_me_credit_transfer_api(test_client, create_credit_transfer, create_
     create_transfer_account_user.is_activated = True
     auth_token = create_transfer_account_user.encode_auth_token()
 
-    response = test_client.get('/api/me/credit_transfer/',
+    response = test_client.get('/api/v1/me/credit_transfer/',
                                headers=dict(Authorization=auth_token.decode(), Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 201

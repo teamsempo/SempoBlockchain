@@ -27,7 +27,7 @@ def test_basic_auth(test_client, username, password, status_code):
     basic_auth = 'Basic ' + base64.b64encode(
         bytes(username + ":" + password, 'ascii')).decode('ascii')
 
-    response = test_client.get('/api/auth/check_basic_auth/',
+    response = test_client.get('/api/v1/auth/check_basic_auth/',
                                headers=dict(Authorization=basic_auth, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
 
@@ -44,7 +44,7 @@ def test_invalid_activate_api(test_client, new_sempo_admin_user, activation_toke
     THEN check the response is invalid when activation_token is incorrect or None
     """
     assert not new_sempo_admin_user.is_activated
-    response = test_client.post('/api/auth/activate/',
+    response = test_client.post('/api/v1/auth/activate/',
                                 data=json.dumps(dict(activation_token=activation_token)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == 401
@@ -58,7 +58,7 @@ def test_valid_activate_api(test_client, new_sempo_admin_user):
     """
     assert not new_sempo_admin_user.is_activated
     activation_token = new_sempo_admin_user.encode_single_use_JWS('A')
-    response = test_client.post('/api/auth/activate/',
+    response = test_client.post('/api/v1/auth/activate/',
                                 data=json.dumps(dict(activation_token=activation_token)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == 201
@@ -73,7 +73,7 @@ def test_get_tfa_url(test_client, activated_sempo_admin_user):
     """
     activated_sempo_admin_user.set_held_role('ADMIN', 'subadmin')
     auth_token = activated_sempo_admin_user.encode_auth_token().decode()
-    response = test_client.get('/api/auth/tfa/',
+    response = test_client.get('/api/v1/auth/tfa/',
                                headers=dict(Authorization=auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
@@ -104,7 +104,7 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
     otp = otp_generator(func)
 
     otp_expiry_interval = 1
-    response = test_client.post('/api/auth/tfa/',
+    response = test_client.post('/api/v1/auth/tfa/',
                                 headers=dict(Authorization=auth_token, Accept='application/json'),
                                 json=dict(
                                     otp=otp,
@@ -127,7 +127,7 @@ def test_request_api_token(test_client, authed_sempo_admin_user, email, password
     """
 
     tfa_token = authed_sempo_admin_user.encode_TFA_token(9999).decode()
-    response = test_client.post('/api/auth/request_api_token/',
+    response = test_client.post('/api/v1/auth/request_api_token/',
                                 data=json.dumps(dict(email=email, password=password, tfa_token=tfa_token)),
                                 content_type='application/json', follow_redirects=True)
 
@@ -148,7 +148,7 @@ def test_request_api_token_phone_success(test_client, create_transfer_account_us
     one_time_code = create_transfer_account_user.one_time_code
     create_transfer_account_user.hash_password(one_time_code)  # set the one time code as password for easy check
 
-    response = test_client.post('/api/auth/request_api_token/',
+    response = test_client.post('/api/v1/auth/request_api_token/',
                                 data=json.dumps(dict(phone=create_transfer_account_user.phone, password=one_time_code)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
@@ -171,7 +171,7 @@ def test_request_api_token_phone_fail(test_client, create_transfer_account_user,
     one_time_code = create_transfer_account_user.one_time_code
     create_transfer_account_user.hash_password(one_time_code)  # set the one time code as password for easy check
 
-    response = test_client.post('/api/auth/request_api_token/',
+    response = test_client.post('/api/v1/auth/request_api_token/',
                                 data=json.dumps(dict(phone=phone, password=one_time_code)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
@@ -187,7 +187,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     from server.models.blacklist_token import BlacklistToken
     authed_sempo_admin_user.is_activated = True
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-    response = test_client.post('/api/auth/logout/',
+    response = test_client.post('/api/v1/auth/logout/',
                                headers=dict(Authorization=auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
@@ -205,7 +205,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
         """
 
         auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-        register_response = test_client.post('/api/auth/permissions/',
+        register_response = test_client.post('/api/v1/auth/permissions/',
                                              headers=dict(Authorization=auth_token, Accept='application/json'),
                                              data=json.dumps(dict(email=email, tier=tier)),
                                              content_type='application/json', follow_redirects=True)
@@ -241,7 +241,7 @@ def test_blockchain_key_api(test_client, authed_sempo_admin_user, tier, status_c
     """
 
     authed_sempo_admin_user.set_held_role('ADMIN',tier)
-    response = test_client.get('/api/auth/blockchain/',
+    response = test_client.get('/api/v1/auth/blockchain/',
                                headers=dict(
                                    Authorization=get_complete_auth_token(authed_sempo_admin_user),
                                    Accept='application/json'
@@ -256,7 +256,7 @@ def test_get_permissions_api(test_client, complete_admin_auth_token):
     WHEN '/api/auth/permissions/' is requested (GET)
     THEN check a list of admins is returned
     """
-    response = test_client.get('/api/auth/permissions/',
+    response = test_client.get('/api/v1/auth/permissions/',
                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
@@ -290,7 +290,7 @@ def test_create_permissions_api(test_client, authed_sempo_admin_user,
 
     default_org_id = get_admin_default_org_id(authed_sempo_admin_user)
 
-    response = test_client.post(f'/api/auth/permissions/?org={default_org_id}',
+    response = test_client.post(f'/api/v1/auth/permissions/?org={default_org_id}',
                                 headers=dict(
                                     Authorization=get_complete_auth_token(authed_sempo_admin_user),
                                     Accept='application/json'
@@ -311,7 +311,7 @@ def test_get_kobo_credentials_api(test_client, authed_sempo_admin_user):
     authed_sempo_admin_user.set_held_role('ADMIN', 'admin')
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
     tfa_token = authed_sempo_admin_user.encode_TFA_token(9999).decode()
-    response = test_client.get('/api/auth/kobo/',
+    response = test_client.get('/api/v1/auth/kobo/',
                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
@@ -328,7 +328,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     from server.models.blacklist_token import BlacklistToken
     authed_sempo_admin_user.is_activated = True
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-    response = test_client.post('/api/auth/logout/',
+    response = test_client.post('/api/v1/auth/logout/',
                                headers=dict(Authorization=auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
@@ -353,7 +353,7 @@ def test_reset_password_valid_token(test_client, authed_sempo_admin_user):
     authed_sempo_admin_user.save_password_reset_token(password_reset_token)
     password = 'NewTestPassword'
 
-    response = test_client.post('/api/auth/reset_password/',
+    response = test_client.post('/api/v1/auth/reset_password/',
                                 data=json.dumps(dict(new_password=password, reset_password_token=password_reset_token)),
                                 content_type='application/json', follow_redirects=True)
 
@@ -379,13 +379,13 @@ def test_reset_password_used_token(test_client, authed_sempo_admin_user):
 
 
     # Use password for the first time
-    test_client.post('/api/auth/reset_password/',
+    test_client.post('/api/v1/auth/reset_password/',
                             data=json.dumps(
                             dict(new_password=password, reset_password_token=password_reset_token)),
                             content_type='application/json', follow_redirects=True)
 
     # Use password for the second time
-    response = test_client.post('/api/auth/reset_password/',
+    response = test_client.post('/api/v1/auth/reset_password/',
                                 data=json.dumps(
                                 dict(new_password=password, reset_password_token=password_reset_token)),
                                 content_type='application/json', follow_redirects=True)
