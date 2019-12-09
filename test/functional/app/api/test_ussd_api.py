@@ -29,10 +29,10 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
     token = Token.query.filter_by(symbol="SM1").first()
     sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
                          pin_hash=User.salt_hash_secret('0000'))
-    create_transfer_account_for_user(sender, token, 40200)
+    create_transfer_account_for_user(sender, token, 4220)
 
     recipient = UserFactory(preferred_language="sw", phone=make_kenyan_phone(phone()), first_name="Joe", last_name="Bar")
-    create_transfer_account_for_user(recipient, token, 19800)
+    create_transfer_account_for_user(recipient, token, 1980)
 
     messages = []
     session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa'
@@ -107,7 +107,7 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
     assert len(messages) == 2
     sent_message = messages[0]
     assert sent_message['phone'] == sender.phone
-    assert f"sent a payment of 12.5 SM1 to {recipient.first_name}" in sent_message['message']
+    assert f"sent a payment of 12.50 SM1 to {recipient.first_name}" in sent_message['message']
     received_message = messages[1]
     assert received_message['phone'] == recipient.phone
-    assert f"Umepokea 12.5 SM1 kutoka kwa {sender.first_name}" in received_message['message']
+    assert f"Umepokea 12.50 SM1 kutoka kwa {sender.first_name}" in received_message['message']
