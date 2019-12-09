@@ -1,7 +1,7 @@
 import {getToken, handleResponse, generateQueryString, generateFormattedURL} from '../utils'
 
 export const loadBusinessVerificationAPI = () => {
-    return fetch(generateFormattedURL('/api/kyc_application/'), {
+    return fetch(generateFormattedURL('/kyc_application/'), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -18,7 +18,7 @@ export const loadBusinessVerificationAPI = () => {
 };
 
 export const createBusinessVerificationAPI = ({body}) => {
-  return fetch(generateFormattedURL('/api/kyc_application/'), {
+  return fetch(generateFormattedURL('/kyc_application/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -34,7 +34,7 @@ export const createBusinessVerificationAPI = ({body}) => {
 };
 
 export const editBusinessVerificationAPI = ({body, path}) => {
-  return fetch(generateFormattedURL('/api/kyc_application/', null , path), {
+  return fetch(generateFormattedURL('/kyc_application/', null , path), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -57,7 +57,7 @@ export const uploadDocumentAPI = ({ body }) => {
   formData.append('reference', body.reference);
   formData.append('kyc_application_id', body.kyc_application_id);
 
-  return fetch(generateFormattedURL('/api/document_upload/'), {
+  return fetch(generateFormattedURL('/document_upload/'), {
     headers: {
       'Authorization': getToken()
     },
@@ -72,7 +72,7 @@ export const uploadDocumentAPI = ({ body }) => {
 
 
 export const createBankAccountAPI = ({body}) => {
-  return fetch(generateFormattedURL('/api/bank_account/'), {
+  return fetch(generateFormattedURL('/bank_account/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -88,7 +88,7 @@ export const createBankAccountAPI = ({body}) => {
 };
 
 export const editBankAccountAPI = ({body, path}) => {
-  return fetch(generateFormattedURL('/api/bank_account/'), {
+  return fetch(generateFormattedURL('/bank_account/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

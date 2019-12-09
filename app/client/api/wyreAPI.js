@@ -1,7 +1,7 @@
 import {getToken, handleResponse, generateFormattedURL} from '../utils'
 
 export const loadExchangeRates = () => {
-    return fetch(generateFormattedURL('/api/wyre_rates/'), {
+    return fetch(generateFormattedURL('/wyre_rates/'), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -18,7 +18,7 @@ export const loadExchangeRates = () => {
 };
 
 export const loadWyreAccountBalance = () => {
-    return fetch(generateFormattedURL('/api/wyre_account/'), {
+    return fetch(generateFormattedURL('/wyre_account/'), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -36,7 +36,7 @@ export const loadWyreAccountBalance = () => {
 
 
 export const createWyreTransferRequest = ({body}) => {
-  return fetch(generateFormattedURL('/api/wyre_transfer/'), {
+  return fetch(generateFormattedURL('/wyre_transfer/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

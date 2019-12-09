@@ -1,7 +1,7 @@
 import { getToken, handleResponse, generateFormattedURL } from '../utils'
 
 export const loadCreditTransferListAPI = ({query , path}) => {
-    return fetch(generateFormattedURL('/api/credit_transfer/', query , path), {
+    return fetch(generateFormattedURL('/credit_transfer/', query , path), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -19,7 +19,7 @@ export const loadCreditTransferListAPI = ({query , path}) => {
 };
 
 export const modifyTransferAPI = ({body, path}) => {
-  return fetch(generateFormattedURL('/api/credit_transfer/', null , path), {
+  return fetch(generateFormattedURL('/credit_transfer/', null , path), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -35,7 +35,7 @@ export const modifyTransferAPI = ({body, path}) => {
 };
 
 export const newTransferAPI = ({body}) => {
-  return fetch(generateFormattedURL('/api/credit_transfer/'), {
+  return fetch(generateFormattedURL('/credit_transfer/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

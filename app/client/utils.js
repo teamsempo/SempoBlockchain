@@ -55,11 +55,11 @@ export const generateFormattedURL = (url, query, path) => {
   if (url === null || typeof url === "undefined") {
     return console.log('URL cannot be null')
   } else if (query) {
-      var URL = `${url}${query_string}`;
+      var URL = `/api/v1${url}${query_string}`;
   } else if (path) {
-      URL = `${url}${path}/${query_string}`;
+      URL = `/api/v1${url}${path}/${query_string}`;
   } else {
-      URL = `${url}${query_string}`;
+      URL = `/api/v1${url}${query_string}`;
   }
   return URL
 };

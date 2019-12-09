@@ -2,7 +2,7 @@ import {getToken, handleResponse, generateFormattedURL} from '../utils'
 
 // Load User Details
 export const loadUserAPI = ({query, path}) => {
-    return fetch(generateFormattedURL('/api/user/', query, path), {
+    return fetch(generateFormattedURL('/user/', query, path), {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -20,7 +20,7 @@ export const loadUserAPI = ({query, path}) => {
 
 // Create at User with Auth
 export const createUserAPI = ({body}) => {
-  return fetch(generateFormattedURL('/api/user/'), {
+  return fetch(generateFormattedURL('/user/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -39,7 +39,7 @@ export const createUserAPI = ({body}) => {
 
 // Edit Transfer Account Details
 export const editUserAPI = ({body, path}) => {
-    return fetch(generateFormattedURL('/api/user/', null, path), {
+    return fetch(generateFormattedURL('/user/', null, path), {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
