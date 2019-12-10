@@ -226,30 +226,32 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     def __init__(self,
                  blockchain_address: Optional[str]=None,
-                 bind_to_entity: Optional[Union[Organisation, User]]=None,
+                 bound_entity: Optional[Union[Organisation, User]]=None,
                  account_type: Optional[TransferAccountType]=None,
                  private_key: Optional[str] = None,
                  **kwargs):
 
         super(TransferAccount, self).__init__(**kwargs)
 
-        if bind_to_entity:
-            bind_to_entity.transfer_accounts.append(self)
+        if bound_entity:
+            bound_entity.transfer_accounts.append(self)
 
-            if isinstance(bind_to_entity, Organisation):
+            if isinstance(bound_entity, Organisation):
                 self.account_type = TransferAccountType.ORGANISATION
-                self._bind_to_organisation(bind_to_entity)
+                self.blockchain_address = bound_entity.primary_blockchain_address
 
-            elif isinstance(bind_to_entity, User):
+                self._bind_to_organisation(bound_entity)
+
+            elif isinstance(bound_entity, User):
                 self.account_type = TransferAccountType.USER
-                if bind_to_entity.default_organisation:
-                    self._bind_to_organisation(bind_to_entity.default_organisation)
+                self.blockchain_address = bound_entity.primary_blockchain_address
 
-                self.blockchain_address = bind_to_entity.primary_blockchain_address
+                if bound_entity.default_organisation:
+                    self._bind_to_organisation(bound_entity.default_organisation)
 
-            elif isinstance(bind_to_entity, ExchangeContract):
+            elif isinstance(bound_entity, ExchangeContract):
                 self.account_type = TransferAccountType.CONTRACT
-                self.blockchain_address = bind_to_entity.blockchain_address
+                self.blockchain_address = bound_entity.blockchain_address
                 self.is_public = True
                 self.exchange_contact = self
 
@@ -263,10 +265,8 @@ class TransferAccount(OneOrgBase, ModelBase):
         if blockchain_address:
             self.blockchain_address = blockchain_address
 
-
         if not self.blockchain_address:
             self.blockchain_address = bt.create_blockchain_wallet(private_key=private_key)
-
 
         if account_type:
             self.account_type = account_type

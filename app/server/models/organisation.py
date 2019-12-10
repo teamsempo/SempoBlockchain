@@ -17,6 +17,11 @@ class Organisation(ModelBase):
 
     name                = db.Column(db.String)
 
+    # TODO: Create a mixin so that both user and organisation can use the same definition here
+    # This is the blockchain address used for transfer accounts, unless overridden
+    primary_blockchain_address = db.Column(db.String)
+
+    # This is the 'behind the scenes' blockchain address used for paying gas fees
     system_blockchain_address = db.Column(db.String)
 
     users               = db.relationship(
@@ -66,7 +71,10 @@ class Organisation(ModelBase):
         message_processor.send_message(to_user.get('phone'), message)
 
     def _setup_org_transfer_account(self):
-        transfer_account = server.models.transfer_account.TransferAccount(bind_to_entity=self, is_approved=True)
+        transfer_account = server.models.transfer_account.TransferAccount(
+            bound_entity=self,
+            is_approved=True
+        )
         db.session.add(transfer_account)
         self.org_level_transfer_account = transfer_account
 
@@ -89,6 +97,8 @@ class Organisation(ModelBase):
                 wei_topup_threshold=0,
             )
 
+            self.primary_blockchain_address = self.system_blockchain_address or bt.create_blockchain_wallet()
+
         else:
             self.is_master = False
 
@@ -96,6 +106,8 @@ class Organisation(ModelBase):
                 wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
                 wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
             )
+
+            self.primary_blockchain_address = bt.create_blockchain_wallet()
 
         if token:
             self.bind_token(token)

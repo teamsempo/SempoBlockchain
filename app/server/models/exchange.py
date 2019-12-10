@@ -97,7 +97,7 @@ class ExchangeContract(ModelBase):
         if not exchange_transfer_account:
 
             exchange_transfer_account = server.models.transfer_account.TransferAccount(
-                bind_to_entity=self,
+                bound_entity=self,
                 token=token,
                 is_approved=True)
 

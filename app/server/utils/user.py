@@ -212,7 +212,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         user.transfer_accounts.append(existing_transfer_account)
     else:
         transfer_account = TransferAccount(
-            bind_to_entity=user,
+            bound_entity=user,
             blockchain_address=blockchain_address,
             organisation=organisation
         )

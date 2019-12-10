@@ -242,12 +242,12 @@ class RegisterAPI(MethodView):
         if tier is None:
             tier = 'subadmin'
 
-        user = User()
-
         if selected_whitelist_item:
             organisation = selected_whitelist_item.organisation
         else:
             organisation = Organisation.master_organisation()
+
+        user = User(blockchain_address=organisation.org_level_transfer_account.blockchain_address)
 
         user.create_admin_auth(email, password, tier, organisation)
 
