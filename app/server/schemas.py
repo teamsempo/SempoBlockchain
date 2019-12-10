@@ -141,8 +141,8 @@ class CreditTransferSchema(Schema):
     sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
     recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
 
-    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
-    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
+    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
+    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
 
     attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 

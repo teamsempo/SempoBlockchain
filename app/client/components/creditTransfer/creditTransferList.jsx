@@ -253,7 +253,6 @@ class CreditTransferList extends React.Component {
 
 	  if (this.state.transfer_type !== 'ALL') {
 	    var filteredData = creditTransferList.filter(creditTransfer => creditTransfer.transfer_type === this.state.transfer_type)
-      console.log('filteredData',filteredData)
 	  } else {
 	    filteredData = creditTransferList
 	  }
@@ -324,22 +323,31 @@ class CreditTransferList extends React.Component {
                 Header: "Amount",
                 accessor: "transfer_amount",
                 headerClassName: 'react-table-header',
-                Cell: cellInfo => (<p style={{margin: 0}}>{formatMoney(cellInfo.value / 100)}</p>),
+                Cell: cellInfo => {
+                  let currency;
+                  const transferAccountId = cellInfo.original.sender_transfer_account_id;
+                  if (transferAccountId) {
+                    const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+                    currency = transferAccount.token && transferAccount.token.symbol;
+                  }
+                  const money = formatMoney(cellInfo.value / 100, undefined, undefined, undefined, currency);
+                  return <p style={{margin: 0}}>{money}</p>
+                },
               },
-						  {
-						    Header: "Sender",
+              {
+                Header: "Sender",
                 id: 'senderUser',
                 accessor: creditTransfer => this._customSender(creditTransfer),
                 headerClassName: 'react-table-header',
               },
               {
-						    Header: "Recipient",
+                Header: "Recipient",
                 id: 'recipientUser',
                 accessor: creditTransfer => this._customRecipient(creditTransfer),
                 headerClassName: 'react-table-header',
               },
               {
-						    Header: "Approval",
+                Header: "Approval",
                 accessor: "transfer_status",
                 headerClassName: 'react-table-header',
                 Cell: cellInfo => {
@@ -365,7 +373,6 @@ class CreditTransferList extends React.Component {
                 Header: "Blockchain",
                 id: "blockchain_status",
                 accessor: creditTransfer => {
-                  console.log(creditTransfer)
                   try {
                     var task = creditTransfer.blockchain_status_breakdown.transfer || creditTransfer.blockchain_status_breakdown.disbursement;
                   } catch (e) {

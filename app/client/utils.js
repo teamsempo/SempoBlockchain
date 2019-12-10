@@ -4,7 +4,7 @@ import {LOGIN_FAILURE} from "./reducers/authReducer";
 import {put} from "redux-saga/es/effects";
 import {store} from "./app";
 
-export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, decimal = ".", thousands = ",") {
+export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, decimal = ".", thousands = ",", currency = window.CURRENCY_NAME) {
   try {
     decimalCount = Math.abs(decimalCount);
     decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
@@ -14,7 +14,7 @@ export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, dec
     let i = parseInt(amount = Math.abs(Number(amount) || 0).toFixed(decimalCount)).toString();
     let j = (i.length > 3) ? i.length % 3 : 0;
 
-    return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "") + ' ' + window.CURRENCY_NAME;
+    return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "") + ' ' + currency;
   } catch (e) {
     console.log(e)
   }
