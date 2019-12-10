@@ -26,6 +26,13 @@ from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
+def cents_to_dollars(amount_cents):
+    return float(amount_cents) / 100
+
+def dollars_to_cents(amount_dollars):
+    return float(amount_dollars) * 100
+
+
 def calculate_transfer_stats(total_time_series=False):
 
     total_distributed = (
@@ -578,6 +585,9 @@ def make_target_balance_transfer(target_balance,
 
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
+
+    # TODO: Yep Fix
+    raise NotImplementedError("target_user.transfer account needs to be fixed")
 
     transfer_amount = target_balance - target_user.transfer_account.balance
 

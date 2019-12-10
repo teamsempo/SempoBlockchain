@@ -3,6 +3,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from server import db, sentry
 from server.models.utils import ModelBase
+from sqlalchemy.orm.attributes import flag_modified
 
 
 class UssdMenu(ModelBase):
@@ -31,6 +32,9 @@ class UssdMenu(ModelBase):
 
     def parent(self):
         return UssdMenu.query.filter_by(id=self.parent_id).first()
+
+    def __repr__(self):
+        return f"<UssdMenu {self.id}: {self.name} - {self.description}>"
 
 
 class UssdSession(ModelBase):
