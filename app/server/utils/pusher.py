@@ -8,7 +8,7 @@ def push_admin_credit_transfer(transfer):
     new_transfer = credit_transfer_schema.dump(transfer).data
 
     for org in transfer.organisations:
-        pusher_channel = current_app.config['PUSHER_ENV_CHANNEL'] + '-' + org.name + '-' + str(org.id)
+        pusher_channel = current_app.config['PUSHER_ENV_CHANNEL'] + '-' + str(org.name) + '-' + str(org.id)
         try:
             pusher_client.trigger(
                 pusher_channel,
