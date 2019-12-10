@@ -44,8 +44,8 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
     token1 = Token.query.filter_by(symbol="SM1").first()
     token2 = Token.query.filter_by(symbol="SM2").first()
     token3 = Token.query.filter_by(symbol="SM3").first()
-    create_transfer_account_for_user(user, token1, 200)
-    create_transfer_account_for_user(user, token2, 350, is_default=False)
+    create_transfer_account_for_user(user, token1, 20000)
+    create_transfer_account_for_user(user, token2, 35000, is_default=False)
     # this one should not show up in balance
     create_transfer_account_for_user(user, token3, 0, is_default=False, is_ghost=True)
 
@@ -56,20 +56,21 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
             return from_amount * 0.8
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
+
     def mock_send_message(phone, message):
         assert sample_text in message
         assert "SM1 200" in message
         assert "SM2 350" in message
-        assert f"{limit * 200} SM1 (1 SM1 = 1.4 AUD)" in message
-        assert f"{limit * 350} SM2 (1 SM2 = 0.8 AUD)" in message
+        assert "{:.2f} SM1 (1 SM1 = 1.4 AUD)".format(limit * 200) in message
+        assert "{:.2f} SM2 (1 SM2 = 0.8 AUD)".format(limit * 350) in message
         assert "SM3" not in message
     mocker.patch('server.message_processor.send_message', mock_send_message)
     TokenProcessor.send_balance_sms(user)
 
 
 @pytest.mark.parametrize("user_type,preferred_language,exchange_text,limit_text", [
-    ("standard", "en", "For 1 SM1 you get 1.2 KSH", "a maximum of 20.0 SM1 at an agent every 7 days"),
-    ("group", "sw", "Kwa kila 1 SM1 utapata 1.2 KSH", "100.0 SM1 kwa wakala baada ya siku 30"),
+    ("standard", "en", "For 1 SM1 you get 1.2 KSH", "a maximum of 20.00 SM1 at an agent every 7 days"),
+    ("group", "sw", "Kwa kila 1 SM1 utapata 1.2 KSH", "100.00 SM1 kwa wakala baada ya siku 30"),
 ])
 def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blockchain_network, user_type,
                              preferred_language, exchange_text, limit_text):
@@ -78,7 +79,7 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
         user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
     token1 = Token.query.filter_by(symbol="SM1").first()
-    create_transfer_account_for_user(user, token1, 200)
+    create_transfer_account_for_user(user, token1, 20000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount):
             return from_amount * 1.2
@@ -94,11 +95,11 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
 def test_send_token(mocker, test_client, init_database, initialised_blockchain_network):
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo")
     token1 = Token.query.filter_by(symbol="SM1").first()
-    create_transfer_account_for_user(sender, token1, 200)
+    create_transfer_account_for_user(sender, token1, 20000)
 
     recipient = UserFactory(phone=phone(), first_name="Joe", last_name="Bar")
     token2 = Token.query.filter_by(symbol="SM2").first()
-    create_transfer_account_for_user(recipient, token2, 300)
+    create_transfer_account_for_user(recipient, token2, 30000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount, signing_address):
         if from_token.symbol == "SM1":
@@ -113,30 +114,30 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
         messages.append({'phone': phone, 'message': message})
     mocker.patch('server.message_processor.send_message', mock_send_message)
 
-    TokenProcessor.send_token(sender, recipient, 10, "A reason", 1)
-    assert default_transfer_account(sender).balance == 190
-    # TODO: shouldn't it double convert from the reserve to be 320..?
-    assert default_transfer_account(recipient).balance == 315
+    TokenProcessor.send_token(sender, recipient, 1000, "A reason", 1)
+    assert default_transfer_account(sender).balance == 19000
+    # TODO: shouldn't it double convert from the reserve to be 32000..?
+    assert default_transfer_account(recipient).balance == 31500
 
     assert len(messages) == 2
     sent_message = messages[0]
     assert sent_message['phone'] == sender.phone
-    assert 'sent a payment of 10 SM1 = 15.0 SM2' in sent_message['message']
+    assert 'sent a payment of 10.00 SM1 = 15.00 SM2' in sent_message['message']
     received_message = messages[1]
     assert received_message['phone'] == recipient.phone
-    assert 'received a payment of 15.0 SM2 = 10 SM1' in received_message['message']
+    assert 'received a payment of 15.00 SM2 = 10.00 SM1' in received_message['message']
 
 
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo")
     token1 = Token.query.filter_by(symbol="SM1").first()
-    create_transfer_account_for_user(sender, token1, 200)
+    create_transfer_account_for_user(sender, token1, 20000)
 
     agent = UserFactory(phone=phone(), first_name="Joe", last_name="Bar")
     agent.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
     # this is under the assumption that token agent would have default token being the reserve token. is this the case?
     reserve = Token.query.filter_by(symbol="AUD").first()
-    create_transfer_account_for_user(agent, reserve, 300)
+    create_transfer_account_for_user(agent, reserve, 30000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount, signing_address):
         return from_amount * 1.2
@@ -148,15 +149,15 @@ def test_exchange_token(mocker, test_client, init_database, initialised_blockcha
         messages.append({'phone': phone, 'message': message})
     mocker.patch('server.message_processor.send_message', mock_send_message)
 
-    TokenProcessor.exchange_token(sender, agent, 10)
-    assert default_transfer_account(sender).balance == 190
-    assert default_transfer_account(agent).balance == 312
+    TokenProcessor.exchange_token(sender, agent, 1000)
+    assert default_transfer_account(sender).balance == 19000
+    assert default_transfer_account(agent).balance == 31200
 
     assert len(messages) == 2
     sent_message = messages[0]
     assert sent_message['phone'] == sender.phone
-    assert 'sent a payment of 10 SM1 = 12.0 AUD' in sent_message['message']
+    assert 'sent a payment of 10.00 SM1 = 12.00 AUD' in sent_message['message']
     received_message = messages[1]
     assert received_message['phone'] == agent.phone
-    assert 'received a payment of 12.0 AUD = 10 SM1' in received_message['message']
+    assert 'received a payment of 12.00 AUD = 10.00 SM1' in received_message['message']
 

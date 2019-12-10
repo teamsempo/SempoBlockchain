@@ -8,6 +8,7 @@ from server.models.kyc_application import KycApplication
 from server.models.device_info import DeviceInfo
 from server.models.referral import Referral
 from server.models.feedback import Feedback
+from server.models.transfer_usage import TransferUsage
 
 
 class UserFactory(SQLAlchemyModelFactory):
@@ -52,3 +53,8 @@ class FeedbackFactory(SQLAlchemyModelFactory):
         model = Feedback
         sqlalchemy_session = db.session
 
+
+class TransferUsageFactory(SQLAlchemyModelFactory):
+    class Meta:
+        model = TransferUsage
+        sqlalchemy_session = db.session

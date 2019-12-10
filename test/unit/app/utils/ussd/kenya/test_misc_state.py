@@ -5,6 +5,8 @@ from faker import Faker
 
 from helpers.user import UserFactory
 from helpers.ussd_session import UssdSessionFactory
+from helpers.ussd_utils import fake_transfer_mapping
+from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
@@ -52,6 +54,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     session = session_factory()
     user = user_factory()
     user.phone = phone()
+    db.session.commit()
     state_machine = KenyaUssdStateMachine(session, user)
 
     state_machine.feed_char(user_input)
@@ -124,6 +127,7 @@ def test_balance_inquiry(mocker, test_client, init_database):
 
 def test_send_directory_listing(mocker, test_client, init_database):
     session = UssdSessionFactory(state="directory_listing")
+    session.session_data = {'transfer_usage_mapping': fake_transfer_mapping(6), 'usage_menu': 0}
     user = standard_user()
     user.phone = phone()
     state_machine = KenyaUssdStateMachine(session, user)
@@ -132,6 +136,6 @@ def test_send_directory_listing(mocker, test_client, init_database):
     send_directory_listing = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.send_directory_listing', send_directory_listing)
 
-    state_machine.feed_char('5')
+    state_machine.feed_char('2')
     assert state_machine.state == 'complete'
     send_directory_listing.assert_called_with(user, transfer_usage)

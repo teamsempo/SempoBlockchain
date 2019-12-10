@@ -25,21 +25,27 @@ sw:
       CON Weka kiwango
       0. Nyuma
     send_token_reason: |
-      CON Chagua kusudi la malipo
-      1. Chakula
-      2. Maji
-      3. Kuni/makaa/mafuta/stima
-      4. Elimu
-      5. Afya
-      6. Uchuuzi
-      7. Mazingira
-      8. Usafiri
-      9. Mfanyakazi
-      10. Nyingine
+      CON Chagua kusudi la malipo 
+      %{options}
+      9. Onyesha chaguzi zingine # This needs proper translations 
       0. Nyuma
-    send_token_reason_other: |
-      CON Fafanua kusudi zaidi
-      0. Nyuma
+    send_token_reason_other:  # This needs proper translations 
+      first: |
+        CON Fafanua kusudi zaidi
+        %{other_options}
+        9. Onyesha chaguzi zingine
+        0. Nyuma
+      middle: |
+        CON Fafanua kusudi zaidi
+        %{other_options}
+        9. Onyesha chaguzi zingine
+        10. Onyesha chaguzi zilizopita
+        0. Nyuma
+      last: |
+        CON Fafanua kusudi zaidi
+        %{other_options}
+        10. Onyesha chaguzi zilizopita
+        0. Nyuma
     send_token_pin_authorization:
       first:
         CON Weka nambari ya siri.
@@ -53,17 +59,28 @@ sw:
       2. Futa
       0. Nyuma
     directory_listing: |
-      CON Chagua unachotaka Sokoni
-      1. Chakula
-      2. Maji
-      3. Kuni/makaa/mafuta/stima
-      4. Elimu
-      5. Afya
-      6. Duka la jumla
-      7. Mazingira
-      8. Usafiri
-      9. Mfanyakazi
+      CON Chagua unachotaka Sokoni 
+      %options%
+      9. Onyesha chaguzi zingine # translate this properly I did this with google translate
+      0. Nyuma
     complete: END Ombi lako limetumwa. Utapokea uthibitishaji wa SMS kwa muda mfupi.
+    directory_listing_other: # Add proper translations
+      first: |
+        CON Chagua unachotaka Sokoni 
+        %{other_options}
+        9. Onyesha chaguzi zingine
+        0. Nyuma
+      middle: |
+        CON Chagua unachotaka Sokoni 
+        %{other_options}
+        9. Onyesha chaguzi zingine
+        10. Onyesha chaguzi zilizopita
+        0. Nyuma
+      last: |
+        CON Chagua unachotaka Sokoni 
+        %{other_options}
+        10. Onyesha chaguzi zilizopita
+        0. Nyuma
     account_management: |
       CON Akaunti yangu
       1. Biashara Yangu
@@ -173,10 +190,17 @@ sw:
     exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha sarafu. Unakubaliwa kubadilisha mara moja kwa siku %{limit_period} pekee
     exchange_amount_error_sms: Samahani umepitisha kiwango ya kubadilisha Sarafu. Unakubaliwa kubadilisha %{limit} ya salio lako
     send_token_error_sms: Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika. Jaribu tena baadaye.
-    send_balance_sms: |
+    send_balance_limit_sms: |
       Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
       %{token_balances}
       Waweza badilisha kwa viwango vifuatavyo:
       %{token_exchanges}
       Mara moja kwa siku %{limit_period}
       Piga 0757628885 kwa usaidizi zaidi
+    send_balance_sms: |
+      Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
+      %{token_balances}
+      Waweza badilisha kwa viwango vifuatavyo:
+      %{token_exchanges}
+      Piga 0757628885 kwa usaidizi zaidi
+

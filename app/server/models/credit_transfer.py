@@ -153,16 +153,20 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
+        # TODO: swap to app generated task id so that app doesnt crash when blockchain taskers are down
+
         self.blockchain_task_id = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,
             to_address=self.recipient_transfer_account.blockchain_address,
             amount=self.transfer_amount,
-            dependent_on_tasks=[
-                sender_approval.eth_send_task_id, sender_approval.approval_task_id,
-                recipient_approval.eth_send_task_id, recipient_approval.approval_task_id
-            ]
+            dependent_on_tasks=
+            list(filter(lambda x: x is not None,
+                        [
+                            sender_approval.eth_send_task_id, sender_approval.approval_task_id,
+                            recipient_approval.eth_send_task_id, recipient_approval.approval_task_id
+                        ]))
         )
 
     def resolve_as_completed(self, existing_blockchain_txn=None):

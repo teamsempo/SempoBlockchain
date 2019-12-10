@@ -85,9 +85,15 @@ def check_user_kyc_two_id_verified(credit_transfer):
 
 
 class TransferLimit(object):
+
+    def __repr__(self):
+        return f"<TransferLimit {self.name}>"
+
+    # TODO: change the init to behave nicer. (eg applied to transfer types, application filter can't actually be none)
     def __init__(self, name: str, total_amount: int=None, time_period_days: int=None,
                  transfer_balance_percentage: float=None, transfer_count: int=None,
                  applied_to_transfer_types: List=None, application_filter: Callable=None):
+
         self.name = name
         self.total_amount = total_amount
         self.time_period_days = time_period_days
