@@ -169,7 +169,6 @@ class TransferAccount(OneOrgBase, ModelBase):
 
 
     def get_or_create_system_transfer_approval(self):
-
         sys_blockchain_address = self.organisation.system_blockchain_address
 
         approval = self.get_approval(sys_blockchain_address)
@@ -207,7 +206,10 @@ class TransferAccount(OneOrgBase, ModelBase):
         if not initial_balance:
             initial_balance = current_app.config['STARTING_BALANCE']
 
-        disbursement = make_payment_transfer(initial_balance, self, transfer_subtype='DISBURSEMENT')
+        disbursement = make_payment_transfer(initial_balance, token=self.token, send_user=self.primary_user,
+                                             receive_user=self.primary_user, transfer_subtype='DISBURSEMENT',
+                                             is_ghost_transfer=False, require_sender_approved=False,
+                                             require_recipient_approved=False)
 
         return disbursement
 
