@@ -1,5 +1,6 @@
 import {handleResponse, getToken, getTFAToken, getOrgId, generateFormattedURL} from '../utils'
 import { startConfiguration } from 'pusher-redux';
+import {store} from "../app";
 
 //Auth API Call
 export const requestApiToken = ({body}) => {
@@ -159,7 +160,8 @@ export const authenticatePusher = () => {
       headers: {
         'Authorization': getToken()
       }
-    }
+    },
+    authEndpoint: generateFormattedURL('/pusher/auth')
   });
 };
 

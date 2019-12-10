@@ -15,10 +15,11 @@ class PusherAuthAPI(MethodView):
     def post(self):
 
         channel = request.form['channel_name']
+        org = g.active_organisation
 
         if (channel == 'private-user-{}-{}'.format(current_app.config['DEPLOYMENT_NAME'], g.user.id)
             or (AccessControl.has_suffient_role(g.user.roles,{'ADMIN': 'admin'})
-                and channel == current_app.config['PUSHER_ENV_CHANNEL'])):
+                and channel == (current_app.config['PUSHER_ENV_CHANNEL']+'-'+org.name+'-'+str(org.id)))):
 
             auth = pusher_client.authenticate(
                 channel=channel,

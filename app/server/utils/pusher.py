@@ -7,15 +7,17 @@ from server.utils import credit_transfer
 def push_admin_credit_transfer(transfer):
     new_transfer = credit_transfer_schema.dump(transfer).data
 
-    try:
-        pusher_client.trigger(
-            current_app.config['PUSHER_ENV_CHANNEL'],
-            'credit_transfer',
-            {'credit_transfer': new_transfer}
-        )
-    except Exception as e:
-        print(e)
-        sentry.captureException()
+    for org in transfer.organisations:
+        pusher_channel = current_app.config['PUSHER_ENV_CHANNEL'] + '-' + org.name + '-' + str(org.id)
+        try:
+            pusher_client.trigger(
+                pusher_channel,
+                'credit_transfer',
+                {'credit_transfer': new_transfer}
+            )
+        except Exception as e:
+            print(e)
+            sentry.captureException()
 
 def push_user_transfer_confirmation(receive_user, transfer_random_key):
     try:
