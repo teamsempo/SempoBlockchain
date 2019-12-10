@@ -327,8 +327,10 @@ class CreditTransferList extends React.Component {
                   let currency;
                   const transferAccountId = cellInfo.original.sender_transfer_account_id;
                   if (transferAccountId) {
+                    // this is not ideal... would be better if credit transfer just had the associated transfer account
+                    // which it does if not for the normalizing...
                     const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-                    currency = transferAccount.token && transferAccount.token.symbol;
+                    currency = transferAccount && transferAccount.token && transferAccount.token.symbol;
                   }
                   const money = formatMoney(cellInfo.value / 100, undefined, undefined, undefined, currency);
                   return <p style={{margin: 0}}>{money}</p>

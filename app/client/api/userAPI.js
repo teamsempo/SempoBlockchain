@@ -55,3 +55,21 @@ export const editUserAPI = ({body, path}) => {
         throw error;
     })
 };
+
+export const resetPinAPI = (userId) => {
+  return fetch(generateFormattedURL('/user/reset_pin'), {
+    headers: {
+      'Authorization': getToken(),
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    method: 'POST',
+    body: JSON.stringify({user_id: userId})
+  })
+    .then(response => {
+      return handleResponse(response)
+    })
+    .catch(error => {
+      throw error;
+    })
+};

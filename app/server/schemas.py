@@ -41,6 +41,8 @@ class UserSchema(SchemaBase):
 
     business_usage_id = fields.Int()
 
+    failed_pin_attempts = fields.Int()
+
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
 

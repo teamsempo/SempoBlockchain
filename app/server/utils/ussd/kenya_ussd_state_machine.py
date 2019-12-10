@@ -145,10 +145,20 @@ class KenyaUssdStateMachine(Machine):
         return authorized
 
     def complete_initial_pin_change(self, user_input):
-        change_initial_pin(user=self.user, new_pin=user_input)
+        try:
+            change_initial_pin(user=self.user, new_pin=user_input)
+            self.send_sms(self.user.phone, "pin_change_success_sms")
+        except Exception as e:
+            self.send_sms(self.user.phone, "pin_change_error_sms")
+            raise e
 
     def complete_pin_change(self, user_input):
-        change_current_pin(user=self.user, new_pin=user_input)
+        try:
+            change_current_pin(user=self.user, new_pin=user_input)
+            self.send_sms(self.user.phone, "pin_change_success_sms")
+        except Exception as e:
+            self.send_sms(self.user.phone, "pin_change_error_sms")
+            raise e
 
     def is_authorized_pin(self, user_input):
         return self.authorize_pin(user_input)

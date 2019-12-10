@@ -48,9 +48,9 @@ class KenyaUssdProcessor:
         if menu.name == 'about_my_business':
             bio = user.custom_attributes.filter_by(name='bio').first()
             if bio is None:
-                return i18n_for(user, 'about_my_business_none')
+                return i18n_for(user, "{}.none".format(menu.display_key))
             else:
-                return i18n_for(user, menu.display_key, user_bio=bio)
+                return i18n_for(user, "{}.bio".format(menu.display_key), user_bio=bio)
 
         if menu.name == 'send_token_confirmation':
             recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)

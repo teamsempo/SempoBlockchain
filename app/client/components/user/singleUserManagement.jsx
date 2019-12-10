@@ -9,7 +9,7 @@ import { ModuleBox, ModuleHeader } from '../styledElements'
 import AsyncButton from './../AsyncButton.jsx'
 import ProfilePicture from '../profilePicture.jsx'
 
-import { editUser } from '../../reducers/userReducer'
+import {EDIT_USER_FAILURE, editUser, resetPin} from '../../reducers/userReducer'
 import { formatMoney } from "../../utils";
 import QrReadingModal from "../qrReadingModal.jsx";
 
@@ -23,6 +23,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     editUser: (body, path) => dispatch(editUser({body, path})),
+    resetPin: (userId) => dispatch(resetPin(userId)),
   };
 };
 
@@ -38,7 +39,6 @@ class SingleUserManagement extends React.Component {
         location: '',
     };
     this.handleChange = this.handleChange.bind(this);
-    this.onSave = this.onSave.bind(this);
   }
 
   componentDidMount() {
@@ -83,8 +83,8 @@ class SingleUserManagement extends React.Component {
     this.setState({ [evt.target.name]: evt.target.value });
   }
 
-  onSave() {
-      this.editUser();
+  resetPin() {
+    this.props.resetPin(this.props.user.id)
   }
 
   render() {
@@ -171,7 +171,7 @@ class SingleUserManagement extends React.Component {
                       <TopRow>
                           <ModuleHeader>DETAILS</ModuleHeader>
                           <ButtonWrapper>
-                            <AsyncButton onClick={this.onSave} miniSpinnerStyle={{height: '10px', width: '10px'}} buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}} isLoading={this.props.users.editStatus.isRequesting} buttonText="SAVE"/>
+                            <AsyncButton onClick={this.editUser.bind(this)} miniSpinnerStyle={{height: '10px', width: '10px'}} buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}} isLoading={this.props.users.editStatus.isRequesting} buttonText="SAVE"/>
                           </ButtonWrapper>
                       </TopRow>
                       <Row style={{margin: '0em 1em'}}>
@@ -225,6 +225,25 @@ class SingleUserManagement extends React.Component {
                           </ManagerText>
                         </SubRow>
                       </Row>
+                    <Row style={{margin: '0em 1em'}}>
+                      {
+                        (this.props.user.failed_pin_attempts && this.props.user.failed_pin_attempts > 0) ?
+                          <SubRow>
+                            <InputLabel>Failed Pin Attempts:</InputLabel>
+                            <ManagerText>
+                              {this.props.user.failed_pin_attempts}
+                              {this.props.user.failed_pin_attempts === 3 ? " (BLOCKED)" : ""}
+                            </ManagerText>
+                            <AsyncButton onClick={this.resetPin.bind(this)}
+                                         miniSpinnerStyle={{height: '10px', width: '10px'}}
+                                         buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}}
+                                         isLoading={this.props.users.pinStatus.isRequesting}
+                                         buttonText="Reset Pin"/>
+                          </SubRow>
+                          :
+                          null
+                      }
+                    </Row>
                       <Row style={{margin: '0em 1em', flexWrap: 'wrap'}}>
                         {custom_attribute_list || null}
                       </Row>
