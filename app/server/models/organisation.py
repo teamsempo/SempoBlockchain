@@ -6,7 +6,7 @@ import server.models.transfer_account
 from server import message_processor
 from server.utils.i18n import i18n_for
 from server.utils.access_control import AccessControl
-
+import server.models.transfer_account
 
 class Organisation(ModelBase):
     """
@@ -43,6 +43,13 @@ class Organisation(ModelBase):
         post_update=True,
         primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
         uselist=False)
+
+    # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
+    @property
+    def queried_org_level_transfer_account(self):
+        if self.org_level_transfer_account_id:
+            return server.models.transfer_account.TransferAccount.query.get(self.org_level_transfer_account_id)
+        return None
 
     credit_transfers    = db.relationship("CreditTransfer",
                                           secondary=organisation_association_table,

@@ -29,7 +29,7 @@ class Setup(object):
 
 
     def _wait_for_get_result(self, get_endpoint, check_reference):
-        attempts = 30
+        attempts = 300
         for i in range(0, attempts):
             get_response = requests.get(
                 url=self.api_host + get_endpoint,
@@ -173,13 +173,48 @@ class Setup(object):
 
         return token_id
 
-    def create_organisation(self, name, token_id):
+    def create_cic_organisation(
+            self,
+            organisation_name,
+            exchange_contract_id,
+            name,
+            symbol,
+            issue_amount_wei,
+            reserve_deposit_wei,
+            reserve_ratio_ppm
+    ):
+
+        r = requests.post(url=self.api_host + 'organisation/',
+                          headers=dict(Authorization=self.api_token, Accept='application/json'),
+                          json={
+                              'deploy_cic': True,
+                              'organisation_name': organisation_name,
+                              'exchange_contract_id': exchange_contract_id,
+                              'name': name,
+                              'symbol': symbol,
+                              'issue_amount_wei': issue_amount_wei,
+                              'reserve_deposit_wei': reserve_deposit_wei,
+                              'reserve_ratio_ppm': reserve_ratio_ppm
+                          })
+
+        json = r.json()
+
+        token_id = json['data']['token_id']
+        print(f'{name} Token id: {token_id}')
+
+        self._wait_for_get_result(f'contract/token/{token_id}', ('data', 'token', 'address'))
+
+        print(json)
+
+        return json['data']['organisation']['id']
+
+    def create_organisation(self, organisation_name, token_id):
 
         r = requests.post(url=self.api_host + 'organisation/',
                           headers=dict(Authorization=self.api_token, Accept='application/json'),
                           json={
                               'token_id': token_id,
-                              'name': name
+                              'organisation_name': organisation_name
                           })
 
         return r.json()['data']['organisation']['id']
@@ -198,11 +233,12 @@ class Setup(object):
                          })
 
         return r.json()['data']['organisation']
+
     def __init__(self, email=None, password=None, api_token=None):
 
         self.api_host = 'http://0.0.0.0:9000/api/v1/'
 
-        if (email and password):
+        if email and password:
             self.api_token = self.get_api_token(email, password)
             print("API TOKEN:")
             print(self.api_token)
@@ -218,38 +254,41 @@ if __name__ == '__main__':
               'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY1NzkyOTMsImlhdCI6MTU3NTk3NDQ5MywiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.7Rw_uMJNLBlDV48oAt5FCDytGbEzcNrCsN5sh1Wc-e4|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzU5NDk5NjUsImlhdCI6MTU3NTg2MzUzNSwiaWQiOjE1fQ.RT2LosnAhthvMzEvY_7a_a_biJoycQEVoHiLw6LhYZk'
     )
 
-    reserve_token_id = s.create_reserve_token(
-        name='Kenyan Shilling',
-        symbol='Ksh',
-        fund_amount_wei=int(100e18)
-    )
+    # reserve_token_id = s.create_reserve_token(
+    #     name='Kenyan Shilling',
+    #     symbol='Ksh',
+    #     fund_amount_wei=int(100e18)
+    # )
+    #
+    # exchange_contract_id = s.create_exchange_contract(reserve_token_id)
+    #
+    reserve_token_id = 1
+    exchange_contract_id = 1
 
-    exchange_contract_id = s.create_exchange_contract(reserve_token_id)
-
-    ge_cic_id = s.create_cic_token(
+    ge_org_id = s.create_cic_organisation(
+        organisation_name='Grassroots Economics 5',
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
         symbol='SAR',
-        issue_amount_wei=int(1e18),
+        issue_amount_wei=int(100e18),
         reserve_deposit_wei=int(1e18),
         reserve_ratio_ppm=250000
     )
-
-    ge_org_id = s.create_organisation('Grassroots Economics', ge_cic_id)
-
     bind_1 = s.bind_this_user_to_organisation_as_admin(ge_org_id)
 
-    community_1_cic_id = s.create_cic_token(
-        exchange_contract_id=exchange_contract_id,
-        name='FooBar',
-        symbol='FOO',
-        issue_amount_wei=int(1e18),
-        reserve_deposit_wei=int(1e18),
-        reserve_ratio_ppm=250000
-    )
-
-    foobar_org_id = s.create_organisation('Foo Org', community_1_cic_id)
-
-    bind_2 = s.bind_this_user_to_organisation_as_admin(foobar_org_id)
-
+    # ge_org_id = s.create_organisation('Grassroots Economics', ge_cic_id)
+    #
+    # foobar_org_id = s.create_cic_organisation(
+    #     organisation_name='Foo Org ',
+    #     exchange_contract_id=exchange_contract_id,
+    #     name='FooBar',
+    #     symbol='FOO',
+    #     issue_amount_wei=int(1e18),
+    #     reserve_deposit_wei=int(1e18),
+    #     reserve_ratio_ppm=250000
+    # )
+    #
+    # # foobar_org_id = s.create_organisation('Foo Org', community_1_cic_id)
+    # bind_2 = s.bind_this_user_to_organisation_as_admin(foobar_org_id)
+    #
     tt = 4
