@@ -90,6 +90,7 @@ class OrganisationUserAPI(MethodView):
         put_data = request.get_json()
 
         user_ids = put_data.get('user_ids')
+        is_admin = put_data.get('is_admin', False)
 
         if len(user_ids) == 0:
             return make_response(jsonify({'message': 'Must provide a list of user ids'})), 400
@@ -110,7 +111,7 @@ class OrganisationUserAPI(MethodView):
                 diagnostics.append({'user': user_id, 'message': 'No user exists'})
 
             else:
-                user.add_user_to_organisation(organisation)
+                user.add_user_to_organisation(organisation, is_admin)
 
         response_object = {
             'message': 'Tied users to organisation {}'.format(organisation_id),

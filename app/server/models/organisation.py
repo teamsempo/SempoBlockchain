@@ -5,6 +5,7 @@ from server.models.utils import ModelBase, organisation_association_table
 import server.models.transfer_account
 from server import message_processor
 from server.utils.i18n import i18n_for
+from server.utils.access_control import AccessControl
 
 
 class Organisation(ModelBase):
@@ -77,6 +78,11 @@ class Organisation(ModelBase):
         )
         db.session.add(transfer_account)
         self.org_level_transfer_account = transfer_account
+
+        # Back setup for delayed organisation transfer account instantiation
+        for user in self.users:
+            if AccessControl.has_any_tier(user.roles, 'ADMIN'):
+                user.transfer_accounts.append(self.org_level_transfer_account)
 
     def bind_token(self, token):
         self.token = token

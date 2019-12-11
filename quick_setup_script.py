@@ -1,3 +1,4 @@
+from functools import reduce
 import requests
 import config
 from time import sleep
@@ -26,6 +27,25 @@ class Setup(object):
 
         return r.json()['auth_token']
 
+
+    def _wait_for_get_result(self, get_endpoint, check_reference):
+        attempts = 30
+        for i in range(0, attempts):
+            get_response = requests.get(
+                url=self.api_host + get_endpoint,
+                headers=dict(Authorization=self.api_token, Accept='application/json'))
+
+            json = get_response.json()
+
+            res = reduce(lambda d, r: d.get(r), check_reference, json)
+
+            if res:
+                return res
+
+            sleep(5)
+
+        raise TimeoutError
+
     def register_blockchain_token(self,
                                   address='0xc4375b7de8af5a38a93548eb8453a498222c4ff2',
                                   name=None,
@@ -53,21 +73,6 @@ class Setup(object):
 
         return r.json()['data']['organisation']['id']
 
-    def bind_this_user_to_organisation(self, organisation_id):
-        u = requests.get(url=self.api_host + 'me/',
-                         headers=dict(Authorization=self.api_token, Accept='application/json'))
-
-        user_id = u.json()['data']['user']['id']
-
-        r = requests.put(url=self.api_host + 'organisation/' + str(organisation_id) + '/users',
-                         headers=dict(Authorization=self.api_token, Accept='application/json'),
-                         json={
-                             'user_ids': [user_id]
-                         })
-
-        return r.json()['data']['organisation']
-
-
     def test_exchange(self, from_token_id, to_token_id, from_amount):
 
         r = requests.post(url=self.api_host + 'me/exchange/',
@@ -91,22 +96,32 @@ class Setup(object):
 
         return r.json()
 
-    def create_exchange_contract(self):
+    def create_reserve_token(
+            self,
+            name,
+            symbol,
+            fund_amount_wei
+    ):
 
-        tokens_get = requests.get(
-            url=self.api_host + 'contract/token/',
-            headers=dict(Authorization=self.api_token, Accept='application/json'))
+        reserve_post = requests.post(
+            url=self.api_host + 'contract/token/reserve/',
+            headers=dict(Authorization=self.api_token, Accept='application/json'),
+            json=dict(
+                name=name,
+                symbol=symbol,
+                fund_amount_wei=fund_amount_wei)
+        )
 
-        tokens_resp = tokens_get.json()
+        json = reserve_post.json()
+        token_id = json['data']['reserve_token_id']
 
-        reserve_token_id = None
-        for token in tokens_resp['data']['tokens']:
-            addr = token['address']
-            if addr == config.RESERVE_TOKEN_ADDRESS:
-                reserve_token_id = token['id']
+        print(f'Reserve Token id: {token_id}')
 
-        if reserve_token_id is None:
-            raise Exception('Reserve token not found')
+        self._wait_for_get_result(f'contract/token/{token_id}', ('data', 'token', 'address'))
+
+        return token_id
+
+    def create_exchange_contract(self, reserve_token_id):
 
         exchange_post = requests.post(
             url=self.api_host + 'contract/exchange/',
@@ -120,24 +135,10 @@ class Setup(object):
 
         print(f'Exchange contract id: {exchange_contract_id}')
 
-        found = False
-        attempts = 0
-
-        while not found and attempts < 100:
-            exchange_get = requests.get(
-                url=self.api_host + 'contract/exchange/' + str(exchange_contract_id),
-                headers=dict(Authorization=self.api_token, Accept='application/json'))
-
-            exchange_get_json = exchange_get.json()
-
-            contract = exchange_get_json['data']['exchange_contract']
-            if contract['contract_registry_blockchain_address']:
-                found = True
-
-            sleep(5)
-
-        if not found:
-            raise TimeoutError
+        self._wait_for_get_result(
+            f'contract/exchange/{exchange_contract_id}',
+            ('data', 'exchange_contract', 'contract_registry_blockchain_address')
+        )
 
         return exchange_contract_id
 
@@ -164,30 +165,13 @@ class Setup(object):
             })
 
         json = cic_post.json()
-        token_id = json['data']['token']['id']
+        token_id = json['data']['token_id']
 
         print(f'CIC Token id: {token_id}')
 
-        found = False
-        attempts = 0
+        self._wait_for_get_result(f'contract/token/{token_id}', ('data', 'token', 'address'))
 
-        while not found and attempts < 100:
-            token_get = requests.get(
-                url=self.api_host + 'contract/token/' + str(exchange_contract_id),
-                headers=dict(Authorization=self.api_token, Accept='application/json'))
-
-            token_get_json = token_get.json()
-
-            contract = token_get_json['data']['token']
-            if contract['blockchain_address']:
-                found = True
-
-            sleep(5)
-
-        if not found:
-            raise TimeoutError
-
-        return exchange_contract_id
+        return token_id
 
     def create_organisation(self, name, token_id):
 
@@ -200,8 +184,20 @@ class Setup(object):
 
         return r.json()['data']['organisation']['id']
 
+    def bind_this_user_to_organisation_as_admin(self, organisation_id):
+        u = requests.get(url=self.api_host + 'me/',
+                         headers=dict(Authorization=self.api_token, Accept='application/json'))
 
+        user_id = u.json()['data']['user']['id']
 
+        r = requests.put(url=self.api_host + 'organisation/' + str(organisation_id) + '/users',
+                         headers=dict(Authorization=self.api_token, Accept='application/json'),
+                         json={
+                             'user_ids': [user_id],
+                             'is_admin': True
+                         })
+
+        return r.json()['data']['organisation']
     def __init__(self, email=None, password=None, api_token=None):
 
         self.api_host = 'http://0.0.0.0:9000/api/v1/'
@@ -222,53 +218,38 @@ if __name__ == '__main__':
               'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY1NzkyOTMsImlhdCI6MTU3NTk3NDQ5MywiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.7Rw_uMJNLBlDV48oAt5FCDytGbEzcNrCsN5sh1Wc-e4|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzU5NDk5NjUsImlhdCI6MTU3NTg2MzUzNSwiaWQiOjE1fQ.RT2LosnAhthvMzEvY_7a_a_biJoycQEVoHiLw6LhYZk'
     )
 
-    exchange_contract_id = s.create_exchange_contract()
+    reserve_token_id = s.create_reserve_token(
+        name='Kenyan Shilling',
+        symbol='Ksh',
+        fund_amount_wei=int(100e18)
+    )
 
-    cic_id = s.create_cic_token(
+    exchange_contract_id = s.create_exchange_contract(reserve_token_id)
+
+    ge_cic_id = s.create_cic_token(
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
-        symbol='Sarafu',
-        issue_amount_wei=int(1e16),
-        reserve_deposit_wei=int(1e16),
+        symbol='SAR',
+        issue_amount_wei=int(1e18),
+        reserve_deposit_wei=int(1e18),
         reserve_ratio_ppm=250000
     )
 
-    # org_id = s.create_organisation('Foo', 1)
+    ge_org_id = s.create_organisation('Grassroots Economics', ge_cic_id)
 
+    bind_1 = s.bind_this_user_to_organisation_as_admin(ge_org_id)
 
-    ttt = 4
+    community_1_cic_id = s.create_cic_token(
+        exchange_contract_id=exchange_contract_id,
+        name='FooBar',
+        symbol='FOO',
+        issue_amount_wei=int(1e18),
+        reserve_deposit_wei=int(1e18),
+        reserve_ratio_ppm=250000
+    )
 
-    # reserve_token_id = result['data']['reserve_token']['id']
-    # cic1_token_id = result['data']['smart_token']['id']
-    # cic2_token_id = result['data']['smart_token_2']['id']
-    #
-    #
-    # x = s.test_exchange(reserve_token_id, cic1_token_id, 5*10**-8)
-    #
-    # y = s.test_exchange(cic1_token_id, cic2_token_id, 1*10**-14)
-    #
-    # z = s.test_exchange(cic1_token_id, reserve_token_id, 1*10**-14)
-    #
-    #
-    # tt = 5
-    #
-    # # reserve_token_id = s.register_blockchain_token(
-    # #     address=config.RESERVE_TOKEN_ADDRESS,
-    # #     name='RESERVE',
-    # #     symbol='RSRV')
-    # #
-    # # cic1_token_id = s.register_blockchain_token('0xA1678D3ED0fF92C66753472e3A015a16DEA0F10f',
-    # #                                             name='CIC1',
-    # #                                             symbol='CIC1',
-    # #                                             exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
-    #
-    # # cic2_token_id = s.register_blockchain_token('0x5CB40AcCE23D33fB28015DFf0C552E4583633996',
-    # #                                             name='CIC2',
-    # #                                             symbol='CIC2',
-    # #                                             exchange_contract_address=config.EXCHANGE_CONTRACT_ADDRESS)
-    # #
-    # # org_id = s.create_organisation('Sempo19', reserve_token_id)
-    # # bind_response = s.bind_this_user_to_organisation(org_id)
-    # #
-    # # print('Bound user to organisation with org level blockchain address {}'.format(bind_response['org_blockchain_address']))
-    # #
+    foobar_org_id = s.create_organisation('Foo Org', community_1_cic_id)
+
+    bind_2 = s.bind_this_user_to_organisation_as_admin(foobar_org_id)
+
+    tt = 4

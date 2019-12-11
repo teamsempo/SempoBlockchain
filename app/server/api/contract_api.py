@@ -4,8 +4,9 @@ import threading
 
 from server import db, bt
 from server.utils.auth import requires_auth
-from server.models.token import Token
+from server.models.token import Token, TokenType
 from server.models.exchange import ExchangeContract
+from server.models.organisation import Organisation
 from server.schemas import exchange_contract_schema, exchange_contracts_schema, token_schema, tokens_schema
 
 contracts_blueprint = Blueprint('contracts', __name__)
@@ -163,7 +164,7 @@ class TokenAPI(MethodView):
 
             return make_response(jsonify(response_object)), 400
 
-        token = Token(name=name, symbol=symbol)
+        token = Token(name=name, symbol=symbol, token_type=TokenType.LIQUID)
         db.session.add(token)
         db.session.flush()
 
@@ -208,6 +209,67 @@ class TokenAPI(MethodView):
         return make_response(jsonify(response_object)), 201
 
 
+class ReserveTokenAPI(MethodView):
+
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
+    def post(self):
+        """
+        Dev function for creating a reserve token AFTER master organisation setup, and then binding to master org
+        """
+        post_data = request.get_json()
+
+        name = post_data['name']
+        symbol = post_data['symbol']
+        fund_amount_wei = post_data['fund_amount_wei']
+
+        deploying_address = g.user.primary_blockchain_address
+
+        if not Organisation.query.filter_by(is_master=True).first():
+            response_object = {
+                    'message': 'Master organisation not found'
+                }
+
+            return make_response(jsonify(response_object)), 400
+
+        token = Token(name=name, symbol=symbol, token_type=TokenType.RESERVE)
+        db.session.add(token)
+        db.session.flush()
+
+        deploy_data = dict(
+            deploying_address=deploying_address,
+            name=name, symbol=symbol, fund_amount_wei=fund_amount_wei,
+        )
+
+        @copy_current_request_context
+        def deploy(_deploy_data, _token_id):
+            reserve_token_address = bt.deploy_and_fund_reserve_token(**_deploy_data)
+
+            _token = Token.query.get(_token_id)
+            _token.address = reserve_token_address
+
+            master_org = Organisation.query.filter_by(is_master=True).first()
+
+            master_org.bind_token(_token)
+
+            master_org.org_level_transfer_account.balance = int(_deploy_data['fund_amount_wei']/1e18)
+
+            db.session.commit()
+
+        t = threading.Thread(target=deploy,
+                             args=(deploy_data, token.id))
+        t.daemon = True
+        t.start()
+
+        response_object = {
+            'message': 'success',
+            'data': {
+                'reserve_token_id': token.id
+            }
+        }
+
+        return make_response(jsonify(response_object)), 201
+
+
 contracts_blueprint.add_url_rule(
     '/contract/exchange/',
     view_func=ExchangeContractAPI.as_view('contract_view'),
@@ -235,3 +297,10 @@ contracts_blueprint.add_url_rule(
     view_func=TokenAPI.as_view('single_token_view'),
     methods=['GET']
 )
+
+contracts_blueprint.add_url_rule(
+    '/contract/token/reserve/',
+    view_func=ReserveTokenAPI.as_view('reserve_token_view'),
+    methods=['POST']
+)
+

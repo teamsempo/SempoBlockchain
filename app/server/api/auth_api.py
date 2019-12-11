@@ -247,7 +247,7 @@ class RegisterAPI(MethodView):
         else:
             organisation = Organisation.master_organisation()
 
-        user = User(blockchain_address=organisation.org_level_transfer_account.blockchain_address)
+        user = User(blockchain_address=organisation.primary_blockchain_address)
 
         user.create_admin_auth(email, password, tier, organisation)
 
