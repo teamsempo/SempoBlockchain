@@ -130,6 +130,7 @@ class CreditTransferSchema(Schema):
     resolved                = fields.DateTime(attribute='resolved_date')
     transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
     transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
+    transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
     transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
     transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
 

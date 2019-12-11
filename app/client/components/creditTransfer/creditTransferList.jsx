@@ -278,6 +278,7 @@ class CreditTransferList extends React.Component {
         <StyledSelect style={{fontWeight: '400', margin: '1em', lineHeight: '25px', height: '25px'}} name="transfer_type" value={this.props.transfer_type} onChange={this.handleChange}>
           <option name="transfer_type" value="ALL">ALL TRANSFERS</option>
           <option name="transfer_type" value="PAYMENT">PAYMENTS</option>
+          <option name="transfer_type" value="EXCHANGE">EXCHANGE</option>
           <option name="transfer_type" value="DISBURSEMENT">DISBURSEMENTS</option>
           <option name="transfer_type" value="RECLAMATION">RECLAMATION</option>
         </StyledSelect>
