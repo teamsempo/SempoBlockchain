@@ -27,10 +27,11 @@ import {handleError} from "../utils";
 
 function* updateStateFromCreditTransfer(result) {
   //Schema expects a list of credit transfer objects
+  let credit_transfer_list = [];
   if (result.data.credit_transfers) {
-    var credit_transfer_list = result.data.credit_transfers
+    credit_transfer_list = result.data.credit_transfers
   } else {
-    credit_transfer_list = [result.data.credit_transfer]
+    credit_transfer_list.push(result.data.credit_transfer)
   }
 
   const normalizedData = normalize(credit_transfer_list, creditTransferSchema);

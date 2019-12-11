@@ -94,8 +94,9 @@ en:
       1. See my business
       2. Change my business
       0. Back
-    about_my_business: END %{user_bio}
-    about_my_business_none: END No business set, please go to Change My Business to set it to something
+    about_my_business:
+      bio: END %{user_bio}
+      none: END No business set, please go to Change My Business to set it to something
     change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back
@@ -203,3 +204,5 @@ en:
       You can exchange the following:
       %{token_exchanges}
       Call 0757628885 for more info
+    pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
+    pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help

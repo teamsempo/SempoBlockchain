@@ -21,8 +21,9 @@ import {
   CREATE_USER_FAILURE
 } from '../reducers/userReducer.js';
 
-import { loadUserAPI, editUserAPI, createUserAPI } from "../api/userAPI";
+import {loadUserAPI, editUserAPI, createUserAPI, resetPinAPI} from "../api/userAPI";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
+import {RESET_PIN_FAILURE, RESET_PIN_REQUEST, RESET_PIN_SUCCESS} from "../reducers/userReducer";
 
 function* updateStateFromUser(data) {
   //Schema expects a list of credit transfer objects
@@ -87,6 +88,30 @@ function* watchEditUser() {
   yield takeEvery(EDIT_USER_REQUEST, editUser);
 }
 
+function* resetPin({userId}) {
+  try {
+    const reset_response = yield call(resetPinAPI, userId);
+
+    yield call(updateStateFromUser, reset_response.data);
+
+    yield put({type: RESET_PIN_SUCCESS, reset_user: reset_response});
+
+    yield put({type: ADD_FLASH_MESSAGE, error: false, message: reset_response.message});
+
+  } catch (fetch_error) {
+
+    const error = yield call(handleError, fetch_error);
+
+    yield put({type: RESET_PIN_FAILURE, error: error});
+
+    yield put({type: ADD_FLASH_MESSAGE, error: true, message: error.message});
+  }
+}
+
+function* watchResetPin() {
+  yield takeEvery(RESET_PIN_REQUEST, resetPin);
+}
+
 function* createUser({ payload }) {
   try {
     const result = yield call(createUserAPI, payload);
@@ -111,6 +136,7 @@ export default function* userSagas() {
   yield all([
     watchLoadUser(),
     watchEditUser(),
-    watchCreateUser()
+    watchCreateUser(),
+    watchResetPin()
   ])
 }

@@ -22,7 +22,7 @@ const byId = (state = {}, action) => {
     case UPDATE_CREDIT_TRANSFER_LIST:
       Object.keys(action.credit_transfers).map(id => {
           let transfer = action.credit_transfers[id];
-          if (transfer.transfer_subtype !== null) {
+          if (transfer.transfer_subtype !== null && typeof transfer.transfer_subtype !== "undefined") {
             if (transfer.transfer_subtype === 'DISBURSEMENT') {
               transfer.transfer_type = 'DISBURSEMENT';
             } else if (transfer.transfer_subtype === 'RECLAMATION') {
