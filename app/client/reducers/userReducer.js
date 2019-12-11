@@ -11,6 +11,10 @@ export const EDIT_USER_REQUEST = "EDIT_USER_REQUEST";
 export const EDIT_USER_SUCCESS = "EDIT_USER_SUCCESS";
 export const EDIT_USER_FAILURE = "EDIT_USER_FAILURE";
 
+export const RESET_PIN_REQUEST = "RESET_PIN_REQUEST";
+export const RESET_PIN_SUCCESS = "RESET_PIN_SUCCESS";
+export const RESET_PIN_FAILURE = "RESET_PIN_FAILURE";
+
 export const CREATE_USER_REQUEST = "CREATE_USER_REQUEST";
 export const CREATE_USER_SUCCESS = "CREATE_USER_SUCCESS";
 export const CREATE_USER_FAILURE = "CREATE_USER_FAILURE";
@@ -71,6 +75,27 @@ const editStatus = (state = initialEditStatusState, action) => {
   }
 };
 
+const initialPinStatus = {
+  isRequesting: false,
+  error: null,
+  success: false
+};
+const pinStatus = (state = initialPinStatus, action) => {
+  switch (action.type) {
+    case RESET_PIN_REQUEST:
+      return {...state, isRequesting: true};
+
+    case RESET_PIN_SUCCESS:
+      return {...state, isRequesting: false, success: true};
+
+    case RESET_PIN_FAILURE:
+      return {...state, isRequesting: false, error: action.error};
+
+    default:
+      return state;
+  }
+};
+
 
 const initialCreateStatusState = {
   isRequesting: false,
@@ -110,7 +135,8 @@ export const users = combineReducers({
     byId,
     loadStatus,
     editStatus,
-    createStatus
+    createStatus,
+    pinStatus
 });
 
 
@@ -126,6 +152,13 @@ export const editUser = (payload) => (
   {
     type: EDIT_USER_REQUEST,
     payload,
+  }
+);
+
+export const resetPin = (userId) => (
+  {
+    type: RESET_PIN_REQUEST,
+    userId,
   }
 );
 

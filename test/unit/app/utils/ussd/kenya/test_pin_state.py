@@ -123,7 +123,7 @@ def test_change_initial_pin(mocker, test_client, init_database):
     user = unactivated_user()
 
     state_machine = KenyaUssdStateMachine(session, user)
-    user_utils.send_sms = mocker.MagicMock()
+    state_machine.send_sms = mocker.MagicMock()
 
     assert user.pin_hash is None
     assert user.is_activated is False
@@ -132,7 +132,7 @@ def test_change_initial_pin(mocker, test_client, init_database):
 
     assert user.verify_pin("0000") is True
     assert user.is_activated is True
-    user_utils.send_sms.assert_called_with(user, 'successful_pin_change_sms')
+    state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
 
 
 def test_change_current_pin(mocker, test_client, init_database):
@@ -140,11 +140,11 @@ def test_change_current_pin(mocker, test_client, init_database):
     user = standard_user()
 
     state_machine = KenyaUssdStateMachine(session, user)
-    user_utils.send_sms = mocker.MagicMock()
+    state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("2222")
 
     assert user.verify_pin("2222") is True
-    user_utils.send_sms.assert_called_with(user, 'successful_pin_change_sms')
+    state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
 
 # TODO: test pin confirmation failed + blocked + reset flow?

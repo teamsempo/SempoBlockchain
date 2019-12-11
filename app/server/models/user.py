@@ -461,7 +461,7 @@ class User(ManyOrgBase, ModelBase):
         self.password_reset_tokens = current_password_reset_tokens
 
     def save_pin_reset_token(self, pin_reset_token):
-        self.clear_expired_password_reset_tokens()
+        self.clear_expired_pin_reset_tokens()
 
         current_pin_reset_tokens = self.pin_reset_tokens[:]
         current_pin_reset_tokens.append(pin_reset_token)
@@ -567,7 +567,7 @@ class User(ManyOrgBase, ModelBase):
         self.clear_expired_pin_reset_tokens()
         not_resetting = len(self.pin_reset_tokens) == 0
 
-        return self.pin_hash is not None and not_resetting
+        return self.pin_hash is not None and not_resetting and self.failed_pin_attempts < 3
 
     def user_details(self):
         # should drop the country code from phone number?

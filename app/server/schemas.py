@@ -41,6 +41,8 @@ class UserSchema(SchemaBase):
 
     business_usage_id = fields.Int()
 
+    failed_pin_attempts = fields.Int()
+
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
 
@@ -128,6 +130,7 @@ class CreditTransferSchema(Schema):
     resolved                = fields.DateTime(attribute='resolved_date')
     transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
     transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
+    transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
     transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
     transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
 
@@ -141,8 +144,8 @@ class CreditTransferSchema(Schema):
     sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
     recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
 
-    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
-    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
+    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
+    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
 
     attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 
