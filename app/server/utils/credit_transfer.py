@@ -46,6 +46,11 @@ def calculate_transfer_stats(total_time_series=False):
             .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
     )
 
+    total_exchanged = (
+        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE).first().total
+    )
+
     total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
 
     total_vendors = db.session.query(User)\
@@ -107,6 +112,7 @@ def calculate_transfer_stats(total_time_series=False):
     data = {
         'total_distributed': total_distributed,
         'total_spent': total_spent,
+        'total_exchanged': total_exchanged,
         'has_transferred_count': has_transferred_count,
         'zero_balance_count': exhausted_balance_count,
         'total_beneficiaries': total_beneficiaries,

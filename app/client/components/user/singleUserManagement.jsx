@@ -9,8 +9,7 @@ import { ModuleBox, ModuleHeader } from '../styledElements'
 import AsyncButton from './../AsyncButton.jsx'
 import ProfilePicture from '../profilePicture.jsx'
 
-import {EDIT_USER_FAILURE, editUser, resetPin} from '../../reducers/userReducer'
-import { formatMoney } from "../../utils";
+import {editUser, resetPin} from '../../reducers/userReducer'
 import QrReadingModal from "../qrReadingModal.jsx";
 
 const mapStateToProps = (state, ownProps) => {
