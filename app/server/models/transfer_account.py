@@ -5,12 +5,11 @@ from sqlalchemy.sql import func
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from server import db, bt
-from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table
+from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, get_authorising_user_id
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
-from server.models.token import Token
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
 
@@ -206,10 +205,16 @@ class TransferAccount(OneOrgBase, ModelBase):
         if not initial_balance:
             initial_balance = current_app.config['STARTING_BALANCE']
 
-        disbursement = make_payment_transfer(initial_balance, token=self.token, send_user=self.primary_user,
-                                             receive_user=self.primary_user, transfer_subtype='DISBURSEMENT',
-                                             is_ghost_transfer=False, require_sender_approved=False,
-                                             require_recipient_approved=False)
+        user_id = get_authorising_user_id()
+        if user_id is not None:
+            sender = User.query.execution_options(show_all=True).get(user_id)
+        else:
+            sender = self.primary_user
+
+        disbursement = make_payment_transfer(
+            initial_balance, token=self.token, send_user=sender, receive_user=self.primary_user,
+            transfer_subtype='DISBURSEMENT', is_ghost_transfer=False, require_sender_approved=False,
+            require_recipient_approved=False)
 
         return disbursement
 

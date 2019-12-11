@@ -197,8 +197,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
     else:
         vendor_tier = 'supervendor'
 
-    if is_vendor:
-        user.set_held_role('VENDOR', vendor_tier)
+    user.set_held_role('VENDOR', vendor_tier)
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
