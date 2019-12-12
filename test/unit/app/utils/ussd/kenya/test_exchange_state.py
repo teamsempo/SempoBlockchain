@@ -33,16 +33,19 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
      (exchange_token_state, standard_user, "1", "exchange_rate_pin_authorization"),
      (exchange_token_state, standard_user, "2", "exchange_token_agent_number_entry"),
      (exchange_token_state, standard_user, "3", "exit_invalid_menu_option"),
+     (exchange_token_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # exchange_token_amount_entry state tests
-     (exchange_token_amount_entry_state, standard_user, "40",
-      "exchange_token_pin_authorization"),
+     (exchange_token_amount_entry_state, standard_user, "45.5", "exchange_token_pin_authorization"),
+     (exchange_token_amount_entry_state, standard_user, "40", "exchange_token_pin_authorization"),
      (exchange_token_amount_entry_state, standard_user, "25", "exit_invalid_exchange_amount"),
+     (exchange_token_amount_entry_state, standard_user, "-1", "exit_invalid_exchange_amount"),
+     (exchange_token_amount_entry_state, standard_user, "asdf", "exit_invalid_exchange_amount"),
      # exchange_token_pin_authorization state tests
-     (exchange_token_pin_authorization_state, standard_user, "0000",
-      "exchange_token_confirmation"),
+     (exchange_token_pin_authorization_state, standard_user, "0000", "exchange_token_confirmation"),
      # exchange_token_confirmation state tests
      (exchange_token_confirmation_state, standard_user, "2", "exit"),
      (exchange_token_confirmation_state, standard_user, "3", "exit_invalid_menu_option"),
+     (exchange_token_confirmation_state, standard_user, "asdf", "exit_invalid_menu_option"),
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
@@ -54,13 +57,24 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     assert state_machine.state == expected
 
 
+def test_invalid_user_recipient(test_client, init_database):
+    session = exchange_token_agent_number_entry_state()
+    user = standard_user()
+    user.phone = phone()
+
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.feed_char("1234")
+
+    assert state_machine.state == "exit_invalid_token_agent"
+    assert session.session_data is None
+
+
 def test_user_recipient(test_client, init_database):
     session = exchange_token_agent_number_entry_state()
     user = standard_user()
     user.phone = phone()
 
     user_recipient = UserFactory(phone=make_kenyan_phone(phone()))
-    user_recipient.phone = make_kenyan_phone(user_recipient.phone)
 
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.feed_char(user_recipient.phone)
