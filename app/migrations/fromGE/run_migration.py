@@ -5,7 +5,7 @@ dirname = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(dirname, "..", "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(dirname, "..", "..")))
 
-from migrations.fromGE.RDSMigrate import RDSMigrate
+from migrations.fromGE.rds_migrate import RDSMigrate
 from server import create_app, db, bt
 
 
