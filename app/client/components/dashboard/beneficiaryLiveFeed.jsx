@@ -109,7 +109,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                       <UserSVG src="/static/media/transfer.svg"/>
                                       <UserGroup>
                                         <TopText>{sender_user_name} transfered</TopText>
-                                        <BottomText><Highlight>{money}</Highlight> to
+                                        <BottomText><DarkHighlight>{money}</DarkHighlight> to
                                           <DarkHighlight> {recipient_user_name}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
