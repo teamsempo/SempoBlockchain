@@ -174,7 +174,7 @@ class ReserveTokenAPI(MethodView):
 
             master_org = Organisation.query.filter_by(is_master=True).first()
             master_org.bind_token(_token)
-            master_org.org_level_transfer_account.balance = int(_deploy_data['fund_amount_wei']/1e18)
+            master_org.org_level_transfer_account.balance = int(_deploy_data['fund_amount_wei'] / 1e16)
             db.session.commit()
 
         t = threading.Thread(target=deploy,

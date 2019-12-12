@@ -21,6 +21,7 @@ from server.utils.credit_transfer import dollars_to_cents
 
 
 ITEMS_PER_MENU = 8
+MIN_EXCHANGE_AMOUNT = 2
 
 
 class KenyaUssdStateMachine(Machine):
@@ -248,7 +249,7 @@ class KenyaUssdStateMachine(Machine):
         self.session.set_data('agent_phone', user_input)
 
     def is_valid_token_exchange_amount(self, user_input):
-        return int(user_input) >= 40
+        return float(user_input * 100) >= MIN_EXCHANGE_AMOUNT
 
     def save_exchange_amount(self, user_input):
         self.session.set_data('exchange_amount', dollars_to_cents(user_input))

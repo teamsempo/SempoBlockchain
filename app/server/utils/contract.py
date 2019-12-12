@@ -43,11 +43,19 @@ def deploy_cic_token(post_data, creating_org=None):
 
     if balance_wei < reserve_deposit_wei:
 
-        load_amount = int((reserve_deposit_wei - balance_wei)/1e18)
+        load_amount = int((reserve_deposit_wei - balance_wei) / 1e16)
 
         master_org = Organisation.master_organisation()
 
         print(f'Insufficient reserve funds (balance in wei: {balance_wei}), loading')
+
+        if master_org.org_level_transfer_account.balance < load_amount:
+            response_object = {
+                'message': f'Insufficient reserve funds for both deploying account  ({balance_wei} wei), '
+                           f'and master ({master_org.org_level_transfer_account.balance * 1e16} wei)'
+            }
+
+            return response_object, 400
 
         load_task_id = bt.make_token_transfer(
             signing_address=master_org.primary_blockchain_address,
@@ -57,15 +65,16 @@ def deploy_cic_token(post_data, creating_org=None):
             amount=load_amount
         )
 
-        bt.await_task_success(load_task_id)
+        try:
+            bt.await_task_success(load_task_id)
+        except TimeoutError:
+            response_object = {
+                'message': f'Insufficient reserve funds (balance in wei: {balance_wei}), and could not load from master'
+            }
 
-        print('Load complete')
+            return response_object, 400
 
-        # response_object = {
-        #     'message': f'Insufficient reserve funds (balance in wei: {balance_wei})'
-        # }
-        #
-        # return response_object, 400
+        master_org.org_level_transfer_account.balance -= load_amount
 
     token = Token(name=name, symbol=symbol, token_type=TokenType.LIQUID)
     db.session.add(token)
@@ -98,7 +107,7 @@ def deploy_cic_token(post_data, creating_org=None):
 
             _creating_org = Organisation.query.get(_creating_org_id)
             _creating_org.bind_token(_token)
-            _creating_org.org_level_transfer_account.balance = int(_deploy_data['issue_amount_wei']/1e18)
+            _creating_org.org_level_transfer_account.balance = int(_deploy_data['issue_amount_wei'] / 1e16)
 
             bal = bt.get_wallet_balance(_creating_org.primary_blockchain_address, _token)
 

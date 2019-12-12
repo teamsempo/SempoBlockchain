@@ -198,9 +198,11 @@ class Setup(object):
                           })
 
         json = r.json()
-
-        token_id = json['data']['token_id']
-        print(f'{name} Token id: {token_id}')
+        try:
+            token_id = json['data']['token_id']
+            print(f'{name} Token id: {token_id}')
+        except KeyError:
+            raise Exception(str(json))
 
         self._wait_for_get_result(f'contract/token/{token_id}', ('data', 'token', 'address'))
 
@@ -254,19 +256,19 @@ if __name__ == '__main__':
               'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY1NzkyOTMsImlhdCI6MTU3NTk3NDQ5MywiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.7Rw_uMJNLBlDV48oAt5FCDytGbEzcNrCsN5sh1Wc-e4|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzU5NDk5NjUsImlhdCI6MTU3NTg2MzUzNSwiaWQiOjE1fQ.RT2LosnAhthvMzEvY_7a_a_biJoycQEVoHiLw6LhYZk'
     )
 
-    # reserve_token_id = s.create_reserve_token(
-    #     name='Kenyan Shilling',
-    #     symbol='Ksh',
-    #     fund_amount_wei=int(100e18)
-    # )
+    reserve_token_id = s.create_reserve_token(
+        name='Kenyan Shilling',
+        symbol='Ksh',
+        fund_amount_wei=int(1000e18)
+    )
+
+    exchange_contract_id = s.create_exchange_contract(reserve_token_id)
     #
-    # exchange_contract_id = s.create_exchange_contract(reserve_token_id)
-    #
-    reserve_token_id = 1
-    exchange_contract_id = 1
+    # reserve_token_id = 1
+    # exchange_contract_id = 1
 
     ge_org_id = s.create_cic_organisation(
-        organisation_name='Grassroots Economics 5',
+        organisation_name='Grassroots Economics',
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
         symbol='SAR',
@@ -276,19 +278,16 @@ if __name__ == '__main__':
     )
     bind_1 = s.bind_this_user_to_organisation_as_admin(ge_org_id)
 
-    # ge_org_id = s.create_organisation('Grassroots Economics', ge_cic_id)
-    #
-    # foobar_org_id = s.create_cic_organisation(
-    #     organisation_name='Foo Org ',
-    #     exchange_contract_id=exchange_contract_id,
-    #     name='FooBar',
-    #     symbol='FOO',
-    #     issue_amount_wei=int(1e18),
-    #     reserve_deposit_wei=int(1e18),
-    #     reserve_ratio_ppm=250000
-    # )
-    #
-    # # foobar_org_id = s.create_organisation('Foo Org', community_1_cic_id)
-    # bind_2 = s.bind_this_user_to_organisation_as_admin(foobar_org_id)
-    #
+    foobar_org_id = s.create_cic_organisation(
+        organisation_name='Foo Org',
+        exchange_contract_id=exchange_contract_id,
+        name='FooBar',
+        symbol='FOO',
+        issue_amount_wei=int(100e18),
+        reserve_deposit_wei=int(1e18),
+        reserve_ratio_ppm=250000
+    )
+
+    bind_2 = s.bind_this_user_to_organisation_as_admin(foobar_org_id)
+
     tt = 4

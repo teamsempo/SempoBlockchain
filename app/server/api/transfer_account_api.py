@@ -1,18 +1,21 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
+from sqlalchemy.orm import lazyload
+
 from server import db
 from server.models.utils import paginate_query
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, show_all
 from server.utils.access_control import AccessControl
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
 
 class TransferAccountAPI(MethodView):
+    # @show_all
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, transfer_account_id):
 
@@ -47,8 +50,10 @@ class TransferAccountAPI(MethodView):
             elif account_type_filter == 'beneficiary':
                 transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=False)
             else:
+                pass
                 # Filter Contract, Float and Organisation Transfer Accounts
-                transfer_accounts_query = TransferAccount.query.filter(TransferAccount.account_type == TransferAccountType.USER)
+                transfer_accounts_query = (TransferAccount.query
+                                           .filter(TransferAccount.account_type == TransferAccountType.USER))
 
             transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
 
