@@ -221,11 +221,16 @@ class Setup(object):
 
         return r.json()['data']['organisation']['id']
 
-    def bind_this_user_to_organisation_as_admin(self, organisation_id):
+    def bind_me_to_organisation_as_admin(self, organisation_id):
         u = requests.get(url=self.api_host + 'me/',
                          headers=dict(Authorization=self.api_token, Accept='application/json'))
 
         user_id = u.json()['data']['user']['id']
+
+        self.bind_user_to_organsation_as_admin(user_id, organisation_id)
+
+
+    def bind_user_to_organsation_as_admin(self, user_id, organisation_id):
 
         r = requests.put(url=self.api_host + 'organisation/' + str(organisation_id) + '/users',
                          headers=dict(Authorization=self.api_token, Accept='application/json'),
@@ -236,9 +241,9 @@ class Setup(object):
 
         return r.json()['data']['organisation']
 
-    def __init__(self, email=None, password=None, api_token=None):
+    def __init__(self, api_host='http://0.0.0.0:9000/api/v1/', email=None, password=None, api_token=None):
 
-        self.api_host = 'http://0.0.0.0:9000/api/v1/'
+        self.api_host = api_host
 
         if email and password:
             self.api_token = self.get_api_token(email, password)
@@ -252,42 +257,59 @@ class Setup(object):
 
 if __name__ == '__main__':
 
-    s = Setup(api_token=
-              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY1NzkyOTMsImlhdCI6MTU3NTk3NDQ5MywiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.7Rw_uMJNLBlDV48oAt5FCDytGbEzcNrCsN5sh1Wc-e4|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzU5NDk5NjUsImlhdCI6MTU3NTg2MzUzNSwiaWQiOjE1fQ.RT2LosnAhthvMzEvY_7a_a_biJoycQEVoHiLw6LhYZk'
+    # s = Setup(
+    #     api_host='https://dev.withsempo.com/api/v1/',
+    #     api_token=
+    #           'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY3MzA0MDUsImlhdCI6MTU3NjEyNTYwNSwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.StVMPYwqqM39SZkjzEpJnw_n7XyjyLW7lfXpVcyM5b0|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjI0Mzk2MDQxMjYsImlhdCI6MTU3NTY5MDQ5NiwiaWQiOjJ9.WaSdLvU5aGxLmNo5uZV0_PmV7LOTymeBBxOymy0Er7U'
+    # )
+
+    s = Setup(
+        api_token=
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY3MzQwMzcsImlhdCI6MTU3NjEyOTIzNywiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.wPxxp-zW5LemP-G5SXwtqfZzi6fHPFqFPQe7BNCsaEk|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzYyMTEzMDIsImlhdCI6MTU3NjEyNDg3MiwiaWQiOjZ9.zkEUtwMgOSrcLy68Rtv_JeMCj9HrsOyQUfH3Dc3itYE'
     )
 
-    reserve_token_id = s.create_reserve_token(
-        name='Kenyan Shilling',
-        symbol='Ksh',
-        fund_amount_wei=int(1000e18)
-    )
 
-    exchange_contract_id = s.create_exchange_contract(reserve_token_id)
+
+    s.bind_user_to_organsation_as_admin(6, 1)
+    s.bind_user_to_organsation_as_admin(6, 2)
+    s.bind_user_to_organsation_as_admin(6, 3)
+
+
+    # reserve_token_id = s.create_reserve_token(
+    #     name='Kenyan Shilling',
+    #     symbol='Ksh',
+    #     fund_amount_wei=int(1000e18)
+    # )
+
+    # exchange_contract_id = s.create_exchange_contract(reserve_token_id)
+
     #
     # reserve_token_id = 1
+    #
+    # #
     # exchange_contract_id = 1
-
-    ge_org_id = s.create_cic_organisation(
-        organisation_name='Grassroots Economics',
-        exchange_contract_id=exchange_contract_id,
-        name='Sarafu',
-        symbol='SAR',
-        issue_amount_wei=int(100e18),
-        reserve_deposit_wei=int(1e18),
-        reserve_ratio_ppm=250000
-    )
-    bind_1 = s.bind_this_user_to_organisation_as_admin(ge_org_id)
-
-    foobar_org_id = s.create_cic_organisation(
-        organisation_name='Foo Org',
-        exchange_contract_id=exchange_contract_id,
-        name='FooBar',
-        symbol='FOO',
-        issue_amount_wei=int(100e18),
-        reserve_deposit_wei=int(1e18),
-        reserve_ratio_ppm=250000
-    )
-
-    bind_2 = s.bind_this_user_to_organisation_as_admin(foobar_org_id)
+    #
+    # ge_org_id = s.create_cic_organisation(
+    #     organisation_name='Grassroots Economics',
+    #     exchange_contract_id=exchange_contract_id,
+    #     name='Sarafu',
+    #     symbol='SAR',
+    #     issue_amount_wei=int(1000e18),
+    #     reserve_deposit_wei=int(10e18),
+    #     reserve_ratio_ppm=250000
+    # )
+    # bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
+    #
+    # foobar_org_id = s.create_cic_organisation(
+    #     organisation_name='Foo Org',
+    #     exchange_contract_id=exchange_contract_id,
+    #     name='FooBar',
+    #     symbol='FOO',
+    #     issue_amount_wei=int(1000e18),
+    #     reserve_deposit_wei=int(10e18),
+    #     reserve_ratio_ppm=250000
+    # )
+    #
+    # bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
 
     tt = 4
