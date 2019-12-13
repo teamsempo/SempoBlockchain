@@ -294,6 +294,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  transfer_subtype=None,
                  is_ghost_transfer=False):
 
+        if amount < 0:
+            raise Exception("Negative amount provided")
         self.transfer_amount = amount
 
         self.sender_user = sender_user
