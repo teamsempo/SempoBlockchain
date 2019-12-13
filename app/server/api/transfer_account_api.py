@@ -8,14 +8,13 @@ from server.models.utils import paginate_query
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
-from server.utils.auth import requires_auth, show_all
+from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
 
 class TransferAccountAPI(MethodView):
-    # @show_all
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, transfer_account_id):
 
