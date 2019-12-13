@@ -284,7 +284,11 @@ class TransferAccountList extends React.Component {
                       Header: "Balance",
                       accessor: "balance",
                       headerClassName: 'react-table-header',
-                      Cell: cellInfo => (<p style={{margin: 0}}>{formatMoney(cellInfo.value / 100)}</p>),
+                      Cell: cellInfo => {
+                        const token = cellInfo.original.token && cellInfo.original.token.symbol;
+                        const money = formatMoney(cellInfo.value / 100, undefined, undefined, undefined, token);
+                        return <p style={{margin: 0}}>{money}</p>
+                      },
                     },
                     {
                       Header: "Status",

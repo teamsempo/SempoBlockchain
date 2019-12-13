@@ -23,6 +23,8 @@ start_state = partial(UssdSessionFactory, state="start")
 account_management_state = partial(UssdSessionFactory, state="account_management")
 my_business_state = partial(UssdSessionFactory, state="my_business")
 choose_language_state = partial(UssdSessionFactory, state="choose_language")
+directory_listing_state = partial(UssdSessionFactory, state="directory_listing")
+directory_listing_other_state = partial(UssdSessionFactory, state="directory_listing_other")
 
 
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected",
@@ -30,6 +32,7 @@ choose_language_state = partial(UssdSessionFactory, state="choose_language")
      # initial_language_selection transitions tests
      (initial_language_selection_state, standard_user, "3", "help"),
      (initial_language_selection_state, standard_user, "5", "exit_invalid_menu_option"),
+     (initial_language_selection_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # start state transition tests
      (start_state, standard_user, "1", "send_enter_recipient"),
      (start_state, standard_user, "2", "account_management"),
@@ -37,6 +40,7 @@ choose_language_state = partial(UssdSessionFactory, state="choose_language")
      (start_state, standard_user, "4", "exchange_token"),
      (start_state, standard_user, "5", "help"),
      (start_state, standard_user, "6", "exit_invalid_menu_option"),
+     (start_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # account_management state tests
      (account_management_state, standard_user, "1", "my_business"),
      (account_management_state, standard_user, "2", "choose_language"),
@@ -44,14 +48,31 @@ choose_language_state = partial(UssdSessionFactory, state="choose_language")
      (account_management_state, standard_user, "4", "current_pin"),
      (account_management_state, standard_user, "5", "opt_out_of_market_place_pin_authorization"),
      (account_management_state, standard_user, "6", "exit_invalid_menu_option"),
+     (account_management_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # my_business state tests
      (my_business_state, standard_user, "1", "about_my_business"),
      (my_business_state, standard_user, "2", "change_my_business_prompt"),
+     (my_business_state, standard_user, "3", "exit_invalid_menu_option"),
+     (my_business_state, standard_user, "asdf", "exit_invalid_menu_option"),
+     # directory listing state tests
+     (directory_listing_state, standard_user, "9", "directory_listing_other"),
+     (directory_listing_state, standard_user, "1", "complete"),
+     (directory_listing_state, standard_user, "10", "exit_invalid_menu_option"),
+     (directory_listing_state, standard_user, "11", "exit_invalid_menu_option"),
+     (directory_listing_state, standard_user, "asdf", "exit_invalid_menu_option"),
+     # directory listing other state tests
+     (directory_listing_other_state, standard_user, "1", "complete"),
+     (directory_listing_other_state, standard_user, "9", "directory_listing_other"),
+     (directory_listing_other_state, standard_user, "10", "directory_listing_other"),
+     (directory_listing_other_state, standard_user, "11", "exit_invalid_menu_option"),
+     (directory_listing_other_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # choose_language state tests
      (choose_language_state, standard_user, "5", "exit_invalid_menu_option"),
+     (choose_language_state, standard_user, "asdf", "exit_invalid_menu_option"),
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
+    session.session_data = {'transfer_usage_mapping': fake_transfer_mapping(10), 'usage_menu': 1, 'usage_menu_max': 1}
     user = user_factory()
     user.phone = phone()
     db.session.commit()

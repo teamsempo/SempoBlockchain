@@ -94,8 +94,9 @@ sw:
       1. Angalia biashara
       2. Badilisha biashara
       0. Nyuma
-    about_my_business: END %{user_bio}
-    about_my_business_none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza
+    about_my_business:
+      bio: END %{user_bio}
+      none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
@@ -203,4 +204,6 @@ sw:
       Waweza badilisha kwa viwango vifuatavyo:
       %{token_exchanges}
       Piga 0757628885 kwa usaidizi zaidi
+    pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.
+    pin_change_error_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0757628885 kwa usaidizi
 

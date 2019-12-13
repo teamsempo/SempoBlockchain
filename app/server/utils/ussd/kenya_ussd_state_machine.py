@@ -71,6 +71,7 @@ class KenyaUssdStateMachine(Machine):
         'exit_not_registered',
         'exit_invalid_menu_option',
         'exit_invalid_recipient',
+        'exit_invalid_input',
         'exit_use_exchange_menu',
         'exit_wrong_pin',
         'exit_invalid_pin',
@@ -145,10 +146,20 @@ class KenyaUssdStateMachine(Machine):
         return authorized
 
     def complete_initial_pin_change(self, user_input):
-        change_initial_pin(user=self.user, new_pin=user_input)
+        try:
+            change_initial_pin(user=self.user, new_pin=user_input)
+            self.send_sms(self.user.phone, "pin_change_success_sms")
+        except Exception as e:
+            self.send_sms(self.user.phone, "pin_change_error_sms")
+            raise e
 
     def complete_pin_change(self, user_input):
-        change_current_pin(user=self.user, new_pin=user_input)
+        try:
+            change_current_pin(user=self.user, new_pin=user_input)
+            self.send_sms(self.user.phone, "pin_change_success_sms")
+        except Exception as e:
+            self.send_sms(self.user.phone, "pin_change_error_sms")
+            raise e
 
     def is_authorized_pin(self, user_input):
         return self.authorize_pin(user_input)
@@ -231,14 +242,32 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.fetch_user_exchange_rate(self.user)
 
     def is_valid_token_agent(self, user_input):
-        user = get_user_by_phone(user_input, "KE", True)
-        return user.has_token_agent_role
+        user = get_user_by_phone(user_input, "KE")
+        return user is not None and user.has_token_agent_role
 
     def save_exchange_agent_phone(self, user_input):
         self.session.set_data('agent_phone', user_input)
 
+    def is_valid_token_amount(self, user_input):
+        try:
+            return float(user_input) > 0
+        except ValueError:
+            return False
+
     def is_valid_token_exchange_amount(self, user_input):
-        return int(user_input) >= 40
+        return float(user_input) >= 40
+
+    def is_valid_menu_option(self, user_input):
+        try:
+            return 0 <= int(user_input) <= 9
+        except ValueError:
+            return False
+
+    def is_valid_other_menu_option(self, user_input):
+        try:
+            return 0 <= int(user_input) <= 10
+        except ValueError:
+            return False
 
     def save_exchange_amount(self, user_input):
         self.session.set_data('exchange_amount', dollars_to_cents(user_input))
@@ -394,10 +423,18 @@ class KenyaUssdStateMachine(Machine):
         self.add_transitions(send_enter_recipient_transitions)
 
         # event: send_token_amount transitions
-        self.add_transition(trigger='feed_char',
-                            source='send_token_amount',
-                            dest='send_token_reason',
-                            after=['save_transaction_amount', 'store_transfer_usage'])
+        send_token_amount_transitions = [
+            {'trigger': 'feed_char',
+             'source': 'send_token_amount',
+             'dest': 'send_token_reason',
+             'conditions': 'is_valid_token_amount',
+             'after': ['save_transaction_amount', 'store_transfer_usage']},
+            {'trigger': 'feed_char',
+             'source': 'send_token_amount',
+             'dest': 'exit_invalid_input',
+            },
+        ]
+        self.add_transitions(send_token_amount_transitions)
 
         # event: send_token_reason transitions
         send_token_reason_transitions = [
@@ -409,7 +446,11 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'send_token_reason',
              'dest': 'send_token_pin_authorization',
-             'after': 'save_transaction_reason'},
+             'after': 'save_transaction_reason',
+             'conditions': 'is_valid_menu_option'},
+            {'trigger': 'feed_char',
+             'source': 'send_token_reason',
+             'dest': 'exit_invalid_menu_option'},
             {'trigger': 'feed_char',
              'source': 'send_token_reason_other',
              'dest': 'send_token_reason_other',
@@ -423,7 +464,11 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'send_token_reason_other',
              'dest': 'send_token_pin_authorization',
-             'after': 'save_transaction_reason'},
+             'after': 'save_transaction_reason',
+             'conditions': 'is_valid_other_menu_option'},
+            {'trigger': 'feed_char',
+             'source': 'send_token_reason_other',
+             'dest': 'exit_invalid_menu_option'},
         ]
         self.add_transitions(send_token_reason_transitions)
 
@@ -435,7 +480,11 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'directory_listing',
              'dest': 'complete',
-             'after': 'send_directory_listing'},
+             'after': 'send_directory_listing',
+             'conditions': 'is_valid_menu_option'},
+            {'trigger': 'feed_char',
+             'source': 'directory_listing',
+             'dest': 'exit_invalid_menu_option'},
             {'trigger': 'feed_char',
              'source': 'directory_listing_other',
              'dest': 'directory_listing_other',
@@ -449,7 +498,11 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'directory_listing_other',
              'dest': 'complete',
-             'after': 'send_directory_listing'},
+             'after': 'send_directory_listing',
+             'conditions': 'is_valid_other_menu_option'},
+            {'trigger': 'feed_char',
+             'source': 'directory_listing_other',
+             'dest': 'exit_invalid_menu_option'},
         ]
         self.add_transitions(directory_listing_transitions)
 
@@ -520,7 +573,10 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'my_business',
              'dest': 'change_my_business_prompt',
-             'conditions': 'menu_two_selected'}
+             'conditions': 'menu_two_selected'},
+            {'trigger': 'feed_char',
+             'source': 'my_business',
+             'dest': 'exit_invalid_menu_option'}
         ]
         self.add_transitions(my_business_transitions)
 
@@ -665,7 +721,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'exchange_token_amount_entry',
              'dest': 'exchange_token_pin_authorization',
-             'conditions': 'is_valid_token_exchange_amount',
+             'conditions': ['is_valid_token_amount', 'is_valid_token_exchange_amount'],
              'after': 'save_exchange_amount'},
             {'trigger': 'feed_char',
              'source': 'exchange_token_amount_entry',
