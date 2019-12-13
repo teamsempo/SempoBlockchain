@@ -219,6 +219,9 @@ class SQLPersistenceInterface(object):
         if dependent_on_tasks is None:
             dependent_on_tasks = []
 
+        if isinstance(dependent_on_tasks, int):
+            dependent_on_tasks = [dependent_on_tasks]
+
         for task_id in dependent_on_tasks:
             dependee_task = session.query(BlockchainTask).get(task_id)
             task.dependees.append(dependee_task)

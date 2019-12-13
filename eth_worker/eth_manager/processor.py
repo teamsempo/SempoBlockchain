@@ -111,7 +111,8 @@ class TransactionProcessor(object):
                             gas_price=None):
 
         chainId = self.ethereum_chain_id
-        gasPrice = gas_price or self.get_gas_price()
+        gasPrice = gas_price or self.gas_price
+        # gasPrice = gas_price or self.get_gas_price()
 
         signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
 

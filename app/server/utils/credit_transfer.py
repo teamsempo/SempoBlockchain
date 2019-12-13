@@ -224,7 +224,7 @@ def find_user_with_transfer_account_from_identifiers(user_id, public_identifier,
 
     user = find_user_from_identifiers(user_id, public_identifier, transfer_account_id)
 
-    if user and not user.transfer_account:
+    if user and not user.transfer_accounts:
         raise NoTransferAccountError('User {} does not have a transfer account'.format(user))
 
     return user
@@ -421,12 +421,12 @@ def make_payment_transfer(transfer_amount,
             require_recipient_approved = False
             require_sufficient_balance = False
             # primary NGO wallet to disburse from
-            send_transfer_account = receive_user.default_organisation.org_level_transfer_account
+            send_transfer_account = receive_user.default_organisation.queried_org_level_transfer_account
 
         if transfer_subtype is TransferSubTypeEnum.RECLAMATION.name:
             require_sender_approved = False
             # primary NGO wallet to reclaim to
-            receive_transfer_account = send_user.default_organisation.org_level_transfer_account
+            receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
 
         if transfer_subtype is TransferSubTypeEnum.INCENTIVE.name:
             send_transfer_account = receive_transfer_account.get_float_transfer_account()

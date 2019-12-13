@@ -322,7 +322,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 self.recipient_transfer_account.is_ghost = False
         except NoTransferAccountError:
             self.recipient_transfer_account = TransferAccount(
-                bind_to_entity=recipient_user,
+                bound_entity=recipient_user,
                 token=token,
                 is_approved=True,
                 is_ghost=is_ghost_transfer

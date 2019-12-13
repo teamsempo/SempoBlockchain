@@ -268,7 +268,6 @@ MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to
 RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
 RESERVE_TOKEN_NAME = specific_parser['ETHEREUM'].get('reserve_token_name')
 RESERVE_TOKEN_SYMBOL = specific_parser['ETHEREUM'].get('reserve_token_symbol')
-# RESERVE_TOKEN_DECIMALS = int(specific_parser['ETHEREUM'].get('reserve_token_decimals', 18))
 
 SYSTEM_WALLET_TARGET_BALANCE = int(specific_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
 SYSTEM_WALLET_TOPUP_THRESHOLD = int(specific_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))

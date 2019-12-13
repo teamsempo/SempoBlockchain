@@ -200,7 +200,14 @@ def encrypt_string(raw_string):
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
 
 
-db = SQLAlchemy(session_options={"expire_on_commit": not config.IS_TEST})
+db = SQLAlchemy(session_options={
+    "expire_on_commit": not config.IS_TEST,
+    # enable_baked_queries prevents the before_compile query from getting trapped on
+    # organisation change. Shouldn't by default but ¯\_(ツ)_/¯
+    # https://docs.sqlalchemy.org/en/13/orm/extensions/baked.html
+    "enable_baked_queries": False,
+})
+
 basic_auth = BasicAuth()
 sentry = Sentry()
 

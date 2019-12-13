@@ -4,14 +4,14 @@ from celery import signature
 
 from eth_manager import utils
 
-
-def deploy_contract_task(signing_address, contract_name, args=None):
+def deploy_contract_task(signing_address, contract_name, args=None, dependent_on_tasks=None):
     deploy_sig = signature(
         utils.eth_endpoint('deploy_contract'),
         kwargs={
             'signing_address': signing_address,
             'contract_name': contract_name,
-            'args': args
+            'args': args,
+            'dependent_on_tasks': dependent_on_tasks
         })
 
     return utils.execute_synchronous_task(deploy_sig)
@@ -65,6 +65,18 @@ def synchronous_call(contract_address, contract_type, func, args=None):
         })
 
     return utils.execute_synchronous_task(call_sig)
+
+
+def get_wallet_balance(address, token_address):
+
+    balance_wei = synchronous_call(
+        contract_address=token_address,
+        contract_type='ERC20',
+        func='balanceOf',
+        args=[address])
+
+    return balance_wei
+
 
 
 def await_task_success(task_id, timeout=None, poll_frequency=0.5):

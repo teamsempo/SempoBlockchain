@@ -18,7 +18,7 @@ phone = partial(fake.msisdn)
 
 def create_transfer_account_for_user(user: User, token: Token, balance: float, is_default: bool = True,
                                      is_ghost: bool = False):
-    transfer_account = TransferAccount(bind_to_entity=user)
+    transfer_account = TransferAccount(bound_entity=user)
     transfer_account.token = token
     transfer_account.balance = balance
 

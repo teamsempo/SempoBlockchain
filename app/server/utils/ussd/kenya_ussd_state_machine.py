@@ -21,6 +21,7 @@ from server.utils.credit_transfer import dollars_to_cents
 
 
 ITEMS_PER_MENU = 8
+MIN_EXCHANGE_AMOUNT_CENTS = 40
 
 
 class KenyaUssdStateMachine(Machine):
@@ -255,7 +256,7 @@ class KenyaUssdStateMachine(Machine):
             return False
 
     def is_valid_token_exchange_amount(self, user_input):
-        return float(user_input) >= 40
+        return float(user_input) * 100 >= MIN_EXCHANGE_AMOUNT_CENTS
 
     def is_valid_menu_option(self, user_input):
         try:

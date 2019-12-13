@@ -507,10 +507,12 @@ class User(ManyOrgBase, ModelBase):
             self.add_user_to_organisation(organisation, is_admin=True)
 
     def add_user_to_organisation(self, organisation: Organisation, is_admin=False):
-        self.organisations.append(organisation)
-        self.default_organisation = organisation
+        if not self.default_organisation:
+            self.default_organisation = organisation
 
-        if is_admin:
+        self.organisations.append(organisation)
+
+        if is_admin and organisation.org_level_transfer_account_id:
             if organisation.org_level_transfer_account is None:
                 organisation.org_level_transfer_account = (
                     db.session.query(server.models.transfer_account.TransferAccount)

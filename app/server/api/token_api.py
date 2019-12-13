@@ -3,7 +3,7 @@ from flask.views import MethodView
 
 from server import db, bt
 from server.utils.auth import requires_auth
-from server.models.token import Token
+from server.models.token import Token, TokenType
 from server.models.exchange import ExchangeContract
 from server.schemas import token_schema, tokens_schema
 
@@ -38,6 +38,7 @@ class TokenAPI(MethodView):
         symbol = post_data['symbol']
         decimals = post_data.get('decimals', 18)
         address = post_data.get('address')
+        is_reserve = post_data.get('is_reserve', True)
 
         token = Token.query.filter_by(address=address).first()
 
@@ -51,7 +52,9 @@ class TokenAPI(MethodView):
 
             return make_response(jsonify(response_object)), 400
 
-        token = Token(address=address, name=name, symbol=symbol, decimals=decimals)
+        token_type = TokenType.RESERVE if is_reserve else TokenType.LIQUID
+
+        token = Token(address=address, name=name, symbol=symbol, decimals=decimals, token_type=token_type)
         db.session.add(token)
 
         response_object = {

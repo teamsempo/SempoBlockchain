@@ -35,9 +35,9 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
      (exchange_token_state, standard_user, "3", "exit_invalid_menu_option"),
      (exchange_token_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # exchange_token_amount_entry state tests
-     (exchange_token_amount_entry_state, standard_user, "45.5", "exchange_token_pin_authorization"),
+     (exchange_token_amount_entry_state, standard_user, "2", "exchange_token_pin_authorization"),
      (exchange_token_amount_entry_state, standard_user, "40", "exchange_token_pin_authorization"),
-     (exchange_token_amount_entry_state, standard_user, "25", "exit_invalid_exchange_amount"),
+     (exchange_token_amount_entry_state, standard_user, "0.01", "exit_invalid_exchange_amount"),
      (exchange_token_amount_entry_state, standard_user, "-1", "exit_invalid_exchange_amount"),
      (exchange_token_amount_entry_state, standard_user, "asdf", "exit_invalid_exchange_amount"),
      # exchange_token_pin_authorization state tests
