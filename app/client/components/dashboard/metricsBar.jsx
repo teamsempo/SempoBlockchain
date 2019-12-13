@@ -21,7 +21,7 @@ const mapDispatchToProps = (dispatch) => {
 };
 
 const MetricsBar = ({creditTransferStats}) => {
-  if (Object.keys(creditTransferStats).length == 0) {
+  if (Object.keys(creditTransferStats).length === 0) {
     return (
       <p>No Transfer Data</p>
     );

@@ -71,13 +71,15 @@ class BeneficiaryLiveFeed extends React.Component {
                               </UserTime>
                             );
 
-                            let currency, fromExchangeTransfer, recipientCurrency;
+                            let currency;
+                            let fromExchangeTransfer;
+                            let recipientCurrency;
                             const transferAccountId = transfer.sender_transfer_account_id;
                             if (transferAccountId) {
                               const transferAccount = this.props.transferAccounts.byId[transferAccountId];
                               currency = transferAccount && transferAccount.token && transferAccount.token.symbol;
                             }
-                            const money = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
+                            const transferFromMoney = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
 
 
                             if (transfer.from_exchange_to_transfer_id !== null && typeof(transfer.from_exchange_to_transfer_id) !== "undefined") {
@@ -96,7 +98,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                       <UserSVG src="/static/media/exchange.svg"/>
                                       <UserGroup>
                                         <TopText>{sender_user_name} exchanged</TopText>
-                                        <BottomText><Highlight>{money}</Highlight> for
+                                        <BottomText><Highlight>{transferFromMoney}</Highlight> for
                                           <DarkHighlight> {transferToMoney}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
@@ -108,8 +110,8 @@ class BeneficiaryLiveFeed extends React.Component {
                                     <UserWrapper key={transfer.id}>
                                       <UserSVG src="/static/media/transfer.svg"/>
                                       <UserGroup>
-                                        <TopText>{sender_user_name} transfered</TopText>
-                                        <BottomText><DarkHighlight>{money}</DarkHighlight> to
+                                        <TopText>{sender_user_name} transferred</TopText>
+                                        <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> to
                                           <DarkHighlight> {recipient_user_name}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
@@ -121,7 +123,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                       <UserSVG src="/static/media/disbursement.svg"/>
                                       <UserGroup>
                                           <TopText>Disbursement of</TopText>
-                                          <BottomText><DarkHighlight>{money}</DarkHighlight> to
+                                          <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> to
                                             <DarkHighlight> {recipient_user_name}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
@@ -134,7 +136,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                                src="/static/media/disbursement.svg"/>
                                       <UserGroup>
                                           <TopText>Withdrawal of</TopText>
-                                          <BottomText><DarkHighlight>{money}</DarkHighlight> by
+                                          <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> by
                                             <DarkHighlight> {sender_user_name}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
