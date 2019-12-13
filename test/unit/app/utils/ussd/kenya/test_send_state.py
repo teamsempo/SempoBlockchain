@@ -29,18 +29,28 @@ send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_co
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected",
  [
      # send_token_amount state test
+     (send_token_amount_state, standard_user, "12.5", "send_token_reason"),
      (send_token_amount_state, standard_user, "500", "send_token_reason"),
+     (send_token_amount_state, standard_user, "-1", "exit_invalid_input"),
+     (send_token_amount_state, standard_user, "asdf", "exit_invalid_input"),
      # send_token_reasons state tests
      (send_token_reason_state, standard_user, "9", "send_token_reason_other"),
      (send_token_reason_state, standard_user, "1", "send_token_pin_authorization"),
+     (send_token_reason_state, standard_user, "10", "exit_invalid_menu_option"),
+     (send_token_reason_state, standard_user, "11", "exit_invalid_menu_option"),
+     (send_token_reason_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # send_token_reason_other state tests
-     (send_token_reason_other_state, standard_user, "1",
-      "send_token_pin_authorization"),
+     (send_token_reason_other_state, standard_user, "1", "send_token_pin_authorization"),
+     (send_token_reason_other_state, standard_user, "9", "send_token_reason_other"),
+     (send_token_reason_other_state, standard_user, "10", "send_token_reason_other"),
+     (send_token_reason_other_state, standard_user, "11", "exit_invalid_menu_option"),
+     (send_token_reason_other_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # send_token_pin_authorization state tests
      (send_token_pin_authorization_state, standard_user, "0000", "send_token_confirmation"),
      # send_token_confirmation state tests
      (send_token_confirmation_state, standard_user, "2", "exit"),
      (send_token_confirmation_state, standard_user, "3", "exit_invalid_menu_option"),
+     (send_token_confirmation_state, standard_user, "asdf", "exit_invalid_menu_option"),
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
@@ -52,6 +62,19 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
+
+
+def test_invalid_user_recipient(mocker, test_client, init_database):
+    session = send_enter_recipient_state()
+    user = standard_user()
+    user.phone = phone()
+
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.send_sms = mocker.MagicMock()
+    state_machine.feed_char("1234")
+
+    assert state_machine.state == "exit_invalid_recipient"
+    assert session.session_data is None
 
 
 def test_invalid_recipient(mocker, test_client, init_database, create_transfer_account_user, external_reserve_token):
