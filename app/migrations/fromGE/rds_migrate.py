@@ -1,7 +1,8 @@
 import MySQLdb
 import secrets as SECRETS
-import pprint
+import time
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
@@ -35,15 +36,21 @@ class RDSMigrate:
 
     def migrate(self):
         self.migrateUsers()
-   
-    def migrateUsers(self):
-        list_of_phones = self.get_phones_from_sempo()
-        self.get_new_users_from_GE(list_of_phones)
-        self.update_users_refered_by(self)
 
-    def get_phones_from_sempo(self):
-        result = users = User.query.filter(User.phone.isnot(None)).with_entities(User.phone).execution_options(
-                show_all=True).all()
+    def migrateUsers(self):
+        list_of_ge_ids = self.get_ids_from_sempo()
+        print(list_of_ge_ids)
+        self.get_new_users_from_GE(list_of_ge_ids)
+        self.update_users_refered_by()
+
+    def get_ids_from_sempo(self):
+        sql = '''SELECT
+            c1.value::text::int
+            FROM "user" u1
+            INNER JOIN custom_attribute_user_storage c1 ON u1.id = c1.user_id
+            WHERE c1."name" = 'GE_id'
+        '''
+        result = db.session.execute(sql)
         return [r[0] for r in result]
 
     def get_new_users_from_GE(self, list_of_phones):
@@ -53,48 +60,54 @@ class RDSMigrate:
             cmd = """SELECT * FROM users
                 INNER JOIN community_tokens ON users.community_token_id=community_tokens.id
                 INNER JOIN business_categories ON users.business_category_id=business_categories.id
-                WHERE phone NOT IN (%s) LIMIT 1
+                WHERE users.id NOT IN (%s) LIMIT 1000
             """
             cursor.execute(cmd % format_strings, tuple(list_of_phones))
             users = cursor.fetchall()
             i = 0
             print('Fetched {} users'.format(len(users)))
-            for user in users:
-                pprint.pprint(user)
-                i += 1
-                print('Adding user {} of {}. User name = {} {}'.format(i, len(users), user['first_name'], user['name']))
-                self.insert_user(user)
 
+            n_users = len(users)
+            t0 = time.time()
+            estimate_time_left = 'unknown'
+            for user in users:
+                i += 1               
+                print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
+                        i, n_users, user['first_name'], user['name'], estimate_time_left))
+                self.insert_user(user)
+                elapsed_time = time.time() - t0
+                estimate_time_left = round( (elapsed_time / i * n_users) - elapsed_time, 1)
 
     def insert_user(self, ge_user):
         is_beneficiary = ge_user['admin_id'] is None   # Is this the correct way to find this out?
         transfer_usage = TransferUsage.find_or_create(ge_user['business_type'])
         phone_number = None if 'DELETED' in ge_user['phone'] else ge_user['phone']
-        print(phone_number)
+        try:
+            sempo_user = create_transfer_account_user(
+                blockchain_address=ge_user['wallet_address'],
+                first_name=ge_user['first_name'],
+                last_name=ge_user['last_name'],
+                phone=phone_number,
+                preferred_language=ge_user['preferred_language'],
+                is_beneficiary=is_beneficiary,
+                is_vendor=not is_beneficiary,
+                location=ge_user['location'],
+                business_usage_id=transfer_usage.id
+            )
 
-        sempo_user = create_transfer_account_user(
-            blockchain_address=ge_user['wallet_address'],
-            first_name=ge_user['first_name'],
-            last_name=ge_user['last_name'],
-            phone=phone_number,
-            preferred_language=ge_user['preferred_language'],
-            is_beneficiary=is_beneficiary,
-            is_vendor=not is_beneficiary,
-            location=ge_user['location'],
-            business_usage_id=transfer_usage.id
-        )
+            sempo_user.custom_attributes = self.get_custom_attributes(ge_user)
+            sempo_user.is_activated = ge_user['status'] == 'Active'  # Is this the correct way to find this out?
+            sempo_user.is_disabled = False
+            sempo_user.is_phone_verified = True
+            sempo_user.is_self_sign_up = False
+            sempo_user.terms_accepted = False
+            sempo_user.created = ge_user['created_at']
 
-        sempo_user.custom_attributes = self.get_custom_attributes(ge_user)
-        sempo_user.is_activated = ge_user['status'] == 'Active'  # Is this the correct way to find this out?
-        sempo_user.is_disabled = False
-        sempo_user.is_phone_verified = True
-        sempo_user.is_self_sign_up = False
-        sempo_user.terms_accepted = False
-        sempo_user.created = ge_user['created_at']
-
-        sempo_user = self.add_migrated_from_ge_attribute(sempo_user)
-        print('Succesfully inserted {}'.format(sempo_user.first_name))
-        db.session.commit()
+            sempo_user = self.add_migrated_from_ge_id(sempo_user, ge_user['id'])
+            db.session.commit()
+        except IntegrityError as e:
+            print(e)
+            db.session().rollback()
 
     def get_custom_attributes(self, ge_user):
         wanted_custom_attributes = [
@@ -112,52 +125,72 @@ class RDSMigrate:
                 custom_attributes.append(custom_attribute)
         return custom_attributes
 
-    def add_migrated_from_ge_attribute(self, sempo_user):
+    def add_migrated_from_ge_id(self, sempo_user, GE_id):
         migrated_attribute = CustomAttributeUserStorage(
-                    name='GE', value=True)
+                    name='GE_id', value=GE_id)
         sempo_user.custom_attributes.append(migrated_attribute)
         return sempo_user
 
     def update_users_refered_by(self):
         print('update_users_refered_by')
-        sql = '''SELECT u1.id,
-            u1."_phone",
-            u1.first_name,
-            u1.last_name,
-            c1.id,
-            c1.value
-        FROM "user" u1
-        INNER JOIN custom_attribute_user_storage c1 ON u1.id = c1.user_id
-        WHERE c1."name" = 'GE_id'
-        AND u1.id NOT IN
-            (SELECT u2.id
-            FROM "user" u2
-            INNER JOIN custom_attribute_user_storage c2 ON u2.id = c2.user_id
-            WHERE c2."name" = 'referred_by_id')
+        ge_sempo_user_ids = self.select_users_refered_by_not_set()
+        self.set_referred_by_all(ge_sempo_user_ids)
+
+    def select_users_refered_by_not_set(self):
+        sql = '''SELECT c1.value::text::int
+            FROM "user" u1
+            INNER JOIN custom_attribute_user_storage c1 ON u1.id = c1.user_id
+            WHERE c1."name" = 'GE_id'
+            AND u1.id NOT IN(
+                SELECT u2.id
+                FROM "user" u2
+                INNER JOIN custom_attribute_user_storage c2 ON u2.id = c2.user_id
+                WHERE c2."name" = 'referred_by_id'
+            )
         '''
         result = db.session.execute(sql)
         users_not_refered_by_id = [row[0] for row in result]
-        
-    def set_referred_by(self, sempo_user, referred_by_id):
-        print('set_referred_by ', referred_by_id)
+        return users_not_refered_by_id
+
+    def set_referred_by_all(self, ge_user_ids):
         with self.connection.cursor(MySQLdb.cursors.DictCursor) as cursor:
-            cmd = """SELECT * FROM users
-                WHERE id = %s
-            """
-            cursor.execute(cmd, (referred_by_id,))
-            refering_user_ge = cursor.fetchone()
 
-            if 'DELETED' not in refering_user_ge['phone']:
+            cmd = """SELECT id, referred_by_id FROM users
+                WHERE id in %s AND referred_by_id IS NOT NULL;
+                """
+            cursor.execute(cmd, (ge_user_ids,))
+            ge_id_referred_by = cursor.fetchall()
+            print('ge_id_referred_by', ge_id_referred_by)
 
-                refering_user_sempo = User.query.filter_by(phone=refering_user_ge['phone']).execution_options(
-                    show_all=True).one()
+            for item in ge_id_referred_by:
+                self.set_referred_by(item['id'], item['referred_by_id'])
 
-                print(refering_user_sempo)
-                
-                migrated_attribute = CustomAttributeUserStorage(
-                        name='referred_by_id', value=refering_user_sempo.id)
+    def set_referred_by(self, ge_id, ge_referred_by):
+        sempo_referred_by = self.get_sempo_id_from_ge_id(ge_referred_by)
+        if sempo_referred_by is not None:
+            referred_by_attribute = CustomAttributeUserStorage(
+                    name='referred_by_id', value=sempo_referred_by)
 
-                sempo_user.custom_attributes.append(migrated_attribute)
-            return sempo_user
+            sempo_user_id = self.get_sempo_id_from_ge_id(ge_id)
+            print('sempo_user_id', sempo_user_id)
+            sempo_user = User.query.filter_by(id=sempo_user_id).execution_options(
+                show_all=True).one()
 
-        
+            sempo_user.custom_attributes.append(referred_by_attribute)
+
+            db.session.commit()
+            print('Added reference user #{} is referenced by #{}'.format(sempo_user_id, sempo_referred_by))
+        else:
+            print('Referring GE user #{} not added to Sempo'.format(ge_referred_by))
+
+    def get_sempo_id_from_ge_id(self, ge_id):
+        sql = '''SELECT u1.id
+                FROM "user" u1
+                INNER JOIN custom_attribute_user_storage c1 ON u1.id = c1.user_id
+                WHERE c1."value"::text = '{}'
+        '''.format(ge_id)
+        result = db.session.execute(sql.format(ge_id)).first()
+        if result is not None:
+            return result[0]
+        else:
+            return result
