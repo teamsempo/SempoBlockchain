@@ -34,8 +34,7 @@ Sentry.init({ dsn: window.SENTRY_REACT_DSN });
 
 // Pusher Options
 const pusherOptions = {
-  cluster: 'ap1',
-  authEndpoint: `/api/v1/pusher/auth`
+  cluster: 'ap1'
 };
 
 delayConfiguration(store, window.PUSHER_KEY, pusherOptions);
