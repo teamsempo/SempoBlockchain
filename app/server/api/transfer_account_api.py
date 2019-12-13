@@ -1,6 +1,8 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
+from sqlalchemy.orm import lazyload
+
 from server import db
 from server.models.utils import paginate_query
 from server.models.transfer_account import TransferAccount, TransferAccountType
@@ -47,8 +49,10 @@ class TransferAccountAPI(MethodView):
             elif account_type_filter == 'beneficiary':
                 transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=False)
             else:
+                pass
                 # Filter Contract, Float and Organisation Transfer Accounts
-                transfer_accounts_query = TransferAccount.query.filter(TransferAccount.account_type == TransferAccountType.USER)
+                transfer_accounts_query = (TransferAccount.query
+                                           .filter(TransferAccount.account_type == TransferAccountType.USER))
 
             transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
 

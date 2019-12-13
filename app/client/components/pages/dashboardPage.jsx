@@ -24,6 +24,7 @@ const HeatMap = lazy(() => import('../heatmap/heatmap.jsx'));
 const mapStateToProps = (state) => {
   return {
     creditTransfers: state.creditTransfers,
+    login: state.login,
   };
 };
 
@@ -88,7 +89,10 @@ class DashboardPage extends React.Component {
     // your additionalParams
     const additionalParams = () => {};
 
-    subscribe(window.PUSHER_ENV_CHANNEL,'credit_transfer', PUSHER_CREDIT_TRANSFER, additionalParams);
+    let login = this.props.login;
+    let pusher_channel = window.PUSHER_ENV_CHANNEL + '-' + login.organisationName + '-' + login.organisationId;
+
+    subscribe(pusher_channel,'credit_transfer', PUSHER_CREDIT_TRANSFER, additionalParams);
 
     // access it within the data object = {
     //  type: String,

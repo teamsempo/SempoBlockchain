@@ -311,12 +311,11 @@ class KycApplicationSchema(SchemaBase):
 
 class OrganisationSchema(SchemaBase):
     name                = fields.Str()
+    primary_blockchain_address = fields.Str()
 
     users               = fields.Nested('server.schemas.UserSchema', many=True)
     transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
     credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
-
-    org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
 
 class TransferUsageSchema(Schema):
     id                  = fields.Int(dump_only=True)

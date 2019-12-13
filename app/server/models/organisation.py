@@ -5,7 +5,8 @@ from server.models.utils import ModelBase, organisation_association_table
 import server.models.transfer_account
 from server import message_processor
 from server.utils.i18n import i18n_for
-
+from server.utils.access_control import AccessControl
+import server.models.transfer_account
 
 class Organisation(ModelBase):
     """
@@ -17,6 +18,11 @@ class Organisation(ModelBase):
 
     name                = db.Column(db.String)
 
+    # TODO: Create a mixin so that both user and organisation can use the same definition here
+    # This is the blockchain address used for transfer accounts, unless overridden
+    primary_blockchain_address = db.Column(db.String)
+
+    # This is the 'behind the scenes' blockchain address used for paying gas fees
     system_blockchain_address = db.Column(db.String)
 
     users               = db.relationship(
@@ -37,6 +43,13 @@ class Organisation(ModelBase):
         post_update=True,
         primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
         uselist=False)
+
+    # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
+    @property
+    def queried_org_level_transfer_account(self):
+        if self.org_level_transfer_account_id:
+            return server.models.transfer_account.TransferAccount.query.get(self.org_level_transfer_account_id)
+        return None
 
     credit_transfers    = db.relationship("CreditTransfer",
                                           secondary=organisation_association_table,
@@ -66,9 +79,17 @@ class Organisation(ModelBase):
         message_processor.send_message(to_user.get('phone'), message)
 
     def _setup_org_transfer_account(self):
-        transfer_account = server.models.transfer_account.TransferAccount(bind_to_entity=self, is_approved=True)
+        transfer_account = server.models.transfer_account.TransferAccount(
+            bound_entity=self,
+            is_approved=True
+        )
         db.session.add(transfer_account)
         self.org_level_transfer_account = transfer_account
+
+        # Back setup for delayed organisation transfer account instantiation
+        for user in self.users:
+            if AccessControl.has_any_tier(user.roles, 'ADMIN'):
+                user.transfer_accounts.append(self.org_level_transfer_account)
 
     def bind_token(self, token):
         self.token = token
@@ -89,6 +110,8 @@ class Organisation(ModelBase):
                 wei_topup_threshold=0,
             )
 
+            self.primary_blockchain_address = self.system_blockchain_address or bt.create_blockchain_wallet()
+
         else:
             self.is_master = False
 
@@ -96,6 +119,8 @@ class Organisation(ModelBase):
                 wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
                 wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
             )
+
+            self.primary_blockchain_address = bt.create_blockchain_wallet()
 
         if token:
             self.bind_token(token)

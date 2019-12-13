@@ -9,7 +9,7 @@ from server.models.ussd import UssdMenu
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.organisation import Organisation
-from server.models.token import Token
+from server.models.token import Token, TokenType
 from server.exceptions import TransferUsageNameDuplicateException
 
 
@@ -330,8 +330,10 @@ def create_reserve_token(app):
             reserve_token = Token(
                 address=reserve_token_address,
                 name=reserve_token_name,
-                symbol=reserve_token_symbol
+                symbol=reserve_token_symbol,
+                token_type=TokenType.RESERVE
             )
+
             db.session.add(reserve_token)
             db.session.commit()
 
@@ -353,7 +355,7 @@ def create_master_organisation(reserve_token):
         print('Creating master organisation')
         if reserve_token:
             print('Binding to reserve token')
-        master_organisation = Organisation(is_master=True, token=reserve_token)
+        master_organisation = Organisation(name='Reserve', is_master=True, token=reserve_token)
         db.session.add(master_organisation)
 
         db.session.commit()

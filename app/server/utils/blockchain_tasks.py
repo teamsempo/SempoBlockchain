@@ -111,7 +111,6 @@ class BlockchainTasker(object):
         raise TimeoutError
 
 
-
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
     def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
         """
@@ -173,7 +172,7 @@ class BlockchainTasker(object):
                             from_address, to_address, amount,
                             dependent_on_tasks=None):
         """
-        Makes a "Transfer From" transaction on an ERC20 token.
+        Makes a "Transfer" or "Transfer From" transaction on an ERC20 token.
 
         :param signing_address: address of wallet signing txn
         :param token: ERC20 token being transferred
@@ -185,6 +184,11 @@ class BlockchainTasker(object):
         """
 
         raw_amount = token.system_amount_to_token(amount)
+
+        balance_wei = self.get_wallet_balance(from_address, token)
+
+        print(f'Balance for {from_address} is: {balance_wei} wei\n (Sending {raw_amount} wei)')
+
 
         if signing_address == from_address:
             return self._synchronous_transaction_task(
@@ -434,3 +438,4 @@ class BlockchainTasker(object):
                                    args=[wallet_address])
 
         return self._execute_synchronous_celery(sig)
+
