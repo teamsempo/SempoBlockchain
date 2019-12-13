@@ -59,6 +59,30 @@ class BeneficiaryLiveFeed extends React.Component {
                                 sender_user_name = null
                             }
 
+                            let currency;
+                            let fromExchangeTransfer;
+                            let transferToMoney;
+                            let recipientCurrency;
+                            let showExchange = false;
+
+                            const transferAccountId = transfer.sender_transfer_account_id;
+                            if (transferAccountId) {
+                              const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+                              currency = transferAccount && transferAccount.token && transferAccount.token.symbol;
+                            }
+                            const transferFromMoney = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
+
+                            if (transfer.from_exchange_to_transfer_id !== null && typeof(transfer.from_exchange_to_transfer_id) !== "undefined") {
+                              fromExchangeTransfer = this.props.creditTransfers.byId[transfer.from_exchange_to_transfer_id];
+                              const transferAccountId = fromExchangeTransfer.sender_transfer_account_id;
+                              if (transferAccountId) {
+                                const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+                                recipientCurrency = transferAccount && transferAccount.token && transferAccount.token.symbol;
+                              }
+                              transferToMoney = formatMoney(fromExchangeTransfer.transfer_amount / 100, undefined, undefined, undefined, recipientCurrency);
+                              showExchange = true;
+                            }
+
                             var statuscolors = {PENDING: '#cc8ee9', COMPLETE: '#2d9ea0', REJECTED: '#ff715b'};
                             var timeStatusBlock = (
                               <UserTime>
@@ -71,40 +95,18 @@ class BeneficiaryLiveFeed extends React.Component {
                               </UserTime>
                             );
 
-                            let currency;
-                            let fromExchangeTransfer;
-                            let recipientCurrency;
-                            const transferAccountId = transfer.sender_transfer_account_id;
-                            if (transferAccountId) {
-                              const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-                              currency = transferAccount && transferAccount.token && transferAccount.token.symbol;
-                            }
-                            const transferFromMoney = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
-
-
-                            if (transfer.from_exchange_to_transfer_id !== null && typeof(transfer.from_exchange_to_transfer_id) !== "undefined") {
-
-                              fromExchangeTransfer = this.props.creditTransfers.byId[transfer.from_exchange_to_transfer_id];
-                              const transferAccountId = fromExchangeTransfer.sender_transfer_account_id;
-                              if (transferAccountId) {
-                                const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-                                recipientCurrency = transferAccount && transferAccount.token && transferAccount.token.symbol;
-                              }
-                              const transferToMoney = formatMoney(fromExchangeTransfer.transfer_amount / 100, undefined, undefined, undefined, recipientCurrency);
-
-                              if (transfer.transfer_type === 'EXCHANGE') {
-                                return (
-                                    <UserWrapper key={transfer.id}>
-                                      <UserSVG src="/static/media/exchange.svg"/>
-                                      <UserGroup>
-                                        <TopText>{sender_user_name} exchanged</TopText>
-                                        <BottomText><Highlight>{transferFromMoney}</Highlight> for
-                                          <DarkHighlight> {transferToMoney}</DarkHighlight></BottomText>
-                                      </UserGroup>
-                                      {timeStatusBlock}
-                                    </UserWrapper>
-                                )
-                              }
+                            if (transfer.transfer_type === 'EXCHANGE' && showExchange) {
+                              return (
+                                  <UserWrapper key={transfer.id}>
+                                    <UserSVG src="/static/media/exchange.svg"/>
+                                    <UserGroup>
+                                      <TopText>{sender_user_name} exchanged</TopText>
+                                      <BottomText><Highlight>{transferFromMoney}</Highlight> for
+                                        <DarkHighlight> {transferToMoney}</DarkHighlight></BottomText>
+                                    </UserGroup>
+                                    {timeStatusBlock}
+                                  </UserWrapper>
+                              )
                             } else if (transfer.transfer_type === 'PAYMENT') {
                                 return (
                                     <UserWrapper key={transfer.id}>
