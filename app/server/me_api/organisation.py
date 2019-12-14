@@ -9,7 +9,7 @@ class MeOrganisationAPI(MethodView):
     @requires_auth
     def get(self):
 
-        organisation = g.user.default_organisation
+        organisation = g.active_organisation
 
         serialised_data = me_organisation_schema.dump(organisation).data
 
