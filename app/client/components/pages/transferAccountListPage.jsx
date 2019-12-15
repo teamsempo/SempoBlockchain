@@ -16,7 +16,7 @@ const mapStateToProps = (state) => {
     transferAccounts: state.transferAccounts,
     mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
       .map((id) => {return {...{id, ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]}, ...state.transferAccounts.byId[id]}})
-      .filter(mergedObj => Object.keys(mergedObj).length > 3),  // added to remove {id: 1, balance: 12, token: {...}} objects
+      .filter(mergedObj => mergedObj.users && mergedObj.users.length >= 1),  // only show mergedObjects with users
     users: state.users,
   };
 };
