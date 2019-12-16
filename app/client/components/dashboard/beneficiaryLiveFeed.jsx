@@ -60,7 +60,7 @@ class BeneficiaryLiveFeed extends React.Component {
                             }
 
                             let currency;
-                            let fromExchangeTransfer;
+                            let exchangeToTransfer;
                             let transferToMoney;
                             let recipientCurrency;
                             let showExchange = false;
@@ -73,13 +73,13 @@ class BeneficiaryLiveFeed extends React.Component {
                             const transferFromMoney = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
 
                             if (transfer.from_exchange_to_transfer_id !== null && typeof(transfer.from_exchange_to_transfer_id) !== "undefined") {
-                              fromExchangeTransfer = this.props.creditTransfers.byId[transfer.from_exchange_to_transfer_id];
-                              const transferAccountId = fromExchangeTransfer.sender_transfer_account_id;
+                              exchangeToTransfer = this.props.creditTransfers.byId[transfer.from_exchange_to_transfer_id];
+                              const transferAccountId = exchangeToTransfer.sender_transfer_account_id;
                               if (transferAccountId) {
                                 const transferAccount = this.props.transferAccounts.byId[transferAccountId];
                                 recipientCurrency = transferAccount && transferAccount.token && transferAccount.token.symbol;
                               }
-                              transferToMoney = formatMoney(fromExchangeTransfer.transfer_amount / 100, undefined, undefined, undefined, recipientCurrency);
+                              transferToMoney = formatMoney(exchangeToTransfer.transfer_amount / 100, undefined, undefined, undefined, recipientCurrency);
                               showExchange = true;
                             }
 
