@@ -9,16 +9,20 @@ import CreateVendorForm, {ICreateVendor} from './CreateVendorForm';
 import { loadTransferUsages } from '../../reducers/transferUsage/actions'
 import {TransferUsage} from "../../reducers/transferUsage/types";
 import {ReduxState} from "../../reducers/rootReducer";
+import {Organisation} from "../../reducers/organisation/types";
+import {loadOrganisation} from "../../reducers/organisation/actions";
 
 interface DispatchProps {
   createUser: (body: any) => void,
   resetCreateUser: () => void
   loadTransferUsages: () => void
+  loadOrganisation: () => void
 }
 
 interface StateProps {
   users: any,
   transferUsages: TransferUsage[]
+  organisation?: Organisation
 }
 
 interface OuterProps {
@@ -39,6 +43,7 @@ type Props = DispatchProps & StateProps & OuterProps
 class CreateUser extends React.Component<Props> {
   componentDidMount() {
     this.props.loadTransferUsages();
+    this.props.loadOrganisation();
   }
 
   componentWillUnmount() {
@@ -143,7 +148,8 @@ const mapDispatchToProps = (dispatch: any) => {
   return {
     createUser: (body: any) => dispatch(createUser({body})),
     resetCreateUser: () => {dispatch({type: RESET_CREATE_USER})},
-    loadTransferUsages: () => {dispatch(loadTransferUsages())}
+    loadTransferUsages: () => {dispatch(loadTransferUsages())},
+    loadOrganisation: () => {dispatch(loadOrganisation())}
   };
 };
 

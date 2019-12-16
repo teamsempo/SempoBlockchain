@@ -8,6 +8,7 @@ import AsyncButton from "../AsyncButton";
 import InputField from '../form/InputField'
 import SelectField from '../form/SelectField'
 import {TransferUsage} from "../../reducers/transferUsage/types";
+import {Organisation} from "../../reducers/organisation/types";
 
 export interface ICreateUser {
   firstName?: string
@@ -30,6 +31,7 @@ interface OuterProps {
 
 interface StateProps {
   businessUsageValue?: string
+  organisation: Organisation | null
 }
 
 type Props = OuterProps & StateProps
@@ -65,16 +67,17 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
   }
 
   render() {
+    const {organisation, businessUsageValue, transferUsages, transferAccountType} = this.props;
     let initialDisbursementAmount;
     let businessUsage;
 
     if (window.MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT > 0) {
       initialDisbursementAmount = <InputField name="additionalInitialDisbursement" label={'Additional Initial Disbursement Amount'}>
-        {window.CURRENCY_NAME}
+        {organisation !== null ? organisation.token.symbol : null}
       </InputField>
     }
-    if (this.props.transferUsages.length > 0) {
-      if (this.props.businessUsageValue && this.props.businessUsageValue.toLowerCase() === "other") {
+    if (transferUsages.length > 0) {
+      if (businessUsageValue && businessUsageValue.toLowerCase() === "other") {
         businessUsage = <>
           <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
           <InputField name="usageOtherSpecific" label='Please specify the category' isRequired />
@@ -86,7 +89,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
 
     return (
       <div>
-        <ModuleHeader>Create a {this.props.transferAccountType} account</ModuleHeader>
+        <ModuleHeader>Create a {transferAccountType} account</ModuleHeader>
 
         <div style={{padding: '1em'}}>
           <form onSubmit={this.props.handleSubmit}>
@@ -132,6 +135,8 @@ export default connect(state => {
   const selector = formValueSelector('createUser');
   return {
     businessUsageValue: selector(state, 'businessUsage'),
+    // @ts-ignore
+    organisation: state.organisation.data
   }
 // @ts-ignore
 })(CreateUserReduxForm);

@@ -38,3 +38,5 @@ ngrok
 app/server/static/javascript/dist/*
 dump.rdb
 eth_worker/complete_compiled_contracts/
+eth_worker/celerybeat-schedule
+eth_worker/celerybeat.pid
