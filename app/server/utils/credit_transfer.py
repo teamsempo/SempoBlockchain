@@ -48,7 +48,8 @@ def calculate_transfer_stats(total_time_series=False):
 
     total_exchanged = (
         db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-            .filter(CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE).first().total
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE)
+            .filter(CreditTransfer.token == g.active_organisation.token).first().total
     )
 
     total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
