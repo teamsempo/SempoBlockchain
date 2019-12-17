@@ -16,6 +16,8 @@ const mapStateToProps = (state) => {
       .filter(id => typeof(state.creditTransfers.byId[id]) !== "undefined")
       .map(id => state.creditTransfers.byId[id]),
     users: state.users,
+    transferAccounts: state.transferAccounts,
+    creditTransfers: state.creditTransfers,
   };
 };
 
@@ -57,6 +59,30 @@ class BeneficiaryLiveFeed extends React.Component {
                                 sender_user_name = null
                             }
 
+                            let currency;
+                            let exchangeToTransfer;
+                            let transferToMoney;
+                            let recipientCurrency;
+                            let showExchange = false;
+
+                            const transferAccountId = transfer.sender_transfer_account_id;
+                            if (transferAccountId) {
+                              const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+                              currency = transferAccount && transferAccount.token && transferAccount.token.symbol;
+                            }
+                            const transferFromMoney = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
+
+                            if (transfer.from_exchange_to_transfer_id !== null && typeof(transfer.from_exchange_to_transfer_id) !== "undefined") {
+                              exchangeToTransfer = this.props.creditTransfers.byId[transfer.from_exchange_to_transfer_id];
+                              const transferAccountId = exchangeToTransfer.sender_transfer_account_id;
+                              if (transferAccountId) {
+                                const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+                                recipientCurrency = transferAccount && transferAccount.token && transferAccount.token.symbol;
+                              }
+                              transferToMoney = formatMoney(exchangeToTransfer.transfer_amount / 100, undefined, undefined, undefined, recipientCurrency);
+                              showExchange = true;
+                            }
+
                             var statuscolors = {PENDING: '#cc8ee9', COMPLETE: '#2d9ea0', REJECTED: '#ff715b'};
                             var timeStatusBlock = (
                               <UserTime>
@@ -69,13 +95,25 @@ class BeneficiaryLiveFeed extends React.Component {
                               </UserTime>
                             );
 
-                            if (transfer.transfer_type === 'PAYMENT') {
+                            if (transfer.transfer_type === 'EXCHANGE' && showExchange) {
+                              return (
+                                  <UserWrapper key={transfer.id}>
+                                    <UserSVG src="/static/media/exchange.svg"/>
+                                    <UserGroup>
+                                      <TopText>{sender_user_name} exchanged</TopText>
+                                      <BottomText><Highlight>{transferFromMoney}</Highlight> for
+                                        <DarkHighlight> {transferToMoney}</DarkHighlight></BottomText>
+                                    </UserGroup>
+                                    {timeStatusBlock}
+                                  </UserWrapper>
+                              )
+                            } else if (transfer.transfer_type === 'PAYMENT') {
                                 return (
                                     <UserWrapper key={transfer.id}>
                                       <UserSVG src="/static/media/transfer.svg"/>
                                       <UserGroup>
-                                        <TopText>{sender_user_name} transfer</TopText>
-                                        <BottomText><Highlight>{formatMoney(transfer.transfer_amount / 100)}</Highlight> to
+                                        <TopText>{sender_user_name} transferred</TopText>
+                                        <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> to
                                           <DarkHighlight> {recipient_user_name}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
@@ -87,7 +125,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                       <UserSVG src="/static/media/disbursement.svg"/>
                                       <UserGroup>
                                           <TopText>Disbursement of</TopText>
-                                          <BottomText><DarkHighlight>{formatMoney(transfer.transfer_amount / 100)}</DarkHighlight> to
+                                          <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> to
                                             <DarkHighlight> {recipient_user_name}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
@@ -100,7 +138,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                                src="/static/media/disbursement.svg"/>
                                       <UserGroup>
                                           <TopText>Withdrawal of</TopText>
-                                          <BottomText><DarkHighlight>{formatMoney(transfer.transfer_amount / 100)}</DarkHighlight> by
+                                          <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> by
                                             <DarkHighlight> {sender_user_name}</DarkHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}

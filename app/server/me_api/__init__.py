@@ -1,5 +1,6 @@
 from flask import Blueprint
 
+from server.me_api.organisation import MeOrganisationAPI
 from server.me_api.transfer_account import MeTransferAccountAPI
 from server.me_api.credit_transfer import MeCreditTransferAPI, RequestWithdrawalAPI
 from server.me_api.me import MeAPI
@@ -75,4 +76,10 @@ me_blueprint.add_url_rule(
     '/poli_payments/',
     view_func=PoliPaymentsAPI.as_view('poli_payments_view'),
     methods=['PUT', 'POST'],
+)
+
+me_blueprint.add_url_rule(
+    '/organisation/',
+    view_func=MeOrganisationAPI.as_view('me_organisation_view'),
+    methods=['GET'],
 )

@@ -105,8 +105,6 @@ class NavBar extends React.Component {
           orgs = []
         }
 
-        console.log('orgs',orgs);
-
         if (this.props.loggedIn) {
 
             return (

@@ -147,6 +147,8 @@ class CreditTransferSchema(Schema):
     sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
     recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
 
+    from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
+
     attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 
     lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
@@ -311,9 +313,12 @@ class OrganisationSchema(SchemaBase):
     name                = fields.Str()
     primary_blockchain_address = fields.Str()
 
+    token               = fields.Nested('server.schemas.TokenSchema')
+
     users               = fields.Nested('server.schemas.UserSchema', many=True)
     transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
     credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
+
 
 class TransferUsageSchema(Schema):
     id                  = fields.Int(dump_only=True)
@@ -380,6 +385,7 @@ kyc_application_state_schema = KycApplicationSchema(
              "beneficial_owners", "bank_accounts",
              "documents", "dob"
              ))
+me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
 

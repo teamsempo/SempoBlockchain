@@ -1,5 +1,8 @@
 export interface Organisation {
-  name: string
+  name: string,
+  token: {
+    symbol: string
+  }
 }
 export const UPDATE_ORGANISATION = "UPDATE_ORGANISATION";
 interface UpdateOrganisation {
