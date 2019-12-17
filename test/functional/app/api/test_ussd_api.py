@@ -3,6 +3,7 @@ from faker.providers import phone_number
 from faker import Faker
 from functools import partial
 
+import config
 from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_phone
 from migrations.seed import create_ussd_menus, create_business_categories
 from helpers.user import UserFactory, TransferUsageFactory
@@ -55,7 +56,7 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
 
     def req(text):
         response = test_client.post(
-            '/api/v1/ussd/kenya',
+            f'/api/v1/ussd/kenya?username={config.EXTERNAL_AUTH_USERNAME}&password={config.EXTERNAL_AUTH_PASSWORD}',
             headers=dict(Accept='application/json'),
             json={'sessionId': session_id,
                   'phoneNumber': sender.phone,
