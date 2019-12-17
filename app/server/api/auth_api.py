@@ -342,13 +342,7 @@ class ActivateUserAPI(MethodView):
 
             auth_token = user.encode_auth_token()
 
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully activated.',
-                'auth_token': auth_token.decode(),
-                'user_id': user.id,
-                'email': user.email,
-            }
+            response_object = create_user_response_object(user, auth_token, 'Successfully activated.')
 
             db.session.commit()
 
