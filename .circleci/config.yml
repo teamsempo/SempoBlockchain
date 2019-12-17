@@ -141,11 +141,6 @@ jobs:
           name: Run Docker Tests
           command: |
             docker-compose up --exit-code-from app
-      - run:
-          name: Run Jest Tests
-          command: |
-            cd app
-            npm run tests
   deploy:
     working_directory: ~/project
     docker:
