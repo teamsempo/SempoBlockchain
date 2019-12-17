@@ -172,9 +172,6 @@ function* register({payload}) {
     const registered_account = yield call(registerAPI, payload);
 
     if (registered_account.status === 'success') {
-      yield put(createLoginSuccessObject(registered_account));
-      yield call(storeSessionToken, registered_account.auth_token );
-      yield call (authenticatePusher);
       yield put({type: REGISTER_SUCCESS, registered_account});
 
     } else if (registered_account.tfa_url) {

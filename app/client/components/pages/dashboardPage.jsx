@@ -62,7 +62,6 @@ class DashboardPage extends React.Component {
   }
 
   componentDidMount() {
-    console.log('dashboard')
     let transfer_type = 'ALL';
     let per_page = 50;
     let page = 1;
@@ -74,8 +73,6 @@ class DashboardPage extends React.Component {
     });
 
     const parsed = this.parseQuery(location.search);
-
-    console.log(parsed)
 
     if (parsed.actok) {
       console.log('actok', parsed.actok)
