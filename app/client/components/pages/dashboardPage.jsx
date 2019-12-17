@@ -93,7 +93,7 @@ class DashboardPage extends React.Component {
     const additionalParams = () => {};
 
     let login = this.props.login;
-    let pusher_channel = window.PUSHER_ENV_CHANNEL + '-' + login.organisationName + '-' + login.organisationId;
+    let pusher_channel = window.PUSHER_ENV_CHANNEL + '-' + login.organisationId;
 
     subscribe(pusher_channel,'credit_transfer', PUSHER_CREDIT_TRANSFER, additionalParams);
 
