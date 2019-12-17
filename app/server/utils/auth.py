@@ -1,12 +1,21 @@
+import time
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import db
+from server.constants import DENOMINATION_DICT
+from server.models.currency_conversion import CurrencyConversion
+from server.models.transfer_account import TransferAccount
+from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.ip_address import IpAddress
 from server.models.organisation import Organisation
 from server.utils.access_control import AccessControl
 import config, hmac, hashlib, json, urllib
-from typing import Optional, List, Dict
+from typing import Optional, Tuple, Dict
+
+from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
+from server.utils.feedback import request_feedback_questions
+from server.utils.intercom import create_intercom_secret
 
 def get_complete_auth_token(user):
     auth_token = user.encode_auth_token().decode()
@@ -26,7 +35,7 @@ def show_all(f):
 
 def requires_auth(f=None,
                   allowed_roles: Optional[Dict]=None,
-                  allowed_basic_auth_types: Optional[List]=None,  # currently 'external' or 'internal'
+                  allowed_basic_auth_types: Optional[Tuple]=None,  # currently 'external' or 'internal'
                   ignore_tfa_requirement: bool=False,
                   allow_query_string_auth: bool=False):
 
@@ -37,8 +46,8 @@ def requires_auth(f=None,
         return partial(requires_auth,
                        allowed_roles=allowed_roles,
                        allowed_basic_auth_types=allowed_basic_auth_types,
-                       ignore_tfa_requirement = ignore_tfa_requirement,
-                       allow_query_string_auth = allow_query_string_auth)
+                       ignore_tfa_requirement=ignore_tfa_requirement,
+                       allow_query_string_auth=allow_query_string_auth)
 
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -119,6 +128,35 @@ def requires_auth(f=None,
                         }
                         return make_response(jsonify(response_object)), 401
 
+                    if not user.is_activated:
+                        response_object = {
+                            'status': 'fail',
+                            'message': 'user not activated'
+                        }
+                        return make_response(jsonify(response_object)), 401
+
+                    if user.is_disabled:
+                        response_object = {
+                            'status': 'fail',
+                            'message': 'user has been disabled'
+                        }
+                        return make_response(jsonify(response_object)), 401
+
+                    tfa_response_object = tfa_logic(user, tfa_token, ignore_tfa_requirement)
+                    if tfa_response_object:
+                        return make_response(jsonify(tfa_response_object)), 401
+
+                    if len(allowed_roles) > 0:
+                        held_roles = resp.get('roles', {})
+
+                        if not AccessControl.has_suffient_role(held_roles, allowed_roles):
+                            response_object = {
+                                'message': 'user does not have any of the allowed roles: ' + str(allowed_roles),
+                            }
+                            return make_response(jsonify(response_object)), 401
+
+                    # ----- AUTH PASSED, DO FINAL SETUP -----
+
                     g.user = user
                     g.member_organisations = [org.id for org in user.organisations]
                     try:
@@ -140,34 +178,6 @@ def requires_auth(f=None,
 
                     except NotImplementedError:
                         g.active_organisation = None
-
-                    if not user.is_activated:
-                        response_object = {
-                            'status': 'fail',
-                            'message': 'user not activated'
-                        }
-                        return make_response(jsonify(response_object)), 401
-
-                    if user.is_disabled:
-                        response_object = {
-                            'status': 'fail',
-                            'message': 'user has been disabled'
-                        }
-                        return make_response(jsonify(response_object)), 401
-
-                    tfa_response_object = tfa_logic(user, tfa_token, ignore_tfa_requirement)
-
-                    if tfa_response_object:
-                        return make_response(jsonify(tfa_response_object)), 401
-
-                    if len(allowed_roles) > 0:
-                        held_roles = resp.get('roles', {})
-
-                        if not AccessControl.has_suffient_role(held_roles, allowed_roles):
-                            response_object = {
-                                'message': 'user does not have any of the allowed roles: ' + str(allowed_roles),
-                            }
-                            return make_response(jsonify(response_object)), 401
 
                     proxies = request.headers.getlist("X-Forwarded-For")
                     check_ip(proxies, user, num_proxy=1)
@@ -271,3 +281,97 @@ def verify_slack_requests(f=None):
 
         return make_response(jsonify({'message': 'Invalid auth'})), 401
     return wrapper
+
+
+def get_user_organisations(user):
+    active_organisation = getattr(g, "active_organisation", None) or user.fallback_active_organisation()
+
+    organisations = dict(
+        active_organisation_name=active_organisation.name,
+        active_organisation_id=active_organisation.id,
+        organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
+    )
+
+    return organisations
+
+
+def get_denominations():
+    currency_name = current_app.config['CURRENCY_NAME']
+    return DENOMINATION_DICT.get(currency_name, {})
+
+
+def create_user_response_object(user, auth_token, message):
+    if current_app.config['IS_USING_BITCOIN']:
+        try:
+            usd_to_satoshi_rate = get_usd_to_satoshi_rate()
+        except Exception:
+            usd_to_satoshi_rate = None
+    else:
+        usd_to_satoshi_rate = None
+
+    conversion_rate = 1
+    currency_name = current_app.config['CURRENCY_NAME']
+    if user.default_currency:
+        conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
+        if conversion is not None:
+            conversion_rate = conversion.rate
+            currency_name = user.default_currency
+
+    transfer_usages = []
+    usage_objects = TransferUsage.query.order_by(TransferUsage.priority).limit(11).all()
+    for usage in usage_objects:
+        if ((usage.is_cashout and user.cashout_authorised) or not usage.is_cashout):
+            transfer_usages.append({
+                'id': usage.id,
+                'name': usage.name,
+                'icon': usage.icon,
+                'priority': usage.priority,
+                'translations': usage.translations
+            })
+
+    response_object = {
+        'status': 'success',
+        'message': message,
+        'auth_token': auth_token.decode(),
+        'user_id': user.id,
+        'email': user.email,
+        'admin_tier': user.admin_tier,
+        'is_vendor': user.is_vendor,
+        'is_supervendor': user.is_supervendor,
+        'server_time': int(time.time() * 1000),
+        'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
+        'pusher_key': current_app.config['PUSHER_KEY'],
+        'currency_decimals': current_app.config['CURRENCY_DECIMALS'],
+        'currency_name': currency_name,
+        'currency_conversion_rate': conversion_rate,
+        'secret': user.secret,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'deployment_name': current_app.config['DEPLOYMENT_NAME'],
+        'denominations': get_denominations(),
+        'terms_accepted': user.terms_accepted,
+        'request_feedback_questions': request_feedback_questions(user),
+        'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
+        'transfer_usages': transfer_usages,
+        'usd_to_satoshi_rate': usd_to_satoshi_rate,
+        'kyc_active': True,  # todo; kyc active function
+        'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
+        'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
+        'web_api_version': current_app.config['WEB_VERSION'],
+    }
+
+    # merge the user and organisation object nicely (handles non-orgs well)
+    response_object = {**response_object, **get_user_organisations(user)}
+
+    # todo: fix this (now many to many)
+    user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
+        TransferAccount.users.any(User.id.in_([user.id]))).all()
+    if len(user_transfer_accounts) > 0:
+        response_object['transfer_account_Id'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
+        response_object['name'] = user_transfer_accounts[0].name  # get the first transfer account name
+
+    # if user.transfer_account:
+    #     response_object['transfer_account_Id'] = user.transfer_account.id
+    #     response_object['name'] = user.transfer_account.name
+
+    return response_object
