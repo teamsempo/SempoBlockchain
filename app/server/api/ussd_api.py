@@ -2,7 +2,7 @@ from flask import Blueprint, request, make_response
 from flask.views import MethodView
 
 from server import db
-from server.utils.auth import show_all
+from server.utils.auth import show_all, requires_auth
 from server.models.user import User
 from server.models.ussd import UssdMenu
 from server.utils.phone import proccess_phone_number
@@ -26,6 +26,7 @@ class ProcessKenyaUssd(MethodView):
         All responses mid-session begin with CON. All responses that terminate the session begin with the word END
     """
     @show_all
+    @requires_auth(allowed_basic_auth_types=('external',), allow_query_string_auth=True)
     def post(self):
         post_data = request.get_json() or request.form
 
