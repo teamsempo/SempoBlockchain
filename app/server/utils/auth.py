@@ -27,7 +27,8 @@ def show_all(f):
 def requires_auth(f=None,
                   allowed_roles: Optional[Dict]=None,
                   allowed_basic_auth_types: Optional[List]=None,  # currently 'external' or 'internal'
-                  ignore_tfa_requirement: bool=False):
+                  ignore_tfa_requirement: bool=False,
+                  allow_query_string_auth: bool=False):
 
     allowed_roles = allowed_roles or {}
     allowed_basic_auth_types = allowed_basic_auth_types or []
@@ -36,16 +37,54 @@ def requires_auth(f=None,
         return partial(requires_auth,
                        allowed_roles=allowed_roles,
                        allowed_basic_auth_types=allowed_basic_auth_types,
-                       ignore_tfa_requirement = ignore_tfa_requirement)
+                       ignore_tfa_requirement = ignore_tfa_requirement,
+                       allow_query_string_auth = allow_query_string_auth)
 
     @wraps(f)
     def wrapper(*args, **kwargs):
 
-        auth = request.authorization
+        # ----- FIRST GET AUTH VALUES -----
 
+        # Query string auth needs to be explicity allowed for an endpoint since it can lead to security vulnerabilities
+        # if used incorrectly by the client (for example credentials getting logged by website trackers).
+        # We get credentials with it first, meaning any values will be overwritten by a present header auth
+        if allow_query_string_auth:
+            username = request.args.get('username', None)
+            password = request.args.get('password', None)
+
+            auth_token = request.args.get('auth_token', None)
+            tfa_token = request.args.get('tfa_token', None)
+        else:
+            username = None
+            password = None
+            auth_token = None
+            tfa_token = None
+
+        # Next get basic auth, which we parse using flask's built-in process, if present overwriting query string values
+        auth = request.authorization
         if auth and auth.type == 'basic':
-            (password, type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(auth.username, (None, None))
-            if password is None or password != auth.password:
+            username = auth.username or username
+            password = auth.password or password
+
+        # Lastly, get any custom set Sempo auth headers, if present overwriting query string values
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            split_header = auth_header.split("|")
+            auth_token = split_header[0]
+            try:
+                tfa_token = split_header[1]
+            except IndexError:
+                # Auth header does not contain a TFA token, try getting it from explicit header instead
+                # (dev convenience)
+                tfa_token = request.headers.get('TFA_Authorization') or tfa_token
+
+        # ----- THEN ATTEMPT AUTHORIZATION -----
+
+        # If username as password attempt basic auth
+        if username and password:
+
+            (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
+            if required_password is None or required_password != password:
                 response_object = {
                     'message': 'invalid basic auth username or password'
                 }
@@ -57,28 +96,13 @@ def requires_auth(f=None,
                 }
                 return make_response(jsonify(response_object)), 401
 
-            if type not in allowed_basic_auth_types:
+            if auth_type not in allowed_basic_auth_types:
                 response_object = {
-                    'message': 'Basic Auth type is {}. Must be: {}'.format(type, allowed_basic_auth_types)
+                    'message': 'Basic Auth type is {}. Must be: {}'.format(auth_type, allowed_basic_auth_types)
                 }
                 return make_response(jsonify(response_object)), 401
 
             return f(*args, **kwargs)
-
-        auth_header = request.headers.get('Authorization')
-
-        if auth_header and auth_header != 'null':
-            split_header = auth_header.split("|")
-            auth_token = split_header[0]
-            try:
-                tfa_token = split_header[1]
-            except IndexError:
-                # Auth header does not contain a TFA token, try getting it from explicit header instead
-                # (dev convenience)
-                tfa_token = request.headers.get('TFA_Authorization', '')
-        else:
-            auth_token = ''
-            tfa_token = ''
 
         if auth_token:
 
@@ -145,13 +169,11 @@ def requires_auth(f=None,
                             }
                             return make_response(jsonify(response_object)), 401
 
-
                     proxies = request.headers.getlist("X-Forwarded-For")
                     check_ip(proxies, user, num_proxy=1)
 
                     # updates the validated user last seen timestamp
                     user.update_last_seen_ts()
-                    # db.session.commit() todo: fix this. can't commit here as means we lose context
 
                     #This is the point where you've made it through ok and you can return the top method
                     return f(*args, **kwargs)
@@ -161,12 +183,12 @@ def requires_auth(f=None,
                 'message': resp
             }
             return make_response(jsonify(response_object)), 401
-        else:
-            response_object = {
-                'status': 'fail',
-                'message': 'Provide a valid auth token.'
-            }
-            return make_response(jsonify(response_object)), 401
+
+        response_object = {
+            'status': 'fail',
+            'message': 'Provide a valid auth token.'
+        }
+        return make_response(jsonify(response_object)), 401
 
     return wrapper
 
