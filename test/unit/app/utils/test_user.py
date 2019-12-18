@@ -16,6 +16,7 @@ import pytest
 #     assert create_transfer_account_user.one_time_code is not None
 #     assert create_transfer_account_user.transfer_account is not None
 #     assert create_transfer_account_user.transfer_account.is_approved is config.AUTO_APPROVE_TRANSFER_ACCOUNTS
+from server.utils.user import transfer_usages_for_user
 
 
 def test_create_user_with_existing_transfer_account(create_user_with_existing_transfer_account, create_transfer_account):
@@ -53,3 +54,17 @@ def test_save_device_info(save_device_info, new_sempo_admin_user, serial_number,
     assert device is not None
     assert device.user_id is new_sempo_admin_user.id
 
+
+def test_transfer_usages_for_user(authed_sempo_admin_user):
+    """
+    GIVEN A User Model
+    WHEN transfer_usages_for_user is called
+    THEN a list is returned
+    """
+    # TODO This test in pretty lightweight atm it just checks if a list - also test if it sorts correctly:
+    # first by highest count
+    # then by defaults
+    # then by everything else
+    # can mock out relevant_usage call for a list
+    usages = transfer_usages_for_user(authed_sempo_admin_user)
+    assert isinstance(usages, list)

@@ -25,21 +25,27 @@ en:
       CON Enter Amount
       0. Back
     send_token_reason: |
-      CON Select Transfer reason
-      1. Food
-      2. Water
-      3. Energy
-      4. Education
-      5. Health
-      6. General shop
-      7. Environment
-      8. Transport
-      9. Labour
-      10. Other
+      CON Select Transfer reason 
+      %{options}
+      9. Show other options
       0. Back
-    send_token_reason_other: |
-      CON Please specify
-      0. Back
+    send_token_reason_other:
+      first: |
+        CON Please specify
+        %{other_options}
+        9. Show other options
+        0. Back
+      middle: |
+        CON Please specify 
+        %{other_options}
+        9. Show other options
+        10. Show previous options
+        0. Back
+      last: |
+        CON Please specify
+        %{other_options}
+        10. Show previous options
+        0. Back
     send_token_pin_authorization:
       first: |
         CON Please enter your PIN.
@@ -53,17 +59,28 @@ en:
       2. Cancel
       0. Back
     directory_listing: |
-      CON Choose Market Category
-      1. Food
-      2. Water
-      3. Energy
-      4. Education
-      5. Health
-      6. General shop
-      7. Environment
-      8. Transport
-      9. Labour
+      CON Choose Market Category 
+      %{options}
+      9. Show other options
+      0. Back
     complete: END Your request has been sent. You will receive an SMS shortly.
+    directory_listing_other:
+      first: |
+        CON Choose Market Category 
+        %{other_options}
+        9. Show other options
+        0. Back
+      middle: |
+        CON Choose Market Category 
+        %{other_options}
+        9. Show other options
+        10. Show previous options
+        0. Back
+      last: |
+        CON Choose Market Category 
+        %{other_options}
+        10. Show previous options
+        0. Back
     account_management: |
       CON My account
       1. My Business
@@ -77,7 +94,9 @@ en:
       1. See my business
       2. Change my business
       0. Back
-    about_my_business: "END %{user_bio}"
+    about_my_business:
+      bio: END %{user_bio}
+      none: END No business set, please go to Change My Business to set it to something
     change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back
@@ -144,7 +163,7 @@ en:
     exit: END Thank you for using the service.
     exit_invalid_menu_option: END Invalid menu option. For help, call %{support_phone}
     exit_invalid_pin: END The PIN you have entered is Invalid. PIN must consist of 4 digits and must be different from your current PIN. For help, call %{support_phone}
-    exit_pin_mismatch: END The new PIN and the new PIN confirmation do not match. Please try again. For help, call %{support_phone}
+    exit_pin_mismatch: END The new PIN does not match the one you entered. Please try again. For help, call %{support_phone}
     exit_pin_blocked: END Your PIN has been blocked. For help, please call %{support_phone}
     exit_invalid_request: END Invalid request
     exit_invalid_input: END Invalid input. Nothing selected
@@ -153,11 +172,11 @@ en:
     exit_use_exchange_menu: END Recipient phone number is an agent. To exchange, use exchange menu
     exit_invalid_token_agent: END Agent phone number is incorrect
     exit_not_registered: |
-      END You hasn't registered for this service. To register send: name, phone number, ID, location, and business to 0757628885
+      END You aren’t registered for Sarafu. To register send: name, phone number, location, and business to 0757628885
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
-    upsell_message: "%{first_name} %{last_name} tried to send you {community_token} but you are not registered. Send your information: name, phone number, ID number, area of residence, and the type of business you run 0757628885."
+    upsell_message: "%{first_name} %{last_name} tried to send you {community_token} but you are not registered. Send your information: name, phone number, area of residence, and the type of business you run 0757628885."
     send_directory_listing_message: "%{community_token_name} %{business_type} Market \n %{directory_listing_users}"
     no_directory_listing_found_message: Sorry we couldn't find businesses from your community that match your search criteria.
     send_token_sender_sms: Successfully sent a payment of %{amount} %{token_name} to %{other_user} on %{date} for %{reason} at %{time}. New %{token_name} balance is %{balance}
@@ -168,17 +187,22 @@ en:
       Exchange Rate:
       For 1 %{token_name} you get %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
-      Send %{token_name} to 0757628885 for MPESA.
       You can transfer a maximum of %{exchange_limit} %{token_name} at an agent every %{limit_period} days.
     exchange_count_error_sms: Sorry you have exceeded your exchange token limit. You are allowed %{transaction_count} transaction per %{limit_period} days
     exchange_amount_error_sms: Sorry you have exceeded your transaction amount limit. You are allowed up to %{limit} of your balance
     send_token_error_sms: Payment of %{amount} %{token_name} to %{recipient} has failed. Please try again later.
+    send_balance_limit_sms: |
+      Your Sarafu-Network balances are as follows:
+      %{token_balances}
+      You can exchange the following:
+      %{token_exchanges}
+      Once per %{limit_period} days.
+      Call 0757628885 for more info
     send_balance_sms: |
       Your Sarafu-Network balances are as follows:
       %{token_balances}
-      You are eligible to exchange as follows:
+      You can exchange the following:
       %{token_exchanges}
-      at an agent per %{exchange_period} days
       Call 0757628885 for more info
-
-
+    pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
+    pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help

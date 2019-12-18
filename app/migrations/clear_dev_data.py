@@ -1,9 +1,15 @@
 import subprocess
 from sqlalchemy import create_engine
+import sys
+import os
+
+dirname = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(dirname, "..", "..")))
+sys.path.append(os.path.abspath(os.path.join(dirname, "..")))
 
 import config
 from server.models.utils import ModelBase as ServerModelBase
-from sql_persistence.models import ModelBase as EthModelBase
+from eth_worker.sql_persistence.models import ModelBase as EthModelBase
 
 
 def drop_and_rebuild_sql(base, uri):
@@ -21,8 +27,8 @@ def clear_all():
 
     print('Resetting Ganache')
 
-    subprocess.Popen(["rm", "-R", "../../ganacheDB"])
-    subprocess.Popen(["mkdir", "../../ganacheDB"])
+    subprocess.Popen(["rm", "-R", "./ganacheDB"])
+    subprocess.Popen(["mkdir", "./ganacheDB"])
 
 
 if __name__ == '__main__':

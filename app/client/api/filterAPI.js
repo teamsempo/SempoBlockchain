@@ -1,8 +1,8 @@
-import { getToken, handleResponse } from '../utils'
+import {generateFormattedURL, getToken, handleResponse} from '../utils'
 
 // Load Filters
 export const loadFiltersAPI = () => {
-    return fetch('/api/filters/', {
+    return fetch(generateFormattedURL('/filters/'), {
         headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',
@@ -20,7 +20,7 @@ export const loadFiltersAPI = () => {
 
 // Create Filter
 export const createFilterAPI = ({body}) => {
-  return fetch('/api/filters/', {
+  return fetch(generateFormattedURL('/filters/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

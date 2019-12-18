@@ -41,3 +41,5 @@ eth_worker/complete_compiled_contracts/
 
 # This is temporary: secrets should be included in AWS?
 app/migrations/fromGE/secrets.py
+eth_worker/celerybeat-schedule
+eth_worker/celerybeat.pid

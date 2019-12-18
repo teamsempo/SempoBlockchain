@@ -41,6 +41,8 @@ class UserSchema(SchemaBase):
 
     business_usage_id = fields.Int()
 
+    failed_pin_attempts = fields.Int()
+
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
 
@@ -105,6 +107,7 @@ class TokenSchema(SchemaBase):
     address             = fields.Str()
     symbol              = fields.Str()
     name                = fields.Str()
+    # exchange_contracts  = fields.Nested("server.schemas.ExchangeContractSchema", many=True)
 
 class CreditTransferSchema(Schema):
 
@@ -127,6 +130,7 @@ class CreditTransferSchema(Schema):
     resolved                = fields.DateTime(attribute='resolved_date')
     transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
     transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
+    transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
     transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
     transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
 
@@ -140,8 +144,10 @@ class CreditTransferSchema(Schema):
     sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
     recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
 
-    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
-    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance"))
+    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
+    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
+
+    from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
     attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 
@@ -305,12 +311,14 @@ class KycApplicationSchema(SchemaBase):
 
 class OrganisationSchema(SchemaBase):
     name                = fields.Str()
+    primary_blockchain_address = fields.Str()
+
+    token               = fields.Nested('server.schemas.TokenSchema')
 
     users               = fields.Nested('server.schemas.UserSchema', many=True)
     transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
     credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
-    org_blockchain_address =  fields.Function(lambda obj: obj.org_level_transfer_account.blockchain_address)
 
 class TransferUsageSchema(Schema):
     id                  = fields.Int(dump_only=True)
@@ -377,14 +385,18 @@ kyc_application_state_schema = KycApplicationSchema(
              "beneficial_owners", "bank_accounts",
              "documents", "dob"
              ))
+me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
+
 transfer_usages_schema = TransferUsageSchema(many=True)
 
 exchange_contract_schema = ExchangeContractSchema()
+exchange_contracts_schema = ExchangeContractSchema(many=True)
+
 
 # Me Schemas
 
@@ -408,3 +420,5 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
                                                   context={'filter_rejected': True})
 
 me_exchange_schema = ExchangeSchema()
+me_exchanges_schema = ExchangeSchema(many=True)
+

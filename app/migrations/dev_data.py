@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 import config
 
 from server import create_app, db, bt
-from server.models.token import Token
+from server.models.token import Token, TokenType
 from server.models.organisation import Organisation
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
@@ -48,7 +48,7 @@ def get_or_create_reserve_token(deploying_address, name, symbol):
             fund_amount_wei=0
         )
 
-        reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol)
+        reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol, token_type=TokenType.RESERVE)
         reserve_token.decimals = 18
 
         db.session.add(reserve_token)
@@ -82,7 +82,7 @@ def create_or_get_reserve_token(
     smart_token_address = smart_token_result['smart_token_address']
     subexchange_address = smart_token_result['subexchange_address']
 
-    smart_token = Token(address=smart_token_address, name=name, symbol=symbol)
+    smart_token = Token(address=smart_token_address, name=name, symbol=symbol, token_type=TokenType.LIQUID)
     smart_token.decimals = 18
 
     db.session.add(smart_token)

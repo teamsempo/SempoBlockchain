@@ -1,6 +1,5 @@
 import sys
 import os
-from sqlalchemy.exc import IntegrityError
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
@@ -8,7 +7,20 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from server import db, create_app
 from server.models.ussd import UssdMenu
 from server.models.transfer_usage import TransferUsage
+from server.models.transfer_account import TransferAccount, TransferAccountType
+from server.models.organisation import Organisation
+from server.models.token import Token, TokenType
 from server.exceptions import TransferUsageNameDuplicateException
+
+
+def print_section_title(text):
+    print(text)
+    print('**********************************************************************')
+
+
+def print_section_conclusion(text):
+    print(text)
+    print('------------------------------------------------------------')
 
 
 def update_or_create_menu(name, description, parent_id=None):
@@ -31,14 +43,8 @@ def update_or_create_menu(name, description, parent_id=None):
     return instance
 
 
-# from app folder: python ./migations/seed.py
-if __name__ == '__main__':
-    app = create_app()
-    ctx = app.app_context()
-    ctx.push()
-
-    print('Creating Sarafu Network USSD Menu')
-    print('**********************************************************************')
+def create_ussd_menus():
+    print_section_title('Creating Sarafu Network USSD Menu')
     print('Creating Initial Language Selection menu')
 
     initial_lang_setup_menu = update_or_create_menu(
@@ -98,6 +104,11 @@ if __name__ == '__main__':
     update_or_create_menu(
         name='directory_listing',
         description='Listing of Market place categories for a user to choose',
+        parent_id=start_menu.id
+    )
+    update_or_create_menu(
+        name='directory_listing_other',
+        description='Listing of Market place other categories for a user to choose',
         parent_id=start_menu.id
     )
     update_or_create_menu(
@@ -257,38 +268,129 @@ if __name__ == '__main__':
         description='The token exchange amount is insufficient',
     )
 
-    print('------------------------------------------------------------')
-    print('Done creating USSD Menus')
+    print_section_conclusion('Done creating USSD Menus')
 
-    
-    
-    print('Creating Business Categories')
-    print('**********************************************************************')
+
+def create_business_categories():
+
+    print_section_title('Creating Business Categories')
     business_categories = [
-        {'name': 'Food', 'icon': 'message'},
-        {'name': 'Water', 'icon': 'message'},
-        {'name': 'Energy', 'icon': 'message'},
-        {'name': 'Education', 'icon': 'message'},
-        {'name': 'Health', 'icon': 'message'},
-        {'name': 'General shop', 'icon': 'message'},
-        {'name': 'Environment', 'icon': 'message'},
-        {'name': 'Transport', 'icon': 'message'},
-        {'name': 'Labour', 'icon': 'message'},
+        {'name': 'Food', 'icon': 'message', 'translations': {
+            'en': 'Food', 'sw': 'Chakula'}},
+        {'name': 'Water', 'icon': 'message',
+         'translations': {'en': 'Water', 'sw': 'Maji'}},
+        {'name': 'Energy', 'icon': 'message', 'translations': {
+            'en': 'Energy', 'sw': 'Kuni/makaa/mafuta/stima'}},
+        {'name': 'Education', 'icon': 'message',
+         'translations': {'en': 'Education', 'sw': 'Elimu'}},
+        {'name': 'Health', 'icon': 'message',
+         'translations': {'en': 'Health', 'sw': 'Afya'}},
+        {'name': 'General shop', 'icon': 'message', 'translations': {
+            'en': 'General shop', 'sw': 'Duka la jumla'}},
+        {'name': 'Environment', 'icon': 'message', 'translations': {
+            'en': 'Environment', 'sw': 'Mazingira'}},
+        {'name': 'Transport', 'icon': 'message', 'translations': {
+            'en': 'Transport', 'sw': 'Usafiri'}},
+        {'name': 'Labour', 'icon': 'message', 'translations': {
+            'en': 'Labour', 'sw': 'Mfanyakazi'}},
     ]
     for business_category in business_categories:
         usage = TransferUsage.find_or_create(business_category['name'])
         if usage is not None:
             usage.icon = business_category['icon']
+            usage.translations = business_category['translations']
         else:
             try:
                 usage = TransferUsage(name=business_category['name'], icon=business_category['icon'],
-                                      priority=1, default=True)
+                                      priority=1, default=True, translations=business_category['translations'])
             except TransferUsageNameDuplicateException as e:
                 print(e)
         db.session.add(usage)
+
+    db.session.commit()
+
+    print_section_conclusion('Done creating Business Categories')
+
+
+def create_reserve_token(app):
+
+    print_section_title("Setting up Reserve Token")
+
+    reserve_token_address = app.config.get('RESERVE_TOKEN_ADDRESS')
+    reserve_token_name = app.config.get('RESERVE_TOKEN_NAME')
+    reserve_token_symbol = app.config.get('RESERVE_TOKEN_SYMBOL')
+    # reserve_token_decimals = app.config.get('RESERVE_TOKEN_DECIMALS')
+
+    if reserve_token_address:
+        reserve_token = Token.query.filter_by(address=reserve_token_address).first()
+
+        print('Existing token not found, creating')
+
+        if not reserve_token:
+            reserve_token = Token(
+                address=reserve_token_address,
+                name=reserve_token_name,
+                symbol=reserve_token_symbol,
+                token_type=TokenType.RESERVE
+            )
+
+            db.session.add(reserve_token)
+            db.session.commit()
+
+        print(f'Reserve token: {reserve_token}')
+
+        return reserve_token
+
+    print('No token address, skipping')
+
+    return None
+
+
+def create_master_organisation(reserve_token):
+
+    print_section_title('Creating/Updating Master Organisation')
+
+    master_organisation = Organisation.master_organisation()
+    if master_organisation is None:
+        print('Creating master organisation')
+        if reserve_token:
+            print('Binding to reserve token')
+        master_organisation = Organisation(name='Reserve', is_master=True, token=reserve_token)
+        db.session.add(master_organisation)
+
         db.session.commit()
 
+    print_section_conclusion('Done creating master organisation')
+
+def create_float_wallet(app):
+    print_section_title('Creating/Updating Float Wallet')
+    float_wallet = TransferAccount.query.execution_options(show_all=True).filter(
+        TransferAccount.account_type == TransferAccountType.FLOAT
+    ).first()
+
+    if float_wallet is None:
+        print('Creating Float Wallet')
+        float_wallet = TransferAccount(
+            private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
+            account_type=TransferAccountType.FLOAT,
+            is_approved=True
+        )
+        db.session.add(float_wallet)
+
+        db.session.commit()
+
+# from app folder: python ./migations/seed.py
+if __name__ == '__main__':
+    current_app = create_app()
+    ctx = current_app.app_context()
+    ctx.push()
+
+    create_ussd_menus()
+    create_business_categories()
+
+    reserve_token = create_reserve_token(current_app)
+    create_master_organisation(reserve_token)
+
+    create_float_wallet(current_app)
+
     ctx.pop()
-    print('------------------------------------------------------------')
-    print('Done creating Business Categories')
-    

@@ -26,6 +26,13 @@ from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
+def cents_to_dollars(amount_cents):
+    return float(amount_cents) / 100
+
+def dollars_to_cents(amount_dollars):
+    return float(amount_dollars) * 100
+
+
 def calculate_transfer_stats(total_time_series=False):
 
     total_distributed = (
@@ -37,6 +44,12 @@ def calculate_transfer_stats(total_time_series=False):
     total_spent = (
         db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
             .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
+    )
+
+    total_exchanged = (
+        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE)
+            .filter(CreditTransfer.token == g.active_organisation.token).first().total
     )
 
     total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
@@ -73,9 +86,8 @@ def calculate_transfer_stats(total_time_series=False):
 
     try:
         master_wallet_balance = cached_funds_available()
-    except BlockchainError:
+    except:
         master_wallet_balance = 0
-
 
     try:
         last_day = daily_transaction_volume[0].date
@@ -101,6 +113,7 @@ def calculate_transfer_stats(total_time_series=False):
     data = {
         'total_distributed': total_distributed,
         'total_spent': total_spent,
+        'total_exchanged': total_exchanged,
         'has_transferred_count': has_transferred_count,
         'zero_balance_count': exhausted_balance_count,
         'total_beneficiaries': total_beneficiaries,
@@ -218,7 +231,7 @@ def find_user_with_transfer_account_from_identifiers(user_id, public_identifier,
 
     user = find_user_from_identifiers(user_id, public_identifier, transfer_account_id)
 
-    if user and not user.transfer_account:
+    if user and not user.transfer_accounts:
         raise NoTransferAccountError('User {} does not have a transfer account'.format(user))
 
     return user
@@ -389,7 +402,8 @@ def make_payment_transfer(transfer_amount,
                           require_sufficient_balance=True,
                           automatically_resolve_complete=True,
                           uuid=None,
-                          transfer_subtype=None):
+                          transfer_subtype=None,
+                          is_ghost_transfer=False):
     """
     This is used for internal transfers between Sempo wallets.
     :param transfer_amount:
@@ -405,22 +419,23 @@ def make_payment_transfer(transfer_amount,
     :param automatically_resolve_complete:
     :param uuid:
     :param transfer_subtype: accepts TransferSubType str.
+    :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
     :return:
     """
     if transfer_subtype in TransferSubTypeEnum.__members__:
-        if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
+        if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT.name:
             require_sender_approved = False
             require_recipient_approved = False
             require_sufficient_balance = False
             # primary NGO wallet to disburse from
-            send_transfer_account = receive_user.default_organisation.org_level_transfer_account
+            send_transfer_account = receive_user.default_organisation.queried_org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.RECLAMATION:
+        if transfer_subtype is TransferSubTypeEnum.RECLAMATION.name:
             require_sender_approved = False
             # primary NGO wallet to reclaim to
-            receive_transfer_account = send_user.default_organisation.org_level_transfer_account
+            receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
+        if transfer_subtype is TransferSubTypeEnum.INCENTIVE.name:
             send_transfer_account = receive_transfer_account.get_float_transfer_account()
 
     transfer = CreditTransfer(transfer_amount,
@@ -430,7 +445,9 @@ def make_payment_transfer(transfer_amount,
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
-                              transfer_subtype=transfer_subtype)
+                              transfer_type=TransferTypeEnum.PAYMENT,
+                              transfer_subtype=transfer_subtype,
+                              is_ghost_transfer=is_ghost_transfer)
 
     make_cashout_incentive_transaction = False
 
@@ -575,6 +592,9 @@ def make_target_balance_transfer(target_balance,
 
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
+
+    # TODO: Yep Fix
+    raise NotImplementedError("target_user.transfer account needs to be fixed")
 
     transfer_amount = target_balance - target_user.transfer_account.balance
 

@@ -8,7 +8,7 @@ from web3 import Web3
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
-ENV_DEPLOYMENT_NAME =  os.environ.get('DEPLOYMENT_NAME') or 'local'
+ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
 BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
 
 print('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
@@ -120,6 +120,7 @@ MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('MAXIMUM_CU
 ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
+WEB_VERSION = specific_parser['APP']['WEB_VERSION']
 
 SECRET_KEY          = specific_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(specific_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
@@ -223,8 +224,8 @@ except ImportError:
 
 ETH_HTTP_PROVIDER       = specific_parser['ETHEREUM']['http_provider']
 ETH_WEBSOCKET_PROVIDER  = specific_parser['ETHEREUM'].get('websocket_provider')
-ETH_CHAIN_ID            = specific_parser['ETHEREUM']['chain_id'] or 1
-ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID), '')
+ETH_CHAIN_ID            = specific_parser['ETHEREUM'].get('chain_id')
+ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID or 1))
 ETH_OWNER_ADDRESS       = specific_parser['ETHEREUM']['owner_address']
 ETH_OWNER_PRIVATE_KEY   = specific_parser['ETHEREUM']['owner_private_key']
 ETH_FLOAT_PRIVATE_KEY   = specific_parser['ETHEREUM']['float_private_key']
@@ -238,7 +239,7 @@ ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME,str(ETH_CON
 ETH_CHECK_TRANSACTION_BASE_TIME = 20
 ETH_CHECK_TRANSACTION_RETRIES = int(specific_parser['ETHEREUM']['check_transaction_retries'])
 ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = sum(
-    [ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** i for i in range(1,ETH_CHECK_TRANSACTION_RETRIES + 1)]
+    [ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** i for i in range(1, ETH_CHECK_TRANSACTION_RETRIES + 1)]
 )
 
 INTERNAL_TO_TOKEN_RATIO = float(specific_parser['ETHEREUM'].get('internal_to_token_ratio', 1))
@@ -250,10 +251,23 @@ if unchecksummed_withdraw_to_address:
 else:
     WITHDRAW_TO_ADDRESS = None
 
-master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
-MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
+# master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
+# MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
+# MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
+# print(f'Master Wallet address: {MASTER_WALLET_ADDRESS}')
+
+MASTER_WALLET_PRIVATE_KEY = specific_parser['ETHEREUM'].get('master_wallet_private_key')
+if MASTER_WALLET_PRIVATE_KEY:
+    master_wallet_private_key = bytes.fromhex(MASTER_WALLET_PRIVATE_KEY.replace('0x', ''))
+else:
+    master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
+    MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
+
 MASTER_WALLET_ADDRESS = keys.PrivateKey(master_wallet_private_key).public_key.to_checksum_address()
-print(f'Master Wallet address: {MASTER_WALLET_ADDRESS}')
+
+RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
+RESERVE_TOKEN_NAME = specific_parser['ETHEREUM'].get('reserve_token_name')
+RESERVE_TOKEN_SYMBOL = specific_parser['ETHEREUM'].get('reserve_token_symbol')
 
 SYSTEM_WALLET_TARGET_BALANCE = int(specific_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
 SYSTEM_WALLET_TOPUP_THRESHOLD = int(specific_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))
@@ -268,7 +282,6 @@ if specific_parser['ETHEREUM'].get('dai_contract_address'):
 
 IS_USING_BITCOIN = False
 
-RESERVE_TOKEN_ADDRESS = specific_parser['ETHEREUM'].get('reserve_token_address')
 EXCHANGE_CONTRACT_ADDRESS = specific_parser['ETHEREUM'].get('exchange_contract_address')
 
 SYNCRONOUS_TASK_TIMEOUT = specific_parser['ETHEREUM'].getint('synchronous_task_timeout', 4)

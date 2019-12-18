@@ -14,7 +14,9 @@ import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
 const mapStateToProps = (state) => {
   return {
     transferAccounts: state.transferAccounts,
-    mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId).map((id) => {return {...{id, ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]}, ...state.transferAccounts.byId[id]}}),
+    mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
+      .map((id) => {return {...{id, ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]}, ...state.transferAccounts.byId[id]}})
+      .filter(mergedObj => mergedObj.users && mergedObj.users.length >= 1),  // only show mergedObjects with users
     users: state.users,
   };
 };
@@ -39,15 +41,12 @@ class TransferAccountListPage extends React.Component {
 
   buildFilterForAPI() {
       if (location.pathname.includes('vendors')) {
-          console.log('vendor filter:', location.search);
           var query = {account_type: 'vendor'};
 
       } else if (location.pathname.includes(window.BENEFICIARY_TERM_PLURAL.toLowerCase())) {
-          console.log('beneficiary filter:', location.search);
           query = {account_type: 'beneficiary'};
 
       } else {
-          console.log('no filter');
           query = null;
       }
 
@@ -57,8 +56,6 @@ class TransferAccountListPage extends React.Component {
   }
   
   render() {
-    let beneficiaryTerm = window.BENEFICIARY_TERM;
-    
     const is_vendor = location.pathname.includes('vendors');
     const is_beneficiary = location.pathname.includes(window.BENEFICIARY_TERM_PLURAL.toLowerCase());
 

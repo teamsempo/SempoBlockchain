@@ -1,11 +1,21 @@
+import time
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
 from server import db
+from server.constants import DENOMINATION_DICT
+from server.models.currency_conversion import CurrencyConversion
+from server.models.transfer_account import TransferAccount
+from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.ip_address import IpAddress
+from server.models.organisation import Organisation
 from server.utils.access_control import AccessControl
 import config, hmac, hashlib, json, urllib
-from typing import Optional, List, Dict
+from typing import Optional, Tuple, Dict
+
+from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
+from server.utils.feedback import request_feedback_questions
+from server.utils.intercom import create_intercom_secret
 
 def get_complete_auth_token(user):
     auth_token = user.encode_auth_token().decode()
@@ -25,8 +35,9 @@ def show_all(f):
 
 def requires_auth(f=None,
                   allowed_roles: Optional[Dict]=None,
-                  allowed_basic_auth_types: Optional[List]=None,  # currently 'external' or 'internal'
-                  ignore_tfa_requirement: bool=False):
+                  allowed_basic_auth_types: Optional[Tuple]=None,  # currently 'external' or 'internal'
+                  ignore_tfa_requirement: bool=False,
+                  allow_query_string_auth: bool=False):
 
     allowed_roles = allowed_roles or {}
     allowed_basic_auth_types = allowed_basic_auth_types or []
@@ -35,16 +46,54 @@ def requires_auth(f=None,
         return partial(requires_auth,
                        allowed_roles=allowed_roles,
                        allowed_basic_auth_types=allowed_basic_auth_types,
-                       ignore_tfa_requirement = ignore_tfa_requirement)
+                       ignore_tfa_requirement=ignore_tfa_requirement,
+                       allow_query_string_auth=allow_query_string_auth)
 
     @wraps(f)
     def wrapper(*args, **kwargs):
 
-        auth = request.authorization
+        # ----- FIRST GET AUTH VALUES -----
 
+        # Query string auth needs to be explicity allowed for an endpoint since it can lead to security vulnerabilities
+        # if used incorrectly by the client (for example credentials getting logged by website trackers).
+        # We get credentials with it first, meaning any values will be overwritten by a present header auth
+        if allow_query_string_auth:
+            username = request.args.get('username', None)
+            password = request.args.get('password', None)
+
+            auth_token = request.args.get('auth_token', None)
+            tfa_token = request.args.get('tfa_token', None)
+        else:
+            username = None
+            password = None
+            auth_token = None
+            tfa_token = None
+
+        # Next get basic auth, which we parse using flask's built-in process, if present overwriting query string values
+        auth = request.authorization
         if auth and auth.type == 'basic':
-            (password, type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(auth.username, (None, None))
-            if password is None or password != auth.password:
+            username = auth.username or username
+            password = auth.password or password
+
+        # Lastly, get any custom set Sempo auth headers, if present overwriting query string values
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            split_header = auth_header.split("|")
+            auth_token = split_header[0]
+            try:
+                tfa_token = split_header[1]
+            except IndexError:
+                # Auth header does not contain a TFA token, try getting it from explicit header instead
+                # (dev convenience)
+                tfa_token = request.headers.get('TFA_Authorization') or tfa_token
+
+        # ----- THEN ATTEMPT AUTHORIZATION -----
+
+        # If username as password attempt basic auth
+        if username and password:
+
+            (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
+            if required_password is None or required_password != password:
                 response_object = {
                     'message': 'invalid basic auth username or password'
                 }
@@ -56,28 +105,13 @@ def requires_auth(f=None,
                 }
                 return make_response(jsonify(response_object)), 401
 
-            if type not in allowed_basic_auth_types:
+            if auth_type not in allowed_basic_auth_types:
                 response_object = {
-                    'message': 'Basic Auth type is {}. Must be: {}'.format(type, allowed_basic_auth_types)
+                    'message': 'Basic Auth type is {}. Must be: {}'.format(auth_type, allowed_basic_auth_types)
                 }
                 return make_response(jsonify(response_object)), 401
 
             return f(*args, **kwargs)
-
-        auth_header = request.headers.get('Authorization')
-
-        if auth_header and auth_header != 'null':
-            split_header = auth_header.split("|")
-            auth_token = split_header[0]
-            try:
-                tfa_token = split_header[1]
-            except IndexError:
-                # Auth header does not contain a TFA token, try getting it from explicit header instead
-                # (dev convenience)
-                tfa_token = request.headers.get('TFA_Authorization', '')
-        else:
-            auth_token = ''
-            tfa_token = ''
 
         if auth_token:
 
@@ -94,27 +128,12 @@ def requires_auth(f=None,
                         }
                         return make_response(jsonify(response_object)), 401
 
-                    g.user = user
-                    # g.member_organisations = [org.id for org in user.organisations]
-                    try:
-                        active_organisation = user.get_active_organisation()
-                        if active_organisation is not None:
-                            g.active_organisation_id = active_organisation.id
-                            g.active_organisation = active_organisation
-                        else:
-                            g.active_organisation_id = None
-                            g.active_organisation = None
-                    except NotImplementedError:
-                        g.active_organisation_id = None
-                        g.active_organisation = None
-
                     if not user.is_activated:
                         response_object = {
                             'status': 'fail',
                             'message': 'user not activated'
                         }
                         return make_response(jsonify(response_object)), 401
-
 
                     if user.is_disabled:
                         response_object = {
@@ -124,7 +143,6 @@ def requires_auth(f=None,
                         return make_response(jsonify(response_object)), 401
 
                     tfa_response_object = tfa_logic(user, tfa_token, ignore_tfa_requirement)
-
                     if tfa_response_object:
                         return make_response(jsonify(tfa_response_object)), 401
 
@@ -137,13 +155,35 @@ def requires_auth(f=None,
                             }
                             return make_response(jsonify(response_object)), 401
 
+                    # ----- AUTH PASSED, DO FINAL SETUP -----
+
+                    g.user = user
+                    g.member_organisations = [org.id for org in user.organisations]
+                    try:
+                        g.active_organisation = None
+
+                        # First try to set the active org from the query
+                        query_org = request.args.get('org', None)
+                        if query_org is not None:
+                            try:
+                                query_org = int(query_org)
+                                if query_org in g.member_organisations:
+                                    g.active_organisation = Organisation.query.get(query_org)
+                            except ValueError:
+                                pass
+
+                        # Then get the fallback organisation
+                        if g.active_organisation is None:
+                            g.active_organisation = user.fallback_active_organisation()
+
+                    except NotImplementedError:
+                        g.active_organisation = None
 
                     proxies = request.headers.getlist("X-Forwarded-For")
                     check_ip(proxies, user, num_proxy=1)
 
                     # updates the validated user last seen timestamp
                     user.update_last_seen_ts()
-                    # db.session.commit() todo: fix this. can't commit here as means we lose context
 
                     #This is the point where you've made it through ok and you can return the top method
                     return f(*args, **kwargs)
@@ -153,12 +193,12 @@ def requires_auth(f=None,
                 'message': resp
             }
             return make_response(jsonify(response_object)), 401
-        else:
-            response_object = {
-                'status': 'fail',
-                'message': 'Provide a valid auth token.'
-            }
-            return make_response(jsonify(response_object)), 401
+
+        response_object = {
+            'status': 'fail',
+            'message': 'Provide a valid auth token.'
+        }
+        return make_response(jsonify(response_object)), 401
 
     return wrapper
 
@@ -241,3 +281,97 @@ def verify_slack_requests(f=None):
 
         return make_response(jsonify({'message': 'Invalid auth'})), 401
     return wrapper
+
+
+def get_user_organisations(user):
+    active_organisation = getattr(g, "active_organisation", None) or user.fallback_active_organisation()
+
+    organisations = dict(
+        active_organisation_name=active_organisation.name,
+        active_organisation_id=active_organisation.id,
+        organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
+    )
+
+    return organisations
+
+
+def get_denominations():
+    currency_name = current_app.config['CURRENCY_NAME']
+    return DENOMINATION_DICT.get(currency_name, {})
+
+
+def create_user_response_object(user, auth_token, message):
+    if current_app.config['IS_USING_BITCOIN']:
+        try:
+            usd_to_satoshi_rate = get_usd_to_satoshi_rate()
+        except Exception:
+            usd_to_satoshi_rate = None
+    else:
+        usd_to_satoshi_rate = None
+
+    conversion_rate = 1
+    currency_name = current_app.config['CURRENCY_NAME']
+    if user.default_currency:
+        conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
+        if conversion is not None:
+            conversion_rate = conversion.rate
+            currency_name = user.default_currency
+
+    transfer_usages = []
+    usage_objects = TransferUsage.query.order_by(TransferUsage.priority).limit(11).all()
+    for usage in usage_objects:
+        if ((usage.is_cashout and user.cashout_authorised) or not usage.is_cashout):
+            transfer_usages.append({
+                'id': usage.id,
+                'name': usage.name,
+                'icon': usage.icon,
+                'priority': usage.priority,
+                'translations': usage.translations
+            })
+
+    response_object = {
+        'status': 'success',
+        'message': message,
+        'auth_token': auth_token.decode(),
+        'user_id': user.id,
+        'email': user.email,
+        'admin_tier': user.admin_tier,
+        'is_vendor': user.is_vendor,
+        'is_supervendor': user.is_supervendor,
+        'server_time': int(time.time() * 1000),
+        'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
+        'pusher_key': current_app.config['PUSHER_KEY'],
+        'currency_decimals': current_app.config['CURRENCY_DECIMALS'],
+        'currency_name': currency_name,
+        'currency_conversion_rate': conversion_rate,
+        'secret': user.secret,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'deployment_name': current_app.config['DEPLOYMENT_NAME'],
+        'denominations': get_denominations(),
+        'terms_accepted': user.terms_accepted,
+        'request_feedback_questions': request_feedback_questions(user),
+        'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
+        'transfer_usages': transfer_usages,
+        'usd_to_satoshi_rate': usd_to_satoshi_rate,
+        'kyc_active': True,  # todo; kyc active function
+        'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
+        'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
+        'web_api_version': current_app.config['WEB_VERSION'],
+    }
+
+    # merge the user and organisation object nicely (handles non-orgs well)
+    response_object = {**response_object, **get_user_organisations(user)}
+
+    # todo: fix this (now many to many)
+    user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
+        TransferAccount.users.any(User.id.in_([user.id]))).all()
+    if len(user_transfer_accounts) > 0:
+        response_object['transfer_account_Id'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
+        response_object['name'] = user_transfer_accounts[0].name  # get the first transfer account name
+
+    # if user.transfer_account:
+    #     response_object['transfer_account_Id'] = user.transfer_account.id
+    #     response_object['name'] = user.transfer_account.name
+
+    return response_object

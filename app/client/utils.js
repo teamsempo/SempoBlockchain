@@ -2,8 +2,9 @@ import {call} from "redux-saga/effects";
 import merge from 'deepmerge';
 import {LOGIN_FAILURE} from "./reducers/authReducer";
 import {put} from "redux-saga/es/effects";
+import {store} from "./app";
 
-export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, decimal = ".", thousands = ",") {
+export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, decimal = ".", thousands = ",", currency = window.CURRENCY_NAME) {
   try {
     decimalCount = Math.abs(decimalCount);
     decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
@@ -13,7 +14,7 @@ export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, dec
     let i = parseInt(amount = Math.abs(Number(amount) || 0).toFixed(decimalCount)).toString();
     let j = (i.length > 3) ? i.length % 3 : 0;
 
-    return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "") + ' ' + window.CURRENCY_NAME;
+    return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "") + ' ' + currency;
   } catch (e) {
     console.log(e)
   }
@@ -33,12 +34,40 @@ export function addCreditTransferIdsToTransferAccount(parent_object, child_objec
 
 export const generateQueryString = (query) => {
   let query_string = '?';
-  Object.keys(query).map(query_key => {
-    let string_term = query_key + '=' + query[query_key] + '&';
-    query_string = query_string.concat(string_term)
-  });
 
-  return query_string.slice(0, -1);
+  if (query) {
+    Object.keys(query).map(query_key => {
+      let string_term = query_key + '=' + query[query_key] + '&';
+      query_string = query_string.concat(string_term)
+    });
+  }
+
+  let orgId = getOrgId();
+  var response_string = query_string;
+  if (orgId !== null && typeof orgId !== "undefined") {
+    response_string = query_string + `org=${orgId}&`;
+  }
+
+  return response_string.slice(0, -1);
+};
+
+export const generateFormattedURL = (url, query, path) => {
+  let URL;
+  let version = store.getState().login.webApiVersion;
+  if (!version) {
+    version = '1';  // fallback to V1 API
+  }
+  let query_string = generateQueryString(query);
+  if (url === null || typeof url === "undefined") {
+    return console.log('URL cannot be null')
+  } else if (query) {
+      URL = `/api/v${version}${url}${query_string}`;
+  } else if (path) {
+      URL = `/api/v${version}${url}${path}/${query_string}`;
+  } else {
+      URL = `/api/v${version}${url}${query_string}`;
+  }
+  return URL
 };
 
 
@@ -70,6 +99,23 @@ export function* handleError(error)  {
 
 const extractJson = (error) => {
     return error.json()
+};
+
+export const storeOrgid = (orgId) => {
+  localStorage.setItem('orgId', orgId);
+};
+
+export const removeOrgId = (orgId) => {
+  localStorage.removeItem('orgId')
+};
+
+export const getOrgId = () => {
+  try {
+    return localStorage.getItem('orgId')
+  } catch (err) {
+    removeOrgId();
+    return null
+  }
 };
 
 export const storeSessionToken = (token) => {

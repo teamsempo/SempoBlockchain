@@ -1,7 +1,6 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { getToken, handleResponse} from "../utils";
+import {generateQueryString, getToken, handleResponse} from "../utils";
 
 class koboCredentials extends React.Component {
   constructor() {
@@ -13,8 +12,10 @@ class koboCredentials extends React.Component {
   }
 
   getKoboCredentials() {
+      const query_string = generateQueryString();
+      var URL = `/api/v1/auth/kobo/${query_string}`;
 
-      return fetch('/api/auth/kobo/', {
+      return fetch(URL, {
           headers: {
               'Authorization': getToken()
           },

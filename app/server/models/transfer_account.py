@@ -5,12 +5,11 @@ from sqlalchemy.sql import func
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from server import db, bt
-from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table
+from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, get_authorising_user_id
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
-from server.models.token import Token
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
 
@@ -39,6 +38,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     is_vendor       = db.Column(db.Boolean, default=False)
 
     is_beneficiary = db.Column(db.Boolean, default=False)
+
+    is_ghost = db.Column(db.Boolean, default=False)
 
     account_type    = db.Column(db.Enum(TransferAccountType))
 
@@ -167,7 +168,6 @@ class TransferAccount(OneOrgBase, ModelBase):
 
 
     def get_or_create_system_transfer_approval(self):
-
         sys_blockchain_address = self.organisation.system_blockchain_address
 
         approval = self.get_approval(sys_blockchain_address)
@@ -205,7 +205,16 @@ class TransferAccount(OneOrgBase, ModelBase):
         if not initial_balance:
             initial_balance = current_app.config['STARTING_BALANCE']
 
-        disbursement = make_payment_transfer(initial_balance, self, transfer_subtype='DISBURSEMENT')
+        user_id = get_authorising_user_id()
+        if user_id is not None:
+            sender = User.query.execution_options(show_all=True).get(user_id)
+        else:
+            sender = self.primary_user
+
+        disbursement = make_payment_transfer(
+            initial_balance, token=self.token, send_user=sender, receive_user=self.primary_user,
+            transfer_subtype='DISBURSEMENT', is_ghost_transfer=False, require_sender_approved=False,
+            require_recipient_approved=False)
 
         return disbursement
 
@@ -224,30 +233,32 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     def __init__(self,
                  blockchain_address: Optional[str]=None,
-                 bind_to_entity: Optional[Union[Organisation, User]]=None,
+                 bound_entity: Optional[Union[Organisation, User]]=None,
                  account_type: Optional[TransferAccountType]=None,
                  private_key: Optional[str] = None,
                  **kwargs):
 
         super(TransferAccount, self).__init__(**kwargs)
 
-        if bind_to_entity:
-            bind_to_entity.transfer_accounts.append(self)
+        if bound_entity:
+            bound_entity.transfer_accounts.append(self)
 
-            if isinstance(bind_to_entity, Organisation):
+            if isinstance(bound_entity, Organisation):
                 self.account_type = TransferAccountType.ORGANISATION
-                self._bind_to_organisation(bind_to_entity)
+                self.blockchain_address = bound_entity.primary_blockchain_address
 
-            elif isinstance(bind_to_entity, User):
+                self._bind_to_organisation(bound_entity)
+
+            elif isinstance(bound_entity, User):
                 self.account_type = TransferAccountType.USER
-                if bind_to_entity.default_organisation:
-                    self._bind_to_organisation(bind_to_entity.default_organisation)
+                self.blockchain_address = bound_entity.primary_blockchain_address
 
-                self.blockchain_address = bind_to_entity.primary_blockchain_address
+                if bound_entity.default_organisation:
+                    self._bind_to_organisation(bound_entity.default_organisation)
 
-            elif isinstance(bind_to_entity, ExchangeContract):
+            elif isinstance(bound_entity, ExchangeContract):
                 self.account_type = TransferAccountType.CONTRACT
-                self.blockchain_address = bind_to_entity.blockchain_address
+                self.blockchain_address = bound_entity.blockchain_address
                 self.is_public = True
                 self.exchange_contact = self
 
@@ -261,10 +272,8 @@ class TransferAccount(OneOrgBase, ModelBase):
         if blockchain_address:
             self.blockchain_address = blockchain_address
 
-
         if not self.blockchain_address:
             self.blockchain_address = bt.create_blockchain_wallet(private_key=private_key)
-
 
         if account_type:
             self.account_type = account_type

@@ -3,15 +3,16 @@ from flask import current_app
 from faker.providers import phone_number
 from faker import Faker
 
-from sqlalchemy.exc import ProgrammingError
 import os
 import sys
+
 app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
 sys.path.append(app_dir)
 sys.path.append(os.getcwd())
 
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
+from server.models.token import TokenType
 import config
 # from app.manage import manager
 
@@ -27,14 +28,13 @@ def requires_auth(test_client):
     return requires_auth
 
 @pytest.fixture(scope='module')
-def create_master_organisation(test_client, init_database):
+def create_master_organisation(test_client, init_database, external_reserve_token):
     from server.models.organisation import Organisation
     master_organisation = Organisation.master_organisation()
     if master_organisation is None:
         print('Creating master organisation')
-        master_organisation = Organisation(is_master=True)
+        master_organisation = Organisation(is_master=True, token=external_reserve_token)
         db.session.add(master_organisation)
-
         db.session.commit()
 
     return master_organisation
@@ -42,9 +42,7 @@ def create_master_organisation(test_client, init_database):
 @pytest.fixture(scope='module')
 def create_organisation(test_client, init_database, external_reserve_token):
     from server.models.organisation import Organisation
-    from server.models.transfer_account import TransferAccount
     organisation = Organisation(name='Sempo', token=external_reserve_token)
-
     db.session.add(organisation)
     db.session.commit()
 
@@ -276,7 +274,7 @@ def initialised_blockchain_network(
         smart_token_address = smart_token_result['smart_token_address']
         subexchange_address = smart_token_result['subexchange_address']
 
-        smart_token = Token(address=smart_token_address, name=name, symbol=symbol)
+        smart_token = Token(address=smart_token_address, name=name, symbol=symbol, token_type=TokenType.LIQUID)
         smart_token.decimals = 18
 
         db.session.add(smart_token)
@@ -313,7 +311,10 @@ def initialised_blockchain_network(
 
     # Create second smart token and add to exchange network
     (smart_token_2,
-     exchange_contract) = deploy_and_add_smart_token('Smart Token 2', 'SM1', 250000, exchange_contract)
+     exchange_contract) = deploy_and_add_smart_token('Smart Token 2', 'SM2', 250000, exchange_contract)
+
+    (smart_token_3,
+     exchange_contract) = deploy_and_add_smart_token('Smart Token 3', 'SM3', 250000, exchange_contract)
 
     db.session.commit()
 
@@ -321,7 +322,8 @@ def initialised_blockchain_network(
         'exchange_contract': exchange_contract,
         'reserve_token': reserve_token,
         'smart_token_1': smart_token_1,
-        'smart_token_2': smart_token_2
+        'smart_token_2': smart_token_2,
+        'smart_token_3': smart_token_3
     }
 
 
@@ -355,7 +357,7 @@ def external_reserve_token(test_client, init_database, loaded_master_wallet_addr
         fund_amount_wei=4 * 10 ** 18
     )
 
-    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol, token_type='RESERVE')
+    reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol, token_type=TokenType.RESERVE)
     reserve_token.decimals = 18
 
     db.session.add(reserve_token)

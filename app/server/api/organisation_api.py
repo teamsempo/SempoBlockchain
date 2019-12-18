@@ -6,8 +6,8 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.utils import paginate_query
 from server.models.user import User
-from server.models.transfer_account import TransferAccount
 from server.schemas import organisation_schema, organisations_schema
+from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
 
 organisation_blueprint = Blueprint('organisation', __name__)
@@ -55,32 +55,44 @@ class OrganisationAPI(MethodView):
     def post(self, organisation_id):
         post_data = request.get_json()
 
-        name = post_data.get('name')
+        organisation_name = post_data.get('organisation_name')
         token_id = post_data.get('token_id')
 
-        if name is None:
+        deploy_cic = post_data.get('deploy_cic', False)
+
+        if organisation_name is None:
             return make_response(jsonify({'message': 'Must provide name to create organisation.'})), 400
 
-        existing_organisation = Organisation.query.filter_by(name=name).execution_options(show_all=True).first()
+        existing_organisation = Organisation.query.filter_by(name=organisation_name).execution_options(show_all=True).first()
         if existing_organisation is not None:
             return make_response(
                 jsonify({
-                    'message': 'Must be unique name. Organisation already exists for name: {}'.format(name),
+                    'message': 'Must be unique name. Organisation already exists for name: {}'.format(organisation_name),
                     'data': {'organisation': organisation_schema.dump(existing_organisation).data}
                 })), 400
 
-        token = Token.query.get(token_id)
-        if token is None:
-            return make_response(jsonify({'message': 'Token not found'})), 404
-
-        new_organisation = Organisation(name=name, token=token)
+        new_organisation = Organisation(name=organisation_name)
         db.session.add(new_organisation)
-        db.session.commit()
+        db.session.flush()
 
         response_object = {
             'message': 'Created Organisation',
             'data': {'organisation': organisation_schema.dump(new_organisation).data},
         }
+
+        if token_id:
+            token = Token.query.get(token_id)
+            if token is None:
+                return make_response(jsonify({'message': 'Token not found'})), 404
+            new_organisation.bind_token(token)
+
+        elif deploy_cic:
+
+            cic_response_object, cic_response_code = deploy_cic_token(post_data, new_organisation)
+            if cic_response_code == 201:
+                response_object['data']['token_id'] = cic_response_object['data']['token_id']
+            else:
+                return make_response(jsonify(cic_response_object)), cic_response_code
 
         return make_response(jsonify(response_object)), 201
 
@@ -91,6 +103,7 @@ class OrganisationUserAPI(MethodView):
         put_data = request.get_json()
 
         user_ids = put_data.get('user_ids')
+        is_admin = put_data.get('is_admin', False)
 
         if len(user_ids) == 0:
             return make_response(jsonify({'message': 'Must provide a list of user ids'})), 400
@@ -111,9 +124,7 @@ class OrganisationUserAPI(MethodView):
                 diagnostics.append({'user': user_id, 'message': 'No user exists'})
 
             else:
-                user.organisations.append(organisation)
-                user.default_organisation = organisation
-                db.session.commit()
+                user.add_user_to_organisation(organisation, is_admin)
 
         response_object = {
             'message': 'Tied users to organisation {}'.format(organisation_id),

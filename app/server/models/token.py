@@ -1,6 +1,5 @@
 import enum
 from sqlalchemy.ext.hybrid import hybrid_property
-from flask import current_app
 from server import db, bt
 
 from server.models.utils import (
@@ -17,7 +16,7 @@ class TokenType(enum.Enum):
 class Token(ModelBase):
     __tablename__ = 'token'
 
-    address = db.Column(db.String, index=True, unique=True, nullable=False)
+    address = db.Column(db.String, index=True, unique=True, nullable=True)
     name = db.Column(db.String)
     symbol = db.Column(db.String)
     _decimals = db.Column(db.Integer)

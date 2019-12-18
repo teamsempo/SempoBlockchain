@@ -203,7 +203,7 @@ class BlockchainTransaction(ModelBase):
 
     ignore = Column(Boolean, default=False)
 
-    coinbase = Column(String)
+    first_block_hash = Column(String)
 
     signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 

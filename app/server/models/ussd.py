@@ -1,7 +1,9 @@
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm.attributes import flag_modified
 
 from server import db, sentry
 from server.models.utils import ModelBase
+from sqlalchemy.orm.attributes import flag_modified
 
 
 class UssdMenu(ModelBase):
@@ -31,6 +33,9 @@ class UssdMenu(ModelBase):
     def parent(self):
         return UssdMenu.query.filter_by(id=self.parent_id).first()
 
+    def __repr__(self):
+        return f"<UssdMenu {self.id}: {self.name} - {self.description}>"
+
 
 class UssdSession(ModelBase):
     __tablename__ = 'ussd_sessions'
@@ -48,6 +53,10 @@ class UssdSession(ModelBase):
         if self.session_data is None:
             self.session_data = {}
         self.session_data[key] = value
+
+        # https://stackoverflow.com/questions/42559434/updates-to-json-field-dont-persist-to-db
+        flag_modified(self, "session_data")
+        db.session.add(self)
 
     def get_data(self, key):
         if self.session_data is not None:

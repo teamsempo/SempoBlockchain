@@ -1,10 +1,11 @@
+import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy import text
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
-from flask import current_app
+from flask import current_app, g
 import datetime
 import bcrypt
 import jwt
@@ -20,6 +21,7 @@ from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
 )
 
+import server.models.transfer_account
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -99,8 +101,12 @@ class User(ManyOrgBase, ModelBase):
         secondary=user_transfer_account_association_table,
         back_populates="users")
 
-    # TODO: work out if this should be deprecated
     default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
+
+    default_transfer_account = db.relationship('TransferAccount',
+                                           primaryjoin='TransferAccount.id == User.default_transfer_account_id',
+                                           lazy=True,
+                                           uselist=False)
 
     default_organisation_id = db.Column(
         db.Integer, db.ForeignKey('organisation.id'))
@@ -286,7 +292,7 @@ class User(ManyOrgBase, ModelBase):
 
     @property
     def transfer_account(self):
-        active_organisation = self.get_active_organisation()
+        active_organisation = getattr(g, "active_organisation", None) or self.fallback_active_organisation()
         if active_organisation:
             return active_organisation.org_level_transfer_account
 
@@ -298,9 +304,9 @@ class User(ManyOrgBase, ModelBase):
     def get_transfer_account_for_token(self, token):
         return find_transfer_accounts_with_matching_token(self, token)
 
-    def get_active_organisation(self, fallback=None):
+    def fallback_active_organisation(self):
         if len(self.organisations) == 0:
-            return fallback
+            return None
 
         if len(self.organisations) > 1:
             return self.default_organisation
@@ -455,7 +461,7 @@ class User(ManyOrgBase, ModelBase):
         self.password_reset_tokens = current_password_reset_tokens
 
     def save_pin_reset_token(self, pin_reset_token):
-        self.clear_expired_password_reset_tokens()
+        self.clear_expired_pin_reset_tokens()
 
         current_pin_reset_tokens = self.pin_reset_tokens[:]
         current_pin_reset_tokens.append(pin_reset_token)
@@ -498,8 +504,20 @@ class User(ManyOrgBase, ModelBase):
         self.set_held_role('ADMIN', tier)
 
         if organisation:
-            self.organisations.append(organisation)
+            self.add_user_to_organisation(organisation, is_admin=True)
+
+    def add_user_to_organisation(self, organisation: Organisation, is_admin=False):
+        if not self.default_organisation:
             self.default_organisation = organisation
+
+        self.organisations.append(organisation)
+
+        if is_admin and organisation.org_level_transfer_account_id:
+            if organisation.org_level_transfer_account is None:
+                organisation.org_level_transfer_account = (
+                    db.session.query(server.models.transfer_account.TransferAccount)
+                    .execution_options(show_all=True)
+                    .get(organisation.org_level_transfer_account_id))
 
             self.transfer_accounts.append(organisation.org_level_transfer_account)
 
@@ -551,12 +569,13 @@ class User(ManyOrgBase, ModelBase):
         self.clear_expired_pin_reset_tokens()
         not_resetting = len(self.pin_reset_tokens) == 0
 
-        return self.pin_hash is not None and not_resetting
+        return self.pin_hash is not None and not_resetting and self.failed_pin_attempts < 3
 
     def user_details(self):
-        "{} {} {}".format(self.first_name, self.last_name, self.phone)
+        # should drop the country code from phone number?
+        return "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
-    def get_most_relevant_transfer_usage(self):
+    def get_most_relevant_transfer_usages(self):
         '''Finds the transfer usage/business categories there are most relevant for the user
         based on the last number of send and completed credit transfers supplemented with the
         defaul business categories
@@ -565,40 +584,21 @@ class User(ManyOrgBase, ModelBase):
         '''
 
         sql = text('''
-            SELECT *, COUNT(*)  FROM
-                (SELECT u.business_usage_id FROM credit_transfer c
-                LEFT JOIN "user" u ON c.recipient_user_id = u.id
-                WHERE sender_user_id = {} AND c.transfer_status = 'COMPLETE'
+            SELECT *, COUNT(*) FROM
+                (SELECT c.transfer_use::text FROM credit_transfer c
+                WHERE c.sender_user_id = {} AND c.transfer_status = 'COMPLETE'
                 ORDER BY c.updated DESC
                 LIMIT 20)
-            C GROUP BY business_usage_id ORDER BY count DESC
+            C GROUP BY transfer_use ORDER BY count DESC
         '''.format(self.id))
         result = db.session.execute(sql)
-        transfer_usage_ids = [row[0] for row in result]
-        # Get most common business_usage_id
-        number_of_wanted_business_id = 9
+        most_common_uses = {}
+        for row in result:
+            if row[0] is not None:
+                for use in json.loads(row[0]):
+                    most_common_uses[use] = row[1]
 
-        most_common_ids = transfer_usage_ids[:number_of_wanted_business_id]
-        # If less than the wanted nr of usage is found fill up the list with default
-        if len(most_common_ids) < number_of_wanted_business_id:
-            most_relevant_ids = self.refine_with_default_transfer_usages(
-                most_common_ids, number_of_wanted_business_id)
-        relevant_transer_usages = TransferUsage.query.filter(
-            TransferUsage.id.in_(most_common_ids)).all()
-        # Order the transfer usages by the ordered list of id that were ordered by count
-        ordered_tranfer_usages = [
-            next(s for s in relevant_transer_usages if s.id == id) for id in most_common_ids]
-        return ordered_tranfer_usages
-
-    def refine_with_default_transfer_usages(self, most_common, nr_of_wanted):
-        default_transer_usages = TransferUsage.query.filter_by(default=True).with_entities(
-            TransferUsage.id).all()
-        for transer_usage_id, in default_transer_usages:
-            if transer_usage_id not in most_common:
-                most_common.append(transer_usage_id)
-            if len(most_common) == nr_of_wanted:
-                break
-        return most_common
+        return most_common_uses
 
     def get_reserve_token(self):
         # reserve token is master token for now

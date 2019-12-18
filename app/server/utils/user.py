@@ -1,5 +1,6 @@
 import threading
-from typing import Optional
+from functools import cmp_to_key
+from typing import Optional, List
 from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
@@ -149,7 +150,7 @@ def update_transfer_account_user(user,
 
 def create_transfer_account_user(first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
-                                 organisation=None,
+                                 organisation: Organisation=None,
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
@@ -202,8 +203,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if organisation:
-        user.organisations.append(organisation)
-        user.default_organisation = organisation
+        user.add_user_to_organisation(organisation, is_admin=False)
 
     db.session.add(user)
 
@@ -212,7 +212,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         user.transfer_accounts.append(existing_transfer_account)
     else:
         transfer_account = TransferAccount(
-            bind_to_entity=user,
+            bound_entity=user,
             blockchain_address=blockchain_address,
             organisation=organisation
         )
@@ -220,6 +220,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         transfer_account.name = transfer_account_name
         transfer_account.location = location
         transfer_account.is_vendor = is_vendor
+        transfer_account.is_beneficiary = is_beneficiary
 
         if transfer_card:
             transfer_account.transfer_card = transfer_card
@@ -231,9 +232,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
             transfer_account.approve_and_disburse()
 
         db.session.add(transfer_account)
-        db.session.commit()
 
-    user.default_transfer_account_id = transfer_account.id
+    user.default_transfer_account = transfer_account
 
     return user
 
@@ -613,11 +613,8 @@ def send_sms(user, message_key):
 
 
 def change_pin(user, new_pin):
-    try:
-        user.hash_pin(new_pin)
-        send_sms(user, 'successful_pin_change_sms')
-    except InvalidRequestError:
-        send_sms(user, 'unsuccessful_pin_change_sms')
+    user.hash_pin(new_pin)
+    user.delete_pin_reset_tokens()
 
 
 def change_initial_pin(user: User, new_pin):
@@ -663,3 +660,32 @@ def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[U
             raise Exception('User not found.')
         else:
             return None
+
+
+def transfer_usages_for_user(user: User) -> List[TransferUsage]:
+    most_common_uses = user.get_most_relevant_transfer_usages()
+
+    def usage_sort(a, b):
+        ma = most_common_uses.get(a.name)
+        mb = most_common_uses.get(b.name)
+
+        # return most used, then default, then everything else
+        if ma is not None and mb is not None:
+            if ma >= mb:
+                return -1
+            else:
+                return 1
+        elif ma is not None:
+            return -1
+        elif mb is not None:
+            return 1
+        elif a.default or b.default:
+            if a.default:
+                return -1
+            else:
+                return 1
+        else:
+            return -1
+
+    ordered_transfer_usages = sorted(TransferUsage.query.all(), key=cmp_to_key(usage_sort))
+    return ordered_transfer_usages

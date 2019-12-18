@@ -1,5 +1,4 @@
-import { take, fork, put, takeEvery, call, all, cancelled, cancel, race} from 'redux-saga/effects'
-import { store } from '../app.jsx'
+import { put, takeEvery, call, all } from 'redux-saga/effects'
 import { normalize } from 'normalizr'
 
 import {
@@ -28,10 +27,11 @@ import {handleError} from "../utils";
 
 function* updateStateFromCreditTransfer(result) {
   //Schema expects a list of credit transfer objects
+  let credit_transfer_list = [];
   if (result.data.credit_transfers) {
-    var credit_transfer_list = result.data.credit_transfers
+    credit_transfer_list = result.data.credit_transfers
   } else {
-    credit_transfer_list = [result.data.credit_transfer]
+    credit_transfer_list.push(result.data.credit_transfer)
   }
 
   const normalizedData = normalize(credit_transfer_list, creditTransferSchema);

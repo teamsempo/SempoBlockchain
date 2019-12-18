@@ -10,6 +10,7 @@ from eth_manager.task_interfaces.regular import (
     send_eth_task,
     synchronous_call,
     await_task_success,
+    get_wallet_balance
 )
 
 timeout = config.SYNCRONOUS_TASK_TIMEOUT
@@ -90,7 +91,7 @@ def deploy_exchange_network(deploying_address):
                 {'type': 'bytes', 'data': contract_to_be_registered_id},
                 contract_address
             ],
-            gas_limit=80000000
+            gas_limit=8000000
         )
 
     reg_deploy = deployer(contract_name='ContractRegistry')
@@ -132,7 +133,7 @@ def deploy_exchange_network(deploying_address):
         contract_type='BancorNetwork',
         func='setSignerAddress',
         args=[deploying_address],
-        gas_limit=int(8e7)
+        gas_limit=8000000
     )
 
     res = await_task_success(set_signer_task, timeout=timeout)
@@ -175,10 +176,14 @@ def deploy_smart_token(
         reserve_token_address,
         reserve_ratio_ppm):
 
+    # TODO: All tasks should automatically check for whether a topup is required
+    topup_task = topup_if_required(deploying_address)
+
     deploy_smart_token_task_id = deploy_contract_task(
         deploying_address,
         'SmartToken',
-        [name, symbol, decimals]
+        [name, symbol, decimals],
+        topup_task
     )
 
     smart_token_address = get_contract_address(deploy_smart_token_task_id)
@@ -189,7 +194,7 @@ def deploy_smart_token(
         contract_type='SmartToken',
         func='issue',
         args=[deploying_address, issue_amount_wei],
-        gas_limit=80000000
+        gas_limit=8000000
     )
 
     deploy_subexchange_task_id = deploy_contract_task(
@@ -199,6 +204,13 @@ def deploy_smart_token(
     )
 
     subexchange_address = get_contract_address(deploy_subexchange_task_id)
+
+    bal = get_wallet_balance(
+        address=deploying_address,
+        token_address=reserve_token_address
+    )
+
+    print(f'Wallet balance is {bal} wei (depositing {reserve_deposit_wei} wei).')
 
     transaction_task(
         signing_address=deploying_address,

@@ -159,20 +159,6 @@ def test_valid_tfa_token(authed_sempo_admin_user):
             .filter_by(id=resp['id']).first()
             is not None)
 
-
-def test_get_most_relevant_transfer_usage(authed_sempo_admin_user):
-    """
-    GIVEN A User Model
-    WHEN get_most_relevant_transfer_usage is called
-    THEN a list is returnen
-    """
-    # TODO This test in pretty lightweight atm it just checks if a list
-    # is returned. It may be worthwhile to add more extensive testing in
-    # the future.
-    usages = authed_sempo_admin_user.get_most_relevant_transfer_usage()
-    assert isinstance(usages, list)
-
-
 """ ----- Transfer Account Model ----- """
 
 

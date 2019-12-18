@@ -38,7 +38,7 @@ class SQLPersistenceInterface(object):
             session.query(BlockchainTransaction)
                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                 .filter(BlockchainTransaction.ignore == False)
-                .filter(BlockchainTransaction.coinbase == self.coinbase)
+                .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
                 .filter(
                     and_(
                         or_(BlockchainTransaction.nonce_consumed == True,
@@ -68,7 +68,7 @@ class SQLPersistenceInterface(object):
                 session.query(BlockchainTransaction)
                     .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                     .filter(BlockchainTransaction.ignore == False)
-                    .filter(BlockchainTransaction.coinbase == self.coinbase)
+                    .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
                     .filter(
                         and_(
                             or_(BlockchainTransaction.nonce_consumed == True,
@@ -90,7 +90,7 @@ class SQLPersistenceInterface(object):
             session.query(BlockchainTransaction)
                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                 .filter(BlockchainTransaction.ignore == False)
-                .filter(BlockchainTransaction.coinbase == self.coinbase)
+                .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
                 .filter(BlockchainTransaction.status == 'PENDING')
                 .filter(and_(BlockchainTransaction.id > highest_valid_id,
                              BlockchainTransaction.id < transaction_id))
@@ -126,7 +126,7 @@ class SQLPersistenceInterface(object):
                                 .filter(BlockchainTransaction.id != transaction_id)
                                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                                 .filter(BlockchainTransaction.ignore == False)
-                                .filter(BlockchainTransaction.coinbase == self.coinbase)
+                                .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
                                 .filter(BlockchainTransaction.status == 'PENDING')
                                 .filter(BlockchainTransaction.nonce == blockchain_transaction.nonce)
                                 .all())
@@ -172,7 +172,7 @@ class SQLPersistenceInterface(object):
 
         blockchain_transaction = BlockchainTransaction(
             signing_wallet=task.signing_wallet,
-            coinbase=self.coinbase
+            first_block_hash=self.first_block_hash
         )
 
         session.add(blockchain_transaction)
@@ -218,6 +218,9 @@ class SQLPersistenceInterface(object):
     def add_dependent_on_tasks(self, task, dependent_on_tasks):
         if dependent_on_tasks is None:
             dependent_on_tasks = []
+
+        if isinstance(dependent_on_tasks, int):
+            dependent_on_tasks = [dependent_on_tasks]
 
         for task_id in dependent_on_tasks:
             dependee_task = session.query(BlockchainTask).get(task_id)
@@ -286,22 +289,25 @@ class SQLPersistenceInterface(object):
     def get_serialised_task_from_id(self, id):
         task = self.get_task_from_id(id)
 
+        base_data = {
+            'id': task.id,
+            'status': task.status,
+            'dependents': [task.id for task in task.dependents],
+            'dependees': [task.id for task in task.dependees]
+        }
+
         if task.successful_transaction:
 
-            return {
-                'status': task.status,
-                'dependents': [task.id for task in task.dependents],
+            transaction_data = {
                 'successful_hash': task.successful_transaction.hash,
                 'successful_block': task.successful_transaction.block,
                 'contract_address': task.successful_transaction.contract_address
             }
 
-        else:
-            return {
-                'status': task.status,
-                'dependents': [task.id for task in task.dependents]
-            }
+            return {**transaction_data, **base_data}
 
+        else:
+            return base_data
 
     def get_task_from_id(self, task_id):
         return session.query(BlockchainTask).get(task_id)
@@ -312,7 +318,7 @@ class SQLPersistenceInterface(object):
         self.create_blockchain_wallet_from_private_key(private_key)
 
     def create_blockchain_wallet_from_private_key(self, private_key,
-                                                  allow_existing,
+                                                  allow_existing=False,
                                                   wei_target_balance=0,
                                                   wei_topup_threshold=0,
                                                   ):
@@ -377,6 +383,6 @@ class SQLPersistenceInterface(object):
 
         self.w3 = w3
 
-        self.coinbase = w3.eth.coinbase
+        self.first_block_hash = w3.eth.getBlock(0).hash.hex()
 
         self.PENDING_TRANSACTION_EXPIRY_SECONDS = PENDING_TRANSACTION_EXPIRY_SECONDS

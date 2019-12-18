@@ -1,6 +1,6 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken} from '../utils'
+import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId} from '../utils'
 
 import {
   requestApiToken,
@@ -18,6 +18,7 @@ import {
 
 import {
   REAUTH_REQUEST,
+  UPDATE_ACTIVE_ORG,
   LOGIN_REQUEST,
   LOGIN_SUCCESS,
   LOGIN_PARTIAL,
@@ -56,8 +57,22 @@ import {
 import {browserHistory} from "../app.jsx";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 
+function* saveOrgId({payload}) {
+  try {
+    yield call(storeOrgid, payload.organisationId.toString());
+
+    window.location.reload()
+  } catch (e) {
+    removeOrgId()
+  }
+}
+
+function* watchSaveOrgId() {
+  yield takeEvery(UPDATE_ACTIVE_ORG, saveOrgId);
+}
 export function* logout() {
-    yield call(removeSessionToken)
+    yield call(removeSessionToken);
+    yield call(removeOrgId);
 }
 
 function createLoginSuccessObject(token) {
@@ -70,8 +85,10 @@ function createLoginSuccessObject(token) {
     adminTier: token.admin_tier,
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
-    organisationName: token.organisation_name,
-    organisationId: token.organisation_id
+    webApiVersion: token.web_api_version,
+    organisationName: token.active_organisation_name,
+    organisationId: token.active_organisation_id,
+    organisations: token.organisations,
   }
 }
 
@@ -153,12 +170,22 @@ function* watchLogoutRequest() {
 function* register({payload}) {
   try {
     const registered_account = yield call(registerAPI, payload);
-    if (registered_account.auth_token) {
-      yield put(createLoginSuccessObject(registered_account));
+
+    if (registered_account.status === 'success') {
+      yield put({type: REGISTER_SUCCESS, registered_account});
+
+    } else if (registered_account.tfa_url) {
       yield call(storeSessionToken, registered_account.auth_token );
-      yield call (authenticatePusher);
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: registered_account.message,
+        tfaURL: registered_account.tfa_url,
+        tfaFailure: true
+      });
+    } else {
+      yield put({type: REGISTER_FAILURE, error: registered_account.message});
+      yield put({type: LOGIN_FAILURE, error: registered_account.message})
     }
-    yield put({type: REGISTER_SUCCESS, registered_account});
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
@@ -287,6 +314,7 @@ function* watchValidateTFA() {
 
 export default function* authSagas() {
   yield all([
+    watchSaveOrgId(),
     watchRegisterRequest(),
     watchLoginRequest(),
     watchLogoutRequest(),

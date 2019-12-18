@@ -5,7 +5,8 @@ from server.models.utils import ModelBase, organisation_association_table
 import server.models.transfer_account
 from server import message_processor
 from server.utils.i18n import i18n_for
-
+from server.utils.access_control import AccessControl
+import server.models.transfer_account
 
 class Organisation(ModelBase):
     """
@@ -17,6 +18,11 @@ class Organisation(ModelBase):
 
     name                = db.Column(db.String)
 
+    # TODO: Create a mixin so that both user and organisation can use the same definition here
+    # This is the blockchain address used for transfer accounts, unless overridden
+    primary_blockchain_address = db.Column(db.String)
+
+    # This is the 'behind the scenes' blockchain address used for paying gas fees
     system_blockchain_address = db.Column(db.String)
 
     users               = db.relationship(
@@ -38,6 +44,13 @@ class Organisation(ModelBase):
         primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
         uselist=False)
 
+    # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
+    @property
+    def queried_org_level_transfer_account(self):
+        if self.org_level_transfer_account_id:
+            return server.models.transfer_account.TransferAccount.query.get(self.org_level_transfer_account_id)
+        return None
+
     credit_transfers    = db.relationship("CreditTransfer",
                                           secondary=organisation_association_table,
                                           back_populates="organisations")
@@ -55,18 +68,34 @@ class Organisation(ModelBase):
     custom_welcome_message_key = db.Column(db.String)
 
     @staticmethod
-    def master_organisation():
+    def master_organisation() -> "Organisation":
         return Organisation.query.filter_by(is_master=True).first()
 
-    def send_welcome_sms(self, to_user):
+    def send_welcome_sms(self, to_user: dict):
         if self.custom_welcome_message_key:
             message = i18n_for(to_user, "organisation.{}".format(self.custom_welcome_message_key))
         else:
             message = i18n_for(to_user, "organisation.generic_welcome_message")
-        message_processor.send_message(to_user.phone, message)
+        message_processor.send_message(to_user.get('phone'), message)
 
+    def _setup_org_transfer_account(self):
+        transfer_account = server.models.transfer_account.TransferAccount(
+            bound_entity=self,
+            is_approved=True
+        )
+        db.session.add(transfer_account)
+        self.org_level_transfer_account = transfer_account
 
-    def __init__(self, is_master=False, **kwargs):
+        # Back setup for delayed organisation transfer account instantiation
+        for user in self.users:
+            if AccessControl.has_any_tier(user.roles, 'ADMIN'):
+                user.transfer_accounts.append(self.org_level_transfer_account)
+
+    def bind_token(self, token):
+        self.token = token
+        self._setup_org_transfer_account()
+
+    def __init__(self, token=None, is_master=False, **kwargs):
 
         super(Organisation, self).__init__(**kwargs)
 
@@ -76,8 +105,12 @@ class Organisation(ModelBase):
 
             self.is_master = True
             self.system_blockchain_address = bt.create_blockchain_wallet(
-                private_key=current_app.config['MASTER_WALLET_PRIVATE_KEY']
+                private_key=current_app.config['MASTER_WALLET_PRIVATE_KEY'],
+                wei_target_balance=0,
+                wei_topup_threshold=0,
             )
+
+            self.primary_blockchain_address = self.system_blockchain_address or bt.create_blockchain_wallet()
 
         else:
             self.is_master = False
@@ -87,6 +120,7 @@ class Organisation(ModelBase):
                 wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
             )
 
-            transfer_account = server.models.transfer_account.TransferAccount(bind_to_entity=self, is_approved=True)
-            db.session.add(transfer_account)
-            self.org_level_transfer_account = transfer_account
+            self.primary_blockchain_address = bt.create_blockchain_wallet()
+
+        if token:
+            self.bind_token(token)

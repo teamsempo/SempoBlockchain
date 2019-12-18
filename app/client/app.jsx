@@ -10,7 +10,7 @@ import * as Sentry from '@sentry/browser';
 import { createBrowserHistory } from 'history'
 
 
-import rootReducer from './reducers/rootReducer'
+import appReducer from './reducers/rootReducer'
 import rootsaga  from './sagas/rootSaga'
 
 import Nav from './nav.jsx'
@@ -22,8 +22,8 @@ const composeSetup = process.env.NODE_ENV !== 'prod' && typeof window === 'objec
   window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
   window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : compose
 
-const store = createStore(
-  rootReducer,
+export const store = createStore(
+  appReducer,
   composeSetup(
     applyMiddleware(sagaMiddleware)
   )
@@ -34,8 +34,7 @@ Sentry.init({ dsn: window.SENTRY_REACT_DSN });
 
 // Pusher Options
 const pusherOptions = {
-  cluster: 'ap1',
-  authEndpoint: '/api/pusher/auth'
+  cluster: 'ap1'
 };
 
 delayConfiguration(store, window.PUSHER_KEY, pusherOptions);

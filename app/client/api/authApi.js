@@ -1,10 +1,11 @@
-import { handleResponse, storeSessionToken, removeSessionToken, getToken, getTFAToken, generateQueryString } from '../utils'
+import {handleResponse, getToken, getTFAToken, getOrgId, generateFormattedURL} from '../utils'
 import { startConfiguration } from 'pusher-redux';
+import {store} from "../app";
 
 //Auth API Call
 export const requestApiToken = ({body}) => {
   body['tfa_token'] = getTFAToken();
-  return fetch('/api/auth/request_api_token/' , {
+  return fetch('/api/v1/auth/request_api_token/' , {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
@@ -21,7 +22,14 @@ export const requestApiToken = ({body}) => {
 };
 
 export const refreshApiToken = () => {
-  return fetch('/api/auth/refresh_api_token/' ,{
+  let orgId = getOrgId();
+  if (orgId !== null) {
+    var URL = `/api/v1/auth/refresh_api_token/?org=${orgId}`
+  } else {
+    URL = '/api/v1/auth/refresh_api_token/'
+  }
+
+  return fetch(URL ,{
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json'
@@ -38,7 +46,7 @@ export const refreshApiToken = () => {
 };
 
 export const registerAPI = ({body}) => {
-  return fetch('/api/auth/register/' , {
+  return fetch('/api/v1/auth/register/' , {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
@@ -47,7 +55,7 @@ export const registerAPI = ({body}) => {
     body: JSON.stringify(body)
     })
     .then(response => {
-      return handleResponse(response)
+      return response.json();
     })
     .catch(error => {
       throw error;
@@ -55,7 +63,7 @@ export const registerAPI = ({body}) => {
 };
 
 export const activateAPI = (activation_token) => {
-  return fetch('/api/auth/activate/' , {
+  return fetch('/api/v1/auth/activate/' , {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
@@ -74,7 +82,7 @@ export const activateAPI = (activation_token) => {
 };
 
 export const requestResetEmailAPI = (email) => {
-  return fetch('/api/auth/request_reset_email/' , {
+  return fetch('/api/v1/auth/request_reset_email/' , {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
@@ -93,7 +101,7 @@ export const requestResetEmailAPI = (email) => {
 };
 
 export const GetTFAAPI = () => {
-  return fetch('/api/auth/tfa/' , {
+  return fetch('/api/v1/auth/tfa/' , {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -104,11 +112,11 @@ export const GetTFAAPI = () => {
   }).catch(error => {
       throw error;
   })
-}
+};
 
 
 export const ValidateTFAAPI = (payload) => {
-  return fetch('/api/auth/tfa/' , {
+  return fetch('/api/v1/auth/tfa/' , {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -128,7 +136,7 @@ export const ValidateTFAAPI = (payload) => {
 
 
 export const ResetPasswordAPI = (payload) => {
-  return fetch('/api/auth/reset_password/' , {
+  return fetch('/api/v1/auth/reset_password/' , {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -152,12 +160,13 @@ export const authenticatePusher = () => {
       headers: {
         'Authorization': getToken()
       }
-    }
+    },
+    authEndpoint: generateFormattedURL('/pusher/auth')
   });
 };
 
 export const getUserList = () => {
-  return fetch('/api/auth/permissions/', {
+  return fetch(generateFormattedURL('/auth/permissions/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -171,11 +180,7 @@ export const getUserList = () => {
 };
 
 export const updateUserAPI = ({body, query}) => {
-
-  const query_string = generateQueryString(query);
-  var URL = `/api/auth/permissions/${query_string}`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/auth/permissions/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',
@@ -192,9 +197,7 @@ export const updateUserAPI = ({body, query}) => {
 };
 
 export const inviteUserAPI = ({body}) => {
-  var URL = `/api/auth/permissions/`;
-
-  return fetch(URL, {
+  return fetch(generateFormattedURL('/auth/permissions/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

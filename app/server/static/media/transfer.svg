@@ -1,23 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="27px" height="30px" viewBox="0 0 27 30" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 49.2 (51160) - http://www.bohemiancoding.com/sketch -->
-    <title>transfer copy 5</title>
+<svg width="29px" height="20px" viewBox="0 0 29 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 51.3 (57544) - http://www.bohemiancoding.com/sketch -->
+    <title>Group</title>
     <desc>Created with Sketch.</desc>
     <defs></defs>
-    <g id="Sempo-Dashboard" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Desktop-HD" transform="translate(-544.000000, -757.000000)" fill="#2D9EA0" fill-rule="nonzero">
-            <g id="Beneficaries" transform="translate(25.000000, 676.000000)">
-                <g id="Group-4" transform="translate(519.000000, 77.000000)">
-                    <g id="transfer-copy-5" transform="translate(0.000000, 4.000000)">
-                        <g id="down-left-1" transform="translate(0.000000, 12.000000)">
-                            <path d="M26.55,0.01875 C26.28,0.01875 26.1,0.16875 26.1,0.39375 C26.1,6.61875 20.88,11.26875 13.95,11.26875 L1.53,11.26875 L7.965,5.90625 C8.145,5.75625 8.145,5.53125 7.965,5.38125 C7.785,5.23125 7.515,5.23125 7.335,5.38125 L0.1872,11.33775 C0.0729,11.40225 0,11.5065 0,11.64375 C0,11.781 0.0729,11.88525 0.1872,11.94975 L7.335,17.90625 C7.425,17.98125 7.605,17.98125 7.695,17.98125 C7.785,17.98125 7.965,17.98125 7.965,17.83125 C8.145,17.68125 8.145,17.45625 7.965,17.30625 L1.62,12.01875 L13.95,12.01875 C21.42,12.01875 27,6.99375 27,0.39375 C27,0.16875 26.82,0.01875 26.55,0.01875 Z" id="Shape"></path>
-                        </g>
-                        <g id="down-left-1-copy" transform="translate(13.500000, 9.000000) scale(-1, -1) translate(-13.500000, -9.000000) ">
-                            <path d="M26.55,0.01875 C26.28,0.01875 26.1,0.16875 26.1,0.39375 C26.1,6.61875 20.88,11.26875 13.95,11.26875 L1.53,11.26875 L7.965,5.90625 C8.145,5.75625 8.145,5.53125 7.965,5.38125 C7.785,5.23125 7.515,5.23125 7.335,5.38125 L0.1872,11.33775 C0.0729,11.40225 0,11.5065 0,11.64375 C0,11.781 0.0729,11.88525 0.1872,11.94975 L7.335,17.90625 C7.425,17.98125 7.605,17.98125 7.695,17.98125 C7.785,17.98125 7.965,17.98125 7.965,17.83125 C8.145,17.68125 8.145,17.45625 7.965,17.30625 L1.62,12.01875 L13.95,12.01875 C21.42,12.01875 27,6.99375 27,0.39375 C27,0.16875 26.82,0.01875 26.55,0.01875 Z" id="Shape"></path>
-                        </g>
-                    </g>
-                </g>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group" transform="translate(1.000000, 0.000000)">
+            <g id="disbursement" transform="translate(16.000000, 10.000000) rotate(90.000000) translate(-16.000000, -10.000000) translate(6.000000, -2.000000)" fill="#4A4A4A" fill-rule="nonzero">
+                <path d="M19,10 C18.872,10 18.744,9.951 18.646,9.854 L10,1.207 L1.354,9.854 C1.159,10.049 0.842,10.049 0.647,9.854 C0.452,9.659 0.452,9.342 0.647,9.147 L9.647,0.147 C9.842,-0.048 10.159,-0.048 10.354,0.147 L19.354,9.147 C19.549,9.342 19.549,9.659 19.354,9.854 C19.256,9.951 19.128,10 19,10 Z" id="Shape"></path>
+                <path d="M10,24 C9.724,24 9.5,23.776 9.5,23.5 L9.5,0.5 C9.5,0.224 9.724,0 10,0 C10.276,0 10.5,0.224 10.5,0.5 L10.5,23.5 C10.5,23.776 10.276,24 10,24 Z" id="Shape"></path>
             </g>
+            <circle id="Oval" stroke="#4A4A4A" cx="1" cy="10" r="1"></circle>
         </g>
     </g>
 </svg>

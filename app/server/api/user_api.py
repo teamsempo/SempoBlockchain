@@ -123,7 +123,7 @@ class UserAPI(MethodView):
     def post(self, user_id):
 
         post_data = request.get_json()
-        organisation = g.user.get_active_organisation()
+        organisation = g.active_organisation
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
@@ -131,11 +131,11 @@ class UserAPI(MethodView):
         )
 
         if response_code == 200:
-            db.session.commit()
-
             user = response_object['data']['user']
             if organisation is not None and user is not None:
                 organisation.send_welcome_sms(user)
+
+            db.session.commit()
 
         return make_response(jsonify(response_object)), response_code
 
@@ -150,6 +150,8 @@ class UserAPI(MethodView):
         phone = put_data.get('phone')
         public_serial_number = put_data.get('public_serial_number')
         location = put_data.get('location')
+
+        default_organisation_id = put_data.get('default_organisation_id')
 
         user = User.query.get(user_id)
 
@@ -177,6 +179,9 @@ class UserAPI(MethodView):
         if location and not location == user.location:
             user.location = location
 
+        if default_organisation_id:
+            user.default_organisation_id = default_organisation_id
+
         db.session.commit()
 
         response_object = {
@@ -189,6 +194,34 @@ class UserAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
+
+class ResetPinAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'}, allowed_basic_auth_types=('external'))
+    def post(self, user_id):
+
+        post_data = request.get_json()
+        reset_user_id = post_data.get('user_id')
+
+        if reset_user_id is not None:
+            user = User.query.get(reset_user_id)
+
+            pin_reset_token = user.encode_single_use_JWS('R')
+            user.save_pin_reset_token(pin_reset_token)
+            user.failed_pin_attempts = 0
+
+            response_object = {
+                'status': 'success',
+                'message': 'Successfully reset pin for user.',
+                'data': {
+                    'user': user_schema.dump(user).data
+                }
+            }
+            return make_response(jsonify(response_object)), 200
+        else:
+            response_object = {
+                'message': 'No user to reset pin for',
+            }
+            return make_response(jsonify(response_object)), 400
 
 
 # add Rules for API Endpoints
@@ -203,4 +236,11 @@ user_blueprint.add_url_rule(
     '/user/<int:user_id>/',
     view_func=UserAPI.as_view('single_user_view'),
     methods=['GET', 'PUT']
+)
+
+user_blueprint.add_url_rule(
+    '/user/reset_pin',
+    view_func=ResetPinAPI.as_view('reset_pin'),
+    methods=['POST'],
+    defaults={'user_id': None}
 )
