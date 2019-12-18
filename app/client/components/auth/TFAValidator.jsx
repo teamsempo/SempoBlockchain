@@ -1,13 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
-import QRCode from 'qrcode.react'
 
 import AsyncButton from './../AsyncButton.jsx'
 
-import {validateTFA, validateTFARequest} from '../../reducers/authReducer'
+import {validateTFARequest} from '../../reducers/auth/actions'
 
-import { Input, StyledButton, ErrorMessage } from './../styledElements'
+import { Input, ErrorMessage } from './../styledElements'
 
 const mapStateToProps = (state) => {
   return {

@@ -9,6 +9,7 @@ import InputField from '../form/InputField'
 import SelectField from '../form/SelectField'
 import {TransferUsage} from "../../reducers/transferUsage/types";
 import {Organisation} from "../../reducers/organisation/types";
+import {ReduxState} from "../../reducers/rootReducer";
 
 export interface ICreateUser {
   firstName?: string
@@ -131,11 +132,10 @@ const CreateUserReduxForm = reduxForm({
 // @ts-ignore
 })(CreateUserForm);
 
-export default connect(state => {
+export default connect((state: ReduxState): StateProps => {
   const selector = formValueSelector('createUser');
   return {
     businessUsageValue: selector(state, 'businessUsage'),
-    // @ts-ignore
     organisation: state.organisation.data
   }
 // @ts-ignore

@@ -6,6 +6,7 @@ import {ErrorMessage, ModuleHeader} from "../styledElements";
 import AsyncButton from "../AsyncButton";
 import InputField from '../form/InputField'
 import {connect} from "react-redux";
+import {ReduxState} from "../../reducers/rootReducer";
 
 export interface ICreateVendor {
   firstName?: string
@@ -109,8 +110,7 @@ const CreateVendorReduxForm = reduxForm({
 // @ts-ignore
 })(CreateVendorForm);
 
-// TODO: can't figure out the typing here...
-export default connect(state => {
+export default connect((state: ReduxState): StateProps => {
   const selector = formValueSelector('createVendor');
   return {
     isCashierAccountValue: selector(state, 'isCashierAccount'),

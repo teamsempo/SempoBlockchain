@@ -9,7 +9,6 @@ import CreateVendorForm, {ICreateVendor} from './CreateVendorForm';
 import { loadTransferUsages } from '../../reducers/transferUsage/actions'
 import {TransferUsage} from "../../reducers/transferUsage/types";
 import {ReduxState} from "../../reducers/rootReducer";
-import {Organisation} from "../../reducers/organisation/types";
 import {loadOrganisation} from "../../reducers/organisation/actions";
 
 interface DispatchProps {
@@ -22,7 +21,6 @@ interface DispatchProps {
 interface StateProps {
   users: any,
   transferUsages: TransferUsage[]
-  organisation?: Organisation
 }
 
 interface OuterProps {
@@ -136,8 +134,7 @@ class CreateUser extends React.Component<Props> {
   }
 }
 
-//TODO: why doesn't ReduxState work correctly
-const mapStateToProps = (state: any) => {
+const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     users: state.users,
     transferUsages: state.transferUsages.transferUsages

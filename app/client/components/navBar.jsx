@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Link, NavLink } from 'react-router-dom';
 
-import { updateActiveOrgRequest } from '../reducers/authReducer'
+import { updateActiveOrgRequest } from '../reducers/auth/actions'
 
 const mapStateToProps = (state) => {
   return {
