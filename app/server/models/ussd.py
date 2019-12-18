@@ -3,7 +3,6 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from server import db, sentry
 from server.models.utils import ModelBase
-from sqlalchemy.orm.attributes import flag_modified
 
 
 class UssdMenu(ModelBase):
