@@ -1,15 +1,14 @@
-import React  from 'react';
+import * as React  from 'react';
 import { connect } from 'react-redux';
 
 import { createUser, RESET_CREATE_USER } from '../../reducers/userReducer'
 import { StyledButton, ModuleHeader } from '../styledElements'
-import styles from './styles.module.css';
-import CreateUserForm, {ICreateUser} from './CreateUserForm';
-import CreateVendorForm, {ICreateVendor} from './CreateVendorForm';
+import * as styles from './styles.module.css';
 import { loadTransferUsages } from '../../reducers/transferUsage/actions'
 import {TransferUsage} from "../../reducers/transferUsage/types";
 import {Organisation} from "../../reducers/organisation/types";
 import {loadOrganisation} from "../../reducers/organisation/actions";
+import CreateUserForm, {ICreateUserUpdate} from './CreateUserForm';
 
 interface DispatchProps {
   createUser: (body: any) => void,
@@ -37,10 +36,11 @@ declare global {
   }
 }
 
-type Form = ICreateUser & ICreateVendor
+type Form = ICreateUserUpdate
 type Props = DispatchProps & StateProps & OuterProps
 
-class CreateUser extends React.Component<Props> {
+class CreateUserUpdated extends React.Component<Props> {
+
   componentDidMount() {
     this.props.loadTransferUsages();
     this.props.loadOrganisation();
@@ -80,8 +80,8 @@ class CreateUser extends React.Component<Props> {
 
   render() {
     const transferAccountType = this.props.isVendor ? "vendor" : window.BENEFICIARY_TERM.toLowerCase();
-
     const {one_time_code, is_external_wallet} = this.props.users.createStatus;
+
     if (one_time_code !== null) {
       if (is_external_wallet === true) {
         return (
@@ -114,20 +114,12 @@ class CreateUser extends React.Component<Props> {
         )
       }
     } else {
-      if (this.props.isVendor) {
-        return <CreateVendorForm
-          users={this.props.users}
-          transferAccountType={transferAccountType}
-          onSubmit={(form: Form) => this.onCreateUser(form)}
-        />
-      } else {
-        return <CreateUserForm
-          users={this.props.users}
-          transferAccountType={transferAccountType}
-          transferUsages={this.props.transferUsages}
-          onSubmit={(form: Form) => this.onCreateUser(form)}
-        />
-      }
+      return <CreateUserForm
+        users={this.props.users}
+        transferAccountType={transferAccountType}
+        transferUsages={this.props.transferUsages}
+        onSubmit={(form: Form) => this.onCreateUser(form)}
+      />;
     }
   }
 }
@@ -150,5 +142,5 @@ const mapDispatchToProps = (dispatch: any) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(CreateUser);
+export default connect(mapStateToProps, mapDispatchToProps)(CreateUserUpdated);
 
