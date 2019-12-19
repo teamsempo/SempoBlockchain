@@ -20,6 +20,7 @@ const ErrorMessage = function(props) {
 
 const mapStateToProps = (state) => {
   return {
+    userId: state.businessVerification.stepState.userId,
     editStatus: state.businessVerification.editStatus,
     businessProfile: state.businessVerification.businessVerificationState,
   };
@@ -36,7 +37,7 @@ class BusinessDetails extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      account_type: 'business',
+      account_type: 'BUSINESS',
       first_name: '',
       last_name: '',
       phone: '',
@@ -110,6 +111,7 @@ class BusinessDetails extends React.Component {
   isValidated() {
     const userInput = this._grabUserInput(); // grab user entered vals
     const validateNewInput = this._validateData(userInput); // run the new input against the validator
+    const createBusinessProfile = {...userInput, ...{'user_id': this.props.userId}};
 
     if (Object.keys(validateNewInput).every((k) => { return validateNewInput[k] === true })) {
       // get business verification profile
@@ -120,7 +122,8 @@ class BusinessDetails extends React.Component {
         this.props.editBusinessProfile(userInput, this.props.businessProfile.id);
       } else {
         // creating a new business profile in db
-        this.props.createBusinessProfile(userInput);
+
+        this.props.createBusinessProfile(createBusinessProfile);
       }
 
     } else {
@@ -161,6 +164,7 @@ class BusinessDetails extends React.Component {
 
     const userInput = this._grabUserInput(); // grab user entered vals
     const validateNewInput = this._validateData(this.state); // run the new input against the validator
+    console.log(validateNewInput)
 
     this.setState(Object.assign(userInput, validateNewInput, this._validationErrors(validateNewInput)));
   }
@@ -178,7 +182,7 @@ class BusinessDetails extends React.Component {
       }
     }
 
-    return  {... businessValidation,
+    return  {...businessValidation,
       // account_type_val: no validation
       first_name_val: /[a-zA-Z]/.test(data.first_name), // char only
       last_name_val: /[a-zA-Z]/.test(data.last_name), // char only
@@ -214,20 +218,20 @@ class BusinessDetails extends React.Component {
   }
 
   render() {
-    const { hideAccountType } = this.props;
-    let indvidualAccount = this.state.account_type === 'individual';
+    const { userId } = this.props;
+    let indvidualAccount = this.state.account_type === 'INDIVIDUAL';
 
     return(
         <div>
 
-          {hideAccountType ? null : <Row>
+          {(userId === null || typeof userId === "undefined") ? null : <Row>
             <InputObject>
               <InputLabel>
                 Account Type
               </InputLabel>
               <StyledSelectKey name="account_type" value={this.state.account_type} onBlur={this.validationCheck} onChange={this.handleInputChange}>
-                <option name="individual" value="individual">Individual</option>
-                <option name="business" value="business">Business</option>
+                <option name="INDIVIDUAL" value="INDIVIDUAL">INDIVIDUAL</option>
+                <option name="BUSINESS" value="BUSINESS">BUSINESS</option>
               </StyledSelectKey>
               <ErrorMessage state={this.state} input={'account_type'}/>
             </InputObject>

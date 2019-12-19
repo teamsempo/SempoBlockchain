@@ -5,6 +5,15 @@ from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 
+
+class LowerCase(fields.Field):
+    """Field that deserializes to a lower case string.
+    """
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        return value.lower()
+
+
 class SchemaBase(Schema):
     id = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
@@ -276,6 +285,7 @@ class UploadedDocumentSchema(SchemaBase):
 
 class KycApplicationSchema(SchemaBase):
     type                = fields.Str()
+    account_type        = LowerCase(attribute="type")
 
     trulioo_id          = fields.Str()
     wyre_id             = fields.Str()

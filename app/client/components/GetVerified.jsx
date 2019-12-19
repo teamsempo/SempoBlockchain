@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 
 import {
-  loadBusinessProfile,
+  loadBusinessProfile, RESET_ACTIVE_STEP_STATE, RESET_BUSINESS_VERIFICATION_STATE,
 } from "../reducers/businessVerificationReducer";
 
 import LoadingSpinner from "./loadingSpinner.jsx";
@@ -20,6 +20,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     loadBusinessProfile: () => dispatch(loadBusinessProfile()),
+    clearUserId: () => dispatch({type: RESET_ACTIVE_STEP_STATE}, {type: RESET_BUSINESS_VERIFICATION_STATE})
   };
 };
 
@@ -30,7 +31,8 @@ class GetVerified extends React.Component {
   }
 
   componentDidMount() {
-    this.props.loadBusinessProfile()
+    this.props.clearUserId();
+    this.props.loadBusinessProfile();
   }
 
   render() {

@@ -5,12 +5,13 @@ import { Link } from 'react-router-dom';
 
 import { replaceUnderscores } from "../../utils";
 
-import { ModuleBox, ModuleHeader } from '../styledElements'
+import {ModuleBox, ModuleHeader, StyledButton} from '../styledElements'
 import AsyncButton from './../AsyncButton.jsx'
 import ProfilePicture from '../profilePicture.jsx'
 
 import {editUser, resetPin} from '../../reducers/userReducer'
 import QrReadingModal from "../qrReadingModal.jsx";
+import {UPDATE_ACTIVE_STEP} from "../../reducers/businessVerificationReducer";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -19,10 +20,11 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     editUser: (body, path) => dispatch(editUser({body, path})),
     resetPin: (userId) => dispatch(resetPin(userId)),
+    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0, userId: ownProps.user_id})
   };
 };
 
@@ -223,6 +225,14 @@ class SingleUserManagement extends React.Component {
                             </a>
                           </ManagerText>
                         </SubRow>
+
+                        <SubRow>
+                          <InputLabel>KYC Data: </InputLabel>
+                          <ManagerText>
+                            <Link to="/settings/verification" onClick={this.props.nextStep.bind(this)}>KYC</Link>
+                          </ManagerText>
+                        </SubRow>
+
                       </Row>
                     <Row style={{margin: '0em 1em'}}>
                       {

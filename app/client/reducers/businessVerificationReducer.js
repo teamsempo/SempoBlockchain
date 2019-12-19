@@ -2,7 +2,9 @@ import { DEEEEEEP } from "../utils";
 import { combineReducers } from "redux";
 
 export const UPDATE_ACTIVE_STEP = 'UPDATE_ACTIVE_STEP';
+export const RESET_ACTIVE_STEP_STATE = 'RESET_ACTIVE_STEP_STATE';
 export const UPDATE_BUSINESS_VERIFICATION_STATE = 'UPDATE_BUSINESS_VERIFICATION_STATE';
+export const RESET_BUSINESS_VERIFICATION_STATE = 'RESET_BUSINESS_VERIFICATION_STATE';
 
 export const EDIT_BUSINESS_VERIFICATION_REQUEST = 'EDIT_BUSINESS_VERIFICATION_REQUEST';
 export const EDIT_BUSINESS_VERIFICATION_SUCCESS = 'EDIT_BUSINESS_VERIFICATION_SUCCESS';
@@ -28,19 +30,25 @@ export const EDIT_BANK_ACCOUNT_REQUEST = 'EDIT_BANK_ACCOUNT_REQUEST';
 export const EDIT_BANK_ACCOUNT_SUCCESS = 'EDIT_BANK_ACCOUNT_SUCCESS';
 export const EDIT_BANK_ACCOUNT_FAILURE = 'EDIT_BANK_ACCOUNT_FAILURE';
 
-export const stepState = (state = {activeStep: -1}, action) => {
+const initialStepState = {activeStep: -1, userId: null};
+export const stepState = (state = initialStepState, action) => {
   switch (action.type) {
     case UPDATE_ACTIVE_STEP:
-      return {...state, activeStep: action.activeStep};
+      return {...state, activeStep: action.activeStep, userId: action.userId};
+    case RESET_ACTIVE_STEP_STATE:
+      return initialStepState;
     default:
       return state
   }
 };
 
-const businessVerificationState = (state = {}, action) => {
+const initialBusinessVerificationState = {};
+const businessVerificationState = (state = initialBusinessVerificationState, action) => {
   switch (action.type) {
     case UPDATE_BUSINESS_VERIFICATION_STATE:
       return DEEEEEEP(state, action.kyc_application);
+    case RESET_BUSINESS_VERIFICATION_STATE:
+      return initialBusinessVerificationState;
     default:
       return state;
   }

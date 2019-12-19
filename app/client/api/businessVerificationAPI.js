@@ -1,7 +1,7 @@
 import {getToken, handleResponse, generateQueryString, generateFormattedURL} from '../utils'
 
-export const loadBusinessVerificationAPI = () => {
-    return fetch(generateFormattedURL('/kyc_application/'), {
+export const loadBusinessVerificationAPI = ({query}) => {
+    return fetch(generateFormattedURL('/kyc_application/', query), {
       headers: {
           'Authorization': getToken(),
           'Accept': 'application/json',

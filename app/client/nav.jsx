@@ -63,13 +63,12 @@ class Nav extends React.Component {
               <PrivateRoute exact path="/accounts" component={transferAccountListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute path="/accounts/:transferAccountId" component={singleTransferAccountPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute path="/users/:userId" component={singleUserPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute exact path="/users/:userId/verification" component={BusinessVerificationPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing} />
               <PrivateRoute exact path="/transfers" component={creditTransferListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/deprecatedVendor" component={deprecatedVendorPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings" component={settingsPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/invite" component={InvitePage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/change-password" component={internalChangePasswordPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute exact path="/settings/verification" component={BusinessVerificationPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing} hideAccountType={true}/>
+              <PrivateRoute exact path="/settings/verification" component={BusinessVerificationPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/fund-wallet" component={FundWalletPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/tfa" component={tfaPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute path="/upload" component={uploadPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>

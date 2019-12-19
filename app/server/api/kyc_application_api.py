@@ -4,6 +4,7 @@ from server import db, sentry
 from server.models.bank_account import BankAccount
 from server.models.kyc_application import KycApplication
 from server.models.upload import UploadedResource
+from server.models.user import User
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.schemas import kyc_application_schema, kyc_application_state_schema
@@ -230,7 +231,7 @@ class KycApplicationAPI(MethodView):
         is_mobile = post_data.get('is_mobile')
         user_id = post_data.get('user_id')  # should only be defined when an admin is adding user KYC data (not their own)
 
-        type = post_data.get('type', 'BUSINESS')
+        type = post_data.get('account_type', 'BUSINESS').upper()
         first_name = post_data.get('first_name')
         last_name = post_data.get('last_name')
         phone = post_data.get('phone')
@@ -260,7 +261,7 @@ class KycApplicationAPI(MethodView):
             if kyc_details is not None:
                 return make_response(jsonify({'message': 'KYC details already exist'})), 400
 
-            if not user_id and document_type is None or document_country is None or document_front_base64 is None or selfie_base64 is None:
+            if not user_id and (document_type is None or document_country is None or document_front_base64 is None or selfie_base64 is None):
                 return make_response(jsonify({'message': 'Must provide correct parameters'})), 400
 
         if not is_mobile and type == 'BUSINESS':
@@ -297,7 +298,9 @@ class KycApplicationAPI(MethodView):
             beneficial_owners=beneficial_owners,
         )
 
-        create_kyc_application.user = user_id or g.user
+        user = User.query.get(user_id)
+
+        create_kyc_application.user = user or g.user
         if not is_mobile and not user_id and type == 'BUSINESS':
             # ngo organisation
             create_kyc_application.organisation = g.active_organisation

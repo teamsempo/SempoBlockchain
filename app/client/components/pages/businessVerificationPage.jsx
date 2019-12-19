@@ -32,7 +32,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    loadBusinessProfile: () => dispatch(loadBusinessProfile()),
+    loadBusinessProfile: (query) => dispatch(loadBusinessProfile({query})),
     nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0})
   };
 };
@@ -44,14 +44,19 @@ class BusinessVerificationPage extends React.Component {
   }
 
   componentDidMount() {
-    this.props.loadBusinessProfile()
+    const { stepStatus } = this.props;
+    let query;
+    if (stepStatus && stepStatus.userId) {
+      query = {'user_id': stepStatus.userId}
+    }
+    this.props.loadBusinessProfile(query)
   }
 
   render() {
-    let { loadStatus, businessProfile, stepStatus, hideAccountType } = this.props;
+    let { loadStatus, businessProfile, stepStatus } = this.props;
 
     const steps = [
-      {name: 'Account Details', component: <BusinessDetails hideAccountType={hideAccountType}/>},
+      {name: 'Account Details', component: <BusinessDetails/>},
       {name: 'Documents', component: <BusinessDocuments/>},
       {name: 'Bank Location', component: <BusinessBankLocation/>},
       {name: 'Bank Details', component: <BusinessBankDetails/>},
