@@ -32,7 +32,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     resolved_date   = db.Column(db.DateTime)
     _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
 
-    transfer_type       = db.Column(db.Enum(TransferTypeEnum))
+    transfer_type       = db.Column(db.Enum(TransferTypeEnum), index=True)
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode       = db.Column(db.Enum(TransferModeEnum))

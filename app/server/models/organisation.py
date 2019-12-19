@@ -14,7 +14,7 @@ class Organisation(ModelBase):
     """
     __tablename__       = 'organisation'
 
-    is_master           = db.Column(db.Boolean, default=False)
+    is_master           = db.Column(db.Boolean, default=False, index=True)
 
     name                = db.Column(db.String)
 
