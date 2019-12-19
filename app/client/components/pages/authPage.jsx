@@ -78,7 +78,7 @@ export class authPage extends React.Component {
           <WrapperDiv>
               <LoginModuleBox>
                   <div>
-                  <SempoLogoSVG src="/static/media/sempo_logo.svg"/>
+                  <SempoLogoSVG src="/static/media/sempo_logo_teal.png"/>
                 </div>
                 <Switch>
                   <Route path={this.props.match.url + '/forgot/'} component={forgotPassword} />
