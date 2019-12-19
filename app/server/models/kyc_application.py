@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import JSON
 from server import db
 from server.models.utils import ModelBase
 from server.models.user import User
+from server.models.organisation import Organisation
 from server.constants import (
     ALLOWED_KYC_TYPES
 )
@@ -55,6 +56,8 @@ class KycApplication(ModelBase):
                                            foreign_keys='BankAccount.kyc_application_id')
 
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+
+    organisation_id = db.Column(db.Integer, db.ForeignKey(Organisation.id))
 
     def __init__(self, type, **kwargs):
         super(KycApplication, self).__init__(**kwargs)

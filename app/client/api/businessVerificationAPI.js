@@ -88,7 +88,7 @@ export const createBankAccountAPI = ({body}) => {
 };
 
 export const editBankAccountAPI = ({body, path}) => {
-  return fetch(generateFormattedURL('/bank_account/'), {
+  return fetch(generateFormattedURL('/bank_account/', null, path), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

@@ -119,7 +119,7 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()
