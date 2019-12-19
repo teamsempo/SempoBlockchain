@@ -384,7 +384,7 @@ def proccess_create_or_modify_user_request(
             pass
 
     require_transfer_card_exists = attribute_dict.get(
-        'require_transfer_card_exists', True)
+        'require_transfer_card_exists', current_app.config['REQUIRE_TRANSFER_CARD_EXISTS'])
 
     public_serial_number = (provided_public_serial_number
                             or attribute_dict.get('payment_card_qr_code')
