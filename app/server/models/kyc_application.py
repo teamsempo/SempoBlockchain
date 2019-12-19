@@ -22,6 +22,7 @@ class KycApplication(ModelBase):
     # Wyre SRN
     wyre_id             = db.Column(db.String)
 
+    # todo: convert to enum
     # Either "INCOMPLETE", "PENDING", "VERIFIED" or "REJECTED"
     kyc_status          = db.Column(db.String, default='INCOMPLETE')
 

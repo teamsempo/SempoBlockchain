@@ -133,13 +133,11 @@ class BusinessDetails extends React.Component {
   }
 
   _grabUserInput() {
-    let { account_type, first_name, last_name, phone, business_legal_name, business_type, tax_id, website,
+    let { account_type, phone, business_legal_name, business_type, tax_id, website,
       date_established, country, street_address, street_address_2,
       city, region, postal_code, beneficial_owners } = this.state;
     return {
       account_type: account_type,
-      first_name: first_name,
-      last_name: last_name,
       phone: phone,
       business_legal_name: business_legal_name,
       business_type: business_type,
@@ -171,8 +169,9 @@ class BusinessDetails extends React.Component {
 
   _validateData(data) {
     let businessValidation;
-    if (this.state.account_type === 'business') {
+    if (this.state.account_type === 'BUSINESS') {
       businessValidation = {
+        phone_val: /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(data.phone), // phone
         business_legal_name_val: /.*\S.*/.test(data.business_legal_name), // is not empty
         business_type_val: data.business_type !== 'select', // not default
         tax_id_val: /.*\S.*/.test(data.tax_id), // not empty
@@ -184,9 +183,6 @@ class BusinessDetails extends React.Component {
 
     return  {...businessValidation,
       // account_type_val: no validation
-      first_name_val: /[a-zA-Z]/.test(data.first_name), // char only
-      last_name_val: /[a-zA-Z]/.test(data.last_name), // char only
-      phone_val: /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(data.phone), // phone
       country_val: /.*\S.*/.test(data.country), // not empty
       street_address_val: /.*\S.*/.test(data.street_address), // not empty
       // street_address_2: no validation
@@ -199,8 +195,6 @@ class BusinessDetails extends React.Component {
   _validationErrors(val) {
     const errMsgs = {
       // account_type_val_msg: val.account_type ? '' : 'Account type must be selected',
-      first_name_val_msg: val.first_name ? '' : 'Please provide your first name',
-      last_name_val_msg: val.last_name ? '' : 'Please provide your first name',
       phone_val_msg: val.phone ? '' : 'Please provide a valid phone number',
       business_legal_name_val_msg: val.business_legal_name ? '' : 'Please provide a business name',
       business_type_val_msg: val.business_type ? '' : 'Please select a business type',
@@ -237,37 +231,7 @@ class BusinessDetails extends React.Component {
             </InputObject>
           </Row>}
 
-          <Row>
-            <InputObject>
-              <InputLabel>
-                First Name
-              </InputLabel>
-              <ManagerInput
-                name="first_name"
-                placeholder="John"
-                type="text"
-                value={this.state.first_name}
-                onBlur={this.validationCheck}
-                onChange={this.handleInputChange} />
-              <ErrorMessage state={this.state} input={'first_name'}/>
-            </InputObject>
-
-            <InputObject>
-              <InputLabel>
-                Last Name
-              </InputLabel>
-              <ManagerInput
-                name="last_name"
-                placeholder="Smith"
-                type="text"
-                value={this.state.last_name}
-                onBlur={this.validationCheck}
-                onChange={this.handleInputChange} />
-              <ErrorMessage state={this.state} input={'last_name'}/>
-            </InputObject>
-          </Row>
-
-          <Row>
+          {indvidualAccount ? null : <div><Row>
             <InputObject>
               <InputLabel>
                 Phone
@@ -283,7 +247,7 @@ class BusinessDetails extends React.Component {
             </InputObject>
           </Row>
 
-          {indvidualAccount ? null : <div><Row>
+          <Row>
             <InputObject>
               <InputLabel>
                 Business Legal Name

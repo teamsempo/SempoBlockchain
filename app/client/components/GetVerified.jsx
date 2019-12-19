@@ -61,7 +61,7 @@ class GetVerified extends React.Component {
       )
     }
 
-    if (businessProfile.kyc_status !== 'INCOMPLETE') {
+    if (businessProfile.kyc_status === 'INCOMPLETE' || (!Object.values(businessProfile).length > 0)) {
       if (adminTier === 'superadmin') {
         text = <Link to='settings/verification'>Get Verified</Link>
       }

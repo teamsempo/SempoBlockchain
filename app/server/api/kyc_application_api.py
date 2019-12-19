@@ -68,7 +68,7 @@ class KycApplicationAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 404
 
-            if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
+            if not user_id and AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
                 response_object = {
                     'message': 'Successfully loaded business verification details',
                     'data': {'kyc_application': kyc_application_schema.dump(kyc_details).data}
@@ -302,8 +302,11 @@ class KycApplicationAPI(MethodView):
 
         create_kyc_application.user = user or g.user
         if not is_mobile and not user_id and type == 'BUSINESS':
-            # ngo organisation
-            create_kyc_application.organisation = g.active_organisation
+            if type == 'BUSINESS':
+                # ngo organisation
+                create_kyc_application.organisation = g.active_organisation
+            if type == 'INDIVIDUAL':
+                create_kyc_application.kyc_status = 'INCOMPLETE'
 
         db.session.add(create_kyc_application)
         db.session.flush()  # need this to create an ID

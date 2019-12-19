@@ -393,7 +393,7 @@ kyc_application_state_schema = KycApplicationSchema(
              "country", "street_address", "street_address_2"
                                           "city", "region", "postal_code",
              "beneficial_owners", "bank_accounts",
-             "documents", "dob"
+             "uploaded_documents", "dob"
              ))
 me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()

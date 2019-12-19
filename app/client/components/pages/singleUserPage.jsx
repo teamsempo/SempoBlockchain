@@ -7,13 +7,11 @@ import {PageWrapper, ModuleBox, CenterLoadingSideBarActive} from '../styledEleme
 import LoadingSpinner from '../loadingSpinner.jsx'
 import {LightTheme} from '../theme.js'
 import SingleUserManagement from '../user/singleUserManagement.jsx';
-import OnBoardingPage from './authPage.jsx';
 
 import { loadUser } from '../../reducers/userReducer'
 
 const mapStateToProps = (state) => {
   return {
-    loggedIn: (state.login.userId != null),
     users: state.users,
   };
 };
@@ -67,7 +65,7 @@ class SingleUserPage extends React.Component {
               </ModuleBox>
       }
 
-      if (this.props.loggedIn && (this.props.users.loadStatus.isRequesting === true)) {
+      if (this.props.users.loadStatus.isRequesting === true) {
           return (
               <WrapperDiv>
 
@@ -79,7 +77,7 @@ class SingleUserPage extends React.Component {
 
               </WrapperDiv>
           );
-      } else if (this.props.loggedIn) {
+      } else {
           return (
               <WrapperDiv>
 
@@ -91,12 +89,6 @@ class SingleUserPage extends React.Component {
                       </ThemeProvider>
                   </PageWrapper>
 
-              </WrapperDiv>
-          );
-      } else {
-          return (
-              <WrapperDiv>
-                  <OnBoardingPage/>
               </WrapperDiv>
           );
       }
