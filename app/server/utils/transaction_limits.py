@@ -2,86 +2,77 @@ from typing import List, Callable
 
 from server.models import token
 
-
-def check_user_liquid_token_type(credit_transfer):
-    t = credit_transfer.token
-    if t is not None and t.token_type == token.TokenType.LIQUID and not \
-            credit_transfer.sender_user.has_group_account_role:
-        return True
-
-    return False
+# ~~~~~~SIMPLE CHECKS~~~~~~
 
 
-def check_group_user_liquid_token_type(credit_transfer):
-    t = credit_transfer.token
-    if t is not None and t.token_type == token.TokenType.LIQUID and \
-            credit_transfer.sender_user.has_group_account_role:
-        return True
-
-    return False
+def user_has_group_account_role(credit_transfer):
+    return credit_transfer.sender_user.has_group_account_role
 
 
-def check_user_is_phone_verified_but_no_kyc(credit_transfer):
-    if check_user_liquid_token_type(credit_transfer):
-        return False
+def user_phone_is_verified(credit_transfer):
+    return credit_transfer.sender_user.is_phone_verified
 
+
+def user_individual_kyc_is_verified(credit_transfer):
     if credit_transfer.sender_user is not None:
         kyc = credit_transfer.sender_user.kyc_applications
-        if len(kyc) > 0:
-            if kyc[0].kyc_status == 'VERIFIED':
-                return False
-
-        return credit_transfer.sender_user.is_phone_verified
-
-    return False
-
-
-def check_user_but_no_phone_verified_and_no_kyc(credit_transfer):
-    if check_user_liquid_token_type(credit_transfer):
-        return False
-
-    if check_user_is_phone_verified_but_no_kyc(credit_transfer):
-        return False
-
-    if credit_transfer.sender_user is not None:
-        kyc = credit_transfer.sender_user.kyc_applications
-        if len(kyc) > 0:
-            if kyc[0].kyc_status == 'VERIFIED':
-                return False
-
-    return True
-
-
-def check_user_kyc_verified(credit_transfer):
-    if check_user_liquid_token_type(credit_transfer):
-        return False
-
-    if credit_transfer.sender_user is not None:
-        kyc = credit_transfer.sender_user.kyc_applications
-
-        if len(kyc) == 0:
-            return False
-
-        if kyc[0].kyc_status == 'VERIFIED' and kyc[0].type == 'INDIVIDUAL':
+        if len(kyc) > 0 and kyc[0].kyc_status == 'VERIFIED' and kyc[0].type == 'INDIVIDUAL':
             return True
 
     return False
 
 
-def check_user_kyc_two_id_verified(credit_transfer):
-    if check_user_liquid_token_type(credit_transfer):
-        return False
-
+def user_business_kyc_is_verified(credit_transfer):
     if credit_transfer.sender_user is not None:
         kyc = credit_transfer.sender_user.kyc_applications
-
-        if len(kyc) == 0:
-            return False
-
-        if kyc[0].kyc_status == 'VERIFIED' and kyc[0].type == 'BUSINESS':
+        if len(kyc) > 0 and kyc[0].kyc_status == 'VERIFIED' and kyc[0].type == 'BUSINESS':
             return True
 
     return False
+
+
+def token_is_liquid_type(credit_transfer):
+    return credit_transfer.token and credit_transfer.token.token_type == token.TokenType.LIQUID
+
+# ~~~~~~COMPOSITE CHECKS~~~~~~
+
+
+def is_user_and_liquid_token(credit_transfer):
+    return token_is_liquid_type(credit_transfer) and not user_has_group_account_role(credit_transfer)
+
+
+def is_group_and_liquid_token(credit_transfer):
+    return token_is_liquid_type(credit_transfer) and user_has_group_account_role(credit_transfer)
+
+
+def is_liquid_and_user_is_not_phone_and_not_kyc_verified(credit_transfer):
+    if is_user_and_liquid_token(credit_transfer):
+        return False
+
+    return not user_phone_is_verified(credit_transfer) and not user_individual_kyc_is_verified(credit_transfer)
+
+
+def is_liquid_and_user_is_phone_but_not_kyc_verified(credit_transfer):
+    if is_user_and_liquid_token(credit_transfer):
+        return False
+
+    return user_phone_is_verified(credit_transfer) and not (
+        user_individual_kyc_is_verified(credit_transfer) or user_business_kyc_is_verified(credit_transfer)
+    )
+
+
+def is_liquid_and_user_is_kyc_verified(credit_transfer):
+    if is_user_and_liquid_token(credit_transfer):
+        return False
+
+    return user_individual_kyc_is_verified(credit_transfer)
+
+
+def is_liquid_and_user_is_kyc_business_verified(credit_transfer):
+    if is_user_and_liquid_token(credit_transfer):
+        return False
+
+    return user_business_kyc_is_verified(credit_transfer)
 
 
 class TransferLimit(object):
@@ -89,39 +80,62 @@ class TransferLimit(object):
     def __repr__(self):
         return f"<TransferLimit {self.name}>"
 
-    # TODO: change the init to behave nicer. (eg applied to transfer types, application filter can't actually be none)
-    def __init__(self, name: str, total_amount: int=None, time_period_days: int=None,
-                 transfer_balance_percentage: float=None, transfer_count: int=None,
-                 applied_to_transfer_types: List=None, application_filter: Callable=None):
+    def __init__(self,
+                 name: str,
+                 applied_to_transfer_types: List,
+                 application_filter: Callable,
+                 time_period_days: int,
+                 total_amount: int = None,
+                 transfer_count: int = None,
+                 transfer_balance_fraction: float = None):
 
         self.name = name
         self.total_amount = total_amount
         self.time_period_days = time_period_days
-        self.transfer_balance_percentage = transfer_balance_percentage
+        self.transfer_balance_fraction = transfer_balance_fraction
         self.transfer_count = transfer_count
         self.applied_to_transfer_types = applied_to_transfer_types
         self.application_filter = application_filter
 
 
 LIMITS = [
-    TransferLimit('Sempo Level 0', 5000, 7, None, None, ['PAYMENT'], check_user_but_no_phone_verified_and_no_kyc),
-    TransferLimit('Sempo Level 0', 10000, 30, None, None, ['PAYMENT'], check_user_but_no_phone_verified_and_no_kyc),
-    TransferLimit('Sempo Level 0', 0, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_but_no_phone_verified_and_no_kyc),
+    TransferLimit('Sempo Level 0', ['PAYMENT'], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 7,
+                  total_amount=5000),
+    TransferLimit('Sempo Level 0', ['PAYMENT'], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
+                  total_amount=10000),
+    TransferLimit('Sempo Level 0', ['WITHDRAWAL', 'DEPOSIT'], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
+                  total_amount=0),
 
-    TransferLimit('Sempo Level 1', 5000, 7, None, None, ['PAYMENT'], check_user_is_phone_verified_but_no_kyc),
-    TransferLimit('Sempo Level 1', 20000, 30, None, None, ['PAYMENT'], check_user_is_phone_verified_but_no_kyc),
-    TransferLimit('Sempo Level 1', 0, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_is_phone_verified_but_no_kyc),
+    TransferLimit('Sempo Level 1', ['PAYMENT'], is_liquid_and_user_is_phone_but_not_kyc_verified, 7,
+                  total_amount=5000),
+    TransferLimit('Sempo Level 1', ['PAYMENT'], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
+                  total_amount=20000),
 
-    TransferLimit('Sempo Level 2', 50000, 7, None, None, ['PAYMENT'], check_user_kyc_verified),
-    TransferLimit('Sempo Level 2', 100000, 30, None, None, ['PAYMENT'], check_user_kyc_verified),
-    TransferLimit('Sempo Level 2', 50000, 7, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_verified),
-    TransferLimit('Sempo Level 2', 100000, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_verified),
+    TransferLimit('Sempo Level 1', ['WITHDRAWAL', 'DEPOSIT'], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
+                  total_amount=0),
 
-    TransferLimit('Sempo Level 3', 500000, 7, None, None, ['PAYMENT'], check_user_kyc_two_id_verified),
-    TransferLimit('Sempo Level 3', 1000000, 30, None, None, ['PAYMENT'], check_user_kyc_two_id_verified),
-    TransferLimit('Sempo Level 3', 500000, 7, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_two_id_verified),
-    TransferLimit('Sempo Level 3', 1000000, 30, None, None, ['WITHDRAWAL', 'DEPOSIT'], check_user_kyc_two_id_verified),
+    TransferLimit('Sempo Level 2', ['PAYMENT'], is_liquid_and_user_is_kyc_verified, 7,
+                  total_amount=50000),
+    TransferLimit('Sempo Level 2', ['PAYMENT'], is_liquid_and_user_is_kyc_verified, 30,
+                  total_amount=100000),
+    TransferLimit('Sempo Level 2', ['WITHDRAWAL', 'DEPOSIT'], is_liquid_and_user_is_kyc_verified, 7,
+                  total_amount=50000),
+    TransferLimit('Sempo Level 2', ['WITHDRAWAL', 'DEPOSIT'], is_liquid_and_user_is_kyc_verified, 30,
+                  total_amount=100000),
 
-    TransferLimit('GE Liquid Token - Standard User', None, 7, 0.1, 1, ['WITHDRAWAL', 'EXCHANGE'], check_user_liquid_token_type),
-    TransferLimit('GE Liquid Token - Group Account User', None, 30, 0.5, 1, ['WITHDRAWAL', 'EXCHANGE'], check_group_user_liquid_token_type)
+    TransferLimit('Sempo Level 3', ['PAYMENT'], is_liquid_and_user_is_kyc_business_verified, 7,
+                  total_amount=500000),
+    TransferLimit('Sempo Level 3', ['PAYMENT'], is_liquid_and_user_is_kyc_business_verified, 30,
+                  total_amount=1000000),
+    TransferLimit('Sempo Level 3', ['WITHDRAWAL', 'DEPOSIT'], is_liquid_and_user_is_kyc_business_verified, 7,
+                  total_amount=500000),
+    TransferLimit('Sempo Level 3', ['WITHDRAWAL', 'DEPOSIT'], is_liquid_and_user_is_kyc_business_verified, 30,
+                  total_amount=1000000),
+
+    TransferLimit('GE Liquid Token - Standard User', ['WITHDRAWAL', 'EXCHANGE'], is_user_and_liquid_token, 7,
+                  transfer_count=1, transfer_balance_fraction=0.10),
+    TransferLimit('GE Liquid Token - Group Account User', ['WITHDRAWAL', 'EXCHANGE'],
+                  
+                  is_group_and_liquid_token, 30,
+                  transfer_count=1, transfer_balance_fraction=0.50)
 ]

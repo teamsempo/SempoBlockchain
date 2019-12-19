@@ -229,16 +229,16 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     self.resolve_as_rejected(message=message)
                     raise TransactionCountLimitError(message, limit.time_period_days, limit.transfer_count)
 
-            if limit.transfer_balance_percentage is not None:
-                allowed_percent_transfer = limit.transfer_balance_percentage * self.sender_transfer_account.balance
+            if limit.transfer_balance_fraction is not None:
+                allowed_transfer = limit.transfer_balance_fraction * self.sender_transfer_account.balance
 
-                if self.transfer_amount > allowed_percent_transfer:
+                if self.transfer_amount > allowed_transfer:
                     message = 'Account % Limit "{}" reached. {} available'.format(
                         limit.name,
-                        max(allowed_percent_transfer, 0)
+                        max(allowed_transfer, 0)
                     )
                     self.resolve_as_rejected(message=message)
-                    raise TransactionPercentLimitError(message, limit.transfer_balance_percentage)
+                    raise TransactionPercentLimitError(message, limit.transfer_balance_fraction)
 
             if limit.total_amount is not None:
                 # Sempo Compliance Account Limits

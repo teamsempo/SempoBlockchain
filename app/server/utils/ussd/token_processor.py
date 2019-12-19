@@ -145,7 +145,7 @@ class TokenProcessor(object):
         reserve_token = user.get_reserve_token()
         exchangeable_tokens = filter(filter_incorrect_limit, token_info_list)
         token_exchanges = "\n".join(
-            map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_percentage * x['balance'])}"
+            map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_fraction * x['balance'])}"
                           f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
                 exchangeable_tokens))
 
@@ -173,9 +173,9 @@ class TokenProcessor(object):
         from_token = default_token(user)
 
         limit = TokenProcessor.get_limit(user, from_token)
-        if limit is not None and limit.transfer_balance_percentage is not None:
+        if limit is not None and limit.transfer_balance_fraction is not None:
             exchange_limit = TokenProcessor.round_amount(
-                limit.transfer_balance_percentage * TokenProcessor.get_balance(user)
+                limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
             )
 
             exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
