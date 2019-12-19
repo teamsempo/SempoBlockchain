@@ -48,10 +48,10 @@ class BusinessVerificationPage extends React.Component {
   }
 
   render() {
-    let { loadStatus, businessProfile, stepStatus } = this.props;
+    let { loadStatus, businessProfile, stepStatus, hideAccountType } = this.props;
 
     const steps = [
-      {name: 'Business Details', component: <BusinessDetails/>},
+      {name: 'Account Details', component: <BusinessDetails hideAccountType={hideAccountType}/>},
       {name: 'Documents', component: <BusinessDocuments/>},
       {name: 'Bank Location', component: <BusinessBankLocation/>},
       {name: 'Bank Details', component: <BusinessBankDetails/>},

@@ -36,6 +36,7 @@ class BusinessDetails extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      account_type: 'business',
       first_name: '',
       last_name: '',
       phone: '',
@@ -129,10 +130,11 @@ class BusinessDetails extends React.Component {
   }
 
   _grabUserInput() {
-    let { first_name, last_name, phone, business_legal_name, business_type, tax_id, website,
+    let { account_type, first_name, last_name, phone, business_legal_name, business_type, tax_id, website,
       date_established, country, street_address, street_address_2,
       city, region, postal_code, beneficial_owners } = this.state;
     return {
+      account_type: account_type,
       first_name: first_name,
       last_name: last_name,
       phone: phone,
@@ -164,27 +166,35 @@ class BusinessDetails extends React.Component {
   }
 
   _validateData(data) {
-    return  {
+    let businessValidation;
+    if (this.state.account_type === 'business') {
+      businessValidation = {
+        business_legal_name_val: /.*\S.*/.test(data.business_legal_name), // is not empty
+        business_type_val: data.business_type !== 'select', // not default
+        tax_id_val: /.*\S.*/.test(data.tax_id), // not empty
+        website_val: /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/g.test(data.website), // domain name
+        date_established_val: /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/i.test(data.date_established), // dd/mm/yyyy
+        beneficial_owners_val: data.beneficial_owners.filter(owner => owner.full_name !== '').length > 0,
+      }
+    }
+
+    return  {... businessValidation,
+      // account_type_val: no validation
       first_name_val: /[a-zA-Z]/.test(data.first_name), // char only
       last_name_val: /[a-zA-Z]/.test(data.last_name), // char only
       phone_val: /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(data.phone), // phone
-      business_legal_name_val: /.*\S.*/.test(data.business_legal_name), // is not empty
-      business_type_val: data.business_type !== 'select', // not default
-      tax_id_val: /.*\S.*/.test(data.tax_id), // not empty
-      website_val: /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/g.test(data.website), // domain name
-      date_established_val: /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/i.test(data.date_established), // dd/mm/yyyy
       country_val: /.*\S.*/.test(data.country), // not empty
       street_address_val: /.*\S.*/.test(data.street_address), // not empty
       // street_address_2: no validation
       city_val: /.*\S.*/.test(data.city), // not empty
       region_val: /.*\S.*/.test(data.region), // not empty
       postal_code_val: /^[0-9]*\S.*$/.test(data.postal_code), // numbers only and not empty
-      beneficial_owners_val: data.beneficial_owners.filter(owner => owner.full_name !== '').length > 0,
     }
   }
 
   _validationErrors(val) {
     const errMsgs = {
+      // account_type_val_msg: val.account_type ? '' : 'Account type must be selected',
       first_name_val_msg: val.first_name ? '' : 'Please provide your first name',
       last_name_val_msg: val.last_name ? '' : 'Please provide your first name',
       phone_val_msg: val.phone ? '' : 'Please provide a valid phone number',
@@ -204,8 +214,25 @@ class BusinessDetails extends React.Component {
   }
 
   render() {
+    const { hideAccountType } = this.props;
+    let indvidualAccount = this.state.account_type === 'individual';
+
     return(
         <div>
+
+          {hideAccountType ? null : <Row>
+            <InputObject>
+              <InputLabel>
+                Account Type
+              </InputLabel>
+              <StyledSelectKey name="account_type" value={this.state.account_type} onBlur={this.validationCheck} onChange={this.handleInputChange}>
+                <option name="individual" value="individual">Individual</option>
+                <option name="business" value="business">Business</option>
+              </StyledSelectKey>
+              <ErrorMessage state={this.state} input={'account_type'}/>
+            </InputObject>
+          </Row>}
+
           <Row>
             <InputObject>
               <InputLabel>
@@ -252,7 +279,7 @@ class BusinessDetails extends React.Component {
             </InputObject>
           </Row>
 
-          <Row>
+          {indvidualAccount ? null : <div><Row>
             <InputObject>
               <InputLabel>
                 Business Legal Name
@@ -334,7 +361,7 @@ class BusinessDetails extends React.Component {
                 onChange={this.handleInputChange} />
               <ErrorMessage state={this.state} input={'date_established'}/>
             </InputObject>
-          </Row>
+          </Row></div>}
 
           <Row>
             <InputObject>
@@ -431,7 +458,7 @@ class BusinessDetails extends React.Component {
             </InputObject>
           </Row>
 
-          <Row>
+          {indvidualAccount ? null : <Row>
             <InputObject>
               <InputLabel>
                 Beneficial Owners (Directly or indirectly owns more than 25% of the Applicant or has effective control over the Applicant)
@@ -454,7 +481,7 @@ class BusinessDetails extends React.Component {
               <ErrorMessage state={this.state} input={'beneficial_owners'}/>
               <TheRealInputButton onClick={this.addOwner}>Add new owner</TheRealInputButton>
             </InputObject>
-          </Row>
+          </Row>}
 
           <ThemeProvider theme={DefaultTheme}>
             <AsyncButton buttonText={'Next'} onClick={this.isValidated} isLoading={this.props.editStatus.isRequesting} buttonStyle={{display: 'flex'}}/>
