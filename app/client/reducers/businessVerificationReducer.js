@@ -34,7 +34,7 @@ const initialStepState = {activeStep: -1, userId: null};
 export const stepState = (state = initialStepState, action) => {
   switch (action.type) {
     case UPDATE_ACTIVE_STEP:
-      return {...state, activeStep: action.activeStep, userId: action.userId};
+      return {...state, activeStep: action.activeStep, userId: action.userId || state.userId};
     case RESET_ACTIVE_STEP_STATE:
       return initialStepState;
     default:

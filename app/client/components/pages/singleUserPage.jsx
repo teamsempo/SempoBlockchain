@@ -36,7 +36,6 @@ class SingleUserPage extends React.Component {
       let userId = parseInt(pathname_array[1]);
 
       if (userId) {
-          console.log("loading user id")
           this.props.loadUser(userId);
       }
   }
@@ -59,7 +58,7 @@ class SingleUserPage extends React.Component {
 
       // check if transferAccount exists else show fallback
       if (this.props.users.byId[userId]) {
-        var userComponent = <SingleUserManagement user_id={userId} />
+        var userComponent = <SingleUserManagement userId={userId} />
 
       } else {
           userComponent =

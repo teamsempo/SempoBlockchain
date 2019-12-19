@@ -8,23 +8,22 @@ import { replaceUnderscores } from "../../utils";
 import {ModuleBox, ModuleHeader, StyledButton} from '../styledElements'
 import AsyncButton from './../AsyncButton.jsx'
 import ProfilePicture from '../profilePicture.jsx'
+import GetVerified from '../GetVerified.jsx'
 
 import {editUser, resetPin} from '../../reducers/userReducer'
 import QrReadingModal from "../qrReadingModal.jsx";
-import {UPDATE_ACTIVE_STEP} from "../../reducers/businessVerificationReducer";
 
 const mapStateToProps = (state, ownProps) => {
   return {
     users: state.users,
-    user: state.users.byId[parseInt(ownProps.user_id)]
+    user: state.users.byId[parseInt(ownProps.userId)]
   };
 };
 
-const mapDispatchToProps = (dispatch, ownProps) => {
+const mapDispatchToProps = (dispatch) => {
   return {
     editUser: (body, path) => dispatch(editUser({body, path})),
     resetPin: (userId) => dispatch(resetPin(userId)),
-    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0, userId: ownProps.user_id})
   };
 };
 
@@ -65,7 +64,7 @@ class SingleUserManagement extends React.Component {
     const phone = this.state.phone;
     const location = this.state.location;
 
-    const single_transfer_account_id = this.props.user_id.toString();
+    const single_transfer_account_id = this.props.userId.toString();
 
     this.props.editUser(
         {
@@ -123,8 +122,8 @@ class SingleUserManagement extends React.Component {
 
       if (this.props.user.matched_profile_pictures.length > 0) {
         var matched_profiles = this.props.user.matched_profile_pictures.map(match => (
-            <Link to={"/users/" + match.user_id}
-                  key={match.user_id}
+            <Link to={"/users/" + match.userId}
+                  key={match.userId}
                   style={{
                     color: 'inherit',
                     textDecoration: 'inherit',
@@ -135,7 +134,7 @@ class SingleUserManagement extends React.Component {
 
               <ProfilePicture
                 label={"Possible Duplicate User:"}
-                sublabel={'User ' + match.user_id}
+                sublabel={'User ' + match.userId}
                 roll={match.roll}
                 url={match.url}
               />
@@ -226,11 +225,8 @@ class SingleUserManagement extends React.Component {
                           </ManagerText>
                         </SubRow>
 
-                        <SubRow>
-                          <InputLabel>KYC Data: </InputLabel>
-                          <ManagerText>
-                            <Link to="/settings/verification" onClick={this.props.nextStep.bind(this)}>KYC</Link>
-                          </ManagerText>
+                        <SubRow style={{margin: '-1em -1em 0'}}>
+                          <GetVerified userId={this.props.userId}/>
                         </SubRow>
 
                       </Row>
