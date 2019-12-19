@@ -4,23 +4,29 @@ import time
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 import pprint
+from uuid import uuid4
 
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
+from server.models.credit_transfer import CreditTransfer
+from server.models.token import Token
 from server import db
 from server.utils.user import create_transfer_account_user
 from server.utils.user import set_custom_attributes
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
-
+from migrations.fromGE.poa_explorer import POAExplorer
 
 
 class RDSMigrate:
+    
     '''
     Access to a MySQL relational database in AWS. This class will be
     used to migrate the 2 databases
     '''
 
     def __init__(self):
+        self.poa = POAExplorer()
         timeout = 120
         print('RDSMigrate: Creating a connection, with a %d sec timeout.' % timeout)
         self.connection = MySQLdb.connect(host=SECRETS.host,
@@ -37,7 +43,8 @@ class RDSMigrate:
 
     def migrate(self):
         self.migrateUsers()
-        self.migrateTransactions()
+        self.migratePOA()
+
 
     def migrateUsers(self):
         list_of_ge_ids = self.get_ids_from_sempo()
@@ -69,7 +76,7 @@ class RDSMigrate:
                 LEFT JOIN business_categories ON users.business_category_id=business_categories.id
                 LEFT JOIN token_agents on users.id=token_agents.user_id
                 LEFT JOIN group_accounts on users.id=group_accounts.user_id
-                WHERE users.id NOT IN (%s) LIMIT 1000
+                WHERE users.id NOT IN (%s) LIMIT 100
             """
             cursor.execute(cmd % format_strings, tuple(list_of_ge_ids))
             users = cursor.fetchall()
@@ -86,7 +93,7 @@ class RDSMigrate:
                 pprint.pprint(user)
                 self.insert_user(user)
                 elapsed_time = time.time() - t0
-                estimate_time_left = round( (elapsed_time / i * n_users) - elapsed_time, 1)
+                estimate_time_left = round((elapsed_time / i * n_users) - elapsed_time, 1)
 
     def insert_user(self, ge_user):
         if ge_user['business_type'] is not None:
@@ -104,6 +111,7 @@ class RDSMigrate:
                 phone=phone_number,
                 preferred_language=ge_user['preferred_language'],
                 # is_vendor= How do we know this?
+                token=db.session.query(Token).first(),  # This should still be set to correct token
                 location=ge_user['location'],
                 business_usage_id=business_usage_id
             )
@@ -130,6 +138,7 @@ class RDSMigrate:
 
             sempo_user = self.add_migrated_from_ge_id(sempo_user, ge_user['id'])
             db.session.commit()
+
         except IntegrityError as e:
             print(e)
             db.session().rollback()
@@ -220,5 +229,87 @@ class RDSMigrate:
         else:
             return result
 
-    def migrateTransactions(self):
+    def migratePOA(self):
+        addresses = self.get_unmigrated_addresses()
+        # self.migrate_balance(addresses)
+        self.migrate_transactions(addresses)
+
+    def get_unmigrated_addresses(self):
+        sql = '''SELECT t.blockchain_address
+        FROM "transfer_account" t
+        JOIN user_transfer_account_association_table ut on t.id = ut.transfer_account_id
+        JOIN "user" u on ut.user_id = u.id
+        INNER JOIN custom_attribute_user_storage c ON u.id = c.user_id
+        WHERE c."name" = 'GE_id' AND t."_balance_wei" = 0
+        LIMIT 2
+        '''
+        result = db.session.execute(sql)
+        addresses = [row[0] for row in result]
+        return addresses
+
+    def migrate_balance(self, addresses):
+        addresses.append('0x5e725c4145bbca40c2d00c0e8bfaa633c864e057')  
+        balance_list = self.poa.balance(addresses)
+
+        for balance_info in balance_list['result']:
+            balance = float(balance_info['balance']) / 10.0 ** 18
+            self.store_wei(balance_info['account'], balance_info['balance'])
+
+    def store_wei(self, address, balance):
+        sql = '''UPDATE "transfer_account"
+        SET "_balance_wei" = {}
+        WHERE blockchain_address = '{}'
+        '''.format(balance, address)
+        db.session.execute(sql)
+        db.session.commit()
+
+    def migrate_transactions(self, addresses):
         print('migrateTransactions')
+        for address in addresses:
+            transactions = self.poa.transaction_list(address)
+            for transaction in transactions['result']:
+                self.add_transactions_sempo(transaction)
+
+    def add_transactions_sempo(self, ge_transaction):
+        pprint.pprint(ge_transaction)
+
+        sender_user = self.get_user_from_address(ge_transaction['from'])
+        recipient_user = self.get_user_from_address(ge_transaction['to'])
+        token = db.session.query(Token).first()  # This should still be set to correct token
+        amount = int(ge_transaction['value']) / 10 ** 16
+        print('amount', amount)
+
+        if sender_user is not None and recipient_user is not None:
+            print(sender_user)
+            # This is not working yet
+
+            # transfer = CreditTransfer(
+            #     amount=amount,
+            #     sender_user=sender_user,
+            #     recipient_user=recipient_user,
+            #     token=token,
+            #     uuid=str(uuid4()))
+
+            # db.session.add(transfer)
+
+            # transfer.resolve_as_completed()
+
+            # transfer.transfer_type = TransferTypeEnum.PAYMENT
+
+    def get_user_from_address(self, address):
+        sql = '''SELECT u.id
+        FROM "transfer_account" t
+        JOIN user_transfer_account_association_table ut on t.id = ut.transfer_account_id
+        JOIN "user" u on ut.user_id = u.id
+        WHERE t.blockchain_address = '{}'
+        '''.format(address)
+        result = db.session.execute(sql).first()
+        print('result', result)
+        if result is not None:
+            sempo_user_id = result[0]
+
+            sempo_user = User.query.filter_by(id=sempo_user_id).execution_options(
+                    show_all=True).one()
+            return sempo_user
+        else:
+            return None
