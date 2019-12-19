@@ -24,6 +24,7 @@ import {
 import {loadUserAPI, editUserAPI, createUserAPI, resetPinAPI} from "../api/userAPI";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 import {RESET_PIN_FAILURE, RESET_PIN_REQUEST, RESET_PIN_SUCCESS} from "../reducers/userReducer";
+import {LOAD_TRANSFER_USAGES_REQUEST} from '../reducers/transferUsage/types';
 
 function* updateStateFromUser(data) {
   //Schema expects a list of credit transfer objects
@@ -119,6 +120,8 @@ function* createUser({ payload }) {
     yield call(updateStateFromUser, result.data);
 
     yield put({type: CREATE_USER_SUCCESS, result});
+
+    yield put({type: LOAD_TRANSFER_USAGES_REQUEST})
 
   } catch (fetch_error) {
 

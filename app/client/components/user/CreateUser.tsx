@@ -76,9 +76,6 @@ class CreateUser extends React.Component<Props> {
       location: form.location,
       business_usage_name: businessUsage,
     })
-
-    //how to trigger this after createUser finishes? so that we can load the new transfer usages
-    //this.props.loadTransferUsages();
   }
 
   render() {
