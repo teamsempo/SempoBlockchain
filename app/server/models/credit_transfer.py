@@ -11,7 +11,6 @@ from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
-from server.utils.transaction_limits import LIMITS, TransferLimit
 
 from server.exceptions import (
     NoTransferAccountError,
@@ -196,12 +195,28 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if message:
             self.resolution_message = message
 
-    def get_transfer_limits(self) -> List[TransferLimit]:
+    def get_transfer_limits(self):
+        import server.utils.transfer_limits
+
         relevant_limits = []
-        for limit in LIMITS:
+        for limit in server.utils.transfer_limits.LIMITS:
             applied = limit.application_filter(self)
-            if applied and str(self.transfer_type) in limit.applied_to_transfer_types:
+            if applied and self.transfer_type in limit.applied_to_transfer_types:
                 relevant_limits.append(limit)
+
+            # # Supports filtering over type-subtype tuples of the form ('PAYMENT', 'AGENT_OUT')
+            # applied = limit.application_filter(self)
+            # if applied:
+            #     for transfer_type in limit.applied_to_transfer_types:
+            #         if isinstance(transfer_type, (tuple, list)):
+            #             if str(self.transfer_type) == transfer_type[0]\
+            #                     and str(self.transfer_subtype) == transfer_type[1]:
+            #                 relevant_limits.append(limit)
+            #                 continue
+            #         else:
+            #             if str(self.transfer_type) == transfer_type:
+            #                 relevant_limits.append(limit)
+            #                 continue
 
         return relevant_limits
 
@@ -213,15 +228,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         relevant_transfer_limits = self.get_transfer_limits()
 
         for limit in relevant_transfer_limits:
-            filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.time_period_days)
 
             if limit.transfer_count is not None:
                 # GE Limits
-                transaction_count = db.session.query(func.count(CreditTransfer.id).label('count'))\
-                    .filter(CreditTransfer.created >= filter_before)\
-                    .filter(CreditTransfer.transfer_type == self.transfer_type) \
-                    .filter(CreditTransfer.sender_user == self.sender_user) \
-                    .execution_options(show_all=True).first().count
+                transaction_count = limit.apply_all_filters(
+                    self,
+                    db.session.query(func.count(CreditTransfer.id).label('count'))
+                ).execution_options(show_all=True).first().count
 
                 if (transaction_count or 0) > limit.transfer_count:
                     message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'\
@@ -242,11 +255,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
             if limit.total_amount is not None:
                 # Sempo Compliance Account Limits
-                transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
-                    .filter(CreditTransfer.created >= filter_before)\
-                    .filter(CreditTransfer.transfer_type == self.transfer_type)\
-                    .filter(CreditTransfer.sender_user == self.sender_user)\
-                    .execution_options(show_all=True).first().total
+
+                transaction_volume = limit.apply_all_filters(
+                    self,
+                    db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+                ).execution_options(show_all=True).first().total
 
                 amount_avail = limit.total_amount - (transaction_volume or 0)
 
@@ -287,11 +300,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  recipient_user=None,
                  sender_transfer_account=None,
                  recipient_transfer_account=None,
-                 transfer_type=None,
+                 transfer_type: TransferTypeEnum=None,
                  uuid=None,
                  transfer_metadata=None,
                  fiat_ramp=None,
-                 transfer_subtype=None,
+                 transfer_subtype: TransferSubTypeEnum=None,
                  is_ghost_transfer=False):
 
         if amount < 0:
@@ -329,10 +342,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             )
             db.session.add(self.recipient_transfer_account)
 
-        if transfer_type is TransferTypeEnum.DEPOSIT.value:
+        if transfer_type is TransferTypeEnum.DEPOSIT:
             self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()
 
-        if transfer_type is TransferTypeEnum.WITHDRAWAL.value:
+        if transfer_type is TransferTypeEnum.WITHDRAWAL:
             self.recipient_transfer_account = self.sender_transfer_account.get_float_transfer_account()
 
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:

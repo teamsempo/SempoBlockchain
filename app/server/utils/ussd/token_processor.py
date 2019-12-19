@@ -13,7 +13,8 @@ from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
-from server.utils.transaction_limits import TransferLimit
+from server.utils.transfer_enums import TransferTypeEnum
+from server.utils.transfer_limits import TransferLimit
 
 
 class TokenProcessor(object):
@@ -69,8 +70,12 @@ class TokenProcessor(object):
 
     @staticmethod
     def get_limit(user: User, token: Token) -> Optional[TransferLimit]:
-        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=user, recipient_user=user, token=token,
-                                          amount=0)
+        example_transfer = CreditTransfer(
+            transfer_type=TransferTypeEnum.EXCHANGE,
+            sender_user=user,
+            recipient_user=user,
+            token=token,
+            amount=0)
 
         limits = example_transfer.get_transfer_limits()
 
@@ -165,9 +170,6 @@ class TokenProcessor(object):
                 token_exchanges=token_exchanges
             )
 
-
-
-
     @staticmethod
     def fetch_exchange_rate(user: User):
         from_token = default_token(user)
@@ -232,8 +234,13 @@ class TokenProcessor(object):
 
     @staticmethod
     def exchange_token(sender: User, agent: User, amount: float):
-        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=sender, recipient_user=sender,
-                                          token=default_token(sender), amount=amount)
+        example_transfer = CreditTransfer(
+            transfer_type=TransferTypeEnum.EXCHANGE,
+            sender_user=sender,
+            recipient_user=sender,
+            token=default_token(sender),
+            amount=amount)
+
         try:
             example_transfer.check_sender_transfer_limits()
             db.session.delete(example_transfer)

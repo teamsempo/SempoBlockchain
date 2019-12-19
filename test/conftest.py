@@ -13,6 +13,7 @@ sys.path.append(os.getcwd())
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
 from server.models.token import TokenType
+from server.utils.transfer_enums import TransferTypeEnum
 import config
 # from app.manage import manager
 
@@ -144,7 +145,7 @@ def new_credit_transfer(create_transfer_account_user, external_reserve_token):
         token=external_reserve_token,
         sender_user=create_transfer_account_user,
         recipient_user=create_transfer_account_user,
-        transfer_type='PAYMENT'
+        transfer_type=TransferTypeEnum.PAYMENT
     )
     return credit_transfer
 

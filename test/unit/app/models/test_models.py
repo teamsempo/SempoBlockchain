@@ -4,6 +4,7 @@ This file (test_models.py) contains the unit tests for the models.py file.
 import pytest
 from server.exceptions import IconNotSupportedException, PaymentMethodException, AccountLimitError
 from server.utils.access_control import AccessControl
+from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum
 
 """ ----- Organisation Model ----- """
 #
@@ -296,16 +297,15 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     WHEN a new credit transfer is created
     THEN check the correct check_sender_transfer_limits apply
     """
-    from server.utils.transaction_limits import LIMITS
+    from server.utils.transfer_limits import LIMITS
     from server.models.kyc_application import KycApplication
     from server.models import token
-    from server.utils.transfer_enums import TransferTypeEnum
 
     # Sempo Level 0 LIMITS (payment only)
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
         if limit.name == 'Sempo Level 0'
-        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
+        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
     ]
 
     # Check Sempo Level 1 LIMITS (payment only)
@@ -313,7 +313,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
         if limit.name == 'Sempo Level 1'
-        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
+        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
     ]
 
     # Check Sempo Level 2 LIMITS (payment only)
@@ -323,7 +323,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
         if limit.name == 'Sempo Level 2'
-        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
+        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
     ]
 
     # Check Sempo Level 3 LIMITS (payment only)
@@ -331,17 +331,28 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
         if limit.name == 'Sempo Level 3'
-        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
+        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
     ]
 
-    # Check GE LIMITS for Liquid Token (withdrawal only)
+    # Check GE LIMITS for Liquid Token (withdrawal)
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
-    create_credit_transfer.transfer_type = "WITHDRAWAL"
+    create_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
         if limit.name == 'GE Liquid Token - Standard User'
-        and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
+        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
+    ]
+
+    # Check GE LIMITS for Liquid Token (payment, Agent Out Subtype)
+    create_credit_transfer.token.token_type = token.TokenType.LIQUID
+    create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+    create_credit_transfer.sender_transfer_account.balance = 10000
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit for limit in LIMITS
+        if limit.name == 'GE Liquid Token - Standard User'
+        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
     ]
 
     # Check Limits skipped if no sender user (exchange)
@@ -356,7 +367,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
     WHEN a new credit transfer is created
     THEN check the correct check_sender_transfer_limits raises AccountLimitError
     """
-    from server.utils.transaction_limits import LIMITS
+    from server.utils.transfer_limits import LIMITS
     from server.models import credit_transfer, token
     from server import db
 
@@ -370,7 +381,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
             token=external_reserve_token,
             sender_user=create_credit_transfer.sender_user,
             recipient_user=create_credit_transfer.sender_user,
-            transfer_type='PAYMENT'
+            transfer_type=TransferTypeEnum.PAYMENT
         )
         db.session.add(c)
         db.session.flush()
@@ -379,17 +390,19 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
     with pytest.raises(AccountLimitError):
         create_credit_transfer.check_sender_transfer_limits()
 
-    # Check GE LIMITS for Liquid Token (withdrawal only) on check LIMITS
+    # Check GE LIMITS for Liquid Token (withdrawal) on check LIMITS
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
-    create_credit_transfer.transfer_type = "WITHDRAWAL"
+    create_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
     create_credit_transfer.sender_transfer_account.balance = 1000
     with pytest.raises(AccountLimitError):
-        assert create_credit_transfer.check_sender_transfer_limits() == [
-            limit for limit in LIMITS
-            if limit.name == 'GE Liquid Token - Standard User'
-            and str(create_credit_transfer.transfer_type) in limit.applied_to_transfer_types
-        ]
+        create_credit_transfer.check_sender_transfer_limits()
 
+    # Check GE LIMITS for Liquid Token (payment, agent_out subtype) on check LIMITS
+    create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+    create_credit_transfer.sender_transfer_account.balance = 1000
+    with pytest.raises(AccountLimitError):
+        create_credit_transfer.check_sender_transfer_limits()
 
 """ ----- Blacklisted Token Model ----- """
 
