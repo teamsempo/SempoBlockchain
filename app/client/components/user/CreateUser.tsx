@@ -8,7 +8,6 @@ import CreateUserForm, {ICreateUser} from './CreateUserForm';
 import CreateVendorForm, {ICreateVendor} from './CreateVendorForm';
 import { loadTransferUsages } from '../../reducers/transferUsage/actions'
 import {TransferUsage} from "../../reducers/transferUsage/types";
-import {ReduxState} from "../../reducers/rootReducer";
 import {Organisation} from "../../reducers/organisation/types";
 import {loadOrganisation} from "../../reducers/organisation/actions";
 
@@ -20,6 +19,7 @@ interface DispatchProps {
 }
 
 interface StateProps {
+  login: any,
   users: any,
   transferUsages: TransferUsage[]
   organisation?: Organisation
@@ -69,8 +69,7 @@ class CreateUser extends React.Component<Props> {
       phone: form.phone,
       is_vendor: this.props.isVendor,
       additional_initial_disbursement: (form.additionalInitialDisbursement || 0) * 100,
-      //TODO(org): make this an organisation level field
-      require_transfer_card_exists: true,
+      require_transfer_card_exists: this.props.login.requireTransferCardExists,
       existing_vendor_phone: form.existingVendorPhone,
       existing_vendor_pin: form.existingVendorPin,
       transfer_account_name: form.transferAccountName,
@@ -139,6 +138,7 @@ class CreateUser extends React.Component<Props> {
 //TODO: why doesn't ReduxState work correctly
 const mapStateToProps = (state: any) => {
   return {
+    login: state.login,
     users: state.users,
     transferUsages: state.transferUsages.transferUsages
   };
