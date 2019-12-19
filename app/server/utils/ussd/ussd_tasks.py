@@ -1,4 +1,3 @@
-from server.models.token import Token
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
 from server.utils.ussd.directory_listing_processor import DirectoryListingProcessor
