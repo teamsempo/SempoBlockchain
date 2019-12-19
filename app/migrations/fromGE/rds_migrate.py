@@ -41,7 +41,7 @@ class RDSMigrate:
 
     def migrateUsers(self):
         list_of_ge_ids = self.get_ids_from_sempo()
-        print(list_of_ge_ids)
+        print('list_of_ge_ids', list_of_ge_ids)
         self.get_new_users_from_GE(list_of_ge_ids)
         self.update_users_refered_by()
 
@@ -53,20 +53,25 @@ class RDSMigrate:
             WHERE c1."name" = 'GE_id'
         '''
         result = db.session.execute(sql)
-        return [r[0] for r in result]
+        list_of_ids = [r[0] for r in result]
+        if len(list_of_ids) > 0:
+            return list_of_ids
+        else:
+            return [0]
 
-    def get_new_users_from_GE(self, list_of_phones):
+
+    def get_new_users_from_GE(self, list_of_ge_ids):
         print('Getting new users from GE')
         with self.connection.cursor(MySQLdb.cursors.DictCursor) as cursor:
-            format_strings = ','.join(['%s'] * len(list_of_phones))
+            format_strings = ','.join(['%s'] * len(list_of_ge_ids))
             cmd = """SELECT * FROM users
-                INNER JOIN community_tokens ON users.community_token_id=community_tokens.id
-                INNER JOIN business_categories ON users.business_category_id=business_categories.id
+                LEFT JOIN community_tokens ON users.community_token_id=community_tokens.id
+                LEFT JOIN business_categories ON users.business_category_id=business_categories.id
                 LEFT JOIN token_agents on users.id=token_agents.user_id
-                INNER JOIN group_accounts on users.id=group_accounts.user_id
-                WHERE users.id NOT IN (%s) LIMIT 2
+                LEFT JOIN group_accounts on users.id=group_accounts.user_id
+                WHERE users.id NOT IN (%s) LIMIT 1000
             """
-            cursor.execute(cmd % format_strings, tuple(list_of_phones))
+            cursor.execute(cmd % format_strings, tuple(list_of_ge_ids))
             users = cursor.fetchall()
             i = 0
             print('Fetched {} users'.format(len(users)))
@@ -84,8 +89,12 @@ class RDSMigrate:
                 estimate_time_left = round( (elapsed_time / i * n_users) - elapsed_time, 1)
 
     def insert_user(self, ge_user):
-        is_beneficiary = ge_user['admin_id'] is None   # Is this the correct way to find this out?
-        transfer_usage = TransferUsage.find_or_create(ge_user['business_type'])
+        if ge_user['business_type'] is not None:
+            transfer_usage = TransferUsage.find_or_create(ge_user['business_type'])
+            business_usage_id = transfer_usage.id
+        else:
+            business_usage_id = None
+      
         phone_number = None if 'DELETED' in ge_user['phone'] else ge_user['phone']
         try:
             sempo_user = create_transfer_account_user(
@@ -94,10 +103,9 @@ class RDSMigrate:
                 last_name=ge_user['last_name'],
                 phone=phone_number,
                 preferred_language=ge_user['preferred_language'],
-                is_beneficiary=is_beneficiary,
-                is_vendor=not is_beneficiary,
+                # is_vendor= How do we know this?
                 location=ge_user['location'],
-                business_usage_id=transfer_usage.id
+                business_usage_id=business_usage_id
             )
 
             sempo_user.custom_attributes = self.get_custom_attributes(ge_user)
@@ -107,6 +115,18 @@ class RDSMigrate:
             sempo_user.is_self_sign_up = False
             sempo_user.terms_accepted = False
             sempo_user.created = ge_user['created_at']
+
+            if ge_user['admin_id'] is not None:
+                # Should we also migrate admins?
+                sempo_user.set_held_role('ADMIN', 'admin')
+            elif ge_user['token_agents.id'] is not None:
+                sempo_user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+            else:
+                # Is this the correct way to find this out or can a benificiary also be a token agent 
+                # Or is there some field where you can find this out?
+                sempo_user.set_held_role('BENEFICIARY', 'beneficiary')
+            if ge_user['group_accounts.id'] is not None:
+                sempo_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
             sempo_user = self.add_migrated_from_ge_id(sempo_user, ge_user['id'])
             db.session.commit()
