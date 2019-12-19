@@ -121,7 +121,7 @@ function* createUser({ payload }) {
 
     yield put({type: CREATE_USER_SUCCESS, result});
 
-    yield put({type: LOAD_TRANSFER_USAGES_REQUEST})
+    yield put({type: LOAD_TRANSFER_USAGES_REQUEST});
 
   } catch (fetch_error) {
 

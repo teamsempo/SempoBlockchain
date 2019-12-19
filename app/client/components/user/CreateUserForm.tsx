@@ -157,6 +157,8 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
             <SelectField name="accountType" label={'Account Type'} options={accountTypes} hideNoneOption={true}/>
 
             <InputField name="publicSerialNumber" label={'ID Number'}>
+              {/*
+                // @ts-ignore */}
               <QrReadingModal
                 updateData={ (data: string) =>  this.setSerialNumber(data) }
               />
@@ -174,6 +176,8 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
             <ErrorMessage>
               {this.props.users.createStatus.error}
             </ErrorMessage>
+            {/*
+                // @ts-ignore */}
             <AsyncButton
               type="submit"
               isLoading={this.props.users.createStatus.isRequesting}
