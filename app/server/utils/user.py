@@ -232,6 +232,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
             transfer_account.approve_and_disburse()
 
         db.session.add(transfer_account)
+        db.session.commit()
 
     user.default_transfer_account = transfer_account
 

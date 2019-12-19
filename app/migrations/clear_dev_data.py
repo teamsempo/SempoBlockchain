@@ -32,4 +32,4 @@ def clear_all():
 
 
 if __name__ == '__main__':
-    clear_all()
+clear_all()

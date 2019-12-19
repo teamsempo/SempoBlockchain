@@ -3,6 +3,7 @@ import secrets as SECRETS
 import time
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
+import pprint
 
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
@@ -36,6 +37,7 @@ class RDSMigrate:
 
     def migrate(self):
         self.migrateUsers()
+        self.migrateTransactions()
 
     def migrateUsers(self):
         list_of_ge_ids = self.get_ids_from_sempo()
@@ -60,7 +62,9 @@ class RDSMigrate:
             cmd = """SELECT * FROM users
                 INNER JOIN community_tokens ON users.community_token_id=community_tokens.id
                 INNER JOIN business_categories ON users.business_category_id=business_categories.id
-                WHERE users.id NOT IN (%s) LIMIT 1000
+                LEFT JOIN token_agents on users.id=token_agents.user_id
+                INNER JOIN group_accounts on users.id=group_accounts.user_id
+                WHERE users.id NOT IN (%s) LIMIT 2
             """
             cursor.execute(cmd % format_strings, tuple(list_of_phones))
             users = cursor.fetchall()
@@ -74,6 +78,7 @@ class RDSMigrate:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
                         i, n_users, user['first_name'], user['name'], estimate_time_left))
+                pprint.pprint(user)
                 self.insert_user(user)
                 elapsed_time = time.time() - t0
                 estimate_time_left = round( (elapsed_time / i * n_users) - elapsed_time, 1)
@@ -179,7 +184,7 @@ class RDSMigrate:
             sempo_user.custom_attributes.append(referred_by_attribute)
 
             db.session.commit()
-            print('Added reference user #{} is referenced by #{}'.format(sempo_user_id, sempo_referred_by))
+            print('Added reference: user #{} is referenced by #{}'.format(sempo_user_id, sempo_referred_by))
         else:
             print('Referring GE user #{} not added to Sempo'.format(ge_referred_by))
 
@@ -194,3 +199,6 @@ class RDSMigrate:
             return result[0]
         else:
             return result
+
+    def migrateTransactions(self):
+        print('migrateTransactions')
