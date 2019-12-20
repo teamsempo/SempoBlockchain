@@ -8,7 +8,7 @@ from helpers.kyc_application import KycApplicationFactory
     (partial(KycApplicationFactory, type='BUSINESS'), (1, None)),
     (partial(KycApplicationFactory, type='INDIVIDUAL'), (1, 'PENDING')),
 ])
-def test_create_kyc_application(kyc_factory, expected):
+def test_create_kyc_application(test_client, init_database, kyc_factory, expected):
     kyc = kyc_factory()
 
     assert kyc.kyc_attempts == expected[0]
