@@ -5,10 +5,11 @@ from server.models.user import User
 from server.utils.namescan import run_namescam_aml_check
 from server.exceptions import NameScanException
 
-import config, slack, json
+import config, slack, json, certifi, ssl
 
 # Slack client for Web API requests
-client = slack.WebClient(token=config.SLACK_API_TOKEN)
+ssl_context = ssl.create_default_context(cafile=certifi.where())
+client = slack.WebClient(token=config.SLACK_API_TOKEN, ssl=ssl_context)
 
 # help-verify channel
 CHANNEL_ID = 'CN1NE0G8P'
@@ -122,6 +123,7 @@ def generate_populated_message(user_id=None):
     if user_id:
         kyc_details = KycApplication.query.execution_options(show_all=True).filter_by(user_id=user_id).first()
 
+    # todo: split web and mobile
     documents = kyc_details.uploaded_documents
     return generate_blocks(
         phone=kyc_details.phone,

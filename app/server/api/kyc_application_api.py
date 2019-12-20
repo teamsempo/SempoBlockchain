@@ -215,6 +215,10 @@ class KycApplicationAPI(MethodView):
             if beneficial_owners:
                 kyc_details.beneficial_owners = beneficial_owners
 
+            if kyc_status == 'PENDING':
+                # Final web submission. Post verification message to slack
+                post_verification_message(user=kyc_details.user)
+
         response_object = {
             'message': 'Successfully Updated KYC Application.',
             'data': {
