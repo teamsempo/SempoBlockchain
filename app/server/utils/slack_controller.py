@@ -15,6 +15,16 @@ client = slack.WebClient(token=config.SLACK_API_TOKEN, ssl=ssl_context)
 CHANNEL_ID = 'CN1NE0G8P'
 
 
+def send_namescan_error_msg(new_message_blocks, payload, aml_result):
+    new_message_blocks.append(dict(type='context',
+                                   elements=[{"type": 'mrkdwn', "text": ':x: Unknown NameScan error: {}'.format(aml_result)}]))
+    client.chat_update(
+        channel=CHANNEL_ID,
+        ts=payload["state"],
+        blocks=new_message_blocks
+    )
+
+
 def generate_deny_button(user_id):
     return {
         "type": "button",
@@ -468,8 +478,10 @@ def slack_controller(payload):
                 try:
                     kyc.namescan_scan_id = aml_result['scan_id']
                 except KeyError:
-                    raise NameScanException('Unknown NameScan error: {}'.format(result))
+                    send_namescan_error_msg(new_message_blocks, payload, result)
+                    raise NameScanException('Unknown NameScan error: {}'.format(aml_result))
             else:
+                send_namescan_error_msg(new_message_blocks, payload, result)
                 raise NameScanException('Unknown NameScan error: {}'.format(result))
 
             match_rates = [x['match_rate'] for x in aml_result.get('persons', [])]
@@ -513,6 +525,7 @@ def slack_controller(payload):
 
             user = get_user_from_id(user_id, payload)
             documents = user.kyc_applications[0].uploaded_documents
+            doc_types = [doc.reference for doc in documents]
 
             # adding other failure options
             [failure_options.update({
@@ -520,18 +533,29 @@ def slack_controller(payload):
                 "{}_doc_partial".format(doc_type): ":x: {} document is partial. Important information is covered.".format(doc_type),
                 "{}_doc_damaged".format(doc_type): ":x: {} document is damaged.".format(doc_type),
                 "{}_doc_non_english".format(doc_type): ":x: {} document is not in English.".format(doc_type),
-                "{}_doc_blurry".format(doc_type): ":x: {} document or selfie is too blurry".format(doc_type)}) for doc_type in documents]
+                "{}_doc_blurry".format(doc_type): ":x: {} document or selfie is too blurry".format(doc_type)}) for doc_type in doc_types]
 
             # list of all doc outcomes (keys -> failure_options)
             doc_outcomes = [str(payload['submission']['{}_doc_validity'.format(document.reference)]) for document in documents]
             doc_outcomes.extend([str(payload['submission']['id_validity'])])
 
+            print(failure_options)
+
             # standard failure
             doc_outcomes_mrkdwn = [
                 {"type": 'mrkdwn', "text": failure_options[payload['submission']['id_validity']]}]
 
+            def _filterdoctypes(_doc_types):
+                formatted_mrkdwn = []
+                for doc in doc_types:
+                    outcome = payload['submission']['{}_doc_validity'.format(doc)]
+                    if outcome != 'valid':
+                        formatted_mrkdwn.extend([{"type": 'mrkdwn', "text": failure_options[outcome]}])
+                return formatted_mrkdwn
+
             # other doc failures
-            doc_outcomes_mrkdwn.extend([{"type": 'mrkdwn', "text": failure_options[payload['submission']['{}_doc_validity'.format(doc)]]} for doc in doc_outcomes])
+            doc_outcomes_mrkdwn.extend(_filterdoctypes(doc_types))
+
             new_message_blocks.append(dict(type='context', elements=doc_outcomes_mrkdwn))
 
             kyc.kyc_status = 'INCOMPLETE'
