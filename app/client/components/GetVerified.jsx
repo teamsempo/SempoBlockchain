@@ -82,7 +82,7 @@ class GetVerified extends React.Component {
       text = 'Verified.';
       addFunds = null;
 
-      if (adminTier === 'superadmin' || adminTier === 'admin') {
+      if (!userId && adminTier === 'superadmin' || adminTier === 'admin') {
         addFunds = <div><br/><Link to='settings/fund-wallet'>Add Funds</Link></div>
       }
     }
