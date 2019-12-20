@@ -103,7 +103,12 @@ class TokenProcessor(object):
         return exchange.get_exchange_rate(from_token, to_token)
 
     @staticmethod
-    def transfer_token(sender: User, recipient: User, amount: float, reason_id: Optional[int] = None):
+    def transfer_token(sender: User,
+                       recipient: User,
+                       amount: float,
+                       reason_id: Optional[int] = None,
+                       transfer_subtype: Optional[TransferSubTypeEnum]=TransferSubTypeEnum.STANDARD):
+
         sent_token = default_token(sender)
         received_token = default_token(recipient)
 
@@ -112,7 +117,8 @@ class TokenProcessor(object):
             transfer_use = str(int(reason_id))
         transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
-                                         require_sender_approved=False, require_recipient_approved=False)
+                                         require_sender_approved=False, require_recipient_approved=False,
+                                         transfer_subtype=transfer_subtype)
         exchanged_amount = None
 
         if sent_token.id != received_token.id:
@@ -253,7 +259,9 @@ class TokenProcessor(object):
                 pass
 
             # TODO: do agents have default token being reserve?
-            to_amount = TokenProcessor.transfer_token(sender, agent, amount)
+            to_amount = TokenProcessor.transfer_token(
+                sender, agent, amount, transfer_subtype=TransferSubTypeEnum.AGENT_OUT
+            )
             tx_time = datetime.datetime.now()
             sender_balance = TokenProcessor.get_balance(sender)
             agent_balance = TokenProcessor.get_balance(agent)
