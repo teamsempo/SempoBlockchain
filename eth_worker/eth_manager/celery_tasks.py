@@ -23,6 +23,11 @@ base_task_config = {
     'retry_backoff': True
 }
 
+no_retry_config = {
+    **base_task_config,
+    'max_retries': 0
+}
+
 processor_task_config = {
     **base_task_config,
     'max_retries': 0,
@@ -74,7 +79,8 @@ def topup_wallets(self):
     eth_manager.task_interfaces.composite.topup_wallets()
 
 
-@celery_app.task(**base_task_config)
+# Set retry attempts to zero since beat will retry shortly anyway
+@celery_app.task(**no_retry_config)
 def topup_wallet_if_required(self, address):
     return eth_manager.task_interfaces.composite.topup_if_required(address)
 

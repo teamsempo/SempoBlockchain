@@ -1,12 +1,13 @@
 import enum
+from sqlalchemy import or_
 from sqlalchemy.ext.hybrid import hybrid_property
+
 from server import db, bt
 
 from server.models.utils import (
     ModelBase,
     exchange_contract_token_association_table
 )
-
 
 class TokenType(enum.Enum):
     LIQUID      = 'LIQUID'

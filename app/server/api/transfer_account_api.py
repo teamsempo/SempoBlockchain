@@ -44,15 +44,16 @@ class TransferAccountAPI(MethodView):
 
         else:
 
+            base_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)
+
             if account_type_filter == 'vendor':
-                transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=True)
+                transfer_accounts_query = base_query.filter_by(has_vendor_role=True)
             elif account_type_filter == 'beneficiary':
-                transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=False)
+                transfer_accounts_query = base_query.filter_by(has_vendor_role=False)
             else:
                 pass
                 # Filter Contract, Float and Organisation Transfer Accounts
-                transfer_accounts_query = (TransferAccount.query
-                                           .filter(TransferAccount.account_type == TransferAccountType.USER))
+                transfer_accounts_query = (base_query.filter(TransferAccount.account_type == TransferAccountType.USER))
 
             transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
 

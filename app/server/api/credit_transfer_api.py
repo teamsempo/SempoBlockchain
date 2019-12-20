@@ -13,7 +13,7 @@ from server.schemas import credit_transfers_schema, credit_transfer_schema, view
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.credit_transfer import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
-from server.utils.transfer_enums import TransferTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
@@ -289,7 +289,7 @@ class CreditTransferAPI(MethodView):
                         token=token,
                         send_user=sender_user,
                         uuid=uuid,
-                        transfer_subtype='RECLAMATION')
+                        transfer_subtype=TransferSubTypeEnum.RECLAMATION)
 
                 elif transfer_type == 'DISBURSEMENT':
                     transfer = make_payment_transfer(
@@ -298,7 +298,7 @@ class CreditTransferAPI(MethodView):
                         send_user=g.user,
                         receive_user=recipient_user,
                         uuid=uuid,
-                        transfer_subtype='DISBURSEMENT')
+                        transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
 
                 elif transfer_type == 'BALANCE':
                     transfer = make_target_balance_transfer(target_balance, recipient_user, uuid=uuid)
