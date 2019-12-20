@@ -10,7 +10,7 @@ slack_blueprint = Blueprint('slack', __name__)
 
 
 class ProcessSlackAPI(MethodView):
-    @verify_slack_requests
+    # @verify_slack_requests
     def post(self):
         post_data = json.loads(request.form['payload'])
 
