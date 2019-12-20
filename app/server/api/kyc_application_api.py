@@ -18,6 +18,18 @@ supported_countries = ['AU', 'TO', 'VU', 'NZ']
 supported_documents = {'AU': ['Passport', 'DrivingLicence'], 'TO': ['Passport', 'DrivingLicence', 'CustomerIdentificationCard', 'GovernmentID', 'GovernmentSuperannuationID', 'StudentUniversityID'], 'VU': ['Passport', 'DrivingLicence'], 'NZ': ['Passport', 'DrivingLicence', 'IdentityCard']}
 
 
+# TODO: Refactor KYC api/models/utils once more insight on business needs
+""""
+The whole KYC API should go through a refactor to unify Mobile and Web. 
+Currently they are fairly segregated, but through the same API making it hard to reason through logic.
+
+ - TODO: Refactor logic into a utils file, so that Kobo and other APIs can create/edit KYC objects
+ - TODO: Refactor the "core" logic onto KYC Application model class
+ - TODO: Refactor mobile document upload to use same handlers as Web
+ - TODO: Refactor supported countries and documents to be unified on web and mobile.
+"""""
+
+
 def handle_kyc_documents(data=None,document_country=None,document_type=None,kyc_details=None):
     for (key, value) in data.items():
         if set([key]).intersection(set(['document_front_base64', 'document_back_base64', 'selfie_base64'])) and value is not None:
