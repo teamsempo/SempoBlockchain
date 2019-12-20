@@ -1,6 +1,7 @@
 from typing import List, Callable, Optional, Union, Tuple
 import datetime
 from toolz import curry, pipe
+from sqlalchemy import or_
 from sqlalchemy.orm import Query
 
 from server.models import token
@@ -15,6 +16,10 @@ DEPOSIT = TransferTypeEnum.DEPOSIT
 WITHDRAWAL = TransferTypeEnum.WITHDRAWAL
 
 AGENT_OUT = TransferSubTypeEnum.AGENT_OUT
+STANDARD = TransferSubTypeEnum.STANDARD
+
+STANDARD_PAYMENT = (PAYMENT, STANDARD)
+AGENT_OUT_PAYMENT = (PAYMENT, AGENT_OUT)
 
 
 def get_transfer_limits(credit_transfer: CreditTransfer):
@@ -28,6 +33,21 @@ def get_transfer_limits(credit_transfer: CreditTransfer):
             relevant_limits.append(limit)
 
     return relevant_limits
+
+
+    # # Supports filtering over type-subtype tuples of the form ('PAYMENT', 'AGENT_OUT')
+    # applied = limit.application_filter(self)
+    # if applied:
+    #     for transfer_type in limit.applied_to_transfer_types:
+    #         if isinstance(transfer_type, (tuple, list)):
+    #             if str(self.transfer_type) == transfer_type[0]\
+    #                     and str(self.transfer_subtype) == transfer_type[1]:
+    #                 relevant_limits.append(limit)
+    #                 continue
+    #         else:
+    #             if str(self.transfer_type) == transfer_type:
+    #                 relevant_limits.append(limit)
+    #                 continue
 
 # ~~~~~~SIMPLE CHECKS~~~~~~
 
@@ -66,6 +86,10 @@ def transfer_is_agent_out_subtype(credit_transfer):
     return credit_transfer.transfer_subtype is TransferSubTypeEnum.AGENT_OUT
 
 # ~~~~~~COMPOSITE CHECKS~~~~~~
+
+
+def is_liquid_and_has_foo(ct):
+    return token_is_liquid_type(ct) and ct.is_foo==True
 
 
 def is_user_and_liquid_token(credit_transfer):
@@ -134,7 +158,13 @@ def matching_transfer_type_and_subtype_filter(transfer: CreditTransfer, query: Q
 
 
 @curry
-def empty_filter(query: Query, transfer: CreditTransfer):
+def withdrawal_or_agent_out_filter(transfer: CreditTransfer, query: Query):
+    return query.filter(or_(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL,
+                            CreditTransfer.transfer_subtype == TransferSubTypeEnum.AGENT_OUT))
+
+
+@curry
+def empty_filter(transfer: CreditTransfer, query: Query):
     return query
 
 
@@ -174,52 +204,48 @@ class TransferLimit(object):
 
 
 LIMITS = [
-    TransferLimit('Sempo Level 0', [PAYMENT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 7,
+    TransferLimit('Sempo Level 0: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 7,
                   total_amount=5000),
-    TransferLimit('Sempo Level 0', [PAYMENT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 0: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
                   total_amount=10000),
-    TransferLimit('Sempo Level 0', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
                   total_amount=0),
 
-    TransferLimit('Sempo Level 1', [PAYMENT], is_liquid_and_user_is_phone_but_not_kyc_verified, 7,
+    TransferLimit('Sempo Level 1: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_phone_but_not_kyc_verified, 7,
                   total_amount=5000),
-    TransferLimit('Sempo Level 1', [PAYMENT], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 1: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
                   total_amount=20000),
-    TransferLimit('Sempo Level 1', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
                   total_amount=0),
 
-    TransferLimit('Sempo Level 2', [PAYMENT], is_liquid_and_user_is_kyc_verified, 7,
+    TransferLimit('Sempo Level 2: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_verified, 7,
                   total_amount=50000),
-    TransferLimit('Sempo Level 2', [PAYMENT], is_liquid_and_user_is_kyc_verified, 30,
+    TransferLimit('Sempo Level 2: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_verified, 30,
                   total_amount=100000),
-    TransferLimit('Sempo Level 2', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_verified, 7,
+    TransferLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_verified, 7,
                   total_amount=50000),
-    TransferLimit('Sempo Level 2', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_verified, 30,
+    TransferLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_verified, 30,
                   total_amount=100000),
 
-    TransferLimit('Sempo Level 3', [PAYMENT], is_liquid_and_user_is_kyc_business_verified, 7,
+    TransferLimit('Sempo Level 3: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_business_verified, 7,
                   total_amount=500000),
-    TransferLimit('Sempo Level 3', [PAYMENT], is_liquid_and_user_is_kyc_business_verified, 30,
+    TransferLimit('Sempo Level 3: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_business_verified, 30,
                   total_amount=1000000),
-    TransferLimit('Sempo Level 3', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_business_verified, 7,
+    TransferLimit('Sempo Level 3: WD7', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_business_verified, 7,
                   total_amount=500000),
-    TransferLimit('Sempo Level 3', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_business_verified, 30,
+    TransferLimit('Sempo Level 3: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_business_verified, 30,
                   total_amount=1000000),
 
-    TransferLimit('GE Liquid Token - Standard User', [PAYMENT],
-                  lambda c: is_user_and_liquid_token(c) and transfer_is_agent_out_subtype(c), 7,
-                  transfer_count=1, transfer_filter=matching_transfer_type_and_subtype_filter,
-                  transfer_balance_fraction=0.10),
 
-    TransferLimit('GE Liquid Token - Standard User', [WITHDRAWAL], is_user_and_liquid_token, 7,
+    TransferLimit('GE Liquid Token - Standard User',
+                  [AGENT_OUT_PAYMENT, WITHDRAWAL], is_user_and_liquid_token, 7,
+                  transfer_filter=withdrawal_or_agent_out_filter,
                   transfer_count=1, transfer_balance_fraction=0.10),
 
-    TransferLimit('GE Liquid Token - Group Account User', [PAYMENT],
-                  lambda c: is_group_and_liquid_token(c) and transfer_is_agent_out_subtype(c), 30,
-                  transfer_count=1, transfer_filter=matching_transfer_type_and_subtype_filter,
-                  transfer_balance_fraction=0.50),
 
-    TransferLimit('GE Liquid Token - Group Account User', [WITHDRAWAL], is_group_and_liquid_token, 30,
+    TransferLimit('GE Liquid Token - Group Account User',
+                  [AGENT_OUT_PAYMENT, WITHDRAWAL], is_group_and_liquid_token, 30,
+                  transfer_filter=withdrawal_or_agent_out_filter,
                   transfer_count=1, transfer_balance_fraction=0.50)
 ]
 

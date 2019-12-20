@@ -198,29 +198,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def get_transfer_limits(self):
         import server.utils.transfer_limits
 
-        relevant_limits = []
-        for limit in server.utils.transfer_limits.LIMITS:
-            applied = limit.application_filter(self)
-            if applied and (self.transfer_type in limit.applied_to_transfer_types
-                or tuple
-            ):
-                relevant_limits.append(limit)
-
-            # # Supports filtering over type-subtype tuples of the form ('PAYMENT', 'AGENT_OUT')
-            # applied = limit.application_filter(self)
-            # if applied:
-            #     for transfer_type in limit.applied_to_transfer_types:
-            #         if isinstance(transfer_type, (tuple, list)):
-            #             if str(self.transfer_type) == transfer_type[0]\
-            #                     and str(self.transfer_subtype) == transfer_type[1]:
-            #                 relevant_limits.append(limit)
-            #                 continue
-            #         else:
-            #             if str(self.transfer_type) == transfer_type:
-            #                 relevant_limits.append(limit)
-            #                 continue
-
-        return relevant_limits
+        return server.utils.transfer_limits.get_transfer_limits(self)
 
     def check_sender_transfer_limits(self):
         if self.sender_user is None:

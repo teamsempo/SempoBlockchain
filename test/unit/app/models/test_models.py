@@ -304,16 +304,14 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     # Sempo Level 0 LIMITS (payment only)
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if limit.name == 'Sempo Level 0'
-        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
+        if 'Sempo Level 0: P' in limit.name
     ]
 
     # Check Sempo Level 1 LIMITS (payment only)
     create_credit_transfer.sender_user.is_phone_verified = True
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if limit.name == 'Sempo Level 1'
-        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
+        if 'Sempo Level 1: P' in limit.name
     ]
 
     # Check Sempo Level 2 LIMITS (payment only)
@@ -322,16 +320,14 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     kyc.kyc_status = 'VERIFIED'
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if limit.name == 'Sempo Level 2'
-        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
+        if 'Sempo Level 2: P' in limit.name
     ]
 
     # Check Sempo Level 3 LIMITS (payment only)
     kyc.type = 'BUSINESS'
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if limit.name == 'Sempo Level 3'
-        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
+        if 'Sempo Level 3: P' in limit.name
     ]
 
     # Check GE LIMITS for Liquid Token (withdrawal)
@@ -340,8 +336,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if limit.name == 'GE Liquid Token - Standard User'
-        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
+        if 'GE Liquid Token - Standard User' == limit.name
     ]
 
     # Check GE LIMITS for Liquid Token (payment, Agent Out Subtype)
@@ -351,8 +346,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if limit.name == 'GE Liquid Token - Standard User'
-        and create_credit_transfer.transfer_type in limit.applied_to_transfer_types
+        if 'GE Liquid Token - Standard User' == limit.name
     ]
 
     # Check Limits skipped if no sender user (exchange)
@@ -381,7 +375,8 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
             token=external_reserve_token,
             sender_user=create_credit_transfer.sender_user,
             recipient_user=create_credit_transfer.sender_user,
-            transfer_type=TransferTypeEnum.PAYMENT
+            transfer_type=TransferTypeEnum.PAYMENT,
+            transfer_subtype=TransferSubTypeEnum.STANDARD
         )
         db.session.add(c)
         db.session.flush()

@@ -13,7 +13,7 @@ sys.path.append(os.getcwd())
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
 from server.models.token import TokenType
-from server.utils.transfer_enums import TransferTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 import config
 # from app.manage import manager
 
@@ -133,7 +133,11 @@ def create_transfer_account(new_transfer_account):
 @pytest.fixture(scope='module')
 def new_disbursement(create_transfer_account_user):
     from server.utils.credit_transfer import make_payment_transfer
-    disbursement = make_payment_transfer(100, receive_transfer_account=create_transfer_account_user, transfer_subtype='DISBURSEMENT')
+    disbursement = make_payment_transfer(
+        100,
+        receive_transfer_account=create_transfer_account_user,
+        transfer_subtype=TransferSubTypeEnum.DISBURSEMENT
+    )
     return disbursement
 
 
@@ -145,7 +149,8 @@ def new_credit_transfer(create_transfer_account_user, external_reserve_token):
         token=external_reserve_token,
         sender_user=create_transfer_account_user,
         recipient_user=create_transfer_account_user,
-        transfer_type=TransferTypeEnum.PAYMENT
+        transfer_type=TransferTypeEnum.PAYMENT,
+        transfer_subtype=TransferSubTypeEnum.STANDARD
     )
     return credit_transfer
 

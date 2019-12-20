@@ -27,6 +27,7 @@ from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
+from server.utils.transfer_enums import TransferSubTypeEnum
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -545,7 +546,10 @@ def proccess_create_or_modify_user_request(
 
     if additional_initial_disbursement:
         CreditTransferUtils.make_payment_transfer(
-            additional_initial_disbursement, organisation.token, receive_user=user, transfer_subtype='DISBURSEMENT')
+            additional_initial_disbursement,
+            organisation.token,
+            receive_user=user,
+            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
 
     # Location fires an async task that needs to know user ID
     db.session.flush()

@@ -1,5 +1,6 @@
 import datetime
 from typing import Optional
+from sqlalchemy.exc import InvalidRequestError
 
 from server import db, message_processor
 from server.exceptions import TransactionPercentLimitError, TransactionCountLimitError
@@ -244,7 +245,12 @@ class TokenProcessor(object):
 
         try:
             example_transfer.check_sender_transfer_limits()
-            db.session.delete(example_transfer)
+
+            try:
+                db.session.delete(example_transfer)
+            except InvalidRequestError:
+                # Instance is already deleted
+                pass
 
             # TODO: do agents have default token being reserve?
             to_amount = TokenProcessor.transfer_token(sender, agent, amount)
