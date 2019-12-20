@@ -67,7 +67,7 @@ class GetVerified extends React.Component {
       }
 
       if (userId) {
-        text = <Link to='/settings/verification' onClick={this.props.nextStep.bind(this)}>Add User KYC</Link>
+        text = <Link to={`/users/${userId}/verification`} onClick={this.props.nextStep.bind(this)}>Add User KYC</Link>
       }
     }
 

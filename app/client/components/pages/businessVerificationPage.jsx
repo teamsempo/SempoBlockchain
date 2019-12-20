@@ -45,11 +45,15 @@ class BusinessVerificationPage extends React.Component {
 
   componentDidMount() {
     const { stepStatus, businessProfile } = this.props;
+    let pathname_array = location.pathname.split('/').slice(1);
+    let pathUserId = parseInt(pathname_array[1]);
     let query;
-    if (!Object.values(businessProfile).length > 0) {
+    if (!Object.values(businessProfile).length > 0 || pathUserId) {
       // only load business profile if none exists
       if (stepStatus && stepStatus.userId) {
-        query = {'user_id': stepStatus.userId}
+        query = {'user_id': stepStatus.userId }
+      } else {
+        query = {'user_id': pathUserId }
       }
       this.props.loadBusinessProfile(query)
     }
