@@ -459,7 +459,7 @@ def make_payment_transfer(transfer_amount,
             use_ids = transfer_use
         for use_id in use_ids:
             if use_id != 'null':
-                use = TransferUsage.query.filter_by(id=use_id).first()
+                use = TransferUsage.query.get(int(use_id))
                 if use:
                     usages.append(use.name)
                     if use.is_cashout:
