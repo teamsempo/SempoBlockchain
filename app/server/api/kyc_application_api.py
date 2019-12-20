@@ -27,6 +27,8 @@ Currently they are fairly segregated, but through the same API making it hard to
  - TODO: Refactor the "core" logic onto KYC Application model class
  - TODO: Refactor mobile document upload to use same handlers as Web
  - TODO: Refactor supported countries and documents to be unified on web and mobile.
+ - TODO: Refactor KYC models so that kyc_actions use helper functions to set/get state on relevant objects 
+    (i.e. bank accounts, documents)
 """""
 
 
