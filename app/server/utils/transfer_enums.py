@@ -17,7 +17,7 @@ class TransferSubTypeEnum(enum.Enum):
     AGENT_OUT       = 'AGENT_OUT'
     FEE             = 'FEE'
     INCENTIVE       = 'INCENTIVE'
-    
+
 
 class TransferModeEnum(enum.Enum):
     NFC = "NFC"
