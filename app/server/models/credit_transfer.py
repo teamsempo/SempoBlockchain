@@ -201,7 +201,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         relevant_limits = []
         for limit in server.utils.transfer_limits.LIMITS:
             applied = limit.application_filter(self)
-            if applied and self.transfer_type in limit.applied_to_transfer_types:
+            if applied and (self.transfer_type in limit.applied_to_transfer_types
+                or tuple
+            ):
                 relevant_limits.append(limit)
 
             # # Supports filtering over type-subtype tuples of the form ('PAYMENT', 'AGENT_OUT')

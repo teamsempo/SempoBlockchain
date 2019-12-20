@@ -1,4 +1,4 @@
-from typing import List, Callable, Optional
+from typing import List, Callable, Optional, Union, Tuple
 import datetime
 from toolz import curry, pipe
 from sqlalchemy.orm import Query
@@ -7,9 +7,27 @@ from server.models import token
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum
 
+AppliedToTypes = List[Union[TransferTypeEnum,
+                            Tuple[TransferTypeEnum, TransferSubTypeEnum]]]
+
 PAYMENT = TransferTypeEnum.PAYMENT
 DEPOSIT = TransferTypeEnum.DEPOSIT
 WITHDRAWAL = TransferTypeEnum.WITHDRAWAL
+
+AGENT_OUT = TransferSubTypeEnum.AGENT_OUT
+
+
+def get_transfer_limits(credit_transfer: CreditTransfer):
+    relevant_limits = []
+    for limit in LIMITS:
+        applied = limit.application_filter(credit_transfer)
+        if applied and (credit_transfer.transfer_type in limit.applied_to_transfer_types
+                        or (credit_transfer.transfer_type, credit_transfer.transfer_subtype)
+                        in limit.applied_to_transfer_types):
+            
+            relevant_limits.append(limit)
+
+    return relevant_limits
 
 # ~~~~~~SIMPLE CHECKS~~~~~~
 
@@ -134,7 +152,7 @@ class TransferLimit(object):
 
     def __init__(self,
                  name: str,
-                 applied_to_transfer_types: List,
+                 applied_to_transfer_types: AppliedToTypes,
                  application_filter: Callable,
                  time_period_days: int,
                  total_amount: Optional[int] = None,
@@ -143,7 +161,10 @@ class TransferLimit(object):
                  transfer_balance_fraction: Optional[float] = None):
 
         self.name = name
-        self.applied_to_transfer_types = applied_to_transfer_types
+
+        # Force to list of tuples to ensure the use of 'in' behaves as expected
+        self.applied_to_transfer_types = [tuple(t) if isinstance(t, list) else t for t in applied_to_transfer_types]
+
         self.application_filter = application_filter
         self.time_period_days = time_period_days
         self.total_amount = total_amount
@@ -190,15 +211,15 @@ LIMITS = [
                   transfer_count=1, transfer_filter=matching_transfer_type_and_subtype_filter,
                   transfer_balance_fraction=0.10),
 
-    TransferLimit('GE Liquid Token - Standard User', [WITHDRAWAL],
-                  is_user_and_liquid_token, 7, transfer_count=1, transfer_balance_fraction=0.10),
+    TransferLimit('GE Liquid Token - Standard User', [WITHDRAWAL], is_user_and_liquid_token, 7,
+                  transfer_count=1, transfer_balance_fraction=0.10),
 
     TransferLimit('GE Liquid Token - Group Account User', [PAYMENT],
                   lambda c: is_group_and_liquid_token(c) and transfer_is_agent_out_subtype(c), 30,
                   transfer_count=1, transfer_filter=matching_transfer_type_and_subtype_filter,
                   transfer_balance_fraction=0.50),
 
-    TransferLimit('GE Liquid Token - Group Account User', [WITHDRAWAL],
-                  is_group_and_liquid_token, 30, transfer_count=1, transfer_balance_fraction=0.50)
+    TransferLimit('GE Liquid Token - Group Account User', [WITHDRAWAL], is_group_and_liquid_token, 30,
+                  transfer_count=1, transfer_balance_fraction=0.50)
 ]
 

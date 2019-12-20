@@ -13,7 +13,7 @@ from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
-from server.utils.transfer_enums import TransferTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 from server.utils.transfer_limits import TransferLimit
 
 
@@ -71,7 +71,8 @@ class TokenProcessor(object):
     @staticmethod
     def get_limit(user: User, token: Token) -> Optional[TransferLimit]:
         example_transfer = CreditTransfer(
-            transfer_type=TransferTypeEnum.EXCHANGE,
+            transfer_type=TransferTypeEnum.PAYMENT,
+            transfer_subtype=TransferSubTypeEnum.AGENT_OUT,
             sender_user=user,
             recipient_user=user,
             token=token,
@@ -138,7 +139,7 @@ class TokenProcessor(object):
         def filter_incorrect_limit(token_info):
             return (token_info['exchange_rate'] is not None
                     and token_info['limit'] is not None
-                    and token_info['limit'].transfer_balance_percentage is not None)
+                    and token_info['limit'].transfer_balance_fraction is not None)
 
         # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
         transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
