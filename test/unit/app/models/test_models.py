@@ -330,23 +330,34 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
         if 'Sempo Level 3: P' in limit.name
     ]
 
-    # Check GE LIMITS for Liquid Token (withdrawal)
+    # Check additional GE LIMITS for Liquid Token (withdrawal)
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
     create_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if 'GE Liquid Token - Standard User' == limit.name
+        if 'GE Liquid Token - Standard User' == limit.name or 'Sempo Level 3: WD' in limit.name
     ]
 
-    # Check GE LIMITS for Liquid Token (payment, Agent Out Subtype)
+    # Check additional GE LIMITS for Liquid Token (payment, Agent Out Subtype)
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
     create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if 'GE Liquid Token - Standard User' == limit.name
+        if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: WD' in limit.name
+    ]
+
+    # Check additional GE LIMITS for Liquid Token and Group Account (payment, Agent Out Subtype)
+    create_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    create_credit_transfer.token.token_type = token.TokenType.LIQUID
+    create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+    create_credit_transfer.sender_transfer_account.balance = 10000
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit for limit in LIMITS
+        if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: WD' in limit.name
     ]
 
     # Check Limits skipped if no sender user (exchange)
