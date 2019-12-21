@@ -1,5 +1,6 @@
 import datetime
 from typing import Optional
+from sqlalchemy.exc import InvalidRequestError
 
 from server import db, message_processor
 from server.exceptions import TransactionPercentLimitError, TransactionCountLimitError
@@ -13,7 +14,8 @@ from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
-from server.utils.transaction_limits import TransferLimit
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.transfer_limits import TransferLimit
 
 
 class TokenProcessor(object):
@@ -69,8 +71,13 @@ class TokenProcessor(object):
 
     @staticmethod
     def get_limit(user: User, token: Token) -> Optional[TransferLimit]:
-        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=user, recipient_user=user, token=token,
-                                          amount=0)
+        example_transfer = CreditTransfer(
+            transfer_type=TransferTypeEnum.PAYMENT,
+            transfer_subtype=TransferSubTypeEnum.AGENT_OUT,
+            sender_user=user,
+            recipient_user=user,
+            token=token,
+            amount=0)
 
         limits = example_transfer.get_transfer_limits()
 
@@ -96,7 +103,12 @@ class TokenProcessor(object):
         return exchange.get_exchange_rate(from_token, to_token)
 
     @staticmethod
-    def transfer_token(sender: User, recipient: User, amount: float, reason_id: Optional[int] = None):
+    def transfer_token(sender: User,
+                       recipient: User,
+                       amount: float,
+                       reason_id: Optional[int] = None,
+                       transfer_subtype: Optional[TransferSubTypeEnum]=TransferSubTypeEnum.STANDARD):
+
         sent_token = default_token(sender)
         received_token = default_token(recipient)
 
@@ -105,7 +117,8 @@ class TokenProcessor(object):
             transfer_use = str(int(reason_id))
         transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
-                                         require_sender_approved=False, require_recipient_approved=False)
+                                         require_sender_approved=False, require_recipient_approved=False,
+                                         transfer_subtype=transfer_subtype)
         exchanged_amount = None
 
         if sent_token.id != received_token.id:
@@ -133,7 +146,7 @@ class TokenProcessor(object):
         def filter_incorrect_limit(token_info):
             return (token_info['exchange_rate'] is not None
                     and token_info['limit'] is not None
-                    and token_info['limit'].transfer_balance_percentage is not None)
+                    and token_info['limit'].transfer_balance_fraction is not None)
 
         # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
         transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
@@ -145,7 +158,7 @@ class TokenProcessor(object):
         reserve_token = user.get_reserve_token()
         exchangeable_tokens = filter(filter_incorrect_limit, token_info_list)
         token_exchanges = "\n".join(
-            map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_percentage * x['balance'])}"
+            map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_fraction * x['balance'])}"
                           f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
                 exchangeable_tokens))
 
@@ -165,17 +178,14 @@ class TokenProcessor(object):
                 token_exchanges=token_exchanges
             )
 
-
-
-
     @staticmethod
     def fetch_exchange_rate(user: User):
         from_token = default_token(user)
 
         limit = TokenProcessor.get_limit(user, from_token)
-        if limit is not None and limit.transfer_balance_percentage is not None:
+        if limit is not None and limit.transfer_balance_fraction is not None:
             exchange_limit = TokenProcessor.round_amount(
-                limit.transfer_balance_percentage * TokenProcessor.get_balance(user)
+                limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
             )
 
             exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
@@ -232,14 +242,26 @@ class TokenProcessor(object):
 
     @staticmethod
     def exchange_token(sender: User, agent: User, amount: float):
-        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=sender, recipient_user=sender,
-                                          token=default_token(sender), amount=amount)
+        example_transfer = CreditTransfer(
+            transfer_type=TransferTypeEnum.EXCHANGE,
+            sender_user=sender,
+            recipient_user=sender,
+            token=default_token(sender),
+            amount=amount)
+
         try:
             example_transfer.check_sender_transfer_limits()
-            db.session.delete(example_transfer)
+
+            try:
+                db.session.delete(example_transfer)
+            except InvalidRequestError:
+                # Instance is already deleted
+                pass
 
             # TODO: do agents have default token being reserve?
-            to_amount = TokenProcessor.transfer_token(sender, agent, amount)
+            to_amount = TokenProcessor.transfer_token(
+                sender, agent, amount, transfer_subtype=TransferSubTypeEnum.AGENT_OUT
+            )
             tx_time = datetime.datetime.now()
             sender_balance = TokenProcessor.get_balance(sender)
             agent_balance = TokenProcessor.get_balance(agent)

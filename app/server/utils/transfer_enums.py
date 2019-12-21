@@ -10,6 +10,7 @@ class TransferTypeEnum(enum.Enum):
 
 
 class TransferSubTypeEnum(enum.Enum):
+    STANDARD        = 'STANDARD'
     DISBURSEMENT    = 'DISBURSEMENT'
     RECLAMATION     = 'RECLAMATION'
     AGENT_IN        = 'AGENT_IN'

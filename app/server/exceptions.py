@@ -16,9 +16,9 @@ class TransactionCountLimitError(AccountLimitError):
 
 
 class TransactionPercentLimitError(AccountLimitError):
-    def __init__(self, message, transfer_balance_percent: float):
+    def __init__(self, message, transfer_balance_fraction: float):
         self.message = message
-        self.transfer_balance_percent = transfer_balance_percent
+        self.transfer_balance_fraction = transfer_balance_fraction
 
     def __repr__(self):
         return self.message
