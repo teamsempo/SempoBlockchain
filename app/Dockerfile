@@ -10,7 +10,7 @@ RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.
 
 
 # GE MIGRATION
-RUN apt -y install mysql-server
+RUN apt -y install mysql-server default-libmysqlclient-dev
 RUN pip install mysqlclient==1.4.5
 
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
