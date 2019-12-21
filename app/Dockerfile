@@ -8,7 +8,13 @@ COPY ./test/requirements.txt /test_requirements.txt
 
 RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
+
+# GE MIGRATION
+RUN apt -y install mysql-server
+RUN pip install mysqlclient==1.4.5
+
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
+
 
 COPY ./config.py ./config_files* /src/
 ADD ./app/server /src/server
