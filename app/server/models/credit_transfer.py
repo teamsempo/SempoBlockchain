@@ -341,4 +341,5 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
 
-        self.check_sender_transfer_limits()
+        # todo: [PR] this feels like backwards logic, in order to check limits, you need to init a credit transfer, which raises error. should only be on resolve_as_completed()
+        # self.check_sender_transfer_limits()

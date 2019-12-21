@@ -110,7 +110,8 @@ def update_transfer_account_user(user,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
-                                 is_vendor=False):
+                                 is_vendor=False,
+                                 is_tokenagent=False):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -140,6 +141,9 @@ def update_transfer_account_user(user,
 
     user.set_held_role('VENDOR', vendor_tier)
 
+    if is_tokenagent:
+        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
@@ -161,6 +165,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
+                                 is_tokenagent=False,
                                  is_self_sign_up=False,
                                  business_usage_id=None):
 
@@ -199,6 +204,9 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         vendor_tier = 'supervendor'
 
     user.set_held_role('VENDOR', vendor_tier)
+
+    if is_tokenagent:
+        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
@@ -422,6 +430,8 @@ def proccess_create_or_modify_user_request(
     # is_beneficiary defaults to the opposite of is_vendor
     is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor)
 
+    is_tokenagent = attribute_dict.get('is_tokenagent', False)
+
     if current_app.config['IS_USING_BITCOIN']:
         try:
             base58.b58decode_check(blockchain_address)
@@ -506,7 +516,8 @@ def proccess_create_or_modify_user_request(
             phone=phone, email=email, public_serial_number=public_serial_number,
             use_precreated_pin=use_precreated_pin,
             existing_transfer_account=existing_transfer_account,
-            is_beneficiary=is_beneficiary, is_vendor=is_vendor
+            is_beneficiary=is_beneficiary, is_vendor=is_vendor,
+            is_tokenagent=is_tokenagent
         )
 
         set_custom_attributes(attribute_dict, user)
@@ -531,8 +542,8 @@ def proccess_create_or_modify_user_request(
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
-        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up,
-        business_usage_id=business_usage_id)
+        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_tokenagent=is_tokenagent,
+        is_self_sign_up=is_self_sign_up, business_usage_id=business_usage_id)
 
     if attribute_dict.get('custom_attributes', None) is None: attribute_dict['custom_attributes'] = {}
     if attribute_dict.get('business_usage_id'): attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')

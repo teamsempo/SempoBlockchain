@@ -66,6 +66,8 @@ class UserAPI(MethodView):
 
         if user_id:
             user = User.query.get(user_id)
+            #
+            # user.cashout_authorised()
 
             if user is None:
                 response_object = {

@@ -11,7 +11,7 @@ import {TransferUsage} from "../../reducers/transferUsage/types";
 import {Organisation} from "../../reducers/organisation/types";
 
 
-enum TransferAccountTypes {USER='USER', CASHIER='CASHIER', VENDOR='VENDOR', SUPERVENDOR='SUPERVENDOR'}
+enum TransferAccountTypes {USER='USER', CASHIER='CASHIER', VENDOR='VENDOR', TOKENAGENT='TOKENAGENT'}
 
 export interface ICreateUser {
   firstName?: string
@@ -139,7 +139,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
           <InputField name="location" label={'Address'} />
         </div>
 
-    } else if (accountType === TransferAccountTypes.SUPERVENDOR.toLowerCase()) {
+    } else if (accountType === TransferAccountTypes.TOKENAGENT.toLowerCase()) {
     //  SUPERVENDOR
       selectedAccountTypeForm =
         <>

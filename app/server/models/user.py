@@ -21,7 +21,10 @@ from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
 )
 
+# circular imports
 import server.models.transfer_account
+import server.models.credit_transfer
+
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -92,8 +95,6 @@ class User(ManyOrgBase, ModelBase):
 
     matched_profile_pictures = db.Column(JSON)
 
-    cashout_authorised = db.Column(db.Boolean, default=False)
-
     business_usage_id = db.Column(db.Integer, db.ForeignKey(TransferUsage.id))
 
     transfer_accounts = db.relationship(
@@ -148,6 +149,23 @@ class User(ManyOrgBase, ModelBase):
                                         lazy='dynamic', foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
+
+    @hybrid_property
+    def cashout_authorised(self):
+        # loop over all
+        # any_valid_token = [t.token for t in self.transfer_accounts]
+        ct = server.models.credit_transfer
+        example_transfer = ct.CreditTransfer(
+            transfer_type=ct.TransferTypeEnum.PAYMENT,
+            transfer_subtype=ct.TransferSubTypeEnum.AGENT_OUT,
+            sender_user=self,
+            recipient_user=self,
+            token=self.transfer_accounts[1].token,  # todo: should loop over all tokens
+            amount=0)
+
+        limits = example_transfer.get_transfer_limits()
+
+        return self._cashout_authorised
 
     @hybrid_property
     def phone(self):
@@ -277,6 +295,7 @@ class User(ManyOrgBase, ModelBase):
     def vendor_tier(self):
         return self._held_roles.get('VENDOR', None)
 
+    # todo: Refactor into above roles
     # These two are here to interface with the mobile API
     @hybrid_property
     def is_vendor(self):
