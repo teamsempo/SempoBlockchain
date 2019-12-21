@@ -402,7 +402,7 @@ def make_payment_transfer(transfer_amount,
                           require_sufficient_balance=True,
                           automatically_resolve_complete=True,
                           uuid=None,
-                          transfer_subtype=None,
+                          transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
                           is_ghost_transfer=False):
     """
     This is used for internal transfers between Sempo wallets.
@@ -422,21 +422,21 @@ def make_payment_transfer(transfer_amount,
     :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
     :return:
     """
-    if transfer_subtype in TransferSubTypeEnum.__members__:
-        if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT.name:
-            require_sender_approved = False
-            require_recipient_approved = False
-            require_sufficient_balance = False
-            # primary NGO wallet to disburse from
-            send_transfer_account = receive_user.default_organisation.queried_org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.RECLAMATION.name:
-            require_sender_approved = False
-            # primary NGO wallet to reclaim to
-            receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
+    if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
+        require_sender_approved = False
+        require_recipient_approved = False
+        require_sufficient_balance = False
+        # primary NGO wallet to disburse from
+        send_transfer_account = receive_user.default_organisation.queried_org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.INCENTIVE.name:
-            send_transfer_account = receive_transfer_account.get_float_transfer_account()
+    if transfer_subtype is TransferSubTypeEnum.RECLAMATION:
+        require_sender_approved = False
+        # primary NGO wallet to reclaim to
+        receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
+
+    if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
+        send_transfer_account = receive_transfer_account.get_float_transfer_account()
 
     transfer = CreditTransfer(transfer_amount,
                               token=token,
@@ -495,7 +495,11 @@ def make_payment_transfer(transfer_amount,
         try:
             incentive_amount = round(transfer_amount * current_app.config['CASHOUT_INCENTIVE_PERCENT'] / 100)
 
-            make_payment_transfer(incentive_amount, receive_user=receive_user, transfer_subtype='INCENTIVE')
+            make_payment_transfer(
+                incentive_amount,
+                receive_user=receive_user,
+                transfer_subtype=TransferSubTypeEnum.INCENTIVE
+            )
 
         except Exception as e:
             print(e)
@@ -608,14 +612,14 @@ def make_target_balance_transfer(target_balance,
                                             require_sufficient_balance=require_sufficient_balance,
                                             automatically_resolve_complete=automatically_resolve_complete,
                                             uuid=uuid,
-                                            transfer_subtype='RECLAMATION')
+                                            transfer_subtype=TransferSubTypeEnum.RECLAMATION)
 
     else:
         transfer = make_payment_transfer(transfer_amount, target_user,
                                             transfer_mode,
                                             automatically_resolve_complete=automatically_resolve_complete,
                                             uuid=uuid,
-                                            transfer_subtype='DISBURSEMENT')
+                                            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
 
     return transfer
 

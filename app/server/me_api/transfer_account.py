@@ -9,7 +9,7 @@ class MeTransferAccountAPI(MethodView):
     @requires_auth
     def get(self):
 
-        transfer_accounts = g.user.transfer_accounts
+        transfer_accounts = [ta for ta in g.user.transfer_accounts if ta.is_ghost is not True]
 
         serialised = me_transfer_accounts_schema.dump(transfer_accounts).data
 

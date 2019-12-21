@@ -13,7 +13,8 @@ from server.models.organisation import Organisation
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
 
-from server.utils.transfer_enums import TransferStatusEnum
+from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum
+
 
 
 class TransferAccountType(enum.Enum):
@@ -213,7 +214,7 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         disbursement = make_payment_transfer(
             initial_balance, token=self.token, send_user=sender, receive_user=self.primary_user,
-            transfer_subtype='DISBURSEMENT', is_ghost_transfer=False, require_sender_approved=False,
+            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT, is_ghost_transfer=False, require_sender_approved=False,
             require_recipient_approved=False)
 
         return disbursement
