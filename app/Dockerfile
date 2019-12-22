@@ -10,6 +10,8 @@ RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.
 
 
 # GE MIGRATION
+# For local OSX try:
+# https://stackoverflow.com/questions/49025594/osx-ld-library-not-found-for-lssl
 RUN apt -y install mysql-server default-libmysqlclient-dev
 RUN pip install mysqlclient==1.4.5
 
