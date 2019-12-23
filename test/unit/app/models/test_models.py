@@ -390,6 +390,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
             transfer_subtype=TransferSubTypeEnum.STANDARD
         )
         db.session.add(c)
+        c.resolve_as_completed()
         db.session.flush()
 
     # Sempo Level 0 LIMITS (payment only) on check LIMITS

@@ -169,6 +169,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         )
 
     def resolve_as_completed(self, existing_blockchain_txn=None):
+        self.check_sender_transfer_limits()
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
@@ -340,5 +341,3 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
-
-        self.check_sender_transfer_limits()

@@ -209,14 +209,14 @@ LIMITS = [
                   total_amount=5000),
     TransferLimit('Sempo Level 0: P30', [STANDARD_PAYMENT], is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
                   total_amount=10000),
-    TransferLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT], is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT], is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
                   total_amount=0),
 
     TransferLimit('Sempo Level 1: P7', [STANDARD_PAYMENT], is_any_token_and_user_is_phone_but_not_kyc_verified, 7,
                   total_amount=5000),
     TransferLimit('Sempo Level 1: P30', [STANDARD_PAYMENT], is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
                   total_amount=20000),
-    TransferLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT], is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT], is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
                   total_amount=0),
 
     TransferLimit('Sempo Level 2: P7', [STANDARD_PAYMENT], is_any_token_and_user_is_kyc_verified, 7,
