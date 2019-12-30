@@ -91,8 +91,9 @@ class TokenProcessor(object):
         if len(limits) == 0:
             return None
         else:
+            # todo: fix in token agent branch
             # might want to do something different if there's more than one limit...
-            return limits[0]
+            return limits[-1]
 
     @staticmethod
     def get_exchange_rate(user: User, from_token: Token):
