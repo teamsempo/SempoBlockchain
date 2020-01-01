@@ -2,7 +2,7 @@ import MySQLdb
 import secrets as SECRETS
 import time
 from sqlalchemy import create_engine
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InvalidRequestError
 import pprint
 from uuid import uuid4
 
@@ -25,7 +25,7 @@ class RDSMigrate:
     used to migrate the 2 databases
     '''
 
-    def __init__(self):
+    def __init__(self, sempo_token_id, ge_community_token_id=None):
         self.poa = POAExplorer()
         timeout = 120
         print('RDSMigrate: Creating a connection, with a %d sec timeout.' % timeout)
@@ -41,15 +41,21 @@ class RDSMigrate:
         else:
             print('DB connection successfully created.  Yeah us.')
 
+        self.sempo_token_id = sempo_token_id
+        self.ge_community_token_id = ge_community_token_id
+
     def migrate(self):
         self.migrateUsers()
-        self.migratePOA()
+
+        db.session.commit()
+
+        # self.migratePOA()
 
 
     def migrateUsers(self):
         list_of_ge_ids = self.get_ids_from_sempo()
         print('list_of_ge_ids', list_of_ge_ids)
-        self.get_new_users_from_GE(list_of_ge_ids)
+        self.get_new_users_from_GE(list_of_ge_ids, community_token_id=self.ge_community_token_id)
         self.update_users_refered_by()
 
     def get_ids_from_sempo(self):
@@ -67,18 +73,26 @@ class RDSMigrate:
             return [0]
 
 
-    def get_new_users_from_GE(self, list_of_ge_ids):
+    def get_new_users_from_GE(self,
+                              already_added_ge_ids: list,
+                              community_token_id: int = None):
+
         print('Getting new users from GE')
         with self.connection.cursor(MySQLdb.cursors.DictCursor) as cursor:
-            format_strings = ','.join(['%s'] * len(list_of_ge_ids))
+            format_strings = ','.join(['%s'] * len(already_added_ge_ids))
             cmd = """SELECT * FROM users
                 LEFT JOIN community_tokens ON users.community_token_id=community_tokens.id
                 LEFT JOIN business_categories ON users.business_category_id=business_categories.id
                 LEFT JOIN token_agents on users.id=token_agents.user_id
                 LEFT JOIN group_accounts on users.id=group_accounts.user_id
-                WHERE users.id NOT IN (%s) LIMIT 100
+                WHERE users.id NOT IN (%s)
+                LIMIT 200 
             """
-            cursor.execute(cmd % format_strings, tuple(list_of_ge_ids))
+
+            if community_token_id:
+                cmd = cmd + f" AND users.community_token_id={community_token_id}"
+
+            cursor.execute(cmd % format_strings, tuple(already_added_ge_ids))
             users = cursor.fetchall()
             i = 0
             print('Fetched {} users'.format(len(users)))
@@ -86,16 +100,29 @@ class RDSMigrate:
             n_users = len(users)
             t0 = time.time()
             estimate_time_left = 'unknown'
+
+            ge_address_to_transfer_account = {}
             for user in users:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
                         i, n_users, user['first_name'], user['name'], estimate_time_left))
-                pprint.pprint(user)
-                self.insert_user(user)
+                # pprint.pprint(user)
+                sempo_user = self.insert_user(user)
+
+                if sempo_user:
+
+                    ge_address_to_transfer_account[user['wallet_address']] = sempo_user.default_transfer_account
+
                 elapsed_time = time.time() - t0
                 estimate_time_left = round((elapsed_time / i * n_users) - elapsed_time, 1)
 
+            self.migrate_balances(ge_address_to_transfer_account)
+
+
     def insert_user(self, ge_user):
+        if ge_user['admin_id']:
+            return
+
         if ge_user['business_type'] is not None:
             transfer_usage = TransferUsage.find_or_create(ge_user['business_type'])
             business_usage_id = transfer_usage.id
@@ -103,67 +130,74 @@ class RDSMigrate:
             business_usage_id = None
       
         phone_number = None if 'DELETED' in ge_user['phone'] else ge_user['phone']
+
+        if business_usage_id:
+            business_usage = TransferUsage.query.get(business_usage_id)
+        else:
+            business_usage = None
+
+        token = db.session.query(Token).get(self.sempo_token_id)
+
         try:
             sempo_user = create_transfer_account_user(
-                blockchain_address=ge_user['wallet_address'],
                 first_name=ge_user['first_name'],
                 last_name=ge_user['last_name'],
                 phone=phone_number,
                 preferred_language=ge_user['preferred_language'],
-                # is_vendor= How do we know this?
-                token=db.session.query(Token).first(),  # This should still be set to correct token
+                token=token,  # This should still be set to correct token
                 location=ge_user['location'],
-                business_usage_id=business_usage_id
+                business_usage=business_usage
             )
 
-            sempo_user.custom_attributes = self.get_custom_attributes(ge_user)
             sempo_user.is_activated = ge_user['status'] == 'Active'  # Is this the correct way to find this out?
             sempo_user.is_disabled = False
             sempo_user.is_phone_verified = True
             sempo_user.is_self_sign_up = False
             sempo_user.terms_accepted = False
             sempo_user.created = ge_user['created_at']
+            sempo_user.custom_attributes = self.create_custom_attributes(ge_user)
 
-            if ge_user['admin_id'] is not None:
-                # Should we also migrate admins?
-                sempo_user.set_held_role('ADMIN', 'admin')
-            elif ge_user['token_agents.id'] is not None:
+            if ge_user['token_agents.id'] is not None:
                 sempo_user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
             else:
                 # Is this the correct way to find this out or can a benificiary also be a token agent 
                 # Or is there some field where you can find this out?
                 sempo_user.set_held_role('BENEFICIARY', 'beneficiary')
+
             if ge_user['group_accounts.id'] is not None:
                 sempo_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
-            sempo_user = self.add_migrated_from_ge_id(sempo_user, ge_user['id'])
-            db.session.commit()
+            db.session.flush()
 
-        except IntegrityError as e:
+            return sempo_user
+
+        except (IntegrityError, InvalidRequestError) as e:
             print(e)
             db.session().rollback()
 
-    def get_custom_attributes(self, ge_user):
+
+
+    def create_custom_attributes(self, ge_user):
+
         wanted_custom_attributes = [
-            'bio',
-            'gender',
-            'market_enabled',
-            'phone_listed',
-            'national_id_number'
+            ('id', 'GE_id'),
+            ('wallet_address', 'GE_wallet_address'),
+            ('bio', 'bio'),
+            ('national_id_number', 'national_id_number'),
+            ('gender', 'gender'),
+            ('market_enabled', 'market_enabled'),
+            ('referred_by_id', 'GE_referred_by_id'),
+            ('phone_listed', 'phone_listed'),
+            ('community_token_id', 'GE_community_token_id')
             ]
+
         custom_attributes = []
-        for attribute in wanted_custom_attributes:
-            if attribute in ge_user:
+        for accessor, label in wanted_custom_attributes:
+            if accessor in ge_user:
                 custom_attribute = CustomAttributeUserStorage(
-                    name=attribute, value=ge_user[attribute])
+                    name=label, value=ge_user[accessor])
                 custom_attributes.append(custom_attribute)
         return custom_attributes
-
-    def add_migrated_from_ge_id(self, sempo_user, GE_id):
-        migrated_attribute = CustomAttributeUserStorage(
-                    name='GE_id', value=GE_id)
-        sempo_user.custom_attributes.append(migrated_attribute)
-        return sempo_user
 
     def update_users_refered_by(self):
         print('update_users_refered_by')
@@ -231,7 +265,7 @@ class RDSMigrate:
 
     def migratePOA(self):
         addresses = self.get_unmigrated_addresses()
-        # self.migrate_balance(addresses)
+        self.migrate_balance(addresses)
         self.migrate_transactions(addresses)
 
     def get_unmigrated_addresses(self):
@@ -247,13 +281,18 @@ class RDSMigrate:
         addresses = [row[0] for row in result]
         return addresses
 
-    def migrate_balance(self, addresses):
-        addresses.append('0x5e725c4145bbca40c2d00c0e8bfaa633c864e057')  
+    def migrate_balances(self, ge_address_to_transfer_account: dict):
+
+        ge_address_to_transfer_account.pop(None, None)
+
+        addresses = list(ge_address_to_transfer_account.keys())
         balance_list = self.poa.balance(addresses)
 
         for balance_info in balance_list['result']:
-            balance = float(balance_info['balance']) / 10.0 ** 18
-            self.store_wei(balance_info['account'], balance_info['balance'])
+            balance_wei = int(balance_info['balance'])
+
+            transfer_account = ge_address_to_transfer_account[balance_info['account']]
+            transfer_account._balance_wei = balance_wei
 
     def store_wei(self, address, balance):
         sql = '''UPDATE "transfer_account"

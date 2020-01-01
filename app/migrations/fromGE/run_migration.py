@@ -15,5 +15,5 @@ if __name__ == "__main__":
     ctx = app.app_context()
     ctx.push()
 
-    rds = RDSMigrate()
+    rds = RDSMigrate(sempo_token_id=1)
     rds.migrate()
