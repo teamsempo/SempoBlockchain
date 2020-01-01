@@ -32,7 +32,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
 @pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
     ("standard", 0.1, "en", "per 7"),
     ("standard", 0.1, "sw", "siku 7"),
-    ("group", 0.5, "en", "per 30"),
+    ("group", 0.5, "en", "per 7"),
     ("group", 0.5, "sw", "siku 30"),
 ])
 def test_send_balance_sms(mocker, test_client, init_database, initialised_blockchain_network, user_type, limit,
