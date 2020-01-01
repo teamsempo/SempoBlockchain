@@ -72,6 +72,12 @@ class TokenProcessor(object):
 
     @staticmethod
     def get_default_limit(user: User, token: Token, transfer_account: TransferAccount) -> Optional[TransferLimit]:
+        """
+        :param user:
+        :param token:
+        :param transfer_account:
+        :return: lowest limit applicable for a given CreditTransfer
+        """
         example_transfer = CreditTransfer(
             transfer_type=TransferTypeEnum.PAYMENT,
             transfer_subtype=TransferSubTypeEnum.AGENT_OUT,
@@ -168,6 +174,7 @@ class TokenProcessor(object):
             }
 
         def check_if_ge_limit(token_info):
+            # return 'GE Liquid Token' in token_info['limit'].name
             return (token_info['exchange_rate'] is not None
                     and token_info['limit'] is not None
                     and token_info['limit'].transfer_balance_fraction is not None)
@@ -180,13 +187,13 @@ class TokenProcessor(object):
                                                token_info_list))
 
         reserve_token = user.get_reserve_token()
-        exchangeable_tokens = filter(check_if_ge_limit, token_info_list)
-        is_ge = False if len(list(exchangeable_tokens)) == 0 else True
+        ge_tokens = list(filter(check_if_ge_limit, token_info_list))
+        is_ge = len(ge_tokens) > 0
         if is_ge:
             token_exchanges = "\n".join(
                 map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_fraction * x['balance'])}"
                               f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
-                    exchangeable_tokens))
+                    ge_tokens))
         else:
             token_exchanges = "\n".join(
                 map(lambda x: f"{TokenProcessor.rounded_dollars(str(x['limit'].total_amount))}"

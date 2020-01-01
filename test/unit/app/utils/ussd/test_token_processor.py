@@ -7,6 +7,7 @@ from helpers.user import UserFactory
 from helpers.ussd_utils import create_transfer_account_for_user
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
+from server.models.kyc_application import KycApplication
 from server.models.user import User
 from server.utils.user import default_transfer_account
 from server.utils.ussd.token_processor import TokenProcessor
@@ -32,7 +33,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
 @pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
     ("standard", 0.1, "en", "per 7"),
     ("standard", 0.1, "sw", "siku 7"),
-    ("group", 0.5, "en", "per 7"),
+    ("group", 0.5, "en", "per 30"),
     ("group", 0.5, "sw", "siku 30"),
 ])
 def test_send_balance_sms(mocker, test_client, init_database, initialised_blockchain_network, user_type, limit,
@@ -40,6 +41,10 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
     user = UserFactory(preferred_language=preferred_language, phone=phone())
     if user_type == "group":
         user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.is_phone_verified = True
+        kyc = KycApplication(type='INDIVIDUAL')
+        kyc.user = user
+        kyc.kyc_status = 'VERIFIED'
 
     token1 = Token.query.filter_by(symbol="SM1").first()
     token2 = Token.query.filter_by(symbol="SM2").first()
@@ -77,6 +82,10 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
     user = UserFactory(preferred_language=preferred_language, phone=phone())
     if user_type == "group":
         user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.is_phone_verified = True
+        kyc = KycApplication(type='INDIVIDUAL')
+        kyc.user = user
+        kyc.kyc_status = 'VERIFIED'
 
     token1 = Token.query.filter_by(symbol="SM1").first()
     create_transfer_account_for_user(user, token1, 20000)

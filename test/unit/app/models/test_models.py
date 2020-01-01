@@ -291,6 +291,7 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
     assert create_credit_transfer.resolution_message is not None
 
 
+# todo: split this out
 def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer):
     """
     GIVEN a CreditTransfer model
@@ -346,7 +347,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: WD' in limit.name
+        if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
 
     # Check additional GE LIMITS for Liquid Token and Group Account (payment, Agent Out Subtype)
@@ -357,7 +358,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: WD' in limit.name
+        if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
 
     # Check Limits skipped if no sender user (exchange)
