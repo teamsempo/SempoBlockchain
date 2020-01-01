@@ -16,10 +16,12 @@ DEPOSIT = TransferTypeEnum.DEPOSIT
 WITHDRAWAL = TransferTypeEnum.WITHDRAWAL
 
 AGENT_OUT = TransferSubTypeEnum.AGENT_OUT
+AGENT_IN = TransferSubTypeEnum.AGENT_IN
 STANDARD = TransferSubTypeEnum.STANDARD
 
 STANDARD_PAYMENT = (PAYMENT, STANDARD)
 AGENT_OUT_PAYMENT = (PAYMENT, AGENT_OUT)
+AGENT_IN_PAYMENT = (PAYMENT, AGENT_IN)
 
 
 def get_transfer_limits(credit_transfer: CreditTransfer):
@@ -50,6 +52,9 @@ def get_transfer_limits(credit_transfer: CreditTransfer):
     #                 continue
 
 # ~~~~~~SIMPLE CHECKS~~~~~~
+
+def sender_user_exists(credit_transfer):
+    return credit_transfer.sender_user
 
 
 def user_has_group_account_role(credit_transfer):
@@ -82,52 +87,48 @@ def token_is_liquid_type(credit_transfer):
     return credit_transfer.token and credit_transfer.token.token_type is token.TokenType.LIQUID
 
 
+def token_is_reserve_type(credit_transfer):
+    return credit_transfer.token and credit_transfer.token.token_type is token.TokenType.RESERVE
+
+
 def transfer_is_agent_out_subtype(credit_transfer):
     return credit_transfer.transfer_subtype is TransferSubTypeEnum.AGENT_OUT
 
 # ~~~~~~COMPOSITE CHECKS~~~~~~
 
 
-def is_liquid_and_has_foo(ct):
-    return token_is_liquid_type(ct) and ct.is_foo==True
+def is_user_and_any_token(credit_transfer):
+    return sender_user_exists(credit_transfer) \
+           and (token_is_reserve_type(credit_transfer) or token_is_liquid_type(credit_transfer))
 
 
 def is_user_and_liquid_token(credit_transfer):
-    return token_is_liquid_type(credit_transfer) and not user_has_group_account_role(credit_transfer)
+    return sender_user_exists(credit_transfer) and token_is_liquid_type(credit_transfer) \
+           and not user_has_group_account_role(credit_transfer)
 
 
 def is_group_and_liquid_token(credit_transfer):
-    return token_is_liquid_type(credit_transfer) and user_has_group_account_role(credit_transfer)
+    return sender_user_exists(credit_transfer) and token_is_liquid_type(credit_transfer) \
+           and user_has_group_account_role(credit_transfer)
 
 
-def is_liquid_and_user_is_not_phone_and_not_kyc_verified(credit_transfer):
-    if is_user_and_liquid_token(credit_transfer):
-        return False
-
-    return not user_phone_is_verified(credit_transfer) and not user_individual_kyc_is_verified(credit_transfer)
+def is_any_token_and_user_is_not_phone_and_not_kyc_verified(credit_transfer):
+    return is_user_and_any_token(credit_transfer) and \
+           not user_phone_is_verified(credit_transfer) and not user_individual_kyc_is_verified(credit_transfer)
 
 
-def is_liquid_and_user_is_phone_but_not_kyc_verified(credit_transfer):
-    if is_user_and_liquid_token(credit_transfer):
-        return False
-
-    return user_phone_is_verified(credit_transfer) and not (
+def is_any_token_and_user_is_phone_but_not_kyc_verified(credit_transfer):
+    return is_user_and_any_token(credit_transfer) and user_phone_is_verified(credit_transfer) and not (
         user_individual_kyc_is_verified(credit_transfer) or user_business_kyc_is_verified(credit_transfer)
     )
 
 
-def is_liquid_and_user_is_kyc_verified(credit_transfer):
-    if is_user_and_liquid_token(credit_transfer):
-        return False
-
-    return user_individual_kyc_is_verified(credit_transfer)
+def is_any_token_and_user_is_kyc_verified(credit_transfer):
+    return is_user_and_any_token(credit_transfer) and user_individual_kyc_is_verified(credit_transfer)
 
 
-def is_liquid_and_user_is_kyc_business_verified(credit_transfer):
-    if is_user_and_liquid_token(credit_transfer):
-        return False
-
-    return user_business_kyc_is_verified(credit_transfer)
+def is_any_token_and_user_is_kyc_business_verified(credit_transfer):
+    return is_user_and_any_token(credit_transfer) and user_business_kyc_is_verified(credit_transfer)
 
 # ~~~~~~LIMIT FILTERS~~~~~~
 
@@ -204,36 +205,36 @@ class TransferLimit(object):
 
 
 LIMITS = [
-    TransferLimit('Sempo Level 0: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 7,
+    TransferLimit('Sempo Level 0: P7', [STANDARD_PAYMENT], is_any_token_and_user_is_not_phone_and_not_kyc_verified, 7,
                   total_amount=5000),
-    TransferLimit('Sempo Level 0: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 0: P30', [STANDARD_PAYMENT], is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
                   total_amount=10000),
-    TransferLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_not_phone_and_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT], is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
                   total_amount=0),
 
-    TransferLimit('Sempo Level 1: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_phone_but_not_kyc_verified, 7,
+    TransferLimit('Sempo Level 1: P7', [STANDARD_PAYMENT], is_any_token_and_user_is_phone_but_not_kyc_verified, 7,
                   total_amount=5000),
-    TransferLimit('Sempo Level 1: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 1: P30', [STANDARD_PAYMENT], is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
                   total_amount=20000),
-    TransferLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_phone_but_not_kyc_verified, 30,
+    TransferLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT], is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
                   total_amount=0),
 
-    TransferLimit('Sempo Level 2: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_verified, 7,
+    TransferLimit('Sempo Level 2: P7', [STANDARD_PAYMENT], is_any_token_and_user_is_kyc_verified, 7,
                   total_amount=50000),
-    TransferLimit('Sempo Level 2: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_verified, 30,
+    TransferLimit('Sempo Level 2: P30', [STANDARD_PAYMENT], is_any_token_and_user_is_kyc_verified, 30,
                   total_amount=100000),
-    TransferLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_verified, 7,
+    TransferLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT], is_any_token_and_user_is_kyc_verified, 7,
                   total_amount=50000),
-    TransferLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_verified, 30,
+    TransferLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT], is_any_token_and_user_is_kyc_verified, 30,
                   total_amount=100000),
 
-    TransferLimit('Sempo Level 3: P7', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_business_verified, 7,
+    TransferLimit('Sempo Level 3: P7', [STANDARD_PAYMENT], is_any_token_and_user_is_kyc_business_verified, 7,
                   total_amount=500000),
-    TransferLimit('Sempo Level 3: P30', [STANDARD_PAYMENT], is_liquid_and_user_is_kyc_business_verified, 30,
+    TransferLimit('Sempo Level 3: P30', [STANDARD_PAYMENT], is_any_token_and_user_is_kyc_business_verified, 30,
                   total_amount=1000000),
-    TransferLimit('Sempo Level 3: WD7', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_business_verified, 7,
+    TransferLimit('Sempo Level 3: WD7', [WITHDRAWAL, DEPOSIT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT], is_any_token_and_user_is_kyc_business_verified, 7,
                   total_amount=500000),
-    TransferLimit('Sempo Level 3: WD30', [WITHDRAWAL, DEPOSIT], is_liquid_and_user_is_kyc_business_verified, 30,
+    TransferLimit('Sempo Level 3: WD30', [WITHDRAWAL, DEPOSIT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT], is_any_token_and_user_is_kyc_business_verified, 30,
                   total_amount=1000000),
 
 
