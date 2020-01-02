@@ -9,9 +9,7 @@ import InputField from '../form/InputField'
 import SelectField from '../form/SelectField'
 import {TransferUsage} from "../../reducers/transferUsage/types";
 import {Organisation} from "../../reducers/organisation/types";
-
-
-enum TransferAccountTypes {USER='USER', CASHIER='CASHIER', VENDOR='VENDOR', TOKENAGENT='TOKENAGENT'}
+import {TransferAccountTypes} from "../transferAccount/types";
 
 export interface ICreateUser {
   firstName?: string
@@ -66,7 +64,7 @@ const validate = (values: ICreateUser) => {
 
 class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Props> & Props> {
   componentDidMount() {
-    this.props.initialize({ accountType: TransferAccountTypes.USER.toLowerCase() });
+    this.props.initialize({ accountType: TransferAccountTypes.USER.toLowerCase(), gender: 'female' });
   }
 
   setSerialNumber(data: string) {
@@ -169,7 +167,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
             <InputField name="lastName" label='Family/Surname' />
             <InputField name="bio" label='Directory Entry' />
             <InputField name="location" label='Location' />
-            <SelectField name="gender" label='Gender' options={["Male", "Female", "Other"]} />
+            <SelectField name="gender" label='Gender' options={["Female", "Male", "Other"]} />
 
             {selectedAccountTypeForm}
 

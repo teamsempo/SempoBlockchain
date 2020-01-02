@@ -46,6 +46,8 @@ class UserSchema(SchemaBase):
 
     is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
+    is_tokenagent           = fields.Boolean(attribute='has_token_agent_role')
+    is_groupaccount         = fields.Boolean(attribute='has_group_account_role')
     is_any_admin            = fields.Boolean(attribute='is_any_admin')
 
     business_usage_id = fields.Int()

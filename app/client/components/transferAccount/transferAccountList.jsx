@@ -12,6 +12,7 @@ import NewTransferManager from '../management/newTransferManager.jsx'
 
 import { formatMoney } from "../../utils";
 import { editTransferAccount, setSelected } from "../../reducers/transferAccountReducer";
+import {TransferAccountTypes} from "../transferAccount/types";
 
 const mapStateToProps = (state) => {
   return {
@@ -43,7 +44,7 @@ class TransferAccountList extends React.Component {
     transfer_account_ids: {},
     allCheckedTransferAccounts: false,
     newTransfer: false,
-    account_type: window.BENEFICIARY_TERM_PLURAL,
+    account_type: 'ALL',
 	};
 	this.handleChange = this.handleChange.bind(this);
 	this.checkAllTransferAccounts = this.checkAllTransferAccounts.bind(this);
@@ -168,17 +169,23 @@ class TransferAccountList extends React.Component {
   }
 
   render() {
+    const {account_type} = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
+    let accountTypes = Object.keys(TransferAccountTypes);
+    accountTypes.push('ALL'); // filter should have all option
 
     var filteredData = this.props.item_list !== undefined ? this.props.item_list : null;
 
-    if (this.state.account_type !== 'ALL') {
-      // a vendor/recipient filter is applied
-      if (this.state.account_type === 'VENDORS') {
+    if (account_type !== 'ALL') {
+      // a filter is being applied
+      if (account_type === TransferAccountTypes.USER) {
+        filteredData = filteredData.filter(account => account.is_beneficiary)
+      } else if (account_type === TransferAccountTypes.VENDOR || account_type === TransferAccountTypes.CASHIER) {
         filteredData = filteredData.filter(account => account.is_vendor)
-      }
-      if (this.state.account_type === window.BENEFICIARY_TERM_PLURAL) {
-        filteredData = filteredData.filter(account => !account.is_vendor)
+      } else if (account_type === TransferAccountTypes.TOKENAGENT) {
+        filteredData = filteredData.filter(account => account.is_tokenagent)
+      } else if (account_type === TransferAccountTypes.GROUPACCOUNT) {
+        filteredData = filteredData.filter(account => account.is_groupaccount)
       }
     }
 
@@ -208,9 +215,9 @@ class TransferAccountList extends React.Component {
         topBarContent =
             <div style={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
               <StyledSelect style={{fontWeight: '400', margin: '1em', lineHeight: '25px', height: '25px'}} name="account_type" value={this.state.account_type} onChange={this.handleChange}>
-                <option name="account_type" value={window.BENEFICIARY_TERM_PLURAL}>{window.BENEFICIARY_TERM_PLURAL}</option>
-                <option name="account_type" value="VENDORS">VENDORS</option>
-                <option name="account_type" value="ALL">ALL ACCOUNTS</option>
+                {accountTypes.map((accountType, index) => {
+                  return <option key={index} name="account_type" value={accountType}>{accountType}</option>
+                })}
               </StyledSelect>
 
               {this.props.login.adminTier !== 'view' ?

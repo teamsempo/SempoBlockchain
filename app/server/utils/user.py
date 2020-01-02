@@ -111,7 +111,8 @@ def update_transfer_account_user(user,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
-                                 is_tokenagent=False):
+                                 is_tokenagent=False,
+                                 is_groupaccount=False):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -144,6 +145,9 @@ def update_transfer_account_user(user,
     if is_tokenagent:
         user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
 
+    if is_groupaccount:
+        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
@@ -166,6 +170,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
+                                 is_groupaccount=False,
                                  is_self_sign_up=False,
                                  business_usage_id=None):
 
@@ -207,6 +212,9 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     if is_tokenagent:
         user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+
+    if is_groupaccount:
+        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
@@ -427,10 +435,11 @@ def proccess_create_or_modify_user_request(
     if is_vendor is None:
         is_vendor = attribute_dict.get('vendor', False)
 
-    # is_beneficiary defaults to the opposite of is_vendor
-    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor)
-
     is_tokenagent = attribute_dict.get('is_tokenagent', False)
+    is_groupaccount = attribute_dict.get('is_groupaccount', False)
+
+    # is_beneficiary defaults to the opposite of is_vendor
+    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
 
     if current_app.config['IS_USING_BITCOIN']:
         try:
@@ -517,7 +526,7 @@ def proccess_create_or_modify_user_request(
             use_precreated_pin=use_precreated_pin,
             existing_transfer_account=existing_transfer_account,
             is_beneficiary=is_beneficiary, is_vendor=is_vendor,
-            is_tokenagent=is_tokenagent
+            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
         )
 
         set_custom_attributes(attribute_dict, user)
@@ -542,7 +551,8 @@ def proccess_create_or_modify_user_request(
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
-        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_tokenagent=is_tokenagent,
+        is_beneficiary=is_beneficiary, is_vendor=is_vendor,
+        is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up, business_usage_id=business_usage_id)
 
     if attribute_dict.get('custom_attributes', None) is None: attribute_dict['custom_attributes'] = {}
