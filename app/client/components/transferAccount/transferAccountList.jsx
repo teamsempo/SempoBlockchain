@@ -168,6 +168,20 @@ class TransferAccountList extends React.Component {
     return (transferAccount.first_name === null ? '' : transferAccount.first_name) + ' ' + (transferAccount.last_name === null ? '' : transferAccount.last_name)
   }
 
+  _customIcon(transferAccount) {
+    let url = "/static/media/user.svg";
+    if (transferAccount.is_beneficiary) {
+      url = "/static/media/user.svg"
+    } else if (transferAccount.is_vendor) {
+      url = "/static/media/store.svg"
+    } else if (transferAccount.is_groupaccount) {
+      url = "/static/media/groupaccount.svg"
+    } else if (transferAccount.is_tokenagent) {
+      url = "/static/media/tokenagent.svg"
+    }
+    return <UserSVG src={url}/>
+  }
+
   render() {
     const {account_type} = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
@@ -265,11 +279,11 @@ class TransferAccountList extends React.Component {
                   columns={[
                     {
                       Header: "",
-                      accessor: "is_vendor",
+                      id: 'transferAccountIcon',
+                      accessor: transferAccount => this._customIcon(transferAccount),
                       headerClassName: 'react-table-header',
                       width: 40,
                       sortable: false,
-                      Cell: cellInfo => (cellInfo.value === true ? <UserSVG src="/static/media/store.svg"/> : <UserSVG src="/static/media/user.svg"/>),
                     },
                     {
                       Header: "Name",

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="46px" height="46px" viewBox="0 0 46 46" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 51.3 (57544) - http://www.bohemiancoding.com/sketch -->
+    <title>user</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <circle id="path-1" cx="23" cy="23" r="23"></circle>
+        <circle id="path-3" cx="23" cy="23" r="23"></circle>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="user">
+            <g id="Oval">
+                <g id="Mask">
+                    <g id="path-1-+-Oval-+-Oval-2-+-Group-+-Oval-+-Oval-2-Mask">
+                        <mask id="mask-2" fill="white">
+                            <use xlink:href="#path-1"></use>
+                        </mask>
+                        <use id="Mask" fill="#697680" fill-rule="nonzero" xlink:href="#path-1"></use>
+                        <mask id="mask-4" fill="white">
+                            <use xlink:href="#path-3"></use>
+                        </mask>
+                        <g id="path-1"></g>
+                        <g id="Group" mask="url(#mask-4)" fill="#FFFFFF" fill-rule="nonzero" stroke="#697680">
+                            <g transform="translate(-4.000000, 17.000000)">
+                                <circle id="Oval" cx="12" cy="24" r="12"></circle>
+                                <circle id="Oval-2" cx="12" cy="5" r="5"></circle>
+                            </g>
+                        </g>
+                        <g id="sub-user" mask="url(#mask-4)" fill="#FFFFFF" fill-rule="nonzero" stroke="#697680">
+                            <g transform="translate(26.000000, 17.000000)">
+                                <circle id="Oval" cx="12" cy="24" r="12"></circle>
+                                <circle id="Oval-2" cx="12" cy="5" r="5"></circle>
+                            </g>
+                        </g>
+                        <circle id="Oval" stroke="#697680" fill="#FFFFFF" fill-rule="nonzero" mask="url(#mask-4)" cx="22.5" cy="47.5" r="18.5"></circle>
+                        <circle id="Oval-2" stroke="#697680" fill="#FFFFFF" fill-rule="nonzero" mask="url(#mask-4)" cx="23" cy="18" r="8"></circle>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
