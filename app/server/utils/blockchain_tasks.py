@@ -178,7 +178,7 @@ class BlockchainTasker(object):
         :param token: ERC20 token being transferred
         :param from_address: address of wallet sending token
         :param to_address:
-        :param amount: the NON WEI amount being sent, eg 2.3 Dai
+        :param amount: the CENTS amount being sent, eg 2300 Cents = 2.3 Dollars
         :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
         :return: task id for the transfer
         """

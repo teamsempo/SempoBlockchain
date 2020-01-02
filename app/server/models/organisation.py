@@ -48,7 +48,8 @@ class Organisation(ModelBase):
     @property
     def queried_org_level_transfer_account(self):
         if self.org_level_transfer_account_id:
-            return server.models.transfer_account.TransferAccount.query.get(self.org_level_transfer_account_id)
+            return server.models.transfer_account.TransferAccount\
+                .query.execution_options(show_all=True).get(self.org_level_transfer_account_id)
         return None
 
     credit_transfers    = db.relationship("CreditTransfer",

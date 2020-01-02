@@ -1,21 +1,19 @@
+from flask import current_app
 import MySQLdb
-import secrets as SECRETS
 import time
-from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 import pprint
-from uuid import uuid4
+
+from server import db, bt
 
 from server.models.user import User
+from server.models.organisation import Organisation
 from server.models.transfer_usage import TransferUsage
-from server.models.credit_transfer import CreditTransfer
 from server.models.token import Token
-from server import db
 from server.utils.user import create_transfer_account_user
-from server.utils.user import set_custom_attributes
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.phone import proccess_phone_number
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
-from migrations.fromGE.poa_explorer import POAExplorer
+from server.utils.ge_migrations.poa_explorer import POAExplorer
 
 
 class RDSMigrate:
@@ -25,15 +23,15 @@ class RDSMigrate:
     used to migrate the 2 databases
     '''
 
-    def __init__(self, sempo_token_id, ge_community_token_id=None):
+    def __init__(self, sempo_organisation_id, ge_community_token_id=None, user_limit=10000):
         self.poa = POAExplorer()
         timeout = 120
         print('RDSMigrate: Creating a connection, with a %d sec timeout.' % timeout)
-        self.connection = MySQLdb.connect(host=SECRETS.host,
-                                          db=SECRETS.name,
-                                          user=SECRETS.user,
-                                          port=SECRETS.port,
-                                          password=SECRETS.password,
+        self.connection = MySQLdb.connect(host=current_app.config['GE_DB_HOST'],
+                                          db=current_app.config['GE_DB_NAME'],
+                                          user=current_app.config['GE_DB_USER'],
+                                          port=int(current_app.config['GE_DB_PORT']),
+                                          password=current_app.config['GE_DB_PASSWORD'],
                                           connect_timeout=timeout)
 
         if not self.connection:
@@ -41,13 +39,16 @@ class RDSMigrate:
         else:
             print('DB connection successfully created.  Yeah us.')
 
-        self.sempo_token_id = sempo_token_id
+        self.sempo_organisation_id = sempo_organisation_id
         self.ge_community_token_id = ge_community_token_id
+        self.user_limit = user_limit
+
+        master_organisation = Organisation.master_organisation()
+
+        self.master_wallet_address = master_organisation.queried_org_level_transfer_account.blockchain_address
 
     def migrate(self):
         self.migrateUsers()
-
-        db.session.commit()
 
         # self.migratePOA()
 
@@ -80,13 +81,13 @@ class RDSMigrate:
         print('Getting new users from GE')
         with self.connection.cursor(MySQLdb.cursors.DictCursor) as cursor:
             format_strings = ','.join(['%s'] * len(already_added_ge_ids))
-            cmd = """SELECT * FROM users
+            cmd = f"""SELECT * FROM users
                 LEFT JOIN community_tokens ON users.community_token_id=community_tokens.id
                 LEFT JOIN business_categories ON users.business_category_id=business_categories.id
                 LEFT JOIN token_agents on users.id=token_agents.user_id
                 LEFT JOIN group_accounts on users.id=group_accounts.user_id
                 WHERE users.id NOT IN (%s)
-                LIMIT 200 
+                LIMIT {self.user_limit}
             """
 
             if community_token_id:
@@ -120,6 +121,18 @@ class RDSMigrate:
 
 
     def insert_user(self, ge_user):
+
+        phone_number = None if 'DELETED' in ge_user['phone'] else ge_user['phone']
+
+        if not phone_number:
+            return
+
+        processed_phone = proccess_phone_number(phone_number)
+        existing_user = User.query.filter_by(phone=processed_phone).execution_options(show_all=True).first()
+        if existing_user:
+            print(f'User already exists for phone {processed_phone}')
+            return
+
         if ge_user['admin_id']:
             return
 
@@ -128,23 +141,21 @@ class RDSMigrate:
             business_usage_id = transfer_usage.id
         else:
             business_usage_id = None
-      
-        phone_number = None if 'DELETED' in ge_user['phone'] else ge_user['phone']
 
         if business_usage_id:
             business_usage = TransferUsage.query.get(business_usage_id)
         else:
             business_usage = None
 
-        token = db.session.query(Token).get(self.sempo_token_id)
+        organsation = db.session.query(Organisation).get(self.sempo_organisation_id)
 
         try:
             sempo_user = create_transfer_account_user(
                 first_name=ge_user['first_name'],
                 last_name=ge_user['last_name'],
+                organisation=organsation,
                 phone=phone_number,
                 preferred_language=ge_user['preferred_language'],
-                token=token,  # This should still be set to correct token
                 location=ge_user['location'],
                 business_usage=business_usage
             )
@@ -283,6 +294,9 @@ class RDSMigrate:
 
     def migrate_balances(self, ge_address_to_transfer_account: dict):
 
+        org = Organisation.query.get(self.sempo_organisation_id)
+        token = org.token
+
         ge_address_to_transfer_account.pop(None, None)
 
         addresses = list(ge_address_to_transfer_account.keys())
@@ -293,6 +307,14 @@ class RDSMigrate:
 
             transfer_account = ge_address_to_transfer_account[balance_info['account']]
             transfer_account._balance_wei = balance_wei
+
+            bt.make_token_transfer(
+                signing_address=self.master_wallet_address,
+                token=token,
+                from_address=self.master_wallet_address,
+                to_address=transfer_account.blockchain_address,
+                amount=balance_wei / 1e16
+            )
 
     def store_wei(self, address, balance):
         sql = '''UPDATE "transfer_account"
