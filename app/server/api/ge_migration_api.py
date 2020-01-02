@@ -17,22 +17,40 @@ class GEMigrationAPI(MethodView):
         sempo_organisation_id = post_data['sempo_organisation_id']
         ge_community_token_id = post_data.get('ge_community_token_id', None)
         user_limit = post_data.get('user_limit', 10000)
+        async = post_data.get('async', True)
+
 
         @copy_current_request_context
         def migrate(_sempo_organisation_id, _ge_community_token_id, _user_limit):
-            rds = rds_migrate.RDSMigrate(sempo_organisation_id=_sempo_organisation_id,
-                                         ge_community_token_id=_ge_community_token_id,
-                                         user_limit=_user_limit
-                                         )
+
+            rds = rds_migrate.RDSMigrate(
+                sempo_organisation_id=_sempo_organisation_id,
+                ge_community_token_id=_ge_community_token_id,
+                user_limit=_user_limit
+            )
+
             rds.migrate()
 
             db.session.commit()
 
-        t = threading.Thread(target=migrate,
-                             args=(sempo_organisation_id, ge_community_token_id, user_limit))
+        if async:
+            t = threading.Thread(target=migrate,
+                                 args=(sempo_organisation_id, ge_community_token_id, user_limit))
 
-        t.daemon = True
-        t.start()
+            t.daemon = True
+            t.start()
+
+        else:
+            rds = rds_migrate.RDSMigrate(
+                sempo_organisation_id=sempo_organisation_id,
+                ge_community_token_id=ge_community_token_id,
+                user_limit=user_limit
+            )
+            rds.migrate()
+
+            print('Migration Complete!!')
+
+            db.session.commit()
 
         response_object = {
             'message': 'success',
