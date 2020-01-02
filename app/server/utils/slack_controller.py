@@ -442,10 +442,10 @@ def slack_controller(payload):
         submission = payload['submission']
         kyc = user.kyc_applications[0]  # most recent
 
-        kyc.first_name = submission['first_name'] or kyc.first_name
-        kyc.last_name = submission['last_name'] or kyc.last_name
-        kyc.dob = submission['date_of_birth'] or kyc.dob
-        kyc.street_address = submission['address'] or kyc.street_address
+        kyc.first_name = submission.get('first_name', kyc.first_name)
+        kyc.last_name = submission.get('last_name', kyc.last_name)
+        kyc.dob = submission.get('date_of_birth', kyc.dob)
+        kyc.street_address = submission.get('address', kyc.street_address)
 
         db.session.flush()  # so that the response message updates user details
 
