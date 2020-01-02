@@ -160,6 +160,7 @@ class RDSMigrate:
                 business_usage=business_usage
             )
 
+            sempo_user.pin_hash = ge_user['encrypted_pin']
             sempo_user.is_activated = ge_user['status'] == 'Active'  # Is this the correct way to find this out?
             sempo_user.is_disabled = False
             sempo_user.is_phone_verified = True
