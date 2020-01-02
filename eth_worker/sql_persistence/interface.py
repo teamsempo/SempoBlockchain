@@ -1,6 +1,7 @@
 import datetime
-
 from sqlalchemy import and_, or_
+
+from types import UUID
 
 from sql_persistence.models import (
     session,
@@ -166,9 +167,9 @@ class SQLPersistenceInterface(object):
 
         session.commit()
 
-    def create_blockchain_transaction(self, task_id):
+    def create_blockchain_transaction(self, task_uuid):
 
-        task = session.query(BlockchainTask).get(task_id)
+        task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
         blockchain_transaction = BlockchainTransaction(
             signing_wallet=task.signing_wallet,
@@ -205,8 +206,8 @@ class SQLPersistenceInterface(object):
 
         return unstarted_dependents
 
-    def unstatisfied_task_dependencies(self, task_id):
-        task = session.query(BlockchainTask).get(task_id)
+    def unstatisfied_task_dependencies(self, task_uuid):
+        task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
         unsatisfied = []
         for dependee in task.dependees:
@@ -219,18 +220,21 @@ class SQLPersistenceInterface(object):
         if dependent_on_tasks is None:
             dependent_on_tasks = []
 
-        if isinstance(dependent_on_tasks, int):
+        if isinstance(dependent_on_tasks, str):
             dependent_on_tasks = [dependent_on_tasks]
 
-        for task_id in dependent_on_tasks:
-            dependee_task = session.query(BlockchainTask).get(task_id)
+        for task_uuid in dependent_on_tasks:
+            dependee_task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
             task.dependees.append(dependee_task)
 
-    def create_send_eth_task(self, signing_wallet_obj,
+    def create_send_eth_task(self,
+                             uuid: UUID,
+                             signing_wallet_obj,
                              recipient_address, amount,
                              dependent_on_tasks=None):
 
-        task = BlockchainTask(signing_wallet=signing_wallet_obj,
+        task = BlockchainTask(uuid,
+                              signing_wallet=signing_wallet_obj,
                               type='SEND_ETH',
                               is_send_eth=True,
                               recipient_address=recipient_address,
@@ -244,12 +248,15 @@ class SQLPersistenceInterface(object):
 
         return task
 
-    def create_function_task(self, signing_wallet_obj,
+    def create_function_task(self,
+                             uuid: UUID,
+                             signing_wallet_obj,
                              contract_address, abi_type,
                              function, args=None, kwargs=None,
                              gas_limit=None, dependent_on_tasks=None):
 
-        task = BlockchainTask(signing_wallet=signing_wallet_obj,
+        task = BlockchainTask(uuid,
+                              signing_wallet=signing_wallet_obj,
                               type='FUNCTION',
                               contract_address=contract_address,
                               abi_type=abi_type,
@@ -266,12 +273,15 @@ class SQLPersistenceInterface(object):
 
         return task
 
-    def create_deploy_contract_task(self, signing_wallet_obj,
+    def create_deploy_contract_task(self,
+                                    uuid: UUID,
+                                    signing_wallet_obj,
                                     contract_name,
                                     args=None, kwargs=None,
                                     gas_limit=None, dependent_on_tasks=None):
 
-        task = BlockchainTask(signing_wallet=signing_wallet_obj,
+        task = BlockchainTask(uuid,
+                              signing_wallet=signing_wallet_obj,
                               type='DEPLOY_CONTRACT',
                               contract_name=contract_name,
                               args=args,
@@ -286,14 +296,14 @@ class SQLPersistenceInterface(object):
 
         return task
 
-    def get_serialised_task_from_id(self, id):
-        task = self.get_task_from_id(id)
+    def get_serialised_task_from_uuid(self, uuid):
+        task = self.get_task_from_uuid(uuid)
 
         base_data = {
             'id': task.id,
             'status': task.status,
-            'dependents': [task.id for task in task.dependents],
-            'dependees': [task.id for task in task.dependees]
+            'dependents': [task.uuid for task in task.dependents],
+            'dependees': [task.uuid for task in task.dependees]
         }
 
         if task.successful_transaction:
@@ -309,8 +319,8 @@ class SQLPersistenceInterface(object):
         else:
             return base_data
 
-    def get_task_from_id(self, task_id):
-        return session.query(BlockchainTask).get(task_id)
+    def get_task_from_uuid(self, task_uuid):
+        return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 
@@ -373,9 +383,9 @@ class SQLPersistenceInterface(object):
          return session.query(BlockchainWallet).filter(
              BlockchainWallet.encrypted_private_key == encrypted_private_key).first()
 
-    def set_wallet_last_topup_task_id(self, wallet_address, task_id):
+    def set_wallet_last_topup_task_uuid(self, wallet_address, task_uuid):
         wallet = self.get_wallet_by_address(wallet_address)
-        wallet.last_topup_task_id = task_id
+        wallet.last_topup_task_id = task_uuid
 
         session.commit()
 

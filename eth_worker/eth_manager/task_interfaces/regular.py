@@ -4,6 +4,7 @@ from celery import signature
 
 from eth_manager import utils
 
+
 def deploy_contract_task(signing_address, contract_name, args=None, dependent_on_tasks=None):
     deploy_sig = signature(
         utils.eth_endpoint('deploy_contract'),
@@ -14,7 +15,7 @@ def deploy_contract_task(signing_address, contract_name, args=None, dependent_on
             'dependent_on_tasks': dependent_on_tasks
         })
 
-    return utils.execute_synchronous_task(deploy_sig)
+    return utils.execute_task(deploy_sig)
 
 
 def transaction_task(signing_address,
@@ -39,7 +40,7 @@ def transaction_task(signing_address,
         utils.eth_endpoint('transact_with_contract_function'),
         kwargs=kwargs)
 
-    return utils.execute_synchronous_task(sig)
+    return utils.execute_task(sig)
 
 
 def send_eth_task(signing_address, amount_wei, recipient_address):
@@ -51,7 +52,7 @@ def send_eth_task(signing_address, amount_wei, recipient_address):
             'recipient_address': recipient_address
         })
 
-    return utils.execute_synchronous_task(sig)
+    return utils.execute_task(sig)
 
 
 def synchronous_call(contract_address, contract_type, func, args=None):
@@ -64,7 +65,7 @@ def synchronous_call(contract_address, contract_type, func, args=None):
             'args': args,
         })
 
-    return utils.execute_synchronous_task(call_sig)
+    return utils.execute_synchronous_celery(call_sig)
 
 
 def get_wallet_balance(address, token_address):
@@ -78,16 +79,15 @@ def get_wallet_balance(address, token_address):
     return balance_wei
 
 
-
-def await_task_success(task_id, timeout=None, poll_frequency=0.5):
+def await_task_success(task_uuid, timeout=None, poll_frequency=0.5):
     elapsed = 0
     while timeout is None or elapsed <= timeout:
         task_sig = signature(
             utils.eth_endpoint('get_task'),
-            kwargs={'task_id': task_id}
+            kwargs={'task_uuid': task_uuid}
         )
 
-        task = utils.execute_synchronous_task(task_sig)
+        task = utils.execute_synchronous_celery(task_sig)
 
         if task['status'] == 'SUCCESS':
             return task

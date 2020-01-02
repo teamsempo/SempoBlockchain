@@ -130,13 +130,13 @@ def send_eth(self, amount_wei, recipient_address,
 
 
 @celery_app.task(**base_task_config)
-def get_task(self, task_id):
-    return blockchain_processor.get_serialised_task_from_id(task_id)
+def get_task(self, task_uuid):
+    return blockchain_processor.get_serialised_task_from_uuid(task_uuid)
 
 
 @celery_app.task(**base_task_config)
-def _attempt_transaction(self, task_id):
-    return blockchain_processor.attempt_transaction(task_id)
+def _attempt_transaction(self, task_uuid):
+    return blockchain_processor.attempt_transaction(task_uuid)
 
 
 @celery_app.task(**processor_task_config)

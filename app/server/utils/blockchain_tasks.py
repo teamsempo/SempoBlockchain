@@ -37,8 +37,9 @@ class BlockchainTasker(object):
 
         return response
 
-    def _execute_synchronous_task(self, signature):
-        return self._execute_synchronous_celery(signature)
+    def _execute_task(self, signature):
+        ar = signature.delay()
+        return ar.id
 
     def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
         call_sig = celery_app.signature(
@@ -72,7 +73,7 @@ class BlockchainTasker(object):
                 'dependent_on_tasks': dependent_on_tasks
             })
 
-        return self._execute_synchronous_task(signature)
+        return self._execute_task(signature)
 
     def get_blockchain_task(self, task_id):
         """
@@ -146,7 +147,7 @@ class BlockchainTasker(object):
                                                 'dependent_on_tasks': dependent_on_tasks
                                             })
 
-        return self._execute_synchronous_task(transfer_sig)
+        return self._execute_task(transfer_sig)
 
     def deploy_contract(
             self,
@@ -166,7 +167,7 @@ class BlockchainTasker(object):
                 'dependent_on_tasks': dependent_on_tasks
             })
 
-        return self._execute_synchronous_task(deploy_sig)
+        return self._execute_task(deploy_sig)
 
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,

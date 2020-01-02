@@ -15,9 +15,9 @@ from eth_manager.task_interfaces.regular import (
 
 timeout = config.SYNCRONOUS_TASK_TIMEOUT
 
-def get_contract_address(task_id):
+def get_contract_address(task_uuid):
     await_tr = partial(await_task_success, timeout=timeout)
-    return pipe(task_id, await_tr, lambda r: r.get('contract_address'))
+    return pipe(task_uuid, await_tr, lambda r: r.get('contract_address'))
 
 
 def topup_wallets():
@@ -29,7 +29,7 @@ def topup_wallets():
             last_topup_task_id = wallet.last_topup_task_id
 
             if last_topup_task_id:
-                task = persistence_interface.get_task_from_id(last_topup_task_id)
+                task = persistence_interface.get_task_from_uuid(last_topup_task_id)
 
                 if task.status in ['PENDING', 'UNSTARTED']:
                     return
@@ -56,11 +56,11 @@ def topup_if_required(address):
                             'dependent_on_tasks': []
                         })
 
-        task_id = utils.execute_synchronous_task(sig)
+        task_uuid = utils.execute_task(sig)
 
-        persistence_interface.set_wallet_last_topup_task_id(address, task_id)
+        persistence_interface.set_wallet_last_topup_task_uuid(address, task_uuid)
 
-        return task_id
+        return task_uuid
 
     return None
 
@@ -71,7 +71,7 @@ def deploy_exchange_network(deploying_address):
     def deployer(contract_name, args=None):
         return deploy_contract_task(deploying_address, contract_name, args)
 
-    def register_contract(task_id, name):
+    def register_contract(task_uuid, name):
 
         contract_to_be_registered_id = synchronous_call(
             contract_address=id_contract_address,
@@ -79,7 +79,7 @@ def deploy_exchange_network(deploying_address):
             func=name
         )
 
-        task = await_task_success(task_id, timeout=timeout)
+        task = await_task_success(task_uuid, timeout=timeout)
         contract_address = task['contract_address']
 
         return transaction_task(
@@ -143,13 +143,13 @@ def deploy_exchange_network(deploying_address):
 
 def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_wei):
 
-    deploy_task_id = deploy_contract_task(
+    deploy_task_uuid = deploy_contract_task(
         deploying_address,
         'WrappedDai',
         [name, symbol]
     )
 
-    reserve_token_address = get_contract_address(deploy_task_id)
+    reserve_token_address = get_contract_address(deploy_task_uuid)
 
     send_eth_task_id = send_eth_task(deploying_address, fund_amount_wei, reserve_token_address)
 
@@ -179,14 +179,14 @@ def deploy_smart_token(
     # TODO: All tasks should automatically check for whether a topup is required
     topup_task = topup_if_required(deploying_address)
 
-    deploy_smart_token_task_id = deploy_contract_task(
+    deploy_smart_token_task_uuid = deploy_contract_task(
         deploying_address,
         'SmartToken',
         [name, symbol, decimals],
         topup_task
     )
 
-    smart_token_address = get_contract_address(deploy_smart_token_task_id)
+    smart_token_address = get_contract_address(deploy_smart_token_task_uuid)
 
     transaction_task(
         signing_address=deploying_address,
@@ -197,13 +197,13 @@ def deploy_smart_token(
         gas_limit=8000000
     )
 
-    deploy_subexchange_task_id = deploy_contract_task(
+    deploy_subexchange_task_uuid = deploy_contract_task(
         deploying_address,
         'BancorConverter',
         [smart_token_address, contract_registry_address, 30000, reserve_token_address, reserve_ratio_ppm]
     )
 
-    subexchange_address = get_contract_address(deploy_subexchange_task_id)
+    subexchange_address = get_contract_address(deploy_subexchange_task_uuid)
 
     bal = get_wallet_balance(
         address=deploying_address,

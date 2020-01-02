@@ -11,6 +11,7 @@ from eth_utils import keccak
 from eth_keys import keys
 from web3 import Web3
 
+from types import UUID
 import config
 
 ALLOWED_TASK_TYPES = ['SEND_ETH', 'FUNCTION', 'DEPLOY_CONTRACT']
@@ -38,7 +39,7 @@ class BlockchainWallet(ModelBase):
 
     wei_target_balance    = Column(BigInteger())
     wei_topup_threshold   = Column(BigInteger())
-    last_topup_task_id    = Column(Integer())
+    last_topup_task_id    = Column(String())
 
     tasks = relationship('BlockchainTask',
                          backref='signing_wallet',
@@ -118,6 +119,8 @@ task_dependencies = Table(
 class BlockchainTask(ModelBase):
     __tablename__ = 'blockchain_task'
 
+    uuid = Column(String, index=True)
+
     _type = Column(String)
     contract_address = Column(String)
     contract_name = Column(String)
@@ -186,6 +189,11 @@ class BlockchainTask(ModelBase):
                 else_='UNSTARTED'
             )
         )
+
+    def __init__(self, uuid: UUID, **kwargs):
+        super(BlockchainTask, self).__init__(**kwargs)
+
+        self.uuid = uuid
 
 class BlockchainTransaction(ModelBase):
     __tablename__ = 'blockchain_transaction'
