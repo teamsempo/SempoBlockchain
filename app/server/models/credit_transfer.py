@@ -163,8 +163,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             dependent_on_tasks=
             list(filter(lambda x: x is not None,
                         [
-                            sender_approval.eth_send_task_id, sender_approval.approval_task_id,
-                            recipient_approval.eth_send_task_id, recipient_approval.approval_task_id
+                            sender_approval.eth_send_task_uuid, sender_approval.approval_task_uuid,
+                            recipient_approval.eth_send_task_uuid, recipient_approval.approval_task_uuid
                         ]))
         )
 
