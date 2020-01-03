@@ -2,6 +2,7 @@ import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
@@ -259,6 +260,7 @@ class User(ManyOrgBase, ModelBase):
             self._held_roles.pop(role, None)
         else:
             self._held_roles[role] = tier
+            flag_modified(self, '_held_roles')
 
     @hybrid_property
     def has_admin_role(self):
