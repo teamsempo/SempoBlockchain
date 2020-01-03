@@ -26,10 +26,10 @@ def topup_wallets():
     for wallet in wallets:
         if (wallet.wei_topup_threshold or 0) > 0:
 
-            last_topup_task_id = wallet.last_topup_task_id
+            last_topup_task_uuid = wallet.last_topup_task_uuid
 
-            if last_topup_task_id:
-                task = persistence_interface.get_task_from_uuid(last_topup_task_id)
+            if last_topup_task_uuid:
+                task = persistence_interface.get_task_from_uuid(last_topup_task_uuid)
 
                 if task.status in ['PENDING', 'UNSTARTED']:
                     return

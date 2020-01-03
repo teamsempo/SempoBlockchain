@@ -31,6 +31,7 @@ class ModelBase(Base):
     created = Column(DateTime, default=datetime.datetime.utcnow)
     updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
+
 class BlockchainWallet(ModelBase):
     __tablename__ = 'blockchain_wallet'
 
@@ -39,7 +40,7 @@ class BlockchainWallet(ModelBase):
 
     wei_target_balance    = Column(BigInteger())
     wei_topup_threshold   = Column(BigInteger())
-    last_topup_task_id    = Column(String())
+    last_topup_task_uuid    = Column(String())
 
     tasks = relationship('BlockchainTask',
                          backref='signing_wallet',

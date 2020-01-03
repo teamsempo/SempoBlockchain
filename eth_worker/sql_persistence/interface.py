@@ -299,6 +299,10 @@ class SQLPersistenceInterface(object):
     def get_serialised_task_from_uuid(self, uuid):
         task = self.get_task_from_uuid(uuid)
 
+        if task is None:
+            ttt = 4
+            return None
+
         base_data = {
             'id': task.id,
             'status': task.status,
@@ -385,7 +389,7 @@ class SQLPersistenceInterface(object):
 
     def set_wallet_last_topup_task_uuid(self, wallet_address, task_uuid):
         wallet = self.get_wallet_by_address(wallet_address)
-        wallet.last_topup_task_id = task_uuid
+        wallet.last_topup_task_uuid = task_uuid
 
         session.commit()
 
