@@ -75,11 +75,11 @@ class BlockchainTasker(object):
 
         return self._execute_task(signature)
 
-    def get_blockchain_task(self, task_id):
+    def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task
 
-        :param task_id: id of the blockchain
+        :param task_uuid: uuid of the blockchain
         :return: Serialised Task Dictionary:
         {
             status: enum, one of 'SUCCESS', 'PENDING', 'UNSTARTED', 'FAILED', 'UNKNOWN'
@@ -88,7 +88,7 @@ class BlockchainTasker(object):
         """
 
         sig = celery_app.signature(self._eth_endpoint('get_task'),
-                                   kwargs={'task_id': task_id})
+                                   kwargs={'task_uuid': task_uuid})
 
         return self._execute_synchronous_celery(sig)
 

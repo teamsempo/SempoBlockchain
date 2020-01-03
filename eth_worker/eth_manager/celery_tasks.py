@@ -104,7 +104,8 @@ def transact_with_contract_function(self, contract_address, function,  abi_type=
                                     signing_address=None, encrypted_private_key=None,
                                     gas_limit=None, dependent_on_tasks=None):
 
-    return blockchain_processor.transact_with_contract_function(contract_address, abi_type, function, args, kwargs,
+    return blockchain_processor.transact_with_contract_function(self.request.id,
+                                                                contract_address, abi_type, function, args, kwargs,
                                                                 signing_address, encrypted_private_key,
                                                                 gas_limit, dependent_on_tasks)
 
@@ -114,7 +115,8 @@ def deploy_contract(self, contract_name, args=None, kwargs=None,
                     signing_address=None, encrypted_private_key=None,
                     gas_limit=None, dependent_on_tasks=None):
 
-    return blockchain_processor.deploy_contract(contract_name, args, kwargs,
+    return blockchain_processor.deploy_contract(self.request.id,
+                                                contract_name, args, kwargs,
                                                 signing_address, encrypted_private_key,
                                                 gas_limit, dependent_on_tasks)
 
@@ -124,7 +126,8 @@ def send_eth(self, amount_wei, recipient_address,
              signing_address=None, encrypted_private_key=None,
              dependent_on_tasks=None):
 
-    return blockchain_processor.send_eth(amount_wei, recipient_address,
+    return blockchain_processor.send_eth(self.request.id,
+                                         amount_wei, recipient_address,
                                          signing_address, encrypted_private_key,
                                          dependent_on_tasks)
 

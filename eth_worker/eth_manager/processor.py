@@ -12,9 +12,11 @@ import config
 from eth_manager.exceptions import PreBlockchainError
 from eth_manager import utils
 from eth_manager.contract_registry import ContractRegistry
-from types import UUIDList, UUID
+from sempo_types import UUIDList, UUID
+
 
 class TransactionProcessor(object):
+
 
     def private_key_to_address(self, private_key):
 

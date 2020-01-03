@@ -257,18 +257,18 @@ class Setup(object):
 
 if __name__ == '__main__':
 
-    s = Setup(
-        api_host='https://dev.withsempo.com/api/v1/',
-        api_token=
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzcxODU3NzQsImlhdCI6MTU3NjU4MDk3NCwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.CGrSHCUcpJlGq3sBgim7omwTBZAx-v0N3AAUurlkqhI|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjI0Mzk2MDQxMjYsImlhdCI6MTU3NTY5MDQ5NiwiaWQiOjJ9.WaSdLvU5aGxLmNo5uZV0_PmV7LOTymeBBxOymy0Er7U'
-    )
-
     # s = Setup(
-    #     api_host='http://0.0.0.0:9000/api/v1/',
+    #     api_host='https://dev.withsempo.com/api/v1/',
     #     api_token=
-    #     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzcxNjc3MDgsImlhdCI6MTU3NjU2MjkwOCwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.S1dMa668pSLkbNAYzgWOC6Td-E84xgDxEg5ilinKiGI|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzYyMTEzMDIsImlhdCI6MTU3NjEyNDg3MiwiaWQiOjZ9.zkEUtwMgOSrcLy68Rtv_JeMCj9HrsOyQUfH3Dc3itYE'
+    #     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzcxODU3NzQsImlhdCI6MTU3NjU4MDk3NCwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.CGrSHCUcpJlGq3sBgim7omwTBZAx-v0N3AAUurlkqhI|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjI0Mzk2MDQxMjYsImlhdCI6MTU3NTY5MDQ5NiwiaWQiOjJ9.WaSdLvU5aGxLmNo5uZV0_PmV7LOTymeBBxOymy0Er7U'
     # )
-    # #
+
+    s = Setup(
+        api_host='http://0.0.0.0:9000/api/v1/',
+        api_token=
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1Nzg2MjE3MzIsImlhdCI6MTU3ODAxNjkzMiwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.-Luhouipdrtw2mSFTSzlUR3CB5FWPGMLyZP2k6cv2b4|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzYyMTEzMDIsImlhdCI6MTU3NjEyNDg3MiwiaWQiOjZ9.zkEUtwMgOSrcLy68Rtv_JeMCj9HrsOyQUfH3Dc3itYE'
+    )
+    #
 
 
     # s.bind_user_to_organsation_as_admin(6, 1)
@@ -276,12 +276,12 @@ if __name__ == '__main__':
     # s.bind_user_to_organsation_as_admin(6, 3)
 
 
-    # reserve_token_id = s.create_reserve_token(
-    #     name='Kenyan Shilling',
-    #     symbol='Ksh',
-    #     fund_amount_wei=int(1000e18)
-    # )
-    reserve_token_id = 1
+    reserve_token_id = s.create_reserve_token(
+        name='Kenyan Shilling',
+        symbol='Ksh',
+        fund_amount_wei=int(1000e18)
+    )
+    # reserve_token_id = 1
 
     exchange_contract_id = s.create_exchange_contract(reserve_token_id)
     # exchange_contract_id = 4

@@ -12,7 +12,7 @@ class SchemaBase(Schema):
 
 class BlockchainTaskableSchemaBase(SchemaBase):
 
-    blockchain_task_id  = fields.Int(dump_only=True)
+    blockchain_task_uuid  = fields.Int(dump_only=True)
     blockchain_status   = fields.Function(lambda obj: obj.blockchain_status)
 
 class UserSchema(SchemaBase):

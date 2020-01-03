@@ -211,7 +211,7 @@ class Exchange(BlockchainTaskableBase):
 
         self.exchange_rate = to_amount/from_amount
 
-        task_id = bt.make_liquid_token_exchange(
+        task_uuid = bt.make_liquid_token_exchange(
             signing_address=signing_address,
             exchange_contract=exchange_contract,
             from_token=from_token,
@@ -231,9 +231,9 @@ class Exchange(BlockchainTaskableBase):
 
         db.session.add(self.to_transfer)
 
-        self.blockchain_task_id = task_id
-        self.from_transfer.blockchain_task_id = task_id
-        self.to_transfer.blockchain_task_id = task_id
+        self.blockchain_task_uuid = task_uuid
+        self.from_transfer.blockchain_task_uuid = task_uuid
+        self.to_transfer.blockchain_task_uuid = task_uuid
 
         self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
         self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)

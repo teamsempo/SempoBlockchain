@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy import and_, or_
 
-from types import UUID
+from sempo_types import UUID
 
 from sql_persistence.models import (
     session,

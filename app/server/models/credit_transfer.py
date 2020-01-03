@@ -154,7 +154,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         # TODO: swap to app generated task id so that app doesnt crash when blockchain taskers are down
 
-        self.blockchain_task_id = bt.make_token_transfer(
+        self.blockchain_task_uuid = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,
