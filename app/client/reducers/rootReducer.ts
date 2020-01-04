@@ -7,9 +7,7 @@ import {
   activate,
   requestResetEmailState,
   resetPasswordState,
-  userList,
-  updateUserRequest,
-  inviteUserRequest,
+  adminUsers,
   validateTFA
 } from './authReducer'
 import { spreadsheetUpload, datasetSave, datasetList } from './spreadsheetReducer'
@@ -32,9 +30,7 @@ const appReducer = combineReducers({
   requestResetEmailState,
   resetPasswordState,
   validateTFA,
-  userList,
-  updateUserRequest,
-  inviteUserRequest,
+  adminUsers,
   spreadsheetUpload,
   datasetSave,
   datasetList,

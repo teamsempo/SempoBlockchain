@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 import AuthModule from '../../auth/authModule.jsx'
 import ResetPasswordForm from "../../auth/resetPasswordForm.jsx"
-import UserList from '../../adminUserList.jsx'
+import UserList from '../../adminUser/adminUserList.jsx'
 import KoboCredentials from "../../koboCredentials.jsx"
 import GetVerified from "../../GetVerified.jsx"
 import CustomerSupport from "../../customerSupport.jsx";

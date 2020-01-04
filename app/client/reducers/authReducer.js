@@ -1,3 +1,6 @@
+import { combineReducers } from 'redux';
+import {DEEEEEEP} from "../utils";
+
 export const REAUTH_REQUEST = 'REAUTH_REQUEST';
 
 export const UPDATE_ACTIVE_ORG = 'UPDATE_ACTIVE_ORG';
@@ -24,13 +27,14 @@ export const RESET_PASSWORD_REQUEST = 'RESET_PASSWORD_REQUEST';
 export const RESET_PASSWORD_SUCCESS = 'RESET_PASSWORD_SUCCESS';
 export const RESET_PASSWORD_FAILURE = 'RESET_PASSWORD_FAILURE';
 
-export const USER_LIST_REQUEST = 'USER_LIST_REQUEST';
-export const USER_LIST_SUCCESS = 'USER_LIST_SUCCESS';
-export const USER_LIST_FAILURE = 'USER_LIST_FAILURE';
+export const UPDATE_ADMIN_USER_LIST = 'UPDATE_ADMIN_USER_LIST';
+export const LOAD_ADMIN_USER_REQUEST = 'LOAD_ADMIN_USER_REQUEST';
+export const LOAD_ADMIN_USER_SUCCESS = 'LOAD_ADMIN_USER_SUCCESS';
+export const LOAD_ADMIN_USER_FAILURE = 'LOAD_ADMIN_USER_FAILURE';
 
-export const UPDATE_USER_REQUEST = 'UPDATE_USER_REQUEST';
-export const UPDATE_USER_SUCCESS = 'UPDATE_USER_SUCCESS';
-export const UPDATE_USER_FAILURE = 'UPDATE_USER_FAILURE';
+export const EDIT_ADMIN_USER_REQUEST = 'EDIT_ADMIN_USER_REQUEST';
+export const EDIT_ADMIN_USER_SUCCESS = 'EDIT_ADMIN_USER_SUCCESS';
+export const EDIT_ADMIN_USER_FAILURE = 'EDIT_ADMIN_USER_FAILURE';
 
 export const INVITE_USER_REQUEST = 'INVITE_USER_REQUEST';
 export const INVITE_USER_SUCCESS = 'INVITE_USER_SUCCESS';
@@ -186,62 +190,89 @@ export const resetPasswordState = (state = inititialResetPasswordState, action) 
   }
 };
 
-const initialUserListState = {
-  isRequesting: false,
-  success: false,
-  error: null
-};
+// ---- ADMIN USER LIST ----
 
-export const userList = (state = initialUserListState, action) => {
+const byId = (state = {}, action) => {
   switch (action.type) {
-    case USER_LIST_REQUEST:
-      return {...state, isRequesting: true};
-    case USER_LIST_SUCCESS:
-      return {...state, isRequesting: false, success: true, userList: action.load_result.admin_list,};
-    case USER_LIST_FAILURE:
-      return {...state, isRequesting: false, success: false, error: action.error || 'unknown error'};
+    case UPDATE_ADMIN_USER_LIST:
+      return DEEEEEEP(state, action.admins);
+
     default:
       return state;
   }
 };
 
-export const initialUpdateUserState = {
+const initialLoadStatusState = {
+  isRequesting: false,
+  error: null,
+  success: false
+};
+
+const loadStatus = (state = initialLoadStatusState, action) => {
+  switch (action.type) {
+    case LOAD_ADMIN_USER_REQUEST:
+      return {...state, isRequesting: true};
+
+    case LOAD_ADMIN_USER_SUCCESS:
+      return {...state, isRequesting: false, success: true};
+
+    case LOAD_ADMIN_USER_FAILURE:
+      return {...state, isRequesting: false, error: action.error};
+
+    default:
+      return state;
+  }
+};
+
+
+const initialEditStatusState = {
+  isRequesting: false,
+  error: null,
+  success: false
+};
+
+const editStatus = (state = initialEditStatusState, action) => {
+  switch (action.type) {
+    case EDIT_ADMIN_USER_REQUEST:
+      return {...state, isRequesting: true};
+
+    case EDIT_ADMIN_USER_SUCCESS:
+      return {...state, isRequesting: false, success: true};
+
+    case EDIT_ADMIN_USER_FAILURE:
+      return {...state, isRequesting: false, error: action.error};
+
+    default:
+      return state;
+  }
+};
+
+export const initialCreateStatusState = {
     isRequesting: false,
     success: false,
     error: null,
 };
 
-export const updateUserRequest = (state = initialUpdateUserState, action) => {
-    switch (action.type) {
-        case UPDATE_USER_REQUEST:
-            return {...state, isRequesting: true, error: null, success: false};
-        case UPDATE_USER_SUCCESS:
-            return {...state, isRequesting: false, success: true};
-        case UPDATE_USER_FAILURE:
-            return {...state, isRequesting: false, error: action.error || 'unknown error'};
-        default:
-            return state;
-    }
-};
-
-export const initialInviteUserState = {
-    isRequesting: false,
-    success: false,
-    error: null,
-};
-
-export const inviteUserRequest = (state = initialInviteUserState, action) => {
+export const createStatus = (state = initialCreateStatusState, action) => {
     switch (action.type) {
         case INVITE_USER_REQUEST:
-            return {...state, isRequesting: true, error: null, success: false};
+            return {...state, isRequesting: true};
         case INVITE_USER_SUCCESS:
             return {...state, isRequesting: false, success: true};
         case INVITE_USER_FAILURE:
-            return {...state, isRequesting: false, error: action.error || 'unknown error'};
+            return {...state, isRequesting: false, error: action.error};
         default:
             return state;
     }
 };
+
+export const adminUsers = combineReducers({
+    byId,
+    loadStatus,
+    editStatus,
+    createStatus,
+});
+
 
 export const initialValidateTFAstate = {
     isRequesting: false,
@@ -354,13 +385,13 @@ export const resetPassword = payload => (
 
 export const loadUserList = () => (
   {
-    type: USER_LIST_REQUEST,
+    type: LOAD_ADMIN_USER_REQUEST,
   }
 );
 
 export const updateUser = (payload) => (
   {
-    type: UPDATE_USER_REQUEST,
+    type: EDIT_ADMIN_USER_REQUEST,
     payload
   }
 );
