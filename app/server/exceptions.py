@@ -1,3 +1,10 @@
+class TransferLimitCreationError(Exception):
+    """
+    Raise if a TransferLimit is initialized with incorrect variables
+    """
+    pass
+
+
 class AccountLimitError(Exception):
     """
     Raise if account LIMITS have been reached when transfer is attempted
