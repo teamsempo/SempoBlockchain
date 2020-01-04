@@ -98,7 +98,12 @@ class TokenProcessor(object):
         if len(limits) == 0:
             return None
         else:
-            ge_limit = [limit for limit in limits if 'GE Liquid Token' in limit.name]  #should only ever be one ge limit
+            # should only ever be one ge limit
+            ge_limit = [limit for limit in limits if 'GE Liquid Token' in limit.name]
+
+            lowest_limit = None
+            lowest_amount_avail = 0
+
             for limit in limits:
                 if 'GE Liquid Token' not in limit.name:
                     transaction_volume = limit.apply_all_filters(
@@ -107,9 +112,14 @@ class TokenProcessor(object):
                     ).execution_options(show_all=True).first().total
 
                     amount_avail = limit.total_amount - (transaction_volume or 0)
-                    if amount_avail < (ge_limit[0].transfer_balance_fraction * transfer_account.balance):
-                        return limit
-            return ge_limit[0]
+                    if amount_avail < (ge_limit[0].transfer_balance_fraction * transfer_account.balance)\
+                            and amount_avail < lowest_amount_avail:
+                        lowest_limit = limit
+
+            if lowest_limit:
+                return lowest_limit
+            else:
+                return ge_limit[0]
 
     @staticmethod
     def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
