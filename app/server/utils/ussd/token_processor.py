@@ -102,7 +102,7 @@ class TokenProcessor(object):
             ge_limit = [limit for limit in limits if 'GE Liquid Token' in limit.name]
 
             lowest_limit = None
-            lowest_amount_avail = 0
+            lowest_amount_avail = float('inf')
 
             for limit in limits:
                 if 'GE Liquid Token' not in limit.name:
@@ -115,6 +115,7 @@ class TokenProcessor(object):
                     if amount_avail < (ge_limit[0].transfer_balance_fraction * transfer_account.balance)\
                             and amount_avail < lowest_amount_avail:
                         lowest_limit = limit
+                        lowest_amount_avail = amount_avail
 
             if lowest_limit:
                 return lowest_limit
