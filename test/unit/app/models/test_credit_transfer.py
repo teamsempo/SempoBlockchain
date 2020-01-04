@@ -37,6 +37,7 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
     assert create_credit_transfer.resolution_message is not None
 
 
+# TODO: split this out for proper unit test
 def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer):
     """
     GIVEN a CreditTransfer model
@@ -92,7 +93,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: WD' in limit.name
+        if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
 
     # Check additional GE LIMITS for Liquid Token and Group Account (payment, Agent Out Subtype)
@@ -103,22 +104,18 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.sender_transfer_account.balance = 10000
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
-        if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: WD' in limit.name
+        if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
 
+
+def test_new_credit_transfer_check_sender_transfer_limits_for_exchange(create_credit_transfer):
     # Check Limits skipped if no sender user (exchange)
     create_credit_transfer.sender_user = None
     create_credit_transfer.transfer_type = TransferTypeEnum.EXCHANGE
     assert create_credit_transfer.check_sender_transfer_limits() is None
 
 
-def test_new_credit_transfer_check_sender_transfer_limits_exception(external_reserve_token, create_credit_transfer):
-    """
-    GIVEN a CreditTransfer model
-    WHEN a new credit transfer is created
-    THEN check the correct check_sender_transfer_limits raises AccountLimitError
-    """
-    from server.utils.transfer_limits import LIMITS
+def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(external_reserve_token, create_credit_transfer):
     from server.models import credit_transfer, token
     from server import db
 
@@ -139,10 +136,20 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
         c.resolve_as_completed()
         db.session.flush()
 
+
+def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(create_credit_transfer):
+    from server.models import token
+
+    create_credit_transfer.token.token_type = token.TokenType.RESERVE
+    create_credit_transfer.sender_user.kyc_applications = []
+
     # Sempo Level 0 LIMITS (payment only) on check LIMITS
     with pytest.raises(AccountLimitError):
         create_credit_transfer.check_sender_transfer_limits()
 
+
+def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_withdrawal(create_credit_transfer):
+    from server.models import token
     # Check GE LIMITS for Liquid Token (withdrawal) on check LIMITS
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
     create_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
@@ -150,9 +157,14 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception(external_res
     with pytest.raises(AccountLimitError):
         create_credit_transfer.check_sender_transfer_limits()
 
+
+def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_agent_out(create_credit_transfer):
+    from server.models import token
     # Check GE LIMITS for Liquid Token (payment, agent_out subtype) on check LIMITS
     create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    create_credit_transfer.token.token_type = token.TokenType.LIQUID
     create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     create_credit_transfer.sender_transfer_account.balance = 1000
     with pytest.raises(AccountLimitError):
         create_credit_transfer.check_sender_transfer_limits()
+
