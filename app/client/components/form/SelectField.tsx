@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react'
 import {Field} from 'redux-form'
 
 import {WrappedInput} from './WrappedInput'
@@ -9,14 +9,15 @@ interface SelectFieldJson {
   name: string,
   options: ({name: string, value: string} | string)[],
   label?: string,
-  isRequired?: boolean
+  isRequired?: boolean,
+  hideNoneOption?: boolean,
 }
 
 const SelectInput = (props: SelectFieldJson & {input: any}) => {
-  const {name, input, options} = props;
+  const {name, input, options, hideNoneOption} = props;
 
   const field = <select className={styles.select} value={input.value} name={name} {...input}>
-    <option value="" key="default"></option>
+    {hideNoneOption ? null : <option value="" key="default"></option>}
     {
       options.map((option) => {
         if (typeof option === "string") {
@@ -34,7 +35,7 @@ const SelectInput = (props: SelectFieldJson & {input: any}) => {
 };
 
 export default function SelectField(props: SelectFieldJson) {
-  const { label, name, options, isRequired} = props;
+  const { label, name, options, isRequired, hideNoneOption} = props;
 
   let validate = [];
   if (isRequired) {
@@ -48,5 +49,6 @@ export default function SelectField(props: SelectFieldJson) {
     options={options}
     validate={validate}
     isRequired={isRequired}
+    hideNoneOption={hideNoneOption}
   />
 }

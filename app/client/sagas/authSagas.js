@@ -89,6 +89,7 @@ function createLoginSuccessObject(token) {
     organisationName: token.active_organisation_name,
     organisationId: token.active_organisation_id,
     organisations: token.organisations,
+    requireTransferCardExists: token.require_transfer_card_exists
   }
 }
 

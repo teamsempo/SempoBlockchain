@@ -35,6 +35,10 @@ def single_account(account_id):
 def single_user(user_id):
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
+@index_view.route('/users/<user_id>/verification')
+def single_user_verification(user_id):
+    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
+
 @index_view.route('/upload')
 def upload():
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())

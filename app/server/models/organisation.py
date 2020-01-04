@@ -65,6 +65,9 @@ class Organisation(ModelBase):
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
 
+    kyc_applications = db.relationship('KycApplication', backref='organisation',
+                                       lazy=True, foreign_keys='KycApplication.organisation_id')
+
     custom_welcome_message_key = db.Column(db.String)
 
     @staticmethod

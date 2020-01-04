@@ -1,7 +1,7 @@
-import React from "react";
+import * as React from "react";
 import {connect} from "react-redux";
 
-import {reduxForm, InjectedFormProps, formValueSelector} from "redux-form";
+import {reduxForm, InjectedFormProps, formValueSelector, FormSection} from "redux-form";
 import QrReadingModal from "../qrReadingModal";
 import {ErrorMessage, ModuleHeader} from "../styledElements";
 import AsyncButton from "../AsyncButton";
@@ -9,6 +9,7 @@ import InputField from '../form/InputField'
 import SelectField from '../form/SelectField'
 import {TransferUsage} from "../../reducers/transferUsage/types";
 import {Organisation} from "../../reducers/organisation/types";
+import {TransferAccountTypes} from "../transferAccount/types";
 
 export interface ICreateUser {
   firstName?: string
@@ -20,16 +21,31 @@ export interface ICreateUser {
   gender?: string
   location?: string
   businessUsage?: string
-  usageOtherSpecific?: string
+  usageOtherSpecific?: string,
+  accountType: any[TransferAccountTypes],
 }
 
+export interface ICreateVendor {
+  firstName?: string
+  lastName?: string
+  publicSerialNumber?: string
+  phone?: string
+  isCashierAccount?: boolean
+  existingVendorPhone?: string
+  existingVendorPin?: string
+  location?: string
+  transferAccountName?: string
+}
+
+export type ICreateUserUpdate = ICreateUser & ICreateVendor
+
 interface OuterProps {
-  transferAccountType: string
   users: any
   transferUsages: TransferUsage[]
 }
 
 interface StateProps {
+  accountType: any[TransferAccountTypes],
   businessUsageValue?: string
   organisation: Organisation | null
 }
@@ -47,6 +63,10 @@ const validate = (values: ICreateUser) => {
 };
 
 class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Props> & Props> {
+  componentDidMount() {
+    this.props.initialize({ accountType: TransferAccountTypes.USER.toLowerCase(), gender: 'female' });
+  }
+
   setSerialNumber(data: string) {
     const cleanedData = data.replace(/^\s+|\s+$/g, '');
     this.props.change('publicSerialNumber', cleanedData);
@@ -67,7 +87,10 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
   }
 
   render() {
-    const {organisation, businessUsageValue, transferUsages, transferAccountType} = this.props;
+    const {organisation, businessUsageValue, transferUsages, accountType} = this.props;
+
+    let accountTypes = Object.keys(TransferAccountTypes);
+    let selectedAccountTypeForm;
     let initialDisbursementAmount;
     let businessUsage;
 
@@ -87,30 +110,72 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
       }
     }
 
+    if (accountType === TransferAccountTypes.USER.toLowerCase()) {
+    //  USER
+      selectedAccountTypeForm =
+        <>
+        {businessUsage}
+        {initialDisbursementAmount}
+        </>
+
+    } else if (accountType === TransferAccountTypes.CASHIER.toLowerCase()) {
+    //  CASHIER
+      selectedAccountTypeForm =
+        <div>
+          <div>
+            To create a cashier account, enter the <strong>vendor's</strong> phone and pin.
+          </div>
+          <InputField name="existingVendorPhone" label={'Vendor Phone Number'} />
+          <InputField name="existingVendorPin" type="password" label={'Vendor PIN'} />
+        </div>
+
+    } else if (accountType === TransferAccountTypes.VENDOR.toLowerCase()) {
+    //  VENDOR
+      selectedAccountTypeForm =
+        <div>
+          <InputField name="transferAccountName" label={'Store Name'} />
+          <InputField name="location" label={'Address'} />
+        </div>
+
+    } else if (accountType === TransferAccountTypes.TOKENAGENT.toLowerCase()) {
+    //  SUPERVENDOR
+      selectedAccountTypeForm =
+        <>
+        </>
+
+    }
+
     return (
       <div>
-        <ModuleHeader>Create a {transferAccountType} account</ModuleHeader>
+        <ModuleHeader>Create a {accountType} account</ModuleHeader>
 
         <div style={{padding: '1em'}}>
           <form onSubmit={this.props.handleSubmit}>
+
+            <SelectField name="accountType" label={'Account Type'} options={accountTypes} hideNoneOption={true}/>
+
             <InputField name="publicSerialNumber" label={'ID Number'}>
+              {/*
+                // @ts-ignore */}
               <QrReadingModal
                 updateData={ (data: string) =>  this.setSerialNumber(data) }
               />
             </InputField> <span>or</span>
             <InputField name="phone" label={'Phone Number'} isPhoneNumber />
+
             <InputField name="firstName" label='Given Name(s)' isRequired />
             <InputField name="lastName" label='Family/Surname' />
             <InputField name="bio" label='Directory Entry' />
             <InputField name="location" label='Location' />
-            <SelectField name="gender" label='Gender' options={["Male", "Female", "Other"]} />
+            <SelectField name="gender" label='Gender' options={["Female", "Male", "Other"]} />
 
-            {businessUsage}
-            {initialDisbursementAmount}
+            {selectedAccountTypeForm}
 
             <ErrorMessage>
               {this.props.users.createStatus.error}
             </ErrorMessage>
+            {/*
+                // @ts-ignore */}
             <AsyncButton
               type="submit"
               isLoading={this.props.users.createStatus.isRequesting}
@@ -125,7 +190,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
 }
 
 // TODO: can't figure out the typing here...
-const CreateUserReduxForm = reduxForm({
+const CreateUserFormReduxForm = reduxForm({
   form: 'createUser',
   validate
 // @ts-ignore
@@ -134,10 +199,11 @@ const CreateUserReduxForm = reduxForm({
 export default connect(state => {
   const selector = formValueSelector('createUser');
   return {
+    accountType: selector(state, 'accountType'),
     businessUsageValue: selector(state, 'businessUsage'),
     // @ts-ignore
     organisation: state.organisation.data
   }
 // @ts-ignore
-})(CreateUserReduxForm);
+})(CreateUserFormReduxForm);
 
