@@ -46,65 +46,71 @@ class NewTransferManager extends React.Component {
   }
 
   createNewTransfer() {
-      if (this.state.transfer_amount > 0) {
-          var transfer_type = this.state.create_transfer_type;
+    let confirmTransferString;
+    let is_bulk = false;
+    let recipient_transfer_accounts_ids = this.props.transfer_account_ids;
+    let transfer_type = this.state.create_transfer_type;
+    let recipient_transfer_account_id = null;
+    let sender_transfer_account_id = null;
+    let transfer_amount = null;
+    let target_balance = null;
 
-          var recipient_transfer_account_id = null;
-          var sender_transfer_account_id = null;
-          var transfer_amount = null;
-          var target_balance = null;
+    if (this.state.transfer_amount > 0) {
+      if (this.props.transfer_account_ids.length > 1) {
+        // BULK TRANSFER
+        is_bulk = true;
 
-          if (this.props.transfer_account_ids.length > 1) {
-              // BULK TRANSFER
-              var is_bulk = true;
-              var recipient_transfer_accounts_ids = this.props.transfer_account_ids;
+        if (transfer_type === 'DISBURSEMENT') {
+            transfer_amount = this.state.transfer_amount * 100;
+        }
 
-              if (transfer_type === 'DISBURSEMENT') {
-                  transfer_amount = this.state.transfer_amount * 100;
-              }
+        if (transfer_type === 'BALANCE') {
+            target_balance = this.state.transfer_amount * 100;
+        }
 
-              if (transfer_type === 'BALANCE') {
-                  target_balance = this.state.transfer_amount * 100;
-              }
+        if (transfer_type === 'RECLAMATION') {
+            transfer_amount = this.state.transfer_amount * 100;
+        }
 
-              if (transfer_type === 'RECLAMATION') {
-                  transfer_amount = this.state.transfer_amount * 100;
-              }
+        confirmTransferString = `Are you sure you wish to make a ${transfer_type}`
+          + (transfer_amount ? ` of ${transfer_amount/100} ${window.CURRENCY_NAME}` : ` set of ${target_balance/100} ${window.CURRENCY_NAME}`) + ` to ${recipient_transfer_accounts_ids.length} users? IDs [${recipient_transfer_accounts_ids}]`;
 
-              this.props.createTransferRequest({
-                  is_bulk,
-                  recipient_transfer_accounts_ids,
-                  transfer_amount,
-                  target_balance,
-                  transfer_type,
-              });
+        window.confirm(confirmTransferString) && this.props.createTransferRequest({
+            is_bulk,
+            recipient_transfer_accounts_ids,
+            transfer_amount,
+            target_balance,
+            transfer_type,
+        });
+      } else {
+        // SINGLE TRANSFER
+        if (transfer_type === 'DISBURSEMENT') {
+            recipient_transfer_account_id = recipient_transfer_accounts_ids[0];
+            transfer_amount = this.state.transfer_amount * 100;
+        }
 
-          } else {
-              // SINGLE TRANSFER
-              if (transfer_type === 'DISBURSEMENT') {
-                  recipient_transfer_account_id = this.props.transfer_account_ids[0];
-                  transfer_amount = this.state.transfer_amount * 100;
-              }
+        if (transfer_type === 'RECLAMATION') {
+            sender_transfer_account_id = recipient_transfer_accounts_ids[0];
+            transfer_amount = this.state.transfer_amount * 100;
+        }
 
-              if (transfer_type === 'RECLAMATION') {
-                  sender_transfer_account_id = this.props.transfer_account_ids[0];
-                  transfer_amount = this.state.transfer_amount * 100;
-              }
+        if (transfer_type === 'BALANCE') {
+            recipient_transfer_account_id = recipient_transfer_accounts_ids[0];
+            target_balance = this.state.transfer_amount * 100;
+        }
 
-              if (transfer_type === 'BALANCE') {
-                  recipient_transfer_account_id = this.props.transfer_account_ids[0];
-                  target_balance = this.state.transfer_amount * 100;
-              }
+        confirmTransferString = `Are you sure you wish to make a ${transfer_type}`
+          + (transfer_amount ? ` of ${transfer_amount/100} ${window.CURRENCY_NAME}` : ` set of ${target_balance/100} ${window.CURRENCY_NAME}`) + ` to 1 user? ID [${recipient_transfer_accounts_ids}]`;
 
-              this.props.createTransferRequest({
-                  recipient_transfer_account_id,
-                  sender_transfer_account_id,
-                  transfer_amount,
-                  target_balance,
-                  transfer_type,
-              });
-          }
+        window.confirm(confirmTransferString) && this.props.createTransferRequest({
+            recipient_transfer_account_id,
+            sender_transfer_account_id,
+            transfer_amount,
+            target_balance,
+            transfer_type,
+        });
       }
+    }
   }
 
   render() {
