@@ -4,6 +4,8 @@ from toolz import curry, pipe
 from sqlalchemy import or_
 from sqlalchemy.orm import Query
 
+from server.exceptions import TransferLimitCreationError
+
 from server.models import token
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum
@@ -202,6 +204,9 @@ class TransferLimit(object):
         self.transfer_count = transfer_count
         self.transfer_filter = transfer_filter
         self.transfer_balance_fraction = transfer_balance_fraction
+
+        if transfer_balance_fraction and total_amount:
+            raise TransferLimitCreationError('Cannot have transfer_balance_fraction and total_amount')
 
 
 LIMITS = [
