@@ -66,6 +66,8 @@ class UserAPI(MethodView):
 
         if user_id:
             user = User.query.get(user_id)
+            #
+            # user.cashout_authorised()
 
             if user is None:
                 response_object = {
@@ -119,7 +121,7 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()

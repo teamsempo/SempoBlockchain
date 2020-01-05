@@ -15,7 +15,7 @@
                             <mask id="mask-2" fill="white">
                                 <use xlink:href="#path-1"></use>
                             </mask>
-                            <use id="Mask" fill="#EEF2F6" xlink:href="#path-1"></use>
+                            <use id="Mask" fill="#697680" xlink:href="#path-1"></use>
                             <circle fill="#FFFFFF" mask="url(#mask-2)" cx="22.5" cy="47.5" r="18.5"></circle>
                         </g>
                         <circle id="Oval-2" fill="#FFFFFF" cx="23" cy="18" r="8"></circle>

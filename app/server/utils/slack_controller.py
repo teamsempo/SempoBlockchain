@@ -5,13 +5,24 @@ from server.models.user import User
 from server.utils.namescan import run_namescam_aml_check
 from server.exceptions import NameScanException
 
-import config, slack, json
+import config, slack, json, certifi, ssl
 
 # Slack client for Web API requests
-client = slack.WebClient(token=config.SLACK_API_TOKEN)
+ssl_context = ssl.create_default_context(cafile=certifi.where())
+client = slack.WebClient(token=config.SLACK_API_TOKEN, ssl=ssl_context)
 
 # help-verify channel
 CHANNEL_ID = 'CN1NE0G8P'
+
+
+def send_namescan_error_msg(new_message_blocks, payload, aml_result):
+    new_message_blocks.append(dict(type='context',
+                                   elements=[{"type": 'mrkdwn', "text": ':x: Unknown NameScan error: {}'.format(aml_result)}]))
+    client.chat_update(
+        channel=CHANNEL_ID,
+        ts=payload["state"],
+        blocks=new_message_blocks
+    )
 
 
 def generate_deny_button(user_id):
@@ -54,24 +65,19 @@ def generate_actions(*args):
     return {"type": "actions", "elements": [arg for arg in args]}
 
 
-def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,country=None, type=None, document_type=None, document_front_url=None, document_back_url=None, selfie_url=None):
-    return [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "You have a new verification request:\n*{}*".format(phone)
-        }},
-        {
-            "type": "divider"
-        },
-        {
-            "type": "section",
-            "fields": [{
+def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=None,country=None, type=None, documents=None):
+
+    documents_mrkdwn = [{
+        "type": "mrkdwn",
+        "text": "*{}:*\n<{}|View>".format(document.reference.title(), document.file_url)
+    } for document in documents]
+
+    mrkdwn_fields = [{
                 "type": "mrkdwn",
                 "text": "*First Name:*\n{}".format(first_name)
             }, {
                 "type": "mrkdwn",
-                "text": "*Last Name::*\n{}".format(last_name)
+                "text": "*Last Name:*\n{}".format(last_name)
             }, {
                 "type": "mrkdwn",
                 "text": "*DOB:*\n{}".format(dob)
@@ -84,16 +90,22 @@ def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=N
             }, {
                 "type": "mrkdwn",
                 "text": "*Type:*\n{}".format(type)
-            }, {
-                "type": "mrkdwn",
-                "text": "*{} (front):*\n<{}|View>".format(document_type,document_front_url)
-            }, {
-                "type": "mrkdwn",
-                "text": "*{} (back):*\n<{}|View>".format(document_type,document_back_url)
-            }, {
-                "type": "mrkdwn",
-                "text": "*Selfie:*\n<{}|View>".format(selfie_url)
             }]
+    if len(documents_mrkdwn) > 0:
+        mrkdwn_fields.extend(documents_mrkdwn)
+
+    return [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "You have a new verification request:\n*{}*".format(phone)
+        }},
+        {
+            "type": "divider"
+        },
+        {
+            "type": "section",
+            "fields": mrkdwn_fields
         },
         {
             "type": "divider"
@@ -131,10 +143,7 @@ def generate_populated_message(user_id=None):
         address=kyc_details.street_address,
         country=kyc_details.country,
         type=kyc_details.type,
-        document_type=documents[0].reference,
-        document_front_url=filter_for_url('document_front_base64', documents),
-        document_back_url=filter_for_url('document_back_base64', documents),
-        selfie_url=filter_for_url('selfie_base64', documents),
+        documents=documents
     )
 
 
@@ -256,15 +265,44 @@ def slack_controller(payload):
 
         if "start" in payload['actions'][0]['value']:
             # Show the user details dialog to the user
+
             user_id = payload['actions'][0]['value'].split('-')[1]
-            client.dialog_open(
-                trigger_id=payload["trigger_id"],
-                dialog={
-                    "title": "Verify User",
-                    "submit_label": "Next",
-                    "callback_id": "user_details_form-" + user_id,
-                    "state": payload['message']['ts'],
-                    "elements": [
+            user = get_user_from_id(user_id, payload)
+            documents = user.kyc_applications[0].uploaded_documents
+            doc_types = [document.reference for document in documents]
+            document_validity_mrkdwn = [{
+                    "label": "{} Document Validity".format(doc_type.title()),
+                    "type": "select",
+                    "name": "{}_doc_validity".format(doc_type),
+                    "options": [
+                        {
+                            "label": ":white_check_mark: {} document is valid and non-expired".format(doc_type),
+                            "value": "valid"
+                        },
+                        {
+                            "label": ":x: {} document is not valid or expired".format(doc_type),
+                            "value": "{}_doc_non_valid".format(doc_type)
+                        },
+                        {
+                            "label": ":x: {} document is partial. Important information is covered.".format(doc_type),
+                            "value": "{}_doc_partial".format(doc_type)
+                        },
+                        {
+                            "label": ":x: {} document is damaged.".format(doc_type),
+                            "value": "{}_doc_damaged".format(doc_type)
+                        },
+                        {
+                            "label": ":x: {} document is not in English.".format(doc_type),
+                            "value": "{}_doc_non_english".format(doc_type)
+                        },
+                        {
+                            "label": ":x: {} document or selfie is too blurry".format(doc_type),
+                            "value": "{}_doc_blurry".format(doc_type)
+                        }
+                    ]
+                } for doc_type in doc_types]
+
+            dialog_elements_mrkdwn = [
                         {
                             "label": "ID Validity",
                             "type": "select",
@@ -333,6 +371,18 @@ def slack_controller(payload):
                             "optional": True
                         }
                     ]
+
+            if len(document_validity_mrkdwn) > 0:
+                dialog_elements_mrkdwn.extend(document_validity_mrkdwn)
+
+            client.dialog_open(
+                trigger_id=payload["trigger_id"],
+                dialog={
+                    "title": "Verify User",
+                    "submit_label": "Next",
+                    "callback_id": "user_details_form-" + user_id,
+                    "state": payload['message']['ts'],
+                    "elements": dialog_elements_mrkdwn
                 }
             )
 
@@ -392,17 +442,20 @@ def slack_controller(payload):
         submission = payload['submission']
         kyc = user.kyc_applications[0]  # most recent
 
-        kyc.first_name = submission['first_name']
-        kyc.last_name = submission['last_name']
-        kyc.dob = submission['date_of_birth']
-        kyc.street_address = submission['address']
+        kyc.first_name = submission.get('first_name', kyc.first_name)
+        kyc.last_name = submission.get('last_name', kyc.last_name)
+        kyc.dob = submission.get('date_of_birth', kyc.dob)
+        kyc.street_address = submission.get('address', kyc.street_address)
 
         db.session.flush()  # so that the response message updates user details
 
         message_blocks = generate_populated_message(user_id=user.id)
         new_message_blocks = message_blocks[:len(message_blocks) - 1]
 
-        if payload['submission']['id_validity'] == 'valid':
+        documents = user.kyc_applications[0].uploaded_documents
+        doc_outcomes = [str(payload['submission']['{}_doc_validity'.format(document.reference)]) for document in documents]
+
+        if payload['submission']['id_validity'] == 'valid' or all([doc == 'valid' for doc in doc_outcomes]):
             # Update the message to show that we're in the process of verifying a user
             new_message_blocks.append(dict(type='context', elements=[
                 {"type": 'mrkdwn', "text": ':female-detective: Running AML checks...'}]))
@@ -422,8 +475,13 @@ def slack_controller(payload):
 
             if result.status_code >= 200:
                 aml_result = json.loads(result.text)
-                kyc.namescan_scan_id = aml_result['scan_id']
+                try:
+                    kyc.namescan_scan_id = aml_result['scan_id']
+                except KeyError:
+                    send_namescan_error_msg(new_message_blocks, payload, result)
+                    raise NameScanException('Unknown NameScan error: {}'.format(aml_result))
             else:
+                send_namescan_error_msg(new_message_blocks, payload, result)
                 raise NameScanException('Unknown NameScan error: {}'.format(result))
 
             match_rates = [x['match_rate'] for x in aml_result.get('persons', [])]
@@ -464,11 +522,44 @@ def slack_controller(payload):
                 "selfie_id_non_present": ":x: ID document is not present in selfie image",
                 "selfie_covered": ":x: Part of the face in the selfie image is covered by a hand, ID, anything else"
             }
-            new_message_blocks.append(dict(type='context', elements=[
-                {"type": 'mrkdwn', "text": failure_options[payload['submission']['id_validity']]}]))
+
+            user = get_user_from_id(user_id, payload)
+            documents = user.kyc_applications[0].uploaded_documents
+            doc_types = [doc.reference for doc in documents]
+
+            # adding other failure options
+            [failure_options.update({
+                "{}_doc_non_valid".format(doc_type): ":x: {} document is not valid or expired".format(doc_type),
+                "{}_doc_partial".format(doc_type): ":x: {} document is partial. Important information is covered.".format(doc_type),
+                "{}_doc_damaged".format(doc_type): ":x: {} document is damaged.".format(doc_type),
+                "{}_doc_non_english".format(doc_type): ":x: {} document is not in English.".format(doc_type),
+                "{}_doc_blurry".format(doc_type): ":x: {} document or selfie is too blurry".format(doc_type)}) for doc_type in doc_types]
+
+            # list of all doc outcomes (keys -> failure_options)
+            doc_outcomes = [str(payload['submission']['{}_doc_validity'.format(document.reference)]) for document in documents]
+            doc_outcomes.extend([str(payload['submission']['id_validity'])])
+
+            print(failure_options)
+
+            # standard failure
+            doc_outcomes_mrkdwn = [
+                {"type": 'mrkdwn', "text": failure_options[payload['submission']['id_validity']]}]
+
+            def _filterdoctypes(_doc_types):
+                formatted_mrkdwn = []
+                for doc in doc_types:
+                    outcome = payload['submission']['{}_doc_validity'.format(doc)]
+                    if outcome != 'valid':
+                        formatted_mrkdwn.extend([{"type": 'mrkdwn', "text": failure_options[outcome]}])
+                return formatted_mrkdwn
+
+            # other doc failures
+            doc_outcomes_mrkdwn.extend(_filterdoctypes(doc_types))
+
+            new_message_blocks.append(dict(type='context', elements=doc_outcomes_mrkdwn))
 
             kyc.kyc_status = 'INCOMPLETE'
-            kyc.kyc_actions = [str(payload['submission']['id_validity'])]
+            kyc.kyc_actions = doc_outcomes
 
             if user.phone:
                 message_processor.send_message(to_phone=user.phone,

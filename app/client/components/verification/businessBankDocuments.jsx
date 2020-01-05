@@ -116,7 +116,7 @@ class BusinessBankDocuments extends React.Component {
   render() {
     let { business, uploadState } = this.props;
 
-    if (business.uploaded_documents !== null && business.uploaded_documents.length > 0) {
+    if (business.uploaded_documents && business.uploaded_documents.length > 0) {
       var bankDocuments = this._generateDocumentList(business.uploaded_documents, 'bank');
     } else {
       bankDocuments = null;
@@ -134,13 +134,13 @@ class BusinessBankDocuments extends React.Component {
         </SecondaryText>
         <SecondaryDiv>
           <ul>
-            <li>This bank statement must correspond to the account you'll be using to fund your Wyre account</li>
+            <li>This bank statement must correspond to the account you'll be using to fund your account</li>
             <li>The statement must NOT have a zero balance</li>
             <li>Credit card statements are NOT applicable</li>
             <li>Statement must be from a bank; third-party statements are NOT acceptable</li>
             <li>Statement must be from the last three months, and must show one full month's worth of transaction activity</li>
             <li>Your name and address should match your Personal ID (If they do not match, please also upload a utility bill or leasing/housing contract in order to provide proof of address)</li>
-            <li>If no bank statement is available, please upload a document to provide proof of address, and send a message to our team at team@sempo.ai for help</li>
+            <li>If no bank statement is available, please upload a document to provide proof of address, and send a message to our team at team@withsempo.com for help</li>
           </ul>
         </SecondaryDiv>
 

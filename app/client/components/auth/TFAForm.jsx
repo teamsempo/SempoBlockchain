@@ -1,30 +1,13 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import styled from 'styled-components';
 import QRCode from 'qrcode.react'
 
 import AsyncButton from './../AsyncButton.jsx'
 import TFAValidator from "./TFAValidator.jsx"
 
-import { loginRequest } from '../../reducers/authReducer'
-
-import { Input, StyledButton, ErrorMessage } from './../styledElements'
 import {FooterLink} from "../pages/authPage.jsx";
-import {Link} from "react-router-dom";
 
-const mapStateToProps = (state) => {
-  return {
-    loginState: state.login
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    loginRequest: (payload) => dispatch(loginRequest(payload)),
-  };
-};
-
-export class TFAFormContainer extends React.Component {
+export default class TFAForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -113,6 +96,4 @@ export const ExternalLink = styled.a`
   }
 `;
 
-
-export default connect(mapStateToProps, mapDispatchToProps)(TFAFormContainer);
 

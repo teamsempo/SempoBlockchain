@@ -26,9 +26,6 @@ import notFoundPage from './components/pages/notFoundPage.jsx';
 import MessageBar from './components/messageBar.jsx';
 import ErrorBoundary from './components/errorBoundary.jsx'
 
-// DEPRECATED VENDOR WEB PORTAL
-const deprecatedVendorPage = lazy(() => import("./components/pages/deprecatedVendorPage.jsx"));
-
 import { WrapperDiv, CenterLoadingSideBarActive } from './components/styledElements';
 import {ThemeProvider} from "styled-components";
 import {DefaultTheme} from './components/theme.js'
@@ -61,10 +58,10 @@ class Nav extends React.Component {
               <PrivateRoute exact path={beneficiaryURL} component={transferAccountListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/vendors" component={transferAccountListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/accounts" component={transferAccountListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute path="/accounts/:transferAccountId" component={singleTransferAccountPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute path="/users/:userId" component={singleUserPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
+              <PrivateRoute exact path="/accounts/:transferAccountId" component={singleTransferAccountPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
+              <PrivateRoute exact path="/users/:userId" component={singleUserPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
+              <PrivateRoute exact path="/users/:userId/verification" component={BusinessVerificationPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/transfers" component={creditTransferListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute exact path="/deprecatedVendor" component={deprecatedVendorPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings" component={settingsPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/invite" component={InvitePage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/change-password" component={internalChangePasswordPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
@@ -121,10 +118,10 @@ const PageWrapper = ({noNav, component: Component, ...props}) => {
     )
 };
 
-const PrivateRoute = ({ noNav, isLoggedIn, isReAuthing, component: Component, ...rest }) => (
+const PrivateRoute = ({ noNav, isLoggedIn, isReAuthing, component: Component, ...props, ...rest }) => (
   <Route
     {...rest}
-    render={props =>
+    render={() =>
       isLoggedIn ? (
          <PageWrapper component={Component} noNav={noNav || false} {...props} />
       ) : (isReAuthing ? <LoadingSpinnerWrapper /> :

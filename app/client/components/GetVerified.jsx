@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 
 import {
-  loadBusinessProfile,
+  loadBusinessProfile, RESET_ACTIVE_STEP_STATE, RESET_BUSINESS_VERIFICATION_STATE, UPDATE_ACTIVE_STEP
 } from "../reducers/businessVerificationReducer";
 
 import LoadingSpinner from "./loadingSpinner.jsx";
@@ -17,9 +17,12 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = (dispatch, ownProps) => {
   return {
-    loadBusinessProfile: () => dispatch(loadBusinessProfile()),
+    loadBusinessProfile: (query) => dispatch(loadBusinessProfile({query})),
+    clearUserId: () => dispatch({type: RESET_ACTIVE_STEP_STATE}),
+    clearBusienssState: () => dispatch({type: RESET_BUSINESS_VERIFICATION_STATE}),
+    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0, userId: ownProps.userId})
   };
 };
 
@@ -29,48 +32,26 @@ class GetVerified extends React.Component {
     this.state = {};
   }
 
+  componentWillMount() {
+    const { userId } = this.props;
+    this.props.clearUserId({'userId': userId});
+    this.props.clearBusienssState();
+  }
+
   componentDidMount() {
-    this.props.loadBusinessProfile()
+    const { userId } = this.props;
+    let query;
+    if (userId) {
+      query = {'user_id': userId}
+    }
+    this.props.loadBusinessProfile(query)
   }
 
   render() {
-    let { loadStatus, businessProfile, adminTier } = this.props;
+    let { loadStatus, businessProfile, adminTier, userId } = this.props;
     var iconColor = '#ff1705';
     var text = 'Please contact support.';
     var addFunds = null;
-
-    if (businessProfile.kyc_status !== 'INCOMPLETE' && typeof businessProfile.kyc_status !== 'undefined' && businessProfile.kyc_status !== null) {
-
-      if (businessProfile.kyc_status === 'PENDING') {
-        iconColor = '#FF9800';
-        text = 'Pending.';
-        addFunds = null;
-      }
-
-      if (businessProfile.kyc_status === 'VERIFIED') {
-        iconColor = '#00C759';
-        text = 'Verified.';
-        addFunds = null;
-
-        if (adminTier === 'superadmin' || adminTier === 'admin') {
-          addFunds = <div><br/><Link to='settings/fund-wallet'>Add Funds</Link></div>
-        }
-      }
-
-      return(
-        <div style={{margin: '1em'}}>
-          <StyledAccountWrapper>
-            <StyledHeader>Account Status:</StyledHeader>
-            <StyledContent backgroundColor={iconColor}>{text}</StyledContent>
-            {addFunds}
-          </StyledAccountWrapper>
-        </div>
-      )
-    }
-
-    if (adminTier === 'superadmin') {
-      text = <Link to='settings/verification'>Get Verified</Link>
-    }
 
     if (loadStatus.isRequesting) {
       return (
@@ -78,16 +59,43 @@ class GetVerified extends React.Component {
           <LoadingSpinner/>
         </WrapperDiv>
       )
-    } else {
-      return (
-        <div style={{margin: '1em'}}>
-          <StyledAccountWrapper>
-            <StyledHeader>Account Status:</StyledHeader>
-            <StyledContent backgroundColor={iconColor}>{text}</StyledContent>
-          </StyledAccountWrapper>
-        </div>
-      )
     }
+
+    if (businessProfile.kyc_status === 'INCOMPLETE' || (!Object.values(businessProfile).length > 0)) {
+      if (adminTier === 'superadmin') {
+        text = <Link to='settings/verification'>Get Verified</Link>
+      }
+
+      if (userId) {
+        text = <Link to={`/users/${userId}/verification`} onClick={this.props.nextStep.bind(this)}>Add User KYC</Link>
+      }
+    }
+
+    if (businessProfile.kyc_status === 'PENDING') {
+      iconColor = '#FF9800';
+      text = 'Pending.';
+      addFunds = null;
+    }
+
+    if (businessProfile.kyc_status === 'VERIFIED') {
+      iconColor = '#00C759';
+      text = 'Verified.';
+      addFunds = null;
+
+      if (!userId && adminTier === 'superadmin' || adminTier === 'admin') {
+        addFunds = <div><br/><Link to='settings/fund-wallet'>Add Funds</Link></div>
+      }
+    }
+
+    return(
+      <div style={{margin: '1em'}}>
+        <StyledAccountWrapper>
+          <StyledHeader>Account Status:</StyledHeader>
+          <StyledContent backgroundColor={iconColor}>{text}</StyledContent>
+          {addFunds}
+        </StyledAccountWrapper>
+      </div>
+    )
   }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(GetVerified);
