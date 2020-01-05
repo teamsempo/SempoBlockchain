@@ -27,7 +27,8 @@ interface LoginState {
   tfaURL: null | string,
   tfaFailure: boolean,
   //TODO(refactor): what is this actually?
-  organisations?: string[]
+  organisations?: null | string[],
+  requireTransferCardExists: null | boolean,
   adminTier?: string
 }
 
@@ -41,6 +42,8 @@ const initialLoginState: LoginState = {
   webApiVersion: null,
   organisationName: null,
   organisationId: null,
+  organisations: null,
+  requireTransferCardExists: null,
   usdToSatoshiRate: null,
   error: null,
   tfaURL: null,
@@ -65,6 +68,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         organisationName: action.organisationName,
         organisationId: action.organisationId,
         organisations: action.organisations,
+        requireTransferCardExists: action.requireTransferCardExists,
         email: action.email,
         adminTier: action.adminTier,
         usdToSatoshiRate: action.usdToSatoshiRate,
@@ -80,7 +84,8 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         webApiVersion: null,
         organisationName: null,
         organisationId: null,
-        organisations: undefined,
+        organisations: null,
+        requireTransferCardExists: null,
         tfaURL: action.tfaURL,
         tfaFailure: action.tfaFailure,
         error: action.error || 'unknown error'};

@@ -39,7 +39,8 @@ export interface LoginSuccess {
   organisationName: null | string,
   organisationId: null | number,
   usdToSatoshiRate: null | number,
-  organisations?: string[]
+  organisations?: string[],
+  requireTransferCardExists: null | boolean,
   adminTier?: string
 }
 export const LOGIN_FAILURE = 'LOGIN_FAILURE';
