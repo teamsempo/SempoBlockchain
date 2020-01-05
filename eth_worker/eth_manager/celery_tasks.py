@@ -165,33 +165,7 @@ def _process_deploy_contract_transaction(self, transaction_id, contract_name,
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
 def _check_transaction_response(self, transaction_id):
-    ETH_CHECK_TRANSACTION_BASE_TIME = 2
-    ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
-
-    def transaction_response_countdown():
-        t = lambda retries: ETH_CHECK_TRANSACTION_BASE_TIME*2**retries
-
-        # If the system has been longer than the max retry period
-        # if previous_result:
-        #     submitted_at = datetime.strptime(previous_result['submitted_date'], "%Y-%m-%d %H:%M:%S.%f")
-        #     if (datetime.utcnow() - submitted_at).total_seconds() > ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT:
-        #         if self.request.retries != self.max_retries:
-        #             self.request.retries = self.max_retries - 1
-        #
-        #         return 0
-
-        return t(self.request.retries)
-
-    try:
-        status = blockchain_processor.check_transaction_response(transaction_id)
-
-        if status == 'PENDING':
-            self.request.retries = 0
-            raise Exception("Need Retry")
-
-    except Exception as e:
-        print(e)
-        self.retry(countdown=transaction_response_countdown())
+    blockchain_processor.check_transaction_response(self, transaction_id)
 
 
 @celery_app.task(base=SqlAlchemyTask)

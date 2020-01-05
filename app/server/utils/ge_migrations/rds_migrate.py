@@ -43,21 +43,18 @@ class RDSMigrate:
         self.ge_community_token_id = ge_community_token_id
         self.user_limit = user_limit
 
-        master_organisation = Organisation.master_organisation()
-
-        self.master_wallet_address = master_organisation.queried_org_level_transfer_account.blockchain_address
-
     def migrate(self):
         self.migrateUsers()
 
         # self.migratePOA()
 
+        print('Migration Complete!')
 
     def migrateUsers(self):
         list_of_ge_ids = self.get_ids_from_sempo()
         print('list_of_ge_ids', list_of_ge_ids)
         self.get_new_users_from_GE(list_of_ge_ids, community_token_id=self.ge_community_token_id)
-        self.update_users_refered_by()
+        # self.update_users_refered_by()
 
     def get_ids_from_sempo(self):
         sql = '''SELECT
@@ -298,6 +295,8 @@ class RDSMigrate:
         org = Organisation.query.get(self.sempo_organisation_id)
         token = org.token
 
+        sending_address = org.queried_org_level_transfer_account.blockchain_address
+
         ge_address_to_transfer_account.pop(None, None)
 
         addresses = list(ge_address_to_transfer_account.keys())
@@ -309,10 +308,12 @@ class RDSMigrate:
             transfer_account = ge_address_to_transfer_account[balance_info['account']]
             transfer_account._balance_wei = balance_wei
 
+            print(f'transfering {balance_wei} wei to {transfer_account}')
+
             bt.make_token_transfer(
-                signing_address=self.master_wallet_address,
+                signing_address=sending_address,
                 token=token,
-                from_address=self.master_wallet_address,
+                from_address=sending_address,
                 to_address=transfer_account.blockchain_address,
                 amount=balance_wei / 1e16
             )

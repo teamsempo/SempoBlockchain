@@ -58,6 +58,7 @@ class POAExplorer:
             for start in range(0, n_elements, max_add):
                 stop = min(start + max_add, n_elements)
                 address_block = ','.join(address[start:stop])
+                print(f'getting addresses {start}-{stop} of {n_elements}')
                 try:
                     req_res = request(self.__url(module='account',
                                                  action = 'balancemulti',

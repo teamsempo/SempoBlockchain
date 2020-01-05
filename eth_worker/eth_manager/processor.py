@@ -9,14 +9,16 @@ from celery import chain, signature
 import requests
 
 import config
-from eth_manager.exceptions import PreBlockchainError
+from eth_manager.exceptions import PreBlockchainError, TaskRetriesExceededError
 from eth_manager import utils
 from eth_manager.contract_registry import ContractRegistry
 from sempo_types import UUIDList, UUID
 
+RETRY_TRANSACTION_BASE_TIME = 2
+ETH_CHECK_TRANSACTION_BASE_TIME = 2
+ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
 
 class TransactionProcessor(object):
-
 
     def private_key_to_address(self, private_key):
 
@@ -109,88 +111,138 @@ class TransactionProcessor(object):
                             gas_limit=None,
                             gas_price=None):
 
-        chainId = self.ethereum_chain_id
-        gasPrice = gas_price or self.gas_price
-        # gasPrice = gas_price or self.get_gas_price()
+        try:
 
-        signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
+            chainId = self.ethereum_chain_id
+            gasPrice = gas_price or self.gas_price
+            # gasPrice = gas_price or self.get_gas_price()
 
-        if gas_limit:
-            gas = gas_limit
-        else:
+            signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
+
+            if gas_limit:
+                gas = gas_limit
+            else:
+                try:
+                    gas = unbuilt_transaction.estimateGas({
+                        'from': signing_wallet_obj.address,
+                        'gasPrice': gasPrice
+                    })
+                except ValueError as e:
+                    print("Estimate Gas Failed. Remedy by specifying gas limit.")
+
+                    raise e
+
+            nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+
+            metadata = {
+                'gas': gas_limit or min(int(gas*1.2), 8000000),
+                'gasPrice': gasPrice,
+                'nonce': nonce
+            }
+
+            if chainId:
+                metadata['chainId'] = chainId
+
+            if unbuilt_transaction:
+                txn = unbuilt_transaction.buildTransaction(metadata)
+            else:
+                txn = {**metadata, **partial_txn_dict}
+
+            signed_txn = self.w3.eth.account.signTransaction(txn, private_key=signing_wallet_obj.private_key)
+
             try:
-                gas = unbuilt_transaction.estimateGas({
-                    'from': signing_wallet_obj.address,
-                    'gasPrice': gasPrice
-                })
+                print('@@@@@@@@@@@@@@ tx {} using nonce {} @@@@@@@@@@@@@@'.format(transaction_id, nonce))
+
+                result = self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+
             except ValueError as e:
-                print("Estimate Gas Failed. Remedy by specifying gas limit.")
-                raise e
 
-        nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+                message = f'Transaction {transaction_id}: {str(e)}'
+                exc = PreBlockchainError(message, False)
+                self.log_error(None, exc, None, transaction_id)
 
-        metadata = {
-            'gas': gas_limit or min(int(gas*1.2), 8000000),
-            'gasPrice': gasPrice,
-            'nonce': nonce
-        }
+                raise PreBlockchainError(message, True)
 
-        if chainId:
-            metadata['chainId'] = chainId
+            # If we've made it this far, the nonce will(?) be consumed
+            transaction_data = {
+                'hash': signed_txn.hash.hex(),
+                'nonce': nonce,
+                'submitted_date': str(datetime.datetime.utcnow()),
+                'nonce_consumed': True
+            }
 
-        if unbuilt_transaction:
-            txn = unbuilt_transaction.buildTransaction(metadata)
-        else:
-            txn = {**metadata, **partial_txn_dict}
+            print('***************Data for transaction {}:***************'.format(transaction_id))
+            print(transaction_data)
 
-        signed_txn = self.w3.eth.account.signTransaction(txn, private_key=signing_wallet_obj.private_key)
+            self.persistence_interface.update_transaction_data(transaction_id, transaction_data)
+
+            return transaction_id
+
+        except Exception as e:
+
+            # Attempt a new transaction if there's any error, but still raise
+            transaction_object = self.persistence_interface.get_transaction(transaction_id)
+            try:
+                self.new_transaction_attempt(transaction_object.task)
+            except TaskRetriesExceededError:
+                pass
+
+            raise e
+
+    def check_transaction_response(self, celery_task, transaction_id):
+        def transaction_response_countdown():
+            t = lambda retries: ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** retries
+
+            # If the system has been longer than the max retry period
+            # if previous_result:
+            #     submitted_at = datetime.strptime(previous_result['submitted_date'], "%Y-%m-%d %H:%M:%S.%f")
+            #     if (datetime.utcnow() - submitted_at).total_seconds() > ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT:
+            #         if self.request.retries != self.max_retries:
+            #             self.request.retries = self.max_retries - 1
+            #
+            #         return 0
+
+            return t(celery_task.request.retries)
 
         try:
-            print('@@@@@@@@@@@@@@ tx {} using nonce {} @@@@@@@@@@@@@@'.format(transaction_id, nonce))
+            transaction_object = self.persistence_interface.get_transaction(transaction_id)
 
-            result = self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+            task = transaction_object.task
 
-        except ValueError as e:
+            transaction_has = transaction_object.hash
 
-            message = f'Transaction {transaction_id}: {str(e)}'
+            result = self.check_transaction_hash(transaction_has)
 
-            exc = PreBlockchainError(message, False)
+            self.persistence_interface.update_transaction_data(transaction_id, result)
 
-            self.log_error(None, exc, None, transaction_id)
+            status = result.get('status')
 
-            raise PreBlockchainError(message, True)
+            print(f'Status for transaction {transaction_object.id} of task UUID {task.uuid} is:'
+            f'\n {status}')
 
-        # If we've made it this far, the nonce will(?) be consumed
-        transaction_data = {
-            'hash': signed_txn.hash.hex(),
-            'nonce': nonce,
-            'submitted_date': str(datetime.datetime.utcnow()),
-            'nonce_consumed': True
-        }
+            if status == 'SUCCESS':
 
-        print('***************Data for transaction {}:***************'.format(transaction_id))
-        print(transaction_data)
+                unstarted_dependents = self.persistence_interface.get_unstarted_dependents(transaction_id)
 
-        self.persistence_interface.update_transaction_data(transaction_id, transaction_data)
+                for dep_task in unstarted_dependents:
+                    print('Starting dependent task: {}'.format(dep_task.uuid))
+                    signature(utils.eth_endpoint('_attempt_transaction'), args=(dep_task.uuid,)).delay()
 
-        return transaction_id
+                self.persistence_interface.set_task_status_text(task, 'SUCCESS')
 
-    def check_transaction_response(self, transaction_id):
+            if status == 'PENDING':
+                celery_task.request.retries = 0
+                raise Exception("Need Retry")
 
-        transaction_hash = self.persistence_interface.get_transaction_hash_from_id(transaction_id)
+            if status == 'FAILED':
+                self.new_transaction_attempt(task)
 
-        result = self.check_transaction_hash(transaction_hash)
+        except TaskRetriesExceededError as e:
+            pass
 
-        self.persistence_interface.update_transaction_data(transaction_id, result)
-
-        if result.get('status') == 'SUCCESS':
-            unstarted_dependents = self.persistence_interface.get_unstarted_dependents(transaction_id)
-
-            for task in unstarted_dependents:
-                print('Starting dependent task: {}'.format(task.uuid))
-                signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid, )).delay()
-
-        return result.get('status')
+        except Exception as e:
+            print(e)
+            celery_task.retry(countdown=transaction_response_countdown())
 
     def check_transaction_hash(self, tx_hash):
 
@@ -199,7 +251,8 @@ class TransactionProcessor(object):
         tx_receipt = self.w3.eth.getTransactionReceipt(tx_hash)
 
         def print_and_return(return_dict):
-            print('{} for txn: {}'.format(return_dict.get('status'), tx_hash))
+            # Not printing here currently because the method above does it
+            # print('{} for txn: {}'.format(return_dict.get('status'), tx_hash))
             return return_dict
 
         if tx_receipt is None:
@@ -234,9 +287,15 @@ class TransactionProcessor(object):
             print('Skipping: dependee tasks {} unsatisfied'.format([task.id for task in unsatisfied_dependee_tasks]))
             return
 
+        t1 = self.persistence_interface.get_task_from_uuid(task_uuid)
+        nt = len(t1.transactions)
+        if nt > 0:
+            ttt = 4
+
         transaction_obj = self.persistence_interface.create_blockchain_transaction(task_uuid)
 
         task_object = self.persistence_interface.get_task_from_uuid(task_uuid)
+
 
         if task_object.type == 'SEND_ETH':
 
@@ -277,6 +336,10 @@ class TransactionProcessor(object):
 
         error_callback = signature(utils.eth_endpoint('_log_error'), args=(transaction_obj.id,))
 
+        number_of_attempts = len(task_object.transactions)
+
+        print(f'Attempt number {number_of_attempts}')
+
         return chain([chain1, chain2]).on_error(error_callback).delay()
 
     def get_signing_wallet_object(self, signing_address, encrypted_private_key):
@@ -311,6 +374,22 @@ class TransactionProcessor(object):
             self.persistence_interface.update_transaction_data(transaction_id, data)
         else:
             print("NOT LOGGING")
+
+    def new_transaction_attempt(self, task):
+        number_of_attempts = len(task.transactions)
+        if number_of_attempts >= self.task_max_retries:
+            print(f"Maximum retries exceeded for task {task.uuid}")
+
+            self.persistence_interface.set_task_status_text(task, 'FAILED')
+
+            raise TaskRetriesExceededError
+
+        else:
+            signature(utils.eth_endpoint('_attempt_transaction'),
+                      args=(task.uuid,)).apply_async(
+                countdown=RETRY_TRANSACTION_BASE_TIME * 4 ** number_of_attempts
+            )
+
 
     def get_serialised_task_from_uuid(self, uuid):
         return self.persistence_interface.get_serialised_task_from_uuid(uuid)
@@ -456,7 +535,8 @@ class TransactionProcessor(object):
                  w3,
                  gas_price_gwei,
                  gas_limit,
-                 persistence_interface):
+                 persistence_interface,
+                 task_max_retries=3):
 
             self.registry = ContractRegistry(w3)
 
@@ -468,5 +548,7 @@ class TransactionProcessor(object):
             self.transaction_max_value = self.gas_price * self.gas_limit
 
             self.persistence_interface = persistence_interface
+
+            self.task_max_retries = task_max_retries
 
 

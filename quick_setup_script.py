@@ -290,7 +290,7 @@ if __name__ == '__main__':
         organisation_name='Grassroots Economics',
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
-        symbol='SAR',
+        symbol='SARAFU',
         issue_amount_wei=int(1000e18),
         reserve_deposit_wei=int(10e18),
         reserve_ratio_ppm=250000

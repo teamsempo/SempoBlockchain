@@ -137,6 +137,9 @@ class BlockchainTask(ModelBase):
 
     signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 
+    # Purely for convenience to show status on single db table for debugging - use status hybrid prop in code
+    status_text = Column(String)
+
     transactions = relationship('BlockchainTransaction',
                                 backref='task',
                                 lazy=True)

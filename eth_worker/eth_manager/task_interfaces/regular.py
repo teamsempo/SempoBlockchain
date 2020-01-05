@@ -80,9 +80,6 @@ def get_wallet_balance(address, token_address):
 
 
 def await_task_success(task_uuid, timeout=None, poll_frequency=0.5):
-    from eth_manager import blockchain_processor
-
-    blockchain_processor.persistence_interface.get_serialised_task_from_uuid(task_uuid)
     elapsed = 0
     print(f'Awaiting success for task uuid: {task_uuid}')
     while timeout is None or elapsed <= timeout:

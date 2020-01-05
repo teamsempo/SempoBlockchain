@@ -185,10 +185,8 @@ class SQLPersistenceInterface(object):
 
         return blockchain_transaction
 
-    def get_transaction_hash_from_id(self, transaction_id):
-        transaction = session.query(BlockchainTransaction).get(transaction_id)
-
-        return transaction.hash
+    def get_transaction(self, transaction_id):
+        return session.query(BlockchainTransaction).get(transaction_id)
 
     def get_transaction_signing_wallet(self, transaction_id):
 
@@ -226,6 +224,10 @@ class SQLPersistenceInterface(object):
         for task_uuid in dependent_on_tasks:
             dependee_task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
             task.dependees.append(dependee_task)
+
+    def set_task_status_text(self, task, text):
+        task.status_text = text
+        session.commit()
 
     def create_send_eth_task(self,
                              uuid: UUID,
@@ -300,14 +302,14 @@ class SQLPersistenceInterface(object):
         task = self.get_task_from_uuid(uuid)
 
         if task is None:
-            ttt = 4
             return None
 
         base_data = {
             'id': task.id,
             'status': task.status,
             'dependents': [task.uuid for task in task.dependents],
-            'dependees': [task.uuid for task in task.dependees]
+            'dependees': [task.uuid for task in task.dependees],
+            'transactions': [transaction.id for transaction in task.transactions]
         }
 
         if task.successful_transaction:

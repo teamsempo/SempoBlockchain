@@ -103,6 +103,9 @@ class BlockchainTasker(object):
 
         while timeout is None or elapsed <= timeout:
             task = self.get_blockchain_task(task_id)
+            if task is None:
+                return None
+
             if task['status'] == 'SUCCESS':
                 return task
             else:
@@ -188,7 +191,10 @@ class BlockchainTasker(object):
 
         balance_wei = self.get_wallet_balance(from_address, token)
 
-        print(f'Balance for {from_address} is: {balance_wei} wei\n (Sending {raw_amount} wei)')
+        if balance_wei < raw_amount:
+            print(f'\nWarning: Balance for {from_address} is currently less than sending amount! Transfer may fail'
+                  f'\nBalance: {balance_wei} wei'
+                  f'\nSending: {raw_amount} wei \n')
 
 
         if signing_address == from_address:
