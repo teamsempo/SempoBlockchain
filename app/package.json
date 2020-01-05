@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
+  "homepage": "./",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",

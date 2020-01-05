@@ -1,15 +1,15 @@
-import React  from 'react';
+import * as React  from 'react';
 import { connect } from 'react-redux';
 
 import { createUser, RESET_CREATE_USER } from '../../reducers/userReducer'
 import { StyledButton, ModuleHeader } from '../styledElements'
-import styles from './styles.module.css';
-import CreateUserForm, {ICreateUser} from './CreateUserForm';
-import CreateVendorForm, {ICreateVendor} from './CreateVendorForm';
+import * as styles from './styles.module.css';
 import { loadTransferUsages } from '../../reducers/transferUsage/actions'
 import {TransferUsage} from "../../reducers/transferUsage/types";
+import {Organisation} from "../../reducers/organisation/types";
 import {ReduxState} from "../../reducers/rootReducer";
 import {loadOrganisation} from "../../reducers/organisation/actions";
+import CreateUserForm, {ICreateUserUpdate} from './CreateUserForm';
 
 interface DispatchProps {
   createUser: (body: any) => void,
@@ -19,8 +19,10 @@ interface DispatchProps {
 }
 
 interface StateProps {
+  login: any,
   users: any,
   transferUsages: TransferUsage[]
+  organisation?: Organisation
 }
 
 interface OuterProps {
@@ -35,10 +37,11 @@ declare global {
   }
 }
 
-type Form = ICreateUser & ICreateVendor
+type Form = ICreateUserUpdate
 type Props = DispatchProps & StateProps & OuterProps
 
-class CreateUser extends React.Component<Props> {
+class CreateUserUpdated extends React.Component<Props> {
+
   componentDidMount() {
     this.props.loadTransferUsages();
     this.props.loadOrganisation();
@@ -65,25 +68,23 @@ class CreateUser extends React.Component<Props> {
       gender: form.gender,
       public_serial_number: form.publicSerialNumber,
       phone: form.phone,
-      is_vendor: this.props.isVendor,
+      is_vendor: (form.accountType === 'vendor' || form.accountType === 'cashier'),
+      is_tokenagent: form.accountType === 'tokenagent',
+      is_groupaccount: form.accountType === 'groupaccount',
       additional_initial_disbursement: (form.additionalInitialDisbursement || 0) * 100,
-      //TODO(org): make this an organisation level field
-      require_transfer_card_exists: true,
+      require_transfer_card_exists: this.props.login.requireTransferCardExists,
       existing_vendor_phone: form.existingVendorPhone,
       existing_vendor_pin: form.existingVendorPin,
       transfer_account_name: form.transferAccountName,
       location: form.location,
       business_usage_name: businessUsage,
     })
-
-    //how to trigger this after createUser finishes? so that we can load the new transfer usages
-    //this.props.loadTransferUsages();
   }
 
   render() {
     const transferAccountType = this.props.isVendor ? "vendor" : window.BENEFICIARY_TERM.toLowerCase();
-
     const {one_time_code, is_external_wallet} = this.props.users.createStatus;
+
     if (one_time_code !== null) {
       if (is_external_wallet === true) {
         return (
@@ -116,26 +117,19 @@ class CreateUser extends React.Component<Props> {
         )
       }
     } else {
-      if (this.props.isVendor) {
-        return <CreateVendorForm
-          users={this.props.users}
-          transferAccountType={transferAccountType}
-          onSubmit={(form: Form) => this.onCreateUser(form)}
-        />
-      } else {
-        return <CreateUserForm
-          users={this.props.users}
-          transferAccountType={transferAccountType}
-          transferUsages={this.props.transferUsages}
-          onSubmit={(form: Form) => this.onCreateUser(form)}
-        />
-      }
+      return <CreateUserForm
+        users={this.props.users}
+        transferAccountType={transferAccountType}
+        transferUsages={this.props.transferUsages}
+        onSubmit={(form: Form) => this.onCreateUser(form)}
+      />;
     }
   }
 }
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
+    login: state.login,
     users: state.users,
     transferUsages: state.transferUsages.transferUsages
   };
@@ -150,5 +144,5 @@ const mapDispatchToProps = (dispatch: any) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(CreateUser);
+export default connect(mapStateToProps, mapDispatchToProps)(CreateUserUpdated);
 

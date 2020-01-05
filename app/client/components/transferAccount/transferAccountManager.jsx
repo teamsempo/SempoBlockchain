@@ -5,19 +5,20 @@ import { connect } from 'react-redux';
 import { StyledButton, ModuleBox, ModuleHeader } from '../styledElements'
 import AsyncButton from '../AsyncButton.jsx'
 const SingleDatePickerWrapper = lazy(() => import('./SingleDatePickerWrapper.jsx'));
-// import SingleDatePickerWrapper from './SingleDatePickerWrapper.jsx'
 import NewTransferManager from '../management/newTransferManager.jsx'
 import DateTime from '../dateTime.jsx';
 
 import { editTransferAccount } from '../../reducers/transferAccountReducer'
 import { createTransferRequest } from '../../reducers/creditTransferReducer'
 import { formatMoney } from "../../utils";
+import {TransferAccountTypes} from "./types";
 
 const mapStateToProps = (state, ownProps) => {
   return {
     login: state.login,
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
+    users: state.users,
     transferAccount: state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)]
   };
 };
@@ -70,6 +71,7 @@ class TransferAccountManager extends React.Component {
   updateTransferAccountState() {
       const transferAccountId = parseInt(this.props.transfer_account_id);
       const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+      const primaryUser = transferAccount.primary_user_id && this.props.users.byId[transferAccount.primary_user_id];
 
       if (transferAccount !== null) {
           this.setState({
@@ -81,7 +83,19 @@ class TransferAccountManager extends React.Component {
               payable_period_type: transferAccount.payable_period_type,
               payable_period_length: transferAccount.payable_period_length,
               is_vendor: transferAccount.is_vendor,
+              is_beneficiary: transferAccount.is_beneficiary,
+              is_tokenagent: transferAccount.is_tokenagent,
+              is_groupaccount: transferAccount.is_groupaccount
           });
+      }
+
+      if (primaryUser) {
+        this.setState({
+          is_vendor: primaryUser.is_vendor,
+          is_beneficiary: primaryUser.is_beneficiary,
+          is_tokenagent: primaryUser.is_tokenagent,
+          is_groupaccount: primaryUser.is_groupaccount
+        });
       }
   }
 
@@ -152,51 +166,68 @@ class TransferAccountManager extends React.Component {
   }
 
   render() {
+    const {is_beneficiary,is_vendor, is_groupaccount, is_tokenagent} = this.state;
+    let accountTypeName;
+    let icon;
 
-      if (this.state.newTransfer) {
-          var newTransfer = <NewTransferManager transfer_account_ids={[this.props.transfer_account_id]} cancelNewTransfer={() => this.onNewTransfer()} />
-      } else {
-          newTransfer = null;
-      }
+    if (this.state.newTransfer) {
+        var newTransfer = <NewTransferManager transfer_account_ids={[this.props.transfer_account_id]} cancelNewTransfer={() => this.onNewTransfer()} />
+    } else {
+        newTransfer = null;
+    }
 
-      const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100)}</p>;
+    const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100)}</p>;
 
-      if (!window.IS_USING_BITCOIN) {
-        var tracker_link = (
-          'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-          + 'etherscan.io/address/' + this.props.transferAccount.blockchain_address
-        )
-      } else {
-        tracker_link = (
-          'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-          '/address/' + this.props.transferAccount.blockchain_address
-        )
-      }
+    if (!window.IS_USING_BITCOIN) {
+      var tracker_link = (
+        'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
+        + 'etherscan.io/address/' + this.props.transferAccount.blockchain_address
+      )
+    } else {
+      tracker_link = (
+        'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
+        '/address/' + this.props.transferAccount.blockchain_address
+      )
+    }
 
-      var summaryBox =
-          <ModuleBox>
-              <SummaryBox>
-                  <TopContent>
-                      <UserSVG src={(this.state.is_vendor === true ? "/static/media/store.svg" : "/static/media/user.svg")}/>
-                      <p style={{margin: '0 1em', fontWeight: '500'}}>{(this.state.is_vendor === true ? 'Vendor' : window.BENEFICIARY_TERM)}</p>
-                  </TopContent>
-                  <BottomContent>
-                      <FontStyling>Balance: <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{displayAmount}</span></FontStyling>
-                      <FontStyling>Created: <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}><DateTime created={this.state.created}/></span></FontStyling>
-                      <FontStyling>Address:
-                        <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>
-                          <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>
-                            <a  href={tracker_link}
-                                     target="_blank">
-                            {this.props.transferAccount.blockchain_address.substring(2,7) + '...'}
-                            </a>
-                          </p>
-                        </span>
-                      </FontStyling>
+    if (is_beneficiary) {
+      accountTypeName = TransferAccountTypes.USER || window.BENEFICIARY_TERM;
+      icon = "/static/media/user.svg"
+    } else if (is_vendor) {
+      accountTypeName = TransferAccountTypes.VENDOR;
+      icon = "/static/media/store.svg"
+    } else if (is_groupaccount) {
+      accountTypeName = TransferAccountTypes.GROUPACCOUNT;
+      icon = "/static/media/groupaccount.svg"
+    } else if (is_tokenagent) {
+      accountTypeName = TransferAccountTypes.TOKENAGENT;
+      icon = "/static/media/tokenagent.svg"
+    }
 
-                  </BottomContent>
-              </SummaryBox>
-          </ModuleBox>;
+    var summaryBox =
+        <ModuleBox>
+            <SummaryBox>
+                <TopContent>
+                    <UserSVG src={icon}/>
+                    <p style={{margin: '0 1em', fontWeight: '500'}}>{accountTypeName}</p>
+                </TopContent>
+                <BottomContent>
+                    <FontStyling>Balance: <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{displayAmount}</span></FontStyling>
+                    <FontStyling>Created: <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}><DateTime created={this.state.created}/></span></FontStyling>
+                    <FontStyling>Address:
+                      <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>
+                        <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>
+                          <a  href={tracker_link}
+                                   target="_blank">
+                          {this.props.transferAccount.blockchain_address.substring(2,7) + '...'}
+                          </a>
+                        </p>
+                      </span>
+                    </FontStyling>
+
+                </BottomContent>
+            </SummaryBox>
+        </ModuleBox>;
 
       return (
           <div style={{display: 'flex', flexDirection: 'column'}}>

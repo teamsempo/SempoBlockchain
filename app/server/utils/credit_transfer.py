@@ -493,6 +493,7 @@ def make_payment_transfer(transfer_amount,
 
     if make_cashout_incentive_transaction:
         try:
+            # todo: check limits apply
             incentive_amount = round(transfer_amount * current_app.config['CASHOUT_INCENTIVE_PERCENT'] / 100)
 
             make_payment_transfer(

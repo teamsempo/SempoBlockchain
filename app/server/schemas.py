@@ -5,6 +5,15 @@ from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 
+
+class LowerCase(fields.Field):
+    """Field that deserializes to a lower case string.
+    """
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        return value.lower()
+
+
 class SchemaBase(Schema):
     id = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
@@ -37,6 +46,8 @@ class UserSchema(SchemaBase):
 
     is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
+    is_tokenagent           = fields.Boolean(attribute='has_token_agent_role')
+    is_groupaccount         = fields.Boolean(attribute='has_group_account_role')
     is_any_admin            = fields.Boolean(attribute='is_any_admin')
 
     business_usage_id = fields.Int()
@@ -277,6 +288,7 @@ class UploadedDocumentSchema(SchemaBase):
 
 class KycApplicationSchema(SchemaBase):
     type                = fields.Str()
+    account_type        = LowerCase(attribute="type")
 
     trulioo_id          = fields.Str()
     wyre_id             = fields.Str()
@@ -384,7 +396,7 @@ kyc_application_state_schema = KycApplicationSchema(
              "country", "street_address", "street_address_2"
                                           "city", "region", "postal_code",
              "beneficial_owners", "bank_accounts",
-             "documents", "dob"
+             "uploaded_documents", "dob"
              ))
 me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()

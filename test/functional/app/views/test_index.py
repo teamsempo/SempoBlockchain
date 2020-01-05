@@ -15,7 +15,7 @@ def test_index(test_client):
     response = test_client.get('/')
 
     assert response.status_code == 200
-    assert b'../static/css/styles.css' in response.data
+    assert b'/static/css/styles.css' in response.data
 
     # analytics
     assert config.GOOGLE_ANALYTICS_ID.encode() in response.data

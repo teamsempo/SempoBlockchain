@@ -5,9 +5,10 @@ import { Link } from 'react-router-dom';
 
 import { replaceUnderscores } from "../../utils";
 
-import { ModuleBox, ModuleHeader } from '../styledElements'
+import {ModuleBox, ModuleHeader, StyledButton} from '../styledElements'
 import AsyncButton from './../AsyncButton.jsx'
 import ProfilePicture from '../profilePicture.jsx'
+import GetVerified from '../GetVerified.jsx'
 
 import {editUser, resetPin} from '../../reducers/userReducer'
 import QrReadingModal from "../qrReadingModal.jsx";
@@ -15,7 +16,7 @@ import QrReadingModal from "../qrReadingModal.jsx";
 const mapStateToProps = (state, ownProps) => {
   return {
     users: state.users,
-    user: state.users.byId[parseInt(ownProps.user_id)]
+    user: state.users.byId[parseInt(ownProps.userId)]
   };
 };
 
@@ -63,7 +64,7 @@ class SingleUserManagement extends React.Component {
     const phone = this.state.phone;
     const location = this.state.location;
 
-    const single_transfer_account_id = this.props.user_id.toString();
+    const single_transfer_account_id = this.props.userId.toString();
 
     this.props.editUser(
         {
@@ -121,8 +122,8 @@ class SingleUserManagement extends React.Component {
 
       if (this.props.user.matched_profile_pictures.length > 0) {
         var matched_profiles = this.props.user.matched_profile_pictures.map(match => (
-            <Link to={"/users/" + match.user_id}
-                  key={match.user_id}
+            <Link to={"/users/" + match.userId}
+                  key={match.userId}
                   style={{
                     color: 'inherit',
                     textDecoration: 'inherit',
@@ -133,7 +134,7 @@ class SingleUserManagement extends React.Component {
 
               <ProfilePicture
                 label={"Possible Duplicate User:"}
-                sublabel={'User ' + match.user_id}
+                sublabel={'User ' + match.userId}
                 roll={match.roll}
                 url={match.url}
               />
@@ -223,6 +224,11 @@ class SingleUserManagement extends React.Component {
                             </a>
                           </ManagerText>
                         </SubRow>
+
+                        <SubRow style={{margin: '-1em -1em 0'}}>
+                          <GetVerified userId={this.props.userId}/>
+                        </SubRow>
+
                       </Row>
                     <Row style={{margin: '0em 1em'}}>
                       {

@@ -101,8 +101,14 @@ class BusinessDocuments extends React.Component {
   }
 
   _validateData(data) {
-    return  {
-      company_documents_val: data.uploaded_documents.filter(document => document.reference === 'company').length > 0,
+    let businessValidation;
+    if (this.props.business.account_type === 'BUSINESS') {
+      businessValidation = {
+        company_documents_val: data.uploaded_documents.filter(document => document.reference === 'company').length > 0,
+      }
+    }
+
+    return  {...businessValidation,
       owner_documents_val: data.uploaded_documents.filter(document => document.reference === 'owners').length > 0,
     }
   }
@@ -118,7 +124,7 @@ class BusinessDocuments extends React.Component {
   render() {
     let { business, uploadState } = this.props;
 
-    if (business.uploaded_documents !== null && business.uploaded_documents.length > 0) {
+    if (business.uploaded_documents && business.uploaded_documents.length > 0) {
       var companyDocuments = this._generateDocumentList(business.uploaded_documents, 'company');
       var ownerDocuments = this._generateDocumentList(business.uploaded_documents, 'owners');
     } else {
@@ -130,17 +136,21 @@ class BusinessDocuments extends React.Component {
     let companyDocumentLoading = this.state.reference === 'company' ? documentLoading : null;
     let ownerDocumentLoading = this.state.reference === 'owners' ? documentLoading : null;
 
+    let isIndividual = business.account_type === 'INDIVIDUAL';
+
     return(
       <div>
-        <h3>Company Identification</h3>
+        {  isIndividual ? null : <div><h3>Company Identification</h3>
         <SecondaryText>Please provide the Articles of Incorporation and/or other Proof of Ownership for the company. This will be either one or multiple documents depending on your location and business structure.</SecondaryText>
         {companyDocumentLoading}
         {companyDocuments}
         <UploadButton handleFileChange={(e) => this.handleFileChange(e, 'company')}/>
         <ErrorMessage state={this.state} input={'company_documents'}/>
+        </div>}
 
-        <h3>Identification of Beneficial Owners</h3>
-        <SecondaryText>Please provide a Passport or Driver’s License for each shareholder that holds 25% or more of the company. If uploading a non-Passport document, please provide a photo of the front and back.</SecondaryText>
+        { isIndividual ? <div><h3>Identification of Individual</h3><SecondaryText>Please provide a Passport or Driver’s License. If uploading a non-Passport document, please provide a photo of the front and back.</SecondaryText></div> :
+        <div><h3>Identification of Beneficial Owners</h3>
+        <SecondaryText>Please provide a Passport or Driver’s License for each shareholder that holds 25% or more of the company. If uploading a non-Passport document, please provide a photo of the front and back.</SecondaryText></div>}
         {ownerDocumentLoading}
         {ownerDocuments}
         <UploadButton handleFileChange={(e) => this.handleFileChange(e, 'owners')}/>

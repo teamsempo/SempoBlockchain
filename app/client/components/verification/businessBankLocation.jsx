@@ -128,9 +128,11 @@ class BusinessBankLocation extends React.Component {
 
 
   render() {
+    const { businessProfile } = this.props;
+    let isIndividual = businessProfile.account_type === 'INDIVIDUAL';
     return(
         <div>
-          <h3>Location of Business Bank Account</h3>
+          <h3>Location of {isIndividual ? null : 'Business'} Bank Account</h3>
           <SecondaryText>Please select the country of the bank you will be using to fund your Sempo account. You will be asked for more details about this account in the next step.</SecondaryText>
 
           <Row>
