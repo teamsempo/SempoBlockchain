@@ -17,7 +17,7 @@ class GEMigrationAPI(MethodView):
         sempo_organisation_id = post_data['sempo_organisation_id']
         ge_community_token_id = post_data.get('ge_community_token_id', None)
         user_limit = post_data.get('user_limit', 10000)
-        async = post_data.get('async', True)
+        do_async = post_data.get('do_async', True)
 
 
         @copy_current_request_context
@@ -33,7 +33,7 @@ class GEMigrationAPI(MethodView):
 
             db.session.commit()
 
-        if async:
+        if do_async:
             t = threading.Thread(target=migrate,
                                  args=(sempo_organisation_id, ge_community_token_id, user_limit))
 
