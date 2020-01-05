@@ -93,7 +93,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(sig)
 
     def await_task_success(self,
-                           task_id,
+                           task_uuid,
                            timeout=None,
                            poll_frequency=0.5):
         elapsed = 0
@@ -102,7 +102,7 @@ class BlockchainTasker(object):
             timeout = current_app.config['SYNCRONOUS_TASK_TIMEOUT']
 
         while timeout is None or elapsed <= timeout:
-            task = self.get_blockchain_task(task_id)
+            task = self.get_blockchain_task(task_uuid)
             if task is None:
                 return None
 
@@ -113,6 +113,14 @@ class BlockchainTasker(object):
                 elapsed += poll_frequency
 
         raise TimeoutError
+
+    def retry_task(self, task_uuid):
+        sig = celery_app.signature(self._eth_endpoint('retry_task'),
+                                   kwargs={
+                                       'task_uuid': task_uuid,
+                                   })
+
+        sig.delay()
 
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)

@@ -132,6 +132,11 @@ def send_eth(self, amount_wei, recipient_address,
                                          dependent_on_tasks)
 
 
+@celery_app.task(**no_retry_config)
+def retry_task(self, task_uuid):
+    return blockchain_processor.retry_task(task_uuid)
+
+
 @celery_app.task(**base_task_config)
 def get_task(self, task_uuid):
     return blockchain_processor.get_serialised_task_from_uuid(task_uuid)

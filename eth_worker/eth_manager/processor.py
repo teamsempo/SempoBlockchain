@@ -284,24 +284,25 @@ class TransactionProcessor(object):
 
         unsatisfied_dependee_tasks = self.persistence_interface.unstatisfied_task_dependencies(task_uuid)
         if len(unsatisfied_dependee_tasks) > 0:
-            print('Skipping: dependee tasks {} unsatisfied'.format([task.id for task in unsatisfied_dependee_tasks]))
+            print('Skipping: dependee tasks {} unsatisfied'.format([
+                f'{task.id} ({task.uuid})' for task in unsatisfied_dependee_tasks
+            ]))
             return
-
-        t1 = self.persistence_interface.get_task_from_uuid(task_uuid)
-        nt = len(t1.transactions)
-        if nt > 0:
-            ttt = 4
 
         transaction_obj = self.persistence_interface.create_blockchain_transaction(task_uuid)
 
         task_object = self.persistence_interface.get_task_from_uuid(task_uuid)
 
+        number_of_attempts = len(task_object.transactions)
+
+        attempt_info = f'\nAttempt number: {number_of_attempts} ' \
+                       f' for invocation round: {task_object.previous_invocations + 1}'
 
         if task_object.type == 'SEND_ETH':
 
             transfer_amount = int(task_object.amount)
 
-            print(f'Starting Send Eth Transaction for {task_uuid}.')
+            print(f'Starting Send Eth Transaction for {task_uuid}.' + attempt_info)
             chain1 = signature(utils.eth_endpoint('_process_send_eth_transaction'),
                           args=(transaction_obj.id,
                                 task_object.recipient_address,
@@ -309,7 +310,7 @@ class TransactionProcessor(object):
                                 task_object.id))
 
         elif task_object.type == 'FUNCTION':
-            print(f'Starting {task_object.function} Transaction for {task_uuid}.')
+            print(f'Starting {task_object.function} Transaction for {task_uuid}.' + attempt_info)
             chain1 = signature(utils.eth_endpoint('_process_function_transaction'),
                                args=(transaction_obj.id,
                                      task_object.contract_address,
@@ -321,7 +322,7 @@ class TransactionProcessor(object):
                                      task_object.id))
 
         elif task_object.type == 'DEPLOY_CONTRACT':
-            print(f'Starting Deploy {task_object.contract_name} Contract Transaction for {task_uuid}.')
+            print(f'Starting Deploy {task_object.contract_name} Contract Transaction for {task_uuid}.' + attempt_info)
             chain1 = signature(utils.eth_endpoint('_process_deploy_contract_transaction'),
                                args=(transaction_obj.id,
                                      task_object.contract_name,
@@ -335,10 +336,6 @@ class TransactionProcessor(object):
         chain2 = signature(utils.eth_endpoint('_check_transaction_response'))
 
         error_callback = signature(utils.eth_endpoint('_log_error'), args=(transaction_obj.id,))
-
-        number_of_attempts = len(task_object.transactions)
-
-        print(f'Attempt number {number_of_attempts}')
 
         return chain([chain1, chain2]).on_error(error_callback).delay()
 
@@ -376,8 +373,10 @@ class TransactionProcessor(object):
             print("NOT LOGGING")
 
     def new_transaction_attempt(self, task):
-        number_of_attempts = len(task.transactions)
-        if number_of_attempts >= self.task_max_retries:
+        number_of_attempts_this_round = abs(
+            len(task.transactions) - self.task_max_retries * (task.previous_invocations or 0)
+        )
+        if number_of_attempts_this_round >= self.task_max_retries:
             print(f"Maximum retries exceeded for task {task.uuid}")
 
             self.persistence_interface.set_task_status_text(task, 'FAILED')
@@ -387,7 +386,7 @@ class TransactionProcessor(object):
         else:
             signature(utils.eth_endpoint('_attempt_transaction'),
                       args=(task.uuid,)).apply_async(
-                countdown=RETRY_TRANSACTION_BASE_TIME * 4 ** number_of_attempts
+                countdown=RETRY_TRANSACTION_BASE_TIME * 4 ** number_of_attempts_this_round
             )
 
 
@@ -527,6 +526,13 @@ class TransactionProcessor(object):
                                                                       dependent_on_tasks)
 
         # Attempt Create Async Transaction
+        signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
+
+    def retry_task(self, uuid: UUID):
+        task = self.persistence_interface.get_task_from_uuid(uuid)
+
+        task.previous_invocations = (task.previous_invocations or 0) + 1
+
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
 
 

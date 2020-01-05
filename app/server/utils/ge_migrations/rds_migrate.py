@@ -7,13 +7,15 @@ import pprint
 from server import db, bt
 
 from server.models.user import User
+from server.models.token import Token
 from server.models.organisation import Organisation
 from server.models.transfer_usage import TransferUsage
-from server.models.token import Token
+from server.models.credit_transfer import CreditTransfer
+from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.user import create_transfer_account_user
 from server.utils.phone import proccess_phone_number
-from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.ge_migrations.poa_explorer import POAExplorer
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 
 class RDSMigrate:
@@ -99,7 +101,7 @@ class RDSMigrate:
             t0 = time.time()
             estimate_time_left = 'unknown'
 
-            ge_address_to_transfer_account = {}
+            ge_address_to_user = {}
             for user in users:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
@@ -108,13 +110,12 @@ class RDSMigrate:
                 sempo_user = self.insert_user(user)
 
                 if sempo_user:
-
-                    ge_address_to_transfer_account[user['wallet_address']] = sempo_user.default_transfer_account
+                    ge_address_to_user[user['wallet_address']] = sempo_user
 
                 elapsed_time = time.time() - t0
                 estimate_time_left = round((elapsed_time / i * n_users) - elapsed_time, 1)
 
-            self.migrate_balances(ge_address_to_transfer_account)
+            self.migrate_balances(ge_address_to_user)
 
 
     def insert_user(self, ge_user):
@@ -290,33 +291,39 @@ class RDSMigrate:
         addresses = [row[0] for row in result]
         return addresses
 
-    def migrate_balances(self, ge_address_to_transfer_account: dict):
+    def migrate_balances(self, ge_address_to_user: dict):
 
         org = Organisation.query.get(self.sempo_organisation_id)
         token = org.token
 
         sending_address = org.queried_org_level_transfer_account.blockchain_address
 
-        ge_address_to_transfer_account.pop(None, None)
+        ge_address_to_user.pop(None, None)
 
-        addresses = list(ge_address_to_transfer_account.keys())
+        addresses = list(ge_address_to_user.keys())
         balance_list = self.poa.balance(addresses)
 
         for balance_info in balance_list['result']:
             balance_wei = int(balance_info['balance'])
 
-            transfer_account = ge_address_to_transfer_account[balance_info['account']]
-            transfer_account._balance_wei = balance_wei
+            user = ge_address_to_user[balance_info['account']]
+            ta = user.get_transfer_account_for_token(token)
+            ta._balance_wei = balance_wei
 
-            print(f'transfering {balance_wei} wei to {transfer_account}')
+            print(f'transfering {balance_wei} wei to {user}')
 
-            bt.make_token_transfer(
-                signing_address=sending_address,
+            migration_transfer = CreditTransfer(
+                amount=balance_wei/1e16,
                 token=token,
-                from_address=sending_address,
-                to_address=transfer_account.blockchain_address,
-                amount=balance_wei / 1e16
+                sender_transfer_account=org.queried_org_level_transfer_account,
+                recipient_user=user,
+                transfer_type=TransferTypeEnum.PAYMENT,
+                transfer_subtype=TransferSubTypeEnum.DISBURSEMENT
             )
+
+            db.session.add(migration_transfer)
+
+            migration_transfer.resolve_as_completed()
 
     def store_wei(self, address, balance):
         sql = '''UPDATE "transfer_account"

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import db, celery_app
+from server import db, bt
 from server.models.credit_transfer import CreditTransfer
 from server.models.blockchain_transaction import BlockchainTransaction
 from server.utils.blockchain_transaction import add_full_transaction_details, claim_nonce
@@ -85,75 +85,16 @@ class BlockchainTransactionRPC(MethodView):
 
         call = post_data.get('call')
 
-        if call == 'CREATE_RESPONSE':
+        if call == 'RETRY_TASK':
+            task_uuid = post_data.get('task_uuid')
 
-            transaction_hash = post_data.get('transaction_hash')
-
-            if transaction_hash is None:
-                response_object = {
-                    'message': 'No transaction hash supplied',
-                }
-
-                return make_response(jsonify(response_object)), 400
-
-            transaction = BlockchainTransaction.query.filter_by(hash=transaction_hash).first()
-            if transaction is None:
-                response_object = {
-                    'message': 'Transaction not found for hash {}'.format(transaction_hash),
-                }
-
-                return make_response(jsonify(response_object)), 405
-
-            credit_transfer_id = transaction.credit_transfer_id
-
-            if credit_transfer_id is None:
-                response_object = {
-                    'message': 'No credit transfer id for hash {}'.format(transaction_hash),
-                }
-
-                return make_response(jsonify(response_object)), 404
-
-            blockchain_task = celery_app.signature('worker.celery_tasks.check_transaction_response',
-                                                   kwargs={'previous_result': {'transaction_hash': transaction_hash},
-                                                           'credit_transfer_id': credit_transfer_id
-                                                           })
-            blockchain_task.delay()
+            bt.retry_task(task_uuid)
 
             response_object = {
-                'message': 'Starting Create Response',
+                'message': 'Starting Retry Task',
             }
 
             return make_response(jsonify(response_object)), 200
-
-        elif call =='COMPLETE_TASKS':
-
-            credit_transfer_id = post_data.get('credit_transfer_id')
-
-            if credit_transfer_id is None:
-                response_object = {
-                    'message': 'No credit transfer id supplied',
-                }
-
-                return make_response(jsonify(response_object)), 400
-
-            credit_transfer = CreditTransfer.query.get(credit_transfer_id)
-
-            if credit_transfer is None:
-                response_object = {
-                    'message': 'No credit transfer not found',
-                }
-
-                return make_response(jsonify(response_object)), 404
-
-            credit_transfer.send_blockchain_payload_to_worker(is_retry=True)
-
-            response_object = {
-                'message': 'Starting Complete Tasks',
-            }
-
-            return make_response(jsonify(response_object)), 200
-
-
 
         response_object = {
             'message': 'Call not recognised',

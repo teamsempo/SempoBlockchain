@@ -222,8 +222,10 @@ class SQLPersistenceInterface(object):
             dependent_on_tasks = [dependent_on_tasks]
 
         for task_uuid in dependent_on_tasks:
+            # TODO: Make sure this can't be failed due to a race condition on tasks being added
             dependee_task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
-            task.dependees.append(dependee_task)
+            if dependee_task:
+                task.dependees.append(dependee_task)
 
     def set_task_status_text(self, task, text):
         task.status_text = text

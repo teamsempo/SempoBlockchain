@@ -140,6 +140,9 @@ class BlockchainTask(ModelBase):
     # Purely for convenience to show status on single db table for debugging - use status hybrid prop in code
     status_text = Column(String)
 
+    # How many times the system has previously requested an attempt to complete a transaction for this task
+    previous_invocations = Column(Integer)
+
     transactions = relationship('BlockchainTransaction',
                                 backref='task',
                                 lazy=True)
@@ -198,6 +201,8 @@ class BlockchainTask(ModelBase):
         super(BlockchainTask, self).__init__(**kwargs)
 
         self.uuid = uuid
+
+        self.previous_invocations = 0
 
 class BlockchainTransaction(ModelBase):
     __tablename__ = 'blockchain_transaction'

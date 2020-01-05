@@ -152,8 +152,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
-        # TODO: swap to app generated task id so that app doesnt crash when blockchain taskers are down
-
         self.blockchain_task_uuid = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
@@ -260,14 +258,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def check_recipient_is_approved(self):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
-    def _select_transfer_account(self, token, user, supplied_transfer_account = None):
+    def _select_transfer_account(self, token, user):
         if token is None:
             raise Exception("Token must be specified")
-        if supplied_transfer_account:
-            if user is not None and user not in supplied_transfer_account.users:
-                raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
-            return supplied_transfer_account
-
         return find_transfer_accounts_with_matching_token(user, token)
 
     def append_organisation_if_required(self, organisation):
@@ -297,8 +290,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
             token,
-            sender_user,
-            sender_transfer_account
+            sender_user
         )
 
         self.token = token or self.sender_transfer_account.token
@@ -308,8 +300,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         try:
             self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
                 self.token,
-                recipient_user,
-                recipient_transfer_account
+                recipient_user
             )
 
             if is_ghost_transfer is False:

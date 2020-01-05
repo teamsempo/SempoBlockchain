@@ -3,13 +3,14 @@ from flask.views import MethodView
 import threading
 
 from server import db, bt
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, show_all
 from server.utils.ge_migrations import rds_migrate
 
 ge_migration_blueprint = Blueprint('ge_migration', __name__)
 
 class GEMigrationAPI(MethodView):
 
+    @show_all
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
         post_data = request.get_json()
