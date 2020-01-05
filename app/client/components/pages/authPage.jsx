@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import {Redirect, Route, Switch, Link} from "react-router-dom";
 import { connect } from 'react-redux';
 
-import {activateAccount, logout} from '../../reducers/authReducer'
+import {activateAccount} from '../../reducers/auth/actions'
 
 import LoginForm from '../auth/loginForm.jsx'
 import RegisterForm from '../auth/registerForm.jsx'

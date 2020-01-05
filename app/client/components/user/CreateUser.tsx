@@ -7,6 +7,7 @@ import * as styles from './styles.module.css';
 import { loadTransferUsages } from '../../reducers/transferUsage/actions'
 import {TransferUsage} from "../../reducers/transferUsage/types";
 import {Organisation} from "../../reducers/organisation/types";
+import {ReduxState} from "../../reducers/rootReducer";
 import {loadOrganisation} from "../../reducers/organisation/actions";
 import CreateUserForm, {ICreateUserUpdate} from './CreateUserForm';
 
@@ -126,8 +127,7 @@ class CreateUserUpdated extends React.Component<Props> {
   }
 }
 
-//TODO: why doesn't ReduxState work correctly
-const mapStateToProps = (state: any) => {
+const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     login: state.login,
     users: state.users,

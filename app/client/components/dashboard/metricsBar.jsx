@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 
-import { logout } from '../../reducers/authReducer';
+import { logout } from '../../reducers/auth/actions';
 import { ModuleHeader } from "../styledElements";
 
 import {formatMoney} from "../../utils";

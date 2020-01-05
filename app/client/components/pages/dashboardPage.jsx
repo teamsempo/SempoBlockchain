@@ -5,7 +5,7 @@ import { subscribe, unsubscribe } from 'pusher-redux';
 
 import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
 
-import { logout, activateAccount } from '../../reducers/authReducer'
+import { logout, activateAccount } from '../../reducers/auth/actions'
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
 
