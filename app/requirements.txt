@@ -3,6 +3,7 @@ bit==0.4.3
 blinker==1.4
 boto3==1.7.2
 celery==4.4.0rc3
+certifi==2019.11.28
 ecdsa==0.13.3
 Flask==1.1.1
 Flask-BasicAuth==0.2.0

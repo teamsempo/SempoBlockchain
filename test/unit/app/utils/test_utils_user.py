@@ -1,5 +1,5 @@
 """
-This file (test_user.py) contains the unit tests for the user.py file in utils dir.
+This file (test_utils_user.py) contains the unit tests for the user.py file in utils dir.
 """
 import pytest
 
