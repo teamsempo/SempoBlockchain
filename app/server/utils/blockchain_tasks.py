@@ -266,7 +266,7 @@ class BlockchainTasker(object):
         :param reserve_token: the reserve token used as a connector in the network
         :param from_amount: the amount of the token being exchanged from
         :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
-        :return: task id for the exchange
+        :return: task uuid for the exchange
         """
 
         dependent_on_tasks = dependent_on_tasks or []
