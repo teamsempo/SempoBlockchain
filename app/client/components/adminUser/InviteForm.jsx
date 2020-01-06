@@ -4,8 +4,8 @@ import styled from 'styled-components';
 
 import AsyncButton from '../AsyncButton.jsx'
 
-import { Input, StyledButton, ErrorMessage } from './styledElements'
-import { inviteUser } from "../reducers/auth/actions";
+import { Input, ErrorMessage } from '../styledElements'
+import { inviteUser } from "../../reducers/auth/actions";
 
 const mapStateToProps = (state) => {
   return {

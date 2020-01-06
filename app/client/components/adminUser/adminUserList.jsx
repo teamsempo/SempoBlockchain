@@ -7,7 +7,7 @@ import ReactTable from 'react-table'
 
 import { TopRow, StyledButton, ModuleHeader } from '../styledElements.js'
 
-import { loadUserList, updateUser } from '../reducers/auth/actions'
+import { loadUserList, updateUser } from '../../reducers/auth/actions'
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 const mapStateToProps = (state) => {
