@@ -85,7 +85,6 @@ function* watchSaveOrgId() {
   yield takeEvery(UPDATE_ACTIVE_ORG, saveOrgId);
 }
 export function* logout() {
-    yield call(removeTFAToken); //todo: only remove on failed login attempt
     yield call(removeSessionToken);
     yield call(removeOrgId);
 }
@@ -129,6 +128,7 @@ function* requestToken({payload}) {
 
       return token_response
     } else if (token_response.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
       yield call(storeSessionToken, token_response.auth_token );
       yield put({
         type: LOGIN_PARTIAL,
@@ -206,6 +206,15 @@ function* register({payload}) {
         tfaURL: registered_account.tfa_url,
         tfaFailure: true
       });
+    } else if (registered_account.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: registered_account.message,
+        tfaURL: null,
+        tfaFailure: true});
+      return registered_account
     } else {
       yield put({type: REGISTER_FAILURE, error: registered_account.message});
       yield put({type: LOGIN_FAILURE, error: registered_account.message})
@@ -239,6 +248,15 @@ function* activate({activation_token}) {
         tfaURL: activated_account.tfa_url,
         tfaFailure: true
       });
+    } else if (activated_account.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: activated_account.message,
+        tfaURL: null,
+        tfaFailure: true});
+      return activated_account
     } else {
       yield put({type: ACTIVATE_FAILURE, error: activated_account.statusText})
     }
