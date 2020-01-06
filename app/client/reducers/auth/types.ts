@@ -122,24 +122,35 @@ interface ResetPasswordFailure {
 }
 export type ResetPasswordAction = ResetPasswordRequest | ResetPasswordSuccess | ResetPasswordFailure
 
-export const USER_LIST_REQUEST = 'USER_LIST_REQUEST';
-interface UserListRequest { type: typeof USER_LIST_REQUEST }
-export const USER_LIST_SUCCESS = 'USER_LIST_SUCCESS';
-interface UserListSuccess {
-  type: typeof USER_LIST_SUCCESS,
-  load_result: {
-    //TODO(refactor): what is userList data actually?
-    admin_list: string[]
-  }
+export interface AdminUser {
+  id: number,
+  email: string,
+  admin_tier: string,
+  created: string,
+  is_activated: boolean,
+  is_disabled: boolean
 }
-export const USER_LIST_FAILURE = 'USER_LIST_FAILURE';
-interface UserListFailure {
-  type: typeof USER_LIST_FAILURE,
+export const UPDATE_ADMIN_USER_LIST = "UPDATE_ADMIN_USER_LIST";
+interface UpdateAdminUsers {
+  type: typeof UPDATE_ADMIN_USER_LIST,
+  admins: AdminUser
+}
+export type AdminUserListAction = UpdateAdminUsers
+
+export const LOAD_ADMIN_USER_REQUEST = 'LOAD_ADMIN_USER_REQUEST';
+interface LoadAdminUserListRequest { type: typeof LOAD_ADMIN_USER_REQUEST }
+export const LOAD_ADMIN_USER_SUCCESS = 'LOAD_ADMIN_USER_SUCCESS';
+interface LoadAdminUserListSuccess {
+  type: typeof LOAD_ADMIN_USER_SUCCESS,
+}
+export const LOAD_ADMIN_USER_FAILURE = 'LOAD_ADMIN_USER_FAILURE';
+interface LoadAdminUserListFailure {
+  type: typeof LOAD_ADMIN_USER_FAILURE,
   error: string
 }
-export type UserListAction = UserListRequest | UserListSuccess | UserListFailure
+export type UserListAction = LoadAdminUserListRequest | LoadAdminUserListSuccess | LoadAdminUserListFailure
 
-export const UPDATE_USER_REQUEST = 'UPDATE_USER_REQUEST';
+export const EDIT_ADMIN_USER_REQUEST = 'EDIT_ADMIN_USER_REQUEST';
 export interface UpdateUserPayload {
   body: {
     user_id: number,
@@ -150,14 +161,14 @@ export interface UpdateUserPayload {
   }
 }
 interface UpdateUserRequest {
-  type: typeof UPDATE_USER_REQUEST,
+  type: typeof EDIT_ADMIN_USER_REQUEST,
   payload: UpdateUserPayload
 }
-export const UPDATE_USER_SUCCESS = 'UPDATE_USER_SUCCESS';
-interface UpdateUserSuccess {type: typeof UPDATE_USER_SUCCESS}
-export const UPDATE_USER_FAILURE = 'UPDATE_USER_FAILURE';
+export const EDIT_ADMIN_USER_SUCCESS = 'EDIT_ADMIN_USER_SUCCESS';
+interface UpdateUserSuccess {type: typeof EDIT_ADMIN_USER_SUCCESS}
+export const EDIT_ADMIN_USER_FAILURE = 'EDIT_ADMIN_USER_FAILURE';
 interface UpdateUserFailure {
-  type: typeof UPDATE_USER_FAILURE,
+  type: typeof EDIT_ADMIN_USER_FAILURE,
   error: string
 }
 export type UpdateUserAction = UpdateUserRequest | UpdateUserSuccess | UpdateUserFailure

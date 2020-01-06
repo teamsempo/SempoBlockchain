@@ -7,13 +7,14 @@ import pprint
 from server import db, bt
 
 from server.models.user import User
-from server.models.token import Token
 from server.models.organisation import Organisation
 from server.models.transfer_usage import TransferUsage
+from server.models.token import Token
+from server.models.kyc_application import KycApplication
 from server.models.credit_transfer import CreditTransfer
-from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.user import create_transfer_account_user
 from server.utils.phone import proccess_phone_number
+from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.ge_migrations.poa_explorer import POAExplorer
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
