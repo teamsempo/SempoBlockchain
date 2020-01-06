@@ -76,7 +76,7 @@ class RegisterAPI(MethodView):
         email_ok = False
 
         whitelisted_emails = EmailWhitelist.query\
-            .filter_by(email=email, referral_code=referral_code, used=False) \
+            .filter_by(referral_code=referral_code, used=False) \
             .execution_options(show_all=True).all()
 
         selected_whitelist_item = None
@@ -156,18 +156,14 @@ class RegisterAPI(MethodView):
             if tfa_response_oject:
                 tfa_response_oject['auth_token'] = auth_token.decode()
 
+                db.session.commit()  # need this here to commit a created user to the db
+
                 return make_response(jsonify(tfa_response_oject)), 401
 
             # Update the last_seen TS for this user
             user.update_last_seen_ts()
 
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully activated.',
-                'auth_token': auth_token.decode(),
-                'user_id': user.id,
-                'email': user.email,
-            }
+            response_object = create_user_response_object(user, auth_token, 'Successfully activated.')
 
             db.session.commit()
 
@@ -182,7 +178,7 @@ class RegisterAPI(MethodView):
         # generate the auth token
         response_object = {
             'status': 'success',
-            'message': 'Successfully registered.',
+            'message': 'Successfully registered. You must activate your email.',
         }
 
         return make_response(jsonify(response_object)), 201
@@ -228,6 +224,23 @@ class ActivateUserAPI(MethodView):
             user.is_activated = True
 
             auth_token = user.encode_auth_token()
+
+            db.session.flush()
+
+            # Possible Outcomes:
+            # TFA required, but not set up
+            # TFA not required
+
+            tfa_response_oject = tfa_logic(user, tfa_token=None)
+            if tfa_response_oject:
+                tfa_response_oject['auth_token'] = auth_token.decode()
+
+                db.session.commit()  # need to commit here so that is_activated = True
+
+                return make_response(jsonify(tfa_response_oject)), 401
+
+            # Update the last_seen TS for this user
+            user.update_last_seen_ts()
 
             response_object = create_user_response_object(user, auth_token, 'Successfully activated.')
 
