@@ -83,7 +83,7 @@ class BlockchainTasker(object):
         :return: Serialised Task Dictionary:
         {
             status: enum, one of 'SUCCESS', 'PENDING', 'UNSTARTED', 'FAILED', 'UNKNOWN'
-            dependents: list of dependent task ids
+            dependents: list of dependent task uuids
         }
         """
 
@@ -148,7 +148,7 @@ class BlockchainTasker(object):
         :param recipient_address: blockchain address of the recipent
         :param amount_wei: amount of eth to send, in wei
         :param dependent_on_tasks: tasks that must successfully complete first befoehand
-        :return: task_id
+        :return: task uuid
         """
         transfer_sig = celery_app.signature(self._eth_endpoint('send_eth'),
                                             kwargs={
@@ -191,8 +191,8 @@ class BlockchainTasker(object):
         :param from_address: address of wallet sending token
         :param to_address:
         :param amount: the CENTS amount being sent, eg 2300 Cents = 2.3 Dollars
-        :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
-        :return: task id for the transfer
+        :param dependent_on_tasks: list of task uuids that must complete before txn will attempt
+        :return: task uuid for the transfer
         """
 
         raw_amount = token.system_amount_to_token(amount)
@@ -265,7 +265,7 @@ class BlockchainTasker(object):
         :param to_token: the token being exchanged to
         :param reserve_token: the reserve token used as a connector in the network
         :param from_amount: the amount of the token being exchanged from
-        :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
+        :param dependent_on_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the exchange
         """
 
@@ -273,10 +273,10 @@ class BlockchainTasker(object):
 
         path = self._get_path(from_token, to_token, reserve_token)
 
-        topup_task_id = self.topup_wallet_if_required(signing_address)
+        topup_task_uuid = self.topup_wallet_if_required(signing_address)
 
-        if topup_task_id:
-            dependent_on_tasks.append(topup_task_id)
+        if topup_task_uuid:
+            dependent_on_tasks.append(topup_task_uuid)
 
         return self._synchronous_transaction_task(
             signing_address=signing_address,

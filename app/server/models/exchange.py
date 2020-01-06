@@ -145,7 +145,7 @@ class Exchange(BlockchainTaskableBase):
         self.exchange_rate = to_amount/from_amount
         return self.exchange_rate
 
-    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None, dependent_task_ids=[]):
+    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None, dependent_task_uuids=[]):
         self.user = user
         self.from_token = from_token
         self.to_token = to_token
@@ -170,13 +170,13 @@ class Exchange(BlockchainTaskableBase):
 
         signing_address = self.from_transfer.sender_transfer_account.blockchain_address
 
-        topup_task_id = bt.topup_wallet_if_required(signing_address)
+        topup_task_uuid = bt.topup_wallet_if_required(signing_address)
 
-        dependent = [topup_task_id] if topup_task_id else []
+        dependent = [topup_task_uuid] if topup_task_uuid else []
 
         # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
         # We need to approve all the tokens involved for spend by the exchange contract
-        to_approval_id = bt.make_approval(
+        to_approval_uuid = bt.make_approval(
             signing_address=signing_address,
             token=to_token,
             spender=exchange_contract.blockchain_address,
@@ -184,7 +184,7 @@ class Exchange(BlockchainTaskableBase):
             dependent_on_tasks=dependent
         )
 
-        reserve_approval_id = bt.make_approval(
+        reserve_approval_uuid = bt.make_approval(
             signing_address=signing_address,
             token=exchange_contract.reserve_token,
             spender=exchange_contract.blockchain_address,
@@ -192,7 +192,7 @@ class Exchange(BlockchainTaskableBase):
             dependent_on_tasks=dependent
         )
 
-        from_approval_id = bt.make_approval(
+        from_approval_uuid = bt.make_approval(
             signing_address=signing_address,
             token=from_token,
             spender=exchange_contract.blockchain_address,
@@ -218,7 +218,7 @@ class Exchange(BlockchainTaskableBase):
             to_token=to_token,
             reserve_token=exchange_contract.reserve_token,
             from_amount=from_amount,
-            dependent_on_tasks=[to_approval_id, reserve_approval_id, from_approval_id] + dependent_task_ids
+            dependent_on_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + dependent_task_uuids
         )
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(
