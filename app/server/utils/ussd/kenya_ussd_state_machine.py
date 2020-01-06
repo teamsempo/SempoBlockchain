@@ -114,6 +114,9 @@ class KenyaUssdStateMachine(Machine):
         set_custom_attributes(attrs, self.user)
         self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
 
+    def set_phone_as_verified(self, user_input):
+        self.user.is_phone_verified = True
+
     def save_pin_data(self, user_input):
         self.session.set_data('initial_pin', user_input)
 
@@ -368,7 +371,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'complete',
-             'after': 'complete_initial_pin_change',
+             'after': ['complete_initial_pin_change', 'set_phone_as_verified'],
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',

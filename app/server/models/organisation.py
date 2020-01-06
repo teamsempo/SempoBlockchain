@@ -48,7 +48,8 @@ class Organisation(ModelBase):
     @property
     def queried_org_level_transfer_account(self):
         if self.org_level_transfer_account_id:
-            return server.models.transfer_account.TransferAccount.query.get(self.org_level_transfer_account_id)
+            return server.models.transfer_account.TransferAccount\
+                .query.execution_options(show_all=True).get(self.org_level_transfer_account_id)
         return None
 
     credit_transfers    = db.relationship("CreditTransfer",
@@ -64,6 +65,9 @@ class Organisation(ModelBase):
 
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
+
+    kyc_applications = db.relationship('KycApplication', backref='organisation',
+                                       lazy=True, foreign_keys='KycApplication.organisation_id')
 
     custom_welcome_message_key = db.Column(db.String)
 

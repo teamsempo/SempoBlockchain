@@ -121,6 +121,7 @@ ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
 WEB_VERSION = specific_parser['APP']['WEB_VERSION']
+REQUIRE_TRANSFER_CARD_EXISTS = specific_parser['APP'].getboolean('REQUIRE_TRANSFER_CARD_EXISTS', False)
 
 SECRET_KEY          = specific_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(specific_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
@@ -313,3 +314,13 @@ try:
     NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
 except KeyError:
     NAMESCAN_KEY = None
+
+try:
+    GE_DB_NAME = specific_parser['GE_MIGRATION'].get('name')
+    GE_DB_USER = specific_parser['GE_MIGRATION'].get('user')
+    GE_DB_HOST = specific_parser['GE_MIGRATION'].get('host')
+    GE_DB_PORT = specific_parser['GE_MIGRATION'].get('port')
+    GE_DB_PASSWORD = specific_parser['GE_MIGRATION'].get('password')
+
+except KeyError:
+    pass

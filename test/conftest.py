@@ -206,8 +206,8 @@ def create_ip_address(authed_sempo_admin_user):
     return ip_address
 
 
-@pytest.fixture(scope='function')
-def create_fiat_ramp():
+@pytest.fixture(scope='module')
+def create_fiat_ramp(test_client, init_database):
     from server.models.fiat_ramp import FiatRamp
     fiat_ramp = FiatRamp(
             payment_method='POLI',

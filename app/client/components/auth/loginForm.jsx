@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import {Link} from "react-router-dom";
 
 import AsyncButton from './../AsyncButton.jsx'
-import { loginRequest } from '../../reducers/authReducer'
+import { loginRequest } from '../../reducers/auth/actions'
 
 import { Input, StyledButton, ErrorMessage } from './../styledElements'
 import { Footer, FooterLink, FooterText} from "../pages/authPage.jsx";
@@ -49,7 +49,7 @@ export class LoginFormContainer extends React.Component {
       this.setState({password_missing: true});
       return
     }
-    this.props.loginRequest({body:{username: this.state.username, password: this.state.password, organisation: this.props.organisation}})
+    this.props.loginRequest({body:{username: this.state.username, password: this.state.password}})
   }
 
   onUserFieldKeyPress(e) {

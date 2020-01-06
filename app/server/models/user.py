@@ -2,6 +2,7 @@ import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
@@ -21,7 +22,11 @@ from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
 )
 
+# circular imports
 import server.models.transfer_account
+import server.models.credit_transfer
+import server.utils.transfer_enums
+
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -92,8 +97,6 @@ class User(ManyOrgBase, ModelBase):
 
     matched_profile_pictures = db.Column(JSON)
 
-    cashout_authorised = db.Column(db.Boolean, default=False)
-
     business_usage_id = db.Column(db.Integer, db.ForeignKey(TransferUsage.id))
 
     transfer_accounts = db.relationship(
@@ -148,6 +151,27 @@ class User(ManyOrgBase, ModelBase):
                                         lazy='dynamic', foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
+
+    @hybrid_property
+    def cashout_authorised(self):
+        # loop over all
+        any_valid_token = [t.token for t in self.transfer_accounts]
+        for token in any_valid_token:
+            ct = server.models.credit_transfer
+            example_transfer = ct.CreditTransfer(
+                transfer_type=ct.TransferTypeEnum.PAYMENT,
+                transfer_subtype=ct.TransferSubTypeEnum.AGENT_OUT,
+                sender_user=self,
+                recipient_user=self,
+                token=token,
+                amount=0)
+
+            limits = example_transfer.get_transfer_limits()
+            limit = limits[0]
+            return limit.total_amount > 0
+        else:
+            # default to false
+            return False
 
     @hybrid_property
     def phone(self):
@@ -236,6 +260,7 @@ class User(ManyOrgBase, ModelBase):
             self._held_roles.pop(role, None)
         else:
             self._held_roles[role] = tier
+            flag_modified(self, '_held_roles')
 
     @hybrid_property
     def has_admin_role(self):
@@ -277,6 +302,7 @@ class User(ManyOrgBase, ModelBase):
     def vendor_tier(self):
         return self._held_roles.get('VENDOR', None)
 
+    # todo: Refactor into above roles
     # These two are here to interface with the mobile API
     @hybrid_property
     def is_vendor(self):

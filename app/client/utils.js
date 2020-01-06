@@ -1,8 +1,8 @@
 import {call} from "redux-saga/effects";
 import merge from 'deepmerge';
-import {LOGIN_FAILURE} from "./reducers/authReducer";
+import {LOGIN_FAILURE} from "./reducers/auth/types";
 import {put} from "redux-saga/es/effects";
-import {store} from "./app";
+import {store} from "./app.jsx";
 
 export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, decimal = ".", thousands = ",", currency = window.CURRENCY_NAME) {
   try {

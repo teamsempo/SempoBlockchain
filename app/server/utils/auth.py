@@ -358,6 +358,7 @@ def create_user_response_object(user, auth_token, message):
         'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
         'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
         'web_api_version': current_app.config['WEB_VERSION'],
+        'require_transfer_card_exists': current_app.config['REQUIRE_TRANSFER_CARD_EXISTS']
     }
 
     # merge the user and organisation object nicely (handles non-orgs well)

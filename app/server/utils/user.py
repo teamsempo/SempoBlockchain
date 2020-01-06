@@ -110,7 +110,9 @@ def update_transfer_account_user(user,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
-                                 is_vendor=False):
+                                 is_vendor=False,
+                                 is_tokenagent=False,
+                                 is_groupaccount=False):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -140,6 +142,12 @@ def update_transfer_account_user(user,
 
     user.set_held_role('VENDOR', vendor_tier)
 
+    if is_tokenagent:
+        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+
+    if is_groupaccount:
+        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
@@ -161,8 +169,10 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
+                                 is_tokenagent=False,
+                                 is_groupaccount=False,
                                  is_self_sign_up=False,
-                                 business_usage_id=None):
+                                 business_usage=None):
 
     user = User(first_name=first_name,
                 last_name=last_name,
@@ -171,7 +181,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 email=email,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
-                business_usage_id=business_usage_id)
+                business_usage=business_usage)
 
     precreated_pin = None
     is_activated = False
@@ -199,6 +209,12 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         vendor_tier = 'supervendor'
 
     user.set_held_role('VENDOR', vendor_tier)
+
+    if is_tokenagent:
+        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+
+    if is_groupaccount:
+        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
@@ -365,6 +381,9 @@ def proccess_create_or_modify_user_request(
     :return: An http response
     """
 
+    if not attribute_dict.get('custom_attributes'):
+        attribute_dict['custom_attributes'] = {}
+
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
@@ -385,7 +404,7 @@ def proccess_create_or_modify_user_request(
             pass
 
     require_transfer_card_exists = attribute_dict.get(
-        'require_transfer_card_exists', True)
+        'require_transfer_card_exists', current_app.config['REQUIRE_TRANSFER_CARD_EXISTS'])
 
     public_serial_number = (provided_public_serial_number
                             or attribute_dict.get('payment_card_qr_code')
@@ -419,8 +438,11 @@ def proccess_create_or_modify_user_request(
     if is_vendor is None:
         is_vendor = attribute_dict.get('vendor', False)
 
+    is_tokenagent = attribute_dict.get('is_tokenagent', False)
+    is_groupaccount = attribute_dict.get('is_groupaccount', False)
+
     # is_beneficiary defaults to the opposite of is_vendor
-    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor)
+    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
 
     if current_app.config['IS_USING_BITCOIN']:
         try:
@@ -492,6 +514,15 @@ def proccess_create_or_modify_user_request(
         }
         return response_object, 400
 
+    business_usage = None
+    if business_usage_id:
+        business_usage = TransferUsage.query.get(business_usage_id)
+        if not business_usage:
+            response_object = {
+                'message': f'Business Usage not found for id {business_usage_id}'
+            }
+            return response_object, 400
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
 
@@ -506,7 +537,8 @@ def proccess_create_or_modify_user_request(
             phone=phone, email=email, public_serial_number=public_serial_number,
             use_precreated_pin=use_precreated_pin,
             existing_transfer_account=existing_transfer_account,
-            is_beneficiary=is_beneficiary, is_vendor=is_vendor
+            is_beneficiary=is_beneficiary, is_vendor=is_vendor,
+            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
         )
 
         set_custom_attributes(attribute_dict, user)
@@ -531,13 +563,17 @@ def proccess_create_or_modify_user_request(
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
-        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up,
-        business_usage_id=business_usage_id)
+        is_beneficiary=is_beneficiary, is_vendor=is_vendor,
+        is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
+        is_self_sign_up=is_self_sign_up,
+        business_usage=business_usage)
 
-    if attribute_dict.get('custom_attributes', None) is None: attribute_dict['custom_attributes'] = {}
-    if attribute_dict.get('business_usage_id'): attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')
-    if attribute_dict.get('gender'): attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
-    if attribute_dict.get('bio'): attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
+    if attribute_dict.get('gender'):
+        attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
+
+    if attribute_dict.get('bio'):
+        attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
+
     set_custom_attributes(attribute_dict, user)
 
     if is_self_sign_up and attribute_dict.get('deviceInfo', None) is not None:

@@ -32,8 +32,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    loadBusinessProfile: () => dispatch(loadBusinessProfile()),
-    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0})
+    loadBusinessProfile: (query) => dispatch(loadBusinessProfile({query})),
+    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0}),
   };
 };
 
@@ -44,14 +44,26 @@ class BusinessVerificationPage extends React.Component {
   }
 
   componentDidMount() {
-    this.props.loadBusinessProfile()
+    const { stepStatus, businessProfile } = this.props;
+    let pathname_array = location.pathname.split('/').slice(1);
+    let pathUserId = parseInt(pathname_array[1]);
+    let query;
+    if (Object.values(businessProfile).length === 0 || pathUserId) {
+      // only load business profile if none exists
+      if (stepStatus && stepStatus.userId) {
+        query = {'user_id': stepStatus.userId }
+      } else {
+        query = {'user_id': pathUserId }
+      }
+      this.props.loadBusinessProfile(query)
+    }
   }
 
   render() {
     let { loadStatus, businessProfile, stepStatus } = this.props;
 
     const steps = [
-      {name: 'Business Details', component: <BusinessDetails/>},
+      {name: 'Account Details', component: <BusinessDetails/>},
       {name: 'Documents', component: <BusinessDocuments/>},
       {name: 'Bank Location', component: <BusinessBankLocation/>},
       {name: 'Bank Details', component: <BusinessBankDetails/>},
@@ -80,7 +92,7 @@ class BusinessVerificationPage extends React.Component {
           </CenterLoadingSideBarActive>
         </WrapperDiv>
       )
-    } else if (Object.values(businessProfile).length > 0 || stepStatus.activeStep >= 0) {
+    } else if (stepStatus.activeStep >= 0 || Object.values(businessProfile).length > 0) {
 
       return (
         <WrapperDiv>
