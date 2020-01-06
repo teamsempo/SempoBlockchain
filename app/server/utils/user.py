@@ -172,7 +172,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_tokenagent=False,
                                  is_groupaccount=False,
                                  is_self_sign_up=False,
-                                 business_usage_id=None):
+                                 business_usage=None):
 
     user = User(first_name=first_name,
                 last_name=last_name,
@@ -181,7 +181,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 email=email,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
-                business_usage_id=business_usage_id)
+                business_usage=business_usage)
 
     precreated_pin = None
     is_activated = False
@@ -511,6 +511,15 @@ def proccess_create_or_modify_user_request(
         }
         return response_object, 400
 
+    business_usage = None
+    if business_usage_id:
+        business_usage = TransferUsage.query.get(business_usage_id)
+        if not business_usage:
+            response_object = {
+                'message': f'Business Usage not found for id {business_usage_id}'
+            }
+            return response_object, 400
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
 
@@ -553,12 +562,15 @@ def proccess_create_or_modify_user_request(
         existing_transfer_account=existing_transfer_account,
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
-        is_self_sign_up=is_self_sign_up, business_usage_id=business_usage_id)
+        is_self_sign_up=is_self_sign_up,
+        business_usage=business_usage)
 
-    if attribute_dict.get('custom_attributes', None) is None: attribute_dict['custom_attributes'] = {}
-    if attribute_dict.get('business_usage_id'): attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')
-    if attribute_dict.get('gender'): attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
-    if attribute_dict.get('bio'): attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
+    if attribute_dict.get('gender'):
+        attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
+
+    if attribute_dict.get('bio'):
+        attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
+
     set_custom_attributes(attribute_dict, user)
 
     if is_self_sign_up and attribute_dict.get('deviceInfo', None) is not None:

@@ -178,7 +178,7 @@ class BlockchainTasker(object):
         :param token: ERC20 token being transferred
         :param from_address: address of wallet sending token
         :param to_address:
-        :param amount: the NON WEI amount being sent, eg 2.3 Dai
+        :param amount: the CENTS amount being sent, eg 2300 Cents = 2.3 Dollars
         :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
         :return: task id for the transfer
         """
@@ -187,7 +187,10 @@ class BlockchainTasker(object):
 
         balance_wei = self.get_wallet_balance(from_address, token)
 
-        print(f'Balance for {from_address} is: {balance_wei} wei\n (Sending {raw_amount} wei)')
+        if balance_wei < raw_amount:
+            print(f'\nWarning: Balance for {from_address} is currently less than sending amount! Transfer may fail'
+                  f'\nBalance: {balance_wei} wei'
+                  f'\nSending: {raw_amount} wei \n')
 
 
         if signing_address == from_address:

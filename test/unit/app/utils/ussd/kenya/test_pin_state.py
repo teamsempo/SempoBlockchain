@@ -127,11 +127,14 @@ def test_change_initial_pin(mocker, test_client, init_database):
 
     assert user.pin_hash is None
     assert user.is_activated is False
+    assert not user.is_phone_verified
 
     state_machine.feed_char("0000")
 
     assert user.verify_pin("0000") is True
     assert user.is_activated is True
+    assert user.is_phone_verified
+
     state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
 
 
