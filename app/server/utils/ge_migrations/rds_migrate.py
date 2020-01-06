@@ -10,6 +10,8 @@ from server.models.user import User
 from server.models.organisation import Organisation
 from server.models.transfer_usage import TransferUsage
 from server.models.token import Token
+from server.models.kyc_application import KycApplication
+
 from server.utils.user import create_transfer_account_user
 from server.utils.phone import proccess_phone_number
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
@@ -175,6 +177,11 @@ class RDSMigrate:
             if ge_user['group_accounts.id'] is not None:
                 sempo_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
+            kyc_app = KycApplication(type='INDIVIDUAL')
+            kyc_app.user = sempo_user
+            kyc_app.set_data('national_id_number', ge_user['national_id_number'])
+            db.session.add(kyc_app)
+
             db.session.flush()
 
             return sempo_user
@@ -191,7 +198,6 @@ class RDSMigrate:
             ('id', 'GE_id'),
             ('wallet_address', 'GE_wallet_address'),
             ('bio', 'bio'),
-            ('national_id_number', 'national_id_number'),
             ('gender', 'gender'),
             ('market_enabled', 'market_enabled'),
             ('referred_by_id', 'GE_referred_by_id'),
