@@ -206,7 +206,7 @@ class User(ManyOrgBase, ModelBase):
 
         if not self._TFA_secret:
             self.set_TFA_secret()
-            db.session.commit()
+            db.session.flush()
 
         secret_key = self.get_TFA_secret()
         return pyotp.totp.TOTP(secret_key).provisioning_uri(

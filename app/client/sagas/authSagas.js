@@ -1,7 +1,7 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
 import { normalize } from 'normalizr';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId} from '../utils'
+import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken} from '../utils'
 import { adminUserSchema } from '../schemas'
 
 import {
@@ -128,6 +128,7 @@ function* requestToken({payload}) {
 
       return token_response
     } else if (token_response.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
       yield call(storeSessionToken, token_response.auth_token );
       yield put({
         type: LOGIN_PARTIAL,
@@ -184,8 +185,18 @@ function* register({payload}) {
   try {
     const registered_account = yield call(registerAPI, payload);
 
-    if (registered_account.status === 'success') {
+    if (registered_account.status === 'success' && !registered_account.auth_token) {
+      // manual sign up, need to activate email
       yield put({type: REGISTER_SUCCESS, registered_account});
+      yield put({type: ADD_FLASH_MESSAGE, error: false, message: registered_account.message});
+      browserHistory.push('/login')
+
+    } else if (registered_account.auth_token && !registered_account.tfa_url) {
+      // email invite, auto login as email validated
+      yield put({type: REGISTER_SUCCESS, registered_account});
+      yield put(createLoginSuccessObject(registered_account));
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield call (authenticatePusher);
 
     } else if (registered_account.tfa_url) {
       yield call(storeSessionToken, registered_account.auth_token );
@@ -195,6 +206,15 @@ function* register({payload}) {
         tfaURL: registered_account.tfa_url,
         tfaFailure: true
       });
+    } else if (registered_account.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: registered_account.message,
+        tfaURL: null,
+        tfaFailure: true});
+      return registered_account
     } else {
       yield put({type: REGISTER_FAILURE, error: registered_account.message});
       yield put({type: LOGIN_FAILURE, error: registered_account.message})
@@ -213,10 +233,36 @@ function* watchRegisterRequest() {
 function* activate({activation_token}) {
   try {
     const activated_account = yield call(activateAPI, activation_token);
-    yield put({type: ACTIVATE_SUCCESS, activated_account});
-    yield put(createLoginSuccessObject(activated_account));
-    yield call(storeSessionToken, activated_account.auth_token );
-  } catch (error) {
+
+    if (activated_account.auth_token && !activated_account.tfa_url) {
+      yield put({type: ACTIVATE_SUCCESS, activated_account});
+      yield put(createLoginSuccessObject(activated_account));
+      yield call(storeSessionToken, activated_account.auth_token);
+      yield call (authenticatePusher);
+
+    } else if (activated_account.tfa_url) {
+      yield call(storeSessionToken, activated_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: activated_account.message,
+        tfaURL: activated_account.tfa_url,
+        tfaFailure: true
+      });
+    } else if (activated_account.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: activated_account.message,
+        tfaURL: null,
+        tfaFailure: true});
+      return activated_account
+    } else {
+      yield put({type: ACTIVATE_FAILURE, error: activated_account.statusText})
+    }
+
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
     yield put({type: ACTIVATE_FAILURE, error: error.statusText})
   }
 }
