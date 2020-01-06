@@ -61,7 +61,7 @@ class CompareListsView extends React.Component {
           <DatasetFeed
             datasetList={
             Object.keys(this.props.datasetList.data).map((key) => this.props.datasetList.data[key])
-            .filter(item => item.uploader_id == this.props.login.userId)
+            .filter(item => item.uploader_id === this.props.login.userId)
             }
           />
         </FeedContainer>
@@ -76,7 +76,7 @@ class CompareListsView extends React.Component {
           <DatasetFeed
             datasetList={
             Object.keys(this.props.datasetList.data).map((key) => this.props.datasetList.data[key])
-            .filter(item => item.uploader_id != this.props.login.userId)
+            .filter(item => item.uploader_id !== this.props.login.userId)
             }
           />
         </FeedContainer>

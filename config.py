@@ -313,3 +313,13 @@ try:
     NAMESCAN_KEY    = common_parser['NAMESCAN']['key']
 except KeyError:
     NAMESCAN_KEY = None
+
+try:
+    GE_DB_NAME = specific_parser['GE_MIGRATION'].get('name')
+    GE_DB_USER = specific_parser['GE_MIGRATION'].get('user')
+    GE_DB_HOST = specific_parser['GE_MIGRATION'].get('host')
+    GE_DB_PORT = specific_parser['GE_MIGRATION'].get('port')
+    GE_DB_PASSWORD = specific_parser['GE_MIGRATION'].get('password')
+
+except KeyError:
+    pass

@@ -12,7 +12,6 @@ class SpendApproval(ModelBase):
     giving_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
 
     def __init__(self, transfer_account_giving_approval, address_getting_approved):
-
         self.giving_transfer_account = transfer_account_giving_approval
 
         self.token = transfer_account_giving_approval.token

@@ -26,9 +26,6 @@ import notFoundPage from './components/pages/notFoundPage.jsx';
 import MessageBar from './components/messageBar.jsx';
 import ErrorBoundary from './components/errorBoundary.jsx'
 
-// DEPRECATED VENDOR WEB PORTAL
-const deprecatedVendorPage = lazy(() => import("./components/pages/deprecatedVendorPage.jsx"));
-
 import { WrapperDiv, CenterLoadingSideBarActive } from './components/styledElements';
 import {ThemeProvider} from "styled-components";
 import {DefaultTheme} from './components/theme.js'
@@ -65,7 +62,6 @@ class Nav extends React.Component {
               <PrivateRoute exact path="/users/:userId" component={singleUserPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/users/:userId/verification" component={BusinessVerificationPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/transfers" component={creditTransferListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute exact path="/deprecatedVendor" component={deprecatedVendorPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings" component={settingsPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/invite" component={InvitePage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/change-password" component={internalChangePasswordPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>

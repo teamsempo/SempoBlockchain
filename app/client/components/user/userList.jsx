@@ -5,7 +5,7 @@ import ReactTable from 'react-table'
 
 import { TopRow, ModuleBox, ModuleHeader } from '../styledElements.js'
 
-import { loadUserList } from '../../reducers/authReducer'
+import { loadUserList } from '../../reducers/auth/actions'
 import { browserHistory } from "../../app.jsx";
 
 const mapStateToProps = (state, props) => {

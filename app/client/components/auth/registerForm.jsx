@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import ReactPasswordStrength from 'react-password-strength';
 
-import { registerRequest } from '../../reducers/authReducer'
+import { registerRequest } from '../../reducers/auth/actions'
 
 import AsyncButton from './../AsyncButton.jsx'
 import TFAForm from "./TFAForm.jsx";
@@ -127,7 +127,7 @@ class RegisterFormContainer extends React.Component {
       )
     }
 
-    if (this.props.register_status.registerSuccess) {
+    if (this.props.register_status.success) {
       return (
         <div>
           <h3> Register Success </h3>
@@ -148,7 +148,7 @@ class RegisterFormContainer extends React.Component {
         password_missmatch = {this.state.password_missmatch}
         password_invalid = {this.state.password_invalid}
         invalid_register = {this.state.invalid_register}
-        isRegistering = {this.props.register_status.isRegistering}
+        isRegistering = {this.props.register_status.isRequesting}
         state={this.state}
       />
     )

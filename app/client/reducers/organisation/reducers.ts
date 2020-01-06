@@ -7,7 +7,7 @@ import {
   LoadOrganisationAction, OrganisationAction, Organisation
 } from "./types";
 
-const data = (state = null, action: OrganisationAction): Organisation | null => {
+const data = (state: Organisation | null = null, action: OrganisationAction): Organisation | null => {
   switch (action.type) {
     case UPDATE_ORGANISATION:
       return action.organisation;
@@ -42,8 +42,6 @@ const loadStatus = (state = initialLoadStatusState, action: LoadOrganisationActi
   }
 };
 
-// TODO: why is this failing
-// @ts-ignore
 export const OrganisationReducer = combineReducers({
   data,
   loadStatus,

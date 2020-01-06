@@ -1,4 +1,5 @@
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm.attributes import flag_modified
 
 from server import db
 from server.models.utils import ModelBase
@@ -49,6 +50,15 @@ class KycApplication(ModelBase):
     region              = db.Column(db.String)
     postal_code         = db.Column(db.Integer)
     beneficial_owners   = db.Column(JSON)
+    other_data          = db.Column(JSON)
+
+    def set_data(self, key, value):
+        if self.other_data is None:
+            self.other_data = {}
+        self.other_data[key] = value
+
+        flag_modified(self, "other_data")
+        db.session.add(self)
 
     uploaded_documents = db.relationship('UploadedResource', backref='kyc_application', lazy=True,
                                          foreign_keys='UploadedResource.kyc_application_id')

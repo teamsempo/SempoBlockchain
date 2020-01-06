@@ -9,7 +9,7 @@ import {
 } from "./types";
 
 
-const transferUsages = (state = [], action: TransferUsagesAction): TransferUsage[] => {
+const transferUsages = (state: TransferUsage[] = [], action: TransferUsagesAction): TransferUsage[] => {
   switch (action.type) {
     case UPDATE_TRANSFER_USAGES:
       return action.transferUsages;
@@ -44,8 +44,6 @@ const loadStatus = (state = initialLoadStatusState, action: LoadTransferUsagesAc
   }
 };
 
-// TODO: why is this failing
-// @ts-ignore
 export const TransferUsageReducer = combineReducers({
   transferUsages,
   loadStatus,

@@ -1,6 +1,6 @@
-import {LOAD_TRANSFER_USAGES_REQUEST} from "./types";
+import {LOAD_TRANSFER_USAGES_REQUEST, LoadTransferUsagesAction} from "./types";
 
-export const loadTransferUsages = () => (
+export const loadTransferUsages = (): LoadTransferUsagesAction => (
   {
     type: LOAD_TRANSFER_USAGES_REQUEST,
   }

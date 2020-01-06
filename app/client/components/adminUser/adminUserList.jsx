@@ -7,7 +7,7 @@ import ReactTable from 'react-table'
 
 import { TopRow, StyledButton, ModuleHeader } from '../styledElements.js'
 
-import { loadUserList, updateUser } from '../../reducers/authReducer'
+import { loadUserList, updateUser } from '../reducers/auth/actions'
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 const mapStateToProps = (state) => {
@@ -200,7 +200,7 @@ class AdminUserList extends React.Component {
       );
 	  }
 
-	  if (this.props.login.adminTier === 'view' || 'subadmin') {
+	  if (this.props.login.adminTier === 'view' || this.props.login.adminTier === 'subadmin') {
 	    return(
         <div style={{justifyContent: 'center', display: 'flex', padding: '10vh 10vw'}}>
           <p>You don't have access to admin list.</p>
