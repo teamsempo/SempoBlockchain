@@ -236,6 +236,7 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
         if tfa_response.get("id") != user.id:
             # User doesn't has valid TFA token BUT it's not theirs
             response_object = {
+                'tfa_failure': True,
                 'message': 'Invalid User ID in TFA response'
             }
 
