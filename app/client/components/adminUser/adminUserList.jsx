@@ -1,20 +1,21 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { browserHistory } from "../app.jsx";
+import { browserHistory } from "../../app.jsx";
 
 import styled from 'styled-components';
 import ReactTable from 'react-table'
 
-import { ModuleBox, TopRow, StyledButton, ModuleHeader } from './styledElements.js'
+import { TopRow, StyledButton, ModuleHeader } from '../styledElements.js'
 
-import { loadUserList, updateUser } from '../reducers/auth/actions'
-import LoadingSpinner from "./loadingSpinner.jsx";
+import { loadUserList, updateUser } from '../../reducers/auth/actions'
+import LoadingSpinner from "../loadingSpinner.jsx";
 
 const mapStateToProps = (state) => {
   return {
   	login: state.login,
     loggedIn: (state.login.userId != null),
-		userList: state.userList,
+		adminUsers: state.adminUsers,
+		adminUserList: Object.keys(state.adminUsers.byId).map(id => state.adminUsers.byId[id]),
 		updateUserRequest: state.updateUserRequest,
   };
 };
@@ -56,13 +57,13 @@ class AdminUserList extends React.Component {
 
 
   displayCorrectStatus(id) {
-	  if (this.props.userList.userList.find(x => x.id === id).is_disabled) {
+	  if (this.props.adminUserList.find(x => x.id === id).is_disabled) {
 	  	var StatusComponent =
 			  <StatusWrapper>
 				  <DisabledIcon style={{backgroundColor: 'rgba(255, 0, 0, 0.8)'}}>Disabled</DisabledIcon>
 			  </StatusWrapper>
 
-      } else if (!this.props.userList.userList.find(x => x.id === id).is_activated) {
+      } else if (!this.props.adminUserList.find(x => x.id === id).is_activated) {
 	  	StatusComponent =
 			  <StatusWrapper>
 				  <DisabledIcon style={{backgroundColor: 'rgba(39, 164, 167, 0.8)'}}>Unactivated</DisabledIcon>
@@ -79,7 +80,7 @@ class AdminUserList extends React.Component {
       {'query': 'view', 'display': 'Change to View Only', 'deactivated': null}
     ];
 
-	if (this.props.userList.userList.find(x => x.id === id).is_disabled) {
+	if (this.props.adminUserList.find(x => x.id === id).is_disabled) {
 		var formatted_action_item = {'query': null, 'display': 'Enable User', 'deactivated': false};
 		default_action_items.push(formatted_action_item);
 	} else {
@@ -124,7 +125,8 @@ class AdminUserList extends React.Component {
   }
 
   render() {
-	  const loadingStatus = this.props.userList.isRequesting || this.props.updateUserRequest.isRequesting;
+  	const { adminUsers, adminUserList } = this.props;
+	  const loadingStatus = adminUsers.loadStatus.isRequesting || adminUsers.createStatus.isRequesting;
 
 	  if (loadingStatus) {
 	    return (
@@ -134,10 +136,9 @@ class AdminUserList extends React.Component {
       )
     }
 
-	  if (this.props.userList.success) {
-		  const tableLength = this.props.userList.userList.length;
-
-		  const sortedUserList = this.props.userList.userList.sort((a, b) => (a.id - b.id));
+	  if (adminUsers.loadStatus.success) {
+		  const tableLength = adminUserList.length;
+		  const sortedUserList = adminUserList.sort((a, b) => (a.id - b.id));
 
 		  return (
 			  <Wrapper>

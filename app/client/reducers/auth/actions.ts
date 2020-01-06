@@ -12,8 +12,8 @@ import {
   REQUEST_RESET_REQUEST,
   RESET_PASSWORD_REQUEST, ResetPasswordPayload,
   UPDATE_ACTIVE_ORG,
-  UPDATE_USER_REQUEST, UpdateActiveOrgPayload, UpdateUserPayload,
-  USER_LIST_REQUEST,
+  EDIT_ADMIN_USER_REQUEST, UpdateActiveOrgPayload, UpdateUserPayload,
+  LOAD_ADMIN_USER_REQUEST,
   VALIDATE_TFA_REQUEST, ValidateTfaPayload
 } from "./types";
 
@@ -93,13 +93,13 @@ export const resetPassword = (payload: ResetPasswordPayload) => (
 
 export const loadUserList = () => (
   {
-    type: USER_LIST_REQUEST,
+    type: LOAD_ADMIN_USER_REQUEST,
   }
 );
 
 export const updateUser = (payload: UpdateUserPayload) => (
   {
-    type: UPDATE_USER_REQUEST,
+    type: EDIT_ADMIN_USER_REQUEST,
     payload
   }
 );

@@ -707,7 +707,7 @@ class PermissionsAPI(MethodView):
         response_object = {
             'status': 'success',
             'message': 'Admin List Loaded',
-            'admin_list': admin_list
+            'admins': admin_list
         }
 
         return make_response(jsonify(response_object)), 200
@@ -791,11 +791,18 @@ class PermissionsAPI(MethodView):
         if deactivated is not None:
             user.is_disabled = deactivated
 
-        db.session.commit()
-
         response_object = {
-            'status': 'success',
             'message': 'Account status modified',
+            'data': {
+                'admin': {
+                    'id': user.id,
+                    'email': user.email,
+                    'admin_tier': user.admin_tier,
+                    'created': user.created,
+                    'is_activated': user.is_activated,
+                    'is_disabled': user.is_disabled
+                }
+            }
         }
 
         return make_response(jsonify(response_object)), 200

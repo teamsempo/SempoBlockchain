@@ -1,6 +1,8 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
+import { normalize } from 'normalizr';
 
 import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken} from '../utils'
+import { adminUserSchema } from '../schemas'
 
 import {
   requestApiToken,
@@ -36,12 +38,13 @@ import {
   RESET_PASSWORD_REQUEST,
   RESET_PASSWORD_SUCCESS,
   RESET_PASSWORD_FAILURE,
-  USER_LIST_REQUEST,
-  USER_LIST_SUCCESS,
-  USER_LIST_FAILURE,
-  UPDATE_USER_REQUEST,
-  UPDATE_USER_SUCCESS,
-  UPDATE_USER_FAILURE,
+  LOAD_ADMIN_USER_REQUEST,
+  LOAD_ADMIN_USER_SUCCESS,
+  LOAD_ADMIN_USER_FAILURE,
+  UPDATE_ADMIN_USER_LIST,
+  EDIT_ADMIN_USER_REQUEST,
+  EDIT_ADMIN_USER_SUCCESS,
+  EDIT_ADMIN_USER_FAILURE,
   INVITE_USER_REQUEST,
   INVITE_USER_SUCCESS,
   INVITE_USER_FAILURE,
@@ -52,6 +55,21 @@ import {
 
 import {browserHistory} from "../app.jsx";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
+
+function* updateStateFromAdmin(data) {
+  //Schema expects a list of admin user objects
+  if (data.admins) {
+    var admin_list = data.admins
+  } else {
+    admin_list = [data.admin]
+  }
+
+  const normalizedData = normalize(admin_list, adminUserSchema);
+
+  const admins = normalizedData.entities.admins;
+
+  yield put({type: UPDATE_ADMIN_USER_LIST, admins});
+}
 
 function* saveOrgId({payload}) {
   try {
@@ -67,7 +85,7 @@ function* watchSaveOrgId() {
   yield takeEvery(UPDATE_ACTIVE_ORG, saveOrgId);
 }
 export function* logout() {
-    yield call(removeTFAToken);
+    yield call(removeTFAToken); //todo: only remove on failed login attempt
     yield call(removeSessionToken);
     yield call(removeOrgId);
 }
@@ -265,33 +283,35 @@ function* watchResetPassword() {
 function* userList() {
   try {
     const load_result = yield call(getUserList);
-    yield put({type: USER_LIST_SUCCESS, load_result});
+
+    yield call(updateStateFromAdmin, load_result);
+
+    yield put({type: LOAD_ADMIN_USER_SUCCESS, load_result});
+
   } catch (error) {
-    yield put({type: USER_LIST_FAILURE, error: error.statusText})
+    yield put({type: LOAD_ADMIN_USER_FAILURE, error: error.statusText})
   }
 }
 
 function* watchLoadUserList() {
-  yield takeEvery(USER_LIST_REQUEST, userList);
+  yield takeEvery(LOAD_ADMIN_USER_REQUEST, userList);
 }
 
 function* updateUserRequest({payload}) {
     try {
-        const result = yield call(updateUserAPI, payload);
-        if (result.status === 'success') {
-          yield put({type: UPDATE_USER_SUCCESS, result});
-          const load_result = yield call(getUserList);
-          yield put({type: USER_LIST_SUCCESS, load_result});
-        } else {
-          yield put({type: UPDATE_USER_FAILURE, error: result.message})
-        }
+      const result = yield call(updateUserAPI, payload);
+
+      yield call(updateStateFromAdmin, result.data);
+
+      yield put({type: EDIT_ADMIN_USER_SUCCESS, result});
+
     } catch (error) {
-        yield put({type: UPDATE_USER_FAILURE, error: error})
+        yield put({type: EDIT_ADMIN_USER_FAILURE, error: error})
     }
 }
 
 function* watchUpdateUserRequest() {
-    yield takeEvery(UPDATE_USER_REQUEST, updateUserRequest);
+    yield takeEvery(EDIT_ADMIN_USER_REQUEST, updateUserRequest);
 }
 
 function* inviteUserRequest({ payload }) {
