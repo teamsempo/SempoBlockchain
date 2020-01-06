@@ -11,6 +11,7 @@ from eth_utils import keccak
 from eth_keys import keys
 from web3 import Web3
 
+from sempo_types import UUID
 import config
 
 ALLOWED_TASK_TYPES = ['SEND_ETH', 'FUNCTION', 'DEPLOY_CONTRACT']
@@ -30,6 +31,7 @@ class ModelBase(Base):
     created = Column(DateTime, default=datetime.datetime.utcnow)
     updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
+
 class BlockchainWallet(ModelBase):
     __tablename__ = 'blockchain_wallet'
 
@@ -38,7 +40,7 @@ class BlockchainWallet(ModelBase):
 
     wei_target_balance    = Column(BigInteger())
     wei_topup_threshold   = Column(BigInteger())
-    last_topup_task_id    = Column(Integer())
+    last_topup_task_uuid    = Column(String())
 
     tasks = relationship('BlockchainTask',
                          backref='signing_wallet',
@@ -118,6 +120,8 @@ task_dependencies = Table(
 class BlockchainTask(ModelBase):
     __tablename__ = 'blockchain_task'
 
+    uuid = Column(String, index=True)
+
     _type = Column(String)
     contract_address = Column(String)
     contract_name = Column(String)
@@ -132,6 +136,12 @@ class BlockchainTask(ModelBase):
     _amount = Column(Numeric(27))
 
     signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
+
+    # Purely for convenience to show status on single db table for debugging - use status hybrid prop in code
+    status_text = Column(String)
+
+    # How many times the system has previously requested an attempt to complete a transaction for this task
+    previous_invocations = Column(Integer)
 
     transactions = relationship('BlockchainTransaction',
                                 backref='task',
@@ -186,6 +196,13 @@ class BlockchainTask(ModelBase):
                 else_='UNSTARTED'
             )
         )
+
+    def __init__(self, uuid: UUID, **kwargs):
+        super(BlockchainTask, self).__init__(**kwargs)
+
+        self.uuid = uuid
+
+        self.previous_invocations = 0
 
 class BlockchainTransaction(ModelBase):
     __tablename__ = 'blockchain_transaction'

@@ -14,6 +14,7 @@ export const requestApiToken = ({body}) => {
     body: JSON.stringify(body)
     })
     .then(response => {
+      // special use case for TFA
       return response.json();
     })
     .catch(error => {
@@ -55,6 +56,7 @@ export const registerAPI = ({body}) => {
     body: JSON.stringify(body)
     })
     .then(response => {
+      // special use case for TFA
       return response.json();
     })
     .catch(error => {
@@ -74,7 +76,8 @@ export const activateAPI = (activation_token) => {
       })
     })
     .then(response => {
-      return handleResponse(response)
+      // special use case for TFA
+      return response.json();
     })
     .catch(error => {
       throw error;
@@ -189,7 +192,7 @@ export const updateUserAPI = ({body, query}) => {
     method: 'PUT',
     body: JSON.stringify(body)
   }).then(response => {
-      return response.json();
+      return handleResponse(response)
     })
     .catch(error => {
       throw error;
