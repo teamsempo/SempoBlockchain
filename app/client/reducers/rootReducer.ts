@@ -6,9 +6,7 @@ import {
   activate,
   requestResetEmailState,
   resetPasswordState,
-  userList,
-  updateUserRequest,
-  inviteUserRequest,
+  adminUsers,
   validateTFA
 } from './auth/reducers'
 import {login} from './auth/loginReducer'
@@ -35,9 +33,7 @@ const appReducer = combineReducers({
   requestResetEmailState,
   resetPasswordState,
   validateTFA,
-  userList,
-  updateUserRequest,
-  inviteUserRequest,
+  adminUsers,
   spreadsheetUpload,
   datasetSave,
   datasetList,

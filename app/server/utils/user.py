@@ -381,6 +381,9 @@ def proccess_create_or_modify_user_request(
     :return: An http response
     """
 
+    if not attribute_dict.get('custom_attributes'):
+        attribute_dict['custom_attributes'] = {}
+
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 

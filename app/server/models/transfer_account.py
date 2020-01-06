@@ -200,8 +200,10 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     def make_initial_disbursement(self, initial_balance=None):
         from server.utils.credit_transfer import make_payment_transfer
+        initial_balance = initial_balance or current_app.config.get('STARTING_BALANCE', None)
+
         if not initial_balance:
-            initial_balance = current_app.config['STARTING_BALANCE']
+            return None
 
         user_id = get_authorising_user_id()
         if user_id is not None:
