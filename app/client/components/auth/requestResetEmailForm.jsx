@@ -1,12 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
 
 import AsyncButton from './../AsyncButton.jsx'
 
-import { requestPasswordResetEmail } from '../../reducers/authReducer'
+import { requestPasswordResetEmail } from '../../reducers/auth/actions'
 
-import { Input, StyledButton, ErrorMessage } from './../styledElements'
+import { Input, ErrorMessage } from './../styledElements'
 
 const mapStateToProps = (state) => {
   return {

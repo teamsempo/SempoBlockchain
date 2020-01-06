@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import { Pie } from 'react-chartjs-2';
 
-import { logout } from '../../reducers/authReducer'
+import { logout } from '../../reducers/auth/actions'
 
 import {ModuleHeader} from '../styledElements.js'
 

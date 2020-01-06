@@ -16,7 +16,6 @@ from server.models.blockchain_transaction import BlockchainTransaction
 from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum
 
 
-
 class TransferAccountType(enum.Enum):
     USER            = 'USER'
     ORGANISATION    = 'ORGANISATION'
@@ -167,7 +166,6 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         return 'NO_REQUEST'
 
-
     def get_or_create_system_transfer_approval(self):
         sys_blockchain_address = self.organisation.system_blockchain_address
 
@@ -193,7 +191,6 @@ class TransferAccount(OneOrgBase, ModelBase):
         return None
 
     def approve_and_disburse(self):
-
         if not self.is_approved:
             self.is_approved = True
 

@@ -24,13 +24,9 @@ import {
   LOGIN_PARTIAL,
   LOGIN_FAILURE,
   LOGOUT,
-  loginFailure,
-  loginSuccess,
   REGISTER_REQUEST,
   REGISTER_SUCCESS,
   REGISTER_FAILURE,
-  registerSuccess,
-  registerFailure,
   ACTIVATE_REQUEST,
   ACTIVATE_SUCCESS,
   ACTIVATE_FAILURE,
@@ -52,7 +48,7 @@ import {
   VALIDATE_TFA_REQUEST,
   VALIDATE_TFA_SUCCESS,
   VALIDATE_TFA_FAILURE
-} from '../reducers/authReducer';
+} from '../reducers/auth/types';
 
 import {browserHistory} from "../app.jsx";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
