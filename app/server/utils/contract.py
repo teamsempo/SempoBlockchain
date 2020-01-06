@@ -57,7 +57,7 @@ def deploy_cic_token(post_data, creating_org=None):
 
             return response_object, 400
 
-        load_task_id = bt.make_token_transfer(
+        load_task_uuid = bt.make_token_transfer(
             signing_address=master_org.primary_blockchain_address,
             token=exchange_contract.reserve_token,
             from_address=master_org.primary_blockchain_address,
@@ -66,7 +66,7 @@ def deploy_cic_token(post_data, creating_org=None):
         )
 
         try:
-            bt.await_task_success(load_task_id)
+            bt.await_task_success(load_task_uuid)
         except TimeoutError:
             response_object = {
                 'message': f'Insufficient reserve funds (balance in wei: {balance_wei}), and could not load from master'
