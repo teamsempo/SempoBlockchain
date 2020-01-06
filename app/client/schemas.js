@@ -26,6 +26,8 @@ const credit_transfer = new schema.Entity('credit_transfers', {
 
 const filter = new schema.Entity('filters');
 
+const admin = new schema.Entity('admins');
+
 export const transferAccountSchema =  [ transfer_account ];
 
 export const creditTransferSchema = [ credit_transfer ];
@@ -33,3 +35,5 @@ export const creditTransferSchema = [ credit_transfer ];
 export const userSchema = [ user ];
 
 export const filterSchema = [ filter ];
+
+export const adminUserSchema = [ admin ];

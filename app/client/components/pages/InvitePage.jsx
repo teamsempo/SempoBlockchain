@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import { PageWrapper, ModuleHeader } from '../styledElements';
-import InviteForm from '../InviteForm.jsx'
+import InviteForm from '../adminUser/InviteForm.jsx'
 
 export default class InvitePage extends React.Component {
   render() {
