@@ -177,10 +177,12 @@ class RDSMigrate:
             if ge_user['group_accounts.id'] is not None:
                 sempo_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
-            kyc_app = KycApplication(type='INDIVIDUAL')
-            kyc_app.user = sempo_user
-            kyc_app.set_data('national_id_number', ge_user['national_id_number'])
-            db.session.add(kyc_app)
+            if ge_user.get('national_id_number') is not None:
+                kyc_app = KycApplication(type='INDIVIDUAL')
+                kyc_app.user = sempo_user
+                kyc_app.set_data('national_id_number', ge_user['national_id_number'])
+                kyc_app.kyc_status = 'VERIFIED'
+                db.session.add(kyc_app)
 
             db.session.flush()
 
