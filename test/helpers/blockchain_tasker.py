@@ -2,6 +2,7 @@ import time
 import random
 import os
 from eth_keys import keys
+import uuid
 
 
 class MockBlockchainTasker(object):
@@ -18,6 +19,10 @@ class MockBlockchainTasker(object):
 
         time.sleep(random.random())
         return MockBlockchainTasker.get_blockchain_task()
+
+    @staticmethod
+    def retry_task(*args, **kwargs):
+        pass
 
     @staticmethod
     def create_blockchain_wallet(*args, **kwargs):
@@ -76,7 +81,7 @@ class MockBlockchainTasker(object):
 
     @staticmethod
     def _generic_task():
-        return random.randint(0, 10000)
+        return str(uuid.uuid4())
 
     @staticmethod
     def _blockchain_address():
