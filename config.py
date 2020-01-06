@@ -212,6 +212,7 @@ MESSAGEBIRD_PHONE = specific_parser['MESSAGEBIRD']['phone']
 
 AT_USERNAME = specific_parser["AFRICASTALKING"]["username"]
 AT_API_KEY = specific_parser["AFRICASTALKING"]["api_key"]
+AT_SENDER_ID = specific_parser["AFRICASTALKING"].get("at_sender_id")
 
 try:
     from ecdsa import SigningKey, NIST192p
