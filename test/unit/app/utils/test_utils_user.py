@@ -1,6 +1,8 @@
 """
 This file (test_utils_user.py) contains the unit tests for the user.py file in utils dir.
 """
+from functools import partial
+
 import pytest
 
 
@@ -16,7 +18,8 @@ import pytest
 #     assert create_transfer_account_user.one_time_code is not None
 #     assert create_transfer_account_user.transfer_account is not None
 #     assert create_transfer_account_user.transfer_account.is_approved is config.AUTO_APPROVE_TRANSFER_ACCOUNTS
-from server.utils.user import transfer_usages_for_user
+from helpers.factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory
+from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages
 
 
 def test_create_user_with_existing_transfer_account(create_user_with_existing_transfer_account, create_transfer_account):
@@ -68,3 +71,30 @@ def test_transfer_usages_for_user(authed_sempo_admin_user):
     # can mock out relevant_usage call for a list
     usages = transfer_usages_for_user(authed_sempo_admin_user)
     assert isinstance(usages, list)
+
+
+#
+# @pytest.mark.parametrize("preferred_language, org_key, expected", [
+#
+#     (None, None, "Welcome to Sarafu Network. Dial *483*46# to continue"),
+#     (None, "grassroots", "Welcome to Sempo!"),
+#     (None, None, "Karibu Sarafu Network. Bonyeza *483*46# kwa maelezo zaidi."),
+# ])
+# def test_send_welcome_sms(mocker, test_client, init_database, preferred_language, org_key, expected):
+#
+#     organisation = OrganisationFactory(custom_welcome_message_key=org_key)
+#     token = TokenFactory(symbol='SARAFU')
+#     transfer_account = TransferAccountFactory(balance=10000, token=token, organisation=organisation)
+#     user = UserFactory(phone='123456789',
+#                        preferred_language=preferred_language,
+#                        default_organisation=organisation,
+#                        transfer_account=transfer_account)
+#
+#     send_message = mocker.MagicMock()
+#     mocker.patch('server.message_processor.send_message', send_message)
+#
+#     send_onboarding_sms_messages(user)
+#
+#     # organisation.send_welcome_sms({'phone': user.phone, 'preferred_language': user.preferred_language})
+#
+#     send_message.assert_called_with(None, expected)

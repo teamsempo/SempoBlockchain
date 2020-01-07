@@ -1,7 +1,7 @@
 import pytest
 from functools import partial
 
-from helpers.kyc_application import KycApplicationFactory
+from helpers.factories import KycApplicationFactory
 
 
 @pytest.mark.parametrize("kyc_factory, expected", [

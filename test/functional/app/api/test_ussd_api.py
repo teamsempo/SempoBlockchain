@@ -6,7 +6,7 @@ from functools import partial
 import config
 from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_phone
 from migrations.seed import create_ussd_menus, create_business_categories
-from helpers.user import UserFactory, TransferUsageFactory
+from helpers.factories import UserFactory, TransferUsageFactory
 from server.models.credit_transfer import CreditTransfer
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage

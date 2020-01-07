@@ -11,6 +11,7 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.models.user import User
 
+from server.utils.misc import round_amount, rounded_dollars
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
@@ -22,19 +23,6 @@ from server.utils.transfer_limits import TransferLimit
 class TokenProcessor(object):
 
     @staticmethod
-    def round_amount(amount):
-        if int(amount) == float(amount) and int(amount) > 1000:
-            # It's a large whole amount like 1200.00, so return as 1200
-            return(str(int(amount)))
-
-        # Add a small amount before round to override rounding half to even
-        return "{:.2f}".format(round(amount + 0.000001, 2))
-
-    @staticmethod
-    def rounded_dollars(amount):
-        return TokenProcessor.round_amount(float(amount) / 100)
-
-    @staticmethod
     def send_sms(user, message_key, **kwargs):
         # if we use token processor similarly for other countries later, can generalize country to init
         message = i18n_for(user, "ussd.kenya.{}".format(message_key), **kwargs)
@@ -44,8 +32,8 @@ class TokenProcessor(object):
     def send_success_sms(message_key: str, user: User, other_user: User, amount: float, reason: str, tx_time: datetime,
                          balance: float):
 
-        amount_dollars = TokenProcessor.rounded_dollars(amount)
-        rounded_balance_dollars = TokenProcessor.rounded_dollars(balance)
+        amount_dollars = rounded_dollars(amount)
+        rounded_balance_dollars = rounded_dollars(balance)
 
         TokenProcessor.send_sms(user, message_key, amount=amount_dollars, token_name=default_token(user).symbol,
                                 other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'), reason=reason,
@@ -55,9 +43,9 @@ class TokenProcessor(object):
     def exchange_success_sms(message_key: str, user: User, other_user: User, own_amount: float, other_amount: float,
                              tx_time: datetime, balance: float):
 
-        rounded_own_amount_dollars = TokenProcessor.rounded_dollars(own_amount)
-        rounded_other_amount_dollars = TokenProcessor.rounded_dollars(other_amount)
-        rounded_balance_dollars = TokenProcessor.rounded_dollars(balance)
+        rounded_own_amount_dollars = rounded_dollars(own_amount)
+        rounded_other_amount_dollars = rounded_dollars(other_amount)
+        rounded_balance_dollars = rounded_dollars(balance)
 
         TokenProcessor.send_sms(
             user, message_key,
@@ -125,11 +113,11 @@ class TokenProcessor(object):
     @staticmethod
     def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
         if limit is not None and limit.transfer_balance_fraction is not None:
-            return TokenProcessor.round_amount(
+            return round_amount(
                 limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
             )
         elif limit.total_amount is not None:
-            return TokenProcessor.round_amount(
+            return round_amount(
                 limit.total_amount
             )
         else:
@@ -194,7 +182,7 @@ class TokenProcessor(object):
         transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
         token_info_list = list(map(get_token_info, transfer_accounts))
 
-        token_balances_dollars = "\n".join(map(lambda x: f"{x['name']} {TokenProcessor.rounded_dollars(x['balance'])}",
+        token_balances_dollars = "\n".join(map(lambda x: f"{x['name']} {rounded_dollars(x['balance'])}",
                                                token_info_list))
 
         reserve_token = user.get_reserve_token()
@@ -202,12 +190,12 @@ class TokenProcessor(object):
         is_ge = len(ge_tokens) > 0
         if is_ge:
             token_exchanges = "\n".join(
-                map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_fraction * x['balance'])}"
+                map(lambda x: f"{rounded_dollars(x['limit'].transfer_balance_fraction * x['balance'])}"
                               f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
                     ge_tokens))
         else:
             token_exchanges = "\n".join(
-                map(lambda x: f"{TokenProcessor.rounded_dollars(str(x['limit'].total_amount))}"
+                map(lambda x: f"{rounded_dollars(str(x['limit'].total_amount))}"
                               f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
                     token_info_list))
 
@@ -240,8 +228,8 @@ class TokenProcessor(object):
             "exchange_rate_sms",
             token_name=from_token.symbol,
             exchange_rate=exchange_rate,
-            exchange_limit=TokenProcessor.rounded_dollars(exchange_limit),
-            exchange_sample_value=TokenProcessor.rounded_dollars(exchange_rate * float(1000)),
+            exchange_limit=rounded_dollars(exchange_limit),
+            exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
             limit_period=default_limit.time_period_days
         )
 

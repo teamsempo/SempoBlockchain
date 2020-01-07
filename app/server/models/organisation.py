@@ -77,9 +77,11 @@ class Organisation(ModelBase):
 
     def send_welcome_sms(self, to_user: dict):
         if self.custom_welcome_message_key:
-            message = i18n_for(to_user, "organisation.{}".format(self.custom_welcome_message_key))
+            message = i18n_for(to_user,
+                               "general_sms.welcome.{}".format(self.custom_welcome_message_key))
         else:
-            message = i18n_for(to_user, "organisation.generic_welcome_message")
+            message = i18n_for(to_user, "general_sms.welcome.generic_welcome_message")
+
         message_processor.send_message(to_user.get('phone'), message)
 
     def _setup_org_transfer_account(self):

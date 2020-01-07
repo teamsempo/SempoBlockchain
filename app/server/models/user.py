@@ -319,13 +319,10 @@ class User(ManyOrgBase, ModelBase):
     @property
     def transfer_account(self):
         active_organisation = getattr(g, "active_organisation", None) or self.fallback_active_organisation()
-        if active_organisation:
-            return active_organisation.org_level_transfer_account
 
-        # TODO: This should have a better concept of a default
-        if len(self.transfer_accounts) == 1:
-            return self.transfer_accounts[0]
-        return None
+        # TODO: This should/could have a better concept of a default
+        active_organisation_token = active_organisation.token
+        return self.get_transfer_account_for_token(active_organisation_token)
 
     def get_transfer_account_for_token(self, token):
         return find_transfer_accounts_with_matching_token(self, token)

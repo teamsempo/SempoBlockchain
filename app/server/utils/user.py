@@ -5,7 +5,7 @@ from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
-from flask import current_app
+from flask import current_app, g
 from eth_utils import to_checksum_address
 
 from server import db
@@ -28,6 +28,8 @@ from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
 from server.utils.transfer_enums import TransferSubTypeEnum
+from server.utils.misc import rounded_dollars
+
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -599,6 +601,10 @@ def proccess_create_or_modify_user_request(
             return {'message': 'User Created. Please verify phone number.', 'otp_verify': True}, 200
 
         elif current_app.config['ONBOARDING_SMS']:
+
+            if organisation is not None and user is not None:
+                organisation.send_welcome_sms(user)
+
             try:
                 balance = user.transfer_account.balance
                 if isinstance(balance, int):
@@ -623,6 +629,29 @@ def proccess_create_or_modify_user_request(
     }
 
     return response_object, 200
+
+
+def send_onboarding_sms_messages(user):
+
+    if not user.phone:
+        return
+
+    # First send the intro message
+    organisation = getattr(g, 'active_organisation', None) or user.default_organisation
+
+    intro_message = i18n_for(
+        user,
+        "general_sms.welcome.{}".format(organisation.custom_welcome_message_key or 'generic'),
+        first_name=user.first_name,
+        balance=rounded_dollars(user.transfer_account.balance),
+        token=user.transfer_account.token.symbol
+    )
+
+    message_processor.send_message(user.phone, intro_message)
+
+    terms_message = i18n_for(user, "general_sms.terms")
+
+    message_processor.send_message(user.phone, terms_message)
 
 
 def send_onboarding_message(to_phone, first_name, credits, one_time_code):
