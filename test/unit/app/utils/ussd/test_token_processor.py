@@ -100,14 +100,32 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
     mocker.patch('server.message_processor.send_message', mock_send_message)
     TokenProcessor.fetch_exchange_rate(user)
 
+@pytest.mark.parametrize("lang, token1_symbol, token2_symbol, recipient_balance, expected_send_msg, expected_receive_msg", [
+    ("en", "SM1", "SM1", 31000,
+     "Successfully sent a payment of 10.00 SM1 to Joe Bar",
+     "Successfully received a payment of 10.00 SM1 from Bob Foo"),
+    ("en", "SM1", "SM2", 31500,
+     "sent a payment of 10.00 SM1 = 15.00 SM2",
+     "received a payment of 15.00 SM2 = 10.00 SM1"),
 
-def test_send_token(mocker, test_client, init_database, initialised_blockchain_network):
-    sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo")
-    token1 = Token.query.filter_by(symbol="SM1").first()
+    ("sw", "SM1", "SM1", 31000,
+     "Umetuma 10.00 SM1 kwa Joe Bar",
+     "Umepokea 10.00 SM1 kutoka kwa Bob Foo"),
+    ("sw", "SM1", "SM2", 31500,
+     "Umetuma 10.00 SM1 = 15.00 SM2",
+     "Umepokea 15.00 SM2 = 10.00 SM1 kutoka kwa Bob Foo")
+])
+def test_send_token(mocker, test_client, init_database, initialised_blockchain_network,
+                    lang,
+                    token1_symbol, token2_symbol,
+                    recipient_balance, expected_send_msg, expected_receive_msg):
+
+    sender = UserFactory(preferred_language=lang, phone=phone(), first_name="Bob", last_name="Foo")
+    token1 = Token.query.filter_by(symbol=token1_symbol).first()
     create_transfer_account_for_user(sender, token1, 20000)
 
-    recipient = UserFactory(phone=phone(), first_name="Joe", last_name="Bar")
-    token2 = Token.query.filter_by(symbol="SM2").first()
+    recipient = UserFactory(preferred_language=lang, phone=phone(), first_name="Joe", last_name="Bar")
+    token2 = Token.query.filter_by(symbol=token2_symbol).first()
     create_transfer_account_for_user(recipient, token2, 30000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount, signing_address):
@@ -125,16 +143,15 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
 
     TokenProcessor.send_token(sender, recipient, 1000, "A reason", 1)
     assert default_transfer_account(sender).balance == 19000
-    # TODO: shouldn't it double convert from the reserve to be 32000..?
-    assert default_transfer_account(recipient).balance == 31500
+    assert default_transfer_account(recipient).balance == recipient_balance
 
     assert len(messages) == 2
     sent_message = messages[0]
     assert sent_message['phone'] == sender.phone
-    assert 'sent a payment of 10.00 SM1 = 15.00 SM2' in sent_message['message']
+    assert expected_send_msg in sent_message['message']
     received_message = messages[1]
     assert received_message['phone'] == recipient.phone
-    assert 'received a payment of 15.00 SM2 = 10.00 SM1' in received_message['message']
+    assert expected_receive_msg in received_message['message']
 
 
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
