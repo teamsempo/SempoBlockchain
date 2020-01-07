@@ -168,7 +168,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
             <InputField name="lastName" label='Family/Surname' />
             <InputField name="bio" label='Directory Entry' />
             <InputField name="location" label='Location' />
-            <SelectField name="gender" label='Gender' options={["Female", "Male", "Other"]} />
+            <SelectField name="gender" label='Gender' options={["Female", "Male", "Other"]} hideNoneOption={true} />
 
             {selectedAccountTypeForm}
 
