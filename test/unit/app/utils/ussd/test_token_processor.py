@@ -76,7 +76,7 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
 
 
 @pytest.mark.parametrize("user_type,preferred_language,exchange_text,limit_text", [
-    ("standard", "en", "For 1 SM1 you get 1.2 KSH", "a maximum of 20.00 SM1 at an agent every 7 days"),
+    # ("standard", "en", "For 1 SM1 you get 1.2 KSH", "a maximum of 20.00 SM1 at an agent every 7 days"),
     ("group", "sw", "Kwa kila 1 SM1 utapata 1.2 KSH", "100.00 SM1 kwa wakala baada ya siku 30"),
 ])
 def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blockchain_network, user_type,

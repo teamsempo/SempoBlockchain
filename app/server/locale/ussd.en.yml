@@ -172,7 +172,8 @@ en:
     exit_use_exchange_menu: END Recipient phone number is an agent. To exchange, use exchange menu
     exit_invalid_token_agent: END Agent phone number is incorrect
     exit_not_registered: |
-      END You aren’t registered for Sarafu. To register send: name, phone number, location, and business to 0757628885
+      END Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
+      To register send: name, number, location and business to 0757628885
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
