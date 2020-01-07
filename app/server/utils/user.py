@@ -630,7 +630,7 @@ def send_onboarding_sms_messages(user):
         "general_sms.welcome.{}".format(organisation.custom_welcome_message_key or 'generic'),
         first_name=user.first_name,
         balance=rounded_dollars(user.transfer_account.balance),
-        token=user.transfer_account.token.symbol
+        token=user.transfer_account.token.name
     )
 
     message_processor.send_message(user.phone, intro_message)
