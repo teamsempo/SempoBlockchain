@@ -159,3 +159,31 @@ def test_send_directory_listing(mocker, test_client, init_database):
     state_machine.feed_char('2')
     assert state_machine.state == 'complete'
     send_directory_listing.assert_called_with(user, transfer_usage)
+
+
+def test_terms_only_sent_once(mocker, test_client, init_database):
+    session = UssdSessionFactory(state="balance_inquiry_pin_authorization")
+    user = standard_user()
+    user.phone = phone()
+
+    messages = []
+    def mock_send_message(phone, message):
+        messages.append({'phone': phone, 'message': message})
+    mocker.patch('server.message_processor.send_message', mock_send_message)
+
+    inquire_balance = mocker.MagicMock()
+    mocker.patch('server.ussd_tasker.inquire_balance', inquire_balance)
+
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.feed_char('0000')
+
+    db.session.commit()
+
+    assert len(messages) == 1
+
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.feed_char('0000')
+
+    assert len(messages) == 1
+
+
