@@ -74,15 +74,26 @@ def test_transfer_usages_for_user(authed_sempo_admin_user):
 
 
 
-@pytest.mark.parametrize("preferred_language, org_key, expected", [
+@pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [
 
-    (None, None, 'Hello Magoo, you have been registered on Sempo. Your balance is 100.00 SARAFU.'),
-    (None, "grassroots", 'Hello Magoo, you have been registered on Sarafu Network. Your balance is 100.00 SARAFU. Dial 38496# Safaricom or 48346# Airtel to use Sarafu'),
-    ('sw', None, 'Habari Magoo, umesajiliwa kwa Sempo. Salio yako ni 100.00 SARAFU.'),
-    ('sw', 'grassroots', 'Habari Magoo, umesajiliwa kwa Sarafu Network. Salio yako ni 100.00 SARAFU. Kutumia bonyeza 38496# kwa Safaricom au 48346# kwa airtel'),
+    (None, None,
+     'Hello Magoo, you have been registered on Sempo. Your balance is 100.00 SARAFU.',
+     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal.'),
+
+    (None, "grassroots",
+     'Hello Magoo, you have been registered on Sarafu Network. Your balance is 100.00 SARAFU. Dial *384*96# Safaricom or *483*46# Airtel to use Sarafu',
+     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal.'),
+
+    ('sw', None,
+     'Habari Magoo, umesajiliwa kwa Sempo. Salio yako ni 100.00 SARAFU.',
+     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal.'),
+    ('sw', 'grassroots',
+     'Habari Magoo, umesajiliwa kwa Sarafu Network. Salio yako ni 100.00 SARAFU. Kutumia bonyeza *384*96# kwa Safaricom au *483*46# kwa airtel',
+     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal.'),
 
 ])
-def test_send_welcome_sms(mocker, test_client, init_database, preferred_language, org_key, expected):
+def test_send_welcome_sms(mocker, test_client, init_database,
+                          preferred_language, org_key, expected_welcome, expected_terms):
 
     token = TokenFactory(symbol='SARAFU')
     organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token)
@@ -99,4 +110,7 @@ def test_send_welcome_sms(mocker, test_client, init_database, preferred_language
 
     send_onboarding_sms_messages(user)
 
-    send_message.assert_has_calls([mocker.call('+61123456789', expected)])
+    send_message.assert_has_calls(
+        [mocker.call('+61123456789', expected_welcome),
+         mocker.call('+61123456789', expected_terms)])
+
