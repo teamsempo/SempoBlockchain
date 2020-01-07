@@ -101,7 +101,8 @@ class TokenProcessor(object):
                     ).execution_options(show_all=True).first().total
 
                     amount_avail = limit.total_amount - (transaction_volume or 0)
-                    if amount_avail < (ge_limit[0].transfer_balance_fraction * transfer_account.balance)\
+                    fraction = ge_limit[0].transfer_balance_fraction or 0
+                    if amount_avail < (fraction * transfer_account.balance)\
                             and amount_avail < lowest_amount_avail:
                         lowest_limit = limit
                         lowest_amount_avail = amount_avail
@@ -174,10 +175,30 @@ class TokenProcessor(object):
             }
 
         def check_if_ge_limit(token_info):
-            # return 'GE Liquid Token' in token_info['limit'].name
-            return (token_info['exchange_rate'] is not None
-                    and token_info['limit'] is not None
-                    and token_info['limit'].transfer_balance_fraction is not None)
+            return 'GE Liquid Token' in token_info['limit'].name
+            # return (token_info['exchange_rate'] is not None
+            #         and token_info['limit'] is not None
+            #         and token_info['limit'].transfer_balance_fraction is not None)
+
+        def ge_string(t):
+            if t['limit'].transfer_balance_fraction:
+                allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
+                rounded_rate = round_amount(t['exchange_rate'])
+                return(
+                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
+                )
+            else:
+                return ""
+
+        def standard_string(t):
+            if t['limit'].total_amount:
+                allowed_amount = f"{rounded_dollars(str(t['limit'].total_amount))}"
+                rounded_rate = round_amount(t['exchange_rate'])
+                return (
+                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
+                )
+            else:
+                return ""
 
         # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
         transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
@@ -190,31 +211,34 @@ class TokenProcessor(object):
         ge_tokens = list(filter(check_if_ge_limit, token_info_list))
         is_ge = len(ge_tokens) > 0
         if is_ge:
-            token_exchanges = "\n".join(
-                map(lambda x: f"{rounded_dollars(x['limit'].transfer_balance_fraction * x['balance'])}"
-                              f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
-                    ge_tokens))
+            token_exchanges = "\n".join(map(ge_string, ge_tokens))
         else:
-            token_exchanges = "\n".join(
-                map(lambda x: f"{rounded_dollars(str(x['limit'].total_amount))}"
-                              f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
-                    token_info_list))
+            token_exchanges = "\n".join(map(standard_string, token_info_list))
+
+        # TODO: Don't love the string comparison here, but it keeps thing short
+        if token_exchanges == "\n":
+            TokenProcessor.send_sms(
+                user,
+                "send_balance_sms",
+                token_balances=token_balances_dollars)
+            return
 
         default_limit = TokenProcessor.get_default_limit(user, default_token(user), default_transfer_account(user))
         if default_limit:
             TokenProcessor.send_sms(
                 user,
-                "send_balance_limit_sms",
+                "send_balance_exchange_limit_sms",
                 token_balances=token_balances_dollars,
                 token_exchanges=token_exchanges,
                 limit_period=default_limit.time_period_days)
-        else:
-            TokenProcessor.send_sms(
-                user,
-                "send_balance_sms",
-                token_balances=token_balances_dollars,
-                token_exchanges=token_exchanges
-            )
+            return
+
+        TokenProcessor.send_sms(
+            user,
+            "send_balance_exchange_sms",
+            token_balances=token_balances_dollars,
+            token_exchanges=token_exchanges
+        )
 
     @staticmethod
     def fetch_exchange_rate(user: User):

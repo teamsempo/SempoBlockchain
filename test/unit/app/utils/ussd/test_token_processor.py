@@ -31,8 +31,8 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
 
 
 @pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
-    ("standard", 0.1, "en", "per 7"),
-    ("standard", 0.1, "sw", "siku 7"),
+    ("standard", None, "en", "Your Sarafu-Network balances are as follows:\nSM1 200.00\nSM2 350.00\nCall 0757628885 for more info"),
+    ("standard", None, "sw", "Akaunti yako ya Sarafu-Network ina masalio yafuatayo:\nSM1 200.00\nSM2 350.00\nPiga 0757628885 kwa usaidizi zaidi"),
     ("group", 0.5, "en", "per 30"),
     ("group", 0.5, "sw", "siku 30"),
 ])
@@ -56,9 +56,9 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount):
         if from_token.symbol == "SM1":
-            return from_amount * 1.4
+            return from_amount * 1.4124333344353534
         else:
-            return from_amount * 0.8
+            return from_amount * 0.8398339289133232
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
 
@@ -66,9 +66,11 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
         assert sample_text in message
         assert "SM1 200" in message
         assert "SM2 350" in message
-        assert "{:.2f} SM1 (1 SM1 = 1.4 AUD)".format(limit * 200) in message
-        assert "{:.2f} SM2 (1 SM2 = 0.8 AUD)".format(limit * 350) in message
         assert "SM3" not in message
+        if limit:
+            assert "{:.2f} SM1 (1 SM1 = 1.41 AUD)".format(limit * 200) in message
+            assert "{:.2f} SM2 (1 SM2 = 0.84 AUD)".format(limit * 350) in message
+
     mocker.patch('server.message_processor.send_message', mock_send_message)
     TokenProcessor.send_balance_sms(user)
 

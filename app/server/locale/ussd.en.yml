@@ -191,18 +191,22 @@ en:
     exchange_count_error_sms: Sorry you have exceeded your exchange token limit. You are allowed %{transaction_count} transaction per %{limit_period} days
     exchange_amount_error_sms: Sorry you have exceeded your transaction amount limit. You are allowed up to %{limit} of your balance
     send_token_error_sms: Payment of %{amount} %{token_name} to %{recipient} has failed. Please try again later.
-    send_balance_limit_sms: |
+    send_balance_exchange_limit_sms: |
       Your Sarafu-Network balances are as follows:
       %{token_balances}
       You can exchange the following:
       %{token_exchanges}
       Once per %{limit_period} days.
       Call 0757628885 for more info
-    send_balance_sms: |
+    send_balance_exchange_sms: |
       Your Sarafu-Network balances are as follows:
       %{token_balances}
       You can exchange the following:
       %{token_exchanges}
+      Call 0757628885 for more info
+    send_balance_sms: |
+      Your Sarafu-Network balances are as follows:
+      %{token_balances}
       Call 0757628885 for more info
     pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
     pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help

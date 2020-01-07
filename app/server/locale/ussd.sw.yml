@@ -191,18 +191,22 @@ sw:
     exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha sarafu. Unakubaliwa kubadilisha mara moja kwa siku %{limit_period} pekee
     exchange_amount_error_sms: Samahani umepitisha kiwango ya kubadilisha Sarafu. Unakubaliwa kubadilisha %{limit} ya salio lako
     send_token_error_sms: Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika. Jaribu tena baadaye.
-    send_balance_limit_sms: |
+    send_balance_exchange_limit_sms: |
       Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
       %{token_balances}
       Waweza badilisha kwa viwango vifuatavyo:
       %{token_exchanges}
       Mara moja kwa siku %{limit_period}
       Piga 0757628885 kwa usaidizi zaidi
-    send_balance_sms: |
+    send_balance_exchange_sms: |
       Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
       %{token_balances}
       Waweza badilisha kwa viwango vifuatavyo:
       %{token_exchanges}
+      Piga 0757628885 kwa usaidizi zaidi
+    send_balance_sms: |
+      Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
+      %{token_balances}
       Piga 0757628885 kwa usaidizi zaidi
     pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.
     pin_change_error_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0757628885 kwa usaidizi
