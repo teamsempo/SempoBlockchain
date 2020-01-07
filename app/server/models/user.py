@@ -320,9 +320,17 @@ class User(ManyOrgBase, ModelBase):
     def transfer_account(self):
         active_organisation = getattr(g, "active_organisation", None) or self.fallback_active_organisation()
 
-        # TODO: This should/could have a better concept of a default
-        active_organisation_token = active_organisation.token
-        return self.get_transfer_account_for_token(active_organisation_token)
+        # TODO: Review if this could have a better concept of a default?
+        return self.get_transfer_account_for_organisation(active_organisation)
+
+    def get_transfer_account_for_organisation(self, organisation):
+        for ta in self.transfer_accounts:
+            if ta in organisation.transfer_accounts:
+                return ta
+
+        raise Exception(
+            f"No matching transfer account for user {self}, token {organisation.token} and organsation {organisation}"
+        )
 
     def get_transfer_account_for_token(self, token):
         return find_transfer_accounts_with_matching_token(self, token)
