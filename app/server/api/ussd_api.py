@@ -38,9 +38,8 @@ class ProcessKenyaUssd(MethodView):
             user = get_user_by_phone(phone_number, 'KE')
             # api chains all inputs that came through with *
             latest_input = user_input.split('*')[-1]
-            # TODO(ussd): 'exit_not_registered' if no user
             if None in [user, session_id]:
-                current_menu = UssdMenu.find_by_name('exit_invalid_request')
+                current_menu = UssdMenu.find_by_name('exit_not_registered')
                 text = menu_display_text_in_lang(current_menu, user)
             else:
                 current_menu = KenyaUssdProcessor.process_request(session_id, latest_input, user)

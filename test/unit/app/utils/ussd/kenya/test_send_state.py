@@ -4,8 +4,7 @@ from faker.providers import phone_number
 from faker import Faker
 import json
 
-from helpers.user import UserFactory
-from helpers.ussd_session import UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory
 from helpers.ussd_utils import make_kenyan_phone, fake_transfer_mapping
 from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine

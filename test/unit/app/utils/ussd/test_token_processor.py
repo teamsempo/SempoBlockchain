@@ -3,7 +3,7 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 
-from helpers.user import UserFactory
+from helpers.factories import UserFactory
 from helpers.ussd_utils import create_transfer_account_for_user
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
@@ -31,8 +31,8 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
 
 
 @pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
-    ("standard", 0.1, "en", "per 7"),
-    ("standard", 0.1, "sw", "siku 7"),
+    ("standard", None, "en", "Your Sarafu-Network balances are as follows:\nSM1 200.00\nSM2 350.00\nCall 0757628885 for more info"),
+    ("standard", None, "sw", "Akaunti yako ya Sarafu-Network ina masalio yafuatayo:\nSM1 200.00\nSM2 350.00\nPiga 0757628885 kwa usaidizi zaidi"),
     ("group", 0.5, "en", "per 30"),
     ("group", 0.5, "sw", "siku 30"),
 ])
@@ -56,9 +56,9 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount):
         if from_token.symbol == "SM1":
-            return from_amount * 1.4
+            return from_amount * 1.4124333344353534
         else:
-            return from_amount * 0.8
+            return from_amount * 0.8398339289133232
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
 
@@ -66,15 +66,17 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
         assert sample_text in message
         assert "SM1 200" in message
         assert "SM2 350" in message
-        assert "{:.2f} SM1 (1 SM1 = 1.4 AUD)".format(limit * 200) in message
-        assert "{:.2f} SM2 (1 SM2 = 0.8 AUD)".format(limit * 350) in message
         assert "SM3" not in message
+        if limit:
+            assert "{:.2f} SM1 (1 SM1 = 1.41 AUD)".format(limit * 200) in message
+            assert "{:.2f} SM2 (1 SM2 = 0.84 AUD)".format(limit * 350) in message
+
     mocker.patch('server.message_processor.send_message', mock_send_message)
     TokenProcessor.send_balance_sms(user)
 
 
 @pytest.mark.parametrize("user_type,preferred_language,exchange_text,limit_text", [
-    ("standard", "en", "For 1 SM1 you get 1.2 KSH", "a maximum of 20.00 SM1 at an agent every 7 days"),
+    # ("standard", "en", "For 1 SM1 you get 1.2 KSH", "a maximum of 20.00 SM1 at an agent every 7 days"),
     ("group", "sw", "Kwa kila 1 SM1 utapata 1.2 KSH", "100.00 SM1 kwa wakala baada ya siku 30"),
 ])
 def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blockchain_network, user_type,
@@ -100,14 +102,32 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
     mocker.patch('server.message_processor.send_message', mock_send_message)
     TokenProcessor.fetch_exchange_rate(user)
 
+@pytest.mark.parametrize("lang, token1_symbol, token2_symbol, recipient_balance, expected_send_msg, expected_receive_msg", [
+    ("en", "SM1", "SM1", 31000,
+     "Successfully sent a payment of 10.00 SM1 to Joe Bar",
+     "Successfully received a payment of 10.00 SM1 from Bob Foo"),
+    ("en", "SM1", "SM2", 31500,
+     "sent a payment of 10.00 SM1 = 15.00 SM2",
+     "received a payment of 15.00 SM2 = 10.00 SM1"),
 
-def test_send_token(mocker, test_client, init_database, initialised_blockchain_network):
-    sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo")
-    token1 = Token.query.filter_by(symbol="SM1").first()
+    ("sw", "SM1", "SM1", 31000,
+     "Umetuma 10.00 SM1 kwa Joe Bar",
+     "Umepokea 10.00 SM1 kutoka kwa Bob Foo"),
+    ("sw", "SM1", "SM2", 31500,
+     "Umetuma 10.00 SM1 = 15.00 SM2",
+     "Umepokea 15.00 SM2 = 10.00 SM1 kutoka kwa Bob Foo")
+])
+def test_send_token(mocker, test_client, init_database, initialised_blockchain_network,
+                    lang,
+                    token1_symbol, token2_symbol,
+                    recipient_balance, expected_send_msg, expected_receive_msg):
+
+    sender = UserFactory(preferred_language=lang, phone=phone(), first_name="Bob", last_name="Foo")
+    token1 = Token.query.filter_by(symbol=token1_symbol).first()
     create_transfer_account_for_user(sender, token1, 20000)
 
-    recipient = UserFactory(phone=phone(), first_name="Joe", last_name="Bar")
-    token2 = Token.query.filter_by(symbol="SM2").first()
+    recipient = UserFactory(preferred_language=lang, phone=phone(), first_name="Joe", last_name="Bar")
+    token2 = Token.query.filter_by(symbol=token2_symbol).first()
     create_transfer_account_for_user(recipient, token2, 30000)
 
     def mock_convert(exchange_contract, from_token, to_token, from_amount, signing_address):
@@ -125,16 +145,15 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
 
     TokenProcessor.send_token(sender, recipient, 1000, "A reason", 1)
     assert default_transfer_account(sender).balance == 19000
-    # TODO: shouldn't it double convert from the reserve to be 32000..?
-    assert default_transfer_account(recipient).balance == 31500
+    assert default_transfer_account(recipient).balance == recipient_balance
 
     assert len(messages) == 2
     sent_message = messages[0]
     assert sent_message['phone'] == sender.phone
-    assert 'sent a payment of 10.00 SM1 = 15.00 SM2' in sent_message['message']
+    assert expected_send_msg in sent_message['message']
     received_message = messages[1]
     assert received_message['phone'] == recipient.phone
-    assert 'received a payment of 15.00 SM2 = 10.00 SM1' in received_message['message']
+    assert expected_receive_msg in received_message['message']
 
 
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
