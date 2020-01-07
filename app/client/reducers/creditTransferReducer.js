@@ -3,6 +3,7 @@ import {DEEEEEEP} from "../utils";
 
 export const UPDATE_CREDIT_TRANSFER_LIST = "UPDATE_CREDIT_TRANSFER_LIST";
 export const UPDATE_CREDIT_TRANSFER_STATS = "UPDATE_CREDIT_TRANSFER_STATS";
+export const UPDATE_CREDIT_TRANSFER_LIST_PAGINATION = 'UPDATE_CREDIT_TRANSFER_LIST_PAGINATION';
 
 export const LOAD_CREDIT_TRANSFER_LIST_REQUEST = "LOAD_CREDIT_TRANSFER_LIST_REQUEST";
 export const LOAD_CREDIT_TRANSFER_LIST_SUCCESS = "LOAD_CREDIT_TRANSFER_LIST_SUCCESS";
@@ -31,8 +32,25 @@ const byId = (state = {}, action) => {
           }
         }
       );
-
+      if (action.reload) {
+        return action.credit_transfers;
+      }
       return DEEEEEEP(state, action.credit_transfers);
+    default:
+      return state;
+  }
+};
+
+
+const initialPagination = {
+  items: null,
+  pages: 0,
+};
+
+const paginate = (state = initialPagination, action) => {
+  switch (action.type) {
+    case UPDATE_CREDIT_TRANSFER_LIST_PAGINATION:
+      return {...state, items: action.items, pages: action.pages};
     default:
       return state;
   }
@@ -108,11 +126,12 @@ export const createStatus = (state = initialCreateStatusState, action) => {
 };
 
 export const creditTransfers = combineReducers({
-    byId,
-    transferStats,
-    loadStatus,
-    createStatus,
-    modifyStatus
+  byId,
+  paginate,
+  transferStats,
+  loadStatus,
+  createStatus,
+  modifyStatus
 });
 
 // ACTIONS

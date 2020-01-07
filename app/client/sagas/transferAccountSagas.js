@@ -8,6 +8,7 @@ import {
   LOAD_TRANSFER_ACCOUNTS_REQUEST,
   LOAD_TRANSFER_ACCOUNTS_SUCCESS,
   LOAD_TRANSFER_ACCOUNTS_FAILURE,
+  UPDATE_TRANSFER_ACCOUNT_LIST_PAGINATION,
   UPDATE_TRANSFER_ACCOUNTS,
 
   EDIT_TRANSFER_ACCOUNT_REQUEST,
@@ -21,7 +22,7 @@ import { UPDATE_CREDIT_TRANSFER_LIST } from "../reducers/creditTransferReducer";
 import { loadTransferAccountListAPI, editTransferAccountAPI } from '../api/transferAccountAPI.js'
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 
-function* updateStateFromTransferAccount(data) {
+function* updateStateFromTransferAccount(data, reload=false) {
   //Schema expects a list of transfer account objects
   if (data.transfer_accounts) {
     var transfer_account_list = data.transfer_accounts
@@ -47,7 +48,7 @@ function* updateStateFromTransferAccount(data) {
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
-    yield put({type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts});
+    yield put({type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts, reload});
   }
 }
 
@@ -56,7 +57,9 @@ function* loadTransferAccounts({payload}) {
   try {
     const load_result = yield call(loadTransferAccountListAPI, payload);
 
-    yield call(updateStateFromTransferAccount, load_result.data);
+    yield call(updateStateFromTransferAccount, load_result.data, true);
+
+    yield put({type: UPDATE_TRANSFER_ACCOUNT_LIST_PAGINATION, items: load_result.items, pages: load_result.pages});
 
     yield put({type: LOAD_TRANSFER_ACCOUNTS_SUCCESS})
 

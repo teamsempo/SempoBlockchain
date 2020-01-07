@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import ReactTable from 'react-table';
 
-import { TopRow, StyledSelect } from '../styledElements.js';
+import { TopRow, StyledSelect, FooterBar } from '../styledElements.js';
 
 import { modifyTransferRequest } from '../../reducers/creditTransferReducer';
 
@@ -42,7 +42,7 @@ class CreditTransferList extends React.Component {
   constructor() {
 	super();
 	this.state = {
-	  pages: null,
+	  current_page: 0,
 	  action: false,
 	  user_id: null,
     transfer_type: 'ALL',
@@ -205,10 +205,13 @@ class CreditTransferList extends React.Component {
     }
   }
 
-  render() {
-    // todo -- add new transfer function
-    const { creditTransfers } = this.props;
+  _onPageChange(pageIndex) {
+    this.props.loadCreditTransferList({per_page:50, page: pageIndex+1});
+    this.setState({current_page: pageIndex})
+  }
 
+  render() {
+    const { creditTransfers, is_search_or_filter_active, is_single } = this.props;
 
 	  const loadingStatus = creditTransfers.loadStatus.isRequesting;
 
@@ -294,6 +297,7 @@ class CreditTransferList extends React.Component {
 
 	  if (this.props.creditTransfers.loadStatus.success || this.props.transferAccounts.loadStatus.success && !this.state.isLoading) {
 	    const tableLength = typeof(filteredData) !== "undefined" ? filteredData.length : null;
+	    const pageSize = is_single ? tableLength : is_search_or_filter_active ? tableLength : 50;
 		  return (
 			  <Wrapper>
           <ModuleBox style={{width: 'calc(100% - 2em)'}}>
@@ -435,12 +439,16 @@ class CreditTransferList extends React.Component {
             ]}
 					  data={filteredData}
 					  loading={loadingStatus} // Display the loading overlay when we need it
-					  pageSize={tableLength}
+					  pageSize={pageSize}
+            page={is_search_or_filter_active ? 0 : this.state.current_page}
+            pages={is_search_or_filter_active ? 0 : creditTransfers.paginate.pages}
+            onPageChange={(pageIndex) => this._onPageChange(pageIndex)}
 					  sortable={true}
-					  showPagination={false}
+					  showPagination={!is_single}
 					  showPageSizeOptions={false}
 					  className='react-table'
 					  resizable={false}
+            manual
             getTdProps={(state, rowInfo) => {
               return {
                 onClick: (e, handleOriginal) => {
@@ -452,13 +460,6 @@ class CreditTransferList extends React.Component {
               };
             }}
           />
-          <FooterBar>
-            <p style={{margin: 0}}>{tableLength} transfers</p>
-            <div style={{margin: 0, marginLeft: 10}} onClick={() =>
-              this.props.loadCreditTransferList({per_page:50, page: Math.floor(tableLength/50 + 1)})}>
-              (Get More)
-            </div>
-          </FooterBar>
           </ModuleBox>
         </Wrapper>
       );
@@ -476,11 +477,9 @@ class CreditTransferList extends React.Component {
 
 export default connect(mapStateToProps, mapDispatchToProps)(CreditTransferList);
 
-const FooterBar = styled.div`
-    display: flex;
-    border-top: solid 1px rgba(0,0,0,0.05);
-    padding: 1em;
-`;
+CreditTransferList.defaultProps = {
+  is_single: false,
+};
 
 const Wrapper = styled.div`
   display: flex;

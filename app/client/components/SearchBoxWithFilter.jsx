@@ -297,6 +297,7 @@ class SearchBoxWithFilter extends React.Component {
     let rowValues = Object.values(keyNameValues);
     let numberSelected = rowValues.filter(Boolean).length;
     let isSelected = numberSelected > 0 || filterType !== 'of';
+    let is_search_or_filter_active = phrase.length > 0 || Object.keys(filters).length > 0;
 
     // get possible filter keys, remove PROFILE_PICTURE
     const keys = (possibleFilters !== undefined && possibleFilters !== null ? Object.keys(possibleFilters).filter(key => (key !== 'profile_picture')) : []);
@@ -502,7 +503,7 @@ class SearchBoxWithFilter extends React.Component {
         {addedFilters}
         {newFilterSection}
 
-        <div>{React.cloneElement(this.props.children, { item_list: item_list })}</div>
+        <div>{React.cloneElement(this.props.children, { item_list: item_list, is_search_or_filter_active: is_search_or_filter_active })}</div>
       </div>
     )
   }

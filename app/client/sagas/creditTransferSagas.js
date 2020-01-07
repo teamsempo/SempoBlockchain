@@ -5,6 +5,7 @@ import {
   PUSHER_CREDIT_TRANSFER,
   UPDATE_CREDIT_TRANSFER_LIST,
   UPDATE_CREDIT_TRANSFER_STATS,
+  UPDATE_CREDIT_TRANSFER_LIST_PAGINATION,
   LOAD_CREDIT_TRANSFER_LIST_REQUEST,
   LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
   LOAD_CREDIT_TRANSFER_LIST_FAILURE,
@@ -25,7 +26,7 @@ import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 import {handleError} from "../utils";
 
 
-function* updateStateFromCreditTransfer(result) {
+function* updateStateFromCreditTransfer(result, reload=false) {
   //Schema expects a list of credit transfer objects
   let credit_transfer_list = [];
   if (result.data.credit_transfers) {
@@ -66,7 +67,7 @@ function* updateStateFromCreditTransfer(result) {
   const credit_transfers = normalizedData.entities.credit_transfers;
 
   if (credit_transfers) {
-      yield put({type: UPDATE_CREDIT_TRANSFER_LIST, credit_transfers});
+      yield put({type: UPDATE_CREDIT_TRANSFER_LIST, credit_transfers, reload});
   }
 }
 
@@ -74,7 +75,9 @@ function* loadCreditTransferList({ payload }) {
   try {
     const credit_load_result = yield call(loadCreditTransferListAPI, payload);
 
-    yield call(updateStateFromCreditTransfer, credit_load_result);
+    yield call(updateStateFromCreditTransfer, credit_load_result, true);
+
+    yield put({type: UPDATE_CREDIT_TRANSFER_LIST_PAGINATION, items: credit_load_result.items, pages: credit_load_result.pages});
 
     yield put({type: LOAD_CREDIT_TRANSFER_LIST_SUCCESS});
 
