@@ -133,10 +133,6 @@ class UserAPI(MethodView):
         )
 
         if response_code == 200:
-            user = response_object['data']['user']
-            if organisation is not None and user is not None:
-                organisation.send_welcome_sms(user)
-
             db.session.commit()
 
         return make_response(jsonify(response_object)), response_code

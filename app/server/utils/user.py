@@ -603,21 +603,8 @@ def proccess_create_or_modify_user_request(
             return {'message': 'User Created. Please verify phone number.', 'otp_verify': True}, 200
 
         elif current_app.config['ONBOARDING_SMS']:
-
-            if organisation is not None and user is not None:
-                organisation.send_welcome_sms(user)
-
             try:
-                balance = user.transfer_account.balance
-                if isinstance(balance, int):
-                    balance = balance / 100
-
-                send_onboarding_message(
-                    first_name=user.first_name,
-                    to_phone=phone,
-                    credits=balance,
-                    one_time_code=user.one_time_code
-                )
+                send_onboarding_sms_messages(user)
             except Exception as e:
                 print(e)
                 sentry.captureException()
@@ -635,9 +622,6 @@ def proccess_create_or_modify_user_request(
 
 def send_onboarding_sms_messages(user):
 
-    if not user.phone:
-        return
-
     # First send the intro message
     organisation = getattr(g, 'active_organisation', None) or user.default_organisation
 
@@ -651,9 +635,16 @@ def send_onboarding_sms_messages(user):
 
     message_processor.send_message(user.phone, intro_message)
 
-    terms_message = i18n_for(user, "general_sms.terms")
+    send_terms_message_if_required(user)
 
-    message_processor.send_message(user.phone, terms_message)
+
+def send_terms_message_if_required(user):
+
+    if not user.seen_latest_terms:
+        terms_message = i18n_for(user, "general_sms.terms")
+        message_processor.send_message(user.phone, terms_message)
+        user.seen_latest_terms = True
+
 
 
 def send_onboarding_message(to_phone, first_name, credits, one_time_code):
