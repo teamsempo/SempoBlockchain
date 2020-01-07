@@ -1,6 +1,6 @@
 sw:
   welcome:
-    generic: %{first_name} umesajiliwa kwa Sempo. Salio yako ni %{balance} %{token}.
-    grassroots: %{first_name} umesajiliwa kwa Sarafu Network. Salio yako ni %{balance} %{token}. Kutumia bonyeza 38496# kwa Safaricom au 48346# kwa airtel
+    generic: Habari %{first_name}, umesajiliwa kwa Sempo. Salio yako ni %{balance} %{token}.
+    grassroots: Habari %{first_name}, umesajiliwa kwa Sarafu Network. Salio yako ni %{balance} %{token}. Kutumia bonyeza 38496# kwa Safaricom au 48346# kwa airtel
 
 

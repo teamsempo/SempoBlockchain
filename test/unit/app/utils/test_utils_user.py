@@ -73,28 +73,30 @@ def test_transfer_usages_for_user(authed_sempo_admin_user):
     assert isinstance(usages, list)
 
 
-#
-# @pytest.mark.parametrize("preferred_language, org_key, expected", [
-#
-#     (None, None, "Welcome to Sarafu Network. Dial *483*46# to continue"),
-#     (None, "grassroots", "Welcome to Sempo!"),
-#     (None, None, "Karibu Sarafu Network. Bonyeza *483*46# kwa maelezo zaidi."),
-# ])
-# def test_send_welcome_sms(mocker, test_client, init_database, preferred_language, org_key, expected):
-#
-#     organisation = OrganisationFactory(custom_welcome_message_key=org_key)
-#     token = TokenFactory(symbol='SARAFU')
-#     transfer_account = TransferAccountFactory(balance=10000, token=token, organisation=organisation)
-#     user = UserFactory(phone='123456789',
-#                        preferred_language=preferred_language,
-#                        default_organisation=organisation,
-#                        transfer_account=transfer_account)
-#
-#     send_message = mocker.MagicMock()
-#     mocker.patch('server.message_processor.send_message', send_message)
-#
-#     send_onboarding_sms_messages(user)
-#
-#     # organisation.send_welcome_sms({'phone': user.phone, 'preferred_language': user.preferred_language})
-#
-#     send_message.assert_called_with(None, expected)
+
+@pytest.mark.parametrize("preferred_language, org_key, expected", [
+
+    (None, None, 'Hello Magoo, you have been registered on Sempo. Your balance is 100.00 SARAFU.'),
+    (None, "grassroots", 'Hello Magoo, you have been registered on Sarafu Network. Your balance is 100.00 SARAFU. Dial 38496# Safaricom or 48346# Airtel to use Sarafu'),
+    ('sw', None, 'Habari Magoo, umesajiliwa kwa Sempo. Salio yako ni 100.00 SARAFU.'),
+    ('sw', 'grassroots', 'Habari Magoo, umesajiliwa kwa Sarafu Network. Salio yako ni 100.00 SARAFU. Kutumia bonyeza 38496# kwa Safaricom au 48346# kwa airtel'),
+
+])
+def test_send_welcome_sms(mocker, test_client, init_database, preferred_language, org_key, expected):
+
+    token = TokenFactory(symbol='SARAFU')
+    organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token)
+    transfer_account = TransferAccountFactory(balance=10000, token=token, organisation=organisation)
+    user = UserFactory(first_name='Magoo',
+                       phone='123456789',
+                       preferred_language=preferred_language,
+                       organisations=[organisation],
+                       default_organisation=organisation,
+                       transfer_accounts=[transfer_account])
+
+    send_message = mocker.MagicMock()
+    mocker.patch('server.message_processor.send_message', send_message)
+
+    send_onboarding_sms_messages(user)
+
+    send_message.assert_has_calls([mocker.call('+61123456789', expected)])
