@@ -33,6 +33,6 @@ def test_exchange(test_client, user_with_reserve_balance, initialised_blockchain
 
     assert response.status_code == status_code
     if status_code == 200 and will_func_test_blockchain():
-        task_id = response.json['data']['exchange']['blockchain_task_id']
-        result = bt.await_task_success(task_id, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 20)
+        task_uuid = response.json['data']['exchange']['blockchain_task_uuid']
+        result = bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 24)
         assert result['status'] == 'SUCCESS'

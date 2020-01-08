@@ -246,8 +246,8 @@ LIMITS = [
     TransferLimit('GE Liquid Token - Standard User',
                   [AGENT_OUT_PAYMENT, WITHDRAWAL], is_user_and_liquid_token, 7,
                   transfer_filter=withdrawal_or_agent_out_filter,
-                  transfer_count=1, transfer_balance_fraction=0.10),
-
+                  # transfer_count=1, transfer_balance_fraction=0.10),
+                  ),
 
     TransferLimit('GE Liquid Token - Group Account User',
                   [AGENT_OUT_PAYMENT, WITHDRAWAL], is_group_and_liquid_token, 30,

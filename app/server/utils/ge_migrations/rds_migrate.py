@@ -11,11 +11,12 @@ from server.models.organisation import Organisation
 from server.models.transfer_usage import TransferUsage
 from server.models.token import Token
 from server.models.kyc_application import KycApplication
-
+from server.models.credit_transfer import CreditTransfer
 from server.utils.user import create_transfer_account_user
 from server.utils.phone import proccess_phone_number
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.ge_migrations.poa_explorer import POAExplorer
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 class RDSMigrate:
     
@@ -49,12 +50,13 @@ class RDSMigrate:
 
         # self.migratePOA()
 
+        print('Migration Complete!')
 
     def migrateUsers(self):
         list_of_ge_ids = self.get_ids_from_sempo()
         print('list_of_ge_ids', list_of_ge_ids)
         self.get_new_users_from_GE(list_of_ge_ids, community_token_id=self.ge_community_token_id)
-        self.update_users_refered_by()
+        # self.update_users_refered_by()
 
     def get_ids_from_sempo(self):
         sql = '''SELECT
@@ -99,7 +101,7 @@ class RDSMigrate:
             t0 = time.time()
             estimate_time_left = 'unknown'
 
-            ge_address_to_transfer_account = {}
+            ge_address_to_user = {}
             for user in users:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
@@ -108,13 +110,12 @@ class RDSMigrate:
                 sempo_user = self.insert_user(user)
 
                 if sempo_user:
-
-                    ge_address_to_transfer_account[user['wallet_address']] = sempo_user.default_transfer_account
+                    ge_address_to_user[user['wallet_address']] = sempo_user
 
                 elapsed_time = time.time() - t0
                 estimate_time_left = round((elapsed_time / i * n_users) - elapsed_time, 1)
 
-            self.migrate_balances(ge_address_to_transfer_account)
+            self.migrate_balances(ge_address_to_user)
 
 
     def insert_user(self, ge_user):
@@ -176,13 +177,6 @@ class RDSMigrate:
             if ge_user['group_accounts.id'] is not None:
                 sempo_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
-            if ge_user.get('national_id_number') is not None:
-                kyc_app = KycApplication(type='INDIVIDUAL')
-                kyc_app.user = sempo_user
-                kyc_app.set_data('national_id_number', ge_user['national_id_number'])
-                kyc_app.kyc_status = 'VERIFIED'
-                db.session.add(kyc_app)
-
             db.session.flush()
 
             return sempo_user
@@ -199,6 +193,7 @@ class RDSMigrate:
             ('id', 'GE_id'),
             ('wallet_address', 'GE_wallet_address'),
             ('bio', 'bio'),
+            ('national_id_number', 'national_id_number'),
             ('gender', 'gender'),
             ('market_enabled', 'market_enabled'),
             ('referred_by_id', 'GE_referred_by_id'),
@@ -296,33 +291,39 @@ class RDSMigrate:
         addresses = [row[0] for row in result]
         return addresses
 
-    def migrate_balances(self, ge_address_to_transfer_account: dict):
+    def migrate_balances(self, ge_address_to_user: dict):
 
         org = Organisation.query.get(self.sempo_organisation_id)
         token = org.token
 
         sending_address = org.queried_org_level_transfer_account.blockchain_address
 
-        ge_address_to_transfer_account.pop(None, None)
+        ge_address_to_user.pop(None, None)
 
-        addresses = list(ge_address_to_transfer_account.keys())
+        addresses = list(ge_address_to_user.keys())
         balance_list = self.poa.balance(addresses)
 
         for balance_info in balance_list['result']:
             balance_wei = int(balance_info['balance'])
 
-            transfer_account = ge_address_to_transfer_account[balance_info['account']]
-            transfer_account._balance_wei = balance_wei
+            user = ge_address_to_user[balance_info['account']]
+            ta = user.get_transfer_account_for_token(token)
+            ta._balance_wei = balance_wei
 
-            print(f'transfering {balance_wei} wei to {transfer_account}')
+            print(f'transfering {balance_wei} wei to {user}')
 
-            bt.make_token_transfer(
-                signing_address=sending_address,
+            migration_transfer = CreditTransfer(
+                amount=balance_wei/1e16,
                 token=token,
-                from_address=sending_address,
-                to_address=transfer_account.blockchain_address,
-                amount=balance_wei / 1e16
+                sender_transfer_account=org.queried_org_level_transfer_account,
+                recipient_user=user,
+                transfer_type=TransferTypeEnum.PAYMENT,
+                transfer_subtype=TransferSubTypeEnum.DISBURSEMENT
             )
+
+            db.session.add(migration_transfer)
+
+            migration_transfer.resolve_as_completed()
 
     def store_wei(self, address, balance):
         sql = '''UPDATE "transfer_account"

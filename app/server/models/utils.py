@@ -172,12 +172,12 @@ class ModelBase(db.Model):
 class BlockchainTaskableBase(ModelBase):
     __abstract__ = True
 
-    blockchain_task_id = db.Column(db.Integer)
+    blockchain_task_uuid = db.Column(db.String)
 
     @hybrid_property
     def blockchain_status(self):
-        if self.blockchain_task_id:
-            task = bt.get_blockchain_task(self.blockchain_task_id)
+        if self.blockchain_task_uuid:
+            task = bt.get_blockchain_task(self.blockchain_task_uuid)
 
             return task.get('status', 'ERROR')
         else:

@@ -104,7 +104,8 @@ def transact_with_contract_function(self, contract_address, function,  abi_type=
                                     signing_address=None, encrypted_private_key=None,
                                     gas_limit=None, dependent_on_tasks=None):
 
-    return blockchain_processor.transact_with_contract_function(contract_address, abi_type, function, args, kwargs,
+    return blockchain_processor.transact_with_contract_function(self.request.id,
+                                                                contract_address, abi_type, function, args, kwargs,
                                                                 signing_address, encrypted_private_key,
                                                                 gas_limit, dependent_on_tasks)
 
@@ -114,7 +115,8 @@ def deploy_contract(self, contract_name, args=None, kwargs=None,
                     signing_address=None, encrypted_private_key=None,
                     gas_limit=None, dependent_on_tasks=None):
 
-    return blockchain_processor.deploy_contract(contract_name, args, kwargs,
+    return blockchain_processor.deploy_contract(self.request.id,
+                                                contract_name, args, kwargs,
                                                 signing_address, encrypted_private_key,
                                                 gas_limit, dependent_on_tasks)
 
@@ -124,19 +126,25 @@ def send_eth(self, amount_wei, recipient_address,
              signing_address=None, encrypted_private_key=None,
              dependent_on_tasks=None):
 
-    return blockchain_processor.send_eth(amount_wei, recipient_address,
+    return blockchain_processor.send_eth(self.request.id,
+                                         amount_wei, recipient_address,
                                          signing_address, encrypted_private_key,
                                          dependent_on_tasks)
 
 
-@celery_app.task(**base_task_config)
-def get_task(self, task_id):
-    return blockchain_processor.get_serialised_task_from_id(task_id)
+@celery_app.task(**no_retry_config)
+def retry_task(self, task_uuid):
+    return blockchain_processor.retry_task(task_uuid)
 
 
 @celery_app.task(**base_task_config)
-def _attempt_transaction(self, task_id):
-    return blockchain_processor.attempt_transaction(task_id)
+def get_task(self, task_uuid):
+    return blockchain_processor.get_serialised_task_from_uuid(task_uuid)
+
+
+@celery_app.task(**base_task_config)
+def _attempt_transaction(self, task_uuid):
+    return blockchain_processor.attempt_transaction(task_uuid)
 
 
 @celery_app.task(**processor_task_config)
@@ -162,33 +170,7 @@ def _process_deploy_contract_transaction(self, transaction_id, contract_name,
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
 def _check_transaction_response(self, transaction_id):
-    ETH_CHECK_TRANSACTION_BASE_TIME = 2
-    ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
-
-    def transaction_response_countdown():
-        t = lambda retries: ETH_CHECK_TRANSACTION_BASE_TIME*2**retries
-
-        # If the system has been longer than the max retry period
-        # if previous_result:
-        #     submitted_at = datetime.strptime(previous_result['submitted_date'], "%Y-%m-%d %H:%M:%S.%f")
-        #     if (datetime.utcnow() - submitted_at).total_seconds() > ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT:
-        #         if self.request.retries != self.max_retries:
-        #             self.request.retries = self.max_retries - 1
-        #
-        #         return 0
-
-        return t(self.request.retries)
-
-    try:
-        status = blockchain_processor.check_transaction_response(transaction_id)
-
-        if status == 'PENDING':
-            self.request.retries = 0
-            raise Exception("Need Retry")
-
-    except Exception as e:
-        print(e)
-        self.retry(countdown=transaction_response_countdown())
+    blockchain_processor.check_transaction_response(self, transaction_id)
 
 
 @celery_app.task(base=SqlAlchemyTask)

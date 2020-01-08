@@ -10,6 +10,20 @@ last_marker = datetime.datetime.utcnow()
 
 from eth_keys import keys
 
+
+def round_amount(amount):
+    if int(amount) == float(amount) and int(amount) > 1000:
+        # It's a large whole amount like 1200.00, so return as 1200
+        return str(int(amount))
+
+    # Add a small amount before round to override rounding half to even
+    return "{:.2f}".format(round(amount + 0.000001, 2))
+
+
+def rounded_dollars(amount):
+    return round_amount(float(amount) / 100)
+
+
 def hex_private_key_to_address(private_key) -> str:
 
     if isinstance(private_key, str):

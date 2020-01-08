@@ -239,6 +239,7 @@ twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
 messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
 africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
 africastalking_client = africastalking.SMS
+
 message_processor = MessageProcessor(
     twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
 

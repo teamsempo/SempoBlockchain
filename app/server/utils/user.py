@@ -5,7 +5,7 @@ from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
-from flask import current_app
+from flask import current_app, g
 from eth_utils import to_checksum_address
 
 from server import db
@@ -28,6 +28,8 @@ from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
 from server.utils.transfer_enums import TransferSubTypeEnum
+from server.utils.misc import rounded_dollars
+
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -219,8 +221,10 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
-    if organisation:
-        user.add_user_to_organisation(organisation, is_admin=False)
+    if not organisation:
+        organisation = Organisation.master_organisation()
+
+    user.add_user_to_organisation(organisation, is_admin=False)
 
     db.session.add(user)
 
@@ -600,16 +604,7 @@ def proccess_create_or_modify_user_request(
 
         elif current_app.config['ONBOARDING_SMS']:
             try:
-                balance = user.transfer_account.balance
-                if isinstance(balance, int):
-                    balance = balance / 100
-
-                send_onboarding_message(
-                    first_name=user.first_name,
-                    to_phone=phone,
-                    credits=balance,
-                    one_time_code=user.one_time_code
-                )
+                send_onboarding_sms_messages(user)
             except Exception as e:
                 print(e)
                 sentry.captureException()
@@ -623,6 +618,33 @@ def proccess_create_or_modify_user_request(
     }
 
     return response_object, 200
+
+
+def send_onboarding_sms_messages(user):
+
+    # First send the intro message
+    organisation = getattr(g, 'active_organisation', None) or user.default_organisation
+
+    intro_message = i18n_for(
+        user,
+        "general_sms.welcome.{}".format(organisation.custom_welcome_message_key or 'generic'),
+        first_name=user.first_name,
+        balance=rounded_dollars(user.transfer_account.balance),
+        token=user.transfer_account.token.name
+    )
+
+    message_processor.send_message(user.phone, intro_message)
+
+    send_terms_message_if_required(user)
+
+
+def send_terms_message_if_required(user):
+
+    if not user.seen_latest_terms:
+        terms_message = i18n_for(user, "general_sms.terms")
+        message_processor.send_message(user.phone, terms_message)
+        user.seen_latest_terms = True
+
 
 
 def send_onboarding_message(to_phone, first_name, credits, one_time_code):
