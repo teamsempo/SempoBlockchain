@@ -84,6 +84,7 @@ class SingleUserManagement extends React.Component {
   }
 
   resetPin() {
+    window.confirm(`Are you sure you wish to reset User ${this.props.user.id}'s PIN?`) &&
     this.props.resetPin(this.props.user.id)
   }
 
@@ -231,23 +232,18 @@ class SingleUserManagement extends React.Component {
 
                       </Row>
                     <Row style={{margin: '0em 1em'}}>
-                      {
-                        (this.props.user.failed_pin_attempts && this.props.user.failed_pin_attempts > 0) ?
-                          <SubRow>
-                            <InputLabel>Failed Pin Attempts:</InputLabel>
-                            <ManagerText>
-                              {this.props.user.failed_pin_attempts}
-                              {this.props.user.failed_pin_attempts === 3 ? " (BLOCKED)" : ""}
-                            </ManagerText>
-                            <AsyncButton onClick={this.resetPin.bind(this)}
-                                         miniSpinnerStyle={{height: '10px', width: '10px'}}
-                                         buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}}
-                                         isLoading={this.props.users.pinStatus.isRequesting}
-                                         buttonText="Reset Pin"/>
-                          </SubRow>
-                          :
-                          null
-                      }
+                      <SubRow>
+                        <InputLabel>Failed Pin Attempts:</InputLabel>
+                        <ManagerText>
+                          {this.props.user.failed_pin_attempts}
+                          {this.props.user.failed_pin_attempts === 3 ? " (BLOCKED)" : ""}
+                        </ManagerText>
+                        <AsyncButton onClick={this.resetPin.bind(this)}
+                                     miniSpinnerStyle={{height: '10px', width: '10px'}}
+                                     buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}}
+                                     isLoading={this.props.users.pinStatus.isRequesting}
+                                     buttonText="Reset Pin"/>
+                      </SubRow>
                     </Row>
                       <Row style={{margin: '0em 1em', flexWrap: 'wrap'}}>
                         {custom_attribute_list || null}

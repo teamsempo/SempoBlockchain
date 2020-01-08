@@ -6,7 +6,7 @@ from functools import partial
 import config
 from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_phone
 from migrations.seed import create_ussd_menus, create_business_categories
-from helpers.user import UserFactory, TransferUsageFactory
+from helpers.factories import UserFactory, TransferUsageFactory
 from server.models.credit_transfer import CreditTransfer
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
@@ -105,10 +105,10 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
     assert default_transfer_account(sender).balance == (4220 - 100 - 100 - 1250)
     assert default_transfer_account(recipient).balance == (1980 + 100 + 100 + 1250)
 
-    assert len(messages) == 2
-    sent_message = messages[0]
+    assert len(messages) == 3
+    sent_message = messages[1]
     assert sent_message['phone'] == sender.phone
     assert f"sent a payment of 12.50 SM1 to {recipient.first_name}" in sent_message['message']
-    received_message = messages[1]
+    received_message = messages[2]
     assert received_message['phone'] == recipient.phone
     assert f"Umepokea 12.50 SM1 kutoka kwa {sender.first_name}" in received_message['message']

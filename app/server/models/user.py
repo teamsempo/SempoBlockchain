@@ -74,6 +74,7 @@ class User(ManyOrgBase, ModelBase):
     _TFA_secret = db.Column(db.String(128))
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
+    seen_latest_terms = db.Column(db.Boolean, default=False)
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
 
@@ -319,13 +320,18 @@ class User(ManyOrgBase, ModelBase):
     @property
     def transfer_account(self):
         active_organisation = getattr(g, "active_organisation", None) or self.fallback_active_organisation()
-        if active_organisation:
-            return active_organisation.org_level_transfer_account
 
-        # TODO: This should have a better concept of a default
-        if len(self.transfer_accounts) == 1:
-            return self.transfer_accounts[0]
-        return None
+        # TODO: Review if this could have a better concept of a default?
+        return self.get_transfer_account_for_organisation(active_organisation)
+
+    def get_transfer_account_for_organisation(self, organisation):
+        for ta in self.transfer_accounts:
+            if ta in organisation.transfer_accounts:
+                return ta
+
+        raise Exception(
+            f"No matching transfer account for user {self}, token {organisation.token} and organsation {organisation}"
+        )
 
     def get_transfer_account_for_token(self, token):
         return find_transfer_accounts_with_matching_token(self, token)
