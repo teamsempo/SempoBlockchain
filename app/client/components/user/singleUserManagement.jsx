@@ -84,7 +84,6 @@ class SingleUserManagement extends React.Component {
   }
 
   resetPin() {
-    window.confirm(`Are you sure you wish to reset User ${this.props.user.id}'s PIN?`) &&
     this.props.resetPin(this.props.user.id)
   }
 
@@ -230,6 +229,8 @@ class SingleUserManagement extends React.Component {
                       <Row style={{margin: '0em 1em'}}>
                         <SubRow>
                         { profilePicture || null }
+                        </SubRow>
+                        <SubRow>
                         </SubRow>
                       </Row>
                   </Wrapper>
