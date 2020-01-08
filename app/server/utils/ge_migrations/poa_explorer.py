@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 
 
 def request(url, delay = 5, retry = 5, timeout = 120):
@@ -80,6 +81,49 @@ class POAExplorer:
                                   action = 'txlist',
                                   address = address))
 
-    def get_block(self, address):
-        return request(self.__url(module='block',
-                                action = 'eth_block_number'))
+    def token_balance(self, contract_address, address):
+        return request(self.__url(module='account',
+                                  action = 'tokenbalance',
+                                  contractaddress = contract_address,
+                                  address = address))
+
+    def token_list(self, address):
+        return request(self.__url(module='account',
+                                  action = 'tokenlist',
+                                  address = address))
+
+    def pull_token_balances(self, wallet_ids):
+        '''
+        For a given list of wallet_ids, this method pulls from POA and
+        updates the token balances for each member in the list.
+        '''
+
+        token_balances = {}
+
+        for index, wid in enumerate(wallet_ids):
+
+            token_balances[wid] = collections.defaultdict(float)
+
+            print('Requesting token list')
+            request = self.token_list(wid)
+
+            if int(request['status']) == 1:
+                token_list = request['result']
+                for contract_address in [d['contractAddress'] for d in token_list]:
+                    print("Getting token balance:", end=" ")
+                    print("-", end=" ")
+                    request = self.token_balance(contract_address, wid)
+
+                    if int(request['status']) == 1:
+                        token_balances[wid][contract_address] = request['result']
+                    else:
+                        print('ERROR pulling token balances for %s' % wid)
+                        print('  status: %s' % request['status'])
+                        print('  message: %s' % request['message'])
+
+            else:
+                print('ERROR pulling token list for %s' % wid)
+                print('  status: %s' % request['status'])
+                print('  message: %s' % request['message'])
+
+        return token_balances
