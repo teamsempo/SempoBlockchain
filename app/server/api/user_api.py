@@ -203,9 +203,7 @@ class ResetPinAPI(MethodView):
         if reset_user_id is not None:
             user = User.query.get(reset_user_id)
 
-            pin_reset_token = user.encode_single_use_JWS('R')
-            user.save_pin_reset_token(pin_reset_token)
-            user.failed_pin_attempts = 0
+            UserUtils.admin_reset_user_pin(user)
 
             response_object = {
                 'status': 'success',

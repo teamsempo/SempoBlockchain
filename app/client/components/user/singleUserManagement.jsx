@@ -84,7 +84,7 @@ class SingleUserManagement extends React.Component {
   }
 
   resetPin() {
-    window.confirm(`Are you sure you wish to reset User ${this.props.user.id}'s PIN?`) &&
+    window.confirm(`Are you sure you wish to reset ${this.state.first_name} ${this.state.last_name}'s PIN?`) &&
     this.props.resetPin(this.props.user.id)
   }
 
