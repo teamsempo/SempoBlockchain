@@ -121,32 +121,6 @@ class SingleUserManagement extends React.Component {
         profilePicture = null
       }
 
-      if (this.props.user.matched_profile_pictures.length > 0) {
-        var matched_profiles = this.props.user.matched_profile_pictures.map(match => (
-            <Link to={"/users/" + match.userId}
-                  key={match.userId}
-                  style={{
-                    color: 'inherit',
-                    textDecoration: 'inherit',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
-                  }}>
-
-              <ProfilePicture
-                label={"Possible Duplicate User:"}
-                sublabel={'User ' + match.userId}
-                roll={match.roll}
-                url={match.url}
-              />
-
-            </Link>
-          )
-        )
-      } else {
-        matched_profiles = null
-      }
-
       console.log(this.props.user.custom_attributes);
 
       custom_attribute_list = Object.keys(this.props.user.custom_attributes).map(key => {
@@ -253,7 +227,6 @@ class SingleUserManagement extends React.Component {
                         { profilePicture || null }
                         </SubRow>
                         <SubRow>
-                        { matched_profiles }
                         </SubRow>
                       </Row>
                   </Wrapper>
