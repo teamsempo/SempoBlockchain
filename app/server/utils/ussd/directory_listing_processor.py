@@ -10,7 +10,7 @@ from server.utils.user import default_token
 
 
 def user_directory_listing(user: User) -> str:
-    bio = user.custom_attributes.filter_by(name='bio').first()
+    bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
     if bio is None:
         return user.phone
     else:

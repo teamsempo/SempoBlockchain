@@ -106,13 +106,13 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
     session = UssdSessionFactory(state="opt_out_of_market_place_pin_authorization")
     user = standard_user()
     user.phone = phone()
-    assert user.custom_attributes.filter_by(name='market_enabled').first() is None
+    assert next(filter(lambda x: x.name == 'market_enabled', user.custom_attributes), None) is None
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("0000")
     assert state_machine.state == "complete"
-    market_enabled = user.custom_attributes.filter_by(name='market_enabled').first()
+    market_enabled = next(filter(lambda x: x.name == 'market_enabled', user.custom_attributes), None)
     assert market_enabled.value is False
     state_machine.send_sms.assert_called_with(user.phone, "opt_out_of_market_place_sms")
 
@@ -121,13 +121,13 @@ def test_save_directory_info(mocker, test_client, init_database):
     session = UssdSessionFactory(state="change_my_business_prompt")
     user = standard_user()
     user.phone = phone()
-    assert user.custom_attributes.filter_by(name='bio').first() is None
+    assert next(filter(lambda x: x.name == 'bio', user.custom_attributes), None) is None
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("My Bio")
     assert state_machine.state == "exit"
-    bio = user.custom_attributes.filter_by(name='bio').first()
+    bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
     assert bio.value == "My Bio"
 
 
