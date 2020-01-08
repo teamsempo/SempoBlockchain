@@ -205,6 +205,8 @@ class RDSMigrate:
         custom_attributes = []
         for accessor, label in wanted_custom_attributes:
             if accessor in ge_user:
+                value = ge_user[accessor]
+
                 custom_attribute = CustomAttributeUserStorage(
                     name=label, value=ge_user[accessor])
                 custom_attributes.append(custom_attribute)

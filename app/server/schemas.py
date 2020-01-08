@@ -75,7 +75,7 @@ class UserSchema(SchemaBase):
 
         for attribute in custom_attributes:
             if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
-                parsed_dict[attribute.name] = attribute.value
+                parsed_dict[attribute.name] = attribute.value.strip('"')
 
         return parsed_dict
 
@@ -388,17 +388,17 @@ transfer_account_schema = TransferAccountSchema(
     exclude=(
         "credit_sends.sender_transfer_account",
         "credit_sends.recipient_transfer_account",
-        # "credit_sends.sender_user",
-        # "credit_sends.recipient_user",
         "credit_receives.sender_transfer_account",
         "credit_receives.recipient_transfer_account",
+        # "credit_sends.sender_user",
+        # "credit_sends.recipient_user",
         #  "credit_receives.sender_user",
         #  "credit_receives.recipient_user"
     ))
 
 transfer_accounts_schema = TransferAccountSchema(
     many=True,
-    only=('balance', 'created', 'id', 'users', 'token', 'primary_user_id')
+    only=('balance', 'created', 'id', 'users', 'token', 'primary_user_id', 'blockchain_address')
 )
 
 # transfer_accounts_schema = MiniTaSchema(many=True)

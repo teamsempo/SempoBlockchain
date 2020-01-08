@@ -121,32 +121,6 @@ class SingleUserManagement extends React.Component {
         profilePicture = null
       }
 
-      if (this.props.user.matched_profile_pictures.length > 0) {
-        var matched_profiles = this.props.user.matched_profile_pictures.map(match => (
-            <Link to={"/users/" + match.userId}
-                  key={match.userId}
-                  style={{
-                    color: 'inherit',
-                    textDecoration: 'inherit',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
-                  }}>
-
-              <ProfilePicture
-                label={"Possible Duplicate User:"}
-                sublabel={'User ' + match.userId}
-                roll={match.roll}
-                url={match.url}
-              />
-
-            </Link>
-          )
-        )
-      } else {
-        matched_profiles = null
-      }
-
       console.log(this.props.user.custom_attributes);
 
       custom_attribute_list = Object.keys(this.props.user.custom_attributes).map(key => {
@@ -232,18 +206,23 @@ class SingleUserManagement extends React.Component {
 
                       </Row>
                     <Row style={{margin: '0em 1em'}}>
-                      <SubRow>
-                        <InputLabel>Failed Pin Attempts:</InputLabel>
-                        <ManagerText>
-                          {this.props.user.failed_pin_attempts}
-                          {this.props.user.failed_pin_attempts === 3 ? " (BLOCKED)" : ""}
-                        </ManagerText>
-                        <AsyncButton onClick={this.resetPin.bind(this)}
-                                     miniSpinnerStyle={{height: '10px', width: '10px'}}
-                                     buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}}
-                                     isLoading={this.props.users.pinStatus.isRequesting}
-                                     buttonText="Reset Pin"/>
-                      </SubRow>
+                      {
+                        (this.props.user.failed_pin_attempts && this.props.user.failed_pin_attempts > 0) ?
+                          <SubRow>
+                            <InputLabel>Failed Pin Attempts:</InputLabel>
+                            <ManagerText>
+                              {this.props.user.failed_pin_attempts}
+                              {this.props.user.failed_pin_attempts === 3 ? " (BLOCKED)" : ""}
+                            </ManagerText>
+                            <AsyncButton onClick={this.resetPin.bind(this)}
+                                         miniSpinnerStyle={{height: '10px', width: '10px'}}
+                                         buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}}
+                                         isLoading={this.props.users.pinStatus.isRequesting}
+                                         buttonText="Reset Pin"/>
+                          </SubRow>
+                          :
+                          null
+                      }
                     </Row>
                       <Row style={{margin: '0em 1em', flexWrap: 'wrap'}}>
                         {custom_attribute_list || null}
@@ -251,9 +230,6 @@ class SingleUserManagement extends React.Component {
                       <Row style={{margin: '0em 1em'}}>
                         <SubRow>
                         { profilePicture || null }
-                        </SubRow>
-                        <SubRow>
-                        { matched_profiles }
                         </SubRow>
                       </Row>
                   </Wrapper>

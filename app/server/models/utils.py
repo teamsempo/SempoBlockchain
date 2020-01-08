@@ -36,7 +36,7 @@ def paginate_query(query, queried_object=None, order_override=None):
     """
 
     page = request.args.get('page')
-    per_page = request.args.get('per_page')
+    per_page = request.args.get('per_page', 30)
 
     if order_override:
         query = query.order_by(order_override)

@@ -1,4 +1,6 @@
 import React from 'react';
+import MediaQuery from 'react-responsive'
+import classNames from 'classnames';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { PageWrapper } from './styledElements.js'
@@ -24,13 +26,19 @@ class MessageBar extends React.Component {
   }
 
   render() {
-    const message = this.props.message;
+      const message = this.props.message;
 
-    return (
-        <PageWrapper style={{marginLeft: (this.props.loggedIn ? undefined : 'auto'), width: (this.props.loggedIn ? undefined : '100vw'), transitionProperty: 'all', transitionDuration: '1.5s', transitionTimingFunction: 'cubic-bezier(0, 1, 0.5, 1)', top: (message.showMessage ? 0 : -35), position: 'fixed', zIndex: '99', textAlign: 'center'}}>
-            <Message style={{backgroundColor: (message.error ? '#F44336' : '#2D9EA0'), opacity: (message.showMessage ? 1 : 0)}}>{message.messageList[0]}</Message>
-        </PageWrapper>
-    )
+      if (this.props.loggedIn) {
+          return (
+              <PageWrapper style={{transitionProperty: 'all', transitionDuration: '1.5s', transitionTimingFunction: 'cubic-bezier(0, 1, 0.5, 1)', top: (message.showMessage ? 0 : -35), position: 'fixed', zIndex: '99', textAlign: 'center'}}>
+                  <Message style={{backgroundColor: (message.error ? '#F44336' : '#2D9EA0'), opacity: (message.showMessage ? 1 : 0)}}>{message.messageList[0]}</Message>
+              </PageWrapper>
+          )
+      } else {
+          return (
+              null
+          )
+      }
   }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MessageBar);
