@@ -301,12 +301,6 @@ class SearchBoxWithFilter extends React.Component {
     // get possible filter keys, remove PROFILE_PICTURE
     const keys = (possibleFilters !== undefined && possibleFilters !== null ? Object.keys(possibleFilters).filter(key => (key !== 'profile_picture')) : []);
 
-    let creditTransferSearchKeys = ['transfer_amount', 'created', 'transfer_status', 'transfer_type', 'id', 'transfer_use', 'recipient', 'sender'];
-    let transferAccountSearchKeys = ['balance', 'created', 'first_name', 'last_name', 'id', 'location', 'is_approved', 'phone', 'nfc_serial_number', 'public_serial_number'];
-
-    // pass correct keys to search filter
-    let searchKeys = location.pathname.includes('transfers') ? creditTransferSearchKeys : location.pathname.includes('accounts') ? transferAccountSearchKeys : [];
-
     // Phrase Search
     if (phrase !== '') {
       item_list = matchSorter(item_list, this.state.phrase, {keys: this.props.searchKeys});
@@ -324,8 +318,6 @@ class SearchBoxWithFilter extends React.Component {
           <FilterText onClick={this.addFilter}>Add</FilterText>
         </div>
     }
-
-
 
 
     if (keyName !== 'select')
