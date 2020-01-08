@@ -185,7 +185,6 @@ class TransferAccountList extends React.Component {
 
 
   render() {
-    const { transferAccounts, is_search_or_filter_active } = this.props;
     const {account_type} = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
     let accountTypes = Object.keys(TransferAccountTypes);

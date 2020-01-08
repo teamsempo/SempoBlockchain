@@ -42,7 +42,6 @@ class CreditTransferList extends React.Component {
   constructor() {
 	super();
 	this.state = {
-	  current_page: 0,
 	  action: false,
 	  user_id: null,
     transfer_type: 'ALL',
@@ -205,13 +204,8 @@ class CreditTransferList extends React.Component {
     }
   }
 
-  _onPageChange(pageIndex) {
-    this.props.loadCreditTransferList({per_page:50, page: pageIndex+1});
-    this.setState({current_page: pageIndex})
-  }
-
   render() {
-    const { creditTransfers, is_search_or_filter_active, is_single } = this.props;
+    const { creditTransfers, is_single } = this.props;
 
 	  const loadingStatus = creditTransfers.loadStatus.isRequesting;
 
@@ -296,8 +290,6 @@ class CreditTransferList extends React.Component {
       }
 
 	  if (this.props.creditTransfers.loadStatus.success || this.props.transferAccounts.loadStatus.success && !this.state.isLoading) {
-	    const tableLength = typeof(filteredData) !== "undefined" ? filteredData.length : null;
-	    const pageSize = is_single ? tableLength : is_search_or_filter_active ? tableLength : 50;
 		  return (
 			  <Wrapper>
           <ModuleBox style={{width: 'calc(100% - 2em)'}}>
