@@ -73,7 +73,6 @@ def test_transfer_usages_for_user(authed_sempo_admin_user):
     assert isinstance(usages, list)
 
 
-
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [
 
     (None, None,
