@@ -57,7 +57,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     users = db.relationship(
         "User",
         secondary=user_transfer_account_association_table,
-        back_populates="transfer_accounts"
+        back_populates="transfer_accounts",
+        lazy='joined'
     )
 
     credit_sends       = db.relationship('CreditTransfer', backref='sender_transfer_account',
@@ -122,13 +123,14 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     @hybrid_property
     def primary_user(self):
-        users = User.query.execution_options(show_all=True) \
-            .filter(User.transfer_accounts.any(TransferAccount.id.in_([self.id]))).all()
-        if len(users) == 0:
-            # This only happens when we've unbound a user from a transfer account by manually editing the db
-            return None
-
-        return sorted(users, key=lambda user: user.created)[0]
+        return self.users[0]
+        # users = User.query.execution_options(show_all=True) \
+        #     .filter(User.transfer_accounts.any(TransferAccount.id.in_([self.id]))).all()
+        # if len(users) == 0:
+        #     # This only happens when we've unbound a user from a transfer account by manually editing the db
+        #     return None
+        #
+        # return sorted(users, key=lambda user: user.created)[0]
 
     @hybrid_property
     def primary_user_id(self):

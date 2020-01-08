@@ -35,6 +35,13 @@ DEFAULT_ATTRIBUTES = ['email', 'phone', 'blockchain_address', 'public_serial_num
                       'additional_initial_disbursement', 'is_vendor', 'is_beneficiary', 'business_usage_id',
                       'existing_vendor_phone', 'existing_vendor_pin', 'use_last_4_digits_of_id_as_initial_pin']
 
+GE_FILTER_ATTRIBUTES = [
+    'gender',
+    'GE_wallet_address',
+    # 'bio',
+    'GE_community_token_id'
+]
+
 
 SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES = [
     # (attribute_name, display name)

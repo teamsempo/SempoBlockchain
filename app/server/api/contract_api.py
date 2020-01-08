@@ -1,9 +1,11 @@
 from flask import Blueprint, request, make_response, jsonify, current_app, g, copy_current_request_context
 from flask.views import MethodView
+from flask import g
+
 import threading
 
 from server import db, bt
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, show_all
 from server.utils.contract import deploy_cic_token
 from server.models.token import Token, TokenType
 from server.models.exchange import ExchangeContract
@@ -167,12 +169,14 @@ class ReserveTokenAPI(MethodView):
 
         @copy_current_request_context
         def deploy(_deploy_data, _token_id):
+            # TODO: Work out why execution options doesn't work
+            g.show_all = True
             reserve_token_address = bt.deploy_and_fund_reserve_token(**_deploy_data)
 
             _token = Token.query.get(_token_id)
             _token.address = reserve_token_address
 
-            master_org = Organisation.query.filter_by(is_master=True).first()
+            master_org = Organisation.query.filter_by(is_master=True).execution_options(show_all=True).first()
             master_org.bind_token(_token)
             master_org.org_level_transfer_account.balance = int(_deploy_data['fund_amount_wei'] / 1e16)
             db.session.commit()
