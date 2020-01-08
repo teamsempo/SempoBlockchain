@@ -39,7 +39,6 @@ class TransferAccountList extends React.Component {
   constructor() {
 	super();
 	this.state = {
-	  current_page: 0,
 	  data: [],
 	  loading: true,
 	  user_id: null,
@@ -184,10 +183,6 @@ class TransferAccountList extends React.Component {
     return <UserSVG src={url}/>
   }
 
-  _onPageChange(pageIndex) {
-    this.props.loadTransferAccounts({per_page:50, page: pageIndex+1});
-    this.setState({current_page: pageIndex})
-  }
 
   render() {
     const { transferAccounts, is_search_or_filter_active } = this.props;
@@ -271,10 +266,6 @@ class TransferAccountList extends React.Component {
     }
 
 	  if (this.props.transferAccounts.loadStatus.success && filteredData !== null && filteredData !== undefined) {
-
-	    const tableLength = filteredData.length;
-	    const pageSize = is_search_or_filter_active ? tableLength : 50;
-
 	    return (
         <div style={{display: 'flex', flexDirection: 'column'}}>
           {newTransfer}
@@ -334,16 +325,12 @@ class TransferAccountList extends React.Component {
                   ]}
                   loading={loadingStatus} // Display the loading overlay when we need it
                   data={filteredData}
-                  pageSize={pageSize}
-                  page={is_search_or_filter_active ? 0 : this.state.current_page}
-                  pages={is_search_or_filter_active ? 0 : transferAccounts.paginate.pages}
-                  onPageChange={(pageIndex) => this._onPageChange(pageIndex)}
+                  pageSize={20}
                   sortable={true}
                   showPagination={true}
                   showPageSizeOptions={false}
                   className='react-table'
                   resizable={false}
-                  manual
                   getTdProps={(state, rowInfo, column) => {
                     return {
                       onClick: (e, handleOriginal) => {

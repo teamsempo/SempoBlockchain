@@ -1,5 +1,5 @@
 from flask import current_app
-# import MySQLdb
+import MySQLdb
 import time
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 import pprint
@@ -16,7 +16,6 @@ from server.utils.user import create_transfer_account_user
 from server.utils.phone import proccess_phone_number
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.ge_migrations.poa_explorer import POAExplorer
-MySQLdb=None
 
 class RDSMigrate:
     

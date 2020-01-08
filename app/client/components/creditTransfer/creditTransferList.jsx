@@ -439,16 +439,12 @@ class CreditTransferList extends React.Component {
             ]}
 					  data={filteredData}
 					  loading={loadingStatus} // Display the loading overlay when we need it
-					  pageSize={pageSize}
-            page={is_search_or_filter_active ? 0 : this.state.current_page}
-            pages={is_search_or_filter_active ? 0 : creditTransfers.paginate.pages}
-            onPageChange={(pageIndex) => this._onPageChange(pageIndex)}
+					  pageSize={20}
 					  sortable={true}
 					  showPagination={!is_single}
 					  showPageSizeOptions={false}
 					  className='react-table'
 					  resizable={false}
-            manual
             getTdProps={(state, rowInfo) => {
               return {
                 onClick: (e, handleOriginal) => {

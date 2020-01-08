@@ -3,7 +3,6 @@ import { DEEEEEEP, addCreditTransferIdsToTransferAccount } from '../utils'
 
 export const UPDATE_TRANSFER_ACCOUNTS = "UPDATE_TRANSFER_ACCOUNTS";
 export const UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS = "UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS";
-export const UPDATE_TRANSFER_ACCOUNT_LIST_PAGINATION = 'UPDATE_TRANSFER_ACCOUNT_LIST_PAGINATION';
 
 export const LOAD_TRANSFER_ACCOUNTS_REQUEST = "LOAD_TRANSFER_ACCOUNTS_REQUEST";
 export const LOAD_TRANSFER_ACCOUNTS_SUCCESS = "LOAD_TRANSFER_ACCOUNTS_SUCCESS";
@@ -19,9 +18,6 @@ export const RESET_SELECTED = "RESET_SELECTED";
 const byId = (state = {}, action) => {
   switch (action.type) {
       case UPDATE_TRANSFER_ACCOUNTS:
-        if (action.reload) {
-          return action.transfer_accounts;
-        }
         return DEEEEEEP(state, action.transfer_accounts);
 
       case UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS:
@@ -41,20 +37,6 @@ const byId = (state = {}, action) => {
 
         return addCreditTransferIdsToTransferAccount(state, newState);
 
-    default:
-      return state;
-  }
-};
-
-const initialPagination = {
-  items: null,
-  pages: 0,
-};
-
-const paginate = (state = initialPagination, action) => {
-  switch (action.type) {
-    case UPDATE_TRANSFER_ACCOUNT_LIST_PAGINATION:
-      return {...state, items: action.items, pages: action.pages};
     default:
       return state;
   }
@@ -124,7 +106,6 @@ export const transferAccounts = combineReducers({
   loadStatus,
   editStatus,
   selected,
-  paginate
 });
 
 // ACTIONS
