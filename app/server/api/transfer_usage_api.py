@@ -14,7 +14,7 @@ transfer_usage_blueprint = Blueprint('transfer_usage', __name__)
 
 
 class TransferUsageAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'})
     def get(self):
         transfer_usages = TransferUsage.query.order_by(
             desc('default')).all()

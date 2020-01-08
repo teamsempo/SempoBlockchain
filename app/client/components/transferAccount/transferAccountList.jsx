@@ -4,14 +4,14 @@ import styled from 'styled-components';
 import ReactTable from 'react-table'
 import { browserHistory } from '../../app.jsx'
 
-import { ModuleBox, TopRow, StyledButton, StyledSelect, Wrapper } from '../styledElements.js'
+import { ModuleBox, TopRow, StyledButton, StyledSelect, Wrapper, FooterBar } from '../styledElements.js'
 
 import LoadingSpinner from "../loadingSpinner.jsx";
 import DateTime from '../dateTime.jsx';
 import NewTransferManager from '../management/newTransferManager.jsx'
 
 import { formatMoney } from "../../utils";
-import { editTransferAccount, setSelected } from "../../reducers/transferAccountReducer";
+import { editTransferAccount, setSelected, loadTransferAccounts } from "../../reducers/transferAccountReducer";
 import {TransferAccountTypes} from "../transferAccount/types";
 
 const mapStateToProps = (state) => {
@@ -26,6 +26,7 @@ const mapDispatchToProps = (dispatch) => {
   return{
     editTransferAccountRequest: (body) => dispatch(editTransferAccount({body})),
     setSelected: (selected) => dispatch(setSelected(selected)),
+    loadTransferAccounts: (query, path) => dispatch(loadTransferAccounts({query, path}))
   };
 };
 
@@ -182,6 +183,7 @@ class TransferAccountList extends React.Component {
     return <UserSVG src={url}/>
   }
 
+
   render() {
     const {account_type} = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
@@ -263,9 +265,6 @@ class TransferAccountList extends React.Component {
     }
 
 	  if (this.props.transferAccounts.loadStatus.success && filteredData !== null && filteredData !== undefined) {
-
-	    const tableLength = filteredData.length;
-
 	    return (
         <div style={{display: 'flex', flexDirection: 'column'}}>
           {newTransfer}
@@ -325,9 +324,9 @@ class TransferAccountList extends React.Component {
                   ]}
                   loading={loadingStatus} // Display the loading overlay when we need it
                   data={filteredData}
-                  pageSize={tableLength}
+                  pageSize={20}
                   sortable={true}
-                  showPagination={false}
+                  showPagination={true}
                   showPageSizeOptions={false}
                   className='react-table'
                   resizable={false}
@@ -349,9 +348,6 @@ class TransferAccountList extends React.Component {
                     };
                   }}
                 />
-                <FooterBar>
-                    <p style={{margin: 0}}>{tableLength} accounts</p>
-                </FooterBar>
               </Wrapper>
             </ModuleBox>
         </div>
@@ -367,11 +363,6 @@ class TransferAccountList extends React.Component {
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TransferAccountList);
-
-const FooterBar = styled.div`
-    border-top: solid 1px rgba(0,0,0,0.05);
-    padding: 1em;
-`;
 
 const UserSVG = styled.img`
   width: 20px;

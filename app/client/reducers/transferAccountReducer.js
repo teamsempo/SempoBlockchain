@@ -105,7 +105,7 @@ export const transferAccounts = combineReducers({
   byId,
   loadStatus,
   editStatus,
-  selected
+  selected,
 });
 
 // ACTIONS

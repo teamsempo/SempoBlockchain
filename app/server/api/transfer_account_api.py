@@ -1,5 +1,7 @@
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify, g, Response
 from flask.views import MethodView
+
+import orjson
 
 from sqlalchemy.orm import lazyload
 
@@ -75,7 +77,9 @@ class TransferAccountAPI(MethodView):
                 'pages': total_pages,
                 'data': {'transfer_accounts': result.data}
             }
-            return make_response(jsonify(response_object)), 201
+
+            bytes_data = orjson.dumps(response_object)
+            return make_response(bytes_data, 200)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, transfer_account_id):

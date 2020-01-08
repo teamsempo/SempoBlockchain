@@ -18,7 +18,6 @@ from server.models.custom_attribute_user_storage import CustomAttributeUserStora
 from server.utils.ge_migrations.poa_explorer import POAExplorer
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
-
 class RDSMigrate:
     
     '''

@@ -1,9 +1,12 @@
 from flask import g
+
 from marshmallow import Schema, fields, post_dump
+import toastedmarshmallow
 
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
+from server.constants import GE_FILTER_ATTRIBUTES
 
 
 class LowerCase(fields.Field):
@@ -15,6 +18,9 @@ class LowerCase(fields.Field):
 
 
 class SchemaBase(Schema):
+    class Meta:
+        jit = toastedmarshmallow.Jit
+
     id = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
     updated = fields.DateTime(dump_only=True)
@@ -59,38 +65,19 @@ class UserSchema(SchemaBase):
 
     transfer_accounts        = fields.Nested('TransferAccountSchema',
                                              many=True,
-                                             exclude=('users','credit_sends','credit_receives'))
+                                             exclude=('users', 'credit_sends', 'credit_receives'))
 
     def get_json_data(self, obj):
 
-        allowed_custom_attributes_objs = CustomAttribute.query.all()
-        allowed_custom_attributes = []
-
-        for attribute in allowed_custom_attributes_objs:
-            allowed_custom_attributes.append(attribute.name)
-
         custom_attributes = obj.custom_attributes
 
-        if custom_attributes is None:
-            return {}
+        parsed_dict = {}
 
-        keys_to_pop = []
-        for attribute_key in custom_attributes.keys():
-            try:
-                if 'uploaded_image_id' in custom_attributes[attribute_key]:
-                    custom_attributes[attribute_key]['url'] = get_file_url(
-                        custom_attributes[attribute_key]['value']
-                    )
-            except TypeError:
-                pass
+        for attribute in custom_attributes:
+            if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
+                parsed_dict[attribute.name] = attribute.value.strip('"')
 
-            if len(allowed_custom_attributes) > 0 and attribute_key not in allowed_custom_attributes:
-                keys_to_pop.append(attribute_key)
-
-        for key in keys_to_pop:
-            custom_attributes.pop(key)
-
-        return custom_attributes
+        return parsed_dict
 
     def get_profile_url(self, obj):
         processed_profile_pictures = []
@@ -201,6 +188,36 @@ class ExchangeSchema(BlockchainTaskableSchemaBase):
     from_transfer       = fields.Nested(CreditTransferSchema)
     to_transfer         = fields.Nested(CreditTransferSchema)
 
+class MiniTaSchema(SchemaBase):
+    is_approved = fields.Boolean()
+    # balance                 = fields.Int()
+    #
+    balance = fields.Function(lambda obj: int(obj.balance))
+
+    # primary_user_id = fields.Int()
+
+    transfer_account_name = fields.Str()
+    is_vendor = fields.Boolean()
+
+    payable_period_type = fields.Str()
+    payable_period_length = fields.Int()
+    payable_epoch = fields.Str()
+    payable_period_epoch = fields.DateTime()
+    #
+    blockchain_address = fields.Str()
+
+    # users = fields.Nested(UserSchema, attribute='users', many=True, exclude=('transfer_account',))
+
+    credit_sends = fields.Nested(CreditTransferSchema, many=True)
+    credit_receives = fields.Nested(CreditTransferSchema, many=True)
+
+    # token = fields.Nested(TokenSchema)
+    #
+    # def get_primary_user_id(self, obj):
+    #     users = obj.user
+    #     print(obj)
+    #     return sorted(users, key=lambda user: user.created)[0].id
+
 
 class TransferAccountSchema(SchemaBase):
     is_approved             = fields.Boolean()
@@ -220,12 +237,34 @@ class TransferAccountSchema(SchemaBase):
 
     blockchain_address      = fields.Str()
 
-    users                   = fields.Nested(UserSchema, attribute='users', many=True, exclude=('transfer_account',))
+    users                   = fields.Nested(
+        UserSchema,
+        attribute='users',
+        many=True,
+        only=(
+            "first_name",
+            "id",
+            "is_beneficiary",
+            "is_disabled",
+            "is_groupaccount",
+            "is_tokenagent",
+            "is_vendor",
+            "last_name",
+            "lat",
+            "lng",
+            "location",
+            "phone",
+            "public_serial_number",
+            "custom_attributes"
+        ),
+        exclude=(
+            'transfer_accounts',
+            'transfer_accounts'))
 
     credit_sends            = fields.Nested(CreditTransferSchema, many=True)
     credit_receives         = fields.Nested(CreditTransferSchema, many=True)
 
-    token                   = fields.Nested(TokenSchema)
+    token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
     def get_primary_user_id(self, obj):
         users = obj.user
@@ -349,14 +388,21 @@ transfer_account_schema = TransferAccountSchema(
     exclude=(
         "credit_sends.sender_transfer_account",
         "credit_sends.recipient_transfer_account",
-        # "credit_sends.sender_user",
-        # "credit_sends.recipient_user",
         "credit_receives.sender_transfer_account",
         "credit_receives.recipient_transfer_account",
+        # "credit_sends.sender_user",
+        # "credit_sends.recipient_user",
         #  "credit_receives.sender_user",
         #  "credit_receives.recipient_user"
     ))
-transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credit_sends", "credit_receives"))
+
+transfer_accounts_schema = TransferAccountSchema(
+    many=True,
+    only=('balance', 'created', 'id', 'users', 'token', 'primary_user_id', 'blockchain_address')
+)
+
+# transfer_accounts_schema = MiniTaSchema(many=True)
+
 
 view_transfer_account_schema = TransferAccountSchema(
     exclude=(
@@ -370,6 +416,7 @@ view_transfer_account_schema = TransferAccountSchema(
         "credit_receives.sender_user",
         "users"
     ))
+
 view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credit_sends", "credit_receives", "users"))
 
 credit_transfer_schema = CreditTransferSchema()

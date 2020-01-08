@@ -64,8 +64,6 @@ function* loadTransferAccounts({payload}) {
 
     const error = yield call(handleError, fetch_error);
 
-    console.log('error is:', error);
-
     yield put({type: LOAD_TRANSFER_ACCOUNTS_FAILURE, error: error});
 
     yield put({type: ADD_FLASH_MESSAGE, error: true, message: error.message});
