@@ -57,7 +57,7 @@ export const editUserAPI = ({body, path}) => {
 };
 
 export const resetPinAPI = (userId) => {
-  return fetch(generateFormattedURL('/user/reset_pin'), {
+  return fetch(generateFormattedURL('/user/reset_pin/'), {
     headers: {
       'Authorization': getToken(),
       'Accept': 'application/json',

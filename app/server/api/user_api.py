@@ -194,7 +194,7 @@ class UserAPI(MethodView):
 
 
 class ResetPinAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()
@@ -203,9 +203,10 @@ class ResetPinAPI(MethodView):
         if reset_user_id is not None:
             user = User.query.get(reset_user_id)
 
-            pin_reset_token = user.encode_single_use_JWS('R')
-            user.save_pin_reset_token(pin_reset_token)
-            user.failed_pin_attempts = 0
+            if user is None:
+                return make_response(jsonify({'message': 'No user found for ID: {}'.format(reset_user_id)})), 404
+
+            UserUtils.admin_reset_user_pin(user)
 
             response_object = {
                 'status': 'success',
@@ -237,7 +238,7 @@ user_blueprint.add_url_rule(
 )
 
 user_blueprint.add_url_rule(
-    '/user/reset_pin',
+    '/user/reset_pin/',
     view_func=ResetPinAPI.as_view('reset_pin'),
     methods=['POST'],
     defaults={'user_id': None}
