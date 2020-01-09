@@ -36,3 +36,21 @@ def test_proccess_phone_number(proccess_phone_number, phone, region, expected):
 ])
 def test_channel_for_number(channel_for_number, phone, expected):
     assert channel_for_number(phone) == expected
+
+
+
+def test_send_message(test_client, mock_sms_apis):
+    from server import message_processor
+
+    message_processor.send_message("+1401391419", 'bonjour')
+    message_processor.send_message("+961401391419", 'mon')
+    message_processor.send_message("+254796918514", 'chéri')
+
+    messages = mock_sms_apis
+
+    assert len(messages) == 3
+    assert messages == [
+        {'phone': '+1401391419', 'message': 'bonjour'},
+        {'phone': '+961401391419', 'message': 'mon'},
+        {'phone': '+254796918514', 'message': 'chéri'}
+    ]
