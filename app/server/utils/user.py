@@ -303,8 +303,13 @@ def set_custom_attributes(attribute_dict, user):
     # loads in any existing custom attributes
     custom_attributes = user.custom_attributes or []
     for key in attribute_dict['custom_attributes'].keys():
+        to_remove = list(filter(lambda a: a.name == key, custom_attributes))
+        for r in to_remove:
+            custom_attributes.remove(r)
+
         custom_attribute = CustomAttributeUserStorage(
             name=key, value=attribute_dict['custom_attributes'][key])
+
         custom_attributes.append(custom_attribute)
     custom_attributes = set_attachments(
         attribute_dict, user, custom_attributes)
