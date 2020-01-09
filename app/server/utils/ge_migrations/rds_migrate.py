@@ -16,7 +16,9 @@ from server.utils.user import create_transfer_account_user
 from server.utils.phone import proccess_phone_number
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.ge_migrations.poa_explorer import POAExplorer
+from server.utils.ge_migrations.web3_explorer import get_token_balance
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.constants import GE_MIGRATION_TOKENS
 
 class RDSMigrate:
     
@@ -304,17 +306,17 @@ class RDSMigrate:
         ge_address_to_user.pop(None, None)
 
         addresses = list(ge_address_to_user.keys())
-        balance_list = self.poa.pull_token_balances(addresses)
 
-        for user_address in balance_list.keys():
+        for user_address in addresses:
             balance_wei = 0
-            for contract_address in balance_list[user_address].keys():
-                v = balance_list[user_address][contract_address]
+
+            for ge_token in GE_MIGRATION_TOKENS.keys():
+                contract_address = GE_MIGRATION_TOKENS[ge_token]
+
+                v = get_token_balance(user_address, contract_address)
+
                 if v != '':
                     balance_wei += int(v)
-
-        # for balance_info in balance_list['result']:
-        #     balance_wei = int(balance_info['balance'])
 
             user = ge_address_to_user[user_address]
             ta = user.get_transfer_account_for_token(token)
