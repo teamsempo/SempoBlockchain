@@ -321,6 +321,12 @@ try:
     GE_DB_HOST = specific_parser['GE_MIGRATION'].get('host')
     GE_DB_PORT = specific_parser['GE_MIGRATION'].get('port')
     GE_DB_PASSWORD = specific_parser['GE_MIGRATION'].get('password')
+    GE_HTTP_PROVIDER = specific_parser['GE_MIGRATION'].get('ge_http_provider')
 
 except KeyError:
-    pass
+    GE_DB_NAME = ''
+    GE_DB_USER = ''
+    GE_DB_HOST = ''
+    GE_DB_PORT = ''
+    GE_DB_PASSWORD = ''
+    GE_HTTP_PROVIDER = ''
