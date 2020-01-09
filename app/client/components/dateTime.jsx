@@ -4,7 +4,6 @@ import moment from 'moment'
 
 export default class DateTime extends React.Component {
     render() {
-        console.log(this.props)
         if (this.props.created) {
 
             var formatted_time = moment.utc(this.props.created).fromNow();
