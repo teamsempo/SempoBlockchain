@@ -219,6 +219,5 @@ workflows:
             branches:
               only:
                 - master
-                - poa_balance_fix
           requires:
             - test
