@@ -301,7 +301,7 @@ def extract_kobo_custom_attributes(post_data):
 
 def set_custom_attributes(attribute_dict, user):
     # loads in any existing custom attributes
-    custom_attributes = user.custom_attributes or {}
+    custom_attributes = user.custom_attributes or []
     for key in attribute_dict['custom_attributes'].keys():
         custom_attribute = CustomAttributeUserStorage(
             name=key, value=attribute_dict['custom_attributes'][key])

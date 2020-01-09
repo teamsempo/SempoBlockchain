@@ -228,3 +228,9 @@ export const ModalClose = styled.img`
   font-weight: bold;
   height: 20px;
  `;
+
+export const FooterBar = styled.div`
+    display: flex;
+    border-top: solid 1px rgba(0,0,0,0.05);
+    padding: 1em;
+`;

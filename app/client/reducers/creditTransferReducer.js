@@ -31,7 +31,6 @@ const byId = (state = {}, action) => {
           }
         }
       );
-
       return DEEEEEEP(state, action.credit_transfers);
     default:
       return state;
@@ -108,11 +107,11 @@ export const createStatus = (state = initialCreateStatusState, action) => {
 };
 
 export const creditTransfers = combineReducers({
-    byId,
-    transferStats,
-    loadStatus,
-    createStatus,
-    modifyStatus
+  byId,
+  transferStats,
+  loadStatus,
+  createStatus,
+  modifyStatus
 });
 
 // ACTIONS

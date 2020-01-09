@@ -86,6 +86,10 @@ body {
   border: 0!important;
 }
 
+.ReactTable .-pagination {
+  box-shadow: none!important;
+}
+
 .react-table-first-cell {
   color: #4A4A4A;
   display: inline;
