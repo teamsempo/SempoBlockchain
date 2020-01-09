@@ -58,8 +58,6 @@ class MessageProcessor(object):
             return ChannelType.TWILIO
 
     def send_message(self, to_phone, message):
-        self.send_at_message(to_phone, message)
-
         if not current_app.config['IS_TEST'] and current_app.config['IS_PRODUCTION']:
             channel = self.channel_for_number(to_phone)
             print(f'Sending SMS via {channel}')
