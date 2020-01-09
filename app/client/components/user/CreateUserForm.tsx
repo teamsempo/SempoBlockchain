@@ -68,7 +68,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     this.props.initialize({
       accountType: TransferAccountTypes.USER.toLowerCase(),
       gender: 'female',
-      additionalInitialDisbursement: window.DEFAULT_INITIAL_DISBURSEMENT / 100 || null
+      additionalInitialDisbursement: window.DEFAULT_INITIAL_DISBURSEMENT / 100 || undefined
     });
   }
 
