@@ -111,8 +111,7 @@ class TokenSchema(SchemaBase):
 class CreditTransferSchema(Schema):
 
     id      = fields.Int(dump_only=True)
-    # created = fields.DateTime(dump_only=True)
-    created = fields.DateTime(dump_only= True, attribute='resolved_date')
+    created = fields.DateTime(dump_only=True)
     authorising_user_email  = fields.Method('get_authorising_user_email')
 
     uuid = fields.String()
