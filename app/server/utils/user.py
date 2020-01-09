@@ -509,15 +509,6 @@ def proccess_create_or_modify_user_request(
                 response_object = {'message': 'Transfer card not found'}
                 return response_object, 400
 
-    if additional_initial_disbursement and not additional_initial_disbursement <= current_app.config[
-        'MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']:
-        response_object = {
-            'message': 'Disbursement more than maximum allowed amount ({} {})'
-                .format(current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT'] / 100,
-                        current_app.config['CURRENCY_NAME'])
-        }
-        return response_object, 400
-
     business_usage = None
     if business_usage_id:
         business_usage = TransferUsage.query.get(business_usage_id)
@@ -589,7 +580,8 @@ def proccess_create_or_modify_user_request(
             additional_initial_disbursement,
             organisation.token,
             receive_user=user,
-            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
+            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+            automatically_resolve_complete=(additional_initial_disbursement <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']))
 
     # Location fires an async task that needs to know user ID
     db.session.flush()

@@ -118,7 +118,7 @@ class CreditTransferAPI(MethodView):
 
             return make_response(jsonify(response_object)), 201
 
-    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, credit_transfer_id):
 
         put_data = request.get_json()

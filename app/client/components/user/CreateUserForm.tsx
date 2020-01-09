@@ -65,7 +65,11 @@ const validate = (values: ICreateUser) => {
 
 class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Props> & Props> {
   componentDidMount() {
-    this.props.initialize({ accountType: TransferAccountTypes.USER.toLowerCase(), gender: 'female' });
+    this.props.initialize({
+      accountType: TransferAccountTypes.USER.toLowerCase(),
+      gender: 'female',
+      additionalInitialDisbursement: window.DEFAULT_INITIAL_DISBURSEMENT / 100 || null
+    });
   }
 
   setSerialNumber(data: string) {
@@ -96,7 +100,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     let businessUsage;
 
     if (window.MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT > 0) {
-      initialDisbursementAmount = <InputField name="additionalInitialDisbursement" label={'Additional Initial Disbursement Amount'}>
+      initialDisbursementAmount = <InputField name="additionalInitialDisbursement" label={'Initial Disbursement Amount'}>
         {organisation !== null ? organisation.token.symbol : null}
       </InputField>
     }
