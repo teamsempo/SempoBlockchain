@@ -43,6 +43,12 @@ class POAExplorer:
     def __url(self, **kwargs):
         args = ['='.join(item) for item in kwargs.items()]        
         return self.base_url + '?' + '&'.join(args)
+
+    def token_balance(self, contract_address, address):
+        return request(self.__url(module='account',
+                                  action='tokenbalance',
+                                  contractaddress=contract_address,
+                                  address=address))
         
     def balance(self, address):
         '''

@@ -123,6 +123,8 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     @hybrid_property
     def primary_user(self):
+        if len(self.users) == 0:
+            return None
         return self.users[0]
         # users = User.query.execution_options(show_all=True) \
         #     .filter(User.transfer_accounts.any(TransferAccount.id.in_([self.id]))).all()
