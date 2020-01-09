@@ -19,7 +19,7 @@ import pytest
 #     assert create_transfer_account_user.transfer_account is not None
 #     assert create_transfer_account_user.transfer_account.is_approved is config.AUTO_APPROVE_TRANSFER_ACCOUNTS
 from helpers.factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory
-from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages
+from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages, admin_reset_user_pin
 
 
 def test_create_user_with_existing_transfer_account(create_user_with_existing_transfer_account, create_transfer_account):
@@ -72,6 +72,19 @@ def test_transfer_usages_for_user(authed_sempo_admin_user):
     usages = transfer_usages_for_user(authed_sempo_admin_user)
     assert isinstance(usages, list)
 
+
+def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfer_account_user):
+    send_message = mocker.MagicMock()
+    mocker.patch('server.message_processor.send_message', send_message)
+
+    user = create_transfer_account_user
+    admin_reset_user_pin(user)
+
+    assert user.failed_pin_attempts == 0
+    assert isinstance(user.pin_reset_tokens, list)
+    assert len(user.pin_reset_tokens) == 1
+
+    send_message.assert_has_calls([mocker.call(user.phone, 'Dial *483*46# to change your PIN')])
 
 
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [
