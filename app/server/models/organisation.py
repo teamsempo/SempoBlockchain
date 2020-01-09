@@ -14,7 +14,7 @@ class Organisation(ModelBase):
     """
     __tablename__       = 'organisation'
 
-    is_master           = db.Column(db.Boolean, default=False)
+    is_master           = db.Column(db.Boolean, default=False, index=True)
 
     name                = db.Column(db.String)
 
@@ -48,7 +48,8 @@ class Organisation(ModelBase):
     @property
     def queried_org_level_transfer_account(self):
         if self.org_level_transfer_account_id:
-            return server.models.transfer_account.TransferAccount.query.get(self.org_level_transfer_account_id)
+            return server.models.transfer_account.TransferAccount\
+                .query.execution_options(show_all=True).get(self.org_level_transfer_account_id)
         return None
 
     credit_transfers    = db.relationship("CreditTransfer",
@@ -65,18 +66,14 @@ class Organisation(ModelBase):
     email_whitelists    = db.relationship('EmailWhitelist', backref='organisation',
                                           lazy=True, foreign_keys='EmailWhitelist.organisation_id')
 
+    kyc_applications = db.relationship('KycApplication', backref='organisation',
+                                       lazy=True, foreign_keys='KycApplication.organisation_id')
+
     custom_welcome_message_key = db.Column(db.String)
 
     @staticmethod
     def master_organisation() -> "Organisation":
         return Organisation.query.filter_by(is_master=True).first()
-
-    def send_welcome_sms(self, to_user: dict):
-        if self.custom_welcome_message_key:
-            message = i18n_for(to_user, "organisation.{}".format(self.custom_welcome_message_key))
-        else:
-            message = i18n_for(to_user, "organisation.generic_welcome_message")
-        message_processor.send_message(to_user.get('phone'), message)
 
     def _setup_org_transfer_account(self):
         transfer_account = server.models.transfer_account.TransferAccount(

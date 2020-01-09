@@ -2,14 +2,14 @@ import React from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 
-import AsyncButton from './AsyncButton.jsx'
+import AsyncButton from '../AsyncButton.jsx'
 
-import { Input, StyledButton, ErrorMessage } from './styledElements'
-import { inviteUser } from "../reducers/authReducer";
+import { Input, ErrorMessage } from '../styledElements'
+import { inviteUser } from "../../reducers/auth/actions";
 
 const mapStateToProps = (state) => {
   return {
-    inviteUserRequest: state.inviteUserRequest
+    createAdminStatus: state.adminUsers.createStatus,
   };
 };
 
@@ -31,7 +31,7 @@ export class InviteFormContainer extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setState({invalid_request: (nextProps.inviteUserRequest.error)})
+    this.setState({invalid_request: (nextProps.createAdminStatus.error)})
 
   }
 
@@ -67,7 +67,7 @@ export class InviteFormContainer extends React.Component {
         onClick = {() => this.onClick()}
         email_missing = {this.state.email_missing}
         invalid_request = {this.state.invalid_request}
-        isLoggingIn = {this.props.inviteUserRequest.isRequesting}
+        isLoggingIn = {this.props.createAdminStatus.isRequesting}
         tier = {this.state.tier}
       />
     )

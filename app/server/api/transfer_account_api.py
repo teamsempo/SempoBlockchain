@@ -1,5 +1,7 @@
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify, g, Response
 from flask.views import MethodView
+
+import orjson
 
 from sqlalchemy.orm import lazyload
 
@@ -44,15 +46,16 @@ class TransferAccountAPI(MethodView):
 
         else:
 
+            base_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)
+
             if account_type_filter == 'vendor':
-                transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=True)
+                transfer_accounts_query = base_query.filter_by(has_vendor_role=True)
             elif account_type_filter == 'beneficiary':
-                transfer_accounts_query = TransferAccount.query.filter_by(has_vendor_role=False)
+                transfer_accounts_query = base_query.filter_by(has_vendor_role=False)
             else:
                 pass
                 # Filter Contract, Float and Organisation Transfer Accounts
-                transfer_accounts_query = (TransferAccount.query
-                                           .filter(TransferAccount.account_type == TransferAccountType.USER))
+                transfer_accounts_query = (base_query.filter(TransferAccount.account_type == TransferAccountType.USER))
 
             transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
 
@@ -74,7 +77,9 @@ class TransferAccountAPI(MethodView):
                 'pages': total_pages,
                 'data': {'transfer_accounts': result.data}
             }
-            return make_response(jsonify(response_object)), 201
+
+            bytes_data = orjson.dumps(response_object)
+            return make_response(bytes_data, 200)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, transfer_account_id):

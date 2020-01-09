@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Link, NavLink } from 'react-router-dom';
 
-import { updateActiveOrgRequest } from '../reducers/authReducer'
+import { updateActiveOrgRequest } from '../reducers/auth/actions'
 
 const mapStateToProps = (state) => {
   return {
@@ -105,8 +105,6 @@ class NavBar extends React.Component {
           orgs = []
         }
 
-        console.log('orgs',orgs);
-
         if (this.props.loggedIn) {
 
             return (
@@ -126,9 +124,9 @@ class NavBar extends React.Component {
                                   <div style={{display: 'flex', flexDirection: 'row', cursor: 'pointer'}}>
                                       <StyledLogoLink to='/' onClick={() => this._closeMobileMenu()}><SVG src={this.state.iconURL}/></StyledLogoLink>
                                       <div style={{display: 'flex', width: '100%', justifyContent: 'space-between'}} onClick={() => this.toggleSwitchOrgDropdown()}>
-                                          <div style={{margin: 'auto 0'}}>
-                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', fontWeight: '600', textDecoration: 'none', letterSpacing: '1.5px', textTransform: 'uppercase'}}>{this.props.login.organisationName}</p>
-                                              <p style={{color: '#fff', margin: '0', fontSize: '12px', textDecoration: 'none'}}>{this.props.email}</p>
+                                          <div style={{margin: 'auto 0', maxWidth: '100px'}}>
+                                              <BoldedNavBarHeaderText>{this.props.login.organisationName}</BoldedNavBarHeaderText>
+                                              <StandardNavBarHeaderText>{this.props.email}</StandardNavBarHeaderText>
                                           </div>
                                           {orgs.length <= 1 ? null : <SVG style={{padding: '0 0.5em 0 0', width: '30px'}} src={'/static/media/angle-down.svg'}/>}
                                       </div>
@@ -278,6 +276,21 @@ const ContractAddress = styled.a`
   right: 0;
   color: #85898c;
   }
+`;
+
+const StandardNavBarHeaderText = styled.p`
+  color: #fff; 
+  margin: 0;
+  font-size: 12px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  overflow: auto;
+`;
+
+const BoldedNavBarHeaderText = styled(StandardNavBarHeaderText)`
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 `;
 
 const DropdownContent = styled.div`

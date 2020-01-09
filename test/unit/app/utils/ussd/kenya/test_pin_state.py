@@ -4,8 +4,7 @@ from faker.providers import phone_number
 from faker import Faker
 import json
 
-from helpers.user import UserFactory
-from helpers.ussd_session import UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
 from server.utils import user as user_utils
@@ -127,11 +126,14 @@ def test_change_initial_pin(mocker, test_client, init_database):
 
     assert user.pin_hash is None
     assert user.is_activated is False
+    assert not user.is_phone_verified
 
     state_machine.feed_char("0000")
 
     assert user.verify_pin("0000") is True
     assert user.is_activated is True
+    assert user.is_phone_verified
+
     state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
 
 

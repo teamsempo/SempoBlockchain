@@ -1,5 +1,7 @@
 import datetime
 from typing import Optional
+from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.sql import func
 
 from server import db, message_processor
 from server.exceptions import TransactionPercentLimitError, TransactionCountLimitError
@@ -9,27 +11,17 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.models.user import User
 
+from server.utils.misc import round_amount, rounded_dollars
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
-from server.utils.transaction_limits import TransferLimit
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.transfer_limits import TransferLimit
 
 
 class TokenProcessor(object):
 
-    @staticmethod
-    def round_amount(amount):
-        if int(amount) == float(amount) and int(amount) > 1000:
-            # It's a large whole amount like 1200.00, so return as 1200
-            return(str(int(amount)))
-
-        # Add a small amount before round to override rounding half to even
-        return "{:.2f}".format(round(amount + 0.000001, 2))
-
-    @staticmethod
-    def rounded_dollars(amount):
-        return TokenProcessor.round_amount(float(amount) / 100)
 
     @staticmethod
     def send_sms(user, message_key, **kwargs):
@@ -41,8 +33,8 @@ class TokenProcessor(object):
     def send_success_sms(message_key: str, user: User, other_user: User, amount: float, reason: str, tx_time: datetime,
                          balance: float):
 
-        amount_dollars = TokenProcessor.rounded_dollars(amount)
-        rounded_balance_dollars = TokenProcessor.rounded_dollars(balance)
+        amount_dollars = rounded_dollars(amount)
+        rounded_balance_dollars = rounded_dollars(balance)
 
         TokenProcessor.send_sms(user, message_key, amount=amount_dollars, token_name=default_token(user).symbol,
                                 other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'), reason=reason,
@@ -52,9 +44,9 @@ class TokenProcessor(object):
     def exchange_success_sms(message_key: str, user: User, other_user: User, own_amount: float, other_amount: float,
                              tx_time: datetime, balance: float):
 
-        rounded_own_amount_dollars = TokenProcessor.rounded_dollars(own_amount)
-        rounded_other_amount_dollars = TokenProcessor.rounded_dollars(other_amount)
-        rounded_balance_dollars = TokenProcessor.rounded_dollars(balance)
+        rounded_own_amount_dollars = rounded_dollars(own_amount)
+        rounded_other_amount_dollars = rounded_dollars(other_amount)
+        rounded_balance_dollars = rounded_dollars(balance)
 
         TokenProcessor.send_sms(
             user, message_key,
@@ -68,9 +60,20 @@ class TokenProcessor(object):
         return default_transfer_account(user).balance
 
     @staticmethod
-    def get_limit(user: User, token: Token) -> Optional[TransferLimit]:
-        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=user, recipient_user=user, token=token,
-                                          amount=0)
+    def get_default_limit(user: User, token: Token, transfer_account: TransferAccount) -> Optional[TransferLimit]:
+        """
+        :param user:
+        :param token:
+        :param transfer_account:
+        :return: lowest limit applicable for a given CreditTransfer
+        """
+        example_transfer = CreditTransfer(
+            transfer_type=TransferTypeEnum.PAYMENT,
+            transfer_subtype=TransferSubTypeEnum.AGENT_OUT,
+            sender_user=user,
+            recipient_user=user,
+            token=token,
+            amount=0)
 
         limits = example_transfer.get_transfer_limits()
 
@@ -84,8 +87,43 @@ class TokenProcessor(object):
         if len(limits) == 0:
             return None
         else:
-            # might want to do something different if there's more than one limit...
-            return limits[0]
+            # should only ever be one ge limit
+            ge_limit = [limit for limit in limits if 'GE Liquid Token' in limit.name]
+
+            lowest_limit = None
+            lowest_amount_avail = float('inf')
+
+            for limit in limits:
+                if 'GE Liquid Token' not in limit.name:
+                    transaction_volume = limit.apply_all_filters(
+                        example_transfer,
+                        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+                    ).execution_options(show_all=True).first().total
+
+                    amount_avail = limit.total_amount - (transaction_volume or 0)
+                    fraction = ge_limit[0].transfer_balance_fraction or 0
+                    if amount_avail < (fraction * transfer_account.balance)\
+                            and amount_avail < lowest_amount_avail:
+                        lowest_limit = limit
+                        lowest_amount_avail = amount_avail
+
+            if lowest_limit:
+                return lowest_limit
+            else:
+                return ge_limit[0]
+
+    @staticmethod
+    def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
+        if limit is not None and limit.transfer_balance_fraction is not None:
+            return round_amount(
+                limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
+            )
+        elif limit.total_amount is not None:
+            return round_amount(
+                limit.total_amount
+            )
+        else:
+            return None
 
     @staticmethod
     def get_exchange_rate(user: User, from_token: Token):
@@ -96,7 +134,12 @@ class TokenProcessor(object):
         return exchange.get_exchange_rate(from_token, to_token)
 
     @staticmethod
-    def transfer_token(sender: User, recipient: User, amount: float, reason_id: Optional[int] = None):
+    def transfer_token(sender: User,
+                       recipient: User,
+                       amount: float,
+                       reason_id: Optional[int] = None,
+                       transfer_subtype: Optional[TransferSubTypeEnum]=TransferSubTypeEnum.STANDARD):
+
         sent_token = default_token(sender)
         received_token = default_token(recipient)
 
@@ -105,13 +148,14 @@ class TokenProcessor(object):
             transfer_use = str(int(reason_id))
         transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
-                                         require_sender_approved=False, require_recipient_approved=False)
+                                         require_sender_approved=False, require_recipient_approved=False,
+                                         transfer_subtype=transfer_subtype)
         exchanged_amount = None
 
         if sent_token.id != received_token.id:
             exchange = Exchange()
             exchange.exchange_from_amount(user=recipient, from_token=sent_token, to_token=received_token,
-                                          from_amount=amount, dependent_task_ids=[transfer.blockchain_task_id])
+                                          from_amount=amount, dependent_task_uuids=[transfer.blockchain_task_uuid])
             exchanged_amount = exchange.to_transfer.transfer_amount
 
         return exchanged_amount
@@ -121,7 +165,7 @@ class TokenProcessor(object):
 
         def get_token_info(transfer_account: TransferAccount):
             token = transfer_account.token
-            limit = TokenProcessor.get_limit(user, token)
+            limit = TokenProcessor.get_default_limit(user, token, transfer_account)
             exchange_rate = TokenProcessor.get_exchange_rate(user, token)
             return {
                 "name": token.symbol,
@@ -130,64 +174,88 @@ class TokenProcessor(object):
                 "limit": limit,
             }
 
-        def filter_incorrect_limit(token_info):
-            return (token_info['exchange_rate'] is not None
-                    and token_info['limit'] is not None
-                    and token_info['limit'].transfer_balance_percentage is not None)
+        def check_if_ge_limit(token_info):
+            return 'GE Liquid Token' in token_info['limit'].name
+            # return (token_info['exchange_rate'] is not None
+            #         and token_info['limit'] is not None
+            #         and token_info['limit'].transfer_balance_fraction is not None)
+
+        def ge_string(t):
+            if t['limit'].transfer_balance_fraction:
+                allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
+                rounded_rate = round_amount(t['exchange_rate'])
+                return(
+                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
+                )
+            else:
+                return ""
+
+        def standard_string(t):
+            if t['limit'].total_amount:
+                allowed_amount = f"{rounded_dollars(str(t['limit'].total_amount))}"
+                rounded_rate = round_amount(t['exchange_rate'])
+                return (
+                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
+                )
+            else:
+                return ""
 
         # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
         transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
         token_info_list = list(map(get_token_info, transfer_accounts))
 
-        token_balances_dollars = "\n".join(map(lambda x: f"{x['name']} {TokenProcessor.rounded_dollars(x['balance'])}",
+        token_balances_dollars = "\n".join(map(lambda x: f"{x['name']} {rounded_dollars(x['balance'])}",
                                                token_info_list))
 
         reserve_token = user.get_reserve_token()
-        exchangeable_tokens = filter(filter_incorrect_limit, token_info_list)
-        token_exchanges = "\n".join(
-            map(lambda x: f"{TokenProcessor.rounded_dollars(x['limit'].transfer_balance_percentage * x['balance'])}"
-                          f" {x['name']} (1 {x['name']} = {x['exchange_rate']} {reserve_token.symbol})",
-                exchangeable_tokens))
-
-        default_limit = TokenProcessor.get_limit(user, default_token(user))
-        if default_limit:
-            TokenProcessor.send_sms(
-                user,
-                "send_balance_limit_sms",
-                token_balances=token_balances_dollars,
-                token_exchanges=token_exchanges,
-                limit_period=default_limit.time_period_days)
+        ge_tokens = list(filter(check_if_ge_limit, token_info_list))
+        is_ge = len(ge_tokens) > 0
+        if is_ge:
+            token_exchanges = "\n".join(map(ge_string, ge_tokens))
         else:
+            token_exchanges = "\n".join(map(standard_string, token_info_list))
+
+        # TODO: Don't love the string comparison here, but it keeps thing short
+        if token_exchanges == "\n":
             TokenProcessor.send_sms(
                 user,
                 "send_balance_sms",
+                token_balances=token_balances_dollars)
+            return
+
+        default_limit = TokenProcessor.get_default_limit(user, default_token(user), default_transfer_account(user))
+        if default_limit:
+            TokenProcessor.send_sms(
+                user,
+                "send_balance_exchange_limit_sms",
                 token_balances=token_balances_dollars,
-                token_exchanges=token_exchanges
-            )
+                token_exchanges=token_exchanges,
+                limit_period=default_limit.time_period_days)
+            return
 
-
-
+        TokenProcessor.send_sms(
+            user,
+            "send_balance_exchange_sms",
+            token_balances=token_balances_dollars,
+            token_exchanges=token_exchanges
+        )
 
     @staticmethod
     def fetch_exchange_rate(user: User):
         from_token = default_token(user)
 
-        limit = TokenProcessor.get_limit(user, from_token)
-        if limit is not None and limit.transfer_balance_percentage is not None:
-            exchange_limit = TokenProcessor.round_amount(
-                limit.transfer_balance_percentage * TokenProcessor.get_balance(user)
-            )
-
-            exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
+        default_limit = TokenProcessor.get_default_limit(user, from_token, default_transfer_account(user))
+        exchange_limit = TokenProcessor.get_default_exchange_limit(default_limit, user)
+        exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
 
         TokenProcessor.send_sms(
             user,
             "exchange_rate_sms",
             token_name=from_token.symbol,
             exchange_rate=exchange_rate,
-            exchange_limit=TokenProcessor.rounded_dollars(exchange_limit),
-            exchange_sample_value=TokenProcessor.rounded_dollars(exchange_rate * float(1000)),
-            limit_period=limit.time_period_days
+            exchange_limit=rounded_dollars(exchange_limit),
+            exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
+            limit_period=default_limit.time_period_days
         )
 
     @staticmethod
@@ -232,14 +300,26 @@ class TokenProcessor(object):
 
     @staticmethod
     def exchange_token(sender: User, agent: User, amount: float):
-        example_transfer = CreditTransfer(transfer_type='EXCHANGE', sender_user=sender, recipient_user=sender,
-                                          token=default_token(sender), amount=amount)
+        example_transfer = CreditTransfer(
+            transfer_type=TransferTypeEnum.EXCHANGE,
+            sender_user=sender,
+            recipient_user=sender,
+            token=default_token(sender),
+            amount=amount)
+
         try:
             example_transfer.check_sender_transfer_limits()
-            db.session.delete(example_transfer)
+
+            try:
+                db.session.delete(example_transfer)
+            except InvalidRequestError:
+                # Instance is already deleted
+                pass
 
             # TODO: do agents have default token being reserve?
-            to_amount = TokenProcessor.transfer_token(sender, agent, amount)
+            to_amount = TokenProcessor.transfer_token(
+                sender, agent, amount, transfer_subtype=TransferSubTypeEnum.AGENT_OUT
+            )
             tx_time = datetime.datetime.now()
             sender_balance = TokenProcessor.get_balance(sender)
             agent_balance = TokenProcessor.get_balance(agent)

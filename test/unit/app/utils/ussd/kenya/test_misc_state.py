@@ -3,8 +3,7 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 
-from helpers.user import UserFactory
-from helpers.ussd_session import UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory
 from helpers.ussd_utils import fake_transfer_mapping
 from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
@@ -107,13 +106,13 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
     session = UssdSessionFactory(state="opt_out_of_market_place_pin_authorization")
     user = standard_user()
     user.phone = phone()
-    assert user.custom_attributes.filter_by(name='market_enabled').first() is None
+    assert next(filter(lambda x: x.name == 'market_enabled', user.custom_attributes), None) is None
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("0000")
     assert state_machine.state == "complete"
-    market_enabled = user.custom_attributes.filter_by(name='market_enabled').first()
+    market_enabled = next(filter(lambda x: x.name == 'market_enabled', user.custom_attributes), None)
     assert market_enabled.value is False
     state_machine.send_sms.assert_called_with(user.phone, "opt_out_of_market_place_sms")
 
@@ -122,13 +121,13 @@ def test_save_directory_info(mocker, test_client, init_database):
     session = UssdSessionFactory(state="change_my_business_prompt")
     user = standard_user()
     user.phone = phone()
-    assert user.custom_attributes.filter_by(name='bio').first() is None
+    assert next(filter(lambda x: x.name == 'bio', user.custom_attributes), None) is None
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("My Bio")
     assert state_machine.state == "exit"
-    bio = user.custom_attributes.filter_by(name='bio').first()
+    bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
     assert bio.value == "My Bio"
 
 
@@ -160,3 +159,31 @@ def test_send_directory_listing(mocker, test_client, init_database):
     state_machine.feed_char('2')
     assert state_machine.state == 'complete'
     send_directory_listing.assert_called_with(user, transfer_usage)
+
+
+def test_terms_only_sent_once(mocker, test_client, init_database):
+    session = UssdSessionFactory(state="balance_inquiry_pin_authorization")
+    user = standard_user()
+    user.phone = phone()
+
+    messages = []
+    def mock_send_message(phone, message):
+        messages.append({'phone': phone, 'message': message})
+    mocker.patch('server.message_processor.send_message', mock_send_message)
+
+    inquire_balance = mocker.MagicMock()
+    mocker.patch('server.ussd_tasker.inquire_balance', inquire_balance)
+
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.feed_char('0000')
+
+    db.session.commit()
+
+    assert len(messages) == 1
+
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.feed_char('0000')
+
+    assert len(messages) == 1
+
+

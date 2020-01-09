@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
 import ReactPasswordStrength from 'react-password-strength';
 
-import {resetPassword} from '../../reducers/authReducer'
+import {resetPassword} from '../../reducers/auth/actions'
 
 import AsyncButton from './../AsyncButton.jsx'
 

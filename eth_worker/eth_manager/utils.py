@@ -1,9 +1,12 @@
+from celery import result
+
 eth_worker_name = 'eth_manager'
 celery_tasks_name = 'celery_tasks'
 eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
 import config
 
-def execute_synchronous_task(signature):
+
+def execute_synchronous_celery(signature):
     async_result = signature.delay()
 
     try:
@@ -18,3 +21,8 @@ def execute_synchronous_task(signature):
         async_result.forget()
 
     return response
+
+
+def execute_task(signature):
+    ar = signature.delay()
+    return ar.id

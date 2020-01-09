@@ -1,7 +1,7 @@
 import phonenumbers
 import enum
 from flask import current_app
-
+import server
 
 def proccess_phone_number(phone_number, region=None, ignore_region=False):
     """
@@ -58,6 +58,8 @@ class MessageProcessor(object):
             return ChannelType.TWILIO
 
     def send_message(self, to_phone, message):
+        self.send_at_message(to_phone, message)
+
         if not current_app.config['IS_TEST'] and current_app.config['IS_PRODUCTION']:
             channel = self.channel_for_number(to_phone)
             print(f'Sending SMS via {channel}')
@@ -83,4 +85,18 @@ class MessageProcessor(object):
 
     def send_at_message(self, to_phone, message):
         if to_phone:
-            self.africastalking_client.send(message, [to_phone])
+
+            # First try with custom sender Id
+            resp = self.africastalking_client.send(
+                message,
+                [to_phone],
+                sender_id=current_app.config.get('AT_SENDER_ID', None)
+            )
+
+            # If that fails, fallback to no sender ID
+            if resp['SMSMessageData']['Message'] == 'InvalidSenderId':
+                server.sentry.captureMessage("InvalidSenderId {}".format(current_app.config.get('AT_SENDER_ID', None)))
+
+                resp = self.africastalking_client.send(
+                    message,
+                    [to_phone])

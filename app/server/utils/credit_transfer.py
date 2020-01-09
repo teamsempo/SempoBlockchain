@@ -26,8 +26,10 @@ from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
+
 def cents_to_dollars(amount_cents):
     return float(amount_cents) / 100
+
 
 def dollars_to_cents(amount_dollars):
     return float(amount_dollars) * 100
@@ -44,6 +46,12 @@ def calculate_transfer_stats(total_time_series=False):
     total_spent = (
         db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
             .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
+    )
+
+    total_exchanged = (
+        db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            .filter(CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE)
+            .filter(CreditTransfer.token == g.active_organisation.token).first().total
     )
 
     total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
@@ -107,6 +115,7 @@ def calculate_transfer_stats(total_time_series=False):
     data = {
         'total_distributed': total_distributed,
         'total_spent': total_spent,
+        'total_exchanged': total_exchanged,
         'has_transferred_count': has_transferred_count,
         'zero_balance_count': exhausted_balance_count,
         'total_beneficiaries': total_beneficiaries,
@@ -395,7 +404,7 @@ def make_payment_transfer(transfer_amount,
                           require_sufficient_balance=True,
                           automatically_resolve_complete=True,
                           uuid=None,
-                          transfer_subtype=None,
+                          transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
                           is_ghost_transfer=False):
     """
     This is used for internal transfers between Sempo wallets.
@@ -415,21 +424,21 @@ def make_payment_transfer(transfer_amount,
     :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
     :return:
     """
-    if transfer_subtype in TransferSubTypeEnum.__members__:
-        if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT.name:
-            require_sender_approved = False
-            require_recipient_approved = False
-            require_sufficient_balance = False
-            # primary NGO wallet to disburse from
-            send_transfer_account = receive_user.default_organisation.queried_org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.RECLAMATION.name:
-            require_sender_approved = False
-            # primary NGO wallet to reclaim to
-            receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
+    if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
+        require_sender_approved = False
+        require_recipient_approved = False
+        require_sufficient_balance = False
+        # primary NGO wallet to disburse from
+        send_transfer_account = receive_user.default_organisation.queried_org_level_transfer_account
 
-        if transfer_subtype is TransferSubTypeEnum.INCENTIVE.name:
-            send_transfer_account = receive_transfer_account.get_float_transfer_account()
+    if transfer_subtype is TransferSubTypeEnum.RECLAMATION:
+        require_sender_approved = False
+        # primary NGO wallet to reclaim to
+        receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
+
+    if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
+        send_transfer_account = receive_transfer_account.get_float_transfer_account()
 
     transfer = CreditTransfer(transfer_amount,
                               token=token,
@@ -452,7 +461,7 @@ def make_payment_transfer(transfer_amount,
             use_ids = transfer_use
         for use_id in use_ids:
             if use_id != 'null':
-                use = TransferUsage.query.filter_by(id=use_id).first()
+                use = TransferUsage.query.get(int(use_id))
                 if use:
                     usages.append(use.name)
                     if use.is_cashout:
@@ -486,9 +495,14 @@ def make_payment_transfer(transfer_amount,
 
     if make_cashout_incentive_transaction:
         try:
+            # todo: check limits apply
             incentive_amount = round(transfer_amount * current_app.config['CASHOUT_INCENTIVE_PERCENT'] / 100)
 
-            make_payment_transfer(incentive_amount, receive_user=receive_user, transfer_subtype='INCENTIVE')
+            make_payment_transfer(
+                incentive_amount,
+                receive_user=receive_user,
+                transfer_subtype=TransferSubTypeEnum.INCENTIVE
+            )
 
         except Exception as e:
             print(e)
@@ -601,14 +615,14 @@ def make_target_balance_transfer(target_balance,
                                             require_sufficient_balance=require_sufficient_balance,
                                             automatically_resolve_complete=automatically_resolve_complete,
                                             uuid=uuid,
-                                            transfer_subtype='RECLAMATION')
+                                            transfer_subtype=TransferSubTypeEnum.RECLAMATION)
 
     else:
         transfer = make_payment_transfer(transfer_amount, target_user,
                                             transfer_mode,
                                             automatically_resolve_complete=automatically_resolve_complete,
                                             uuid=uuid,
-                                            transfer_subtype='DISBURSEMENT')
+                                            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
 
     return transfer
 

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import {Redirect, Route, Switch, Link} from "react-router-dom";
 import { connect } from 'react-redux';
 
-import {activateAccount, logout} from '../../reducers/authReducer'
+import {activateAccount} from '../../reducers/auth/actions'
 
 import LoginForm from '../auth/loginForm.jsx'
 import RegisterForm from '../auth/registerForm.jsx'
@@ -78,7 +78,7 @@ export class authPage extends React.Component {
           <WrapperDiv>
               <LoginModuleBox>
                   <div>
-                  <SempoLogoSVG src="/static/media/sempo_logo.svg"/>
+                  <SempoLogoSVG src="/static/media/sempo_logo_teal.png"/>
                 </div>
                 <Switch>
                   <Route path={this.props.match.url + '/forgot/'} component={forgotPassword} />
@@ -89,8 +89,8 @@ export class authPage extends React.Component {
               </LoginModuleBox>
               <DeploymentNameText>sempo | {deploymentName}</DeploymentNameText>
               <TermsWrapper>
-                <TermsText href='https://sempo.ai/legal/privacy/'>Privacy Policy</TermsText>
-                <TermsText href='https://drive.google.com/file/d/1zv3LbBmpnwmCXrn310TO9X-OoGXL1ehu/view?usp=sharing'>Terms of Service</TermsText>
+                <TermsText href='https://withsempo.com/legal/privacy-policy/'>Privacy Policy</TermsText>
+                <TermsText href='https://withsempo.com/legal/platform-terms/'>Terms of Service</TermsText>
               </TermsWrapper>
           </WrapperDiv>
       )

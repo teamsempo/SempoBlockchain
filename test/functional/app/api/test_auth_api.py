@@ -13,26 +13,6 @@ from server.utils.auth import get_complete_auth_token
 
 # todo- permissions api, reset password, request reset password
 
-@pytest.mark.parametrize("username,password,status_code", [
-    (config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD, 201),
-    ("fake_username", "fake_password", 401)
-])
-def test_basic_auth(test_client, username, password, status_code):
-    """
-    GIVEN a Flask Application
-    WHEN the '/api/auth/check_basic_auth/' api is requested (GET)
-    THEN check the response is valid
-    """
-
-    basic_auth = 'Basic ' + base64.b64encode(
-        bytes(username + ":" + password, 'ascii')).decode('ascii')
-
-    response = test_client.get('/api/v1/auth/check_basic_auth/',
-                               headers=dict(Authorization=basic_auth, Accept='application/json'),
-                               content_type='application/json', follow_redirects=True)
-
-    assert response.status_code == status_code
-
 @pytest.mark.parametrize("activation_token", [
     "alsdfjkadsljflk",
     None,
@@ -260,7 +240,7 @@ def test_get_permissions_api(test_client, complete_admin_auth_token):
                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert response.json['admin_list'] is not None
+    assert response.json['admins'] is not None
 
 
 def get_admin_default_org_id(admin_user):
@@ -392,3 +372,81 @@ def test_reset_password_used_token(test_client, authed_sempo_admin_user):
 
     assert response.status_code == 401
     assert response.json['message'] == 'Token already used'
+
+
+@pytest.mark.parametrize("username,password,status_code", [
+    (config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD, 200),
+    (config.EXTERNAL_AUTH_USERNAME, config.EXTERNAL_AUTH_PASSWORD, 401),
+    ("fake_username", "fake_password", 401),
+    (None, None, 401)
+])
+def test_basic_auth(test_client, username, password, status_code):
+    """
+    GIVEN a Flask Application
+    WHEN the '/api/auth/check/basic/' api is requested (GET)
+    THEN check the response is valid
+    """
+
+    if username and password:
+        basic_auth = 'Basic ' + base64.b64encode(
+            bytes(username + ":" + password, 'ascii')).decode('ascii')
+    else:
+        basic_auth = ''
+
+    response = test_client.get('/api/v1/auth/check/basic/',
+                               headers=dict(Authorization=basic_auth, Accept='application/json'),
+                               content_type='application/json', follow_redirects=True)
+
+    assert response.status_code == status_code
+
+@pytest.mark.parametrize("username,password,status_code", [
+    (config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD, 200),
+    (config.EXTERNAL_AUTH_USERNAME, config.EXTERNAL_AUTH_PASSWORD, 401),
+    ("fake_username", "fake_password", 401),
+    (None, None, 401)
+])
+def test_basic_query_string_auth(test_client, username, password, status_code):
+    """
+    GIVEN a Flask Application
+    WHEN the '/api/auth/check/basic/' api is requested (GET) with credentials in query string
+    THEN check the response is valid
+    """
+
+    if username and password:
+        query = f'?username={username}&password={password}'
+    else:
+        query = ''
+
+    response = test_client.get('/api/v1/auth/check/basic/' + query,
+                               content_type='application/json', follow_redirects=True)
+
+    assert response.status_code == status_code
+
+
+@pytest.mark.parametrize("role, tier,status_code", [
+    (None, None, 401),
+    ('VENDOR', 'supervendor', 401),
+    ('ADMIN', 'admin', 401),
+    ('ADMIN', 'superadmin', 200),
+])
+def test_token_auth(test_client, authed_sempo_admin_user, role, tier, status_code):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/check/token/' api is requested (GET)
+    THEN check the response is only returned for superadmin
+    """
+
+    if role and tier:
+        authed_sempo_admin_user.set_held_role('ADMIN', None)
+        authed_sempo_admin_user.set_held_role(role, tier)
+        auth = get_complete_auth_token(authed_sempo_admin_user)
+    else:
+        auth = None
+
+    response = test_client.get('/api/v1/auth/check/token/',
+                               headers=dict(
+                                   Authorization=auth,
+                                   Accept='application/json'
+                               ),
+                               content_type='application/json', follow_redirects=True)
+    assert response.status_code == status_code

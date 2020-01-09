@@ -2,6 +2,7 @@ import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
@@ -21,7 +22,11 @@ from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
 )
 
+# circular imports
 import server.models.transfer_account
+import server.models.credit_transfer
+import server.utils.transfer_enums
+
 from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
@@ -59,7 +64,7 @@ class User(ManyOrgBase, ModelBase):
     _last_seen = db.Column(db.DateTime)
 
     email = db.Column(db.String())
-    _phone = db.Column(db.String(), unique=True)
+    _phone = db.Column(db.String(), unique=True, index=True)
     _public_serial_number = db.Column(db.String())
     nfc_serial_number = db.Column(db.String())
 
@@ -69,6 +74,7 @@ class User(ManyOrgBase, ModelBase):
     _TFA_secret = db.Column(db.String(128))
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
+    seen_latest_terms = db.Column(db.Boolean, default=False)
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
 
@@ -91,8 +97,6 @@ class User(ManyOrgBase, ModelBase):
     terms_accepted = db.Column(db.Boolean, default=True)
 
     matched_profile_pictures = db.Column(JSON)
-
-    cashout_authorised = db.Column(db.Boolean, default=False)
 
     business_usage_id = db.Column(db.Integer, db.ForeignKey(TransferUsage.id))
 
@@ -145,9 +149,30 @@ class User(ManyOrgBase, ModelBase):
                                lazy='dynamic', foreign_keys='Feedback.user_id')
 
     custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
-                                        lazy='dynamic', foreign_keys='CustomAttributeUserStorage.user_id')
+                                        lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
+
+    @hybrid_property
+    def cashout_authorised(self):
+        # loop over all
+        any_valid_token = [t.token for t in self.transfer_accounts]
+        for token in any_valid_token:
+            ct = server.models.credit_transfer
+            example_transfer = ct.CreditTransfer(
+                transfer_type=ct.TransferTypeEnum.PAYMENT,
+                transfer_subtype=ct.TransferSubTypeEnum.AGENT_OUT,
+                sender_user=self,
+                recipient_user=self,
+                token=token,
+                amount=0)
+
+            limits = example_transfer.get_transfer_limits()
+            limit = limits[0]
+            return limit.total_amount > 0
+        else:
+            # default to false
+            return False
 
     @hybrid_property
     def phone(self):
@@ -182,7 +207,7 @@ class User(ManyOrgBase, ModelBase):
 
         if not self._TFA_secret:
             self.set_TFA_secret()
-            db.session.commit()
+            db.session.flush()
 
         secret_key = self.get_TFA_secret()
         return pyotp.totp.TOTP(secret_key).provisioning_uri(
@@ -236,6 +261,7 @@ class User(ManyOrgBase, ModelBase):
             self._held_roles.pop(role, None)
         else:
             self._held_roles[role] = tier
+            flag_modified(self, '_held_roles')
 
     @hybrid_property
     def has_admin_role(self):
@@ -277,6 +303,7 @@ class User(ManyOrgBase, ModelBase):
     def vendor_tier(self):
         return self._held_roles.get('VENDOR', None)
 
+    # todo: Refactor into above roles
     # These two are here to interface with the mobile API
     @hybrid_property
     def is_vendor(self):
@@ -293,13 +320,18 @@ class User(ManyOrgBase, ModelBase):
     @property
     def transfer_account(self):
         active_organisation = getattr(g, "active_organisation", None) or self.fallback_active_organisation()
-        if active_organisation:
-            return active_organisation.org_level_transfer_account
 
-        # TODO: This should have a better concept of a default
-        if len(self.transfer_accounts) == 1:
-            return self.transfer_accounts[0]
-        return None
+        # TODO: Review if this could have a better concept of a default?
+        return self.get_transfer_account_for_organisation(active_organisation)
+
+    def get_transfer_account_for_organisation(self, organisation):
+        for ta in self.transfer_accounts:
+            if ta in organisation.transfer_accounts:
+                return ta
+
+        raise Exception(
+            f"No matching transfer account for user {self}, token {organisation.token} and organsation {organisation}"
+        )
 
     def get_transfer_account_for_token(self, token):
         return find_transfer_accounts_with_matching_token(self, token)

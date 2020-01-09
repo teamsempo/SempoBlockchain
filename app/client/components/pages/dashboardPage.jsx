@@ -5,7 +5,7 @@ import { subscribe, unsubscribe } from 'pusher-redux';
 
 import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
 
-import { logout, activateAccount } from '../../reducers/authReducer'
+import { logout, activateAccount } from '../../reducers/auth/actions'
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
 
@@ -62,7 +62,6 @@ class DashboardPage extends React.Component {
   }
 
   componentDidMount() {
-    console.log('dashboard')
     let transfer_type = 'ALL';
     let per_page = 50;
     let page = 1;
@@ -74,8 +73,6 @@ class DashboardPage extends React.Component {
     });
 
     const parsed = this.parseQuery(location.search);
-
-    console.log(parsed)
 
     if (parsed.actok) {
       console.log('actok', parsed.actok)
@@ -93,7 +90,7 @@ class DashboardPage extends React.Component {
     const additionalParams = () => {};
 
     let login = this.props.login;
-    let pusher_channel = window.PUSHER_ENV_CHANNEL + '-' + login.organisationName + '-' + login.organisationId;
+    let pusher_channel = window.PUSHER_ENV_CHANNEL + '-' + login.organisationId;
 
     subscribe(pusher_channel,'credit_transfer', PUSHER_CREDIT_TRANSFER, additionalParams);
 

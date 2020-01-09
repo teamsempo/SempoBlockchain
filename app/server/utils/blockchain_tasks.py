@@ -37,8 +37,9 @@ class BlockchainTasker(object):
 
         return response
 
-    def _execute_synchronous_task(self, signature):
-        return self._execute_synchronous_celery(signature)
+    def _execute_task(self, signature):
+        ar = signature.delay()
+        return ar.id
 
     def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
         call_sig = celery_app.signature(
@@ -72,27 +73,27 @@ class BlockchainTasker(object):
                 'dependent_on_tasks': dependent_on_tasks
             })
 
-        return self._execute_synchronous_task(signature)
+        return self._execute_task(signature)
 
-    def get_blockchain_task(self, task_id):
+    def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task
 
-        :param task_id: id of the blockchain
+        :param task_uuid: uuid of the blockchain
         :return: Serialised Task Dictionary:
         {
             status: enum, one of 'SUCCESS', 'PENDING', 'UNSTARTED', 'FAILED', 'UNKNOWN'
-            dependents: list of dependent task ids
+            dependents: list of dependent task uuids
         }
         """
 
         sig = celery_app.signature(self._eth_endpoint('get_task'),
-                                   kwargs={'task_id': task_id})
+                                   kwargs={'task_uuid': task_uuid})
 
         return self._execute_synchronous_celery(sig)
 
     def await_task_success(self,
-                           task_id,
+                           task_uuid,
                            timeout=None,
                            poll_frequency=0.5):
         elapsed = 0
@@ -101,7 +102,10 @@ class BlockchainTasker(object):
             timeout = current_app.config['SYNCRONOUS_TASK_TIMEOUT']
 
         while timeout is None or elapsed <= timeout:
-            task = self.get_blockchain_task(task_id)
+            task = self.get_blockchain_task(task_uuid)
+            if task is None:
+                return None
+
             if task['status'] == 'SUCCESS':
                 return task
             else:
@@ -109,6 +113,14 @@ class BlockchainTasker(object):
                 elapsed += poll_frequency
 
         raise TimeoutError
+
+    def retry_task(self, task_uuid):
+        sig = celery_app.signature(self._eth_endpoint('retry_task'),
+                                   kwargs={
+                                       'task_uuid': task_uuid,
+                                   })
+
+        sig.delay()
 
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
@@ -136,7 +148,7 @@ class BlockchainTasker(object):
         :param recipient_address: blockchain address of the recipent
         :param amount_wei: amount of eth to send, in wei
         :param dependent_on_tasks: tasks that must successfully complete first befoehand
-        :return: task_id
+        :return: task uuid
         """
         transfer_sig = celery_app.signature(self._eth_endpoint('send_eth'),
                                             kwargs={
@@ -146,7 +158,7 @@ class BlockchainTasker(object):
                                                 'dependent_on_tasks': dependent_on_tasks
                                             })
 
-        return self._execute_synchronous_task(transfer_sig)
+        return self._execute_task(transfer_sig)
 
     def deploy_contract(
             self,
@@ -166,7 +178,7 @@ class BlockchainTasker(object):
                 'dependent_on_tasks': dependent_on_tasks
             })
 
-        return self._execute_synchronous_task(deploy_sig)
+        return self._execute_task(deploy_sig)
 
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,
@@ -178,16 +190,19 @@ class BlockchainTasker(object):
         :param token: ERC20 token being transferred
         :param from_address: address of wallet sending token
         :param to_address:
-        :param amount: the NON WEI amount being sent, eg 2.3 Dai
-        :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
-        :return: task id for the transfer
+        :param amount: the CENTS amount being sent, eg 2300 Cents = 2.3 Dollars
+        :param dependent_on_tasks: list of task uuids that must complete before txn will attempt
+        :return: task uuid for the transfer
         """
 
         raw_amount = token.system_amount_to_token(amount)
 
         balance_wei = self.get_wallet_balance(from_address, token)
 
-        print(f'Balance for {from_address} is: {balance_wei} wei\n (Sending {raw_amount} wei)')
+        if balance_wei < raw_amount:
+            print(f'\nWarning: Balance for {from_address} is currently less than sending amount! Transfer may fail'
+                  f'\nBalance: {balance_wei} wei'
+                  f'\nSending: {raw_amount} wei \n')
 
 
         if signing_address == from_address:
@@ -250,18 +265,18 @@ class BlockchainTasker(object):
         :param to_token: the token being exchanged to
         :param reserve_token: the reserve token used as a connector in the network
         :param from_amount: the amount of the token being exchanged from
-        :param dependent_on_tasks: list of task IDs that must complete before txn will attempt
-        :return: task id for the exchange
+        :param dependent_on_tasks: list of task uuids that must complete before txn will attempt
+        :return: task uuid for the exchange
         """
 
         dependent_on_tasks = dependent_on_tasks or []
 
         path = self._get_path(from_token, to_token, reserve_token)
 
-        topup_task_id = self.topup_wallet_if_required(signing_address)
+        topup_task_uuid = self.topup_wallet_if_required(signing_address)
 
-        if topup_task_id:
-            dependent_on_tasks.append(topup_task_id)
+        if topup_task_uuid:
+            dependent_on_tasks.append(topup_task_uuid)
 
         return self._synchronous_transaction_task(
             signing_address=signing_address,

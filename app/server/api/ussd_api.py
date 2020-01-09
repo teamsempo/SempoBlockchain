@@ -2,10 +2,9 @@ from flask import Blueprint, request, make_response
 from flask.views import MethodView
 
 from server import db
-from server.utils.auth import show_all
-from server.models.user import User
+from server.utils.auth import show_all, requires_auth
 from server.models.ussd import UssdMenu
-from server.utils.phone import proccess_phone_number
+from server.utils.user import get_user_by_phone
 from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
@@ -26,6 +25,7 @@ class ProcessKenyaUssd(MethodView):
         All responses mid-session begin with CON. All responses that terminate the session begin with the word END
     """
     @show_all
+    @requires_auth(allowed_basic_auth_types=('external',), allow_query_string_auth=True)
     def post(self):
         post_data = request.get_json() or request.form
 
@@ -35,13 +35,11 @@ class ProcessKenyaUssd(MethodView):
         service_code = post_data.get('serviceCode')
 
         if phone_number:
-            msisdn = proccess_phone_number(phone_number, 'KE')
-            user = User.query.execution_options(show_all=True).filter_by(phone=msisdn).first()
+            user = get_user_by_phone(phone_number, 'KE')
             # api chains all inputs that came through with *
             latest_input = user_input.split('*')[-1]
-            # TODO(ussd): 'exit_not_registered' if no user
-            if None in [user, msisdn, session_id]:
-                current_menu = UssdMenu.find_by_name('exit_invalid_request')
+            if None in [user, session_id]:
+                current_menu = UssdMenu.find_by_name('exit_not_registered')
                 text = menu_display_text_in_lang(current_menu, user)
             else:
                 current_menu = KenyaUssdProcessor.process_request(session_id, latest_input, user)

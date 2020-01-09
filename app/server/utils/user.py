@@ -5,7 +5,7 @@ from phonenumbers.phonenumberutil import NumberParseException
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
-from flask import current_app
+from flask import current_app, g
 from eth_utils import to_checksum_address
 
 from server import db
@@ -27,6 +27,9 @@ from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
+from server.utils.transfer_enums import TransferSubTypeEnum
+from server.utils.misc import rounded_dollars
+
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -109,7 +112,9 @@ def update_transfer_account_user(user,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
-                                 is_vendor=False):
+                                 is_vendor=False,
+                                 is_tokenagent=False,
+                                 is_groupaccount=False):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -139,6 +144,12 @@ def update_transfer_account_user(user,
 
     user.set_held_role('VENDOR', vendor_tier)
 
+    if is_tokenagent:
+        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+
+    if is_groupaccount:
+        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
@@ -160,8 +171,10 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
+                                 is_tokenagent=False,
+                                 is_groupaccount=False,
                                  is_self_sign_up=False,
-                                 business_usage_id=None):
+                                 business_usage=None):
 
     user = User(first_name=first_name,
                 last_name=last_name,
@@ -170,7 +183,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 email=email,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
-                business_usage_id=business_usage_id)
+                business_usage=business_usage)
 
     precreated_pin = None
     is_activated = False
@@ -199,11 +212,19 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     user.set_held_role('VENDOR', vendor_tier)
 
+    if is_tokenagent:
+        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+
+    if is_groupaccount:
+        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
-    if organisation:
-        user.add_user_to_organisation(organisation, is_admin=False)
+    if not organisation:
+        organisation = Organisation.master_organisation()
+
+    user.add_user_to_organisation(organisation, is_admin=False)
 
     db.session.add(user)
 
@@ -280,7 +301,7 @@ def extract_kobo_custom_attributes(post_data):
 
 def set_custom_attributes(attribute_dict, user):
     # loads in any existing custom attributes
-    custom_attributes = user.custom_attributes or {}
+    custom_attributes = user.custom_attributes or []
     for key in attribute_dict['custom_attributes'].keys():
         custom_attribute = CustomAttributeUserStorage(
             name=key, value=attribute_dict['custom_attributes'][key])
@@ -364,6 +385,9 @@ def proccess_create_or_modify_user_request(
     :return: An http response
     """
 
+    if not attribute_dict.get('custom_attributes'):
+        attribute_dict['custom_attributes'] = {}
+
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
@@ -384,7 +408,7 @@ def proccess_create_or_modify_user_request(
             pass
 
     require_transfer_card_exists = attribute_dict.get(
-        'require_transfer_card_exists', True)
+        'require_transfer_card_exists', current_app.config['REQUIRE_TRANSFER_CARD_EXISTS'])
 
     public_serial_number = (provided_public_serial_number
                             or attribute_dict.get('payment_card_qr_code')
@@ -418,8 +442,11 @@ def proccess_create_or_modify_user_request(
     if is_vendor is None:
         is_vendor = attribute_dict.get('vendor', False)
 
+    is_tokenagent = attribute_dict.get('is_tokenagent', False)
+    is_groupaccount = attribute_dict.get('is_groupaccount', False)
+
     # is_beneficiary defaults to the opposite of is_vendor
-    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor)
+    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
 
     if current_app.config['IS_USING_BITCOIN']:
         try:
@@ -491,6 +518,15 @@ def proccess_create_or_modify_user_request(
         }
         return response_object, 400
 
+    business_usage = None
+    if business_usage_id:
+        business_usage = TransferUsage.query.get(business_usage_id)
+        if not business_usage:
+            response_object = {
+                'message': f'Business Usage not found for id {business_usage_id}'
+            }
+            return response_object, 400
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
 
@@ -505,7 +541,8 @@ def proccess_create_or_modify_user_request(
             phone=phone, email=email, public_serial_number=public_serial_number,
             use_precreated_pin=use_precreated_pin,
             existing_transfer_account=existing_transfer_account,
-            is_beneficiary=is_beneficiary, is_vendor=is_vendor
+            is_beneficiary=is_beneficiary, is_vendor=is_vendor,
+            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
         )
 
         set_custom_attributes(attribute_dict, user)
@@ -530,13 +567,17 @@ def proccess_create_or_modify_user_request(
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
-        is_beneficiary=is_beneficiary, is_vendor=is_vendor, is_self_sign_up=is_self_sign_up,
-        business_usage_id=business_usage_id)
+        is_beneficiary=is_beneficiary, is_vendor=is_vendor,
+        is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
+        is_self_sign_up=is_self_sign_up,
+        business_usage=business_usage)
 
-    if attribute_dict.get('custom_attributes', None) is None: attribute_dict['custom_attributes'] = {}
-    if attribute_dict.get('business_usage_id'): attribute_dict['custom_attributes']['business_usage_id'] = attribute_dict.get('business_usage_id')
-    if attribute_dict.get('gender'): attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
-    if attribute_dict.get('bio'): attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
+    if attribute_dict.get('gender'):
+        attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
+
+    if attribute_dict.get('bio'):
+        attribute_dict['custom_attributes']['bio'] = attribute_dict.get('bio')
+
     set_custom_attributes(attribute_dict, user)
 
     if is_self_sign_up and attribute_dict.get('deviceInfo', None) is not None:
@@ -545,7 +586,10 @@ def proccess_create_or_modify_user_request(
 
     if additional_initial_disbursement:
         CreditTransferUtils.make_payment_transfer(
-            additional_initial_disbursement, organisation.token, receive_user=user, transfer_subtype='DISBURSEMENT')
+            additional_initial_disbursement,
+            organisation.token,
+            receive_user=user,
+            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
 
     # Location fires an async task that needs to know user ID
     db.session.flush()
@@ -560,16 +604,7 @@ def proccess_create_or_modify_user_request(
 
         elif current_app.config['ONBOARDING_SMS']:
             try:
-                balance = user.transfer_account.balance
-                if isinstance(balance, int):
-                    balance = balance / 100
-
-                send_onboarding_message(
-                    first_name=user.first_name,
-                    to_phone=phone,
-                    credits=balance,
-                    one_time_code=user.one_time_code
-                )
+                send_onboarding_sms_messages(user)
             except Exception as e:
                 print(e)
                 sentry.captureException()
@@ -583,6 +618,33 @@ def proccess_create_or_modify_user_request(
     }
 
     return response_object, 200
+
+
+def send_onboarding_sms_messages(user):
+
+    # First send the intro message
+    organisation = getattr(g, 'active_organisation', None) or user.default_organisation
+
+    intro_message = i18n_for(
+        user,
+        "general_sms.welcome.{}".format(organisation.custom_welcome_message_key or 'generic'),
+        first_name=user.first_name,
+        balance=rounded_dollars(user.transfer_account.balance),
+        token=user.transfer_account.token.name
+    )
+
+    message_processor.send_message(user.phone, intro_message)
+
+    send_terms_message_if_required(user)
+
+
+def send_terms_message_if_required(user):
+
+    if not user.seen_latest_terms:
+        terms_message = i18n_for(user, "general_sms.terms")
+        message_processor.send_message(user.phone, terms_message)
+        user.seen_latest_terms = True
+
 
 
 def send_onboarding_message(to_phone, first_name, credits, one_time_code):

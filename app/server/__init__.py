@@ -153,6 +153,7 @@ def register_blueprints(app):
     from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
     from server.api.contract_api import contracts_blueprint
+    from server.api.ge_migration_api import ge_migration_blueprint
 
     versioned_url = '/api/v' + app.config['WEB_VERSION']
 
@@ -182,6 +183,7 @@ def register_blueprints(app):
     app.register_blueprint(poli_payments_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ussd_blueprint, url_prefix=versioned_url)
     app.register_blueprint(contracts_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(ge_migration_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)
@@ -237,6 +239,7 @@ twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
 messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
 africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
 africastalking_client = africastalking.SMS
+
 message_processor = MessageProcessor(
     twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
 

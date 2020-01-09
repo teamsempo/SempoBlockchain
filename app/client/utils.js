@@ -1,8 +1,8 @@
 import {call} from "redux-saga/effects";
 import merge from 'deepmerge';
-import {LOGIN_FAILURE} from "./reducers/authReducer";
+import {LOGIN_FAILURE} from "./reducers/auth/types";
 import {put} from "redux-saga/es/effects";
-import {store} from "./app";
+import {store} from "./app.jsx";
 
 export function formatMoney(amount, decimalCount = window.CURRENCY_DECIMALS, decimal = ".", thousands = ",", currency = window.CURRENCY_NAME) {
   try {
@@ -52,12 +52,16 @@ export const generateQueryString = (query) => {
 };
 
 export const generateFormattedURL = (url, query, path) => {
-  var version = store.getState().login.webApiVersion;
-  var query_string = generateQueryString(query);
+  let URL;
+  let version = store.getState().login.webApiVersion;
+  if (!version) {
+    version = '1';  // fallback to V1 API
+  }
+  let query_string = generateQueryString(query);
   if (url === null || typeof url === "undefined") {
     return console.log('URL cannot be null')
   } else if (query) {
-      var URL = `/api/v${version}${url}${query_string}`;
+      URL = `/api/v${version}${url}${query_string}`;
   } else if (path) {
       URL = `/api/v${version}${url}${path}/${query_string}`;
   } else {

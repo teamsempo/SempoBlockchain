@@ -11,7 +11,6 @@ from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
-from server.utils.transaction_limits import LIMITS, TransferLimit
 
 from server.exceptions import (
     NoTransferAccountError,
@@ -32,7 +31,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     resolved_date   = db.Column(db.DateTime)
     _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
 
-    transfer_type       = db.Column(db.Enum(TransferTypeEnum))
+    transfer_type       = db.Column(db.Enum(TransferTypeEnum), index=True)
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode       = db.Column(db.Enum(TransferModeEnum))
@@ -153,9 +152,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
-        # TODO: swap to app generated task id so that app doesnt crash when blockchain taskers are down
-
-        self.blockchain_task_id = bt.make_token_transfer(
+        self.blockchain_task_uuid = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,
@@ -164,12 +161,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             dependent_on_tasks=
             list(filter(lambda x: x is not None,
                         [
-                            sender_approval.eth_send_task_id, sender_approval.approval_task_id,
-                            recipient_approval.eth_send_task_id, recipient_approval.approval_task_id
+                            sender_approval.eth_send_task_uuid, sender_approval.approval_task_uuid,
+                            recipient_approval.eth_send_task_uuid, recipient_approval.approval_task_uuid
                         ]))
         )
 
     def resolve_as_completed(self, existing_blockchain_txn=None):
+        self.check_sender_transfer_limits()
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
 
@@ -196,14 +194,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if message:
             self.resolution_message = message
 
-    def get_transfer_limits(self) -> List[TransferLimit]:
-        relevant_limits = []
-        for limit in LIMITS:
-            applied = limit.application_filter(self)
-            if applied and str(self.transfer_type) in limit.applied_to_transfer_types:
-                relevant_limits.append(limit)
+    def get_transfer_limits(self):
+        import server.utils.transfer_limits
 
-        return relevant_limits
+        return server.utils.transfer_limits.get_transfer_limits(self)
 
     def check_sender_transfer_limits(self):
         if self.sender_user is None:
@@ -213,15 +207,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         relevant_transfer_limits = self.get_transfer_limits()
 
         for limit in relevant_transfer_limits:
-            filter_before = datetime.datetime.today() - datetime.timedelta(days=limit.time_period_days)
 
             if limit.transfer_count is not None:
                 # GE Limits
-                transaction_count = db.session.query(func.count(CreditTransfer.id).label('count'))\
-                    .filter(CreditTransfer.created >= filter_before)\
-                    .filter(CreditTransfer.transfer_type == self.transfer_type) \
-                    .filter(CreditTransfer.sender_user == self.sender_user) \
-                    .execution_options(show_all=True).first().count
+                transaction_count = limit.apply_all_filters(
+                    self,
+                    db.session.query(func.count(CreditTransfer.id).label('count'))
+                ).execution_options(show_all=True).first().count
 
                 if (transaction_count or 0) > limit.transfer_count:
                     message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'\
@@ -229,24 +221,24 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     self.resolve_as_rejected(message=message)
                     raise TransactionCountLimitError(message, limit.time_period_days, limit.transfer_count)
 
-            if limit.transfer_balance_percentage is not None:
-                allowed_percent_transfer = limit.transfer_balance_percentage * self.sender_transfer_account.balance
+            if limit.transfer_balance_fraction is not None:
+                allowed_transfer = limit.transfer_balance_fraction * self.sender_transfer_account.balance
 
-                if self.transfer_amount > allowed_percent_transfer:
+                if self.transfer_amount > allowed_transfer:
                     message = 'Account % Limit "{}" reached. {} available'.format(
                         limit.name,
-                        max(allowed_percent_transfer, 0)
+                        max(allowed_transfer, 0)
                     )
                     self.resolve_as_rejected(message=message)
-                    raise TransactionPercentLimitError(message, limit.transfer_balance_percentage)
+                    raise TransactionPercentLimitError(message, limit.transfer_balance_fraction)
 
             if limit.total_amount is not None:
                 # Sempo Compliance Account Limits
-                transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))\
-                    .filter(CreditTransfer.created >= filter_before)\
-                    .filter(CreditTransfer.transfer_type == self.transfer_type)\
-                    .filter(CreditTransfer.sender_user == self.sender_user)\
-                    .execution_options(show_all=True).first().total
+
+                transaction_volume = limit.apply_all_filters(
+                    self,
+                    db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+                ).execution_options(show_all=True).first().total
 
                 amount_avail = limit.total_amount - (transaction_volume or 0)
 
@@ -266,14 +258,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def check_recipient_is_approved(self):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
-    def _select_transfer_account(self, token, user, supplied_transfer_account = None):
+    def _select_transfer_account(self, token, user):
         if token is None:
             raise Exception("Token must be specified")
-        if supplied_transfer_account:
-            if user is not None and user not in supplied_transfer_account.users:
-                raise UserNotFoundError(f'User {user} not found for transfer account {supplied_transfer_account}')
-            return supplied_transfer_account
-
         return find_transfer_accounts_with_matching_token(user, token)
 
     def append_organisation_if_required(self, organisation):
@@ -287,11 +274,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  recipient_user=None,
                  sender_transfer_account=None,
                  recipient_transfer_account=None,
-                 transfer_type=None,
+                 transfer_type: TransferTypeEnum=None,
                  uuid=None,
                  transfer_metadata=None,
                  fiat_ramp=None,
-                 transfer_subtype=None,
+                 transfer_subtype: TransferSubTypeEnum=None,
                  is_ghost_transfer=False):
 
         if amount < 0:
@@ -303,8 +290,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.sender_transfer_account = sender_transfer_account or self._select_transfer_account(
             token,
-            sender_user,
-            sender_transfer_account
+            sender_user
         )
 
         self.token = token or self.sender_transfer_account.token
@@ -314,8 +300,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         try:
             self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
                 self.token,
-                recipient_user,
-                recipient_transfer_account
+                recipient_user
             )
 
             if is_ghost_transfer is False:
@@ -329,10 +314,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             )
             db.session.add(self.recipient_transfer_account)
 
-        if transfer_type is TransferTypeEnum.DEPOSIT.value:
+        if transfer_type is TransferTypeEnum.DEPOSIT:
             self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()
 
-        if transfer_type is TransferTypeEnum.WITHDRAWAL.value:
+        if transfer_type is TransferTypeEnum.WITHDRAWAL:
             self.recipient_transfer_account = self.sender_transfer_account.get_float_transfer_account()
 
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:
@@ -347,5 +332,3 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
-
-        self.check_sender_transfer_limits()

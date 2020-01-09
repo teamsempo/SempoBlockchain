@@ -8,7 +8,7 @@ the services provided by the  ussd app.
 import re
 import math
 
-from transitions import Machine
+from transitions import Machine, State
 
 from server import message_processor, ussd_tasker
 from server.models.user import User
@@ -16,7 +16,7 @@ from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
-    get_user_by_phone, transfer_usages_for_user
+    get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required
 from server.utils.credit_transfer import dollars_to_cents
 
 
@@ -80,7 +80,7 @@ class KenyaUssdStateMachine(Machine):
         'exit_pin_blocked',
         'exit_invalid_token_agent',
         'exit_invalid_exchange_amount',
-        'complete'
+        State(name='complete', on_enter=['send_terms_to_user_if_required'])
     ]
 
     def send_sms(self, phone, message_key, **kwargs):
@@ -113,6 +113,12 @@ class KenyaUssdStateMachine(Machine):
         }
         set_custom_attributes(attrs, self.user)
         self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
+
+    def send_terms_to_user_if_required(self, user_inpt):
+        send_terms_message_if_required(self.user)
+
+    def set_phone_as_verified(self, user_input):
+        self.user.is_phone_verified = True
 
     def save_pin_data(self, user_input):
         self.session.set_data('initial_pin', user_input)
@@ -368,7 +374,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'complete',
-             'after': 'complete_initial_pin_change',
+             'after': ['complete_initial_pin_change', 'set_phone_as_verified'],
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',

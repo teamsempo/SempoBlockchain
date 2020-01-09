@@ -2,133 +2,20 @@ from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from server import db, sentry
 # from server import limiter
-from server.constants import DENOMINATION_DICT
-from server.models.transfer_account import TransferAccount
 from phonenumbers.phonenumberutil import NumberParseException
 from server.models.user import User
 from server.models.organisation import Organisation
 from server.models.email_whitelist import EmailWhitelist
-from server.models.currency_conversion import CurrencyConversion
 from server.models.blacklist_token import BlacklistToken
-from server.models.transfer_usage import TransferUsage
-from server.utils.intercom import create_intercom_secret
-from server.utils.auth import requires_auth, tfa_logic, show_all
+from server.utils.auth import requires_auth, tfa_logic, show_all, create_user_response_object
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
-from server.utils.feedback import request_feedback_questions
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
-from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
 
-import time, random
+import random
 
 auth_blueprint = Blueprint('auth', __name__)
-
-
-def get_user_organisations(user):
-    active_organisation = getattr(g, "active_organisation", None) or user.fallback_active_organisation()
-
-    organisations = dict(
-        active_organisation_name=active_organisation.name,
-        active_organisation_id=active_organisation.id,
-        organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
-    )
-
-    return organisations
-
-
-def get_denominations():
-    currency_name = current_app.config['CURRENCY_NAME']
-    return DENOMINATION_DICT.get(currency_name, {})
-
-
-def create_user_response_object(user, auth_token, message):
-    if current_app.config['IS_USING_BITCOIN']:
-        try:
-            usd_to_satoshi_rate = get_usd_to_satoshi_rate()
-        except Exception:
-            usd_to_satoshi_rate = None
-    else:
-        usd_to_satoshi_rate = None
-
-    conversion_rate = 1
-    currency_name = current_app.config['CURRENCY_NAME']
-    if user.default_currency:
-        conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
-        if conversion is not None:
-            conversion_rate = conversion.rate
-            currency_name = user.default_currency
-
-    transfer_usages = []
-    usage_objects = TransferUsage.query.order_by(TransferUsage.priority).limit(11).all()
-    for usage in usage_objects:
-        if ((usage.is_cashout and user.cashout_authorised) or not usage.is_cashout):
-            transfer_usages.append({
-                'id': usage.id,
-                'name': usage.name,
-                'icon': usage.icon,
-                'priority': usage.priority,
-                'translations': usage.translations
-            })
-
-    response_object = {
-        'status': 'success',
-        'message': message,
-        'auth_token': auth_token.decode(),
-        'user_id': user.id,
-        'email': user.email,
-        'admin_tier': user.admin_tier,
-        'is_vendor': user.is_vendor,
-        'is_supervendor': user.is_supervendor,
-        'server_time': int(time.time() * 1000),
-        'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
-        'pusher_key': current_app.config['PUSHER_KEY'],
-        'currency_decimals': current_app.config['CURRENCY_DECIMALS'],
-        'currency_name': currency_name,
-        'currency_conversion_rate': conversion_rate,
-        'secret': user.secret,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-        'deployment_name': current_app.config['DEPLOYMENT_NAME'],
-        'denominations': get_denominations(),
-        'terms_accepted': user.terms_accepted,
-        'request_feedback_questions': request_feedback_questions(user),
-        'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
-        'transfer_usages': transfer_usages,
-        'usd_to_satoshi_rate': usd_to_satoshi_rate,
-        'kyc_active': True,  # todo; kyc active function
-        'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
-        'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
-        'web_api_version': current_app.config['WEB_VERSION'],
-    }
-
-    # merge the user and organisation object nicely (handles non-orgs well)
-    response_object = {**response_object, **get_user_organisations(user)}
-
-    # todo: fix this (now many to many)
-    user_transfer_accounts = TransferAccount.query.execution_options(show_all=True).filter(
-        TransferAccount.users.any(User.id.in_([user.id]))).all()
-    if len(user_transfer_accounts) > 0:
-        response_object['transfer_account_Id'] = [ta.id for ta in user_transfer_accounts]  # should change to plural
-        response_object['name'] = user_transfer_accounts[0].name  # get the first transfer account name
-
-    # if user.transfer_account:
-    #     response_object['transfer_account_Id'] = user.transfer_account.id
-    #     response_object['name'] = user.transfer_account.name
-
-    return response_object
-
-
-class CheckBasicAuth(MethodView):
-
-    @requires_auth(allowed_basic_auth_types=('internal'))
-    def get(self):
-        response_object = {
-            'status': 'success',
-        }
-
-        return make_response(jsonify(response_object)), 201
-
 
 class RefreshTokenAPI(MethodView):
     """
@@ -146,7 +33,7 @@ class RefreshTokenAPI(MethodView):
             # Update the last_seen TS for this user
             g.user.update_last_seen_ts()
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
         except Exception as e:
 
@@ -189,7 +76,7 @@ class RegisterAPI(MethodView):
         email_ok = False
 
         whitelisted_emails = EmailWhitelist.query\
-            .filter_by(email=email, referral_code=referral_code, used=False) \
+            .filter_by(referral_code=referral_code, used=False) \
             .execution_options(show_all=True).all()
 
         selected_whitelist_item = None
@@ -269,18 +156,14 @@ class RegisterAPI(MethodView):
             if tfa_response_oject:
                 tfa_response_oject['auth_token'] = auth_token.decode()
 
+                db.session.commit()  # need this here to commit a created user to the db
+
                 return make_response(jsonify(tfa_response_oject)), 401
 
             # Update the last_seen TS for this user
             user.update_last_seen_ts()
 
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully activated.',
-                'auth_token': auth_token.decode(),
-                'user_id': user.id,
-                'email': user.email,
-            }
+            response_object = create_user_response_object(user, auth_token, 'Successfully activated.')
 
             db.session.commit()
 
@@ -295,7 +178,7 @@ class RegisterAPI(MethodView):
         # generate the auth token
         response_object = {
             'status': 'success',
-            'message': 'Successfully registered.',
+            'message': 'Successfully registered. You must activate your email.',
         }
 
         return make_response(jsonify(response_object)), 201
@@ -342,13 +225,24 @@ class ActivateUserAPI(MethodView):
 
             auth_token = user.encode_auth_token()
 
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully activated.',
-                'auth_token': auth_token.decode(),
-                'user_id': user.id,
-                'email': user.email,
-            }
+            db.session.flush()
+
+            # Possible Outcomes:
+            # TFA required, but not set up
+            # TFA not required
+
+            tfa_response_oject = tfa_logic(user, tfa_token=None)
+            if tfa_response_oject:
+                tfa_response_oject['auth_token'] = auth_token.decode()
+
+                db.session.commit()  # need to commit here so that is_activated = True
+
+                return make_response(jsonify(tfa_response_oject)), 401
+
+            # Update the last_seen TS for this user
+            user.update_last_seen_ts()
+
+            response_object = create_user_response_object(user, auth_token, 'Successfully activated.')
 
             db.session.commit()
 
@@ -813,7 +707,7 @@ class PermissionsAPI(MethodView):
         response_object = {
             'status': 'success',
             'message': 'Admin List Loaded',
-            'admin_list': admin_list
+            'admins': admin_list
         }
 
         return make_response(jsonify(response_object)), 200
@@ -897,11 +791,18 @@ class PermissionsAPI(MethodView):
         if deactivated is not None:
             user.is_disabled = deactivated
 
-        db.session.commit()
-
         response_object = {
-            'status': 'success',
             'message': 'Account status modified',
+            'data': {
+                'admin': {
+                    'id': user.id,
+                    'email': user.email,
+                    'admin_tier': user.admin_tier,
+                    'created': user.created,
+                    'is_activated': user.is_activated,
+                    'is_disabled': user.is_disabled
+                }
+            }
         }
 
         return make_response(jsonify(response_object)), 200
@@ -990,14 +891,29 @@ class TwoFactorAuthAPI(MethodView):
         return make_response(jsonify(response_object)), 400
 
 
+class CheckBasicAuth(MethodView):
+    @requires_auth(allowed_basic_auth_types=('internal',), allow_query_string_auth=True)
+    def get(self):
+        response_object = {
+            'status': 'success',
+        }
+
+        return make_response(jsonify(response_object)), 200
+
+
+class CheckTokenAuth(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def get(self):
+        response_object = {
+            'status': 'success',
+        }
+
+        return make_response(jsonify(response_object)), 200
+
+
+
+
 # add Rules for API Endpoints
-
-auth_blueprint.add_url_rule(
-    '/auth/check_basic_auth/',
-    view_func=CheckBasicAuth.as_view('check_basic_auth'),
-    methods=['GET']
-)
-
 auth_blueprint.add_url_rule(
     '/auth/refresh_api_token/',
     view_func=RefreshTokenAPI.as_view('refresh_token_api'),
@@ -1062,4 +978,16 @@ auth_blueprint.add_url_rule(
     '/auth/tfa/',
     view_func=TwoFactorAuthAPI.as_view('tfa_view'),
     methods=['GET', 'POST']
+)
+
+auth_blueprint.add_url_rule(
+    '/auth/check/basic/',
+    view_func=CheckBasicAuth.as_view('check_basic_auth'),
+    methods=['GET']
+)
+
+auth_blueprint.add_url_rule(
+    '/auth/check/token/',
+    view_func=CheckTokenAuth.as_view('check_token_auth'),
+    methods=['GET']
 )

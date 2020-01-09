@@ -1,17 +1,15 @@
-import { combineReducers } from 'redux';
-import { reducer as FormReducer } from 'redux-form'
+import {AnyAction, combineReducers, Reducer} from 'redux';
+import {FormStateMap, reducer as FormReducer} from 'redux-form'
 
 import {
-  login,
   register,
   activate,
   requestResetEmailState,
   resetPasswordState,
-  userList,
-  updateUserRequest,
-  inviteUserRequest,
+  adminUsers,
   validateTFA
-} from './authReducer'
+} from './auth/reducers'
+import {login} from './auth/loginReducer'
 import { spreadsheetUpload, datasetSave, datasetList } from './spreadsheetReducer'
 import { qrCodeCheck, qrCodeTransfer } from './qrCodeReducer'
 import { newExportRequest } from "./exportReducer"
@@ -25,6 +23,9 @@ import { wyre } from "./wyreReducer"
 import {TransferUsageReducer} from "./transferUsage/reducers";
 import {OrganisationReducer} from "./organisation/reducers";
 
+//might be because of older version of react-redux that have to force like this...
+const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
+
 const appReducer = combineReducers({
   login,
   register,
@@ -32,9 +33,7 @@ const appReducer = combineReducers({
   requestResetEmailState,
   resetPasswordState,
   validateTFA,
-  userList,
-  updateUserRequest,
-  inviteUserRequest,
+  adminUsers,
   spreadsheetUpload,
   datasetSave,
   datasetList,
@@ -50,7 +49,7 @@ const appReducer = combineReducers({
   wyre,
   transferUsages: TransferUsageReducer,
   organisation: OrganisationReducer,
-  form: FormReducer
+  form
 });
 
 const rootReducer = (state: any, action: any) => {

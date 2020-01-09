@@ -6,8 +6,7 @@ from server.models.transfer_usage import TransferUsage
 from server.models.ussd import UssdMenu
 from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
 
-from helpers.user import UserFactory
-from helpers.ussd_session import UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory
 from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 

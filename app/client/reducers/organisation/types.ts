@@ -15,7 +15,6 @@ export type OrganisationAction = UpdateOrganisation
 export const LOAD_ORGANISATION_REQUEST = "LOAD_ORGANISATIONS_REQUEST";
 interface LoadOrganisationRequest {
   type: typeof LOAD_ORGANISATION_REQUEST,
-  id: string
 }
 export const LOAD_ORGANISATION_SUCCESS = "LOAD_ORGANISATIONS_SUCCESS";
 interface LoadOrganisationSuccess {

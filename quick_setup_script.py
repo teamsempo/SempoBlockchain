@@ -2,6 +2,7 @@ from functools import reduce
 import requests
 import config
 from time import sleep
+import os
 
 def load_account(address, amount_wei):
     from web3 import (
@@ -259,57 +260,51 @@ if __name__ == '__main__':
 
     # s = Setup(
     #     api_host='https://dev.withsempo.com/api/v1/',
-    #     api_token=
-    #           'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY3MzA0MDUsImlhdCI6MTU3NjEyNTYwNSwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.StVMPYwqqM39SZkjzEpJnw_n7XyjyLW7lfXpVcyM5b0|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjI0Mzk2MDQxMjYsImlhdCI6MTU3NTY5MDQ5NiwiaWQiOjJ9.WaSdLvU5aGxLmNo5uZV0_PmV7LOTymeBBxOymy0Er7U'
+    #     email=os.environ.get('dev_email'),
+    #     password=os.environ.get('dev_password')
     # )
 
     s = Setup(
-        api_token=
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzY3MzQwMzcsImlhdCI6MTU3NjEyOTIzNywiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.wPxxp-zW5LemP-G5SXwtqfZzi6fHPFqFPQe7BNCsaEk|eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzYyMTEzMDIsImlhdCI6MTU3NjEyNDg3MiwiaWQiOjZ9.zkEUtwMgOSrcLy68Rtv_JeMCj9HrsOyQUfH3Dc3itYE'
+        api_host='http://0.0.0.0:9000/api/v1/',
+        email=os.environ.get('local_email'),
+        password=os.environ.get('local_password')
     )
 
+    # s.bind_user_to_organsation_as_admin(6, 1)
+    # s.bind_user_to_organsation_as_admin(6, 2)
+    # s.bind_user_to_organsation_as_admin(6, 3)
 
 
-    s.bind_user_to_organsation_as_admin(6, 1)
-    s.bind_user_to_organsation_as_admin(6, 2)
-    s.bind_user_to_organsation_as_admin(6, 3)
-
-
-    # reserve_token_id = s.create_reserve_token(
-    #     name='Kenyan Shilling',
-    #     symbol='Ksh',
-    #     fund_amount_wei=int(1000e18)
-    # )
-
-    # exchange_contract_id = s.create_exchange_contract(reserve_token_id)
-
-    #
+    reserve_token_id = s.create_reserve_token(
+        name='Kenyan Shilling',
+        symbol='Ksh',
+        fund_amount_wei=int(1000e18)
+    )
     # reserve_token_id = 1
-    #
-    # #
-    # exchange_contract_id = 1
-    #
-    # ge_org_id = s.create_cic_organisation(
-    #     organisation_name='Grassroots Economics',
-    #     exchange_contract_id=exchange_contract_id,
-    #     name='Sarafu',
-    #     symbol='SAR',
-    #     issue_amount_wei=int(1000e18),
-    #     reserve_deposit_wei=int(10e18),
-    #     reserve_ratio_ppm=250000
-    # )
-    # bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
-    #
-    # foobar_org_id = s.create_cic_organisation(
-    #     organisation_name='Foo Org',
-    #     exchange_contract_id=exchange_contract_id,
-    #     name='FooBar',
-    #     symbol='FOO',
-    #     issue_amount_wei=int(1000e18),
-    #     reserve_deposit_wei=int(10e18),
-    #     reserve_ratio_ppm=250000
-    # )
-    #
-    # bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
+
+    exchange_contract_id = s.create_exchange_contract(reserve_token_id)
+    # exchange_contract_id = 4
+
+    ge_org_id = s.create_cic_organisation(
+        organisation_name='Grassroots Economics',
+        exchange_contract_id=exchange_contract_id,
+        name='Sarafu',
+        symbol='SARAFU',
+        issue_amount_wei=int(100000e18),
+        reserve_deposit_wei=int(10e18),
+        reserve_ratio_ppm=250000
+    )
+    bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
+
+    foobar_org_id = s.create_cic_organisation(
+        organisation_name='Foo Org',
+        exchange_contract_id=exchange_contract_id,
+        name='FooBar',
+        symbol='FOO',
+        issue_amount_wei=int(100000e18),
+        reserve_deposit_wei=int(10e18),
+        reserve_ratio_ppm=250000
+    )
+    bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
 
     tt = 4

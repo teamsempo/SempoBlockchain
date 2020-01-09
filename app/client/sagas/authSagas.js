@@ -1,6 +1,8 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
+import { normalize } from 'normalizr';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId} from '../utils'
+import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken} from '../utils'
+import { adminUserSchema } from '../schemas'
 
 import {
   requestApiToken,
@@ -24,13 +26,9 @@ import {
   LOGIN_PARTIAL,
   LOGIN_FAILURE,
   LOGOUT,
-  loginFailure,
-  loginSuccess,
   REGISTER_REQUEST,
   REGISTER_SUCCESS,
   REGISTER_FAILURE,
-  registerSuccess,
-  registerFailure,
   ACTIVATE_REQUEST,
   ACTIVATE_SUCCESS,
   ACTIVATE_FAILURE,
@@ -40,22 +38,38 @@ import {
   RESET_PASSWORD_REQUEST,
   RESET_PASSWORD_SUCCESS,
   RESET_PASSWORD_FAILURE,
-  USER_LIST_REQUEST,
-  USER_LIST_SUCCESS,
-  USER_LIST_FAILURE,
-  UPDATE_USER_REQUEST,
-  UPDATE_USER_SUCCESS,
-  UPDATE_USER_FAILURE,
+  LOAD_ADMIN_USER_REQUEST,
+  LOAD_ADMIN_USER_SUCCESS,
+  LOAD_ADMIN_USER_FAILURE,
+  UPDATE_ADMIN_USER_LIST,
+  EDIT_ADMIN_USER_REQUEST,
+  EDIT_ADMIN_USER_SUCCESS,
+  EDIT_ADMIN_USER_FAILURE,
   INVITE_USER_REQUEST,
   INVITE_USER_SUCCESS,
   INVITE_USER_FAILURE,
   VALIDATE_TFA_REQUEST,
   VALIDATE_TFA_SUCCESS,
   VALIDATE_TFA_FAILURE
-} from '../reducers/authReducer';
+} from '../reducers/auth/types';
 
 import {browserHistory} from "../app.jsx";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
+
+function* updateStateFromAdmin(data) {
+  //Schema expects a list of admin user objects
+  if (data.admins) {
+    var admin_list = data.admins
+  } else {
+    admin_list = [data.admin]
+  }
+
+  const normalizedData = normalize(admin_list, adminUserSchema);
+
+  const admins = normalizedData.entities.admins;
+
+  yield put({type: UPDATE_ADMIN_USER_LIST, admins});
+}
 
 function* saveOrgId({payload}) {
   try {
@@ -89,14 +103,13 @@ function createLoginSuccessObject(token) {
     organisationName: token.active_organisation_name,
     organisationId: token.active_organisation_id,
     organisations: token.organisations,
+    requireTransferCardExists: token.require_transfer_card_exists
   }
 }
 
 function* requestToken({payload}) {
   try {
     const token_response = yield call(requestApiToken, payload);
-
-    console.log("token response is", token_response)
 
     if (token_response.status === 'success') {
       yield put(createLoginSuccessObject(token_response));
@@ -115,6 +128,7 @@ function* requestToken({payload}) {
 
       return token_response
     } else if (token_response.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
       yield call(storeSessionToken, token_response.auth_token );
       yield put({
         type: LOGIN_PARTIAL,
@@ -171,11 +185,18 @@ function* register({payload}) {
   try {
     const registered_account = yield call(registerAPI, payload);
 
-    if (registered_account.status === 'success') {
+    if (registered_account.status === 'success' && !registered_account.auth_token) {
+      // manual sign up, need to activate email
+      yield put({type: REGISTER_SUCCESS, registered_account});
+      yield put({type: ADD_FLASH_MESSAGE, error: false, message: registered_account.message});
+      browserHistory.push('/login')
+
+    } else if (registered_account.auth_token && !registered_account.tfa_url) {
+      // email invite, auto login as email validated
+      yield put({type: REGISTER_SUCCESS, registered_account});
       yield put(createLoginSuccessObject(registered_account));
       yield call(storeSessionToken, registered_account.auth_token );
       yield call (authenticatePusher);
-      yield put({type: REGISTER_SUCCESS, registered_account});
 
     } else if (registered_account.tfa_url) {
       yield call(storeSessionToken, registered_account.auth_token );
@@ -185,6 +206,15 @@ function* register({payload}) {
         tfaURL: registered_account.tfa_url,
         tfaFailure: true
       });
+    } else if (registered_account.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: registered_account.message,
+        tfaURL: null,
+        tfaFailure: true});
+      return registered_account
     } else {
       yield put({type: REGISTER_FAILURE, error: registered_account.message});
       yield put({type: LOGIN_FAILURE, error: registered_account.message})
@@ -203,10 +233,36 @@ function* watchRegisterRequest() {
 function* activate({activation_token}) {
   try {
     const activated_account = yield call(activateAPI, activation_token);
-    yield put({type: ACTIVATE_SUCCESS, activated_account});
-    yield put(createLoginSuccessObject(activated_account));
-    yield call(storeSessionToken, activated_account.auth_token );
-  } catch (error) {
+
+    if (activated_account.auth_token && !activated_account.tfa_url) {
+      yield put({type: ACTIVATE_SUCCESS, activated_account});
+      yield put(createLoginSuccessObject(activated_account));
+      yield call(storeSessionToken, activated_account.auth_token);
+      yield call (authenticatePusher);
+
+    } else if (activated_account.tfa_url) {
+      yield call(storeSessionToken, activated_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: activated_account.message,
+        tfaURL: activated_account.tfa_url,
+        tfaFailure: true
+      });
+    } else if (activated_account.tfa_failure) {
+      yield call(removeTFAToken); // something failed on the TFA logic
+      yield call(storeSessionToken, registered_account.auth_token );
+      yield put({
+        type: LOGIN_PARTIAL,
+        error: activated_account.message,
+        tfaURL: null,
+        tfaFailure: true});
+      return activated_account
+    } else {
+      yield put({type: ACTIVATE_FAILURE, error: activated_account.statusText})
+    }
+
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
     yield put({type: ACTIVATE_FAILURE, error: error.statusText})
   }
 }
@@ -245,33 +301,35 @@ function* watchResetPassword() {
 function* userList() {
   try {
     const load_result = yield call(getUserList);
-    yield put({type: USER_LIST_SUCCESS, load_result});
+
+    yield call(updateStateFromAdmin, load_result);
+
+    yield put({type: LOAD_ADMIN_USER_SUCCESS, load_result});
+
   } catch (error) {
-    yield put({type: USER_LIST_FAILURE, error: error.statusText})
+    yield put({type: LOAD_ADMIN_USER_FAILURE, error: error.statusText})
   }
 }
 
 function* watchLoadUserList() {
-  yield takeEvery(USER_LIST_REQUEST, userList);
+  yield takeEvery(LOAD_ADMIN_USER_REQUEST, userList);
 }
 
 function* updateUserRequest({payload}) {
     try {
-        const result = yield call(updateUserAPI, payload);
-        if (result.status === 'success') {
-          yield put({type: UPDATE_USER_SUCCESS, result});
-          const load_result = yield call(getUserList);
-          yield put({type: USER_LIST_SUCCESS, load_result});
-        } else {
-          yield put({type: UPDATE_USER_FAILURE, error: result.message})
-        }
+      const result = yield call(updateUserAPI, payload);
+
+      yield call(updateStateFromAdmin, result.data);
+
+      yield put({type: EDIT_ADMIN_USER_SUCCESS, result});
+
     } catch (error) {
-        yield put({type: UPDATE_USER_FAILURE, error: error})
+        yield put({type: EDIT_ADMIN_USER_FAILURE, error: error})
     }
 }
 
 function* watchUpdateUserRequest() {
-    yield takeEvery(UPDATE_USER_REQUEST, updateUserRequest);
+    yield takeEvery(EDIT_ADMIN_USER_REQUEST, updateUserRequest);
 }
 
 function* inviteUserRequest({ payload }) {
