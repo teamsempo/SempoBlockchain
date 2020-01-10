@@ -56,8 +56,8 @@ class OrganisationAPI(MethodView):
         post_data = request.get_json()
 
         organisation_name = post_data.get('organisation_name')
-        custom_welcome_message_key = post_data['custom_welcome_message_key']
-        timezone = post_data['timezone']
+        custom_welcome_message_key = post_data.get('custom_welcome_message_key')
+        timezone = post_data.get('timezone')
 
         token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
