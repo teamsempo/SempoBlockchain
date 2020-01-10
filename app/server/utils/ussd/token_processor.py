@@ -268,33 +268,35 @@ class TokenProcessor(object):
         try:
             exchanged_amount = TokenProcessor.transfer_token(sender, recipient, amount, reason_id)
 
-            tx_time = datetime.datetime.utcnow()
+            sender_tx_time = pendulum.now(sender.default_organisation.timezone)
+            recipient_tx_time = pendulum.now(recipient.default_organisation.timezone)
+
             sender_balance = TokenProcessor.get_balance(sender)
             recipient_balance = TokenProcessor.get_balance(recipient)
             if exchanged_amount is None:
                 TokenProcessor.send_success_sms(
                     "send_token_sender_sms",
                     sender, recipient, amount,
-                    reason_str, tx_time,
+                    reason_str, sender_tx_time,
                     sender_balance)
 
                 TokenProcessor.send_success_sms(
                     "send_token_recipient_sms",
                     recipient, sender, amount,
-                    reason_str, tx_time,
+                    reason_str, recipient_tx_time,
                     recipient_balance)
             else:
                 TokenProcessor.exchange_success_sms(
                     "exchange_token_sender_sms",
                     sender, recipient,
                     amount, exchanged_amount,
-                    tx_time, sender_balance)
+                    sender_tx_time, sender_balance)
 
                 TokenProcessor.exchange_success_sms(
                     "exchange_token_agent_sms",
                     recipient, sender,
                     exchanged_amount,
-                    amount, tx_time,
+                    amount, recipient_tx_time,
                     recipient_balance)
 
         except Exception as e:
