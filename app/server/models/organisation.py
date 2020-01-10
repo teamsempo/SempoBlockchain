@@ -54,7 +54,7 @@ class Organisation(ModelBase):
 
     @timezone.setter
     def timezone(self, val):
-        if val is not None or val not in pendulum.timezones:
+        if val is not None and val not in pendulum.timezones:
             raise Exception(f"{val} is not a valid timezone")
         self._timezone = val
 

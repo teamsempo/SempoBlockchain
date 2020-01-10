@@ -74,7 +74,7 @@ class DirectoryListingProcessor(object):
             return self.selected_business_category.name
 
     def send_directory_listing(self):
-        transfer_account = TransferAccount.query.get(self.recipient.default_transfer_account_id)
+        transfer_account = self.recipient.default_transfer_account
         token = transfer_account.token
 
         # find users who fit recipient's selected business category and are opted in for marketplace

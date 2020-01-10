@@ -140,6 +140,8 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(create_credit_transfer):
     from server.models import token
 
+    create_credit_transfer.transfer_amount = 100000
+
     create_credit_transfer.token.token_type = token.TokenType.RESERVE
     create_credit_transfer.sender_user.kyc_applications = []
 

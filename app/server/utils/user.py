@@ -698,8 +698,8 @@ def admin_reset_user_pin(user: User):
 
 
 def default_transfer_account(user: User) -> TransferAccount:
-    if user.default_transfer_account_id is not None:
-        return TransferAccount.query.get(user.default_transfer_account_id)
+    if user.default_transfer_account is not None:
+        return user.default_transfer_account
     else:
         raise TransferAccountNotFoundError("no default transfer account set")
 
