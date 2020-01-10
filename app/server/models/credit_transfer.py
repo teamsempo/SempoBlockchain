@@ -223,6 +223,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     raise TransactionCountLimitError(
                         transfer_count_limit=limit.transfer_count,
                         limit_time_period_days=limit.time_period_days,
+                        token=self.token.name,
                         message=message
                     )
 
@@ -239,6 +240,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                         transfer_balance_fraction_limit=limit.transfer_balance_fraction,
                         transfer_amount_avail=int(allowed_transfer),
                         limit_time_period_days=limit.time_period_days,
+                        token=self.token.name,
                         message=message
                     )
 

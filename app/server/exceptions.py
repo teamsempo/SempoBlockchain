@@ -9,9 +9,10 @@ class AccountLimitError(Exception):
     """
     Raise if account LIMITS have been reached when transfer is attempted
     """
-    def __init__(self, message: str, limit_time_period_days: int):
+    def __init__(self, message: str, limit_time_period_days: int, token: str):
         self.message = message
         self.limit_time_period_days = limit_time_period_days
+        self.token = token
 
 
 class TransactionCountLimitError(AccountLimitError):
@@ -33,11 +34,10 @@ class TransactionBalanceFractionLimitError(AccountLimitError):
         return self.message
 
 class TransferAmountLimitError(AccountLimitError):
-    def __init__(self, transfer_amount_limit: int, transfer_amount_avail: int, token: str, **kwargs):
+    def __init__(self, transfer_amount_limit: int, transfer_amount_avail: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_amount_limit = transfer_amount_limit
         self.transfer_amount_avail = transfer_amount_avail
-        self.token = token
 
     def __repr__(self):
         return self.message

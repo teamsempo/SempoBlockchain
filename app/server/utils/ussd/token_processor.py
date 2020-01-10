@@ -351,6 +351,7 @@ class TokenProcessor(object):
             TokenProcessor.send_sms(
                 sender,
                 "exchange_fraction_error_sms",
+                token=e.token,
                 percent=f"{int(e.transfer_balance_fraction_limit * 100)}%"
             )
         except TransactionCountLimitError as e:
@@ -358,5 +359,6 @@ class TokenProcessor(object):
                 sender,
                 "exchange_count_error_sms",
                 count=e.transfer_count_limit,
+                token=e.token,
                 limit_period=e.limit_time_period_days
             )
