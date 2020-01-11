@@ -45,6 +45,30 @@ class TransactionProcessor(object):
 
         return gas_price
 
+    def topup_if_required(self, wallet, posterior_task_uuid):
+        balance = self.w3.eth.getBalance(wallet.address)
+
+        wei_topup_threshold = wallet.wei_topup_threshold
+        wei_target_balance = wallet.wei_target_balance or 0
+
+        if balance <= wei_topup_threshold and wei_target_balance > balance:
+            sig = signature(utils.eth_endpoint('send_eth'),
+                            kwargs={
+                                'signing_address': config.MASTER_WALLET_ADDRESS,
+                                'amount_wei': wei_target_balance - balance,
+                                'recipient_address': wallet.address,
+                                'prior_tasks': [],
+                                'posterior_tasks': [posterior_task_uuid]
+                            })
+
+            task_uuid = utils.execute_task(sig)
+
+            self.persistence_interface.set_wallet_last_topup_task_uuid(wallet.address, task_uuid)
+
+            return task_uuid
+
+        return None
+
     def process_send_eth_transaction(self, transaction_id,
                                      recipient_address, amount, task_id=None):
 
@@ -189,6 +213,15 @@ class TransactionProcessor(object):
 
             raise e
 
+    def get_unstarted_posteriors(self, task):
+
+        unstarted_posteriors = []
+        for posterior in task.posterior_tasks:
+            if posterior.status == 'UNSTARTED':
+                unstarted_posteriors.append(posterior)
+
+        return unstarted_posteriors
+
     def check_transaction_response(self, celery_task, transaction_id):
         def transaction_response_countdown():
             t = lambda retries: ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** retries
@@ -209,9 +242,9 @@ class TransactionProcessor(object):
 
             task = transaction_object.task
 
-            transaction_has = transaction_object.hash
+            transaction_hash = transaction_object.hash
 
-            result = self.check_transaction_hash(transaction_has)
+            result = self.check_transaction_hash(transaction_hash)
 
             self.persistence_interface.update_transaction_data(transaction_id, result)
 
@@ -222,10 +255,10 @@ class TransactionProcessor(object):
 
             if status == 'SUCCESS':
 
-                unstarted_dependents = self.persistence_interface.get_unstarted_dependents(transaction_id)
+                unstarted_posteriors = self.get_unstarted_posteriors(task)
 
-                for dep_task in unstarted_dependents:
-                    print('Starting dependent task: {}'.format(dep_task.uuid))
+                for dep_task in unstarted_posteriors:
+                    print('Starting posterior task: {}'.format(dep_task.uuid))
                     signature(utils.eth_endpoint('_attempt_transaction'), args=(dep_task.uuid,)).delay()
 
                 self.persistence_interface.set_task_status_text(task, 'SUCCESS')
@@ -280,14 +313,34 @@ class TransactionProcessor(object):
                'mined_date': mined_date
            })
 
+    def get_unsatisfied_prior_tasks(self, task):
+
+        unsatisfied = []
+        for prior in task.prior_tasks:
+            if prior.status != 'SUCCESS':
+                unsatisfied.append(prior)
+
+        return unsatisfied
+
+
     def attempt_transaction(self, task_uuid):
 
-        unsatisfied_dependee_tasks = self.persistence_interface.unstatisfied_task_dependencies(task_uuid)
-        if len(unsatisfied_dependee_tasks) > 0:
-            print('Skipping: dependee tasks {} unsatisfied'.format([
-                f'{task.id} ({task.uuid})' for task in unsatisfied_dependee_tasks
-            ]))
+        task = self.persistence_interface.get_task_from_uuid(task_uuid)
+
+        unsatisfied_prior_tasks = self.get_unsatisfied_prior_tasks(task)
+
+        if len(unsatisfied_prior_tasks) > 0:
+            print('Skipping {}: prior tasks {} unsatisfied'.format(
+                task.id,
+                [f'{u.id} ({u.uuid})' for u in unsatisfied_prior_tasks]))
             return
+
+        topup_uuid = self.topup_if_required(task.signing_wallet, task_uuid)
+
+        if topup_uuid:
+            print(f'Skipping {task.id}: Topup required')
+            return
+
 
         transaction_obj = self.persistence_interface.create_blockchain_transaction(task_uuid)
 
@@ -438,7 +491,7 @@ class TransactionProcessor(object):
             args: Optional[tuple] = None, kwargs: Optional[dict] = None,
             signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
             gas_limit: Optional[int] = None,
-            dependent_on_tasks: Optional[UUIDList] = None
+            prior_tasks: Optional[UUIDList] = None
     ):
         """
         The main transaction entrypoint for the processor.
@@ -451,7 +504,7 @@ class TransactionProcessor(object):
         :param signing_address: address of the wallet signing the txn
         :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
         :param gas_limit: limit on the amount of gas txn can use. Overrides system default
-        :param dependent_on_tasks: a list of task uuids that must succeed before this task will be attempted
+        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted
         :return: task_id
         """
 
@@ -461,7 +514,7 @@ class TransactionProcessor(object):
                                                                signing_wallet_obj,
                                                                contract_address, abi_type,
                                                                function_name, args, kwargs,
-                                                               gas_limit, dependent_on_tasks)
+                                                               gas_limit, prior_tasks)
 
         # Attempt Create Async Transaction
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
@@ -471,7 +524,8 @@ class TransactionProcessor(object):
                  amount_wei: int,
                  recipient_address: str,
                  signing_address: Optional[str] = None, encrypted_private_key: Optional[str] = None,
-                 dependent_on_tasks: Optional[UUIDList] = None):
+                 prior_tasks: Optional[UUIDList] = None,
+                 posterior_tasks: Optional[UUIDList] = None):
         """
         The main entrypoint sending eth.
 
@@ -480,7 +534,8 @@ class TransactionProcessor(object):
         :param recipient_address: the recipient address
         :param signing_address: address of the wallet signing the txn
         :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
-        :param dependent_on_tasks: a list of task uuids that must succeed before this task will be attempted
+        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted
+        :param posterior_tasks: a uuid list of tasks for which this task must succeed before they will be attempted
         :return: task_id
         """
 
@@ -489,7 +544,8 @@ class TransactionProcessor(object):
         task = self.persistence_interface.create_send_eth_task(uuid,
                                                                signing_wallet_obj,
                                                                recipient_address, amount_wei,
-                                                               dependent_on_tasks)
+                                                               prior_tasks,
+                                                               posterior_tasks)
 
         # Attempt Create Async Transaction
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
@@ -501,7 +557,7 @@ class TransactionProcessor(object):
             args: Optional[tuple] = None, kwargs: Optional[dict] = None,
             signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
             gas_limit: Optional[int] = None,
-            dependent_on_tasks: Optional[UUIDList] = None
+            prior_tasks: Optional[UUIDList] = None
     ):
         """
         The main deploy contract entrypoint for the processor.
@@ -513,7 +569,7 @@ class TransactionProcessor(object):
         :param signing_address: address of the wallet signing the txn
         :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
         :param gas_limit: limit on the amount of gas txn can use. Overrides system default
-        :param dependent_on_tasks: a list of task uuid that must succeed before this task will be attempted
+        :param prior_tasks: a list of task uuid that must succeed before this task will be attempted
         """
 
         signing_wallet_obj = self.get_signing_wallet_object(signing_address, encrypted_private_key)
@@ -523,7 +579,7 @@ class TransactionProcessor(object):
                                                                       contract_name,
                                                                       args, kwargs,
                                                                       gas_limit,
-                                                                      dependent_on_tasks)
+                                                                      prior_tasks)
 
         # Attempt Create Async Transaction
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()

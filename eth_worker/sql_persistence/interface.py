@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy import and_, or_
 
-from sempo_types import UUID
+from sempo_types import UUID, UUIDList
 
 from sql_persistence.models import (
     session,
@@ -194,38 +194,31 @@ class SQLPersistenceInterface(object):
 
         return transaction.signing_wallet
 
-    def get_unstarted_dependents(self, transaction_id):
-        transaction = session.query(BlockchainTransaction).get(transaction_id)
+    def add_prior_tasks(self, task: BlockchainTask, prior_tasks: UUIDList):
+        if prior_tasks is None:
+            prior_tasks = []
 
-        unstarted_dependents = []
-        for dependent_task in transaction.task.dependents:
-            if dependent_task.status == 'UNSTARTED':
-                unstarted_dependents.append(dependent_task)
+        if isinstance(prior_tasks, str):
+            prior_tasks = [prior_tasks]
 
-        return unstarted_dependents
-
-    def unstatisfied_task_dependencies(self, task_uuid):
-        task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
-
-        unsatisfied = []
-        for dependee in task.dependees:
-            if dependee.status != 'SUCCESS':
-                unsatisfied.append(dependee)
-
-        return unsatisfied
-
-    def add_dependent_on_tasks(self, task, dependent_on_tasks):
-        if dependent_on_tasks is None:
-            dependent_on_tasks = []
-
-        if isinstance(dependent_on_tasks, str):
-            dependent_on_tasks = [dependent_on_tasks]
-
-        for task_uuid in dependent_on_tasks:
+        for task_uuid in prior_tasks:
             # TODO: Make sure this can't be failed due to a race condition on tasks being added
-            dependee_task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
-            if dependee_task:
-                task.dependees.append(dependee_task)
+            prior_task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+            if prior_task:
+                task.prior_tasks.append(prior_task)
+
+    def add_posterior_tasks(self, task: BlockchainTask, posterior_tasks: UUIDList):
+        if posterior_tasks is None:
+            posterior_tasks = []
+
+        if isinstance(posterior_tasks, str):
+            posterior_tasks = [posterior_tasks]
+
+        for task_uuid in posterior_tasks:
+            # TODO: Make sure this can't be failed due to a race condition on tasks being added
+            posterior = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+            if posterior:
+                task.posterior_tasks.append(posterior)
 
     def set_task_status_text(self, task, text):
         task.status_text = text
@@ -235,7 +228,8 @@ class SQLPersistenceInterface(object):
                              uuid: UUID,
                              signing_wallet_obj,
                              recipient_address, amount,
-                             dependent_on_tasks=None):
+                             prior_tasks=None,
+                             posterior_tasks=None):
 
         task = BlockchainTask(uuid,
                               signing_wallet=signing_wallet_obj,
@@ -246,7 +240,8 @@ class SQLPersistenceInterface(object):
 
         session.add(task)
 
-        self.add_dependent_on_tasks(task, dependent_on_tasks)
+        self.add_prior_tasks(task, prior_tasks)
+        self.add_posterior_tasks(task, posterior_tasks)
 
         session.commit()
 
@@ -257,7 +252,7 @@ class SQLPersistenceInterface(object):
                              signing_wallet_obj,
                              contract_address, abi_type,
                              function, args=None, kwargs=None,
-                             gas_limit=None, dependent_on_tasks=None):
+                             gas_limit=None, prior_tasks=None):
 
         task = BlockchainTask(uuid,
                               signing_wallet=signing_wallet_obj,
@@ -271,7 +266,7 @@ class SQLPersistenceInterface(object):
 
         session.add(task)
 
-        self.add_dependent_on_tasks(task, dependent_on_tasks)
+        self.add_prior_tasks(task, prior_tasks)
 
         session.commit()
 
@@ -282,7 +277,7 @@ class SQLPersistenceInterface(object):
                                     signing_wallet_obj,
                                     contract_name,
                                     args=None, kwargs=None,
-                                    gas_limit=None, dependent_on_tasks=None):
+                                    gas_limit=None, prior_tasks=None):
 
         task = BlockchainTask(uuid,
                               signing_wallet=signing_wallet_obj,
@@ -294,7 +289,7 @@ class SQLPersistenceInterface(object):
 
         session.add(task)
 
-        self.add_dependent_on_tasks(task, dependent_on_tasks)
+        self.add_prior_tasks(task, prior_tasks)
 
         session.commit()
 
@@ -309,8 +304,8 @@ class SQLPersistenceInterface(object):
         base_data = {
             'id': task.id,
             'status': task.status,
-            'dependents': [task.uuid for task in task.dependents],
-            'dependees': [task.uuid for task in task.dependees],
+            'prior_tasks': [task.uuid for task in task.prior_tasks],
+            'posterior_tasks': [task.uuid for task in task.posterior_tasks],
             'transactions': [transaction.id for transaction in task.transactions]
         }
 

@@ -104,11 +104,13 @@ class RDSMigrate:
             estimate_time_left = 'unknown'
 
             ge_address_to_user = {}
+
             for user in users:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
                         i, n_users, user['first_name'], user['name'], estimate_time_left))
                 # pprint.pprint(user)
+
                 sempo_user = self.insert_user(user)
 
                 if sempo_user:
@@ -313,7 +315,7 @@ class RDSMigrate:
             for ge_token in GE_MIGRATION_TOKENS.keys():
                 contract_address = GE_MIGRATION_TOKENS[ge_token]
 
-                v = get_token_balance(user_address, contract_address)
+                v = 10000000 or get_token_balance(user_address, contract_address)
 
                 if v != '':
                     balance_wei += int(v)

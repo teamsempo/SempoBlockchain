@@ -59,7 +59,7 @@ class BlockchainTasker(object):
                                       contract_address, contract_type,
                                       func, args=None,
                                       gas_limit=None,
-                                      dependent_on_tasks=None):
+                                      prior_tasks=None):
 
         signature = celery_app.signature(
             self._eth_endpoint('transact_with_contract_function'),
@@ -70,7 +70,7 @@ class BlockchainTasker(object):
                 'function': func,
                 'args': args,
                 'gas_limit': gas_limit,
-                'dependent_on_tasks': dependent_on_tasks
+                'prior_tasks': prior_tasks
             })
 
         return self._execute_task(signature)
@@ -83,7 +83,7 @@ class BlockchainTasker(object):
         :return: Serialised Task Dictionary:
         {
             status: enum, one of 'SUCCESS', 'PENDING', 'UNSTARTED', 'FAILED', 'UNKNOWN'
-            dependents: list of dependent task uuids
+            priors: list of prior task uuids
         }
         """
 
@@ -139,15 +139,20 @@ class BlockchainTasker(object):
                                        'private_key': private_key
                                    })
 
-        return self._execute_synchronous_celery(sig)
+        wallet_address = self._execute_synchronous_celery(sig)
 
-    def send_eth(self, signing_address, recipient_address, amount_wei, dependent_on_tasks=None):
+        if wei_target_balance or 0 > 0:
+            self.topup_wallet_if_required(wallet_address)
+
+        return wallet_address
+
+    def send_eth(self, signing_address, recipient_address, amount_wei, prior_tasks=None):
         """
         Send eth to a target address
         :param signing_address: blockchain address of the txn signer/sender
         :param recipient_address: blockchain address of the recipent
         :param amount_wei: amount of eth to send, in wei
-        :param dependent_on_tasks: tasks that must successfully complete first befoehand
+        :param prior_tasks: tasks that must successfully complete first befotehand
         :return: task uuid
         """
         transfer_sig = celery_app.signature(self._eth_endpoint('send_eth'),
@@ -155,7 +160,7 @@ class BlockchainTasker(object):
                                                 'signing_address': signing_address,
                                                 'amount_wei': amount_wei,
                                                 'recipient_address': recipient_address,
-                                                'dependent_on_tasks': dependent_on_tasks
+                                                'prior_tasks': prior_tasks
                                             })
 
         return self._execute_task(transfer_sig)
@@ -166,7 +171,7 @@ class BlockchainTasker(object):
             contract_name: str,
             constructor_args: Optional[List] = None,
             constructor_kwargs: Optional[Dict] = None,
-            dependent_on_tasks: Optional[List[int]] = None) -> int:
+            prior_tasks: Optional[List[int]] = None) -> int:
 
         deploy_sig = celery_app.signature(
             self._eth_endpoint('deploy_contract'),
@@ -175,14 +180,14 @@ class BlockchainTasker(object):
                 'contract_name': contract_name,
                 'args': constructor_args,
                 'kwargs': constructor_kwargs,
-                'dependent_on_tasks': dependent_on_tasks
+                'prior_tasks': prior_tasks
             })
 
         return self._execute_task(deploy_sig)
 
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,
-                            dependent_on_tasks=None):
+                            prior_tasks=None):
         """
         Makes a "Transfer" or "Transfer From" transaction on an ERC20 token.
 
@@ -191,7 +196,7 @@ class BlockchainTasker(object):
         :param from_address: address of wallet sending token
         :param to_address:
         :param amount: the CENTS amount being sent, eg 2300 Cents = 2.3 Dollars
-        :param dependent_on_tasks: list of task uuids that must complete before txn will attempt
+        :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the transfer
         """
 
@@ -215,7 +220,7 @@ class BlockchainTasker(object):
                     to_address,
                     raw_amount
                 ],
-                dependent_on_tasks=dependent_on_tasks
+                prior_tasks=prior_tasks
             )
 
         return self._synchronous_transaction_task(
@@ -228,13 +233,13 @@ class BlockchainTasker(object):
                 to_address,
                 token.system_amount_to_token(amount)
             ],
-            dependent_on_tasks=dependent_on_tasks
+            prior_tasks=prior_tasks
         )
 
     def make_approval(self,
                       signing_address, token,
                       spender, amount,
-                      dependent_on_tasks=None):
+                      prior_tasks=None):
 
         return self._synchronous_transaction_task(
             signing_address=signing_address,
@@ -246,7 +251,7 @@ class BlockchainTasker(object):
                 spender,
                 token.system_amount_to_token(amount)
             ],
-            dependent_on_tasks=dependent_on_tasks
+            prior_tasks=prior_tasks
         )
 
     def make_liquid_token_exchange(self,
@@ -256,7 +261,7 @@ class BlockchainTasker(object):
                                    to_token,
                                    reserve_token,
                                    from_amount,
-                                   dependent_on_tasks=None):
+                                   prior_tasks=None):
         """
         Uses a Liquid Token Contract network to exchange between two ERC20 smart tokens.
         :param signing_address: address of wallet signing txn
@@ -265,18 +270,18 @@ class BlockchainTasker(object):
         :param to_token: the token being exchanged to
         :param reserve_token: the reserve token used as a connector in the network
         :param from_amount: the amount of the token being exchanged from
-        :param dependent_on_tasks: list of task uuids that must complete before txn will attempt
+        :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the exchange
         """
 
-        dependent_on_tasks = dependent_on_tasks or []
+        prior_tasks = prior_tasks or []
 
         path = self._get_path(from_token, to_token, reserve_token)
-
-        topup_task_uuid = self.topup_wallet_if_required(signing_address)
-
-        if topup_task_uuid:
-            dependent_on_tasks.append(topup_task_uuid)
+        #
+        # topup_task_uuid = self.topup_wallet_if_required(signing_address)
+        #
+        # if topup_task_uuid:
+        #     prior_tasks.append(topup_task_uuid)
 
         return self._synchronous_transaction_task(
             signing_address=signing_address,
@@ -288,7 +293,7 @@ class BlockchainTasker(object):
                 from_token.system_amount_to_token(from_amount),
                 1
             ],
-            dependent_on_tasks=dependent_on_tasks
+            prior_tasks=prior_tasks
         )
 
     def get_conversion_amount(self, exchange_contract, from_token, to_token, from_amount, signing_address=None):

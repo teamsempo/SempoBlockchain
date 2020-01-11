@@ -282,12 +282,12 @@ if __name__ == '__main__':
     reserve_token_id = s.create_reserve_token(
         name='Kenyan Shilling',
         symbol='Ksh',
-        fund_amount_wei=int(1000e18)
+        fund_amount_wei=int(10000e18)
     )
     # reserve_token_id = 1
 
     exchange_contract_id = s.create_exchange_contract(reserve_token_id)
-    # exchange_contract_id = 4
+    # exchange_contract_id = 1
 
     ge_org_id = s.create_cic_organisation(
         organisation_name='Grassroots Economics',
@@ -296,23 +296,23 @@ if __name__ == '__main__':
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
         symbol='SARAFU',
-        issue_amount_wei=int(100000e18),
-        reserve_deposit_wei=int(10e18),
+        issue_amount_wei=int(1000000e18),
+        reserve_deposit_wei=int(1000e18),
         reserve_ratio_ppm=250000
     )
     bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
-
-    foobar_org_id = s.create_cic_organisation(
-        organisation_name='Foo Org',
-        exchange_contract_id=exchange_contract_id,
-        custom_welcome_message_key=None,
-        timezone='Africa/Nairobi',
-        name='FooBar',
-        symbol='FOO',
-        issue_amount_wei=int(100000e18),
-        reserve_deposit_wei=int(10e18),
-        reserve_ratio_ppm=250000
-    )
-    bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
+    #
+    # foobar_org_id = s.create_cic_organisation(
+    #     organisation_name='Foo Org',
+    #     exchange_contract_id=exchange_contract_id,
+    #     custom_welcome_me ssage_key=None,
+    #     timezone='Africa/Nairobi',
+    #     name='FooBar',
+    #     symbol='FOO',
+    #     issue_amount_wei=int(100000e18),
+    #     reserve_deposit_wei=int(10e18),
+    #     reserve_ratio_ppm=250000
+    # )
+    # bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
 
     tt = 4
