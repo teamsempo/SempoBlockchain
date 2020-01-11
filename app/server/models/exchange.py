@@ -174,7 +174,7 @@ class Exchange(BlockchainTaskableBase):
 
         # topup_task_uuid = bt.topup_wallet_if_required(signing_address)
 
-        prior = [topup_task_uuid] if topup_task_uuid else []
+        prior = []
 
         # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
         # We need to approve all the tokens involved for spend by the exchange contract
