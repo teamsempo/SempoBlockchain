@@ -322,8 +322,17 @@ class SQLPersistenceInterface(object):
         else:
             return base_data
 
+    def increment_task_invokations(self, task):
+        task.previous_invocations = (task.previous_invocations or 0) + 1
+
+        session.commit()
+
     def get_task_from_uuid(self, task_uuid):
         return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+
+    def get_failed_tasks(self):
+        return session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED').all()
+
 
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 

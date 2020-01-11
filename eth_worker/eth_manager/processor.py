@@ -587,10 +587,18 @@ class TransactionProcessor(object):
     def retry_task(self, uuid: UUID):
         task = self.persistence_interface.get_task_from_uuid(uuid)
 
-        task.previous_invocations = (task.previous_invocations or 0) + 1
+        self._retry_task(task)
 
+    def retry_failed(self):
+
+        failed_tasks = self.persistence_interface.get_failed_tasks()
+
+        for task in failed_tasks:
+            self._retry_task(task)
+
+    def _retry_task(self, task):
+        self.persistence_interface.increment_task_invokations(task)
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
-
 
     def __init__(self,
                  ethereum_chain_id,

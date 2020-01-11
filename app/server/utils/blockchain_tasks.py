@@ -122,6 +122,11 @@ class BlockchainTasker(object):
 
         sig.delay()
 
+    def retry_failed(self):
+        sig = celery_app.signature(self._eth_endpoint('retry_failed'))
+
+        sig.delay()
+
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
     def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
