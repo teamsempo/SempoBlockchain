@@ -220,7 +220,7 @@ class Exchange(BlockchainTaskableBase):
             to_token=to_token,
             reserve_token=exchange_contract.reserve_token,
             from_amount=from_amount,
-            prior_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + prior_task_uuids
+            prior_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + (prior_task_uuids or [])
         )
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(
