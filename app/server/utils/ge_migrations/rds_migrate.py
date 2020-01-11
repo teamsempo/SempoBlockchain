@@ -315,7 +315,7 @@ class RDSMigrate:
             for ge_token in GE_MIGRATION_TOKENS.keys():
                 contract_address = GE_MIGRATION_TOKENS[ge_token]
 
-                v = 10000000 or get_token_balance(user_address, contract_address)
+                v = get_token_balance(user_address, contract_address)
 
                 if v != '':
                     balance_wei += int(v)
