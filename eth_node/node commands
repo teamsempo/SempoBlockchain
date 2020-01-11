@@ -1,4 +1,4 @@
-ssh -i "aws-eb.pem" ubuntu@ec2-54-154-184-10.eu-west-1.compute.amazonaws.com
+ssh -i "aws-eb.pem" ubuntu@ec2-34-251-252-164.eu-west-1.compute.amazonaws.com
 
 apt update
 sudo apt -y install curl
@@ -10,7 +10,13 @@ scp -i "aws-eb.pem" ./bootnodes.txt ubuntu@ec2-54-154-184-10.eu-west-1.compute.a
 
 scp -i "aws-eb.pem" ./spec.json ubuntu@ec2-54-154-184-10.eu-west-1.compute.amazonaws.com:~/spec.json
 
-parity --chain ~/spec.json --reserved-peers ~/bootnodes.txt --jsonrpc-port 8500 --jsonrpc-hosts all --jsonrpc-interface all
+parity --chain ~/spec.json --reserved-peers ~/bootnodes.txt --jsonrpc-port 8500 --jsonrpc-hosts all --jsonrpc-interface all &
+
+bg
+
+disown
+
+(https://superuser.com/questions/1293298/how-to-detach-ssh-session-without-killing-a-running-process)
 
 curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x621093B2EAeA58E9403c8fc3a870F52A6dDfb28F", "latest"],"id":1}' http://172.31.38.202:8500
 

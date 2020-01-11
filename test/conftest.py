@@ -411,6 +411,26 @@ def init_database():
         db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
         db.drop_all()
 
+
+@pytest.fixture(autouse=True)
+def mock_sms_apis(mocker):
+    # Always patch out all sms sending apis because we don't want to spam messages with our tests!!
+
+    from server.utils.phone import MessageProcessor
+
+    messages = []
+    def mock_sms_api(phone, message):
+        messages.append({'phone': phone, 'message': message})
+
+    # Aggressively patch methods inside the class so we don't accidentally leave one out
+    for method in dir(MessageProcessor):
+        if not method.startswith('__') and method not in ['channel_for_number', 'send_message']:
+            mocker.patch(f'server.message_processor.{method}', mock_sms_api)
+
+    return messages
+
+
+
 @pytest.fixture(scope="module")
 def monkeymodule(request):
     from _pytest.monkeypatch import MonkeyPatch
