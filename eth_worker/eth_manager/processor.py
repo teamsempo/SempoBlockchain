@@ -156,7 +156,9 @@ class TransactionProcessor(object):
 
                     raise e
 
-            nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+            nonce, transaction_id = self.persistence_interface.locked_claim_transaction_nonce(
+                signing_wallet_obj, transaction_id
+            )
 
             metadata = {
                 'gas': gas_limit or min(int(gas*1.2), 8000000),

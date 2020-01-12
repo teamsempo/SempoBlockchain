@@ -11,7 +11,8 @@ from sql_persistence.models import (
 )
 
 from eth_manager.exceptions import (
-    WalletExistsError
+    WalletExistsError,
+    LockedNotAcquired
 )
 
 class SQLPersistenceInterface(object):
@@ -42,8 +43,8 @@ class SQLPersistenceInterface(object):
                 .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
                 .filter(
                     and_(
-                        or_(BlockchainTransaction.nonce_consumed == True,
-                            BlockchainTransaction.status == 'PENDING'),
+                        or_(BlockchainTransaction.status == 'PENDING',
+                            BlockchainTransaction.nonce_consumed == True),
                         BlockchainTransaction.nonce >= starting_nonce
                     )
                 )
@@ -51,53 +52,30 @@ class SQLPersistenceInterface(object):
 
         # Use a set to find continous nonces because txns in db may be out of order
         nonce_set = set()
-        nonce_to_id = {}
         for txn in likely_consumed_nonces:
             nonce_set.add(txn.nonce)
-            if txn.nonce > nonce_to_id.get(txn.nonce, 0):
-                nonce_to_id[txn.nonce] = txn.id
 
         next_nonce = starting_nonce
-        highest_valid_id = None
         while next_nonce in nonce_set:
-            highest_valid_id = nonce_to_id.get(next_nonce, highest_valid_id)
             next_nonce += 1
 
-        # if highest_valid_id is None, find it from db
-        if highest_valid_id is None:
-            highest_valid_txn = (
-                session.query(BlockchainTransaction)
-                    .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
-                    .filter(BlockchainTransaction.ignore == False)
-                    .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
-                    .filter(
-                        and_(
-                            or_(BlockchainTransaction.nonce_consumed == True,
-                                BlockchainTransaction.status == 'PENDING'),
-                            BlockchainTransaction.nonce <= starting_nonce
-                        )
-                    )
-                    .order_by(BlockchainTransaction.id.desc())
-                    .first())
+        return next_nonce
 
-            highest_valid_id = getattr(highest_valid_txn, 'id', 0)
+    def locked_claim_transaction_nonce(self, siging_wallet_object, transaction_id):
+        # Locks normally get released in less than 0.05 seconds
 
-        # Now find all transactions that are from the same address
-        # and have a txn ID bound by the top consumed nonce and the current txn.
-        # These txns are in a similar state to the current will be allocated nonces very shortly
-        # Because they have lower IDs, they get precendent over the nonces
+        have_lock = False
+        lock = self.red.lock(siging_wallet_object.address, timeout=10)
 
-        live_txns_from_same_address = (
-            session.query(BlockchainTransaction)
-                .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
-                .filter(BlockchainTransaction.ignore == False)
-                .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
-                .filter(BlockchainTransaction.status == 'PENDING')
-                .filter(and_(BlockchainTransaction.id > highest_valid_id,
-                             BlockchainTransaction.id < transaction_id))
-                .all())
-
-        return next_nonce + len(live_txns_from_same_address)
+        try:
+            have_lock = lock.acquire(blocking_timeout=1)
+            if have_lock:
+                return self.claim_transaction_nonce(siging_wallet_object, transaction_id)
+            else:
+                raise LockedNotAcquired
+        finally:
+            if have_lock:
+                lock.release()
 
     def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
 
@@ -113,46 +91,6 @@ class SQLPersistenceInterface(object):
         blockchain_transaction.signing_wallet = signing_wallet_obj
         blockchain_transaction.nonce = calculated_nonce
         blockchain_transaction.status = 'PENDING'
-
-        session.commit()
-
-        gauranteed_clash_free = False
-
-        clash_fix_attempts = 0
-        while not gauranteed_clash_free and clash_fix_attempts < 200:
-            clash_fix_attempts += 1
-            # Occasionally two workers will hit the db at the same time and claim the same nonce
-
-            nonce_clash_txns = (session.query(BlockchainTransaction)
-                                .filter(BlockchainTransaction.id != transaction_id)
-                                .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
-                                .filter(BlockchainTransaction.ignore == False)
-                                .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
-                                .filter(BlockchainTransaction.status == 'PENDING')
-                                .filter(BlockchainTransaction.nonce == blockchain_transaction.nonce)
-                                .all())
-
-            if len(nonce_clash_txns) > 0:
-                # If there is a clash, just try again
-                print('\n ~~~~~~~~Cash Fix {} for txn {} with nonce {}~~~~~~~~'
-                    .format(clash_fix_attempts, transaction_id, blockchain_transaction.nonce))
-                print(nonce_clash_txns)
-
-                lower_txn_ids = 0
-                for txn in nonce_clash_txns:
-                    if txn.id < transaction_id:
-                        lower_txn_ids += 1
-
-                if lower_txn_ids != 0:
-                    print('Incrementing nonce by {}'.format(lower_txn_ids))
-                    blockchain_transaction.nonce = blockchain_transaction.nonce + lower_txn_ids
-                    session.commit()
-                else:
-                    print('Transaction has lowest ID, taking nonce')
-                    gauranteed_clash_free = True
-
-            else:
-                gauranteed_clash_free = True
 
         session.commit()
 
@@ -401,9 +339,11 @@ class SQLPersistenceInterface(object):
 
         session.commit()
 
-    def __init__(self, w3, PENDING_TRANSACTION_EXPIRY_SECONDS=300):
+    def __init__(self, w3, red, PENDING_TRANSACTION_EXPIRY_SECONDS=300):
 
         self.w3 = w3
+
+        self.red = red
 
         self.first_block_hash = w3.eth.getBlock(0).hash.hex()
 

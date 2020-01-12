@@ -262,29 +262,29 @@ class Setup(object):
 
 if __name__ == '__main__':
 
-    s = Setup(
-        api_host='https://dev.withsempo.com/api/v1/',
-        email=os.environ.get('dev_email'),
-        password=os.environ.get('dev_password')
-    )
-
     # s = Setup(
-    #     api_host='http://0.0.0.0:9000/api/v1/',
-    #     email=os.environ.get('local_email'),
-    #     password=os.environ.get('local_password')
+    #     api_host='https://dev.withsempo.com/api/v1/',
+    #     email=os.environ.get('dev_email'),
+    #     password=os.environ.get('dev_password')
     # )
+
+    s = Setup(
+        api_host='http://0.0.0.0:9000/api/v1/',
+        email=os.environ.get('local_email'),
+        password=os.environ.get('local_password')
+    )
 
     # s.bind_user_to_organsation_as_admin(6, 1)
     # s.bind_user_to_organsation_as_admin(6, 2)
     # s.bind_user_to_organsation_as_admin(6, 3)
 
 
-    # reserve_token_id = s.create_reserve_token(
-    #     name='Kenyan Shilling',
-    #     symbol='Ksh',
-    #     fund_amount_wei=int(10000e18)
-    # )
-    reserve_token_id = 1
+    reserve_token_id = s.create_reserve_token(
+        name='Kenyan Shilling',
+        symbol='Ksh',
+        fund_amount_wei=int(10000e18)
+    )
+    # reserve_token_id = 1
 
     exchange_contract_id = s.create_exchange_contract(reserve_token_id)
     # exchange_contract_id = 1

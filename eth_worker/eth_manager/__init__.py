@@ -62,7 +62,7 @@ w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
-persistence_interface = SQLPersistenceInterface(w3=w3)
+persistence_interface = SQLPersistenceInterface(w3=w3, red=red)
 
 blockchain_processor = TransactionProcessor(
     **eth_config,

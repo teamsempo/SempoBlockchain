@@ -4,7 +4,9 @@ import eth_manager.task_interfaces.composite
 from sql_persistence.models import session
 from eth_manager import celery_app, blockchain_processor, persistence_interface
 from functools import wraps
-
+from eth_manager.exceptions import (
+    LockedNotAcquired
+)
 class SqlAlchemyTask(celery.Task):
     """An abstract Celery Task that ensures that the connection the the
     database is closed on task completion"""
@@ -30,8 +32,9 @@ no_retry_config = {
 
 processor_task_config = {
     **base_task_config,
-    'max_retries': 0,
-    'queue': 'processor'
+    'max_retries': 10,
+    'queue': 'processor',
+    'default_retry_delay': 10
 }
 
 
@@ -154,23 +157,32 @@ def _attempt_transaction(self, task_uuid):
 
 @celery_app.task(**processor_task_config)
 def _process_send_eth_transaction(self, transaction_id, recipient_address, amount, task_id=None):
-    return blockchain_processor.process_send_eth_transaction(transaction_id, recipient_address, amount, task_id)
+    try:
+        return blockchain_processor.process_send_eth_transaction(transaction_id, recipient_address, amount, task_id)
+    except LockedNotAcquired as exc:
+        raise self.retry(countdown=3)
 
 
 @celery_app.task(**processor_task_config)
 def _process_function_transaction(self, transaction_id, contract_address, abi_type,
                                   function, args=None, kwargs=None,  gas_limit=None, task_id=None):
+    try:
+        return blockchain_processor.process_function_transaction(transaction_id, contract_address, abi_type,
+                                                                 function, args, kwargs, gas_limit, task_id)
 
-    return blockchain_processor.process_function_transaction(transaction_id, contract_address, abi_type,
-                                                             function, args, kwargs, gas_limit, task_id)
+    except LockedNotAcquired as exc:
+        raise self.retry(countdown=3)
 
 
 @celery_app.task(**processor_task_config)
 def _process_deploy_contract_transaction(self, transaction_id, contract_name,
                                          args=None, kwargs=None,  gas_limit=None, task_id=None):
 
-    return blockchain_processor.process_deploy_contract_transaction(transaction_id, contract_name,
-                                                                    args, kwargs, gas_limit, task_id)
+    try:
+        return blockchain_processor.process_deploy_contract_transaction(transaction_id, contract_name,
+                                                                        args, kwargs, gas_limit, task_id)
+    except LockedNotAcquired as exc:
+        raise self.retry(countdown=3)
 
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
