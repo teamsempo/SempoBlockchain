@@ -256,7 +256,7 @@ class BlockchainTasker(object):
             gas_limit=100000,
             args=[
                 spender,
-                '1000000000000000000000000000000000000'
+                int(1e36)
             ],
             prior_tasks=prior_tasks
         )
