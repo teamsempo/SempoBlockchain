@@ -65,6 +65,10 @@ class MockBlockchainTasker(object):
         return 100
 
     @staticmethod
+    def get_allowance(*args, **kwargs):
+        return 100
+
+    @staticmethod
     def deploy_exchange_network(*args, **kwargs):
         return MockBlockchainTasker._blockchain_address()
 
