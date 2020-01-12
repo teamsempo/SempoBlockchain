@@ -238,7 +238,7 @@ def deploy_smart_token(
             contract_address=reserve_token_address,
             contract_type='EtherToken',
             func='approve',
-            args=[subexchange_address, int(1e30)],
+            args=[subexchange_address, '1000000000000000000000000000000000000'],
             gas_limit=100000
         ))
 
@@ -249,7 +249,7 @@ def deploy_smart_token(
             contract_address=smart_token_address,
             contract_type='SmartToken',
             func='approve',
-            args=[subexchange_address, int(1e30)],
+            args=[subexchange_address, '1000000000000000000000000000000000000'],
             gas_limit=100000
         )
     )

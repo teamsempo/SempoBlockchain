@@ -24,6 +24,7 @@ class SQLPersistenceInterface(object):
 
         (session.query(BlockchainTransaction)
          .filter(and_(BlockchainTransaction.status == 'PENDING',
+                      BlockchainTransaction.nonce != None,
                       BlockchainTransaction.created < expire_time))
          .update({BlockchainTransaction.status: 'FAILED',
                   BlockchainTransaction.error: 'Timeout Error'},
@@ -61,17 +62,22 @@ class SQLPersistenceInterface(object):
 
         return next_nonce
 
-    def locked_claim_transaction_nonce(self, siging_wallet_object, transaction_id):
+    def locked_claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
         # Locks normally get released in less than 0.05 seconds
 
         have_lock = False
-        lock = self.red.lock(siging_wallet_object.address, timeout=10)
+        lock = self.red.lock(signing_wallet_obj.address, timeout=10)
+
+        print(f'Attempting lock for txn: {transaction_id} \n'
+              f'addr:{signing_wallet_obj.address}')
 
         try:
             have_lock = lock.acquire(blocking_timeout=1)
             if have_lock:
-                return self.claim_transaction_nonce(siging_wallet_object, transaction_id)
+                return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
             else:
+                print(f'Lock not acquired for txn: {transaction_id} \n'
+                      f'addr:{signing_wallet_obj.address}')
                 raise LockedNotAcquired
         finally:
             if have_lock:
@@ -339,7 +345,7 @@ class SQLPersistenceInterface(object):
 
         session.commit()
 
-    def __init__(self, w3, red, PENDING_TRANSACTION_EXPIRY_SECONDS=300):
+    def __init__(self, w3, red, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 
         self.w3 = w3
 
