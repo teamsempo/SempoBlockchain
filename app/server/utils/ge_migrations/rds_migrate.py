@@ -4,7 +4,7 @@ import time
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 import pprint
 
-from server import db, bt
+from server import db, sentry
 
 from server.models.user import User
 from server.models.organisation import Organisation
@@ -310,36 +310,42 @@ class RDSMigrate:
         addresses = list(ge_address_to_user.keys())
 
         for user_address in addresses:
-            balance_wei = 0
 
-            for ge_token in GE_MIGRATION_TOKENS.keys():
-                contract_address = GE_MIGRATION_TOKENS[ge_token]
+            try:
+                balance_wei = 0
 
-                v = get_token_balance(user_address, contract_address)
+                for ge_token in GE_MIGRATION_TOKENS.keys():
+                    contract_address = GE_MIGRATION_TOKENS[ge_token]
 
-                if v != '':
-                    balance_wei += int(v)
+                    v = get_token_balance(user_address, contract_address)
 
-            user = ge_address_to_user[user_address]
-            ta = user.get_transfer_account_for_token(token)
-            ta._balance_wei = balance_wei
+                    if v != '':
+                        balance_wei += int(v)
 
-            print(f'transfering {balance_wei} wei to {user}')
+                user = ge_address_to_user[user_address]
+                ta = user.get_transfer_account_for_token(token)
+                ta._balance_wei = balance_wei
 
-            if balance_wei != 0:
+                print(f'transfering {balance_wei} wei to {user}')
 
-                migration_transfer = CreditTransfer(
-                    amount=balance_wei/1e16,
-                    token=token,
-                    sender_transfer_account=org.queried_org_level_transfer_account,
-                    recipient_user=user,
-                    transfer_type=TransferTypeEnum.PAYMENT,
-                    transfer_subtype=TransferSubTypeEnum.DISBURSEMENT
-                )
+                if balance_wei != 0:
 
-                db.session.add(migration_transfer)
+                    migration_transfer = CreditTransfer(
+                        amount=balance_wei/1e16,
+                        token=token,
+                        sender_transfer_account=org.queried_org_level_transfer_account,
+                        recipient_user=user,
+                        transfer_type=TransferTypeEnum.PAYMENT,
+                        transfer_subtype=TransferSubTypeEnum.DISBURSEMENT
+                    )
 
-                migration_transfer.resolve_as_completed()
+                    db.session.add(migration_transfer)
+
+                    migration_transfer.resolve_as_completed()
+
+            except Exception as e:
+                sentry.captureException()
+                pass
 
     def store_wei(self, address, balance):
         sql = '''UPDATE "transfer_account"

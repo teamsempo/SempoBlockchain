@@ -270,8 +270,8 @@ def _base_setup(s, reserve_token_id):
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
         symbol='SARAFU',
-        issue_amount_wei=int(1000000e18),
-        reserve_deposit_wei=int(1000e18),
+        issue_amount_wei=int(10000000e18),
+        reserve_deposit_wei=int(10000e18),
         reserve_ratio_ppm=250000
     )
     bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
@@ -323,6 +323,6 @@ def local_setup():
 
 if __name__ == '__main__':
 
-    # ge_setup()
+    ge_setup()
 
-    local_setup()
+    # local_setup()
