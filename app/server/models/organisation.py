@@ -1,4 +1,6 @@
 from flask import current_app
+from sqlalchemy.ext.hybrid import hybrid_property
+import pendulum
 
 from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
@@ -17,6 +19,8 @@ class Organisation(ModelBase):
     is_master           = db.Column(db.Boolean, default=False, index=True)
 
     name                = db.Column(db.String)
+
+    _timezone           = db.Column(db.String)
 
     # TODO: Create a mixin so that both user and organisation can use the same definition here
     # This is the blockchain address used for transfer accounts, unless overridden
@@ -43,6 +47,16 @@ class Organisation(ModelBase):
         post_update=True,
         primaryjoin="Organisation.org_level_transfer_account_id==TransferAccount.id",
         uselist=False)
+
+    @hybrid_property
+    def timezone(self):
+        return self._timezone
+
+    @timezone.setter
+    def timezone(self, val):
+        if val is not None and val not in pendulum.timezones:
+            raise Exception(f"{val} is not a valid timezone")
+        self._timezone = val
 
     # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
     @property

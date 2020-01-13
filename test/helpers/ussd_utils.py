@@ -15,7 +15,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
     transfer_account.balance = balance
 
     if is_default:
-        user.default_transfer_account_id = transfer_account.id
+        user.default_transfer_account = transfer_account
 
     if is_ghost:
         transfer_account.is_ghost = True

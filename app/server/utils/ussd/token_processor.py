@@ -1,10 +1,15 @@
 import datetime
+import pendulum
 from typing import Optional
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.sql import func
 
 from server import db, message_processor
-from server.exceptions import TransactionPercentLimitError, TransactionCountLimitError
+from server.exceptions import (
+    TransactionBalanceFractionLimitError,
+    TransactionCountLimitError,
+    TransferAmountLimitError
+)
 from server.models.credit_transfer import CreditTransfer
 from server.models.exchange import Exchange
 from server.models.token import Token
@@ -263,33 +268,35 @@ class TokenProcessor(object):
         try:
             exchanged_amount = TokenProcessor.transfer_token(sender, recipient, amount, reason_id)
 
-            tx_time = datetime.datetime.now()
+            sender_tx_time = pendulum.now(sender.default_organisation.timezone)
+            recipient_tx_time = pendulum.now(recipient.default_organisation.timezone)
+
             sender_balance = TokenProcessor.get_balance(sender)
             recipient_balance = TokenProcessor.get_balance(recipient)
             if exchanged_amount is None:
                 TokenProcessor.send_success_sms(
                     "send_token_sender_sms",
                     sender, recipient, amount,
-                    reason_str, tx_time,
+                    reason_str, sender_tx_time,
                     sender_balance)
 
                 TokenProcessor.send_success_sms(
                     "send_token_recipient_sms",
                     recipient, sender, amount,
-                    reason_str, tx_time,
+                    reason_str, recipient_tx_time,
                     recipient_balance)
             else:
                 TokenProcessor.exchange_success_sms(
                     "exchange_token_sender_sms",
                     sender, recipient,
                     amount, exchanged_amount,
-                    tx_time, sender_balance)
+                    sender_tx_time, sender_balance)
 
                 TokenProcessor.exchange_success_sms(
                     "exchange_token_agent_sms",
                     recipient, sender,
                     exchanged_amount,
-                    amount, tx_time,
+                    amount, recipient_tx_time,
                     recipient_balance)
 
         except Exception as e:
@@ -300,6 +307,7 @@ class TokenProcessor(object):
 
     @staticmethod
     def exchange_token(sender: User, agent: User, amount: float):
+        # TODO: is this check actually used?
         example_transfer = CreditTransfer(
             transfer_type=TransferTypeEnum.EXCHANGE,
             sender_user=sender,
@@ -320,16 +328,37 @@ class TokenProcessor(object):
             to_amount = TokenProcessor.transfer_token(
                 sender, agent, amount, transfer_subtype=TransferSubTypeEnum.AGENT_OUT
             )
-            tx_time = datetime.datetime.now()
+            sender_tx_time = pendulum.now(sender.default_organisation.timezone)
+            agent_tx_time = pendulum.now(agent.default_organisation.timezone)
             sender_balance = TokenProcessor.get_balance(sender)
             agent_balance = TokenProcessor.get_balance(agent)
-            TokenProcessor.exchange_success_sms("exchange_token_sender_sms", sender, agent, amount, to_amount, tx_time,
-                                                sender_balance)
-            TokenProcessor.exchange_success_sms("exchange_token_agent_sms", agent, sender, to_amount, amount, tx_time,
-                                                agent_balance)
+            TokenProcessor.exchange_success_sms(
+                "exchange_token_sender_sms", sender, agent, amount, to_amount, sender_tx_time, sender_balance
+            )
+            TokenProcessor.exchange_success_sms(
+                "exchange_token_agent_sms", agent, sender, to_amount, amount, agent_tx_time, agent_balance
+            )
 
-        except TransactionPercentLimitError as e:
-            TokenProcessor.send_sms(sender, "exchange_amount_error_sms", limit=f"{e.transfer_balance_percent * 100}%")
+        except TransferAmountLimitError as e:
+            TokenProcessor.send_sms(
+                sender,
+                "exchange_amount_error_sms",
+                amount=rounded_dollars(e.transfer_amount_limit),
+                token=e.token,
+                limit_period=e.limit_time_period_days
+            )
+        except TransactionBalanceFractionLimitError as e:
+            TokenProcessor.send_sms(
+                sender,
+                "exchange_fraction_error_sms",
+                token=e.token,
+                percent=f"{int(e.transfer_balance_fraction_limit * 100)}%"
+            )
         except TransactionCountLimitError as e:
-            TokenProcessor.send_sms(sender, "exchange_count_error_sms", transaction_count=e.transfer_count,
-                                    limit_period=e.time_period_days)
+            TokenProcessor.send_sms(
+                sender,
+                "exchange_count_error_sms",
+                count=e.transfer_count_limit,
+                token=e.token,
+                limit_period=e.limit_time_period_days
+            )
