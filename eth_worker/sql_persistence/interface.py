@@ -24,8 +24,7 @@ class SQLPersistenceInterface(object):
 
         (session.query(BlockchainTransaction)
          .filter(and_(BlockchainTransaction.status == 'PENDING',
-                      BlockchainTransaction.nonce != None,
-                      BlockchainTransaction.created < expire_time))
+                      BlockchainTransaction.submitted_date < expire_time))
          .update({BlockchainTransaction.status: 'FAILED',
                   BlockchainTransaction.error: 'Timeout Error'},
                  synchronize_session=False))
