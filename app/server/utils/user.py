@@ -29,7 +29,7 @@ from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, L
 from server.utils.i18n import i18n_for
 from server.utils.transfer_enums import TransferSubTypeEnum
 from server.utils.misc import rounded_dollars
-
+from server.utils.access_control import AccessControl
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -174,7 +174,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_tokenagent=False,
                                  is_groupaccount=False,
                                  is_self_sign_up=False,
-                                 business_usage=None):
+                                 business_usage=None,
+                                 initial_disbursement=None):
 
     user = User(first_name=first_name,
                 last_name=last_name,
@@ -249,8 +250,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         if token:
             transfer_account.token = token
 
-        if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
-            transfer_account.approve_and_disburse()
+        if not is_self_sign_up:
+            transfer_account.approve_and_disburse(initial_disbursement=initial_disbursement)
 
         db.session.add(transfer_account)
 
@@ -435,8 +436,7 @@ def proccess_create_or_modify_user_request(
     primary_user_identifier = attribute_dict.get('primary_user_identifier')
     primary_user_pin = attribute_dict.get('primary_user_pin')
 
-    additional_initial_disbursement = attribute_dict.get(
-        'additional_initial_disbursement', None)
+    initial_disbursement = attribute_dict.get('initial_disbursement', None)
 
     is_vendor = attribute_dict.get('is_vendor', None)
     if is_vendor is None:
@@ -561,7 +561,7 @@ def proccess_create_or_modify_user_request(
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
-        business_usage=business_usage)
+        business_usage=business_usage, initial_disbursement=initial_disbursement)
 
     if attribute_dict.get('gender'):
         attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
@@ -575,13 +575,14 @@ def proccess_create_or_modify_user_request(
         save_device_info(device_info=attribute_dict.get(
             'deviceInfo'), user=user)
 
-    if additional_initial_disbursement:
-        CreditTransferUtils.make_payment_transfer(
-            additional_initial_disbursement,
-            organisation.token,
-            receive_user=user,
-            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
-            automatically_resolve_complete=(additional_initial_disbursement <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']))
+    # if initial_disbursement:
+    #     # todo: fix
+    #     CreditTransferUtils.make_payment_transfer(
+    #         initial_disbursement,
+    #         organisation.token,
+    #         receive_user=user,
+    #         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+    #         automatically_resolve_complete=(initial_disbursement <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']))
 
     # Location fires an async task that needs to know user ID
     db.session.flush()

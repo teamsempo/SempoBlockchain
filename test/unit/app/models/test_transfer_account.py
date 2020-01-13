@@ -21,7 +21,7 @@ def test_approve_beneficiary_transfer_account(create_transfer_account_user):
     create_transfer_account_user.transfer_account.is_beneficiary = True
     create_transfer_account_user.transfer_account.approve_and_disburse()
 
-    assert create_transfer_account_user.transfer_account.balance == config.STARTING_BALANCE
+    assert create_transfer_account_user.transfer_account.balance == config.DEFAULT_INITIAL_DISBURSEMENT
 
 
 def test_approve_vendor_transfer_account(new_transfer_account):

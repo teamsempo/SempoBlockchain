@@ -17,7 +17,7 @@ export interface ICreateUser {
   lastName?: string
   publicSerialNumber?: string,
   phone?: string,
-  additionalInitialDisbursement?: number
+  initialDisbursement?: number
   bio?: string
   gender?: string
   location?: string
@@ -68,7 +68,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     this.props.initialize({
       accountType: TransferAccountTypes.USER.toLowerCase(),
       gender: 'female',
-      additionalInitialDisbursement: window.DEFAULT_INITIAL_DISBURSEMENT / 100 || undefined
+      initialDisbursement: window.DEFAULT_INITIAL_DISBURSEMENT / 100 || undefined
     });
   }
 
@@ -100,7 +100,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     let businessUsage;
 
     if (window.MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT > 0) {
-      initialDisbursementAmount = <InputField name="additionalInitialDisbursement" label={'Initial Disbursement Amount'}>
+      initialDisbursementAmount = <InputField name="initialDisbursement" label={'Initial Disbursement Amount'}>
         {organisation !== null ? organisation.token.symbol : null}
       </InputField>
     }

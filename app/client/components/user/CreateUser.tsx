@@ -72,7 +72,7 @@ class CreateUserUpdated extends React.Component<Props> {
       is_vendor: (form.accountType === 'vendor' || form.accountType === 'cashier'),
       is_tokenagent: form.accountType === 'tokenagent',
       is_groupaccount: form.accountType === 'groupaccount',
-      additional_initial_disbursement: (form.additionalInitialDisbursement || 0) * 100,
+      initial_disbursement: (form.initialDisbursement || 0) * 100,
       require_transfer_card_exists: this.props.login.requireTransferCardExists,
       existing_vendor_phone: form.existingVendorPhone,
       existing_vendor_pin: form.existingVendorPin,
