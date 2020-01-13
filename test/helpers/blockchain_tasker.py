@@ -26,7 +26,10 @@ class MockBlockchainTasker(object):
 
     @staticmethod
     def retry_failed(*args, **kwargs):
-        pass
+        return {
+            'failed_count': 10,
+            'pending_count': 2
+        }
 
     @staticmethod
     def create_blockchain_wallet(*args, **kwargs):

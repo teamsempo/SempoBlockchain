@@ -276,6 +276,8 @@ class SQLPersistenceInterface(object):
     def get_failed_tasks(self):
         return session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED').all()
 
+    def get_pending_tasks(self):
+        return session.query(BlockchainTask).filter(BlockchainTask.status == 'PENDING').all()
 
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 

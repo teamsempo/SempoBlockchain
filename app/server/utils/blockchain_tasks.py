@@ -125,7 +125,8 @@ class BlockchainTasker(object):
     def retry_failed(self):
         sig = celery_app.signature(self._eth_endpoint('retry_failed'))
 
-        sig.delay()
+        return self._execute_synchronous_celery(sig)
+
 
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
