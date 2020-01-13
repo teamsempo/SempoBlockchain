@@ -194,22 +194,23 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return approval
         return None
 
-    def approve_and_disburse(self, initial_disbursement, auto_resolve=False):
+    def approve_and_disburse(self, initial_disbursement=None, auto_resolve=False):
         from server.utils.access_control import AccessControl
 
         auto_approve = current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS']
+        admin = getattr(g, 'user', None)
 
-        if not self.is_approved:
-            if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin'):
+        if not self.is_approved and admin:
+            if AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'superadmin'):
                 auto_resolve = True
                 self.is_approved = True
 
-            elif AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
+            elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
                 auto_resolve = initial_disbursement \
                                <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']
                 self.is_approved = auto_approve
 
-            elif AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'subadmin'):
+            elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'subadmin'):
                 auto_resolve = False
                 self.is_approved = False
 
@@ -217,14 +218,14 @@ class TransferAccount(OneOrgBase, ModelBase):
             if len(self.credit_receives) < 1:
                 # approve_and_disburse might be called for a second time to disburse
                 # so first check that no credit transfer have already been received
-                disbursement = self.make_initial_disbursement(initial_disbursement, auto_resolve)
+                disbursement = self._make_initial_disbursement(initial_disbursement, auto_resolve)
                 return disbursement
 
-    def make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
+    def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
         from server.utils.credit_transfer import make_payment_transfer
 
-        initial_balance = initial_disbursement or current_app.config.get('DEFAULT_INITIAL_DISBURSEMENT', None)
-        if not initial_balance:
+        initial_disbursement = initial_disbursement or current_app.config.get('DEFAULT_INITIAL_DISBURSEMENT', None)
+        if not initial_disbursement:
             return None
 
         user_id = get_authorising_user_id()

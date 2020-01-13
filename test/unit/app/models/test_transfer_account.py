@@ -19,7 +19,7 @@ def test_approve_beneficiary_transfer_account(create_transfer_account_user):
     """
     import config
     create_transfer_account_user.transfer_account.is_beneficiary = True
-    create_transfer_account_user.transfer_account.approve_and_disburse()
+    create_transfer_account_user.transfer_account.approve_and_disburse(auto_resolve=True)
 
     assert create_transfer_account_user.transfer_account.balance == config.DEFAULT_INITIAL_DISBURSEMENT
 
