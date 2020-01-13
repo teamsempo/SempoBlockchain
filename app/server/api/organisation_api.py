@@ -56,8 +56,10 @@ class OrganisationAPI(MethodView):
         post_data = request.get_json()
 
         organisation_name = post_data.get('organisation_name')
-        token_id = post_data.get('token_id')
+        custom_welcome_message_key = post_data.get('custom_welcome_message_key')
+        timezone = post_data.get('timezone')
 
+        token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
 
         if organisation_name is None:
@@ -71,7 +73,11 @@ class OrganisationAPI(MethodView):
                     'data': {'organisation': organisation_schema.dump(existing_organisation).data}
                 })), 400
 
-        new_organisation = Organisation(name=organisation_name)
+        new_organisation = Organisation(
+            name=organisation_name,
+            custom_welcome_message_key=custom_welcome_message_key,
+            timezone=timezone)
+
         db.session.add(new_organisation)
         db.session.flush()
 

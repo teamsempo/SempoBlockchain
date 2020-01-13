@@ -6,7 +6,7 @@ from functools import partial
 import config
 from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_phone
 from migrations.seed import create_ussd_menus, create_business_categories
-from helpers.factories import UserFactory, TransferUsageFactory
+from helpers.factories import UserFactory, TransferUsageFactory, OrganisationFactory
 from server.models.credit_transfer import CreditTransfer
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
@@ -26,13 +26,16 @@ def init_seed(test_client, init_database):
     create_business_categories()
 
 
-def test_golden_path_send_token(mocker, test_client, init_database, initialised_blockchain_network, init_seed):
+def test_golden_path_send_token(mocker, test_client,
+                                init_database, initialised_blockchain_network, init_seed):
     token = Token.query.filter_by(symbol="SM1").first()
+    org = OrganisationFactory()
     sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
-                         pin_hash=User.salt_hash_secret('0000'))
+                         pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
     create_transfer_account_for_user(sender, token, 4220)
 
-    recipient = UserFactory(preferred_language="sw", phone=make_kenyan_phone(phone()), first_name="Joe", last_name="Bar")
+    recipient = UserFactory(preferred_language="sw", phone=make_kenyan_phone(phone()),
+                            first_name="Joe", last_name="Bar", default_organisation=org)
     create_transfer_account_for_user(recipient, token, 1980)
 
     messages = []
