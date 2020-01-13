@@ -108,7 +108,7 @@ class RDSMigrate:
             for user in users:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
-                        i, n_users, user['first_name'], user['name'], estimate_time_left))
+                        i, n_users, user['first_name'], user['phone'], estimate_time_left))
                 # pprint.pprint(user)
 
                 sempo_user = self.insert_user(user)
@@ -132,15 +132,13 @@ class RDSMigrate:
         phone_number = None if 'DELETED' in ge_user['phone'] else ge_user['phone']
 
         if not phone_number:
+            print("Phone Deleted, Skipping")
             return
 
         processed_phone = proccess_phone_number(phone_number)
         existing_user = User.query.filter_by(phone=processed_phone).execution_options(show_all=True).first()
         if existing_user:
             print(f'User already exists for phone {processed_phone}')
-            return
-
-        if ge_user['admin_id']:
             return
 
         if ge_user['business_type'] is not None:
