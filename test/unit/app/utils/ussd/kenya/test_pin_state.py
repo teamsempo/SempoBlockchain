@@ -14,9 +14,10 @@ fake.add_provider(phone_number)
 # why do i get dupes if i put it directly on standard_user...?
 phone = partial(fake.msisdn)
 
-unactivated_user = partial(UserFactory, is_activated=False)
-standard_user = partial(UserFactory, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
-pin_blocked_user = partial(UserFactory, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=3)
+base_user = partial(UserFactory, phone='+61400000000')
+unactivated_user = partial(base_user, is_activated=False)
+standard_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
+pin_blocked_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=3)
 
 initial_pin_entry_state = partial(UssdSessionFactory, state="initial_pin_entry")
 initial_pin_confirmation_state = partial(UssdSessionFactory, state="initial_pin_confirmation",
@@ -107,7 +108,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 def test_authorize_pin(test_client, init_database, session_factory, user_factory, user_input, expected,
                        before_failed_pin_attempts, after_failed_pin_attempts):
     session = session_factory()
-    user = user_factory()
+    user = user_factory(phone='+6140000000')
     user.failed_pin_attempts = before_failed_pin_attempts
 
     state_machine = KenyaUssdStateMachine(session, user)
