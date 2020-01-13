@@ -136,3 +136,5 @@ class ExchangeAPI(MethodView):
         }
 
         return make_response(jsonify(response_object)), 200
+
+#     Yay
