@@ -40,22 +40,11 @@ processor_task_config = {
     'retry_backoff': False
 }
 
-
-
-@signals.task_retry.connect
-@signals.task_failure.connect
-@signals.task_revoked.connect
-def on_task_failure(**kwargs):
-    """Abort transaction on task errors.
-    """
-    # celery exceptions will not be published to `sys.excepthook`. therefore we have to create another handler here.
-    from traceback import format_tb
-
-    print('[task:%s:%s]' % (kwargs.get('task_id'), kwargs['sender'].request.correlation_id, )
-              + '\n'
-              + ''.join(format_tb(kwargs.get('traceback', [])))
-              + '\n'
-              + str(kwargs.get('exception', '')))
+# @signals.task_failure.connect
+# def on_task_failure(**kwargs):
+#     print('[task:%s]' % (kwargs['sender'].request.correlation_id, )
+#           + '\n'
+#           + kwargs.get('einfo').traceback)
 
 @celery_app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):
