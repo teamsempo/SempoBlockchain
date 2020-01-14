@@ -31,7 +31,7 @@ def topup_wallets():
             if last_topup_task_uuid:
                 task = persistence_interface.get_task_from_uuid(last_topup_task_uuid)
 
-                if task.status in ['PENDING', 'UNSTARTED']:
+                if task and task.status in ['PENDING', 'UNSTARTED']:
                     return
 
             signature(utils.eth_endpoint('topup_wallet_if_required'),
