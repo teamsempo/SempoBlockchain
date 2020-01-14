@@ -1,9 +1,10 @@
 import celery
+from celery import signals
+
 import config
 import eth_manager.task_interfaces.composite
 from sql_persistence.models import session
 from eth_manager import celery_app, blockchain_processor, persistence_interface
-from functools import wraps
 from eth_manager.exceptions import (
     LockedNotAcquired
 )
@@ -39,6 +40,22 @@ processor_task_config = {
     'retry_backoff': False
 }
 
+
+
+@signals.task_retry.connect
+@signals.task_failure.connect
+@signals.task_revoked.connect
+def on_task_failure(**kwargs):
+    """Abort transaction on task errors.
+    """
+    # celery exceptions will not be published to `sys.excepthook`. therefore we have to create another handler here.
+    from traceback import format_tb
+
+    print('[task:%s:%s]' % (kwargs.get('task_id'), kwargs['sender'].request.correlation_id, )
+              + '\n'
+              + ''.join(format_tb(kwargs.get('traceback', [])))
+              + '\n'
+              + str(kwargs.get('exception', '')))
 
 @celery_app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):
