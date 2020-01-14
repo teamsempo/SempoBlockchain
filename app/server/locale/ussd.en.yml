@@ -184,11 +184,15 @@ en:
     send_token_recipient_sms: Successfully received a payment of %{amount} %{token_name} from %{other_user} for %{reason} on %{date} at %{time}. New %{token_name} balance is %{balance}
     exchange_token_sender_sms: Successfully sent a payment of %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} to %{other_user} on %{date} at %{time}. New %{own_token_name} balance is %{balance}
     exchange_token_agent_sms: Successfully received a payment of %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} from %{other_user} on %{date} at %{time}. New %{own_token_name} balance is %{balance}
-    exchange_rate_sms: |
+    exchange_rate_can_exchange_sms: |
       Exchange Rate:
       For 1 %{token_name} you get %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
       You can transfer a maximum of %{exchange_limit} %{token_name} at an agent every %{limit_period} days.
+    exchange_rate_sms: |
+      Exchange Rate:
+      For 1 %{token_name} you get %{exchange_rate} KSH
+      1000 %{token_name} = %{exchange_sample_value} KSH
     exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
     exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
     exchange_amount_error_sms: Sorry you have exceeded your %{token} transfer amount limit. You are allowed up to %{amount} %{token} per %{limit_period} days

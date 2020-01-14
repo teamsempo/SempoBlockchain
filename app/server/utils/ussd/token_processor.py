@@ -253,15 +253,24 @@ class TokenProcessor(object):
         exchange_limit = TokenProcessor.get_default_exchange_limit(default_limit, user)
         exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
 
-        TokenProcessor.send_sms(
-            user,
-            "exchange_rate_sms",
-            token_name=from_token.symbol,
-            exchange_rate=exchange_rate,
-            exchange_limit=rounded_dollars(exchange_limit),
-            exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
-            limit_period=default_limit.time_period_days
-        )
+        if exchange_limit:
+            TokenProcessor.send_sms(
+                user,
+                "exchange_rate_can_exchange_sms",
+                token_name=from_token.symbol,
+                exchange_rate=exchange_rate,
+                exchange_limit=rounded_dollars(exchange_limit),
+                exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
+                limit_period=default_limit.time_period_days
+            )
+        else:
+            TokenProcessor.send_sms(
+                user,
+                "exchange_rate_sms",
+                token_name=from_token.symbol,
+                exchange_rate=exchange_rate,
+                exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
+            )
 
     @staticmethod
     def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):
