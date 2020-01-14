@@ -8,6 +8,7 @@ from server.utils.auth import get_complete_auth_token
                          "recipient_user_id_accessor,"
                          "transfer_type, tier, transfer_status, status_code", [
     (None, None, lambda t: None, lambda u: None, lambda u: None, lambda u: None, None, 'view', None, 403),
+    (None, None, lambda t: None, lambda u: None, lambda u: None, lambda u: None, None, 'subadmin', None, 403),
     (None, None, lambda t: t.uuid, lambda u: None, lambda u: None, lambda u: None, None, 'admin', 'PENDING', 201),
     (0, None, lambda t: None, lambda u: None, lambda u: None, lambda u: None, None, 'admin', None, 400),
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, None, 'admin', None, 400),
@@ -20,8 +21,9 @@ from server.utils.auth import get_complete_auth_token
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'BALANCE', 'admin', None, 201),  # returns 400 in bulk
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'DISBURSEMENT', 'admin', 'PENDING', 201),
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'DISBURSEMENT', 'superadmin', 'COMPLETE', 201),
+    (-1, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'RECLAMATION', 'admin', None, 400),
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'RECLAMATION', 'admin', None, 400),
-    (10, None, lambda t: None, lambda u: None, lambda u: u.id, lambda u: None, 'RECLAMATION', 'admin', 'PENDING', 201),
+    (10, None, lambda t: None, lambda u: None, lambda u: u.id, lambda u: None, 'RECLAMATION', 'admin', 'PENDING', 201), #todo: bug: sometimes Line 82 transfer_status raises KeyError
     (10, None, lambda t: None, lambda u: None, lambda u: u.id, lambda u: None, 'RECLAMATION', 'superadmin', 'COMPLETE', 201),
 ])
 def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_transfer_account_user,
