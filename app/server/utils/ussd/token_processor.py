@@ -221,7 +221,7 @@ class TokenProcessor(object):
             token_exchanges = "\n".join(map(standard_string, token_info_list))
 
         # TODO: Don't love the string comparison here, but it keeps thing short
-        if token_exchanges == "\n":
+        if token_exchanges in ["\n", '']:
             TokenProcessor.send_sms(
                 user,
                 "send_balance_sms",
