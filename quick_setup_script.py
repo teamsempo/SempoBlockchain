@@ -177,6 +177,8 @@ class Setup(object):
     def create_cic_organisation(
             self,
             organisation_name,
+            custom_welcome_message_key,
+            timezone,
             exchange_contract_id,
             name,
             symbol,
@@ -190,6 +192,8 @@ class Setup(object):
                           json={
                               'deploy_cic': True,
                               'organisation_name': organisation_name,
+                              'custom_welcome_message_key': custom_welcome_message_key,
+                              'timezone': timezone,
                               'exchange_contract_id': exchange_contract_id,
                               'name': name,
                               'symbol': symbol,
@@ -287,6 +291,8 @@ if __name__ == '__main__':
 
     ge_org_id = s.create_cic_organisation(
         organisation_name='Grassroots Economics',
+        custom_welcome_message_key='grassroots',
+        timezone='Africa/Nairobi',
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
         symbol='SARAFU',
@@ -299,6 +305,8 @@ if __name__ == '__main__':
     foobar_org_id = s.create_cic_organisation(
         organisation_name='Foo Org',
         exchange_contract_id=exchange_contract_id,
+        custom_welcome_message_key=None,
+        timezone='Africa/Nairobi',
         name='FooBar',
         symbol='FOO',
         issue_amount_wei=int(100000e18),
