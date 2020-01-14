@@ -42,6 +42,9 @@ class CreditTransferAPI(MethodView):
 
             credit_transfer = CreditTransfer.query.get(credit_transfer_id)
 
+            if credit_transfer is None:
+                return make_response(jsonify({'message': 'Credit transfer not found'})), 404
+
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump([credit_transfer]).data
             elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
@@ -58,7 +61,7 @@ class CreditTransferAPI(MethodView):
                 }
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
         else:
 
@@ -116,7 +119,7 @@ class CreditTransferAPI(MethodView):
                 }
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, credit_transfer_id):
@@ -455,7 +458,7 @@ credit_transfer_blueprint.add_url_rule(
 )
 
 credit_transfer_blueprint.add_url_rule(
-    '/credit_transfer/<int:credit_transfer_id>/',
+    '/credit_transfer/<int:credit_transfer_id>',
     view_func=CreditTransferAPI.as_view('single_transfer_account_credit_transfer_view'),
     methods=['GET', 'PUT']
 )
