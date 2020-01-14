@@ -76,9 +76,15 @@ class TransferAccountList extends React.Component {
     this.props.setSelected(selected)
   }
 
-  componentDidUpdate(newProps) {
+  componentDidUpdate(newProps, prevState) {
     if (this.props.creditTransfers.createStatus.success !== newProps.creditTransfers.createStatus.success) {
       this.setState({newTransfer: false});
+    }
+
+    if (prevState.transfer_account_ids !== this.state.transfer_account_ids) {
+      if (this.get_selected_ids_array(this.state.transfer_account_ids).length === 0) {
+        this.setState({newTransfer: false})
+      }
     }
 
     if (this.props.item_list !== undefined && this.props.item_list !== newProps.item_list) {

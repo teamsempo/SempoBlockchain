@@ -11,7 +11,7 @@ from server.exceptions import (
     InsufficientBalanceError,
     AccountNotApprovedError,
     InvalidTargetBalanceError,
-    BlockchainError
+    TransferAccountNotFoundError
 )
 
 from server import db, sentry, red, bt
@@ -600,8 +600,8 @@ def make_target_balance_transfer(target_balance,
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
 
-    # TODO: Yep Fix
-    raise NotImplementedError("target_user.transfer account needs to be fixed")
+    if target_user.transfer_account is None:
+        raise TransferAccountNotFoundError('Transfer account not found')
 
     transfer_amount = target_balance - target_user.transfer_account.balance
 
@@ -609,20 +609,24 @@ def make_target_balance_transfer(target_balance,
         raise InvalidTargetBalanceError("Setting balance would force withdrawal")
 
     if transfer_amount < 0:
-        transfer = make_payment_transfer(transfer_amount, target_user,
-                                            transfer_mode,
-                                            require_sender_approved=require_target_user_approved,
-                                            require_sufficient_balance=require_sufficient_balance,
-                                            automatically_resolve_complete=automatically_resolve_complete,
-                                            uuid=uuid,
-                                            transfer_subtype=TransferSubTypeEnum.RECLAMATION)
+        transfer = make_payment_transfer(transfer_amount,
+                                         target_user.transfer_account.token,
+                                         send_user=target_user,
+                                         transfer_mode=transfer_mode,
+                                         require_sender_approved=require_target_user_approved,
+                                         require_sufficient_balance=require_sufficient_balance,
+                                         automatically_resolve_complete=automatically_resolve_complete,
+                                         uuid=uuid,
+                                         transfer_subtype=TransferSubTypeEnum.RECLAMATION)
 
     else:
-        transfer = make_payment_transfer(transfer_amount, target_user,
-                                            transfer_mode,
-                                            automatically_resolve_complete=automatically_resolve_complete,
-                                            uuid=uuid,
-                                            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
+        transfer = make_payment_transfer(transfer_amount,
+                                         target_user.transfer_account.token,
+                                         receive_user=target_user,
+                                         transfer_mode=transfer_mode,
+                                         automatically_resolve_complete=automatically_resolve_complete,
+                                         uuid=uuid,
+                                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
 
     return transfer
 

@@ -82,7 +82,7 @@ class NewTransferManager extends React.Component {
             target_balance,
             transfer_type,
         });
-      } else {
+      } else if (this.props.transfer_account_ids.length === 1) {
         // SINGLE TRANSFER
         if (transfer_type === 'DISBURSEMENT') {
             recipient_transfer_account_id = recipient_transfer_accounts_ids[0];
@@ -178,15 +178,6 @@ const TopRow = styled.div`
   display: flex;
   width: 100%;
   justify-content: space-between;
-`;
-
-const ButtonWrapper = styled.div`
-  margin: auto 1em;
-  @media (max-width: 767px) {
-  margin: auto 1em;
-  display: flex;
-  flex-direction: column;
-  }
 `;
 
 const Row = styled.div`
