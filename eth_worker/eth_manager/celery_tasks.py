@@ -87,7 +87,9 @@ def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold
 
 @celery_app.task(**base_task_config)
 def topup_wallets(self):
-    eth_manager.task_interfaces.composite.topup_wallets()
+    # TODO: Reenable this once there's a worker for it
+    return True
+    # eth_manager.task_interfaces.composite.topup_wallets()
 
 
 # Set retry attempts to zero since beat will retry shortly anyway
