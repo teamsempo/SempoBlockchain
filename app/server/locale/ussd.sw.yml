@@ -95,7 +95,7 @@ sw:
       2. Badilisha biashara
       0. Nyuma
     about_my_business:
-      bio: END %{user_bio}
+      bio: END Unauza %{user_bio}
       none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza

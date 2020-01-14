@@ -95,7 +95,7 @@ en:
       2. Change my business
       0. Back
     about_my_business:
-      bio: END %{user_bio}
+      bio: END You sell %{user_bio}
       none: END No business set, please go to Change My Business to set it to something
     change_my_business_prompt: |
       CON Please enter a product or service you offer
