@@ -2,7 +2,7 @@ from typing import Optional, Union
 from decimal import Decimal
 import datetime, enum
 from sqlalchemy.sql import func
-from flask import current_app
+from flask import current_app, g
 from sqlalchemy.ext.hybrid import hybrid_property
 from server import db, bt
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, get_authorising_user_id
@@ -194,19 +194,38 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return approval
         return None
 
-    def approve_and_disburse(self):
-        if not self.is_approved:
-            self.is_approved = True
+    def approve_and_disburse(self, initial_disbursement=None, auto_resolve=False):
+        from server.utils.access_control import AccessControl
 
-            if self.is_beneficiary:
-                disbursement = self.make_initial_disbursement()
+        auto_approve = current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS']
+        admin = getattr(g, 'user', None)
+
+        if not self.is_approved and admin:
+            if AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'superadmin'):
+                auto_resolve = True
+                self.is_approved = True
+
+            elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
+                auto_resolve = initial_disbursement \
+                               <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']
+                self.is_approved = auto_approve
+
+            elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'subadmin'):
+                auto_resolve = False
+                self.is_approved = False
+
+        if self.is_beneficiary:
+            if len(self.credit_receives) < 1:
+                # approve_and_disburse might be called for a second time to disburse
+                # so first check that no credit transfer have already been received
+                disbursement = self._make_initial_disbursement(initial_disbursement, auto_resolve)
                 return disbursement
 
-    def make_initial_disbursement(self, initial_balance=None):
+    def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
         from server.utils.credit_transfer import make_payment_transfer
-        initial_balance = initial_balance or current_app.config.get('STARTING_BALANCE', None)
 
-        if not initial_balance:
+        initial_disbursement = initial_disbursement or current_app.config.get('DEFAULT_INITIAL_DISBURSEMENT', None)
+        if not initial_disbursement:
             return None
 
         user_id = get_authorising_user_id()
@@ -216,9 +235,9 @@ class TransferAccount(OneOrgBase, ModelBase):
             sender = self.primary_user
 
         disbursement = make_payment_transfer(
-            initial_balance, token=self.token, send_user=sender, receive_user=self.primary_user,
+            initial_disbursement, token=self.token, send_user=sender, receive_user=self.primary_user,
             transfer_subtype=TransferSubTypeEnum.DISBURSEMENT, is_ghost_transfer=False, require_sender_approved=False,
-            require_recipient_approved=False)
+            require_recipient_approved=False, automatically_resolve_complete=auto_resolve)
 
         return disbursement
 

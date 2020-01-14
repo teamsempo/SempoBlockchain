@@ -153,7 +153,7 @@ def requires_auth(f=None,
                             response_object = {
                                 'message': 'user does not have any of the allowed roles: ' + str(allowed_roles),
                             }
-                            return make_response(jsonify(response_object)), 401
+                            return make_response(jsonify(response_object)), 403
 
                     # ----- AUTH PASSED, DO FINAL SETUP -----
 

@@ -46,8 +46,7 @@ function* updateStateFromCreditTransfer(result) {
     yield put({type: UPDATE_USER_LIST, users});
   }
 
-  if (result.message === 'Transfer Successful') {
-    //TODO: More string comparisons!??!?!
+  if (result.is_create === true) {
     // a single transfer was just created!
     // we need to add the newly created credit_transfer id
     // to the associated transfer_account object credit_transfer array
@@ -56,7 +55,8 @@ function* updateStateFromCreditTransfer(result) {
   }
 
   if (result.bulk_responses) {
-    yield put({type: ADD_FLASH_MESSAGE, error: result.bulk_responses[0].status !== 200, message: result.bulk_responses[0].message});
+    // bulk transfers created!
+    yield put({type: ADD_FLASH_MESSAGE, error: result.bulk_responses[0].status !== 201, message: result.bulk_responses[0].message});
   }
 
   const transfer_stats = result.data.transfer_stats;
