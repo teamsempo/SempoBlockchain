@@ -293,6 +293,7 @@ class CreditTransferAPI(MethodView):
                         send_user=sender_user,
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.RECLAMATION,
+                        require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve)
 
                 elif transfer_type == 'DISBURSEMENT':

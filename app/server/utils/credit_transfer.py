@@ -591,12 +591,10 @@ def make_deposit_transfer(transfer_amount,
 def make_target_balance_transfer(target_balance,
                                  target_user,
                                  transfer_mode=None,
-                                 allow_withdrawal=False,
                                  require_target_user_approved=True,
                                  require_sufficient_balance=True,
                                  automatically_resolve_complete=True,
                                  uuid=None):
-
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
 
@@ -605,15 +603,13 @@ def make_target_balance_transfer(target_balance,
 
     transfer_amount = target_balance - target_user.transfer_account.balance
 
-    if transfer_amount < 0 and not allow_withdrawal:
-        raise InvalidTargetBalanceError("Setting balance would force withdrawal")
-
     if transfer_amount < 0:
-        transfer = make_payment_transfer(transfer_amount,
+        transfer = make_payment_transfer(abs(transfer_amount),
                                          target_user.transfer_account.token,
                                          send_user=target_user,
                                          transfer_mode=transfer_mode,
                                          require_sender_approved=require_target_user_approved,
+                                         require_recipient_approved=False,
                                          require_sufficient_balance=require_sufficient_balance,
                                          automatically_resolve_complete=automatically_resolve_complete,
                                          uuid=uuid,

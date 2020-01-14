@@ -109,7 +109,11 @@ class NewTransferManager extends React.Component {
             target_balance,
             transfer_type,
         });
+      } else {
+        window.alert('Must select at least one user')
       }
+    } else {
+      window.alert('Must enter an amount')
     }
   }
 
