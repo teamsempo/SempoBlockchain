@@ -172,8 +172,6 @@ class Exchange(BlockchainTaskableBase):
 
         signing_address = self.from_transfer.sender_transfer_account.blockchain_address
 
-        # topup_task_uuid = bt.topup_wallet_if_required(signing_address)
-
         prior = []
 
         # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
