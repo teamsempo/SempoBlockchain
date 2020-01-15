@@ -25,6 +25,10 @@ class MockBlockchainTasker(object):
         pass
 
     @staticmethod
+    def retry_failed(*args, **kwargs):
+        pass
+
+    @staticmethod
     def create_blockchain_wallet(*args, **kwargs):
         return MockBlockchainTasker._blockchain_address()
 

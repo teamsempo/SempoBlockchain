@@ -104,11 +104,13 @@ class RDSMigrate:
             estimate_time_left = 'unknown'
 
             ge_address_to_user = {}
+
             for user in users:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
                         i, n_users, user['first_name'], user['name'], estimate_time_left))
                 # pprint.pprint(user)
+
                 sempo_user = self.insert_user(user)
 
                 if sempo_user:

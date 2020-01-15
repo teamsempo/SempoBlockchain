@@ -28,7 +28,7 @@ class SpendApproval(ModelBase):
             token=self.token,
             spender=address_getting_approved,
             amount=1000000,
-            dependent_on_tasks=[eth_send_task_uuid])
+            prior_tasks=[eth_send_task_uuid])
 
         self.eth_send_task_uuid = eth_send_task_uuid
         self.approval_task_uuid = approval_task_uuid

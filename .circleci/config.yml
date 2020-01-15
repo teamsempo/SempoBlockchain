@@ -219,5 +219,6 @@ workflows:
             branches:
               only:
                 - master
+                - auto_topup
           requires:
             - test

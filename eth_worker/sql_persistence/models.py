@@ -113,8 +113,8 @@ class BlockchainWallet(ModelBase):
 # https://stackoverflow.com/questions/20830118/creating-a-self-referencing-m2m-relationship-in-sqlalchemy-flask
 task_dependencies = Table(
     'task_dependencies', Base.metadata,
-    Column('dependent_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True),
-    Column('dependee_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True)
+    Column('prior_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True),
+    Column('posterior_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True)
 )
 
 class BlockchainTask(ModelBase):
@@ -147,11 +147,11 @@ class BlockchainTask(ModelBase):
                                 backref='task',
                                 lazy=True)
 
-    dependees = relationship('BlockchainTask',
+    prior_tasks = relationship('BlockchainTask',
                              secondary=task_dependencies,
-                             primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
-                             secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
-                             backref='dependents')
+                             primaryjoin="BlockchainTask.id == task_dependencies.c.posterior_task_id",
+                             secondaryjoin="BlockchainTask.id == task_dependencies.c.prior_task_id",
+                             backref='posterior_tasks')
 
     @hybrid_property
     def type(self):
