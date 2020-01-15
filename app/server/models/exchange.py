@@ -18,7 +18,7 @@ from server.models.utils import (
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 from server.utils.root_solver import find_monotonic_increasing_bounds, false_position_method
-from server.exceptions import InsufficientBalanceError
+from server.exceptions import InsufficientBalanceError, SubexchangeNotFound
 
 
 class ExchangeContract(ModelBase):
@@ -66,8 +66,15 @@ class ExchangeContract(ModelBase):
 
     def get_subexchange_details(self, token_address):
         if self.subexchange_address_mapping is None:
-            return None
-        return self.subexchange_address_mapping.get(token_address, None)
+            raise SubexchangeNotFound
+
+        details = self.subexchange_address_mapping.get(token_address, None)
+
+        if not details:
+            raise SubexchangeNotFound
+
+        return details
+
 
     def _add_subexchange(self, token_address, subexchange_address, subexchange_reserve_ratio_ppm):
         if self.subexchange_address_mapping is None:
@@ -127,25 +134,31 @@ class Exchange(BlockchainTaskableBase):
     from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
     to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
 
-    def get_exchange_rate(self, from_token, to_token):
-        if self.exchange_rate is not None:
-            return self.exchange_rate
+    @staticmethod
+    def get_exchange_rate(from_token, to_token):
+        """
+        eg if from USD to AUD, and 1 USD buys 2 AUD
+        return AUD 2
+        :param from_token:
+        :param to_token:
+        :return:
+        """
 
         from_amount = 1
-        self.from_token = from_token
-        self.to_token = to_token
 
-        exchange_contract = self._find_exchange_contract(from_token, to_token)
+        exchange_contract = Exchange._find_exchange_contract(from_token, to_token)
 
         to_amount = bt.get_conversion_amount(
             exchange_contract=exchange_contract,
             from_token=from_token,
             to_token=to_token,
             from_amount=from_amount)
-        self.exchange_rate = to_amount/from_amount
-        return self.exchange_rate
 
-    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None, dependent_task_uuids=[]):
+        return to_amount/from_amount
+
+    def exchange_from_amount(
+            self, user, from_token, to_token, from_amount, calculated_to_amount=None, prior_task_uuids=None
+    ):
         self.user = user
         self.from_token = from_token
         self.to_token = to_token
@@ -170,9 +183,7 @@ class Exchange(BlockchainTaskableBase):
 
         signing_address = self.from_transfer.sender_transfer_account.blockchain_address
 
-        topup_task_uuid = bt.topup_wallet_if_required(signing_address)
-
-        dependent = [topup_task_uuid] if topup_task_uuid else []
+        prior = []
 
         # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
         # We need to approve all the tokens involved for spend by the exchange contract
@@ -181,7 +192,7 @@ class Exchange(BlockchainTaskableBase):
             token=to_token,
             spender=exchange_contract.blockchain_address,
             amount=from_amount * 100000,
-            dependent_on_tasks=dependent
+            prior_tasks=prior
         )
 
         reserve_approval_uuid = bt.make_approval(
@@ -189,7 +200,7 @@ class Exchange(BlockchainTaskableBase):
             token=exchange_contract.reserve_token,
             spender=exchange_contract.blockchain_address,
             amount=from_amount * 100000,
-            dependent_on_tasks=dependent
+            prior_tasks=prior
         )
 
         from_approval_uuid = bt.make_approval(
@@ -197,7 +208,7 @@ class Exchange(BlockchainTaskableBase):
             token=from_token,
             spender=exchange_contract.blockchain_address,
             amount=from_amount*100000,
-            dependent_on_tasks=dependent
+            prior_tasks=prior
         )
 
         if calculated_to_amount:
@@ -218,7 +229,7 @@ class Exchange(BlockchainTaskableBase):
             to_token=to_token,
             reserve_token=exchange_contract.reserve_token,
             from_amount=from_amount,
-            dependent_on_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + dependent_task_uuids
+            prior_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + (prior_task_uuids or [])
         )
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(
@@ -247,7 +258,8 @@ class Exchange(BlockchainTaskableBase):
 
         self.exchange_from_amount(user, from_token, to_token, from_amount, calculated_to_amount)
 
-    def _find_exchange_contract(self, from_token, to_token):
+    @staticmethod
+    def _find_exchange_contract(from_token, to_token):
 
         def exchangeable_by_contract(token, contract):
             return token == contract.reserve_token or token in contract.exchangeable_tokens
