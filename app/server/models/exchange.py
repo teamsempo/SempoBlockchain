@@ -145,7 +145,9 @@ class Exchange(BlockchainTaskableBase):
         self.exchange_rate = to_amount/from_amount
         return self.exchange_rate
 
-    def exchange_from_amount(self, user, from_token, to_token, from_amount, calculated_to_amount=None, dependent_task_uuids=[]):
+    def exchange_from_amount(
+            self, user, from_token, to_token, from_amount, calculated_to_amount=None, prior_task_uuids=None
+    ):
         self.user = user
         self.from_token = from_token
         self.to_token = to_token
@@ -170,9 +172,9 @@ class Exchange(BlockchainTaskableBase):
 
         signing_address = self.from_transfer.sender_transfer_account.blockchain_address
 
-        topup_task_uuid = bt.topup_wallet_if_required(signing_address)
+        # topup_task_uuid = bt.topup_wallet_if_required(signing_address)
 
-        dependent = [topup_task_uuid] if topup_task_uuid else []
+        prior = []
 
         # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
         # We need to approve all the tokens involved for spend by the exchange contract
@@ -181,7 +183,7 @@ class Exchange(BlockchainTaskableBase):
             token=to_token,
             spender=exchange_contract.blockchain_address,
             amount=from_amount * 100000,
-            dependent_on_tasks=dependent
+            prior_tasks=prior
         )
 
         reserve_approval_uuid = bt.make_approval(
@@ -189,7 +191,7 @@ class Exchange(BlockchainTaskableBase):
             token=exchange_contract.reserve_token,
             spender=exchange_contract.blockchain_address,
             amount=from_amount * 100000,
-            dependent_on_tasks=dependent
+            prior_tasks=prior
         )
 
         from_approval_uuid = bt.make_approval(
@@ -197,7 +199,7 @@ class Exchange(BlockchainTaskableBase):
             token=from_token,
             spender=exchange_contract.blockchain_address,
             amount=from_amount*100000,
-            dependent_on_tasks=dependent
+            prior_tasks=prior
         )
 
         if calculated_to_amount:
@@ -218,7 +220,7 @@ class Exchange(BlockchainTaskableBase):
             to_token=to_token,
             reserve_token=exchange_contract.reserve_token,
             from_amount=from_amount,
-            dependent_on_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + dependent_task_uuids
+            prior_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + (prior_task_uuids or [])
         )
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(

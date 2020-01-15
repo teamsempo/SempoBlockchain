@@ -159,7 +159,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             from_address=self.sender_transfer_account.blockchain_address,
             to_address=self.recipient_transfer_account.blockchain_address,
             amount=self.transfer_amount,
-            dependent_on_tasks=
+            prior_tasks=
             list(filter(lambda x: x is not None,
                         [
                             sender_approval.eth_send_task_uuid, sender_approval.approval_task_uuid,

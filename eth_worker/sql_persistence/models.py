@@ -18,7 +18,12 @@ ALLOWED_TASK_TYPES = ['SEND_ETH', 'FUNCTION', 'DEPLOY_CONTRACT']
 STATUS_STRING_TO_INT = {'SUCCESS': 1, 'PENDING': 2, 'UNSTARTED': 3, 'FAILED': 4, 'UNKNOWN': 99}
 STATUS_INT_TO_STRING = {v: k for k, v in STATUS_STRING_TO_INT.items()}
 
-engine = create_engine(config.ETH_DATABASE_URI, pool_size=40, max_overflow=100)
+engine = create_engine(
+    config.ETH_DATABASE_URI,
+    pool_size=config.ETH_WORKER_DB_POOL_SIZE,
+    max_overflow=config.ETH_WORKER_DB_POOL_OVERFLOW
+)
+
 session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = scoped_session(session_factory)
 
@@ -113,8 +118,8 @@ class BlockchainWallet(ModelBase):
 # https://stackoverflow.com/questions/20830118/creating-a-self-referencing-m2m-relationship-in-sqlalchemy-flask
 task_dependencies = Table(
     'task_dependencies', Base.metadata,
-    Column('dependent_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True),
-    Column('dependee_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True)
+    Column('prior_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True),
+    Column('posterior_task_id', Integer, ForeignKey('blockchain_task.id'), primary_key=True)
 )
 
 class BlockchainTask(ModelBase):
@@ -147,11 +152,11 @@ class BlockchainTask(ModelBase):
                                 backref='task',
                                 lazy=True)
 
-    dependees = relationship('BlockchainTask',
+    prior_tasks = relationship('BlockchainTask',
                              secondary=task_dependencies,
-                             primaryjoin="BlockchainTask.id == task_dependencies.c.dependee_task_id",
-                             secondaryjoin="BlockchainTask.id == task_dependencies.c.dependent_task_id",
-                             backref='dependents')
+                             primaryjoin="BlockchainTask.id == task_dependencies.c.posterior_task_id",
+                             secondaryjoin="BlockchainTask.id == task_dependencies.c.prior_task_id",
+                             backref='posterior_tasks')
 
     @hybrid_property
     def type(self):

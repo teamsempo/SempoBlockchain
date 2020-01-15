@@ -160,7 +160,7 @@ class TokenProcessor(object):
         if sent_token.id != received_token.id:
             exchange = Exchange()
             exchange.exchange_from_amount(user=recipient, from_token=sent_token, to_token=received_token,
-                                          from_amount=amount, dependent_task_uuids=[transfer.blockchain_task_uuid])
+                                          from_amount=amount, prior_task_uuids=[transfer.blockchain_task_uuid])
             exchanged_amount = exchange.to_transfer.transfer_amount
 
         return exchanged_amount
