@@ -46,11 +46,16 @@ class KenyaUssdProcessor:
     @staticmethod
     def custom_display_text(menu: UssdMenu, ussd_session: UssdSession, user: User) -> Optional[str]:
         if menu.name == 'about_my_business':
-            bio = user.custom_attributes.filter_by(name='bio').first()
-            if bio is None:
+            bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
+            if bio:
+                bio_text = bio.value.strip('"')
+            else:
+                bio_text = None
+
+            if bio_text is None or '':
                 return i18n_for(user, "{}.none".format(menu.display_key))
             else:
-                return i18n_for(user, "{}.bio".format(menu.display_key), user_bio=bio)
+                return i18n_for(user, "{}.bio".format(menu.display_key), user_bio=bio_text)
 
         if menu.name == 'send_token_confirmation':
             recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)
