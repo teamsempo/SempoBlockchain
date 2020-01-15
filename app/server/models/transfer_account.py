@@ -197,7 +197,6 @@ class TransferAccount(OneOrgBase, ModelBase):
     def approve_and_disburse(self, initial_disbursement=None, auto_resolve=False):
         from server.utils.access_control import AccessControl
 
-        auto_approve = current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS']
         admin = getattr(g, 'user', None)
 
         if not self.is_approved and admin:
@@ -207,7 +206,7 @@ class TransferAccount(OneOrgBase, ModelBase):
 
             elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
                 auto_resolve = initial_disbursement != current_app.config['DEFAULT_INITIAL_DISBURSEMENT']
-                self.is_approved = auto_approve
+                self.is_approved = True
 
             elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'subadmin'):
                 auto_resolve = False
