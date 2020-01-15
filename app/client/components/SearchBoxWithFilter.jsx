@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from 'react-redux';
-import { ModuleBox, StyledSelect, Input} from "./styledElements";
+import { ModuleBox, StyledSelect, Input, StyledButton} from "./styledElements";
 import styled from "styled-components";
 import matchSorter from "match-sorter";
 
@@ -91,14 +91,16 @@ class SearchBoxWithFilter extends React.Component {
     var item_list = this.props.item_list;
 
     const proccess_attribute = (name, value) => {
-      if (attribute_dict[name] === undefined) {
-        // This means that the attribute name has not been seen at all, which means we can just create array
-        attribute_dict[name] = [value]
-      } else {
-        // Attribute name has been seen, check if attribute VALUE has been seen
-        if (attribute_dict[name].indexOf(value) === -1) {
-          //hasn't been seen, so add
-          attribute_dict[name].push(value)
+      if (value !== undefined && value !== null) {
+        if (attribute_dict[name] === undefined) {
+          // This means that the attribute name has not been seen at all, which means we can just create array
+          attribute_dict[name] = [value]
+        } else {
+          // Attribute name has been seen, check if attribute VALUE has been seen
+          if (attribute_dict[name].indexOf(value) === -1) {
+            //hasn't been seen, so add
+            attribute_dict[name].push(value)
+          }
         }
       }
     };
@@ -108,7 +110,7 @@ class SearchBoxWithFilter extends React.Component {
       item_list
         .filter(item => item.custom_attributes !== undefined)
         .map(item => Object.keys(item.custom_attributes).map(attribute_name => {
-          let attribute_value = item.custom_attributes[attribute_name]['value'];
+          let attribute_value = item.custom_attributes[attribute_name];
           proccess_attribute(attribute_name, attribute_value)
         }));
 
@@ -123,13 +125,12 @@ class SearchBoxWithFilter extends React.Component {
         })
       })
     }
-
     return attribute_dict
   }
 
   keyNameChange(name, value) {
     var keyNameValues = this.state.possibleFilters[value];
-    // this.setState({ [evt.target.name]: evt.target.value });
+
     if (keyNameValues !== undefined) {
       // resets keyName and keyNameValues to default to avoid controlled/uncontrolled checkbox error
       // maps over new keyNameValues,
@@ -315,7 +316,7 @@ class SearchBoxWithFilter extends React.Component {
     if (isSelected) {
       var addFilterBtn =
         <div>
-          <FilterText onClick={this.addFilter}>Add</FilterText>
+          <StyledButton style={{fontWeight: '400', margin: '0em 1em', lineHeight: '25px', height: '25px'}} onClick={this.addFilter}>Add</StyledButton>
         </div>
     }
 
@@ -468,8 +469,6 @@ class SearchBoxWithFilter extends React.Component {
     }
 
     return(
-
-
       <div>
         <ModuleBox>
           <SearchWrapper>

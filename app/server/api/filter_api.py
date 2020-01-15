@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, jsonify
+from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from server import db
 from server.models.saved_filter import SavedFilter
@@ -51,11 +51,12 @@ class SavedFiltersAPI(MethodView):
 
         create_filter = SavedFilter(
             name=filter_name,
-            filter=filter_attributes
+            filter=filter_attributes,
+            organisation_id=g.user.default_organisation_id
         )
 
         db.session.add(create_filter)
-        db.session.commit()
+        db.session.flush()
 
         response_object = {
             'message': 'Filter {} created'.format(filter_name),
