@@ -206,8 +206,7 @@ class TransferAccount(OneOrgBase, ModelBase):
                 self.is_approved = True
 
             elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
-                auto_resolve = initial_disbursement \
-                               <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']
+                auto_resolve = initial_disbursement != current_app.config['DEFAULT_INITIAL_DISBURSEMENT']
                 self.is_approved = auto_approve
 
             elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'subadmin'):
