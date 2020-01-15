@@ -1,7 +1,7 @@
 import datetime
 import base64
 import re
-from flask import current_app
+from flask import current_app, request
 from eth_utils import keccak
 from cryptography.fernet import Fernet
 from server.models.settings import Settings
@@ -10,6 +10,13 @@ last_marker = datetime.datetime.utcnow()
 
 from eth_keys import keys
 
+
+def get_parsed_arg_list(arg_name: str, to_lower=False) -> list:
+    list_string = request.args.get(arg_name)
+    if list_string:
+        return [x.lower() if to_lower else x for x in list_string.split(",")]
+    else:
+        return []
 
 def round_amount(amount):
     if int(amount) == float(amount) and int(amount) > 1000:

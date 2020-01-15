@@ -6,7 +6,9 @@ import toastedmarshmallow
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
+from server.models.exchange import Exchange
 from server.constants import GE_FILTER_ATTRIBUTES
+from server.exceptions import SubexchangeNotFound
 
 
 class LowerCase(fields.Field):
@@ -105,6 +107,21 @@ class TokenSchema(SchemaBase):
     address             = fields.Str()
     symbol              = fields.Str()
     name                = fields.Str()
+
+    def get_exchange_rates(self, obj):
+        rates = {}
+        for to_token in self.context.get('exchange_pairs', []):
+            if to_token != obj:
+                try:
+                    rate = Exchange.get_exchange_rate(obj, to_token)
+                    rates[to_token.symbol] = rate
+
+                except SubexchangeNotFound:
+                    pass
+
+        return rates
+
+    exchange_rates = fields.Method("get_exchange_rates")
 
     # exchange_contracts  = fields.Nested("server.schemas.ExchangeContractSchema", many=True)
 

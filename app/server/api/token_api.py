@@ -2,19 +2,31 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
 from server import db, bt
+from server.utils.misc import get_parsed_arg_list
 from server.utils.auth import requires_auth
 from server.models.token import Token, TokenType
 from server.models.exchange import ExchangeContract
 from server.schemas import token_schema, tokens_schema
 
 token_blueprint = Blueprint('token', __name__)
+from sqlalchemy import func
 
 
 class TokenAPI(MethodView):
 
-    @requires_auth(allowed_basic_auth_types=['internal'])
     def get(self):
-        tokens = Token.query.all()
+
+        symbols = get_parsed_arg_list('symbols', to_lower=True)
+        exchange_pairs = get_parsed_arg_list('exchange_pairs', to_lower=True)
+
+        if len(symbols) > 0:
+            tokens = Token.query.filter(func.lower(Token.symbol).in_(symbols)).all()
+        else:
+            tokens = Token.query.all()
+
+        exchange_pair_tokens = Token.query.filter(func.lower(Token.symbol).in_(exchange_pairs)).all()
+
+        tokens_schema.context = {'exchange_pairs': exchange_pair_tokens}
 
         response_object = {
             'message': 'success',
