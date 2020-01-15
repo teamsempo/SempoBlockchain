@@ -12,8 +12,8 @@ def deploy_cic_token(post_data, creating_org=None):
     name = post_data['name']
     symbol = post_data['symbol']
     decimals = post_data.get('decimals', 18)
-    issue_amount_wei = post_data['issue_amount_wei']
-    reserve_deposit_wei = post_data['reserve_deposit_wei']
+    issue_amount_wei = int(post_data['issue_amount_wei'])
+    reserve_deposit_wei = int(post_data['reserve_deposit_wei'])
     exchange_contract_id = post_data['exchange_contract_id']
     reserve_ratio_ppm = post_data.get('reserve_ratio_ppm', 250000)
 

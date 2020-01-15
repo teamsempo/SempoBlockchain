@@ -227,7 +227,7 @@ celery_app = Celery('tasks',
 
 
 encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
-dependent_on_tasks = None
+prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)
 

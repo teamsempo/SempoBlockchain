@@ -53,7 +53,7 @@ def topup_if_required(address):
                             'signing_address': config.MASTER_WALLET_ADDRESS,
                             'amount_wei': wei_target_balance - balance,
                             'recipient_address': address,
-                            'dependent_on_tasks': []
+                            'prior_tasks': []
                         })
 
         task_uuid = utils.execute_task(sig)
@@ -162,7 +162,7 @@ def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_w
         args=[deploying_address]
     )
 
-    print(f'Account balance is: {balance}')
+    print(f'Account balance for {reserve_token_address} is: {balance}')
 
     return reserve_token_address
 
@@ -176,32 +176,38 @@ def deploy_smart_token(
         reserve_token_address,
         reserve_ratio_ppm):
 
-    # TODO: All tasks should automatically check for whether a topup is required
-    topup_task = topup_if_required(deploying_address)
+    def with_log(message, uuid):
+        print(f'{message}: {uuid}')
+        return uuid
 
-    deploy_smart_token_task_uuid = deploy_contract_task(
-        deploying_address,
-        'SmartToken',
-        [name, symbol, decimals],
-        topup_task
-    )
+    deploy_smart_token_task_uuid = with_log(
+        'Deploying smart token',
+        deploy_contract_task(
+            deploying_address,
+            'SmartToken',
+            [name, symbol, decimals]
+        ))
 
     smart_token_address = get_contract_address(deploy_smart_token_task_uuid)
 
-    transaction_task(
-        signing_address=deploying_address,
-        contract_address=smart_token_address,
-        contract_type='SmartToken',
-        func='issue',
-        args=[deploying_address, issue_amount_wei],
-        gas_limit=8000000
-    )
+    with_log(
+        'Issuing smart token bal',
+        transaction_task(
+            signing_address=deploying_address,
+            contract_address=smart_token_address,
+            contract_type='SmartToken',
+            func='issue',
+            args=[deploying_address, issue_amount_wei],
+            gas_limit=8000000
+        ))
 
-    deploy_subexchange_task_uuid = deploy_contract_task(
-        deploying_address,
-        'BancorConverter',
-        [smart_token_address, contract_registry_address, 30000, reserve_token_address, reserve_ratio_ppm]
-    )
+    deploy_subexchange_task_uuid = with_log(
+        'Deploying converter',
+        deploy_contract_task(
+            deploying_address,
+            'BancorConverter',
+            [smart_token_address, contract_registry_address, 30000, reserve_token_address, reserve_ratio_ppm]
+        ))
 
     subexchange_address = get_contract_address(deploy_subexchange_task_uuid)
 
@@ -210,52 +216,65 @@ def deploy_smart_token(
         token_address=reserve_token_address
     )
 
-    print(f'Wallet balance is {bal} wei (depositing {reserve_deposit_wei} wei).')
+    print(f'Wallet balance for {reserve_token_address} is \n'
+          f'{bal} wei. Depositing \n'
+          f'{reserve_deposit_wei} wei).')
 
-    transaction_task(
-        signing_address=deploying_address,
-        contract_address=reserve_token_address,
-        contract_type='EtherToken',
-        func='transfer',
-        args=[subexchange_address, reserve_deposit_wei],
-        gas_limit=100000
+    with_log(
+        'Transfering reserve deposit',
+        transaction_task(
+            signing_address=deploying_address,
+            contract_address=reserve_token_address,
+            contract_type='EtherToken',
+            func='transfer',
+            args=[subexchange_address, reserve_deposit_wei],
+            gas_limit=100000
+        ))
+
+    with_log(
+        'Approving converter for ethertoken',
+        transaction_task(
+            signing_address=deploying_address,
+            contract_address=reserve_token_address,
+            contract_type='EtherToken',
+            func='approve',
+            args=[subexchange_address, int(1e30)],
+            gas_limit=100000
+        ))
+
+    with_log(
+        'Approving converter for smart token',
+        transaction_task(
+            signing_address=deploying_address,
+            contract_address=smart_token_address,
+            contract_type='SmartToken',
+            func='approve',
+            args=[subexchange_address, int(1e30)],
+            gas_limit=100000
+        )
     )
 
-    transaction_task(
-        signing_address=deploying_address,
-        contract_address=reserve_token_address,
-        contract_type='EtherToken',
-        func='approve',
-        args=[subexchange_address, int(1e30)],
-        gas_limit=100000
-    )
+    transfer_ownership_id = with_log(
+        'Transfering ownership of smart token',
+        transaction_task(
+            signing_address=deploying_address,
+            contract_address=smart_token_address,
+            contract_type='SmartToken',
+            func='transferOwnership',
+            args=[subexchange_address],
+            gas_limit=100000
+        ))
 
-    transaction_task(
-        signing_address=deploying_address,
-        contract_address=smart_token_address,
-        contract_type='SmartToken',
-        func='approve',
-        args=[subexchange_address, int(1e30)],
-        gas_limit=100000
-    )
-
-    transfer_ownership_id = transaction_task(
-        signing_address=deploying_address,
-        contract_address=smart_token_address,
-        contract_type='SmartToken',
-        func='transferOwnership',
-        args=[subexchange_address],
-        gas_limit=100000
-    )
-
-    transaction_task(
-        signing_address=deploying_address,
-        contract_address=subexchange_address,
-        contract_type='BancorConverter',
-        func='acceptTokenOwnership',
-        gas_limit=100000,
-        dependent_on_tasks=[transfer_ownership_id]
-    )
+    with_log(
+        'Accepting Ownership',
+        transaction_task(
+            signing_address=deploying_address,
+            contract_address=subexchange_address,
+            contract_type='BancorConverter',
+            func='acceptTokenOwnership',
+            gas_limit=100000,
+            prior_tasks=[transfer_ownership_id]
+        ))
 
     return {'smart_token_address': smart_token_address,
             'subexchange_address': subexchange_address}

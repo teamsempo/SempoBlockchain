@@ -5,14 +5,14 @@ from celery import signature
 from eth_manager import utils
 
 
-def deploy_contract_task(signing_address, contract_name, args=None, dependent_on_tasks=None):
+def deploy_contract_task(signing_address, contract_name, args=None, prior_tasks=None):
     deploy_sig = signature(
         utils.eth_endpoint('deploy_contract'),
         kwargs={
             'signing_address': signing_address,
             'contract_name': contract_name,
             'args': args,
-            'dependent_on_tasks': dependent_on_tasks
+            'prior_tasks': prior_tasks
         })
 
     return utils.execute_task(deploy_sig)
@@ -22,7 +22,7 @@ def transaction_task(signing_address,
                      contract_address, contract_type,
                      func, args=None,
                      gas_limit=None,
-                     dependent_on_tasks=None):
+                     prior_tasks=None):
 
     kwargs = {
         'signing_address': signing_address,
@@ -30,7 +30,7 @@ def transaction_task(signing_address,
         'abi_type': contract_type,
         'function': func,
         'args': args,
-        'dependent_on_tasks': dependent_on_tasks
+        'prior_tasks': prior_tasks
     }
 
     if gas_limit:
