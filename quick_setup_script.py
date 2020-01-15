@@ -323,6 +323,6 @@ def local_setup():
 
 if __name__ == '__main__':
 
-    ge_setup()
+    # ge_setup()
 
-    # local_setup()
+    local_setup()

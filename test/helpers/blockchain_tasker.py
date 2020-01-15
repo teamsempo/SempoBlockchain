@@ -65,11 +65,11 @@ class MockBlockchainTasker(object):
 
     @staticmethod
     def get_wallet_balance(*args, **kwargs):
-        return 100
+        return int(10e18)
 
     @staticmethod
     def get_allowance(*args, **kwargs):
-        return 100
+        return int(10e18)
 
     @staticmethod
     def deploy_exchange_network(*args, **kwargs):
