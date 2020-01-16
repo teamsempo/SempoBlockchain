@@ -318,7 +318,7 @@ def local_setup():
 
     _base_setup(s, reserve_token_id)
 
-    tt =4
+    tt = 4
 
 
 if __name__ == '__main__':

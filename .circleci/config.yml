@@ -219,7 +219,5 @@ workflows:
             branches:
               only:
                 - master
-                - auto_topup
-                - locking_strat
           requires:
             - test
