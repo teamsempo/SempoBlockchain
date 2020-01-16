@@ -156,7 +156,7 @@ class CreditTransferAPI(MethodView):
         elif action == 'REJECT':
             credit_transfer.resolve_as_rejected()
 
-        db.session.commit()
+        db.session.flush()
 
         response_object = {
             'message': 'Modification successful',
@@ -326,7 +326,7 @@ class CreditTransferAPI(MethodView):
                     response_list.append({'status': 400, 'message': str(e)})
 
                 else:
-                    db.session.commit()
+                    db.session.flush()
                     response_object = {'message': str(e),}
                     return make_response(jsonify(response_object)), 400
 
@@ -339,6 +339,7 @@ class CreditTransferAPI(MethodView):
                     response_list.append({'status': 201, 'message': message})
 
                 else:
+                    db.session.flush()
 
                     credit_transfer = credit_transfer_schema.dump(transfer).data
 
@@ -349,11 +350,10 @@ class CreditTransferAPI(MethodView):
                             'credit_transfer': credit_transfer,
                         }
                     }
-                    db.session.commit()
 
                     return make_response(jsonify(response_object)), 201
 
-        db.session.commit()
+        db.session.flush()
 
         message = 'Bulk Transfer Creation Successful' if auto_resolve else 'Bulk Transfer Pending. Must be approved.'
         response_object = {
@@ -387,7 +387,7 @@ class ConfirmWithdrawalAPI(MethodView):
 
             credit_transfers.append(CreditTransfer.query.get(withdrawal_id_string))
 
-        db.session.commit()
+        db.session.flush()
 
         response_object = {
             'message': 'Withdrawal Confirmed',
@@ -438,7 +438,7 @@ class InternalCreditTransferAPI(MethodView):
                                             existing_blockchain_txn=blockchain_transaction_hash,
                                             require_sufficient_balance=False)
 
-        db.session.commit()
+        db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
 
         response_object = {

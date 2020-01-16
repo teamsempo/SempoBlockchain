@@ -409,6 +409,7 @@ def make_payment_transfer(transfer_amount,
     """
     This is used for internal transfers between Sempo wallets.
     :param transfer_amount:
+    :param token:
     :param send_user:
     :param send_transfer_account:
     :param receive_user:
