@@ -121,15 +121,13 @@ class SingleUserManagement extends React.Component {
         profilePicture = null
       }
 
-      console.log(this.props.user.custom_attributes);
-
       custom_attribute_list = Object.keys(this.props.user.custom_attributes).map(key => {
           if (!this.props.user.custom_attributes[key].uploaded_image_id) {
             return (
               <SubRow key={key}>
                 <InputLabel>{replaceUnderscores(key)}: </InputLabel>
                 <div style={{marginLeft: '0.5em', marginRight: '4em'}}>
-                  {replaceUnderscores(this.props.user.custom_attributes[key].value)}
+                  {replaceUnderscores(this.props.user.custom_attributes[key])}
                 </div>
               </SubRow>
             )
