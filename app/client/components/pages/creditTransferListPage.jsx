@@ -29,7 +29,7 @@ const mapDispatchToProps = (dispatch) => {
 
 class CreditTransferListPage extends React.Component {
   componentDidMount() {
-      this.props.loadCreditTransferList()
+      this.props.loadCreditTransferList({per_page: 200, page:1})
   }
 
   render() {

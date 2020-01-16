@@ -326,7 +326,7 @@ class CreditTransferAPI(MethodView):
                     response_list.append({'status': 400, 'message': str(e)})
 
                 else:
-                    db.session.flush()
+                    db.session.commit()
                     response_object = {'message': str(e),}
                     return make_response(jsonify(response_object)), 400
 
