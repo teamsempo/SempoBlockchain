@@ -176,7 +176,7 @@ sw:
     exit_invalid_exchange_amount: END Kiwango ulichoweka hakitoshi. Tafadhali weka kiwango cha 40 au zaidi.
     language_change_sms: Lugha imebadilishwa.
     opt_out_of_market_place_sms: Ombi lako la kuondoka sokoni limekamilika.
-    upsell_message: "%{first_name} %{last_name} amejaribu kukutumia {community_token} lakini hujasajili. Tuma maelezo yako: jina, eneo, na aina ya biashara yako kwa 0757628885."
+    upsell_message: "%{first_name} %{last_name} amejaribu kukutumia %{community_token} lakini hujasajili. Tuma maelezo yako: jina, eneo, na aina ya biashara yako kwa 0757628885."
     send_directory_listing_message: "%{community_token_name} Soko ya %{business_type}"
     no_directory_listing_found_message: Samahani hatukuweza kupata biashara kutoka kwa jumuiya yako inayofanana na utafutaji wako.
     send_token_sender_sms: Umetuma %{amount} %{token_name} kwa %{other_user} tarehe %{date} kusudi %{reason} saa %{time}. Salio lako la %{token_name} ni %{balance}

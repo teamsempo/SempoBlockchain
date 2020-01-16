@@ -18,6 +18,7 @@ from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
     get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required
 from server.utils.credit_transfer import dollars_to_cents
+from server.utils.phone import proccess_phone_number
 
 
 ITEMS_PER_MENU = 8
@@ -228,15 +229,14 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
 
     def upsell_unregistered_recipient(self, user_input):
-        user = get_user_by_phone(user_input, "KE")
-        if self.is_valid_recipient(user, False, False):
-            self.send_sms(
-                user.phone,
-                'upsell_message',
-                first_name=user.first_name,
-                last_name=user.last_name,
-                community_token=default_token(user).name
-            )
+        desination_phone = proccess_phone_number(user_input)
+        self.send_sms(
+            desination_phone,
+            'upsell_message',
+            first_name=self.user.first_name,
+            last_name=self.user.last_name,
+            community_token=default_token(self.user).name
+        )
 
     def inquire_balance(self, user_input):
         ussd_tasker.inquire_balance(self.user)
