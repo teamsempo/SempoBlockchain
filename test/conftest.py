@@ -177,6 +177,19 @@ def save_device_info(test_client, init_database, create_transfer_account_user):
     return save_device_info
 
 
+@pytest.fixture(scope='module')
+def create_filter(test_client, init_database, create_organisation):
+    from server.models.saved_filter import SavedFilter
+    saved_filter = SavedFilter(
+        name='TestFilter',
+        filter=dict(allowedValues=[1,2], id=1, keyName='balance', type='of'),
+        organisation_id=create_organisation.id
+    )
+    db.session.add(saved_filter)
+    db.session.commit()
+    return saved_filter
+
+
 @pytest.fixture(scope='function')
 def create_blacklisted_token(authed_sempo_admin_user):
     from server.models.blacklist_token import BlacklistToken

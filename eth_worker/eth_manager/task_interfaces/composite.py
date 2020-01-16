@@ -31,7 +31,7 @@ def topup_wallets():
             if last_topup_task_uuid:
                 task = persistence_interface.get_task_from_uuid(last_topup_task_uuid)
 
-                if task.status in ['PENDING', 'UNSTARTED']:
+                if task and task.status in ['PENDING', 'UNSTARTED']:
                     return
 
             signature(utils.eth_endpoint('topup_wallet_if_required'),
@@ -238,7 +238,7 @@ def deploy_smart_token(
             contract_address=reserve_token_address,
             contract_type='EtherToken',
             func='approve',
-            args=[subexchange_address, int(1e30)],
+            args=[subexchange_address, int(1e36)],
             gas_limit=100000
         ))
 
@@ -249,7 +249,7 @@ def deploy_smart_token(
             contract_address=smart_token_address,
             contract_type='SmartToken',
             func='approve',
-            args=[subexchange_address, int(1e30)],
+            args=[subexchange_address, int(1e36)],
             gas_limit=100000
         )
     )

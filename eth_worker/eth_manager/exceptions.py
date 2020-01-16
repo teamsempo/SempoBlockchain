@@ -14,3 +14,7 @@ class WalletExistsError(Exception):
 
 class TaskRetriesExceededError(Exception):
     """Number of transaction retries allowed for task has been exceeded"""
+
+class LockedNotAcquired(Exception):
+    """Redis lock not acquired"""
+    pass

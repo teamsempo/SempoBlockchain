@@ -154,6 +154,8 @@ ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']
 
 ETH_DATABASE_HOST = specific_parser['DATABASE'].get('eth_host') or DATABASE_HOST
+ETH_WORKER_DB_POOL_SIZE = specific_parser['DATABASE'].getint('eth_worker_pool_size', 40)
+ETH_WORKER_DB_POOL_OVERFLOW = specific_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
 
 def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
