@@ -34,7 +34,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
     ("standard", None, "en", "Your Sarafu-Network balances are as follows:\nSM1 200.00\nSM2 350.00\nCall 0757628885 for more info"),
     ("standard", None, "sw", "Akaunti yako ya Sarafu-Network ina masalio yafuatayo:\nSM1 200.00\nSM2 350.00\nPiga 0757628885 kwa usaidizi zaidi"),
     ("group", 0.5, "en", "per 30"),
-    ("group", 0.5, "sw", "siku 30"),
+    ("group", 0.5, "sw", "siku 30")
 ])
 def test_send_balance_sms(mocker, test_client, init_database, initialised_blockchain_network, user_type, limit,
                      preferred_language, sample_text):

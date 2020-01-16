@@ -218,10 +218,11 @@ class TransferLimit(object):
         self.transfer_balance_fraction = transfer_balance_fraction
 
         if reduce(lambda x, y: x + bool(y not in [None, False]),
-                  [no_transfer_allowed, total_amount, transfer_count, transfer_balance_fraction], 0) != 1:
+                  [no_transfer_allowed, total_amount, transfer_count or transfer_balance_fraction], 0) != 1:
 
             raise TransferLimitCreationError(
-                'Must set exactly one of no_exchange_allowed, total_amount, transfer_count or transfer_balance_fraction'
+                'Must set exactly one of no_exchange_allowed, total_amount,'
+                ' or transfer_count and transfer_balance_fraction'
             )
 
 
@@ -280,6 +281,6 @@ LIMITS = [
     TransferLimit('GE Liquid Token - Group Account User',
                   [AGENT_OUT_PAYMENT, WITHDRAWAL], is_group_and_liquid_token, 30,
                   transfer_filter=withdrawal_or_agent_out_filter,
-                  no_transfer_allowed=True)
+                  transfer_count=1, transfer_balance_fraction=0.50)
 ]
 
