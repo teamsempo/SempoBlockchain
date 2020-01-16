@@ -20,3 +20,4 @@ disown
 
 curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x621093B2EAeA58E9403c8fc3a870F52A6dDfb28F", "latest"],"id":1}' http://172.31.38.202:8500
 
+curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x621093B2EAeA58E9403c8fc3a870F52A6dDfb28F", "latest"],"id":1}' http://34.251.252.164:8500
