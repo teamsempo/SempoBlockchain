@@ -397,17 +397,7 @@ class CreditTransferList extends React.Component {
                   }
 
                   if (hash) {
-                    if (!window.IS_USING_BITCOIN) {
-                      var tracker_link = (
-                        'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-                        + 'etherscan.io/tx/' + hash
-                      )
-                    } else {
-                      tracker_link = (
-                        'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-                        '/tx/' + hash
-                      )
-                    }
+                    var tracker_link = window.ETH_EXPLORER_URL + '/tx/' + hash;
                   } else {
                     tracker_link = null
                   }
