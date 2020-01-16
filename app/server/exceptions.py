@@ -130,6 +130,8 @@ class UserNotFoundError(Exception):
 class InsufficientBalanceError(Exception):
     pass
 
+class SubexchangeNotFound(Exception):
+    pass
 
 class AccountNotApprovedError(Exception):
     def __init__(self, message, is_sender=None):

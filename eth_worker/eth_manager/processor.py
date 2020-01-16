@@ -516,7 +516,7 @@ class TransactionProcessor(object):
         task = self.persistence_interface.create_function_task(uuid,
                                                                signing_wallet_obj,
                                                                contract_address, abi_type,
-                                                               function_name, args, kwargs,
+                                                            function_name, args, kwargs,
                                                                gas_limit, prior_tasks)
 
         # Attempt Create Async Transaction

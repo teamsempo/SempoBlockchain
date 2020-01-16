@@ -318,11 +318,11 @@ def local_setup():
 
     _base_setup(s, reserve_token_id)
 
-    tt =4
+    tt = 4
 
 
 if __name__ == '__main__':
 
-    ge_setup()
+    # ge_setup()
 
-    # local_setup()
+    local_setup()
