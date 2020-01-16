@@ -6,8 +6,9 @@ from sqlalchemy.sql import func
 
 from server import db, message_processor
 from server.exceptions import (
-    TransactionBalanceFractionLimitError,
-    TransactionCountLimitError,
+    NoTransferAllowedLimitError,
+    TransferBalanceFractionLimitError,
+    TransferCountLimitError,
     TransferAmountLimitError
 )
 from server.models.credit_transfer import CreditTransfer
@@ -348,6 +349,12 @@ class TokenProcessor(object):
                 "exchange_token_agent_sms", agent, sender, to_amount, amount, agent_tx_time, agent_balance
             )
 
+        except NoTransferAllowedLimitError as e:
+            TokenProcessor.send_sms(
+                sender,
+                "exchange_not_allowed_error_sms",
+            )
+
         except TransferAmountLimitError as e:
             TokenProcessor.send_sms(
                 sender,
@@ -356,14 +363,14 @@ class TokenProcessor(object):
                 token=e.token,
                 limit_period=e.limit_time_period_days
             )
-        except TransactionBalanceFractionLimitError as e:
+        except TransferBalanceFractionLimitError as e:
             TokenProcessor.send_sms(
                 sender,
                 "exchange_fraction_error_sms",
                 token=e.token,
                 percent=f"{int(e.transfer_balance_fraction_limit * 100)}%"
             )
-        except TransactionCountLimitError as e:
+        except TransferCountLimitError as e:
             TokenProcessor.send_sms(
                 sender,
                 "exchange_count_error_sms",

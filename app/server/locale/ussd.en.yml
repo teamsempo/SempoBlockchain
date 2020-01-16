@@ -193,6 +193,7 @@ en:
       Exchange Rate:
       For 1 %{token_name} you get %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
+    exchange_not_allowed_error_sms: Only a group account can exchange please contact 0757628885 for help
     exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
     exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
     exchange_amount_error_sms: Sorry you have exceeded your %{token} transfer amount limit. You are allowed up to %{amount} %{token} per %{limit_period} days

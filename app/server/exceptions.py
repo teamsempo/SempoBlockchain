@@ -14,8 +14,16 @@ class AccountLimitError(Exception):
         self.limit_time_period_days = limit_time_period_days
         self.token = token
 
+class NoTransferAllowedLimitError(AccountLimitError):
+    def __init__(self, token):
+        super().__init__(message='No transfers are allowed', limit_time_period_days=0, token=token)
 
-class TransactionCountLimitError(AccountLimitError):
+
+    def __repr__(self):
+        return self.message
+
+
+class TransferCountLimitError(AccountLimitError):
     def __init__(self, transfer_count_limit: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_count_limit = transfer_count_limit
@@ -24,7 +32,7 @@ class TransactionCountLimitError(AccountLimitError):
         return self.message
 
 
-class TransactionBalanceFractionLimitError(AccountLimitError):
+class TransferBalanceFractionLimitError(AccountLimitError):
     def __init__(self, transfer_balance_fraction_limit: float, transfer_amount_avail: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_balance_fraction_limit = transfer_balance_fraction_limit
