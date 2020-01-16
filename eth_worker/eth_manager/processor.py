@@ -156,7 +156,9 @@ class TransactionProcessor(object):
 
                     raise e
 
-            nonce, transaction_id = self.persistence_interface.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+            nonce, transaction_id = self.persistence_interface.locked_claim_transaction_nonce(
+                signing_wallet_obj, transaction_id
+            )
 
             metadata = {
                 'gas': gas_limit or min(int(gas*1.2), 8000000),
@@ -432,7 +434,8 @@ class TransactionProcessor(object):
         if number_of_attempts_this_round >= self.task_max_retries:
             print(f"Maximum retries exceeded for task {task.uuid}")
 
-            self.persistence_interface.set_task_status_text(task, 'FAILED')
+            if task.status_text != 'SUCCESS':
+                self.persistence_interface.set_task_status_text(task, 'FAILED')
 
             raise TaskRetriesExceededError
 
@@ -513,7 +516,7 @@ class TransactionProcessor(object):
         task = self.persistence_interface.create_function_task(uuid,
                                                                signing_wallet_obj,
                                                                contract_address, abi_type,
-                                                               function_name, args, kwargs,
+                                                            function_name, args, kwargs,
                                                                gas_limit, prior_tasks)
 
         # Attempt Create Async Transaction
@@ -592,9 +595,18 @@ class TransactionProcessor(object):
     def retry_failed(self):
 
         failed_tasks = self.persistence_interface.get_failed_tasks()
+        pending_tasks = self.persistence_interface.get_pending_tasks()
+
+        print(f"{len(failed_tasks)} tasks currently with failed state")
+        print(f"{len(pending_tasks)} tasks currently pending")
 
         for task in failed_tasks:
             self._retry_task(task)
+
+        return {
+            'failed_count': len(failed_tasks),
+            'pending_count': len(pending_tasks)
+        }
 
     def _retry_task(self, task):
         self.persistence_interface.increment_task_invokations(task)

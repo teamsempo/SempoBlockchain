@@ -125,7 +125,8 @@ class BlockchainTasker(object):
     def retry_failed(self):
         sig = celery_app.signature(self._eth_endpoint('retry_failed'))
 
-        sig.delay()
+        return self._execute_synchronous_celery(sig)
+
 
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
@@ -246,6 +247,8 @@ class BlockchainTasker(object):
                       spender, amount,
                       prior_tasks=None):
 
+        # TODO: Fix the signature on this
+
         return self._synchronous_transaction_task(
             signing_address=signing_address,
             contract_address=token.address,
@@ -254,7 +257,7 @@ class BlockchainTasker(object):
             gas_limit=100000,
             args=[
                 spender,
-                token.system_amount_to_token(amount)
+                int(1e36)
             ],
             prior_tasks=prior_tasks
         )
@@ -419,6 +422,16 @@ class BlockchainTasker(object):
             args=[address])
 
         return balance_wei
+
+    def get_allowance(self, token, owner_address, spender_address):
+
+        allowance_wei = self._synchronous_call(
+            contract_address=token.address,
+            contract_type='ERC20',
+            func='allowance',
+            args=[owner_address, spender_address])
+
+        return allowance_wei
 
     def deploy_exchange_network(self, deploying_address):
         """
