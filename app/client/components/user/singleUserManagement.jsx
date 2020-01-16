@@ -91,18 +91,8 @@ class SingleUserManagement extends React.Component {
   render() {
     let blockchain_address = '';
     if (this.props.user.transfer_account) {
-      blockchain_address =  this.props.user.transfer_account.blockchain_address
-      if (!window.IS_USING_BITCOIN) {
-        var tracker_link = (
-          'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-          + 'etherscan.io/address/' + blockchain_address
-        )
-      } else {
-        tracker_link = (
-          'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-          '/address/' + blockchain_address
-        )
-      }
+      blockchain_address =  this.props.user.transfer_account.blockchain_address;
+      var tracker_link = window.ETH_EXPLORER_URL + '/address/' + blockchain_address;
     }
 
     var profilePicture = null;
@@ -193,7 +183,7 @@ class SingleUserManagement extends React.Component {
                           <ManagerText>
                             <a  href={tracker_link}
                                      target="_blank">
-                            {blockchain_address.substring(window.IS_USING_BITCOIN? 0:2,)}
+                            {blockchain_address.substring(2,)}
                             </a>
                           </ManagerText>
                         </SubRow>

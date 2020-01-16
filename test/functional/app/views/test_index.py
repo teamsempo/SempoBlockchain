@@ -22,7 +22,7 @@ def test_index(test_client):
     assert config.HEAP_ANALYTICS_ID.encode() in response.data
 
     # blockchain
-    assert config.ETH_CHAIN_NAME.encode() in response.data
+    assert config.ETH_EXPLORER_URL.encode() in response.data
     assert config.MASTER_WALLET_ADDRESS.encode() in response.data
     assert config.ETH_CONTRACT_ADDRESS.encode() in response.data
 
