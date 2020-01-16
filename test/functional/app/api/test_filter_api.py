@@ -3,7 +3,7 @@ from server.utils.auth import get_complete_auth_token
 
 
 @pytest.mark.parametrize("tier, status_code", [
-    ("subadmin", 401),
+    ("subadmin", 403),
     ("admin", 200),
 ])
 def test_get_filters(test_client, authed_sempo_admin_user, create_filter, tier, status_code):
