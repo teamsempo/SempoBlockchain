@@ -96,6 +96,16 @@ class BlockchainTransactionRPC(MethodView):
 
             return make_response(jsonify(response_object)), 200
 
+        if call == 'RETRY_FAILED':
+
+            bt.retry_failed()
+
+            response_object = {
+                'message': 'Starting Retry Failed',
+            }
+
+            return make_response(jsonify(response_object)), 200
+
         response_object = {
             'message': 'Call not recognised',
         }
