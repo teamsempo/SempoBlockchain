@@ -229,13 +229,18 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
 
     def upsell_unregistered_recipient(self, user_input):
-        desination_phone = proccess_phone_number(user_input)
+        recipient_phone = proccess_phone_number(user_input)
         self.send_sms(
-            desination_phone,
-            'upsell_message',
+            self.user.phone,
+            'upsell_message_sender',
+            recipient_phone=recipient_phone,
+        )
+        self.send_sms(
+            recipient_phone,
+            'upsell_message_recipient',
             first_name=self.user.first_name,
             last_name=self.user.last_name,
-            community_token=default_token(self.user).name
+            token_name=default_token(self.user).name
         )
 
     def inquire_balance(self, user_input):
