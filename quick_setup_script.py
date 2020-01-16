@@ -259,33 +259,7 @@ class Setup(object):
         else:
             raise Exception("Must provide either username and password OR api token")
 
-
-if __name__ == '__main__':
-
-    s = Setup(
-        api_host='https://dev.withsempo.com/api/v1/',
-        email=os.environ.get('dev_email'),
-        password=os.environ.get('dev_password')
-    )
-
-    # s = Setup(
-    #     api_host='http://0.0.0.0:9000/api/v1/',
-    #     email=os.environ.get('local_email'),
-    #     password=os.environ.get('local_password')
-    # )
-
-    # s.bind_user_to_organsation_as_admin(6, 1)
-    # s.bind_user_to_organsation_as_admin(6, 2)
-    # s.bind_user_to_organsation_as_admin(6, 3)
-
-
-    # reserve_token_id = s.create_reserve_token(
-    #     name='Kenyan Shilling',
-    #     symbol='Ksh',
-    #     fund_amount_wei=int(10000e18)
-    # )
-    reserve_token_id = 1
-
+def _base_setup(s, reserve_token_id):
     exchange_contract_id = s.create_exchange_contract(reserve_token_id)
     # exchange_contract_id = 1
 
@@ -296,12 +270,14 @@ if __name__ == '__main__':
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
         symbol='SARAFU',
-        issue_amount_wei=int(1000000e18),
-        reserve_deposit_wei=int(1000e18),
+        issue_amount_wei=int(10000000e18),
+        reserve_deposit_wei=int(10000e18),
         reserve_ratio_ppm=250000
     )
     bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
-    #
+
+    tt = 4
+
     # foobar_org_id = s.create_cic_organisation(
     #     organisation_name='Foo Org',
     #     exchange_contract_id=exchange_contract_id,
@@ -315,4 +291,38 @@ if __name__ == '__main__':
     # )
     # bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
 
+
+def ge_setup():
+    s = Setup(
+        api_host='https://dev.withsempo.com/api/v1/',
+        email=os.environ.get('dev_email'),
+        password=os.environ.get('dev_password')
+    )
+
+    reserve_token_id = 1
+
+    _base_setup(s, reserve_token_id)
+
+def local_setup():
+    s = Setup(
+        api_host='http://0.0.0.0:9000/api/v1/',
+        email=os.environ.get('local_email'),
+        password=os.environ.get('local_password')
+    )
+
+    reserve_token_id = s.create_reserve_token(
+        name='Kenyan Shilling',
+        symbol='Ksh',
+        fund_amount_wei=int(10000e18)
+    )
+
+    _base_setup(s, reserve_token_id)
+
     tt = 4
+
+
+if __name__ == '__main__':
+
+    # ge_setup()
+
+    local_setup()
