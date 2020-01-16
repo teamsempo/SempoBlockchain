@@ -714,7 +714,7 @@ def default_token(user: User) -> Token:
         transfer_account = default_transfer_account(user)
         token = transfer_account.token
     except TransferAccountNotFoundError:
-        if user.default_organisation_id is not None:
+        if user.default_organisation is not None:
             token = user.default_organisation.token
         else:
             token = Organisation.master_organisation().token

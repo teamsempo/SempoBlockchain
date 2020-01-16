@@ -177,7 +177,7 @@ en:
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
-    upsell_message_sender: Recipient %{recipient_phone} is not yet registered. Please call or send their Name, Phone number, business and location to 0757628885
+    upsell_message_sender: "Recipient %{recipient_phone} is not yet registered. Please call or send their Name, Phone number, business and location to 0757628885"
     upsell_message_recipient: "%{first_name} %{last_name} tried to send you %{token_name} but you are not registered. Send your information: name, phone number, area of residence, and the type of business you run 0757628885."
     send_directory_listing_message: "%{community_token_name} %{business_type} Market \n %{directory_listing_users}"
     no_directory_listing_found_message: Sorry we couldn't find businesses from your community that match your search criteria.

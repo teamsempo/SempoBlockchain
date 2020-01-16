@@ -162,6 +162,8 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
     org = OrganisationFactory()
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo", default_organisation=org)
+    sender.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
     token1 = Token.query.filter_by(symbol="SM1").first()
     create_transfer_account_for_user(sender, token1, 20000)
 
