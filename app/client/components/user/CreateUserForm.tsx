@@ -108,7 +108,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
       if (businessUsageValue && businessUsageValue.toLowerCase() === "other") {
         businessUsage = <>
           <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
-          <InputField name="usageOtherSpecific" label='Please specify the category' isRequired />
+          <InputField name="usageOtherSpecific" label='Please specify the category' isRequired isNotOther />
         </>
       } else {
         businessUsage = <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />

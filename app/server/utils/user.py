@@ -729,7 +729,7 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
         ma = most_common_uses.get(a.name)
         mb = most_common_uses.get(b.name)
 
-        # return most used, then default, then everything else
+        # return most used, then prioritised, then everything else
         if ma is not None and mb is not None:
             if ma >= mb:
                 return -1
@@ -739,11 +739,13 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
             return -1
         elif mb is not None:
             return 1
-        elif a.default or b.default:
-            if a.default:
+        elif a.priority and b.priority:
+            if a.priority < b.priority:
                 return -1
             else:
                 return 1
+        elif b.priority:
+            return 1
         else:
             return -1
 

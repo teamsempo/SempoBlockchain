@@ -41,8 +41,9 @@ def test_golden_path_send_token(mocker, test_client,
     messages = []
     session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa'
 
-    usage = TransferUsage.query.filter_by(name="Education").first()
-    # do two of these transfers to ensure education is the first shown
+    # Take the last to
+    usage = TransferUsage.query.all()[-1]
+    # do two of these transfers to ensure last is is the first shown
     make_payment_transfer(100, token=token, send_user=sender,
                           receive_user=recipient,
                           transfer_use=str(int(usage.id)), is_ghost_transfer=False,
@@ -86,7 +87,7 @@ def test_golden_path_send_token(mocker, test_client,
 
     resp = req("12.5")
     assert "CON Select Transfer" in resp
-    assert "1. Education" in resp
+    assert f"1. {usage.name}" in resp
     assert "9." in resp
 
     resp = req("9")
@@ -94,13 +95,15 @@ def test_golden_path_send_token(mocker, test_client,
     assert "10. Show previous options" in resp
     assert "9." not in resp
 
-    resp = req("1")
+    resp = req("10")
+
+    resp = req("4")
     assert "CON Please enter your PIN" in resp
 
     resp = req("0000")
     assert "CON Send 12.5 SM1" in resp
     # went to second page, should not be education
-    assert "for Education" not in resp
+    assert f"for {usage.name}" not in resp
 
     resp = req("1")
     assert "END Your request has been sent." in resp

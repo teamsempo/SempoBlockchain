@@ -61,7 +61,7 @@ class DirectoryListingProcessor(object):
         result = db.session.execute(sql)
         ids = [row[0] for row in result]
 
-        # TODO: how to convert from id to user while preserving order?
+        # TODO: how to convert from id to user while presChoose Market Categoryerving order?
         return list(map(lambda x: User.query.execution_options(show_all=True).get(x), ids))
 
     def get_business_category_translation(self):

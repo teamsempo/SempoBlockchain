@@ -16,13 +16,12 @@ transfer_usage_blueprint = Blueprint('transfer_usage', __name__)
 class TransferUsageAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'subadmin'})
     def get(self):
-        transfer_usages = TransferUsage.query.order_by(
-            desc('default')).all()
+        usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).all()
 
         response_object = {
             'message': 'success',
             'data': {
-                'transfer_usages': transfer_usages_schema.dump(transfer_usages).data
+                'transfer_usages': transfer_usages_schema.dump(usage_objects).data
             }
         }
         return make_response(jsonify(response_object)), 200
