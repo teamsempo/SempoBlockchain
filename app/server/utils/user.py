@@ -397,6 +397,8 @@ def proccess_create_or_modify_user_request(
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
+    referred_by = attribute_dict.get('referred_by')
+
     blockchain_address = attribute_dict.get('blockchain_address')
 
     provided_public_serial_number = attribute_dict.get('public_serial_number')
@@ -523,6 +525,8 @@ def proccess_create_or_modify_user_request(
             }
             return response_object, 400
 
+    referred_by_user = find_user_from_public_identifier(referred_by)
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
 
@@ -540,6 +544,9 @@ def proccess_create_or_modify_user_request(
             is_beneficiary=is_beneficiary, is_vendor=is_vendor,
             is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
         )
+
+        if referred_by_user:
+            user.referred_by.append(referred_by_user)
 
         set_custom_attributes(attribute_dict, user)
         flag_modified(user, "custom_attributes")
@@ -567,6 +574,9 @@ def proccess_create_or_modify_user_request(
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
         business_usage=business_usage, initial_disbursement=initial_disbursement)
+
+    if referred_by_user:
+        user.referred_by.append(referred_by_user)
 
     if attribute_dict.get('gender'):
         attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
