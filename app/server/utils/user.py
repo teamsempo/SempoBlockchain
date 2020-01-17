@@ -114,7 +114,8 @@ def update_transfer_account_user(user,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
-                                 is_groupaccount=False):
+                                 is_groupaccount=False,
+                                 default_organisation_id=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -130,31 +131,39 @@ def update_transfer_account_user(user,
     if location:
         user.location = location
 
+    if default_organisation_id:
+        user.default_organisation_id = default_organisation_id
+
     if use_precreated_pin:
         transfer_card = TransferCard.get_transfer_card(public_serial_number)
 
         user.set_pin(transfer_card.PIN)
 
-    if not is_vendor:
-        vendor_tier = None
-    elif existing_transfer_account:
-        vendor_tier = 'vendor'
-    else:
-        vendor_tier = 'supervendor'
-
-    user.set_held_role('VENDOR', vendor_tier)
-
-    if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
-
-    if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
-
-    if is_beneficiary:
-        user.set_held_role('BENEFICIARY', 'beneficiary')
-
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
+
+    if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
+        # remove all roles before updating
+        user.remove_all_held_roles()
+        flag_modified(user, '_held_roles')
+
+        if not is_vendor:
+            vendor_tier = None
+        elif existing_transfer_account:
+            vendor_tier = 'vendor'
+        else:
+            vendor_tier = 'supervendor'
+
+        user.set_held_role('VENDOR', vendor_tier)
+
+        if is_tokenagent:
+            user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+
+        if is_groupaccount:
+            user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
+        if is_beneficiary:
+            user.set_held_role('BENEFICIARY', 'beneficiary')
 
     return user
 

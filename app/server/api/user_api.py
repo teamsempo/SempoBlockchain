@@ -137,7 +137,7 @@ class UserAPI(MethodView):
 
         return make_response(jsonify(response_object)), response_code
 
-    @requires_auth(allowed_roles={'ADMIN': 'subadmin'})
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, user_id):
         put_data = request.get_json()
 
@@ -149,6 +149,16 @@ class UserAPI(MethodView):
         public_serial_number = put_data.get('public_serial_number')
         location = put_data.get('location')
 
+        is_vendor = put_data.get('is_vendor', None)
+        if is_vendor is None:
+            is_vendor = put_data.get('vendor', False)
+
+        is_tokenagent = put_data.get('is_tokenagent', False)
+        is_groupaccount = put_data.get('is_groupaccount', False)
+
+        # is_beneficiary defaults to the opposite of is_vendor
+        is_beneficiary = put_data.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
+
         default_organisation_id = put_data.get('default_organisation_id')
 
         user = User.query.get(user_id)
@@ -159,34 +169,23 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        if first_name and not first_name == user.first_name:
-            user.first_name = first_name
+        updated_user = UserUtils.update_transfer_account_user(user,
+                                                              first_name=first_name, last_name=last_name,
+                                                              email=email, phone=phone,
+                                                              public_serial_number=public_serial_number,
+                                                              location=location,
+                                                              is_vendor=is_vendor, is_beneficiary=is_beneficiary,
+                                                              is_groupaccount=is_groupaccount,
+                                                              is_tokenagent=is_tokenagent,
+                                                              default_organisation_id=default_organisation_id)
 
-        if last_name and not last_name == user.last_name:
-            user.last_name = last_name
-
-        if email and not email == user.email:
-            user.email = email
-
-        if phone and not phone == user.phone:
-            user.phone = phone
-
-        if public_serial_number and not public_serial_number == user.public_serial_number:
-            user.public_serial_number = public_serial_number
-
-        if location and not location == user.location:
-            user.location = location
-
-        if default_organisation_id:
-            user.default_organisation_id = default_organisation_id
-
-        db.session.commit()
+        db.session.flush()
 
         response_object = {
             'status': 'success',
             'message': 'Successfully Edited User.',
             'data': {
-                'user': user_schema.dump(user).data
+                'user': user_schema.dump(updated_user).data
             }
         }
 
