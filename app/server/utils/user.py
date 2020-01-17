@@ -114,7 +114,8 @@ def update_transfer_account_user(user,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
-                                 is_groupaccount=False):
+                                 is_groupaccount=False,
+                                 default_organisation_id=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -130,10 +131,20 @@ def update_transfer_account_user(user,
     if location:
         user.location = location
 
+    if default_organisation_id:
+        user.default_organisation_id = default_organisation_id
+
     if use_precreated_pin:
         transfer_card = TransferCard.get_transfer_card(public_serial_number)
 
         user.set_pin(transfer_card.PIN)
+
+    if existing_transfer_account:
+        user.transfer_accounts.append(existing_transfer_account)
+
+    # remove all roles before updating
+    user.remove_all_held_roles()
+    flag_modified(user, '_held_roles')
 
     if not is_vendor:
         vendor_tier = None
@@ -152,9 +163,6 @@ def update_transfer_account_user(user,
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
-
-    if existing_transfer_account:
-        user.transfer_accounts.append(existing_transfer_account)
 
     return user
 
