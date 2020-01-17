@@ -42,11 +42,11 @@ from server.constants import (
 )
 
 # self-referencing-m2m-relationship
-# referrals = Table(
-#     'referrals', ModelBase.metadata,
-#     db.Column('referred_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-#     db.Column('referring_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
-# )
+referrals = Table(
+    'referrals', ModelBase.metadata,
+    db.Column('referred_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('referrer_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
 
 
 class User(ManyOrgBase, ModelBase):
@@ -138,15 +138,11 @@ class User(ManyOrgBase, ModelBase):
 
     devices = db.relationship('DeviceInfo', backref='user', lazy=True)
 
-    # todo: deprecate
-    # referrals = db.relationship(
-    #     'Referral', backref='referring_user', lazy=True)
-
-    # prior_tasks = relationship('BlockchainTask',
-    #                          secondary=task_dependencies,
-    #                          primaryjoin="BlockchainTask.id == task_dependencies.c.posterior_task_id",
-    #                          secondaryjoin="BlockchainTask.id == task_dependencies.c.prior_task_id",
-    #                          backref='posterior_tasks')
+    referrals = db.relationship('User',
+                                secondary=referrals,
+                                primaryjoin="User.id == referrals.c.referred_user_id",
+                                secondaryjoin="User.id == referrals.c.referrer_user_id",
+                                backref='referred_by')
 
     transfer_card = db.relationship(
         'TransferCard', backref='user', lazy=True, uselist=False)
