@@ -227,7 +227,7 @@ except ImportError:
 ETH_HTTP_PROVIDER       = specific_parser['ETHEREUM']['http_provider']
 ETH_WEBSOCKET_PROVIDER  = specific_parser['ETHEREUM'].get('websocket_provider')
 ETH_CHAIN_ID            = specific_parser['ETHEREUM'].get('chain_id')
-ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID or 1))
+ETH_EXPLORER_URL        = (specific_parser['ETHEREUM'].get('explorer_url') or 'https://etherscan.io').strip('/')
 ETH_OWNER_ADDRESS       = specific_parser['ETHEREUM']['owner_address']
 ETH_OWNER_PRIVATE_KEY   = specific_parser['ETHEREUM']['owner_private_key']
 ETH_FLOAT_PRIVATE_KEY   = specific_parser['ETHEREUM']['float_private_key']
@@ -236,7 +236,7 @@ ETH_GAS_PRICE           = int(specific_parser['ETHEREUM']['gas_price_gwei'] or 0
 ETH_GAS_LIMIT           = int(specific_parser['ETHEREUM']['gas_limit'] or 0)
 ETH_TARGET_TRANSACTION_TIME = int(specific_parser['ETHEREUM']['target_transaction_time'] or 120)
 ETH_GAS_PRICE_PROVIDER  = specific_parser['ETHEREUM']['gas_price_provider']
-ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME,str(ETH_CONTRACT_VERSION))
+ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME, str(ETH_CONTRACT_VERSION))
 
 ETH_CHECK_TRANSACTION_BASE_TIME = 20
 ETH_CHECK_TRANSACTION_RETRIES = int(specific_parser['ETHEREUM']['check_transaction_retries'])
