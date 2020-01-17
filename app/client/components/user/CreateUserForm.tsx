@@ -20,6 +20,7 @@ export interface ICreateUser {
   initialDisbursement?: number
   bio?: string
   gender?: string
+  referredBy?: string
   location?: string
   businessUsage?: string
   usageOtherSpecific?: string,
@@ -173,6 +174,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
             <InputField name="bio" label='Directory Entry' />
             <InputField name="location" label='Location' />
             <SelectField name="gender" label='Gender' options={["Female", "Male", "Other"]} hideNoneOption={true} />
+            <InputField name="referredBy" label={'Referred by user phone number'} isPhoneNumber />
 
             {selectedAccountTypeForm}
 
