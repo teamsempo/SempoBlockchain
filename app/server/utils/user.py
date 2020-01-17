@@ -580,15 +580,6 @@ def proccess_create_or_modify_user_request(
         save_device_info(device_info=attribute_dict.get(
             'deviceInfo'), user=user)
 
-    # if initial_disbursement:
-    #     # todo: fix
-    #     CreditTransferUtils.make_payment_transfer(
-    #         initial_disbursement,
-    #         organisation.token,
-    #         receive_user=user,
-    #         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
-    #         automatically_resolve_complete=(initial_disbursement <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']))
-
     # Location fires an async task that needs to know user ID
     db.session.flush()
 
@@ -707,7 +698,7 @@ def default_token(user: User) -> Token:
         transfer_account = default_transfer_account(user)
         token = transfer_account.token
     except TransferAccountNotFoundError:
-        if user.default_organisation_id is not None:
+        if user.default_organisation is not None:
             token = user.default_organisation.token
         else:
             token = Organisation.master_organisation().token

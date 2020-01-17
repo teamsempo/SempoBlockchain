@@ -67,6 +67,7 @@ class KycApplicationFactory(SQLAlchemyModelFactory):
         model = KycApplication
         sqlalchemy_session = db.session
 
+
 class OrganisationFactory(SQLAlchemyModelFactory):
     class Meta:
         model = Organisation

@@ -197,29 +197,28 @@ class TransferAccount(OneOrgBase, ModelBase):
     def approve_and_disburse(self, initial_disbursement=None, auto_resolve=False):
         from server.utils.access_control import AccessControl
 
-        auto_approve = current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS']
         admin = getattr(g, 'user', None)
+        auto_resolve = initial_disbursement != current_app.config['DEFAULT_INITIAL_DISBURSEMENT']
 
-        if not self.is_approved and admin:
-            if AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'superadmin'):
-                auto_resolve = True
-                self.is_approved = True
-
-            elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
-                auto_resolve = initial_disbursement \
-                               <= current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']
-                self.is_approved = auto_approve
-
-            elif AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'subadmin'):
-                auto_resolve = False
-                self.is_approved = False
+        if not self.is_approved and admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
+            self.is_approved = True
 
         if self.is_beneficiary:
+            # TODO: make this more robust
+            # approve_and_disburse might be called for a second time to disburse
+            # so first check that no credit transfer have already been received
             if len(self.credit_receives) < 1:
-                # approve_and_disburse might be called for a second time to disburse
-                # so first check that no credit transfer have already been received
+                # make initial disbursement
                 disbursement = self._make_initial_disbursement(initial_disbursement, auto_resolve)
                 return disbursement
+
+            elif len(self.credit_receives) == 1:
+                # else likely initial disbursement received, check if DISBURSEMENT and PENDING and resolve if default
+
+                disbursement = self.credit_receives[0]
+                if disbursement.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT and disbursement.transfer_status == TransferStatusEnum.PENDING and auto_resolve:
+                    disbursement.resolve_as_completed()
+                    return disbursement
 
     def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
         from server.utils.credit_transfer import make_payment_transfer

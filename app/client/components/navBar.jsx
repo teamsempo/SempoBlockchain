@@ -88,17 +88,10 @@ class NavBar extends React.Component {
         let beneficiaryTermPlural = window.BENEFICIARY_TERM_PLURAL;
         let beneficiaryURL = '/' + beneficiaryTermPlural.toLowerCase();
 
-        if (!window.IS_USING_BITCOIN) {
-          var tracker_link = (
-            'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-            + 'etherscan.io/address/' +
-            (window.USING_EXTERNAL_ERC20? window.master_wallet_address : window.ETH_CONTRACT_ADDRESS))
-        } else {
-          tracker_link = (
-            'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-            '/address/' + window.BITCOIN_MASTER_WALLET_ADDRESS
-          )
-        }
+        var tracker_link = (
+          window.ETH_EXPLORER_URL
+          + '/address/' +
+          (window.USING_EXTERNAL_ERC20? window.master_wallet_address : window.ETH_CONTRACT_ADDRESS));
 
         var orgs = this.props.login.organisations;
         if (orgs === null || typeof orgs === "undefined") {

@@ -15,9 +15,10 @@ from server.models.transfer_account import TransferAccount
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError,
+    NoTransferAllowedLimitError,
     TransferAmountLimitError,
-    TransactionCountLimitError,
-    TransactionBalanceFractionLimitError)
+    TransferCountLimitError,
+    TransferBalanceFractionLimitError)
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
@@ -209,6 +210,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         for limit in relevant_transfer_limits:
 
+            if limit.no_transfer_allowed:
+                raise NoTransferAllowedLimitError(token=self.token.name)
+
             if limit.transfer_count is not None:
                 # GE Limits
                 transaction_count = limit.apply_all_filters(
@@ -220,7 +224,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'\
                         .format(limit.name, limit.transfer_count, limit.time_period_days)
                     self.resolve_as_rejected(message=message)
-                    raise TransactionCountLimitError(
+                    raise TransferCountLimitError(
                         transfer_count_limit=limit.transfer_count,
                         limit_time_period_days=limit.time_period_days,
                         token=self.token.name,
@@ -236,7 +240,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                         max(allowed_transfer, 0)
                     )
                     self.resolve_as_rejected(message=message)
-                    raise TransactionBalanceFractionLimitError(
+                    raise TransferBalanceFractionLimitError(
                         transfer_balance_fraction_limit=limit.transfer_balance_fraction,
                         transfer_amount_avail=int(allowed_transfer),
                         limit_time_period_days=limit.time_period_days,

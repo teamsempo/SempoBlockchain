@@ -6,8 +6,9 @@ from sqlalchemy.sql import func
 
 from server import db, message_processor
 from server.exceptions import (
-    TransactionBalanceFractionLimitError,
-    TransactionCountLimitError,
+    NoTransferAllowedLimitError,
+    TransferBalanceFractionLimitError,
+    TransferCountLimitError,
     TransferAmountLimitError
 )
 from server.models.credit_transfer import CreditTransfer
@@ -221,7 +222,7 @@ class TokenProcessor(object):
             token_exchanges = "\n".join(map(standard_string, token_info_list))
 
         # TODO: Don't love the string comparison here, but it keeps thing short
-        if token_exchanges == "\n":
+        if token_exchanges in ["\n", '']:
             TokenProcessor.send_sms(
                 user,
                 "send_balance_sms",
@@ -253,15 +254,24 @@ class TokenProcessor(object):
         exchange_limit = TokenProcessor.get_default_exchange_limit(default_limit, user)
         exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
 
-        TokenProcessor.send_sms(
-            user,
-            "exchange_rate_sms",
-            token_name=from_token.symbol,
-            exchange_rate=exchange_rate,
-            exchange_limit=rounded_dollars(exchange_limit),
-            exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
-            limit_period=default_limit.time_period_days
-        )
+        if exchange_limit:
+            TokenProcessor.send_sms(
+                user,
+                "exchange_rate_can_exchange_sms",
+                token_name=from_token.symbol,
+                exchange_rate=exchange_rate,
+                exchange_limit=rounded_dollars(exchange_limit),
+                exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
+                limit_period=default_limit.time_period_days
+            )
+        else:
+            TokenProcessor.send_sms(
+                user,
+                "exchange_rate_sms",
+                token_name=from_token.symbol,
+                exchange_rate=exchange_rate,
+                exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
+            )
 
     @staticmethod
     def send_token(sender: User, recipient: User, amount: float, reason_str: str, reason_id: int):
@@ -339,6 +349,12 @@ class TokenProcessor(object):
                 "exchange_token_agent_sms", agent, sender, to_amount, amount, agent_tx_time, agent_balance
             )
 
+        except NoTransferAllowedLimitError as e:
+            TokenProcessor.send_sms(
+                sender,
+                "exchange_not_allowed_error_sms",
+            )
+
         except TransferAmountLimitError as e:
             TokenProcessor.send_sms(
                 sender,
@@ -347,14 +363,14 @@ class TokenProcessor(object):
                 token=e.token,
                 limit_period=e.limit_time_period_days
             )
-        except TransactionBalanceFractionLimitError as e:
+        except TransferBalanceFractionLimitError as e:
             TokenProcessor.send_sms(
                 sender,
                 "exchange_fraction_error_sms",
                 token=e.token,
                 percent=f"{int(e.transfer_balance_fraction_limit * 100)}%"
             )
-        except TransactionCountLimitError as e:
+        except TransferCountLimitError as e:
             TokenProcessor.send_sms(
                 sender,
                 "exchange_count_error_sms",

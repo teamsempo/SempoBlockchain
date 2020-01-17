@@ -99,7 +99,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     let initialDisbursementAmount;
     let businessUsage;
 
-    if (window.MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT > 0) {
+    if (window.DEFAULT_INITIAL_DISBURSEMENT > 0) {
       initialDisbursementAmount = <InputField name="initialDisbursement" label={'Initial Disbursement Amount'}>
         {organisation !== null ? organisation.token.symbol : null}
       </InputField>

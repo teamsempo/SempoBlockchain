@@ -178,17 +178,7 @@ class TransferAccountManager extends React.Component {
 
     const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100)}</p>;
 
-    if (!window.IS_USING_BITCOIN) {
-      var tracker_link = (
-        'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-        + 'etherscan.io/address/' + this.props.transferAccount.blockchain_address
-      )
-    } else {
-      tracker_link = (
-        'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-        '/address/' + this.props.transferAccount.blockchain_address
-      )
-    }
+    let tracker_link = window.ETH_EXPLORER_URL + '/address/' + this.props.transferAccount.blockchain_address;
 
     if (is_beneficiary) {
       accountTypeName = TransferAccountTypes.USER || window.BENEFICIARY_TERM;
