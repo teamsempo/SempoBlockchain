@@ -144,13 +144,16 @@ def new_disbursement(create_transfer_account_user):
 @pytest.fixture(scope='function')
 def new_credit_transfer(create_transfer_account_user, external_reserve_token):
     from server.models.credit_transfer import CreditTransfer
+    from uuid import uuid4
+
     credit_transfer = CreditTransfer(
         amount=1000,
         token=external_reserve_token,
         sender_user=create_transfer_account_user,
         recipient_user=create_transfer_account_user,
         transfer_type=TransferTypeEnum.PAYMENT,
-        transfer_subtype=TransferSubTypeEnum.STANDARD
+        transfer_subtype=TransferSubTypeEnum.STANDARD,
+        uuid=str(uuid4())
     )
     return credit_transfer
 
