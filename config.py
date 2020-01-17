@@ -103,7 +103,6 @@ if IS_PRODUCTION is None:
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
 CURRENCY_DECIMALS   = int(specific_parser['APP']['CURRENCY_DECIMALS'])
-STARTING_BALANCE    = int(specific_parser['APP']['STARTING_BALANCE'])
 DEFAULT_COUNTRY     = specific_parser['APP']['DEFAULT_COUNTRY']
 DEFAULT_LAT         = float(specific_parser['APP']['DEFAULT_LAT'])
 DEFAULT_LNG         = float(specific_parser['APP']['DEFAULT_LNG'])
@@ -115,8 +114,7 @@ FEEDBACK_TRIGGERED_WHEN_BALANCE_BELOW = int(specific_parser['APP']['FEEDBACK_TRI
 FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE = int(specific_parser['APP']['FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE'])
 LIMIT_EXCHANGE_RATE = float(specific_parser['APP'].get('LIMIT_EXCHANGE_RATE', 1))
 CASHOUT_INCENTIVE_PERCENT = float(specific_parser['APP'].get('CASHOUT_INCENTIVE_PERCENT', 0))
-AUTO_APPROVE_TRANSFER_ACCOUNTS = specific_parser['APP'].getboolean('AUTO_APPROVE_TRANSFER_ACCOUNTS', False)
-MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT', 0))
+DEFAULT_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('DEFAULT_INITIAL_DISBURSEMENT', 0))
 ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
