@@ -247,6 +247,9 @@ class User(ManyOrgBase, ModelBase):
             return {}
         return self._held_roles
 
+    def remove_all_held_roles(self):
+        self._held_roles = {}
+
     def set_held_role(self, role: str, tier: Union[str, None]):
         if role not in ACCESS_ROLES:
             raise RoleNotFoundException("Role '{}' not valid".format(role))
