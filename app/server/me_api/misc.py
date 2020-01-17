@@ -3,10 +3,8 @@ from flask.views import MethodView
 
 from server import db
 from server.models.feedback import Feedback
-from server.models.referral import Referral
 from server.models.fiat_ramp import FiatRamp, FiatRampStatusEnum, Token
 from server.models.user import User
-from server.schemas import referrals_schema, referral_schema
 from server.utils.auth import requires_auth
 from server.utils.mobile_version import check_mobile_version
 from server.utils.poli_payments import PoliPaymentsError, create_poli_link, get_poli_link_status, generate_poli_link_from_url_token
@@ -48,46 +46,55 @@ class MeFeedbackAPI(MethodView):
         return make_response(jsonify(response_object)), 201
 
 
+# TODO: fix this
 class ReferralAPI(MethodView):
     @requires_auth
     def get(self):
 
-        referrals = Referral.query.filter_by(referring_user_id=g.user.id).all()
+        e = NotImplementedError('Referral has been updated and needs to be fixed!')
 
-        response_object = {
-            'message': 'Referrals Loaded',
-            'data': {
-                'referrals': referrals_schema.dump(referrals).data
-            }
-        }
+        return make_response(jsonify(str(e))), 501
 
-        return make_response(jsonify(response_object)), 201
+        # referrals = Referral.query.filter_by(referring_user_id=g.user.id).all()
+        #
+        # response_object = {
+        #     'message': 'Referrals Loaded',
+        #     'data': {
+        #         'referrals': referrals_schema.dump(referrals).data
+        #     }
+        # }
+        #
+        # return make_response(jsonify(response_object)), 201
 
     @requires_auth
     def post(self):
-        post_data = request.get_json()
+        e = NotImplementedError('Referral has been updated and needs to be fixed!')
 
-        referral = Referral()
+        return make_response(jsonify(str(e))), 501
 
-        referral.first_name = post_data.get('first_name')
-        referral.last_name = post_data.get('last_name')
-        referral.phone = post_data.get('phone')
-        referral.reason = post_data.get('reason')
+        # post_data = request.get_json()
+        #
+        # referral = Referral()
+        #
+        # referral.first_name = post_data.get('first_name')
+        # referral.last_name = post_data.get('last_name')
+        # referral.phone = post_data.get('phone')
+        # referral.reason = post_data.get('reason')
+        #
+        # referral.referring_user = g.user
+        #
+        # db.session.add(referral)
+        #
+        # db.session.commit()
+        #
+        # response_object = {
+        #     'message': 'Referral Created',
+        #     'data': {
+        #         'referral': referral_schema.dump(referral).data
+        #     }
+        # }
 
-        referral.referring_user = g.user
-
-        db.session.add(referral)
-
-        db.session.commit()
-
-        response_object = {
-            'message': 'Referral Created',
-            'data': {
-                'referral': referral_schema.dump(referral).data
-            }
-        }
-
-        return make_response(jsonify(response_object)), 201
+        # return make_response(jsonify(response_object)), 201
 
 
 class VersionAPI(MethodView):

@@ -306,13 +306,6 @@ class TransferCardSchema(SchemaBase):
             return None
 
 
-class ReferralSchema(SchemaBase):
-    first_name      = fields.Str()
-    last_name       = fields.Str()
-    reason          = fields.Str()
-    phone           = fields.Str()
-
-
 class SavedFilterSchema(SchemaBase):
     name            = fields.Str()
     filter          = fields.Method('get_filter_json')
@@ -444,9 +437,6 @@ view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
 
 uploaded_resource_schema = UploadedResourceSchema()
-
-referral_schema = ReferralSchema()
-referrals_schema = ReferralSchema(many=True)
 
 filter_schema = SavedFilterSchema()
 filters_schema = SavedFilterSchema(many=True)

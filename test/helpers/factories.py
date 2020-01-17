@@ -8,7 +8,6 @@ from server.models.device_info import DeviceInfo
 from server.models.feedback import Feedback
 from server.models.kyc_application import KycApplication
 from server.models.organisation import Organisation
-from server.models.referral import Referral
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
@@ -41,12 +40,6 @@ class UploadedResourceFactory(SQLAlchemyModelFactory):
 class TransferAccountFactory(SQLAlchemyModelFactory):
     class Meta:
         model = TransferAccount
-        sqlalchemy_session = db.session
-
-
-class ReferralFactory(SQLAlchemyModelFactory):
-    class Meta:
-        model = Referral
         sqlalchemy_session = db.session
 
 
