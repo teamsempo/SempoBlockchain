@@ -142,28 +142,27 @@ def update_transfer_account_user(user,
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
 
-    if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
-        # remove all roles before updating
-        user.remove_all_held_roles()
-        flag_modified(user, '_held_roles')
+    # remove all roles before updating
+    user.remove_all_held_roles()
+    flag_modified(user, '_held_roles')
 
-        if not is_vendor:
-            vendor_tier = None
-        elif existing_transfer_account:
-            vendor_tier = 'vendor'
-        else:
-            vendor_tier = 'supervendor'
+    if not is_vendor:
+        vendor_tier = None
+    elif existing_transfer_account:
+        vendor_tier = 'vendor'
+    else:
+        vendor_tier = 'supervendor'
 
-        user.set_held_role('VENDOR', vendor_tier)
+    user.set_held_role('VENDOR', vendor_tier)
 
-        if is_tokenagent:
-            user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+    if is_tokenagent:
+        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
 
-        if is_groupaccount:
-            user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    if is_groupaccount:
+        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
-        if is_beneficiary:
-            user.set_held_role('BENEFICIARY', 'beneficiary')
+    if is_beneficiary:
+        user.set_held_role('BENEFICIARY', 'beneficiary')
 
     return user
 

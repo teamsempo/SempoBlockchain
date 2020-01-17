@@ -161,13 +161,16 @@ class UserAPI(MethodView):
 
         default_organisation_id = put_data.get('default_organisation_id')
 
+        if user_id is None:
+            return make_response(jsonify({'message': 'No user_id provided'})), 400
+
         user = User.query.get(user_id)
 
         if not user:
             response_object = {
                 'message': 'User not found'
             }
-            return make_response(jsonify(response_object)), 400
+            return make_response(jsonify(response_object)), 404
 
         updated_user = UserUtils.update_transfer_account_user(user,
                                                               first_name=first_name, last_name=last_name,
@@ -189,7 +192,7 @@ class UserAPI(MethodView):
             }
         }
 
-        return make_response(jsonify(response_object)), 201
+        return make_response(jsonify(response_object)), 200
 
 
 class ResetPinAPI(MethodView):
