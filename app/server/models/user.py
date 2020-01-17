@@ -3,7 +3,7 @@ from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy import text
+from sqlalchemy import text, Table
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
 from flask import current_app, g
@@ -40,6 +40,13 @@ from server.exceptions import (
 from server.constants import (
     ACCESS_ROLES
 )
+
+# self-referencing-m2m-relationship
+# referrals = Table(
+#     'referrals', ModelBase.metadata,
+#     db.Column('referred_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+#     db.Column('referring_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+# )
 
 
 class User(ManyOrgBase, ModelBase):
@@ -131,8 +138,15 @@ class User(ManyOrgBase, ModelBase):
 
     devices = db.relationship('DeviceInfo', backref='user', lazy=True)
 
-    referrals = db.relationship(
-        'Referral', backref='referring_user', lazy=True)
+    # todo: deprecate
+    # referrals = db.relationship(
+    #     'Referral', backref='referring_user', lazy=True)
+
+    # prior_tasks = relationship('BlockchainTask',
+    #                          secondary=task_dependencies,
+    #                          primaryjoin="BlockchainTask.id == task_dependencies.c.posterior_task_id",
+    #                          secondaryjoin="BlockchainTask.id == task_dependencies.c.prior_task_id",
+    #                          backref='posterior_tasks')
 
     transfer_card = db.relationship(
         'TransferCard', backref='user', lazy=True, uselist=False)
