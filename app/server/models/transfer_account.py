@@ -204,6 +204,7 @@ class TransferAccount(OneOrgBase, ModelBase):
             self.is_approved = True
 
         if self.is_beneficiary:
+            # TODO: make this more robust
             # approve_and_disburse might be called for a second time to disburse
             # so first check that no credit transfer have already been received
             if len(self.credit_receives) < 1:
