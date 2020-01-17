@@ -34,7 +34,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
     ("standard", None, "en", "Your Sarafu-Network balances are as follows:\nSM1 200.00\nSM2 350.00\nCall 0757628885 for more info"),
     ("standard", None, "sw", "Akaunti yako ya Sarafu-Network ina masalio yafuatayo:\nSM1 200.00\nSM2 350.00\nPiga 0757628885 kwa usaidizi zaidi"),
     ("group", 0.5, "en", "per 30"),
-    ("group", 0.5, "sw", "siku 30"),
+    ("group", 0.5, "sw", "siku 30")
 ])
 def test_send_balance_sms(mocker, test_client, init_database, initialised_blockchain_network, user_type, limit,
                      preferred_language, sample_text):
@@ -162,6 +162,8 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
     org = OrganisationFactory()
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo", default_organisation=org)
+    sender.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
     token1 = Token.query.filter_by(symbol="SM1").first()
     create_transfer_account_for_user(sender, token1, 20000)
 
