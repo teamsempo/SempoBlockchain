@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 
-import { formatMoney } from '../../utils.js'
+import { formatMoney, generateQueryString } from '../../utils.js'
 
 import DateTime from '../dateTime.jsx'
 import {ModuleHeader} from '../styledElements.js'
@@ -18,10 +18,15 @@ const mapStateToProps = (state) => {
     users: state.users,
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
+    login: state.login,
   };
 };
 
 class BeneficiaryLiveFeed extends React.Component {
+
+    navigateToAccount = (accountId) => {
+      window.location.assign('/accounts/' + accountId + generateQueryString({org_name: this.props.login.organisationName}))
+    }
 
     render() {
         let users = this.props.users;
@@ -100,7 +105,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                   <UserWrapper key={transfer.id}>
                                     <UserSVG src="/static/media/exchange.svg"/>
                                     <UserGroup>
-                                      <TopText>{sender_user_name} exchanged</TopText>
+                                      <ClickableTopText onClick={() => this.navigateToAccount(transferAccountId)}>{sender_user_name} exchanged</ClickableTopText>
                                       <BottomText><Highlight>{transferFromMoney}</Highlight> for
                                         <DarkHighlight> {transferToMoney}</DarkHighlight></BottomText>
                                     </UserGroup>
@@ -112,9 +117,9 @@ class BeneficiaryLiveFeed extends React.Component {
                                     <UserWrapper key={transfer.id}>
                                       <UserSVG src="/static/media/transfer.svg"/>
                                       <UserGroup>
-                                        <TopText>{sender_user_name} transferred</TopText>
+                                        <ClickableTopText onClick={() => this.navigateToAccount(transferAccountId)}>{sender_user_name} transferred</ClickableTopText>
                                         <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> to
-                                          <DarkHighlight> {recipient_user_name}</DarkHighlight></BottomText>
+                                          <ClickableHighlight onClick={() => this.navigateToAccount(transfer.recipient_transfer_account)}> {recipient_user_name}</ClickableHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
                                     </UserWrapper>
@@ -126,7 +131,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                       <UserGroup>
                                           <TopText>Disbursement of</TopText>
                                           <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> to
-                                            <DarkHighlight> {recipient_user_name}</DarkHighlight></BottomText>
+                                            <ClickableHighlight onClick={() => this.navigateToAccount(transfer.recipient_transfer_account)}> {recipient_user_name}</ClickableHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
                                     </UserWrapper>
@@ -139,7 +144,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                       <UserGroup>
                                           <TopText>Withdrawal of</TopText>
                                           <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> by
-                                            <DarkHighlight> {sender_user_name}</DarkHighlight></BottomText>
+                                            <ClickableHighlight onClick={() => this.navigateToAccount(transferAccountId)}> {sender_user_name}</ClickableHighlight></BottomText>
                                       </UserGroup>
                                       {timeStatusBlock}
                                     </UserWrapper>
@@ -197,10 +202,17 @@ const TopText = styled.h5`
   font-weight: 300;
 `;
 
+const ClickableTopText = styled.h5`
+  margin: 2px;
+  font-size: 12px;
+  color: #2D9EA0;
+  font-weight: 600;
+  cursor: pointer;
+`
+
 const BottomText = styled.div`
   margin: 2px;
   font-size: 15px;
-  color: #4A4A4A;
   font-weight: 300;
 `;
 
@@ -223,6 +235,17 @@ const DarkHighlight = styled.h5`
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
+`;
+
+const ClickableHighlight = styled.h5`
+  color: #2D9EA0;
+  display: inline;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
 `;
 
 const UserTime = styled.div`
