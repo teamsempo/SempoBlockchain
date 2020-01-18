@@ -118,13 +118,9 @@ class TokenProcessor(object):
     @staticmethod
     def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
         if limit is not None and limit.transfer_balance_fraction is not None:
-            return round_to_sig_figs(
-                limit.transfer_balance_fraction * TokenProcessor.get_balance(user), 3
-            )
+            return limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
         elif limit.total_amount is not None:
-            return round_to_sig_figs(
-                limit.total_amount, 3
-            )
+            return limit.total_amount
         else:
             return None
 
@@ -185,6 +181,7 @@ class TokenProcessor(object):
 
         def ge_string(t):
             if t['limit'].transfer_balance_fraction:
+                # TODO: This doesn't seem DRY with respect to 'get default exchange rate'
                 allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
                 rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
                 return(
