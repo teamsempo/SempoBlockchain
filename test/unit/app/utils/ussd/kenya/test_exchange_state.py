@@ -29,7 +29,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected",
  [
      # exchange_token state tests
-     (exchange_token_state, standard_user, "1", "exchange_rate_pin_authorization"),
+     (exchange_token_state, standard_user, "1", "complete"),
      (exchange_token_state, standard_user, "2", "exchange_token_agent_number_entry"),
      (exchange_token_state, standard_user, "3", "exit_invalid_menu_option"),
      (exchange_token_state, standard_user, "asdf", "exit_invalid_menu_option"),
