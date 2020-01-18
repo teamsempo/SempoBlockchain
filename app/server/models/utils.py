@@ -14,6 +14,24 @@ from server import db, bt
 from server.exceptions import OrganisationNotProvidedException
 
 
+@contextmanager
+def ephemeral_alchemy_object(mod: db.Model, *args, **kwargs):
+    # weird SQLAlchemy behaviour cause object  to be persisted under some circumstances, even if they're not committed
+    # See: https://hades.github.io/2013/06/sqlalchemy-adds-objects-collections-automatically/
+    # Use this to make sure an object definitely doesn't hang round
+
+    instance = mod(*args, **kwargs)
+    yield instance
+
+    for f in [db.session.expunge, db.session.delete]:
+        # Can't delete transient objects, so we expunge them first instead
+        try:
+            f(instance)
+        except:
+            # We don't care about no exceptions, we just want the object GONE!!!
+            pass
+
+
 def get_authorising_user_id():
     if hasattr(g, 'user'):
         return g.user.id
