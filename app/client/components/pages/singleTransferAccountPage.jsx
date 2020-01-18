@@ -76,7 +76,7 @@ class SingleTransferAccountPage extends React.Component {
       }
 
 
-      if (this.props.loggedIn && (this.props.transferAccounts.loadStatus.isRequesting === true || this.props.login.organisationId != query_params["org"])) {
+      if (this.props.loggedIn && (this.props.transferAccounts.loadStatus.isRequesting === true)) {
           return (
               <WrapperDiv>
 
