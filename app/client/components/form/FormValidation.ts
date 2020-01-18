@@ -12,7 +12,8 @@ const FormValidation = {
         return "Please enter a proper phone number";
       }
     }
-  }
+  },
+  notOther:  (value: string) => (value.toLowerCase() === 'other') ? undefined : "'Other' is not a valid input"
 };
 
 export default FormValidation;

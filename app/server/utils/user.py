@@ -114,7 +114,8 @@ def update_transfer_account_user(user,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
-                                 is_groupaccount=False):
+                                 is_groupaccount=False,
+                                 default_organisation_id=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -130,10 +131,20 @@ def update_transfer_account_user(user,
     if location:
         user.location = location
 
+    if default_organisation_id:
+        user.default_organisation_id = default_organisation_id
+
     if use_precreated_pin:
         transfer_card = TransferCard.get_transfer_card(public_serial_number)
 
         user.set_pin(transfer_card.PIN)
+
+    if existing_transfer_account:
+        user.transfer_accounts.append(existing_transfer_account)
+
+    # remove all roles before updating
+    user.remove_all_held_roles()
+    flag_modified(user, '_held_roles')
 
     if not is_vendor:
         vendor_tier = None
@@ -152,9 +163,6 @@ def update_transfer_account_user(user,
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
-
-    if existing_transfer_account:
-        user.transfer_accounts.append(existing_transfer_account)
 
     return user
 
@@ -397,6 +405,8 @@ def proccess_create_or_modify_user_request(
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
+    referred_by = attribute_dict.get('referred_by')
+
     blockchain_address = attribute_dict.get('blockchain_address')
 
     provided_public_serial_number = attribute_dict.get('public_serial_number')
@@ -523,6 +533,8 @@ def proccess_create_or_modify_user_request(
             }
             return response_object, 400
 
+    referred_by_user = find_user_from_public_identifier(referred_by)
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
 
@@ -540,6 +552,9 @@ def proccess_create_or_modify_user_request(
             is_beneficiary=is_beneficiary, is_vendor=is_vendor,
             is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
         )
+
+        if referred_by_user:
+            user.referred_by.append(referred_by_user)
 
         set_custom_attributes(attribute_dict, user)
         flag_modified(user, "custom_attributes")
@@ -567,6 +582,9 @@ def proccess_create_or_modify_user_request(
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
         business_usage=business_usage, initial_disbursement=initial_disbursement)
+
+    if referred_by_user:
+        user.referred_by.append(referred_by_user)
 
     if attribute_dict.get('gender'):
         attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
@@ -729,7 +747,7 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
         ma = most_common_uses.get(a.name)
         mb = most_common_uses.get(b.name)
 
-        # return most used, then default, then everything else
+        # return most used, then prioritised, then everything else
         if ma is not None and mb is not None:
             if ma >= mb:
                 return -1
@@ -739,11 +757,13 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
             return -1
         elif mb is not None:
             return 1
-        elif a.default or b.default:
-            if a.default:
+        elif a.priority and b.priority:
+            if a.priority < b.priority:
                 return -1
             else:
                 return 1
+        elif b.priority:
+            return 1
         else:
             return -1
 
