@@ -198,7 +198,7 @@ class TransferAccount(OneOrgBase, ModelBase):
         from server.utils.access_control import AccessControl
 
         admin = getattr(g, 'user', None)
-        auto_resolve = initial_disbursement != current_app.config['DEFAULT_INITIAL_DISBURSEMENT']
+        auto_resolve = initial_disbursement == current_app.config['DEFAULT_INITIAL_DISBURSEMENT']
 
         if not self.is_approved and admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
             self.is_approved = True
