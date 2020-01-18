@@ -17,7 +17,7 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.models.user import User
 
-from server.utils.misc import round_amount, rounded_dollars
+from server.utils.misc import round_to_decimals, rounded_dollars, round_to_sig_figs
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
@@ -121,12 +121,12 @@ class TokenProcessor(object):
     @staticmethod
     def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
         if limit is not None and limit.transfer_balance_fraction is not None:
-            return round_amount(
-                limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
+            return round_to_sig_figs(
+                limit.transfer_balance_fraction * TokenProcessor.get_balance(user), 3
             )
         elif limit.total_amount is not None:
-            return round_amount(
-                limit.total_amount
+            return round_to_sig_figs(
+                limit.total_amount, 3
             )
         else:
             return None
@@ -189,7 +189,7 @@ class TokenProcessor(object):
         def ge_string(t):
             if t['limit'].transfer_balance_fraction:
                 allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
-                rounded_rate = round_amount(t['exchange_rate'])
+                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
                 return(
                     f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
                 )
@@ -199,7 +199,7 @@ class TokenProcessor(object):
         def standard_string(t):
             if t['limit'].total_amount:
                 allowed_amount = f"{rounded_dollars(str(t['limit'].total_amount))}"
-                rounded_rate = round_amount(t['exchange_rate'])
+                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
                 return (
                     f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
                 )
@@ -251,8 +251,11 @@ class TokenProcessor(object):
         from_token = default_token(user)
 
         default_limit = TokenProcessor.get_default_limit(user, from_token, default_transfer_account(user))
-        exchange_limit = TokenProcessor.get_default_exchange_limit(default_limit, user)
-        exchange_rate = TokenProcessor.get_exchange_rate(user, from_token)
+        exchange_rate_full_precision = TokenProcessor.get_exchange_rate(user, from_token)
+
+        exchange_limit = rounded_dollars(TokenProcessor.get_default_exchange_limit(default_limit, user))
+        exchange_rate = round_to_sig_figs(exchange_rate_full_precision, 3)
+        exchange_sample_value = rounded_dollars(exchange_rate_full_precision * float(1000))
 
         if exchange_limit:
             TokenProcessor.send_sms(
@@ -260,8 +263,8 @@ class TokenProcessor(object):
                 "exchange_rate_can_exchange_sms",
                 token_name=from_token.symbol,
                 exchange_rate=exchange_rate,
-                exchange_limit=rounded_dollars(exchange_limit),
-                exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
+                exchange_limit=exchange_limit,
+                exchange_sample_value=exchange_sample_value,
                 limit_period=default_limit.time_period_days
             )
         else:
@@ -270,7 +273,7 @@ class TokenProcessor(object):
                 "exchange_rate_sms",
                 token_name=from_token.symbol,
                 exchange_rate=exchange_rate,
-                exchange_sample_value=rounded_dollars(exchange_rate * float(1000)),
+                exchange_sample_value=exchange_sample_value,
             )
 
     @staticmethod
