@@ -75,7 +75,8 @@ function* saveOrgId({payload}) {
   try {
     yield call(storeOrgid, payload.organisationId.toString());
 
-    window.location.reload()
+    var active_tab = browserHistory.location.pathname.split("/")[1];
+    window.location.assign("/" + active_tab);
   } catch (e) {
     removeOrgId()
   }
