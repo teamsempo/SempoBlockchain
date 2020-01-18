@@ -209,6 +209,9 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
         if not user.TFA_enabled:
             # Go down this path if user is yet to set up TFA
             tfa_url = user.tfa_url
+
+            db.session.commit()
+
             response_object = {
                 'tfa_url': tfa_url,
                 'message': 'User must setup two factor authentication'
