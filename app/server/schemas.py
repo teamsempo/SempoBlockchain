@@ -414,7 +414,7 @@ transfer_account_schema = TransferAccountSchema(
 
 transfer_accounts_schema = TransferAccountSchema(
     many=True,
-    only=('balance', 'created', 'id', 'users', 'token', 'primary_user_id', 'blockchain_address')
+    only=('balance', 'created', 'id', 'users', 'token', 'primary_user_id', 'blockchain_address', 'is_approved')
 )
 
 # transfer_accounts_schema = MiniTaSchema(many=True)
