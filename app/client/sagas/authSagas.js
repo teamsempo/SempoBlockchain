@@ -1,7 +1,7 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
 import { normalize } from 'normalizr';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken} from '../utils'
+import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken, parseQuery} from '../utils'
 import { adminUserSchema } from '../schemas'
 
 import {
@@ -75,8 +75,19 @@ function* saveOrgId({payload}) {
   try {
     yield call(storeOrgid, payload.organisationId.toString());
 
-    var active_tab = browserHistory.location.pathname.split("/")[1];
-    window.location.assign("/" + active_tab);
+    let query_params = parseQuery(window.location.search)
+
+    // if query param and payload are matching then just reload to update navbar
+    if(query_params["org"] && payload.organisationId == query_params["org"]){
+      window.location.reload()
+    } else {
+      // shorten url to base or base + 1 path
+      var active_tab = browserHistory.location.pathname.split("/")[1];
+      window.location.assign("/" + active_tab);
+    }
+
+    
+    
   } catch (e) {
     removeOrgId()
   }

@@ -10,7 +10,7 @@ import LoadingSpinner from "../loadingSpinner.jsx";
 import DateTime from '../dateTime.jsx';
 import NewTransferManager from '../management/newTransferManager.jsx'
 
-import { formatMoney } from "../../utils";
+import { formatMoney, generateQueryString } from "../../utils";
 import { editTransferAccount, setSelected, loadTransferAccounts } from "../../reducers/transferAccountReducer";
 import {TransferAccountTypes} from "../transferAccount/types";
 
@@ -339,7 +339,7 @@ class TransferAccountList extends React.Component {
                             return
                         }
 
-                        browserHistory.push('/accounts/' + rowInfo.row.id);
+                        browserHistory.push('/accounts/' + rowInfo.row.id + generateQueryString({org_name: this.props.login.organisationName}) );
 
                         if (handleOriginal) {
                           handleOriginal();
