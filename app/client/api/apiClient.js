@@ -1,4 +1,4 @@
-import {generateFormattedURL, getToken, handleResponse} from "../utils";
+import {generateFormattedURL, getTFAToken, getToken, handleResponse} from "../utils";
 
 /**
  * Sempo apiClient
@@ -6,13 +6,14 @@ import {generateFormattedURL, getToken, handleResponse} from "../utils";
  * @param url, STRING to be queried
  * @param method, ENUM of available HTTP codes
  * @param isAuthed, BOOLEAN,
+ * @param isTFA, BOOLEAN,
  * @param query, OBJECT of key/value pairs to be parsed into a query string
  * @param body, OBJECT, body data to send to server
  * @param path, INTEGER, used for calling specific object ID i.e. /1/
  * @param errorHandling, BOOLEAN, only use FALSE for special use case for TFA/auth
  * @returns {Promise<Response>}
  */
-export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, query=null, body=null, path=null, errorHandling=true}) => {
+export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, isTFA=false, query=null, body=null, path=null, errorHandling=true}) => {
   if (['PUT', 'POST', 'GET'].indexOf(method) === -1) {
     throw Error('Method provided is not supported')
   }
@@ -25,6 +26,7 @@ export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, quer
     'Content-Type': 'application/json'
   };
   isAuthed ? headers['Authorization'] = getToken() : null;
+  isTFA ? body['tfa_token'] = getTFAToken() : null;
 
   let data = {
     headers: headers,

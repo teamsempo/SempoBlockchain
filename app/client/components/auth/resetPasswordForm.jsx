@@ -75,11 +75,11 @@ class ResetPasswordFormContainer extends React.Component {
       return
     }
 
-    this.props.resetPassword({
+    this.props.resetPassword({body: {
       new_password: this.state.new_password,
       reset_password_token: this.state.reset_password_token,
       old_password: this.state.old_password
-    })
+    }})
   }
 
   onOldPasswordFieldKeyPress(e) {

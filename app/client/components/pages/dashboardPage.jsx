@@ -5,7 +5,7 @@ import { subscribe, unsubscribe } from 'pusher-redux';
 
 import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
 
-import { logout, activateAccount } from '../../reducers/auth/actions'
+import { logout } from '../../reducers/auth/actions'
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
 
@@ -31,8 +31,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     logout:       () => dispatch(logout()),
-    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
-    activateAccount: (activation_token) => dispatch(activateAccount(activation_token))
+    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path}))
   };
 };
 
@@ -51,16 +50,6 @@ class DashboardPage extends React.Component {
     this.subscribe();
   }
 
-  parseQuery(queryString) {
-    var query = {};
-    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
-    for (var i = 0; i < pairs.length; i++) {
-        var pair = pairs[i].split('=');
-        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-    }
-    return query;
-  }
-
   componentDidMount() {
     let transfer_type = 'ALL';
     let per_page = 50;
@@ -71,14 +60,6 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
-
-    const parsed = this.parseQuery(location.search);
-
-    if (parsed.actok) {
-      console.log('actok', parsed.actok)
-      this.props.activateAccount(parsed.actok)
-    }
-
   }
 
   componentWillUnmount() {

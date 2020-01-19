@@ -14,7 +14,7 @@ import {
   UPDATE_ACTIVE_ORG,
   EDIT_ADMIN_USER_REQUEST, UpdateActiveOrgPayload, UpdateUserPayload,
   LOAD_ADMIN_USER_REQUEST,
-  VALIDATE_TFA_REQUEST, ValidateTfaPayload
+  VALIDATE_TFA_REQUEST, ValidateTfaPayload, ActivatePayload, ResetEmailPayload
 } from "./types";
 
 export const updateActiveOrgRequest = (payload: UpdateActiveOrgPayload) => (
@@ -70,17 +70,17 @@ export const deactivateRegister = () => (
   }
 );
 
-export const activateAccount = (activation_token: string) => (
+export const activateAccount = (payload: ActivatePayload) => (
   {
     type: ACTIVATE_REQUEST,
-    activation_token
+    payload
   }
 );
 
-export const requestPasswordResetEmail = (email: string) => (
+export const requestPasswordResetEmail = (payload: ResetEmailPayload) => (
   {
     type: REQUEST_RESET_REQUEST,
-    email
+    payload
   }
 );
 
