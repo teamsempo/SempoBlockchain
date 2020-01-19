@@ -84,7 +84,7 @@ class UserAPI(MethodView):
                 }
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
         else:
             if account_type_filter == 'beneficiary':

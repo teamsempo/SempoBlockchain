@@ -115,7 +115,8 @@ def update_transfer_account_user(user,
                                  is_vendor=False,
                                  is_tokenagent=False,
                                  is_groupaccount=False,
-                                 default_organisation_id=None):
+                                 default_organisation_id=None,
+                                 business_usage=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -141,6 +142,9 @@ def update_transfer_account_user(user,
 
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
+
+    if business_usage:
+        user.business_usage_id = business_usage.id
 
     # remove all roles before updating
     user.remove_all_held_roles()
@@ -536,6 +540,12 @@ def proccess_create_or_modify_user_request(
 
     referred_by_user = find_user_from_public_identifier(referred_by)
 
+    if referred_by and not referred_by_user:
+        response_object = {
+            'message': f'Referrer user not found for public identifier {referred_by}'
+        }
+        return response_object, 400
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
 
@@ -551,10 +561,12 @@ def proccess_create_or_modify_user_request(
             use_precreated_pin=use_precreated_pin,
             existing_transfer_account=existing_transfer_account,
             is_beneficiary=is_beneficiary, is_vendor=is_vendor,
-            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
+            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
+            business_usage=business_usage
         )
 
         if referred_by_user:
+            user.referred_by.clear()  # otherwise prior referrals will remain...
             user.referred_by.append(referred_by_user)
 
         set_custom_attributes(attribute_dict, user)
