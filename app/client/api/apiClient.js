@@ -13,7 +13,12 @@ import {generateFormattedURL, getToken, handleResponse} from "../utils";
  * @returns {Promise<Response>}
  */
 export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, query=null, body=null, path=null, errorHandling=true}) => {
-  console.log('url',url, 'method',method, 'isAuthed',isAuthed, 'query',query, 'body',body, 'path',path, 'errorHandling',errorHandling)
+  if (['PUT', 'POST', 'GET'].indexOf(method) === -1) {
+    throw Error('Method provided is not supported')
+  }
+
+  console.log('url',url, 'method',method, 'isAuthed',isAuthed, 'query',query, 'body',body, 'path',path, 'errorHandling',errorHandling);
+
   //todo: check which headers are needed for given method
   let headers = {
     'Accept': 'application/json',
@@ -21,15 +26,13 @@ export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, quer
   };
   isAuthed ? headers['Authorization'] = getToken() : null;
 
-  if (['PUT', 'POST', 'GET'].indexOf(method) === -1) {
-    throw Error('Method provided is not supported')
-  }
-
-  return fetch(generateFormattedURL(url, query, path), {
+  let data = {
     headers: headers,
     method: method,
-    body: JSON.stringify(body)
-  }).then(response => {
+  };
+  method !== 'GET' ? data['body'] = JSON.stringify(body) : null;
+
+  return fetch(generateFormattedURL(url, query, path), data).then(response => {
     return errorHandling ? handleResponse(response) : response.json();
   }).catch(error => {
     throw error;

@@ -1,13 +1,9 @@
 import { apiClient } from './apiClient';
 
-// Load User Details
 export const loadUserAPI = ({query, path}) => apiClient({url: '/user/', method: 'GET', query: query, path: path});
 
-// Create at User with Auth
 export const createUserAPI = ({body}) => apiClient({url: '/user/', method: 'POST', body: body});
 
-// Edit User Details
 export const editUserAPI = ({body, path}) => apiClient({url: '/user/', method: 'PUT', body: body, path: path});
 
-// Reset User Pin
 export const resetPinAPI = ({body}) => apiClient({url: '/user/reset_pin/', method: 'POST', body: body});
