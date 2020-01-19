@@ -269,7 +269,7 @@ class SearchBoxWithFilter extends React.Component {
         //Filtering Custom Attributes
         Object.keys(item.custom_attributes).map(attribute_name => {
           if (attribute_name === filter.keyName) {
-           let attribute_value = item.custom_attributes[attribute_name].value;
+           let attribute_value = item.custom_attributes[attribute_name];
            test_conditions(filter, attribute_value)
           }
         })
