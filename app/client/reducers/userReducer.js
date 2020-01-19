@@ -155,10 +155,10 @@ export const editUser = (payload) => (
   }
 );
 
-export const resetPin = (userId) => (
+export const resetPin = (payload) => (
   {
     type: RESET_PIN_REQUEST,
-    userId,
+    payload,
   }
 );
 

@@ -1,51 +1,10 @@
-import { getToken, handleResponse, generateFormattedURL } from '../utils'
+import { apiClient } from './apiClient';
 
-export const loadCreditTransferListAPI = ({query , path}) => {
-    return fetch(generateFormattedURL('/credit_transfer/', query , path), {
-      headers: {
-          'Authorization': getToken(),
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-      },
-      method: 'GET',
-      // body: JSON.stringify({'transfer_account_id_list': transfer_account_id_list})
-      })
-      .then(response => {
-        return handleResponse(response)
-      })
-      .catch(error => {
-        throw error;
-      })
-};
+// Load list of credit transfers
+export const loadCreditTransferListAPI = ({query, path}) => apiClient({url: '/credit_transfer/', method: 'GET', query: query, path: path});
 
-export const modifyTransferAPI = ({body, path}) => {
-  return fetch(generateFormattedURL('/credit_transfer/', null , path), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'PUT',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
+// Modify credit transfer
+export const modifyTransferAPI = ({body, path}) => apiClient({url: '/credit_transfer/', method: 'PUT', body: body, path: path});
 
-export const newTransferAPI = ({body}) => {
-  return fetch(generateFormattedURL('/credit_transfer/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'POST',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
+// Create new credit transfer
+export const newTransferAPI = ({body}) => apiClient({url: '/credit_transfer/', method: 'POST', body: body});

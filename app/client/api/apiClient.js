@@ -1,7 +1,19 @@
 import {generateFormattedURL, getToken, handleResponse} from "../utils";
 
-
-export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, query=null, body=null, path=null}) => {
+/**
+ * Sempo apiClient
+ *
+ * @param url, STRING to be queried
+ * @param method, ENUM of available HTTP codes
+ * @param isAuthed, BOOLEAN,
+ * @param query, OBJECT of key/value pairs to be parsed into a query string
+ * @param body, OBJECT, body data to send to server
+ * @param path, INTEGER, used for calling specific object ID i.e. /1/
+ * @param errorHandling, BOOLEAN, only use FALSE for special use case for TFA/auth
+ * @returns {Promise<Response>}
+ */
+export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, query=null, body=null, path=null, errorHandling=true}) => {
+  console.log('url',url, 'method',method, 'isAuthed',isAuthed, 'query',query, 'body',body, 'path',path, 'errorHandling',errorHandling)
   //todo: check which headers are needed for given method
   let headers = {
     'Accept': 'application/json',
@@ -9,14 +21,16 @@ export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, quer
   };
   isAuthed ? headers['Authorization'] = getToken() : null;
 
-  //todo: check method is supported in ['PUT', 'POST', 'GET'], else raise error
-  // if (method !==)
+  if (['PUT', 'POST', 'GET'].indexOf(method) === -1) {
+    throw Error('Method provided is not supported')
+  }
 
   return fetch(generateFormattedURL(url, query, path), {
     headers: headers,
     method: method,
+    body: JSON.stringify(body)
   }).then(response => {
-    return handleResponse(response)
+    return errorHandling ? handleResponse(response) : response.json();
   }).catch(error => {
     throw error;
   });
