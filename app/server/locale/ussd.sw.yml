@@ -24,12 +24,12 @@ sw:
     send_token_amount: |
       CON Weka kiwango
       0. Nyuma
-    send_token_reason: |
+    send_token_reason: | # This needs proper translations
       CON Chagua kusudi la malipo 
       %{options}
-      9. Onyesha chaguzi zingine # This needs proper translations 
+      9. Onyesha chaguzi zingine
       0. Nyuma
-    send_token_reason_other:  # This needs proper translations 
+    send_token_reason_other: # This needs proper translations
       first: |
         CON Fafanua kusudi zaidi
         %{other_options}

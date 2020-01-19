@@ -25,7 +25,7 @@ en:
       CON Enter Amount
       0. Back
     send_token_reason: |
-      CON Select Transfer reason 
+      CON Select Transfer reason
       %{options}
       9. Show other options
       0. Back
@@ -59,7 +59,7 @@ en:
       2. Cancel
       0. Back
     directory_listing: |
-      CON Choose Market Category 
+      CON Choose Market Category
       %{options}
       9. Show other options
       0. Back

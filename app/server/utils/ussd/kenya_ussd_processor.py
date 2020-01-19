@@ -4,7 +4,7 @@ import math
 from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
 from server.utils.user import get_user_by_phone, default_token
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine, ITEMS_PER_MENU
+from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine, ITEMS_PER_MENU, USSD_MAX_LENGTH
 from server.utils.i18n import i18n_for
 from server.utils.credit_transfer import cents_to_dollars
 
@@ -42,6 +42,26 @@ class KenyaUssdProcessor:
 
         session.state = new_state
         return new_state
+
+    @staticmethod
+    def fit_usages(ussd_session, most_relevant_usages, blank_len, user, list_start, previous_stack):
+
+        current_usages = []
+        previous_set_of_options = ''
+        last_index = 0
+        for index, usage in enumerate(most_relevant_usages[list_start:]):
+            current_usages.append(usage)
+            menu_options = KenyaUssdProcessor.create_usages_list(current_usages, user)
+
+            if len(menu_options) + blank_len > USSD_MAX_LENGTH or index + 1 > ITEMS_PER_MENU:
+                continue
+
+            previous_set_of_options = menu_options
+            last_index = index
+
+        ussd_session.set_data('usage_index_stack', previous_stack + [list_start + last_index + 1])
+
+        return previous_set_of_options
 
     @staticmethod
     def custom_display_text(menu: UssdMenu, ussd_session: UssdSession) -> str:
@@ -112,35 +132,79 @@ class KenyaUssdProcessor:
                 return i18n_for(user, "{}.first".format(menu.display_key))
 
         if menu.name == 'directory_listing' or menu.name == 'send_token_reason':
+
+            blank_template = i18n_for(
+                user, menu.display_key, options=''
+            )
+
+            blank_len = len(blank_template)
+
             most_relevant_usages = ussd_session.get_data('transfer_usage_mapping')
-            current_usages = most_relevant_usages[:ITEMS_PER_MENU]
-            menu_options = KenyaUssdProcessor.create_usages_list(current_usages, user)
+
+            options = KenyaUssdProcessor.fit_usages(
+                ussd_session,
+                most_relevant_usages,
+                blank_len,
+                user,
+                0,
+                [0]
+            )
+
+            # current_usages = most_relevant_usages[:ITEMS_PER_MENU]
             return i18n_for(
                 user, menu.display_key,
-                options=menu_options
+                options=options
             )
 
         if menu.name == 'directory_listing_other' or menu.name == 'send_token_reason_other':
+
             most_relevant_usages = ussd_session.get_data('transfer_usage_mapping')
             usage_menu_nr = ussd_session.get_data('usage_menu')
-            start_of_list = (ITEMS_PER_MENU * usage_menu_nr)
-            end_of_list = ITEMS_PER_MENU + (ITEMS_PER_MENU * usage_menu_nr)
-            if end_of_list > len(most_relevant_usages):
-                end_of_list = len(most_relevant_usages)
-            current_usages = most_relevant_usages[start_of_list:end_of_list]
+            usage_stack = ussd_session.get_data('usage_index_stack')
 
-            menu_options = KenyaUssdProcessor.create_usages_list(current_usages, user)
-            if usage_menu_nr == 0:
-                menu_usage_part = 'first'
-            elif end_of_list == len(most_relevant_usages):
-                menu_usage_part = 'last'
-            else:
-                menu_usage_part = 'middle'
-            translated_menu = i18n_for(
-                user, "{}.{}".format(menu.display_key, menu_usage_part),
-                other_options=menu_options
+            start_of_list = usage_stack[usage_menu_nr]
+
+            total_usages = len(most_relevant_usages)
+
+            # First see if we can fit remaining usages onto the one page
+            if start_of_list + ITEMS_PER_MENU > total_usages:
+                part = 'first' if start_of_list == 0 else 'last'
+                current_usages = most_relevant_usages[start_of_list:total_usages]
+                menu_options = KenyaUssdProcessor.create_usages_list(current_usages, user)
+
+                translated_menu = i18n_for(
+                    user, "{}.{}".format(menu.display_key, part),
+                    other_options=menu_options
+                )
+
+                if len(translated_menu) <= USSD_MAX_LENGTH:
+                    return translated_menu
+
+            # Oh well, guess we just have to fit as many as possible then
+
+            part = 'first' if start_of_list == 0 else 'middle'
+
+            blank_template = i18n_for(
+                user, "{}.{}".format(menu.display_key, part),
+                other_options=''
             )
-            return translated_menu
+
+            blank_len = len(blank_template)
+
+            options = KenyaUssdProcessor.fit_usages(
+                ussd_session,
+                most_relevant_usages,
+                blank_len,
+                user,
+                start_of_list,
+                usage_stack)
+
+            # current_usages = most_relevant_usages[:ITEMS_PER_MENU]
+            return i18n_for(
+                user, "{}.{}".format(menu.display_key, part),
+                other_options=options
+            )
+
         return i18n_for(user, menu.display_key)
 
     @staticmethod

@@ -45,8 +45,12 @@ class ProcessKenyaUssd(MethodView):
                 current_menu = KenyaUssdProcessor.process_request(session_id, latest_input, user)
                 ussd_session = create_or_update_session(session_id, user, current_menu, user_input, service_code)
                 text = KenyaUssdProcessor.custom_display_text(current_menu, ussd_session)
+
                 if "CON" not in text and "END" not in text:
                     raise Exception("no menu found. text={}, user={}, menu={}, session={}".format(text, user.id, current_menu.name, ussd_session.id))
+
+                if len(text) > 164:
+                    print(f"Warning, text has length {len(text)}, display may be truncated")
 
                 db.session.commit()
         else:
