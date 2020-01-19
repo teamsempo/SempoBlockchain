@@ -59,9 +59,17 @@ def find_oldest_user_for_transfer_account(transfer_account):
 
 
 def find_user_from_public_identifier(*public_identifiers):
+    """
+    :param public_identifiers: email, phone, public_serial_number, nfc_serial_number or address
+    :return: First user found
+    """
     user = None
 
-    for public_identifier in public_identifiers:
+    for public_identifier in list(filter(lambda x: x is not None, public_identifiers)):
+
+        if user:
+            # if user was found on last loop, return!
+            return user
 
         if public_identifier is None:
             continue
