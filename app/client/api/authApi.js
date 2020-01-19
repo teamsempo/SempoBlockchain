@@ -1,6 +1,6 @@
 import {handleResponse, getToken, getTFAToken, getOrgId, generateFormattedURL} from '../utils'
 import { startConfiguration } from 'pusher-redux';
-import {store} from "../app";
+import {apiClient} from "./apiClient";
 
 //Auth API Call
 export const requestApiToken = ({body}) => {
@@ -168,49 +168,8 @@ export const authenticatePusher = () => {
   });
 };
 
-export const getUserList = () => {
-  return fetch(generateFormattedURL('/auth/permissions/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-    },
-    method: 'GET',
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
+export const getUserList = () => apiClient({url: '/auth/permissions/', method: 'GET'});
 
-export const updateUserAPI = ({body, query}) => {
-  return fetch(generateFormattedURL('/auth/permissions/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'PUT',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-    })
-    .catch(error => {
-      throw error;
-    })
-};
+export const updateUserAPI = ({body, query}) => apiClient({url: '/auth/permissions/', method: 'PUT', body: body, query: query});
 
-export const inviteUserAPI = ({body}) => {
-  return fetch(generateFormattedURL('/auth/permissions/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'POST',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
+export const inviteUserAPI = ({body}) => apiClient({url: '/auth/permissions/', method: 'POST', body: body});
