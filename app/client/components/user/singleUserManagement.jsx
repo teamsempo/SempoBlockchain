@@ -40,6 +40,7 @@ class SingleUserManagement extends React.Component {
       phone: '',
       location: '',
       account_type: '',
+      custom_attr_keys: [],
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -47,6 +48,9 @@ class SingleUserManagement extends React.Component {
   componentDidMount() {
     const { user } = this.props;
     let account_type;
+    let custom_attr_keys;
+    let custom_attr_key;
+    let custom_attr_value;
 
     if (user !== null) {
       if (user.is_beneficiary) {
@@ -59,6 +63,14 @@ class SingleUserManagement extends React.Component {
         account_type = TransferAccountTypes.GROUPACCOUNT
       }
 
+      custom_attr_keys = Object.keys(user.custom_attributes);
+      custom_attr_keys.map(key => {
+        if (!user.custom_attributes[key].uploaded_image_id) {
+          custom_attr_key = key;
+          custom_attr_value = replaceUnderscores(user.custom_attributes[key]);
+          this.setState({[custom_attr_key]: custom_attr_value})
+        }
+      });
 
       this.setState({
         first_name: user.first_name,
@@ -67,34 +79,37 @@ class SingleUserManagement extends React.Component {
         public_serial_number: user.public_serial_number,
         phone: user.phone,
         location: user.location,
-        account_type: account_type
+        account_type: account_type,
+        custom_attr_keys: custom_attr_keys
       });
     }
   }
 
   editUser() {
-    const first_name = this.state.first_name;
-    const last_name = this.state.last_name;
-    const nfc_serial_number = this.state.nfc_serial_number;
-    const public_serial_number = this.state.public_serial_number;
-    const phone = this.state.phone;
-    const location = this.state.location;
-    const account_type = this.state.account_type;
+    const { first_name, last_name, nfc_serial_number, public_serial_number,
+      phone, location, account_type, custom_attr_keys } = this.state;
 
     const single_transfer_account_id = this.props.userId.toString();
 
+    let attr_dict = {};
+    custom_attr_keys.map(key => {
+      attr_dict[key] = this.state[key]
+      return attr_dict
+    });
+
     this.props.editUser({
-        first_name,
-        last_name,
-        nfc_serial_number,
-        public_serial_number,
-        phone,
-        location,
-        is_vendor: (account_type === 'VENDOR' || account_type === 'CASHIER'),
-        is_tokenagent: account_type === 'TOKENAGENT',
-        is_groupaccount: account_type === 'GROUPACCOUNT',
-        },
-        single_transfer_account_id
+      first_name,
+      last_name,
+      nfc_serial_number,
+      public_serial_number,
+      phone,
+      location,
+      is_vendor: (account_type === 'VENDOR' || account_type === 'CASHIER'),
+      is_tokenagent: account_type === 'TOKENAGENT',
+      is_groupaccount: account_type === 'GROUPACCOUNT',
+      custom_attributes: attr_dict
+      },
+      single_transfer_account_id
     );
   }
 
@@ -136,9 +151,7 @@ class SingleUserManagement extends React.Component {
             return (
               <SubRow key={key}>
                 <InputLabel>{replaceUnderscores(key)}: </InputLabel>
-                <div style={{marginLeft: '0.5em', marginRight: '4em'}}>
-                  {replaceUnderscores(this.props.user.custom_attributes[key])}
-                </div>
+                <ManagerInput name={key} value={this.state[key] || ''} onChange={this.handleChange}/>
               </SubRow>
             )
           }
@@ -235,18 +248,26 @@ class SingleUserManagement extends React.Component {
                                      buttonText="Reset Pin"/>
                       </SubRow>
                     </Row>
-                      <Row style={{margin: '0em 1em', flexWrap: 'wrap'}}>
-                        {custom_attribute_list || null}
-                      </Row>
-                      <Row style={{margin: '0em 1em'}}>
-                        <SubRow>
-                        { profilePicture || null }
-                        </SubRow>
-                        <SubRow>
-                        </SubRow>
-                      </Row>
                   </Wrapper>
               </ModuleBox>
+
+            {this.state.custom_attr_keys.length >= 1 ? <ModuleBox>
+              <Wrapper>
+                <TopRow>
+                  <ModuleHeader>CUSTOM ATTRIBUTES</ModuleHeader>
+                </TopRow>
+                <Row style={{margin: '0em 1em'}}>
+                  {custom_attribute_list || null}
+                </Row>
+                <Row style={{margin: '0em 1em'}}>
+                  <SubRow>
+                  { profilePicture || null }
+                  </SubRow>
+                  <SubRow>
+                  </SubRow>
+                </Row>
+              </Wrapper>
+            </ModuleBox> : null }
           </div>
       );
   }

@@ -315,6 +315,7 @@ def set_custom_attributes(attribute_dict, user):
         to_remove = list(filter(lambda a: a.name == key, custom_attributes))
         for r in to_remove:
             custom_attributes.remove(r)
+            db.session.delete(r)
 
         custom_attribute = CustomAttributeUserStorage(
             name=key, value=attribute_dict['custom_attributes'][key])

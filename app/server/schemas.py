@@ -76,6 +76,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
+            # todo: is there a reason only GE attributes are returned??
             if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
                 parsed_dict[attribute.name] = attribute.value.strip('"')
 
