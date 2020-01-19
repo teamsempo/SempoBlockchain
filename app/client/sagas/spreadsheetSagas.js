@@ -18,11 +18,13 @@ import {
 import { uploadSpreadsheetAPI, saveDatasetAPI, loadDatasetListAPI } from '../api/spreadsheetAPI.js'
 import {handleError} from "../utils";
 
-function* spreadsheetUpload({ spreadsheet, preview_id, transfer_account_type }) {
+function* spreadsheetUpload({ payload }) {
   try {
-    const upload_result = yield call(uploadSpreadsheetAPI, spreadsheet, preview_id);
+    const upload_result = yield call(uploadSpreadsheetAPI, payload);
     yield put({type: SPREADSHEET_UPLOAD_SUCCESS, upload_result});
-    browserHistory.push('/upload?type=' + transfer_account_type)
+    //todo: this needs to be updated as account type no longer handled via URL
+    // browserHistory.push('/upload?type=' + transfer_account_type)
+    browserHistory.push('/upload')
 
   } catch (fetch_error) {
 

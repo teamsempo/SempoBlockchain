@@ -91,12 +91,10 @@ export const datasetList = (state = intialDatasetListState, action) => {
 
 /// Actions
 
-export const uploadSpreadsheet = (spreadsheet, preview_id, transfer_account_type) => (
+export const uploadSpreadsheet = (payload) => (
   {
     type: SPREADSHEET_UPLOAD_REQUEST,
-    spreadsheet,
-    preview_id,
-    transfer_account_type
+    payload,
   }
 );
 
