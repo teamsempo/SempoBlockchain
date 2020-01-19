@@ -47,8 +47,13 @@ class TransferAccountListPage extends React.Component {
           query = {account_type: 'beneficiary'};
 
       } else {
-          query = null;
+          query = {};
       }
+      
+      if (this.props.transferAccounts.loadStatus.lastQueried) {
+        query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
+      }
+
 
       const path = null;
 
