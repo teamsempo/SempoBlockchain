@@ -3,6 +3,8 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 import json
+from server import db
+
 
 from helpers.factories import UserFactory, UssdSessionFactory
 from helpers.ussd_utils import make_kenyan_phone
@@ -54,7 +56,6 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
-
 
 def test_invalid_user_recipient(test_client, init_database):
     session = exchange_token_agent_number_entry_state()

@@ -44,7 +44,18 @@ class KenyaUssdProcessor:
         return new_state
 
     @staticmethod
-    def custom_display_text(menu: UssdMenu, ussd_session: UssdSession, user: User) -> Optional[str]:
+    def custom_display_text(menu: UssdMenu, ussd_session: UssdSession) -> str:
+        """
+        Many USSD responses include user-specific data that is stored inside the USSD session. This function
+        extracts the appropriate session data based on the current menu name and then inserts them as keywords in the
+        i18n function.
+        :param menu: The USSD menu to create a text response for
+        :param ussd_session: The ussd session containing user data
+        :return: raw ussd menu text string
+        """
+
+        user = ussd_session.user
+
         if menu.name == 'about_my_business':
             bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
             if bio:
@@ -130,7 +141,7 @@ class KenyaUssdProcessor:
                 other_options=menu_options
             )
             return translated_menu
-        return None
+        return i18n_for(user, menu.display_key)
 
     @staticmethod
     def create_usages_list(usages, user):
