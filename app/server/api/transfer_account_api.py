@@ -119,7 +119,7 @@ class TransferAccountAPI(MethodView):
             if not approve == transfer_account.is_approved and transfer_account.is_approved is not True:
                 transfer_account.approve_and_disburse()
 
-            db.session.commit()
+            db.session.flush()
 
             result = transfer_account_schema.dump(transfer_account)
             response_object = {
