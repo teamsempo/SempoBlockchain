@@ -65,6 +65,6 @@ class UssdSession(ModelBase):
 
     def get_data(self, key):
         if self.session_data is not None:
-            return self.session_data[key]
+            return self.session_data.get(key)
         else:
             return None

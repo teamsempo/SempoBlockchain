@@ -50,7 +50,11 @@ def test_custom_display_text(test_client, init_database, menu_name, language, ex
         user = standard_user()
         user.preferred_language = language
 
-        start_state.session_data = {'transfer_usage_mapping': mapping, 'usage_menu': menu_nr}
+        start_state.session_data = {
+            'transfer_usage_mapping': mapping,
+            'usage_menu': menu_nr,
+            'usage_index_stack': [0, 8]
+        }
 
         start_state.user = user
 

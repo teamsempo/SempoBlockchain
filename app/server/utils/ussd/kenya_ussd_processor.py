@@ -160,7 +160,7 @@ class KenyaUssdProcessor:
 
             most_relevant_usages = ussd_session.get_data('transfer_usage_mapping')
             usage_menu_nr = ussd_session.get_data('usage_menu')
-            usage_stack = ussd_session.get_data('usage_index_stack')
+            usage_stack = ussd_session.get_data('usage_index_stack') or [0]
 
             start_of_list = usage_stack[usage_menu_nr]
 

@@ -373,11 +373,11 @@ class TokenProcessor(object):
         ge_tokens = list(filter(check_if_ge_limit, token_info_list))
         is_ge = len(ge_tokens) > 0
         if is_ge:
-            exchange_list = map(ge_string, ge_tokens)
+            exchange_list = list(map(ge_string, ge_tokens))
         else:
-            exchange_list = map(standard_string, token_info_list)
+            exchange_list = list(map(standard_string, token_info_list))
 
-        if len(list(exchange_list)) == 0:
+        if len(exchange_list) == 0:
             token_exchanges = None
         else:
             token_exchanges = "\n".join(exchange_list)
