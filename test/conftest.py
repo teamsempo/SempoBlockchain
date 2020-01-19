@@ -445,6 +445,10 @@ def mock_sms_apis(mocker):
 
     return messages
 
+@pytest.fixture(autouse=True)
+def mock_pusher(mocker):
+    mocker.patch('server.pusher_client.trigger')
+    mocker.patch('server.pusher_client.authenticate')
 
 
 @pytest.fixture(scope="module")
