@@ -7,6 +7,8 @@ import os
 import random
 from time import sleep
 
+from . import eth_worker_simulator
+
 from server import celery_app
 from server.utils.exchange import (
     bonding_curve_tokens_to_reserve,
@@ -20,10 +22,13 @@ class BlockchainTasker(object):
     def _eth_endpoint(self, endpoint):
         eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
+        print(f'{eth_worker_name}.{celery_tasks_name}.{endpoint}')
+        print(type(f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'))
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
     # TODO: Move these out to a separate util file
     def _execute_synchronous_celery(self, signature, timeout=None):
         # TODO: Read sig here, scan for simulator output
+        eth_worker_simulator.simulate(signature)
         async_result = signature.delay()
 
         try:
@@ -40,6 +45,12 @@ class BlockchainTasker(object):
     # TODO: Move these out to a separate util file
     def _execute_task(self, signature):
         # TODO: Read sig here, scan for simulator output
+        # Make this function accept args/kwargs and build celeryapp.signature here instead
+        # Feed the same args to simulator
+
+
+        eth_worker_simulator.simulate(signature)
+
         ar = signature.delay()
         return ar.id
 
@@ -181,7 +192,7 @@ class BlockchainTasker(object):
             constructor_args: Optional[List] = None,
             constructor_kwargs: Optional[Dict] = None,
             prior_tasks: Optional[List[int]] = None) -> int:
-
+        print(self._eth_endpoint('deploy_contract'))
         deploy_sig = celery_app.signature(
             self._eth_endpoint('deploy_contract'),
             kwargs={
