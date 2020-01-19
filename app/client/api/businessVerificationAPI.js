@@ -1,55 +1,14 @@
-import {getToken, handleResponse, generateQueryString, generateFormattedURL} from '../utils'
+import { apiClient } from './apiClient';
 
-export const loadBusinessVerificationAPI = ({query}) => {
-    return fetch(generateFormattedURL('/kyc_application/', query), {
-      headers: {
-          'Authorization': getToken(),
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-      },
-      method: 'GET',
-      })
-      .then(response => {
-        return handleResponse(response)
-      })
-      .catch(error => {
-        throw error;
-      })
-};
+import {getToken, handleResponse, generateFormattedURL} from '../utils'
 
-export const createBusinessVerificationAPI = ({body}) => {
-  return fetch(generateFormattedURL('/kyc_application/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'POST',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
+export const loadBusinessVerificationAPI = ({query}) => apiClient({url: '/kyc_application/', method: 'GET', query: query});
 
-export const editBusinessVerificationAPI = ({body, path}) => {
-  return fetch(generateFormattedURL('/kyc_application/', null , path), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'PUT',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
+export const createBusinessVerificationAPI = ({body}) => apiClient({url: '/kyc_application/', method: 'POST', body: body});
 
+export const editBusinessVerificationAPI = ({body, path}) => apiClient({url: '/kyc_application/', method: 'PUT', body: body, path: path});
 
+//todo: generic form handler
 export const uploadDocumentAPI = ({ body }) => {
 
   const formData = new FormData();
@@ -70,35 +29,6 @@ export const uploadDocumentAPI = ({ body }) => {
   })
 };
 
+export const createBankAccountAPI = ({body}) => apiClient({url: '/bank_account/', method: 'POST', body: body});
 
-export const createBankAccountAPI = ({body}) => {
-  return fetch(generateFormattedURL('/bank_account/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'POST',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
-
-export const editBankAccountAPI = ({body, path}) => {
-  return fetch(generateFormattedURL('/bank_account/', null, path), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'PUT',
-    body: JSON.stringify(body)
-  }).then(response => {
-      return handleResponse(response)
-  }).catch(error => {
-      throw error;
-  })
-};
+export const editBankAccountAPI = ({body, path}) => apiClient({url: '/bank_account/', method: 'PUT', body: body, path: path});

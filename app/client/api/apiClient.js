@@ -17,7 +17,7 @@ export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, quer
     throw Error('Method provided is not supported')
   }
 
-  console.log('url',url, 'method',method, 'isAuthed',isAuthed, 'query',query, 'body',body, 'path',path, 'errorHandling',errorHandling);
+  //todo: generic form handler
 
   //todo: check which headers are needed for given method
   let headers = {

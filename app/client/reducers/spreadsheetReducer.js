@@ -100,10 +100,10 @@ export const uploadSpreadsheet = (spreadsheet, preview_id, transfer_account_type
   }
 );
 
-export const saveDataset = (dataset) => (
+export const saveDataset = (payload) => (
   {
     type: SAVE_DATASET_REQUEST,
-    dataset
+    payload
   }
 );
 

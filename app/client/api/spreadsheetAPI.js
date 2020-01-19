@@ -1,5 +1,7 @@
 import {generateFormattedURL, getToken, handleResponse} from '../utils'
+import {apiClient} from "./apiClient";
 
+//todo: generic form handler
 export const uploadSpreadsheetAPI= (spreadsheet, preview_id) => {
 
   const formData = new FormData();
@@ -19,33 +21,6 @@ export const uploadSpreadsheetAPI= (spreadsheet, preview_id) => {
   })
 };
 
-export const saveDatasetAPI= (dataset) => {
-  return fetch(generateFormattedURL('/dataset/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: "POST",
-    body: JSON.stringify(dataset)
-  }).then(response => {
-    return handleResponse(response)
-  }).catch(error => {
-    throw error;
-  })
-};
+export const saveDatasetAPI = ({body}) => apiClient({url: '/dataset/', method: 'POST', body: body});
 
-export const loadDatasetListAPI= () => {
-  return fetch(generateFormattedURL('/dataset/') , {
-    headers: {
-      'Authorization': getToken()
-    },
-    method: 'GET'
-    })
-    .then(response => {
-      return handleResponse(response)
-    })
-    .catch(error => {
-      throw error;
-    })
-};
+export const loadDatasetListAPI = () => apiClient({url: '/dataset/', method: 'GET'});

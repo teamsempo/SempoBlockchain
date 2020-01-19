@@ -38,9 +38,9 @@ function* watchSpreadsheetUpload() {
   yield takeEvery(SPREADSHEET_UPLOAD_REQUEST, spreadsheetUpload);
 }
 
-function* saveDataset({ dataset }) {
+function* saveDataset({ payload }) {
   try {
-    const save_result = yield call(saveDatasetAPI, dataset);
+    const save_result = yield call(saveDatasetAPI, payload);
     yield put({type: SAVE_DATASET_SUCCESS, save_result});
 
   } catch (error) {
