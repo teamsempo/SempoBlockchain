@@ -42,7 +42,7 @@ class TransferAccountList extends React.Component {
 	  data: [],
 	  loading: true,
 	  user_id: null,
-    transfer_account_ids: {},
+    idSelectedStatus: {},
     allCheckedTransferAccounts: false,
     newTransfer: false,
     account_type: 'ALL',
@@ -55,89 +55,76 @@ class TransferAccountList extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.item_list !== undefined) {
-      this.props.item_list.map(i => {
-        this.setState(prevState => ({
-          transfer_account_ids: {
-            ...prevState.transfer_account_ids,
-            [i.id]: false,
-          }
-        }))
-      });
-    }
+    // if (this.props.item_list !== undefined) {
+    //   this.props.item_list.map(i => {
+    //     this.setState(prevState => ({
+    //       transfer_account_ids: {
+    //         ...prevState.transfer_account_ids,
+    //         [i.id]: false,
+    //       }
+    //     }))
+    //   });
+    // }
   }
 
   componentWillUnmount() {
-    let selected = [];
-    Object.keys(this.state.transfer_account_ids).map(id => {
-      if (this.state.transfer_account_ids[id]) selected.push(id);
-    })
-
-    this.props.setSelected(selected)
+    this.props.setSelected(
+      this.get_selected_ids_array(this.state.idSelectedStatus)
+    )
   }
 
   componentDidUpdate(newProps) {
     if (this.props.creditTransfers.createStatus.success !== newProps.creditTransfers.createStatus.success) {
       this.setState({newTransfer: false});
     }
-
-    if (this.props.item_list !== undefined && this.props.item_list !== newProps.item_list) {
-      this.props.item_list.map(i => {
-        this.setState(prevState => ({
-          transfer_account_ids: {
-            ...prevState.transfer_account_ids,
-            [i.id]: false,
-          },
-          allCheckedTransferAccounts: false,
-        }))
-      });
-    }
   }
 
-  get_selected_ids_array(selected) {
-    Object.filter = (obj, predicate) => Object.keys(obj).filter( key => predicate(obj[key]) ).reduce( (res, key) => (res[key] = obj[key], res), {} );
-
-    return Object.keys(Object.filter(selected, selected => selected === true));
+  get_selected_ids_array(statusDict) {
+    return Object.keys(statusDict).filter(id => statusDict[id] === true);
   }
 
   toggleSelectedTransferAccount(id) {
-    const value = !this.state.transfer_account_ids[id];
+    const value = !(this.state.idSelectedStatus[id] || false);
 
-     this.setState(prevState => ({
-         transfer_account_ids: {
-             ...prevState.transfer_account_ids,
-             [id]: value
-         },
-         allCheckedTransferAccounts: false,
-     }))
+    this.setState(prevState => ({
+       idSelectedStatus: {
+           ...prevState.idSelectedStatus,
+           [id]: value
+       },
+       allCheckedTransferAccounts: false,
+    }))
   }
 
   displaySelect(id) {
-    if (this.state.transfer_account_ids[id] !== null) {
-        return(
-            <input name={id} type="checkbox" checked={this.state.transfer_account_ids[id]} onChange={() => this.toggleSelectedTransferAccount(id)} />
-        )
-    }
+    let checked = this.state.idSelectedStatus[id] || false;
+
+    return(
+        <input
+          name={id}
+          type="checkbox"
+          checked={checked}
+          onChange={() => this.toggleSelectedTransferAccount(id)}
+        />
+    )
+
   }
 
   checkAllTransferAccounts(filteredData) {
       if (this.state.allCheckedTransferAccounts) {
-          // UNCHECK
-          var value = false
+          // UNCHECK ALL
+          this.setState({
+            idSelectedStatus: {},
+            allCheckedTransferAccounts: false
+          })
       } else {
-          // CHECK ALL
-          value = true
+          // CHECK ALL FILTERED
+          let checked = {};
+          filteredData.map(ta => {checked[ta.id] = true});
+          this.setState({
+            allCheckedTransferAccounts: true,
+            idSelectedStatus: checked,
+          })
       }
-
-      filteredData.map(i => {
-         this.setState(prevState => ({
-             transfer_account_ids: {
-                 ...prevState.transfer_account_ids,
-                 [i.id]: value
-             },
-             allCheckedTransferAccounts: value,
-         }))
-      })
   };
 
   onNewTransfer() {
@@ -148,7 +135,7 @@ class TransferAccountList extends React.Component {
 
   approveSelected() {
     let approve = true;
-    let transfer_account_id_list = this.get_selected_ids_array(this.state.transfer_account_ids);
+    let transfer_account_id_list = this.get_selected_ids_array(this.state.idSelectedStatus);
 
     this.props.editTransferAccountRequest(
         {
@@ -185,6 +172,10 @@ class TransferAccountList extends React.Component {
 
 
   render() {
+    console.log('TA Dict', this.state.idSelectedStatus);
+
+    console.log('TA IDS', this.get_selected_ids_array(this.state.idSelectedStatus));
+
     const {account_type} = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
     let accountTypes = Object.keys(TransferAccountTypes);
@@ -202,7 +193,7 @@ class TransferAccountList extends React.Component {
       filteredData = filteredData.filter(account => account.is_groupaccount)
     }
 
-	  let rowValues = Object.values(this.state.transfer_account_ids);
+	  let rowValues = Object.values(this.state.idSelectedStatus);
     let numberSelected = rowValues.filter(Boolean).length;
     let isSelected = numberSelected > 0;
 
@@ -251,7 +242,7 @@ class TransferAccountList extends React.Component {
     }
 
     if (this.state.newTransfer) {
-        var newTransfer = <NewTransferManager transfer_account_ids={this.get_selected_ids_array(this.state.transfer_account_ids)} cancelNewTransfer={() => this.onNewTransfer()} />
+        var newTransfer = <NewTransferManager transfer_account_ids={this.get_selected_ids_array(this.state.idSelectedStatus)} cancelNewTransfer={() => this.onNewTransfer()} />
     } else {
         newTransfer = null;
     }

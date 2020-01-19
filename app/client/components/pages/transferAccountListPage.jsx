@@ -49,7 +49,7 @@ class TransferAccountListPage extends React.Component {
       } else {
           query = {};
       }
-      
+
       if (this.props.transferAccounts.loadStatus.lastQueried) {
         query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
       }
