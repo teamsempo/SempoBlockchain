@@ -37,32 +37,22 @@ class SingleTransferAccountPage extends React.Component {
   componentDidMount() {
         let pathname_array = location.pathname.split('/').slice(1);
         let transferAccountID = parseInt(pathname_array[1]);
+        if(transferAccountID) {
+            this.props.loadTransferAccountList(transferAccountID) //  load single account
+        }
 
         // load organisation if param is not matching currently active org
         let query_params = parseQuery(location.search)
         if(query_params["org"] && this.props.login.organisationId != query_params["org"]){
             this.props.updateActiveOrgRequest(query_params["org_name"], query_params["org"])
-        } else if(transferAccountID) {
-            this.props.loadTransferAccountList(transferAccountID) //  load single account if organisationId is synced
         }
-  }
-
-  componentWillReceiveProps(nextProps){
-        let pathname_array = location.pathname.split('/').slice(1);
-        let transferAccountID = parseInt(pathname_array[1]);
-
-        //   if org id is new load transfer accounts
-        if(nextProps.login.organisationId != this.props.login.organisationId) {
-            this.props.loadTransferAccountList(transferAccountID)
-        }
+        
   }
 
   render() {
       let pathname_array = location.pathname.split('/').slice(1);
       let url_provided = pathname_array[1];
       let transferAccountId = parseInt(url_provided);
-
-      let query_params = parseQuery(location.search)
 
       // check if transferAccount exists else show fallback
       if (this.props.transferAccounts.byId[transferAccountId]) {
