@@ -126,6 +126,7 @@ class BitcoinProcessor(object):
                 celery_tasks.check_whether_transaction_sent_to_pool.s(),
                 celery_tasks.check_transaction_status_in_pool.s()
             ]
+
             chain(chain_list).apply_async(countdown=self.hold_transaction_seconds)
 
     def get_next_transaction_outputs(self):
