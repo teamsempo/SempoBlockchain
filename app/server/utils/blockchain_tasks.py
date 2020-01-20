@@ -18,7 +18,6 @@ from server.utils.exchange import (
 
 
 class BlockchainTasker(object):
-
     def _eth_endpoint(self, endpoint):
         eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'

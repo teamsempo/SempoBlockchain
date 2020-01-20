@@ -17,12 +17,8 @@ endpoint_simulators = {
 
 def simulate(task, kwargs, args):
     print('[WARN] Worker Simulator is running. This task will NOT be executed on the blockchain. Never use this mode in prod, or else bad stuff will happen')
-    print(task)
-    print(kwargs)
-    print(args)
-    id = 123 # make this random
     if task in endpoint_simulators:
         return endpoint_simulators[task](args)
     else:
         print('[WARN] Task \'${task}\' does not have a simulator. Please add one to worker_simulator.endpoint_simulators. Using generic response.')
-        return { id: id }
+        return blockchain_tasks_simulator.FakeCeleryAsyncResult()

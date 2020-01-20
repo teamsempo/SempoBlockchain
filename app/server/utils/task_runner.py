@@ -16,4 +16,4 @@ def delay_task(task, kwargs=None, args=None):
     print('REAL RESPONSE')
     print(async_result)
     print(type(async_result))
-    return sim_resp
+    return async_result
