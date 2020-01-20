@@ -8,9 +8,7 @@ import {LightTheme} from '../theme.js'
 import SingleTransferAccountManagement from '../transferAccount/singleTransferAccountWrapper.jsx';
 
 import { loadTransferAccounts } from '../../reducers/transferAccountReducer'
-import { updateActiveOrgRequest } from '../../reducers/auth/actions'
-
-import { parseQuery } from '../../utils'
+import organizationWrapper from '../organizationWrapper';
 
 const mapStateToProps = (state) => {
   return {
@@ -23,7 +21,6 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         loadTransferAccountList: (path) => dispatch(loadTransferAccounts({path})),
-        updateActiveOrgRequest: (organisationName, organisationId) => dispatch(updateActiveOrgRequest({organisationName, organisationId})),
     };
 };
 
@@ -40,13 +37,6 @@ class SingleTransferAccountPage extends React.Component {
         if(transferAccountID) {
             this.props.loadTransferAccountList(transferAccountID) //  load single account
         }
-
-        // load organisation if param is not matching currently active org
-        let query_params = parseQuery(location.search)
-        if(query_params["org"] && this.props.login.organisationId != query_params["org"]){
-            this.props.updateActiveOrgRequest(query_params["org_name"], query_params["org"])
-        }
-        
   }
 
   render() {
@@ -98,7 +88,7 @@ class SingleTransferAccountPage extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SingleTransferAccountPage);
+export default connect(mapStateToProps, mapDispatchToProps)(organizationWrapper(SingleTransferAccountPage));
 
 const WrapperDiv = styled.div`
   display: flex;

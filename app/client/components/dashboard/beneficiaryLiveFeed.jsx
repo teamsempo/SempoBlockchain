@@ -25,7 +25,7 @@ const mapStateToProps = (state) => {
 class BeneficiaryLiveFeed extends React.Component {
 
     navigateToAccount = (accountId) => {
-      window.location.assign('/accounts/' + accountId + generateQueryString({org_name: this.props.login.organisationName}))
+      window.location.assign('/accounts/' + accountId)
     }
 
     render() {
