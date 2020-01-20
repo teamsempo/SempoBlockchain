@@ -254,27 +254,27 @@ def deploy_smart_token(
         )
     )
 
-    transfer_ownership_id = with_log(
-        'Transfering ownership of smart token',
-        transaction_task(
-            signing_address=deploying_address,
-            contract_address=smart_token_address,
-            contract_type='SmartToken',
-            func='transferOwnership',
-            args=[subexchange_address],
-            gas_limit=100000
-        ))
-
-    with_log(
-        'Accepting Ownership',
-        transaction_task(
-            signing_address=deploying_address,
-            contract_address=subexchange_address,
-            contract_type='BancorConverter',
-            func='acceptTokenOwnership',
-            gas_limit=100000,
-            prior_tasks=[transfer_ownership_id]
-        ))
+    # transfer_ownership_id = with_log(
+    #     'Transfering ownership of smart token',
+    #     transaction_task(
+    #         signing_address=deploying_address,
+    #         contract_address=smart_token_address,
+    #         contract_type='SmartToken',
+    #         func='transferOwnership',
+    #         args=[subexchange_address],
+    #         gas_limit=100000
+    #     ))
+    #
+    # with_log(
+    #     'Accepting Ownership',
+    #     transaction_task(
+    #         signing_address=deploying_address,
+    #         contract_address=subexchange_address,
+    #         contract_type='BancorConverter',
+    #         func='acceptTokenOwnership',
+    #         gas_limit=100000,
+    #         prior_tasks=[transfer_ownership_id]
+    #     ))
 
     return {'smart_token_address': smart_token_address,
             'subexchange_address': subexchange_address}
