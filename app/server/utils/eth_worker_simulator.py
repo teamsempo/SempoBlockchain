@@ -4,6 +4,16 @@ def simulate(task, args):
     print(task)
     print(args)
 
+#def simulate(sig):
+#    id = 123 # make this random
+#    if sig in worker_function_returns:
+#        return (id, worker_function_returns[sig](sig)) # Make this a named touple
+#    else:
+#        return (id, None)
+
+
+
+
 # Reference blockchain_tasker.py
 
 # Worker: eth_worker
@@ -24,15 +34,6 @@ def send_eth(sig):
 worker_function_returns = {
     'deploy_exchange_network': deploy_exchange_network
 }
-
-
-def simulate(sig):
-    id = 123 # make this random
-    if sig in worker_function_returns:
-        return (id, worker_function_returns[sig](sig)) # Make this a named touple
-    else:
-        return (id, None)
-
 
 # Reference blockchain_tasker.py
 

@@ -30,6 +30,10 @@ class BlockchainTasker(object):
     def _execute_synchronous_celery(self, task, args, timeout=None):
         # TODO: Read sig here, scan for simulator output
         async_result = task_runner.delay_task(task, args)
+        print('-___-')
+        print(async_result)
+        print(task)
+        print(args)
         # If sim, return sim.result right away. Else keep going with this
         try:
             response = async_result.get(
@@ -53,13 +57,8 @@ class BlockchainTasker(object):
         # Feed the same args to simulator
 
 
-        eth_worker_simulator.simulate(signature)
+        #eth_worker_simulator.simulate(signature)
 
-        ar = signature.delay()
-        return ar.id
-
-    def new_execute_task(self, task, args):
-        signature = celery_app.signature(task, args)
         ar = signature.delay()
         return ar.id
 
