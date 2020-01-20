@@ -36,14 +36,14 @@ class BlockchainTasker(object):
         return response
 
     def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
-        args = {
+        kwargs = {
             'contract_address': contract_address,
             'abi_type': contract_type,
             'function': func,
             'args': args,
             'signing_address': signing_address
         }
-        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), args)
+        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), kwargs)
 
     def _synchronous_transaction_task(self,
                                       signing_address,
