@@ -81,9 +81,7 @@ function* saveOrgId({payload}) {
     if(query_params["org"] && payload.organisationId == query_params["org"]){
       window.location.reload()
     } else {
-      // shorten url to base or base + 1 path
-      var active_tab = browserHistory.location.pathname.split("/")[1];
-      window.location.assign("/" + active_tab);
+      window.location.assign("/");
     }
 
     
