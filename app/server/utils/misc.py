@@ -1,4 +1,5 @@
 import datetime
+from math import log10, floor
 import base64
 import re
 from flask import current_app, request
@@ -18,17 +19,34 @@ def get_parsed_arg_list(arg_name: str, to_lower=False) -> list:
     else:
         return []
 
-def round_amount(amount):
-    if int(amount) == float(amount) and int(amount) > 1000:
-        # It's a large whole amount like 1200.00, so return as 1200
-        return str(int(amount))
+def round_to_sig_figs(amount, sig_figs = 2):
+    if amount is None:
+        return None
+
+    if amount == 0:
+        return 0
+
+    return round(amount, -int(floor(log10(abs(amount)))) + (sig_figs - 1))
+
+
+def round_to_decimals(amount, decimals=2):
+    if amount is None:
+        return None
 
     # Add a small amount before round to override rounding half to even
-    return "{:.2f}".format(round(amount + 0.000001, 2))
+    return round(amount + 0.000001, decimals)
 
 
 def rounded_dollars(amount):
-    return round_amount(float(amount) / 100)
+    if amount is None:
+        return None
+
+    rounded = round_to_decimals(float(amount) / 100)
+    if int(rounded) == float(rounded) and int(rounded) > 1000:
+        # It's a large whole amount like 1200.00, so return as 1200
+        return str(int(rounded))
+
+    return "{:.2f}".format(rounded)
 
 
 def hex_private_key_to_address(private_key) -> str:
