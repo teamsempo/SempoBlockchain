@@ -90,8 +90,12 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
 ])
 def test_get_credit_transfer(test_client, complete_admin_auth_token, create_credit_transfer,
                           credit_transfer_selector_func, status_code):
+    if credit_transfer_selector_func(create_credit_transfer):
+        url = f"/api/v1/credit_transfer/{credit_transfer_selector_func(create_credit_transfer)}/"
+    else:
+        url = '/api/v1/credit_transfer/'
     response = test_client.get(
-        f"/api/v1/credit_transfer/{credit_transfer_selector_func(create_credit_transfer) or ''}",
+        url,
         headers=dict(
             Authorization=complete_admin_auth_token,
             Accept='application/json'

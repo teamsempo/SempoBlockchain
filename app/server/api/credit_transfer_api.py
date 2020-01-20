@@ -458,7 +458,7 @@ credit_transfer_blueprint.add_url_rule(
 )
 
 credit_transfer_blueprint.add_url_rule(
-    '/credit_transfer/<int:credit_transfer_id>',
+    '/credit_transfer/<int:credit_transfer_id>/',
     view_func=CreditTransferAPI.as_view('single_transfer_account_credit_transfer_view'),
     methods=['GET', 'PUT']
 )

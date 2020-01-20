@@ -1,7 +1,7 @@
 from contextlib import contextmanager
-
 from flask import g, request
 import datetime
+from dateutil import parser
 
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.declarative import declared_attr
@@ -12,6 +12,24 @@ from sqlalchemy import or_
 import server
 from server import db, bt
 from server.exceptions import OrganisationNotProvidedException
+
+
+@contextmanager
+def ephemeral_alchemy_object(mod: db.Model, *args, **kwargs):
+    # weird SQLAlchemy behaviour cause object  to be persisted under some circumstances, even if they're not committed
+    # See: https://hades.github.io/2013/06/sqlalchemy-adds-objects-collections-automatically/
+    # Use this to make sure an object definitely doesn't hang round
+
+    instance = mod(*args, **kwargs)
+    yield instance
+
+    for f in [db.session.expunge, db.session.delete]:
+        # Can't delete transient objects, so we expunge them first instead
+        try:
+            f(instance)
+        except:
+            # We don't care about no exceptions, we just want the object GONE!!!
+            pass
 
 
 def get_authorising_user_id():
@@ -35,8 +53,13 @@ def paginate_query(query, queried_object=None, order_override=None):
     :returns: tuple of (item list, total number of items, total number of pages)
     """
 
+    updated_after = request.args.get('updated_after')
     page = request.args.get('page')
     per_page = request.args.get('per_page')
+
+    if updated_after:
+        parsed_time = parser.isoparse(updated_after)
+        query = query.filter(queried_object.updated > parsed_time)
 
     if order_override:
         query = query.order_by(order_override)
