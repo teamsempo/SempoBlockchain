@@ -172,10 +172,6 @@ class TransferAccountList extends React.Component {
 
 
   render() {
-    console.log('TA Dict', this.state.idSelectedStatus);
-
-    console.log('TA IDS', this.get_selected_ids_array(this.state.idSelectedStatus));
-
     const {account_type} = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
     let accountTypes = Object.keys(TransferAccountTypes);
