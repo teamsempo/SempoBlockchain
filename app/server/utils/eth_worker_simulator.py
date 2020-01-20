@@ -1,15 +1,8 @@
 
-def simulate(sig):
-    id = 123 # make this random
-    print('---')
-    print(sig)
-    print(type(sig))
-    print('---')
-    if sig in worker_function_returns:
-        return (id, worker_function_returns[sig](sig)) # Make this a named touple
-    else:
-        return (id, None)
-
+def simulate(task, args):
+    print('Simulating!')
+    print(task)
+    print(args)
 
 # Reference blockchain_tasker.py
 

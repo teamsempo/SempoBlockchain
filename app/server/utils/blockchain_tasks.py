@@ -8,6 +8,7 @@ import random
 from time import sleep
 
 from . import eth_worker_simulator
+from . import task_runner
 
 from server import celery_app
 from server.utils.exchange import (
@@ -26,11 +27,10 @@ class BlockchainTasker(object):
         print(type(f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'))
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
     # TODO: Move these out to a separate util file
-    def _execute_synchronous_celery(self, signature, timeout=None):
+    def _execute_synchronous_celery(self, task, args, timeout=None):
         # TODO: Read sig here, scan for simulator output
-        eth_worker_simulator.simulate(signature)
-        async_result = signature.delay()
-
+        async_result = task_runner.delay_task(task, args)
+        # If sim, return sim.result right away. Else keep going with this
         try:
             response = async_result.get(
                 timeout=timeout or current_app.config['SYNCRONOUS_TASK_TIMEOUT'],
@@ -40,8 +40,12 @@ class BlockchainTasker(object):
             raise e
         finally:
             async_result.forget()
-
+        print('Sync Call Resp')
+        print(response)
+        print(type(response))
+        print('---')
         return response
+
     # TODO: Move these out to a separate util file
     def _execute_task(self, signature):
         # TODO: Read sig here, scan for simulator output
@@ -54,18 +58,21 @@ class BlockchainTasker(object):
         ar = signature.delay()
         return ar.id
 
-    def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
-        call_sig = celery_app.signature(
-            self._eth_endpoint('call_contract_function'),
-            kwargs={
-                'contract_address': contract_address,
-                'abi_type': contract_type,
-                'function': func,
-                'args': args,
-                'signing_address': signing_address
-            })
+    def new_execute_task(self, task, args):
+        signature = celery_app.signature(task, args)
+        ar = signature.delay()
+        return ar.id
 
-        return self._execute_synchronous_celery(call_sig)
+    def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
+        print('running sync call')
+        args = {
+            'contract_address': contract_address,
+            'abi_type': contract_type,
+            'function': func,
+            'args': args,
+            'signing_address': signing_address
+        }
+        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), args = args)
 
     def _synchronous_transaction_task(self,
                                       signing_address,
@@ -73,20 +80,16 @@ class BlockchainTasker(object):
                                       func, args=None,
                                       gas_limit=None,
                                       prior_tasks=None):
-
-        signature = celery_app.signature(
-            self._eth_endpoint('transact_with_contract_function'),
-            kwargs={
-                'signing_address': signing_address,
-                'contract_address': contract_address,
-                'abi_type': contract_type,
-                'function': func,
-                'args': args,
-                'gas_limit': gas_limit,
-                'prior_tasks': prior_tasks
-            })
-
-        return self._execute_task(signature)
+        args = {
+            'signing_address': signing_address,
+            'contract_address': contract_address,
+            'abi_type': contract_type,
+            'function': func,
+            'args': args,
+            'gas_limit': gas_limit,
+            'prior_tasks': prior_tasks
+        }
+        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), args)
 
     def get_blockchain_task(self, task_uuid):
         """

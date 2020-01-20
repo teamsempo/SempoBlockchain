@@ -57,7 +57,7 @@ def create_app():
 
     # ensure the instance folder exists
     try:
-        os.makedirs(app.instance_path)
+        os.makedirs(app.instance_path) # TODO: Check if exists instead of relying on err handling
     except OSError:
         pass
 
