@@ -406,7 +406,7 @@ class BlockchainTasker(object):
         :param deploying_address: The address of the wallet used to deploy the network
         :return: registry contract address
         """
-        return self._execute_synchronous_celery(self._eth_endpoint('deploy_exchange_network'), [deploying_address], timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
+        return self._execute_synchronous_celery(self._eth_endpoint('deploy_exchange_network'), args = [deploying_address], timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
         args = [deploying_address, name, symbol, fund_amount_wei]
