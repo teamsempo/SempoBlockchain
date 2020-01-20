@@ -66,36 +66,31 @@ def find_user_from_public_identifier(*public_identifiers):
     user = None
 
     for public_identifier in list(filter(lambda x: x is not None, public_identifiers)):
-
-        if user:
-            # if user was found on last loop, return!
-            return user
-
         if public_identifier is None:
             continue
 
         user = User.query.execution_options(show_all=True).filter_by(
             email=str(public_identifier).lower()).first()
         if user:
-            continue
+            break
 
         try:
             user = User.query.execution_options(show_all=True).filter_by(
                 phone=proccess_phone_number(public_identifier)).first()
             if user:
-                continue
+                break
         except NumberParseException:
             pass
 
         user = User.query.execution_options(show_all=True).filter_by(
             public_serial_number=str(public_identifier).lower()).first()
         if user:
-            continue
+            break
 
         user = User.query.execution_options(show_all=True).filter_by(
             nfc_serial_number=public_identifier.upper()).first()
         if user:
-            continue
+            break
 
         try:
             checksummed = to_checksum_address(public_identifier)
@@ -105,7 +100,7 @@ def find_user_from_public_identifier(*public_identifiers):
             if blockchain_address and blockchain_address.transfer_account:
                 user = blockchain_address.transfer_account.primary_user
                 if user:
-                    continue
+                    break
 
         except Exception:
             pass
