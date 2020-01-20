@@ -9,7 +9,6 @@ from time import sleep
 
 from . import task_runner
 
-from server import celery_app
 from server.utils.exchange import (
     bonding_curve_tokens_to_reserve,
     bonding_curve_reserve_to_tokens,
