@@ -1,6 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify, g, Response
 from flask.views import MethodView
-
+import datetime
 import orjson
 
 from sqlalchemy.orm import lazyload
@@ -75,6 +75,7 @@ class TransferAccountAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
+                'query_time': datetime.datetime.utcnow(),
                 'data': {'transfer_accounts': result.data}
             }
 

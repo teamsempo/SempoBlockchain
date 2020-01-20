@@ -47,14 +47,20 @@ def test_custom_display_text(test_client, init_database, menu_name, language, ex
         real_usage2.translations = {'en': 'Health', 'sw': 'Afya'}
         mapping[real_at_idx] = KenyaUssdStateMachine.make_usage_mapping(real_usage1)
         mapping[real_at_idx + 1] = KenyaUssdStateMachine.make_usage_mapping(real_usage2)
-        start_state.session_data = {'transfer_usage_mapping': mapping, 'usage_menu': menu_nr}
-
         user = standard_user()
         user.preferred_language = language
 
+        start_state.session_data = {
+            'transfer_usage_mapping': mapping,
+            'usage_menu': menu_nr,
+            'usage_index_stack': [0, 8]
+        }
+
+        start_state.user = user
+
         menu = UssdMenu(name=menu_name, display_key="ussd.kenya.{}".format(menu_name))
         resulting_menu = KenyaUssdProcessor.custom_display_text(
-            menu, start_state, user)
+            menu, start_state)
 
         for expected in expecteds:
             assert expected in resulting_menu

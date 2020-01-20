@@ -58,7 +58,7 @@ function* loadTransferAccounts({payload}) {
 
     yield call(updateStateFromTransferAccount, load_result.data);
 
-    yield put({type: LOAD_TRANSFER_ACCOUNTS_SUCCESS})
+    yield put({type: LOAD_TRANSFER_ACCOUNTS_SUCCESS, lastQueried: load_result.query_time})
 
   } catch (fetch_error) {
 

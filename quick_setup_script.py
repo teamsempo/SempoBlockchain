@@ -246,6 +246,17 @@ class Setup(object):
 
         return r.json()['data']['organisation']
 
+    def ussd_request(self, organisation_name, token_id):
+
+        r = requests.post(url=self.api_host + 'ussd/kenya',
+                          headers=dict(Authorization=self.api_token, Accept='application/json'),
+                          json={
+                              'token_id': token_id,
+                              'organisation_name': organisation_name
+                          })
+
+        return r.json()['data']['organisation']['id']
+
     def __init__(self, api_host='http://0.0.0.0:9000/api/v1/', email=None, password=None, api_token=None):
 
         self.api_host = api_host

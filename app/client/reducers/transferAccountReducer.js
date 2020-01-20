@@ -45,7 +45,8 @@ const byId = (state = {}, action) => {
 const initialLoadStatusState = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
+  lastQueried: null
 };
 
 const loadStatus = (state = initialLoadStatusState, action) => {
@@ -54,7 +55,7 @@ const loadStatus = (state = initialLoadStatusState, action) => {
       return {...state, isRequesting: true};
 
     case LOAD_TRANSFER_ACCOUNTS_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return {...state, isRequesting: false, success: true, lastQueried: action.lastQueried || state.lastQueried};
 
     case LOAD_TRANSFER_ACCOUNTS_FAILURE:
       return {...state, isRequesting: false, error: action.error};
