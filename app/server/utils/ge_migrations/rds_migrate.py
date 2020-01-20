@@ -18,7 +18,7 @@ from server.models.custom_attribute_user_storage import CustomAttributeUserStora
 from server.utils.ge_migrations.poa_explorer import POAExplorer
 from server.utils.ge_migrations.web3_explorer import get_token_balance
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
-from server.constants import GE_MIGRATION_TOKENS
+from server.constants import GE_MIGRATION_TOKENS, GE_BUSINESS_CATEGORY_MAPPINGS
 
 class RDSMigrate:
     
@@ -88,11 +88,12 @@ class RDSMigrate:
                 LEFT JOIN token_agents on users.id=token_agents.user_id
                 LEFT JOIN group_accounts on users.id=group_accounts.user_id
                 WHERE users.id NOT IN (%s)
-                LIMIT {self.user_limit}
             """
 
             if community_token_id:
                 cmd = cmd + f" AND users.community_token_id={community_token_id}"
+
+            cmd = cmd + f" LIMIT {self.user_limit}"
 
             cursor.execute(cmd % format_strings, tuple(already_added_ge_ids))
             users = cursor.fetchall()
@@ -141,16 +142,13 @@ class RDSMigrate:
             print(f'User already exists for phone {processed_phone}')
             return
 
+        business_usage = None
         if ge_user['business_type'] is not None:
-            transfer_usage = TransferUsage.find_or_create(ge_user['business_type'])
-            business_usage_id = transfer_usage.id
-        else:
-            business_usage_id = None
 
-        if business_usage_id:
-            business_usage = TransferUsage.query.get(business_usage_id)
-        else:
-            business_usage = None
+            sempo_category = GE_BUSINESS_CATEGORY_MAPPINGS.get(ge_user['business_type'])
+
+            if sempo_category:
+                business_usage = TransferUsage.query.filter_by(name=sempo_category).first()
 
         organsation = db.session.query(Organisation).get(self.sempo_organisation_id)
 
@@ -342,6 +340,7 @@ class RDSMigrate:
                     migration_transfer.resolve_as_completed()
 
             except Exception as e:
+                print(e)
                 sentry.captureException()
                 pass
 
