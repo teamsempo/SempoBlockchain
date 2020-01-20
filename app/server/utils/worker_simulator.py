@@ -18,7 +18,7 @@ endpoint_simulators = {
 def simulate(task, kwargs, args):
     print('[WARN] Worker Simulator is running. This task will NOT be executed on the blockchain. Never use this mode in prod, or else bad stuff will happen')
     if task in endpoint_simulators:
-        return endpoint_simulators[task](args)
+        return endpoint_simulators[task](kwargs, args)
     else:
         print('[WARN] Task \'${task}\' does not have a simulator. Please add one to worker_simulator.endpoint_simulators. Using generic response.')
         return blockchain_tasks_simulator.FakeCeleryAsyncResult()

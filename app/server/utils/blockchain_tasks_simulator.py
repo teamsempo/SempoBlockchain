@@ -13,44 +13,44 @@ class FakeCeleryAsyncResult():
     def forget(self):
         pass
 
-def deploy_contract(args):
+def deploy_contract(kwargs, args):
     return FakeCeleryAsyncResult()
 
-def call_contract_function(args):
+def call_contract_function(kwargs, args):
     return FakeCeleryAsyncResult(result=18)
 
-def transact_with_contract_function(args):
+def transact_with_contract_function(kwargs, args):
     return FakeCeleryAsyncResult()
 
-def get_task(args):
+def get_task(kwargs, args):
     return FakeCeleryAsyncResult()
 
-def retry_task(args):
+def retry_task(kwargs, args):
     return FakeCeleryAsyncResult()
 
-def retry_failed(args):
+def retry_failed(kwargs, args):
     return FakeCeleryAsyncResult(result={
             'failed_count': 10,
             'pending_count': 2
         })
 
-def create_new_blockchain_wallet(args):
+def create_new_blockchain_wallet(kwargs, args):
     return FakeCeleryAsyncResult(result = keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address())
 
-def deploy_exchange_network(args):
+def deploy_exchange_network(kwargs, args):
     return FakeCeleryAsyncResult(result = keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address())
 
-def deploy_and_fund_reserve_token(args):
+def deploy_and_fund_reserve_token(kwargs, args):
     return FakeCeleryAsyncResult(result = keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address())
 
-def deploy_smart_token(args):
+def deploy_smart_token(kwargs, args):
     return FakeCeleryAsyncResult(result = { 
             'smart_token_address': keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address(),
             'subexchange_address': keys.PrivateKey(os.urandom(32)).public_key.to_checksum_address()
     })
 
-def topup_wallet_if_required(args):
+def topup_wallet_if_required(kwargs, args):
     return FakeCeleryAsyncResult()
 
-def send_eth(args):
+def send_eth(kwargs, args):
     return FakeCeleryAsyncResult()
