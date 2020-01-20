@@ -25,7 +25,6 @@ class SingleTransferAccountWrapper extends React.Component {
 
     if (transferAccount.credit_receives || transferAccount.credit_sends) {
       var creditTransferIds = transferAccount.credit_receives.concat(transferAccount.credit_sends);
-      console.log(creditTransferIds);
     }
 
     return (
