@@ -41,7 +41,6 @@ class BlockchainTasker(object):
         return response
 
     def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
-        print('running sync call')
         args = {
             'contract_address': contract_address,
             'abi_type': contract_type,
@@ -49,7 +48,7 @@ class BlockchainTasker(object):
             'args': args,
             'signing_address': signing_address
         }
-        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), args = args)
+        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), args)
 
     def _synchronous_transaction_task(self,
                                       signing_address,
@@ -79,7 +78,7 @@ class BlockchainTasker(object):
             priors: list of prior task uuids
         }
         """
-        return self._execute_synchronous_celery(self._eth_endpoint('get_task'), args = {'task_uuid': task_uuid})
+        return self._execute_synchronous_celery(self._eth_endpoint('get_task'), {'task_uuid': task_uuid})
 
     def await_task_success(self,
                            task_uuid,
@@ -120,10 +119,9 @@ class BlockchainTasker(object):
         """
         args={
             'wei_target_balance': wei_target_balance,
-           'wei_topup_threshold': wei_topup_threshold,
-           'private_key': private_key
+            'wei_topup_threshold': wei_topup_threshold,
+            'private_key': private_key
         }
-
         wallet_address = self._execute_synchronous_celery(self._eth_endpoint('create_new_blockchain_wallet'), args)
 
         if wei_target_balance or 0 > 0:
