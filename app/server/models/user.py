@@ -130,6 +130,8 @@ class User(ManyOrgBase, ModelBase):
     # roles = db.relationship('UserRole', backref='user', lazy=True,
     #                              foreign_keys='UserRole.user_id')
 
+    ussd_sessions = db.relationship('UssdSession', backref='user', lazy=True, foreign_keys='UssdSession.user_id')
+
     uploaded_images = db.relationship('UploadedResource', backref='user', lazy=True,
                                       foreign_keys='UploadedResource.user_id')
 
