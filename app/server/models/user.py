@@ -375,18 +375,23 @@ class User(ManyOrgBase, ModelBase):
 
     @staticmethod
     def check_salt_hashed_secret(password, hashed_password):
+        # Add pepper stuff here
         return bcrypt.checkpw(password.encode(), hashed_password.encode())
 
-    def hash_password(self, password):
+    def hash_password(self, password):        # Add pepper stuff here
+
         self.password_hash = self.salt_hash_secret(password)
 
     def verify_password(self, password):
+        # Add pepper stuff here
         return self.check_salt_hashed_secret(password, self.password_hash)
 
     def hash_pin(self, pin):
+        # Add pepper stuff here
         self.pin_hash = self.salt_hash_secret(pin)
 
     def verify_pin(self, pin):
+        # Add pepper stuff here
         return self.check_salt_hashed_secret(pin, self.pin_hash)
 
     def encode_TFA_token(self, valid_days=1):
