@@ -1,12 +1,19 @@
-from . import eth_worker_simulator
+from . import worker_simulator
 from server import celery_app
 
-def delay_task(task, args):
+def delay_task(task, kwargs=None, args=None):
     print('sim starting')
-    eth_worker_simulator.simulate(task, args)
-    signature = celery_app.signature(task, kwargs=args)
+    print(task)
+    print(args)
+    sim_resp = worker_simulator.simulate(task, kwargs, args)
+    print('SIM RESPONSE')
+    print(sim_resp)
+    signature = celery_app.signature(task, kwargs=kwargs, args=args)
     print(signature)
     print(task)
     print(args)
     async_result = signature.delay()
-    return async_result
+    print('REAL RESPONSE')
+    print(async_result)
+    print(type(async_result))
+    return sim_resp
