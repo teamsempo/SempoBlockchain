@@ -1,10 +1,9 @@
 import React, {Component} from 'react';
 import { connect } from 'react-redux';
-import {compose} from 'redux';
+import { compose } from 'redux';
 import { updateActiveOrgRequest } from '../reducers/auth/actions'
 import { parseQuery, generateQueryString } from './../utils'
-
-import { browserHistory } from '../app'
+import { withRouter } from "react-router";
 
 const OrganizationWrapper = Component => class extends Component {
 
@@ -14,7 +13,7 @@ const OrganizationWrapper = Component => class extends Component {
         if(query_params["org"] && this.props.login.organisationId != query_params["org"]){
             this.props.updateActiveOrgRequest(query_params["org_name"], query_params["org"])
         } else {
-            browserHistory.push({
+            this.props.history.push({
                 search: generateQueryString({org_name: this.props.login.organisationName})
             })
         }
@@ -40,6 +39,7 @@ const mapDispatchToProps = (dispatch) => {
 
 const composedOrganizationWrapper = compose(
     connect(mapStateToProps, mapDispatchToProps),
+    withRouter,
     OrganizationWrapper
 )
 

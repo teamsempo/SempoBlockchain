@@ -13,6 +13,7 @@ import NewTransferManager from '../management/newTransferManager.jsx'
 import { formatMoney } from "../../utils";
 import { editTransferAccount, setSelected, loadTransferAccounts } from "../../reducers/transferAccountReducer";
 import {TransferAccountTypes} from "../transferAccount/types";
+import organizationWrapper from '../organizationWrapper';
 
 const mapStateToProps = (state) => {
   return {
@@ -349,7 +350,7 @@ class TransferAccountList extends React.Component {
   }
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(TransferAccountList);
+export default connect(mapStateToProps, mapDispatchToProps)(organizationWrapper(TransferAccountList));
 
 const UserSVG = styled.img`
   width: 20px;
