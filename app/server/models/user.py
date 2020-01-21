@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text, Table
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
+from cryptography.fernet import Fernet
 import pyotp
 from flask import current_app, g
 import datetime
@@ -12,7 +13,6 @@ import bcrypt
 import jwt
 import random
 import string
-
 from server import db, sentry, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
@@ -75,12 +75,13 @@ class User(ManyOrgBase, ModelBase):
     _public_serial_number = db.Column(db.String())
     nfc_serial_number = db.Column(db.String())
 
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(200))
     one_time_code = db.Column(db.String)
     secret = db.Column(db.String())
-    _TFA_secret = db.Column(db.String(128))
+    _TFA_secret = db.Column(db.String(200))
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
+    pin_hash2 = db.Column(db.String())
     seen_latest_terms = db.Column(db.Boolean, default=False)
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
@@ -371,27 +372,27 @@ class User(ManyOrgBase, ModelBase):
 
     @staticmethod
     def salt_hash_secret(password):
-        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        secret = '4S0u6ZS0u1sEylUpT_AWO5umDkZ-uZWKmd-vP5BPyIY='.encode() # Temporary
+        f = Fernet(secret)
+        return f.encrypt(bcrypt.hashpw(password.encode(), bcrypt.gensalt())).decode()
 
     @staticmethod
     def check_salt_hashed_secret(password, hashed_password):
-        # Add pepper stuff here
-        return bcrypt.checkpw(password.encode(), hashed_password.encode())
+        secret = '4S0u6ZS0u1sEylUpT_AWO5umDkZ-uZWKmd-vP5BPyIY='.encode() # Temporary
+        f = Fernet(secret)
+        hashed_password = f.decrypt(hashed_password.encode())
+        return bcrypt.checkpw(password.encode(), hashed_password)
 
     def hash_password(self, password):
-        # Add pepper stuff here
         self.password_hash = self.salt_hash_secret(password)
 
     def verify_password(self, password):
-        # Add pepper stuff here
         return self.check_salt_hashed_secret(password, self.password_hash)
 
     def hash_pin(self, pin):
-        # Add pepper stuff here
         self.pin_hash = self.salt_hash_secret(pin)
 
     def verify_pin(self, pin):
-        # Add pepper stuff here
         return self.check_salt_hashed_secret(pin, self.pin_hash)
 
     def encode_TFA_token(self, valid_days=1):
