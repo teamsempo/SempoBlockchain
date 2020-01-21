@@ -275,21 +275,21 @@ def create_business_categories():
 
     print_section_title('Creating Business Categories')
     business_categories = [
-        {'name': 'Food/Water', 'icon': 'message', 'translations': {
+        {'name': 'food_water', 'icon': 'message', 'translations': {
             'en': 'Food/Water', 'sw': 'Chakula/Maji'}},
-        {'name': 'Fuel/Energy', 'icon': 'message', 'translations': {
+        {'name': 'fuel_energy', 'icon': 'message', 'translations': {
             'en': 'Fuel/Energy', 'sw': 'Kuni/Makaa/Mafuta'}},
-        {'name': 'Education/Health', 'icon': 'message', 'translations': {
+        {'name': 'education_health', 'icon': 'message', 'translations': {
             'en': 'Education/Health', 'sw': 'Elimu/Afya'}},
-        {'name': 'Shop', 'icon': 'message', 'translations': {
+        {'name': 'shop', 'icon': 'message', 'translations': {
             'en': 'Shop', 'sw': 'Duka'}},
-        {'name': 'Environment', 'icon': 'message', 'translations': {
+        {'name': 'environment', 'icon': 'message', 'translations': {
             'en': 'Environment', 'sw': 'Mazingira'}},
-        {'name': 'Transport', 'icon': 'message', 'translations': {
+        {'name': 'transport', 'icon': 'message', 'translations': {
             'en': 'Transport', 'sw': 'Usafiri'}},
-        {'name': 'Farming/Labour', 'icon': 'message', 'translations': {
+        {'name': 'farming_labour', 'icon': 'message', 'translations': {
             'en': 'Farming/Labour', 'sw': 'Mkulima/Mfanyikazi'}},
-        {'name': 'Savings Group', 'icon': 'message', 'translations': {
+        {'name': 'savings_group', 'icon': 'message', 'translations': {
             'en': 'Savings Group', 'sw': 'Chama'}}
     ]
     for index, business_category in enumerate(business_categories):
