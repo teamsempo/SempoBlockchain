@@ -378,8 +378,8 @@ class User(ManyOrgBase, ModelBase):
         # Add pepper stuff here
         return bcrypt.checkpw(password.encode(), hashed_password.encode())
 
-    def hash_password(self, password):        # Add pepper stuff here
-
+    def hash_password(self, password):
+        # Add pepper stuff here
         self.password_hash = self.salt_hash_secret(password)
 
     def verify_password(self, password):
