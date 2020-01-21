@@ -89,7 +89,7 @@ def test_golden_path_send_token(mocker, test_client,
 
     resp = req("12.5")
     assert "CON Select Transfer" in resp
-    assert f"1. {top_priority.name}" in resp
+    assert f"1. {top_priority.translations['en']}" in resp
     assert "9." in resp
 
     resp = req("9")
@@ -105,7 +105,7 @@ def test_golden_path_send_token(mocker, test_client,
     resp = req("0000")
     assert "CON Send 12.5 SM1" in resp
     # went to second page, should not be the first
-    assert f"for {top_priority.name}" not in resp
+    assert f"for {top_priority.translations['en']}" not in resp
 
     resp = req("1")
     assert "END Your request has been sent." in resp

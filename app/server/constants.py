@@ -50,6 +50,19 @@ SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES = [
     ('phone', 'phone numbers')
 ]
 
+GE_BUSINESS_CATEGORY_MAPPINGS = {
+    'Food': 'food_water',
+    'Water': 'food_water',
+    'Energy': 'fuel_energy',
+    'Education': 'education_health',
+    'Health': 'education_health',
+    'General shop': 'shop',
+    'Environment': 'environment',
+    'Transport': 'transport',
+    'Labour': 'farming_labour',
+    'Other': 'savings_group'
+}
+
 GE_MIGRATION_TOKENS = {
     'GATINA': '0x826a4205b829d1907930b1632f9ce227072e59ca',
     'BANGLA': '0x59c7eec63b7ccd438a6dc428848973f11d894b7d',

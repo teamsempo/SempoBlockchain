@@ -66,7 +66,11 @@ send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_co
  ])
 def test_kenya_state_machine(test_client, init_database, standard_user, session_factory, user_input, expected):
     session = session_factory()
-    session.session_data = {'transfer_usage_mapping': fake_transfer_mapping(10), 'usage_menu': 1, 'usage_menu_max': 1}
+    session.session_data = {
+        'transfer_usage_mapping': fake_transfer_mapping(10),
+        'usage_menu': 1,
+        'usage_index_stack': [0, 8]
+    }
     db.session.commit()
     state_machine = KenyaUssdStateMachine(session, standard_user)
 
