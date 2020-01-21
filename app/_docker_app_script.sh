@@ -21,7 +21,8 @@ if [ "$CONTAINER_MODE" = 'TEST' ]; then
   echo running backend tests
   python invoke_tests.py
   echo running frontend tests
-  cd app
+  ls
+  cd src
   npm run test
 else
   uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app
