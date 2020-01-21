@@ -140,6 +140,7 @@ class UserAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, user_id):
         put_data = request.get_json()
+        put_data['user_id'] = user_id
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             put_data,

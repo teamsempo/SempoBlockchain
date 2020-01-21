@@ -411,6 +411,8 @@ def proccess_create_or_modify_user_request(
     if not attribute_dict.get('custom_attributes'):
         attribute_dict['custom_attributes'] = {}
 
+    user_id = attribute_dict.get('user_id')
+
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
@@ -552,6 +554,9 @@ def proccess_create_or_modify_user_request(
 
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
+
+    if modify_only:
+        existing_user = User.query.get(user_id)
 
     if modify_only and existing_user is None:
         response_object = {'message': 'User not found'}
