@@ -25,7 +25,7 @@ en:
       CON Enter Amount
       0. Back
     send_token_reason: |
-      CON Select Transfer reason 
+      CON Select Transfer reason
       %{options}
       9. Show other options
       0. Back
@@ -59,7 +59,7 @@ en:
       2. Cancel
       0. Back
     directory_listing: |
-      CON Choose Market Category 
+      CON Choose Market Category
       %{options}
       9. Show other options
       0. Back
@@ -198,6 +198,10 @@ en:
     exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
     exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
     exchange_amount_error_sms: Sorry you have exceeded your %{token} transfer amount limit. You are allowed up to %{amount} %{token} per %{limit_period} days
+    insufficient_balance_sms: |
+      Payment of %{amount} %{token_name} to %{recipient} has failed due to insufficent balance.
+      Your Sarafu-Network balances are as follows:
+      %{token_balances}
     send_token_error_sms: Payment of %{amount} %{token_name} to %{recipient} has failed. Please try again later.
     send_balance_exchange_limit_sms: |
       Your Sarafu-Network balances are as follows:

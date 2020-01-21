@@ -114,6 +114,13 @@ def ses_email_handler(recipient, subject, textbody, htmlbody = None):
     htmlbody = htmlbody or textbody
     charset = "UTF-8"
 
+    if not current_app.config['IS_PRODUCTION']:
+        print(f"Email Sent to {recipient} "
+              f"\nSubject:"
+              f"\n{subject}"
+              f"\nBody:"
+              f"\n{textbody}")
+
     if not current_app.config['IS_TEST']:
 
         # Create a new SES resource and specify a region.

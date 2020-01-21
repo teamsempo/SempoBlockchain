@@ -14,11 +14,15 @@ def create_or_update_session(session_id: str, user: User, current_menu: UssdMenu
     session: Optional[UssdSession] = UssdSession.query.filter_by(session_id=session_id).first()
     if session:
         session.user_input = user_input
-        session.ussd_menu_id = current_menu.id
+        session.ussd_menu = current_menu
         session.state = current_menu.name
     else:
-        session = UssdSession(session_id=session_id, user_id=user.id, msisdn=user.phone, user_input=user_input,
-                              ussd_menu_id=current_menu.id, state=current_menu.name, service_code=service_code)
+        session = UssdSession(session_id=session_id, msisdn=user.phone, user_input=user_input,
+                              state=current_menu.name, service_code=service_code)
+
+        session.user = user
+        session.ussd_menu = current_menu
+
         db.session.add(session)
 
     return session
