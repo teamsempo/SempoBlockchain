@@ -193,7 +193,7 @@ sw:
       Kiwango cha ubadilishaji:
       Kwa kila 1 %{token_name} utapata %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
-    exchange_not_allowed_error_sms: Kikundi pekee kikakubalika kubadilisha. Kwa maelezo piga 0757628885
+    exchange_not_allowed_error_sms: Kikundi pekee kinakubaliwa kubadilisha. Kwa maelezo piga 0757628885
     exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha mara %{count} kwa siku %{limit_period} pekee
     exchange_fraction_error_sms: Samahani umepitisha kiwango ya kubadilisha %{token}. Unakubaliwa kubadilisha %{percent}% ya salio lako
     exchange_amount_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{token} %{amount} kwa siku {limit_period} pekee
