@@ -144,7 +144,8 @@ class UserAPI(MethodView):
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             put_data,
             organisation=g.active_organisation,
-            allow_existing_user_modify=True
+            allow_existing_user_modify=True,
+            modify_only=True
         )
 
         if response_code == 200:

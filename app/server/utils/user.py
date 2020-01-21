@@ -390,6 +390,7 @@ def proccess_create_or_modify_user_request(
         organisation=None,
         allow_existing_user_modify=False,
         is_self_sign_up=False,
+        modify_only=False,
 ):
     """
     Takes a create or modify user request and determines the response. Normally what's in the top level API function,
@@ -548,6 +549,10 @@ def proccess_create_or_modify_user_request(
 
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
+
+    if modify_only and existing_user is None:
+        response_object = {'message': 'User not found'}
+        return response_object, 404
 
     if existing_user:
         if not allow_existing_user_modify:
