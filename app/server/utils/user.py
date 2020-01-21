@@ -38,7 +38,7 @@ def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     try:
         rekognition_task = celery_app.signature('worker.celery_tasks.check_for_duplicate_person',
                                                 args=(new_filename, image_id))
-        # TODO: Standardize this task (pipe through execute_synchronous_celery)
+
         rekognition_task.delay()
     except Exception as e:
         print(e)
