@@ -81,7 +81,6 @@ class User(ManyOrgBase, ModelBase):
     _TFA_secret = db.Column(db.String(200))
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
-    pin_hash2 = db.Column(db.String())
     seen_latest_terms = db.Column(db.Boolean, default=False)
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
