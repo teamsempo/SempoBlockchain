@@ -71,7 +71,7 @@ Once ganache is installed, run
 
 ```
 ganache-cli -l 80000000 -i 42 --db './ganacheDB' \
---account="0xc0d863808bc05e06a481622f9e8c1a6c3474320d71736afa3aff7f668284d804,10000000000000000000000000"
+--account="0x00f49bc12b2e102e072ee086482e700ad7fe2b5ee417697b13ca04e4dc1572d9,10000000000000000000000000"
 ```
 
 Here:
@@ -196,7 +196,7 @@ We use [Mozilla Sops](https://github.com/mozilla/sops/) for sharing low-risk dev
 If you're working on a sempo-specfic deployment, contact nick or tristan to gain decryption access. You will be given an
 AWS account - set up your credentials locally using [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), setting the profile name to `sempo` inside the [credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
 
-Once you've been authorised, you can access config settings by running `_SOPS_load.py` inside `.sempoconfig`.
+Once you've been authorised, you can access config settings by first creating a directory called `config_files` in the root folder, and running `_SOPS_load.py` inside `.sempoconfig` (note that you have to be in the `.sempoconfig` directory.
 This will extract all keys into the config_files folder. To encrypt them again for sharing on git, run
 `_SOPS_save.py`.
 

@@ -5,13 +5,15 @@ import { Link } from 'react-router-dom';
 
 import { replaceUnderscores } from "../../utils";
 
-import {ModuleBox, ModuleHeader, StyledButton} from '../styledElements'
+import {ModuleBox, ModuleHeader, StyledSelect} from '../styledElements'
 import AsyncButton from './../AsyncButton.jsx'
 import ProfilePicture from '../profilePicture.jsx'
 import GetVerified from '../GetVerified.jsx'
 
 import {editUser, resetPin} from '../../reducers/userReducer'
 import QrReadingModal from "../qrReadingModal.jsx";
+
+import {TransferAccountTypes} from "../transferAccount/types";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -31,29 +33,43 @@ class SingleUserManagement extends React.Component {
   constructor() {
     super();
     this.state = {
-        first_name: '',
-        last_name: '',
-        nfc_serial_number: '',
-        public_serial_number: '',
-        phone: '',
-        location: '',
+      first_name: '',
+      last_name: '',
+      nfc_serial_number: '',
+      public_serial_number: '',
+      phone: '',
+      location: '',
+      account_type: '',
     };
     this.handleChange = this.handleChange.bind(this);
   }
 
   componentDidMount() {
-      const { user } = this.props;
+    const { user } = this.props;
+    let account_type;
 
-      if (user !== null) {
-          this.setState({
-              first_name: user.first_name,
-              last_name: user.last_name,
-              nfc_serial_number: user.nfc_serial_number,
-              public_serial_number: user.public_serial_number,
-              phone: user.phone,
-              location: user.location
-          });
+    if (user !== null) {
+      if (user.is_beneficiary) {
+        account_type = TransferAccountTypes.USER
+      } else if (user.is_vendor) {
+        account_type = TransferAccountTypes.VENDOR
+      } else if (user.is_tokenagent) {
+        account_type = TransferAccountTypes.TOKENAGENT
+      } else if (user.is_groupaccount) {
+        account_type = TransferAccountTypes.GROUPACCOUNT
       }
+
+
+      this.setState({
+        first_name: user.first_name,
+        last_name: user.last_name,
+        nfc_serial_number: user.nfc_serial_number,
+        public_serial_number: user.public_serial_number,
+        phone: user.phone,
+        location: user.location,
+        account_type: account_type
+      });
+    }
   }
 
   editUser() {
@@ -63,17 +79,20 @@ class SingleUserManagement extends React.Component {
     const public_serial_number = this.state.public_serial_number;
     const phone = this.state.phone;
     const location = this.state.location;
+    const account_type = this.state.account_type;
 
     const single_transfer_account_id = this.props.userId.toString();
 
-    this.props.editUser(
-        {
-            first_name,
-            last_name,
-            nfc_serial_number,
-            public_serial_number,
-            phone,
-            location,
+    this.props.editUser({
+        first_name,
+        last_name,
+        nfc_serial_number,
+        public_serial_number,
+        phone,
+        location,
+        is_vendor: (account_type === 'VENDOR' || account_type === 'CASHIER'),
+        is_tokenagent: account_type === 'TOKENAGENT',
+        is_groupaccount: account_type === 'GROUPACCOUNT',
         },
         single_transfer_account_id
     );
@@ -84,25 +103,16 @@ class SingleUserManagement extends React.Component {
   }
 
   resetPin() {
-    window.confirm(`Are you sure you wish to reset User ${this.props.user.id}'s PIN?`) &&
+    window.confirm(`Are you sure you wish to reset ${this.state.first_name} ${this.state.last_name}'s PIN?`) &&
     this.props.resetPin(this.props.user.id)
   }
 
   render() {
+    let accountTypes = Object.keys(TransferAccountTypes);
     let blockchain_address = '';
     if (this.props.user.transfer_account) {
-      blockchain_address =  this.props.user.transfer_account.blockchain_address
-      if (!window.IS_USING_BITCOIN) {
-        var tracker_link = (
-          'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-          + 'etherscan.io/address/' + blockchain_address
-        )
-      } else {
-        tracker_link = (
-          'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-          '/address/' + blockchain_address
-        )
-      }
+      blockchain_address =  this.props.user.transfer_account.blockchain_address;
+      var tracker_link = window.ETH_EXPLORER_URL + '/address/' + blockchain_address;
     }
 
     var profilePicture = null;
@@ -121,15 +131,13 @@ class SingleUserManagement extends React.Component {
         profilePicture = null
       }
 
-      console.log(this.props.user.custom_attributes);
-
       custom_attribute_list = Object.keys(this.props.user.custom_attributes).map(key => {
           if (!this.props.user.custom_attributes[key].uploaded_image_id) {
             return (
               <SubRow key={key}>
                 <InputLabel>{replaceUnderscores(key)}: </InputLabel>
                 <div style={{marginLeft: '0.5em', marginRight: '4em'}}>
-                  {replaceUnderscores(this.props.user.custom_attributes[key].value)}
+                  {replaceUnderscores(this.props.user.custom_attributes[key])}
                 </div>
               </SubRow>
             )
@@ -179,6 +187,14 @@ class SingleUserManagement extends React.Component {
                           <InputLabel>Location: </InputLabel>
                           <ManagerInput name="location" placeholder="n/a" value={this.state.location || ''} onChange={this.handleChange}/>
                         </SubRow>
+                        <SubRow>
+                          <InputLabel>User Type: </InputLabel>
+                          <StyledSelect style={{fontWeight: '400', margin: '1em', lineHeight: '25px', height: '25px'}} name="account_type" value={this.state.account_type} onChange={this.handleChange}>
+                            {accountTypes.map((accountType, index) => {
+                              return <option key={index} name="account_type" value={accountType}>{accountType}</option>
+                            })}
+                          </StyledSelect>
+                        </SubRow>
                       </Row>
                       <Row style={{margin: '0em 1em'}}>
                         {
@@ -195,7 +211,7 @@ class SingleUserManagement extends React.Component {
                           <ManagerText>
                             <a  href={tracker_link}
                                      target="_blank">
-                            {blockchain_address.substring(window.IS_USING_BITCOIN? 0:2,)}
+                            {blockchain_address.substring(2,)}
                             </a>
                           </ManagerText>
                         </SubRow>

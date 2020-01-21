@@ -37,7 +37,7 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
     assert create_credit_transfer.resolution_message is not None
 
 
-# TODO: split this out for proper unit test
+# TODO: split this out for proper unit test. Also there should be tests that actually run against the counts.
 def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer):
     """
     GIVEN a CreditTransfer model
@@ -81,7 +81,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.token.token_type = token.TokenType.LIQUID
     create_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
     create_credit_transfer.sender_transfer_account.balance = 10000
-    assert create_credit_transfer.check_sender_transfer_limits() == [
+    assert create_credit_transfer.get_transfer_limits() == [
         limit for limit in LIMITS
         if 'GE Liquid Token - Standard User' == limit.name or 'Sempo Level 3: WD' in limit.name
     ]
@@ -91,7 +91,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     create_credit_transfer.sender_transfer_account.balance = 10000
-    assert create_credit_transfer.check_sender_transfer_limits() == [
+    assert create_credit_transfer.get_transfer_limits() == [
         limit for limit in LIMITS
         if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
@@ -102,7 +102,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
     create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     create_credit_transfer.sender_transfer_account.balance = 10000
-    assert create_credit_transfer.check_sender_transfer_limits() == [
+    assert create_credit_transfer.get_transfer_limits() == [
         limit for limit in LIMITS
         if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
@@ -139,6 +139,8 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(create_credit_transfer):
     from server.models import token
+
+    create_credit_transfer.transfer_amount = 100000
 
     create_credit_transfer.token.token_type = token.TokenType.RESERVE
     create_credit_transfer.sender_user.kyc_applications = []

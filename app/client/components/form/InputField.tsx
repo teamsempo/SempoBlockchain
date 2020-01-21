@@ -12,12 +12,13 @@ interface InputFieldJson {
   placeholder?: string,
   isRequired?: boolean,
   isPhoneNumber?: boolean,
+  isNotOther?: boolean,
   children?: React.ReactNode
 }
 
 
 export default function InputField(props: InputFieldJson) {
-  const { name, label, isRequired, isPhoneNumber, placeholder, type, children} = props;
+  const { name, label, isRequired, isPhoneNumber, isNotOther, placeholder, type, children} = props;
 
   let validate = [];
   if (isRequired) {
@@ -25,6 +26,9 @@ export default function InputField(props: InputFieldJson) {
   }
   if (isPhoneNumber) {
     validate.push(FormValidation.phone)
+  }
+  if (isNotOther) {
+    validate.push(FormValidation.notOther)
   }
 
   return <Field

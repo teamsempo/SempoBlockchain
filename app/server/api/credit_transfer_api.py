@@ -42,6 +42,9 @@ class CreditTransferAPI(MethodView):
 
             credit_transfer = CreditTransfer.query.get(credit_transfer_id)
 
+            if credit_transfer is None:
+                return make_response(jsonify({'message': 'Credit transfer not found'})), 404
+
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump([credit_transfer]).data
             elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
@@ -58,7 +61,7 @@ class CreditTransferAPI(MethodView):
                 }
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
         else:
 
@@ -116,9 +119,9 @@ class CreditTransferAPI(MethodView):
                 }
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, credit_transfer_id):
 
         put_data = request.get_json()
@@ -153,7 +156,7 @@ class CreditTransferAPI(MethodView):
         elif action == 'REJECT':
             credit_transfer.resolve_as_rejected()
 
-        db.session.commit()
+        db.session.flush()
 
         response_object = {
             'message': 'Modification successful',
@@ -166,6 +169,8 @@ class CreditTransferAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self, credit_transfer_id):
+
+        auto_resolve = AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin')
 
         post_data = request.get_json()
 
@@ -281,7 +286,8 @@ class CreditTransferAPI(MethodView):
                         send_user=sender_user,
                         receive_user=recipient_user,
                         transfer_use=transfer_use,
-                        uuid=uuid)
+                        uuid=uuid,
+                        automatically_resolve_complete=auto_resolve)
 
                 elif transfer_type == 'RECLAMATION':
                     transfer = make_payment_transfer(
@@ -289,7 +295,9 @@ class CreditTransferAPI(MethodView):
                         token=token,
                         send_user=sender_user,
                         uuid=uuid,
-                        transfer_subtype=TransferSubTypeEnum.RECLAMATION)
+                        transfer_subtype=TransferSubTypeEnum.RECLAMATION,
+                        require_recipient_approved=False,
+                        automatically_resolve_complete=auto_resolve)
 
                 elif transfer_type == 'DISBURSEMENT':
                     transfer = make_payment_transfer(
@@ -298,10 +306,15 @@ class CreditTransferAPI(MethodView):
                         send_user=g.user,
                         receive_user=recipient_user,
                         uuid=uuid,
-                        transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
+                        transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+                        automatically_resolve_complete=auto_resolve)
 
                 elif transfer_type == 'BALANCE':
-                    transfer = make_target_balance_transfer(target_balance, recipient_user, uuid=uuid)
+                    transfer = make_target_balance_transfer(
+                        target_balance,
+                        recipient_user,
+                        uuid=uuid,
+                        automatically_resolve_complete=auto_resolve)
 
             except (InsufficientBalanceError,
                     AccountNotApprovedError,
@@ -318,30 +331,33 @@ class CreditTransferAPI(MethodView):
                     return make_response(jsonify(response_object)), 400
 
             else:
+                message = 'Transfer Successful' if auto_resolve else 'Transfer Pending. Must be approved.'
+
                 if is_bulk:
                     credit_transfers.append(transfer)
 
-                    response_list.append({'status': 200, 'message': 'Transfer Successful'})
+                    response_list.append({'status': 201, 'message': message})
 
                 else:
+                    db.session.flush()
 
                     credit_transfer = credit_transfer_schema.dump(transfer).data
 
-
                     response_object = {
-                        'message': 'Transfer Successful',
+                        'message': message,
+                        'is_create': True,
                         'data': {
                             'credit_transfer': credit_transfer,
                         }
                     }
-                    db.session.commit()
 
                     return make_response(jsonify(response_object)), 201
 
-        db.session.commit()
+        db.session.flush()
 
+        message = 'Bulk Transfer Creation Successful' if auto_resolve else 'Bulk Transfer Pending. Must be approved.'
         response_object = {
-            'message': 'Bulk Transfer Creation Successful',
+            'message': message,
             'bulk_responses': response_list,
             'data': {
                 'credit_transfers': credit_transfers_schema.dump(credit_transfers).data
@@ -371,7 +387,7 @@ class ConfirmWithdrawalAPI(MethodView):
 
             credit_transfers.append(CreditTransfer.query.get(withdrawal_id_string))
 
-        db.session.commit()
+        db.session.flush()
 
         response_object = {
             'message': 'Withdrawal Confirmed',
@@ -422,7 +438,7 @@ class InternalCreditTransferAPI(MethodView):
                                             existing_blockchain_txn=blockchain_transaction_hash,
                                             require_sufficient_balance=False)
 
-        db.session.commit()
+        db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
 
         response_object = {

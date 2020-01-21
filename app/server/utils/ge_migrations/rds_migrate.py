@@ -4,7 +4,7 @@ import time
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 import pprint
 
-from server import db, bt
+from server import db, sentry
 
 from server.models.user import User
 from server.models.organisation import Organisation
@@ -16,7 +16,9 @@ from server.utils.user import create_transfer_account_user
 from server.utils.phone import proccess_phone_number
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.ge_migrations.poa_explorer import POAExplorer
+from server.utils.ge_migrations.web3_explorer import get_token_balance
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.constants import GE_MIGRATION_TOKENS, GE_BUSINESS_CATEGORY_MAPPINGS
 
 class RDSMigrate:
     
@@ -54,7 +56,7 @@ class RDSMigrate:
 
     def migrateUsers(self):
         list_of_ge_ids = self.get_ids_from_sempo()
-        print('list_of_ge_ids', list_of_ge_ids)
+        # print('list_of_ge_ids', list_of_ge_ids)
         self.get_new_users_from_GE(list_of_ge_ids, community_token_id=self.ge_community_token_id)
         # self.update_users_refered_by()
 
@@ -86,11 +88,12 @@ class RDSMigrate:
                 LEFT JOIN token_agents on users.id=token_agents.user_id
                 LEFT JOIN group_accounts on users.id=group_accounts.user_id
                 WHERE users.id NOT IN (%s)
-                LIMIT {self.user_limit}
             """
 
             if community_token_id:
                 cmd = cmd + f" AND users.community_token_id={community_token_id}"
+
+            cmd = cmd + f" LIMIT {self.user_limit}"
 
             cursor.execute(cmd % format_strings, tuple(already_added_ge_ids))
             users = cursor.fetchall()
@@ -102,20 +105,27 @@ class RDSMigrate:
             estimate_time_left = 'unknown'
 
             ge_address_to_user = {}
+
             for user in users:
                 i += 1               
                 print('Adding user {} of {}. User name = {} {}. Estimated time left {}. seconds'.format(
-                        i, n_users, user['first_name'], user['name'], estimate_time_left))
+                        i, n_users, user['first_name'], user['phone'], estimate_time_left))
                 # pprint.pprint(user)
+
                 sempo_user = self.insert_user(user)
 
                 if sempo_user:
                     ge_address_to_user[user['wallet_address']] = sempo_user
 
+                    self.migrate_balances({user['wallet_address']: sempo_user})
+
+                    db.session.commit()
+
                 elapsed_time = time.time() - t0
                 estimate_time_left = round((elapsed_time / i * n_users) - elapsed_time, 1)
 
-            self.migrate_balances(ge_address_to_user)
+
+            # self.migrate_balances(ge_address_to_user)
 
 
     def insert_user(self, ge_user):
@@ -123,6 +133,7 @@ class RDSMigrate:
         phone_number = None if 'DELETED' in ge_user['phone'] else ge_user['phone']
 
         if not phone_number:
+            print("Phone Deleted, Skipping")
             return
 
         processed_phone = proccess_phone_number(phone_number)
@@ -131,19 +142,13 @@ class RDSMigrate:
             print(f'User already exists for phone {processed_phone}')
             return
 
-        if ge_user['admin_id']:
-            return
-
+        business_usage = None
         if ge_user['business_type'] is not None:
-            transfer_usage = TransferUsage.find_or_create(ge_user['business_type'])
-            business_usage_id = transfer_usage.id
-        else:
-            business_usage_id = None
 
-        if business_usage_id:
-            business_usage = TransferUsage.query.get(business_usage_id)
-        else:
-            business_usage = None
+            sempo_category = GE_BUSINESS_CATEGORY_MAPPINGS.get(ge_user['business_type'])
+
+            if sempo_category:
+                business_usage = TransferUsage.query.filter_by(name=sempo_category).first()
 
         organsation = db.session.query(Organisation).get(self.sempo_organisation_id)
 
@@ -296,34 +301,48 @@ class RDSMigrate:
         org = Organisation.query.get(self.sempo_organisation_id)
         token = org.token
 
-        sending_address = org.queried_org_level_transfer_account.blockchain_address
-
         ge_address_to_user.pop(None, None)
 
         addresses = list(ge_address_to_user.keys())
-        balance_list = self.poa.balance(addresses)
 
-        for balance_info in balance_list['result']:
-            balance_wei = int(balance_info['balance'])
+        for user_address in addresses:
 
-            user = ge_address_to_user[balance_info['account']]
-            ta = user.get_transfer_account_for_token(token)
-            ta._balance_wei = balance_wei
+            try:
+                balance_wei = 0
 
-            print(f'transfering {balance_wei} wei to {user}')
+                for ge_token in GE_MIGRATION_TOKENS.keys():
+                    contract_address = GE_MIGRATION_TOKENS[ge_token]
 
-            migration_transfer = CreditTransfer(
-                amount=balance_wei/1e16,
-                token=token,
-                sender_transfer_account=org.queried_org_level_transfer_account,
-                recipient_user=user,
-                transfer_type=TransferTypeEnum.PAYMENT,
-                transfer_subtype=TransferSubTypeEnum.DISBURSEMENT
-            )
+                    v = get_token_balance(user_address, contract_address)
 
-            db.session.add(migration_transfer)
+                    if v != '':
+                        balance_wei += int(v)
 
-            migration_transfer.resolve_as_completed()
+                user = ge_address_to_user[user_address]
+                ta = user.get_transfer_account_for_token(token)
+                ta._balance_wei = balance_wei
+
+                print(f'transfering {balance_wei} wei to {user}')
+
+                if balance_wei != 0:
+
+                    migration_transfer = CreditTransfer(
+                        amount=balance_wei/1e16,
+                        token=token,
+                        sender_transfer_account=org.queried_org_level_transfer_account,
+                        recipient_user=user,
+                        transfer_type=TransferTypeEnum.PAYMENT,
+                        transfer_subtype=TransferSubTypeEnum.DISBURSEMENT
+                    )
+
+                    db.session.add(migration_transfer)
+
+                    migration_transfer.resolve_as_completed()
+
+            except Exception as e:
+                print(e)
+                sentry.captureException()
+                pass
 
     def store_wei(self, address, balance):
         sql = '''UPDATE "transfer_account"

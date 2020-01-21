@@ -4,7 +4,7 @@ from faker.providers import phone_number
 from faker import Faker
 import json
 
-from helpers.factories import UserFactory, UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory, TokenFactory, OrganisationFactory
 from helpers.ussd_utils import make_kenyan_phone, fake_transfer_mapping
 from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
@@ -15,7 +15,20 @@ fake.add_provider(phone_number)
 # why do i get dupes if i put it directly on standard_user...?
 phone = partial(fake.msisdn)
 
-standard_user = partial(UserFactory, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
+@pytest.fixture(scope='function')
+def standard_user(test_client, init_database):
+    token = TokenFactory(name='Sarafu', symbol='SARAFU')
+    organisation = OrganisationFactory(token=token)
+
+    return UserFactory(
+        first_name="Foo",
+        last_name="Bar",
+        pin_hash=User.salt_hash_secret('0000'),
+        failed_pin_attempts=0,
+        phone=phone(),
+        default_organisation=organisation
+    )
+
 
 send_enter_recipient_state = partial(UssdSessionFactory, state="send_enter_recipient")
 send_token_amount_state = partial(UssdSessionFactory, state="send_token_amount")
@@ -25,50 +38,49 @@ send_token_pin_authorization_state = partial(UssdSessionFactory, state="send_tok
 send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_confirmation")
 
 
-@pytest.mark.parametrize("session_factory, user_factory, user_input, expected",
+@pytest.mark.parametrize("session_factory, user_input, expected",
  [
      # send_token_amount state test
-     (send_token_amount_state, standard_user, "12.5", "send_token_reason"),
-     (send_token_amount_state, standard_user, "500", "send_token_reason"),
-     (send_token_amount_state, standard_user, "-1", "exit_invalid_input"),
-     (send_token_amount_state, standard_user, "asdf", "exit_invalid_input"),
+     (send_token_amount_state, "12.5", "send_token_reason"),
+     (send_token_amount_state, "500", "send_token_reason"),
+     (send_token_amount_state, "-1", "exit_invalid_input"),
+     (send_token_amount_state, "asdf", "exit_invalid_input"),
      # send_token_reasons state tests
-     (send_token_reason_state, standard_user, "9", "send_token_reason_other"),
-     (send_token_reason_state, standard_user, "1", "send_token_pin_authorization"),
-     (send_token_reason_state, standard_user, "10", "exit_invalid_menu_option"),
-     (send_token_reason_state, standard_user, "11", "exit_invalid_menu_option"),
-     (send_token_reason_state, standard_user, "asdf", "exit_invalid_menu_option"),
+     (send_token_reason_state, "9", "send_token_reason_other"),
+     (send_token_reason_state, "1", "send_token_pin_authorization"),
+     (send_token_reason_state, "10", "exit_invalid_menu_option"),
+     (send_token_reason_state, "11", "exit_invalid_menu_option"),
+     (send_token_reason_state, "asdf", "exit_invalid_menu_option"),
      # send_token_reason_other state tests
-     (send_token_reason_other_state, standard_user, "1", "send_token_pin_authorization"),
-     (send_token_reason_other_state, standard_user, "9", "send_token_reason_other"),
-     (send_token_reason_other_state, standard_user, "10", "send_token_reason_other"),
-     (send_token_reason_other_state, standard_user, "11", "exit_invalid_menu_option"),
-     (send_token_reason_other_state, standard_user, "asdf", "exit_invalid_menu_option"),
+     (send_token_reason_other_state, "1", "send_token_pin_authorization"),
+     (send_token_reason_other_state, "9", "send_token_reason_other"),
+     (send_token_reason_other_state, "10", "send_token_reason_other"),
+     (send_token_reason_other_state, "11", "exit_invalid_menu_option"),
+     (send_token_reason_other_state, "asdf", "exit_invalid_menu_option"),
      # send_token_pin_authorization state tests
-     (send_token_pin_authorization_state, standard_user, "0000", "send_token_confirmation"),
+     (send_token_pin_authorization_state, "0000", "send_token_confirmation"),
      # send_token_confirmation state tests
-     (send_token_confirmation_state, standard_user, "2", "exit"),
-     (send_token_confirmation_state, standard_user, "3", "exit_invalid_menu_option"),
-     (send_token_confirmation_state, standard_user, "asdf", "exit_invalid_menu_option"),
+     (send_token_confirmation_state, "2", "exit"),
+     (send_token_confirmation_state, "3", "exit_invalid_menu_option"),
+     (send_token_confirmation_state, "asdf", "exit_invalid_menu_option"),
  ])
-def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
+def test_kenya_state_machine(test_client, init_database, standard_user, session_factory, user_input, expected):
     session = session_factory()
-    session.session_data = {'transfer_usage_mapping': fake_transfer_mapping(10), 'usage_menu': 1, 'usage_menu_max': 1}
-    user = user_factory()
-    user.phone = phone()
+    session.session_data = {
+        'transfer_usage_mapping': fake_transfer_mapping(10),
+        'usage_menu': 1,
+        'usage_index_stack': [0, 8]
+    }
     db.session.commit()
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = KenyaUssdStateMachine(session, standard_user)
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
 
 
-def test_invalid_user_recipient(mocker, test_client, init_database):
+def test_invalid_user_recipient(mocker, test_client, init_database, standard_user):
     session = send_enter_recipient_state()
-    user = standard_user()
-    user.phone = phone()
-
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = KenyaUssdStateMachine(session, standard_user)
     state_machine.send_sms = mocker.MagicMock()
     state_machine.feed_char("1234")
 
@@ -76,62 +88,55 @@ def test_invalid_user_recipient(mocker, test_client, init_database):
     assert session.session_data is None
 
 
-def test_invalid_recipient(mocker, test_client, init_database, create_transfer_account_user, external_reserve_token):
+def test_invalid_recipient(
+        mocker, test_client, init_database, standard_user, create_transfer_account_user, external_reserve_token
+):
     session = send_enter_recipient_state()
-    user = standard_user()
-    user.phone = phone()
 
-    invalid_recipient = create_transfer_account_user
-    invalid_recipient.is_disabled = True
-    invalid_recipient.phone = make_kenyan_phone(invalid_recipient.phone)
+    invalid_recipient_phone = "+61234567890"
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = KenyaUssdStateMachine(session, standard_user)
     state_machine.send_sms = mocker.MagicMock()
-    state_machine.feed_char(invalid_recipient.phone)
+    state_machine.feed_char(invalid_recipient_phone)
 
     assert state_machine.state == "exit_invalid_recipient"
     assert session.session_data is None
 
-    # implicitly tests default_token + couples it to organisation being external_reserve... could test better
     state_machine.send_sms.assert_called_with(
-        invalid_recipient.phone,
-        "upsell_message",
-        first_name=invalid_recipient.first_name,
-        last_name=invalid_recipient.last_name,
-        community_token=external_reserve_token.name
+        invalid_recipient_phone,
+        "upsell_message_recipient",
+        first_name=standard_user.first_name,
+        last_name=standard_user.last_name,
+        token_name=standard_user.default_organisation.token.name
     )
 
 
-def test_standard_recipient(test_client, init_database):
+def test_standard_recipient(test_client, init_database, standard_user):
     session = send_enter_recipient_state()
-    user = standard_user()
-    user.phone = phone()
 
     recipient_user = UserFactory(phone=make_kenyan_phone(phone()))
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = KenyaUssdStateMachine(session, standard_user)
     state_machine.feed_char(recipient_user.phone)
 
     assert state_machine.state == "send_token_amount"
     assert session.get_data('recipient_phone') == recipient_user.phone
 
 
-def test_agent_recipient(test_client, init_database):
+def test_agent_recipient(test_client, init_database, standard_user):
     session = send_enter_recipient_state()
-    user = standard_user()
-    user.phone = phone()
 
     agent_recipient = UserFactory(phone=make_kenyan_phone(phone()))
     agent_recipient.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = KenyaUssdStateMachine(session, standard_user)
     state_machine.feed_char(agent_recipient.phone)
 
     assert state_machine.state == "exit_use_exchange_menu"
     assert session.session_data is None
 
 
-def test_send_token(mocker, test_client, init_database, create_transfer_account_user):
+def test_send_token(mocker, test_client, init_database, create_transfer_account_user, standard_user):
     recipient = create_transfer_account_user
     recipient.phone = make_kenyan_phone(recipient.phone)
 
@@ -147,13 +152,10 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
         )
     )
 
-    user = standard_user()
-    user.phone = phone()
-
-    state_machine = KenyaUssdStateMachine(send_token_confirmation, user)
+    state_machine = KenyaUssdStateMachine(send_token_confirmation, standard_user)
     send_token = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.send_token', send_token)
 
     state_machine.feed_char("1")
     assert state_machine.state == "complete"
-    send_token.assert_called_with(user, recipient, 10, "A reason", 1)
+    send_token.assert_called_with(standard_user, recipient, 10, "A reason", 1)

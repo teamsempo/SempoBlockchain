@@ -210,7 +210,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
 #     assert register_response.status_code == status_code
 
 @pytest.mark.parametrize("tier,status_code", [
-    ('admin', 401),
+    ('admin', 403),
     ('superadmin', 200),
 ])
 def test_blockchain_key_api(test_client, authed_sempo_admin_user, tier, status_code):
@@ -425,8 +425,8 @@ def test_basic_query_string_auth(test_client, username, password, status_code):
 
 @pytest.mark.parametrize("role, tier,status_code", [
     (None, None, 401),
-    ('VENDOR', 'supervendor', 401),
-    ('ADMIN', 'admin', 401),
+    ('VENDOR', 'supervendor', 403),
+    ('ADMIN', 'admin', 403),
     ('ADMIN', 'superadmin', 200),
 ])
 def test_token_auth(test_client, authed_sempo_admin_user, role, tier, status_code):

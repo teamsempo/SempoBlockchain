@@ -103,7 +103,6 @@ if IS_PRODUCTION is None:
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
 CURRENCY_DECIMALS   = int(specific_parser['APP']['CURRENCY_DECIMALS'])
-STARTING_BALANCE    = int(specific_parser['APP']['STARTING_BALANCE'])
 DEFAULT_COUNTRY     = specific_parser['APP']['DEFAULT_COUNTRY']
 DEFAULT_LAT         = float(specific_parser['APP']['DEFAULT_LAT'])
 DEFAULT_LNG         = float(specific_parser['APP']['DEFAULT_LNG'])
@@ -113,10 +112,9 @@ CHATBOT_REQUIRE_PIN = specific_parser['APP'].getboolean('CHATBOT_REQUIRE_PIN')
 DEFAULT_FEEDBACK_QUESTIONS = list(specific_parser['APP']['DEFAULT_FEEDBACK_QUESTIONS'].split(','))
 FEEDBACK_TRIGGERED_WHEN_BALANCE_BELOW = int(specific_parser['APP']['FEEDBACK_TRIGGERED_WHEN_BALANCE_BELOW'])
 FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE = int(specific_parser['APP']['FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE'])
-
+LIMIT_EXCHANGE_RATE = float(specific_parser['APP'].get('LIMIT_EXCHANGE_RATE', 1))
 CASHOUT_INCENTIVE_PERCENT = float(specific_parser['APP'].get('CASHOUT_INCENTIVE_PERCENT', 0))
-AUTO_APPROVE_TRANSFER_ACCOUNTS = specific_parser['APP'].getboolean('AUTO_APPROVE_TRANSFER_ACCOUNTS', False)
-MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT', 0))
+DEFAULT_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('DEFAULT_INITIAL_DISBURSEMENT', 0))
 ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
@@ -142,8 +140,10 @@ BASIC_AUTH_CREDENTIALS = {
 
 REDIS_URL = 'redis://' + specific_parser['REDIS']['URI']
 
-DATABASE_USER = specific_parser['DATABASE'].get('user') \
-                or '{}_{}'.format(common_parser['DATABASE']['user'],DEPLOYMENT_NAME.replace("-", "_"))
+DATABASE_USER = os.environ.get("DATABASE_USER") or specific_parser['DATABASE'].get('user') \
+                or '{}_{}'.format(common_parser['DATABASE']['user'], DEPLOYMENT_NAME.replace("-", "_"))
+
+DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD") or specific_parser['DATABASE']['password']
 
 DATABASE_HOST = specific_parser['DATABASE']['host']
 
@@ -154,10 +154,12 @@ ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']
 
 ETH_DATABASE_HOST = specific_parser['DATABASE'].get('eth_host') or DATABASE_HOST
+ETH_WORKER_DB_POOL_SIZE = specific_parser['DATABASE'].getint('eth_worker_pool_size', 40)
+ETH_WORKER_DB_POOL_OVERFLOW = specific_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
 
 def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
-                                                '*******' if censored else specific_parser['DATABASE']['password'],
+                                                '*******' if censored else DATABASE_PASSWORD,
                                                 host,
                                                 common_parser['DATABASE']['port'],
                                                 name)
@@ -227,7 +229,7 @@ except ImportError:
 ETH_HTTP_PROVIDER       = specific_parser['ETHEREUM']['http_provider']
 ETH_WEBSOCKET_PROVIDER  = specific_parser['ETHEREUM'].get('websocket_provider')
 ETH_CHAIN_ID            = specific_parser['ETHEREUM'].get('chain_id')
-ETH_CHAIN_NAME          = {1: '', 3: 'Ropsten', 42: 'Kovan'}.get(int(ETH_CHAIN_ID or 1))
+ETH_EXPLORER_URL        = (specific_parser['ETHEREUM'].get('explorer_url') or 'https://etherscan.io').strip('/')
 ETH_OWNER_ADDRESS       = specific_parser['ETHEREUM']['owner_address']
 ETH_OWNER_PRIVATE_KEY   = specific_parser['ETHEREUM']['owner_private_key']
 ETH_FLOAT_PRIVATE_KEY   = specific_parser['ETHEREUM']['float_private_key']
@@ -236,7 +238,7 @@ ETH_GAS_PRICE           = int(specific_parser['ETHEREUM']['gas_price_gwei'] or 0
 ETH_GAS_LIMIT           = int(specific_parser['ETHEREUM']['gas_limit'] or 0)
 ETH_TARGET_TRANSACTION_TIME = int(specific_parser['ETHEREUM']['target_transaction_time'] or 120)
 ETH_GAS_PRICE_PROVIDER  = specific_parser['ETHEREUM']['gas_price_provider']
-ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME,str(ETH_CONTRACT_VERSION))
+ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME, str(ETH_CONTRACT_VERSION))
 
 ETH_CHECK_TRANSACTION_BASE_TIME = 20
 ETH_CHECK_TRANSACTION_RETRIES = int(specific_parser['ETHEREUM']['check_transaction_retries'])
@@ -321,6 +323,12 @@ try:
     GE_DB_HOST = specific_parser['GE_MIGRATION'].get('host')
     GE_DB_PORT = specific_parser['GE_MIGRATION'].get('port')
     GE_DB_PASSWORD = specific_parser['GE_MIGRATION'].get('password')
+    GE_HTTP_PROVIDER = specific_parser['GE_MIGRATION'].get('ge_http_provider')
 
 except KeyError:
-    pass
+    GE_DB_NAME = ''
+    GE_DB_USER = ''
+    GE_DB_HOST = ''
+    GE_DB_PORT = ''
+    GE_DB_PASSWORD = ''
+    GE_HTTP_PROVIDER = ''

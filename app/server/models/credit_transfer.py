@@ -15,8 +15,10 @@ from server.models.transfer_account import TransferAccount
 from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError,
-    AccountLimitError,
-    TransactionCountLimitError, TransactionPercentLimitError)
+    NoTransferAllowedLimitError,
+    TransferAmountLimitError,
+    TransferCountLimitError,
+    TransferBalanceFractionLimitError)
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
@@ -158,7 +160,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             from_address=self.sender_transfer_account.blockchain_address,
             to_address=self.recipient_transfer_account.blockchain_address,
             amount=self.transfer_amount,
-            dependent_on_tasks=
+            prior_tasks=
             list(filter(lambda x: x is not None,
                         [
                             sender_approval.eth_send_task_uuid, sender_approval.approval_task_uuid,
@@ -208,6 +210,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         for limit in relevant_transfer_limits:
 
+            if limit.no_transfer_allowed:
+                raise NoTransferAllowedLimitError(token=self.token.name)
+
             if limit.transfer_count is not None:
                 # GE Limits
                 transaction_count = limit.apply_all_filters(
@@ -219,7 +224,12 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     message = 'Account Limit "{}" reached. Allowed {} transaction per {} days'\
                         .format(limit.name, limit.transfer_count, limit.time_period_days)
                     self.resolve_as_rejected(message=message)
-                    raise TransactionCountLimitError(message, limit.time_period_days, limit.transfer_count)
+                    raise TransferCountLimitError(
+                        transfer_count_limit=limit.transfer_count,
+                        limit_time_period_days=limit.time_period_days,
+                        token=self.token.name,
+                        message=message
+                    )
 
             if limit.transfer_balance_fraction is not None:
                 allowed_transfer = limit.transfer_balance_fraction * self.sender_transfer_account.balance
@@ -230,7 +240,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                         max(allowed_transfer, 0)
                     )
                     self.resolve_as_rejected(message=message)
-                    raise TransactionPercentLimitError(message, limit.transfer_balance_fraction)
+                    raise TransferBalanceFractionLimitError(
+                        transfer_balance_fraction_limit=limit.transfer_balance_fraction,
+                        transfer_amount_avail=int(allowed_transfer),
+                        limit_time_period_days=limit.time_period_days,
+                        token=self.token.name,
+                        message=message
+                    )
 
             if limit.total_amount is not None:
                 # Sempo Compliance Account Limits
@@ -238,14 +254,21 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 transaction_volume = limit.apply_all_filters(
                     self,
                     db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-                ).execution_options(show_all=True).first().total
+                ).execution_options(show_all=True).first().total or 0
 
-                amount_avail = limit.total_amount - (transaction_volume or 0)
+                if transaction_volume > limit.total_amount:
+                    # Don't include the current transaction when reporting amount available
+                    amount_avail = limit.total_amount - transaction_volume + int(self.transfer_amount)
 
-                if self.transfer_amount > amount_avail:
                     message = 'Account Limit "{}" reached. {} available'.format(limit.name, max(amount_avail, 0))
                     self.resolve_as_rejected(message=message)
-                    raise AccountLimitError(message)
+                    raise TransferAmountLimitError(
+                        transfer_amount_limit=limit.total_amount,
+                        transfer_amount_avail=amount_avail,
+                        limit_time_period_days=limit.time_period_days,
+                        token=self.token.name,
+                        message=message
+                    )
 
         return relevant_transfer_limits
 

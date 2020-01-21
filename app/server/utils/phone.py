@@ -58,32 +58,30 @@ class MessageProcessor(object):
             return ChannelType.TWILIO
 
     def send_message(self, to_phone, message):
-        self.send_at_message(to_phone, message)
-
-        if not current_app.config['IS_TEST'] and current_app.config['IS_PRODUCTION']:
+        if current_app.config['IS_TEST'] or current_app.config['IS_PRODUCTION']:
             channel = self.channel_for_number(to_phone)
             print(f'Sending SMS via {channel}')
             if channel == ChannelType.TWILIO:
-                self.send_twilio_message(to_phone, message)
+                self._send_twilio_message(to_phone, message)
             if channel == ChannelType.MESSAGEBIRD:
-                self.send_messagebird_message(to_phone, message)
+                self._send_messagebird_message(to_phone, message)
             if channel == ChannelType.AFRICAS_TALKING:
-                self.send_at_message(to_phone, message)
+                self._send_at_message(to_phone, message)
         else:
             print(f'"IS NOT PRODUCTION", not sending SMS:\n{message}')
 
-    def send_twilio_message(self, to_phone, message):
+    def _send_twilio_message(self, to_phone, message):
         if to_phone:
             self.twilio_client.api.account.messages.create(
                 to=to_phone,
                 from_=current_app.config['TWILIO_PHONE'],
                 body=message)
 
-    def send_messagebird_message(self, to_phone, message):
+    def _send_messagebird_message(self, to_phone, message):
         if to_phone:
             self.messagebird_client.message_create(current_app.config['MESSAGEBIRD_PHONE'], to_phone, message)
 
-    def send_at_message(self, to_phone, message):
+    def _send_at_message(self, to_phone, message):
         if to_phone:
 
             # First try with custom sender Id

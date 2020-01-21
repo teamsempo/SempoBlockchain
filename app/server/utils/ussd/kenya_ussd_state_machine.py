@@ -18,9 +18,11 @@ from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
     get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required
 from server.utils.credit_transfer import dollars_to_cents
+from server.utils.phone import proccess_phone_number
 
 
 ITEMS_PER_MENU = 8
+USSD_MAX_LENGTH = 164
 MIN_EXCHANGE_AMOUNT_CENTS = 40
 
 
@@ -60,7 +62,7 @@ class KenyaUssdStateMachine(Machine):
         'directory_listing_other',
         # exchange token states
         'exchange_token',
-        'exchange_rate_pin_authorization',
+        # 'exchange_rate_pin_authorization',
         'exchange_token_agent_number_entry',
         'exchange_token_amount_entry',
         'exchange_token_pin_authorization',
@@ -213,8 +215,7 @@ class KenyaUssdStateMachine(Machine):
     def set_usage_menu_number(self, user_input):
         current_menu_nr = self.session.get_data('usage_menu')
         if int(user_input) == 9:
-            max_menu = self.session.get_data('usage_menu_max')
-            current_menu_nr = current_menu_nr + 1 if current_menu_nr < max_menu else max_menu
+            current_menu_nr = current_menu_nr + 1
             self.session.set_data('usage_menu', current_menu_nr)
         elif int(user_input) == 10:
             current_menu_nr = current_menu_nr - 1 if current_menu_nr > 0 else 0
@@ -228,15 +229,19 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
 
     def upsell_unregistered_recipient(self, user_input):
-        user = get_user_by_phone(user_input, "KE")
-        if self.is_valid_recipient(user, False, False):
-            self.send_sms(
-                user.phone,
-                'upsell_message',
-                first_name=user.first_name,
-                last_name=user.last_name,
-                community_token=default_token(user).name
-            )
+        recipient_phone = proccess_phone_number(user_input)
+        self.send_sms(
+            self.user.phone,
+            'upsell_message_sender',
+            recipient_phone=recipient_phone,
+        )
+        self.send_sms(
+            recipient_phone,
+            'upsell_message_recipient',
+            first_name=self.user.first_name,
+            last_name=self.user.last_name,
+            token_name=default_token(self.user).name
+        )
 
     def inquire_balance(self, user_input):
         ussd_tasker.inquire_balance(self.user)
@@ -294,11 +299,11 @@ class KenyaUssdStateMachine(Machine):
 
         self.session.set_data('transfer_usage_mapping', transfer_usage_map)
         self.session.set_data('usage_menu', 0)
-        self.session.set_data('usage_menu_max', math.floor(len(usages)/ITEMS_PER_MENU))
 
     def get_select_transfer_usage(self, user_input):
         menu_page = self.session.get_data('usage_menu')
-        idx = menu_page * ITEMS_PER_MENU + int(user_input) - 1
+        usage_stack = self.session.get_data('usage_index_stack') or [0]
+        idx = usage_stack[menu_page] + int(user_input) - 1
         selected_tranfer_usage_id = self.session.get_data('transfer_usage_mapping')[idx]['id']
         return TransferUsage.query.get(selected_tranfer_usage_id)
 
@@ -483,7 +488,8 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'directory_listing',
              'dest': 'directory_listing_other',
-             'conditions': 'menu_nine_selected'},
+             'conditions': 'menu_nine_selected',
+             'after': 'set_usage_menu_number'},
             {'trigger': 'feed_char',
              'source': 'directory_listing',
              'dest': 'complete',
@@ -683,7 +689,7 @@ class KenyaUssdStateMachine(Machine):
         exchange_token_transitions = [
             {'trigger': 'feed_char',
              'source': 'exchange_token',
-             'dest': 'exchange_rate_pin_authorization',
+             'dest': 'complete',
              'conditions': 'menu_one_selected',
              'after': 'fetch_user_exchange_rate'},
             {'trigger': 'feed_char',
@@ -696,6 +702,7 @@ class KenyaUssdStateMachine(Machine):
         ]
         self.add_transitions(exchange_token_transitions)
 
+        # DEPRECATED - exchange rate currently given without requiring pin
         # event: exchange_rate_pin_authorization transitions
         exchange_rate_pin_authorization_transitions = [
             {'trigger': 'feed_char',

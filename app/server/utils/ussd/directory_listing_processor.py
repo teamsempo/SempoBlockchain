@@ -61,7 +61,7 @@ class DirectoryListingProcessor(object):
         result = db.session.execute(sql)
         ids = [row[0] for row in result]
 
-        # TODO: how to convert from id to user while preserving order?
+        # TODO: how to convert from id to user while presChoose Market Categoryerving order?
         return list(map(lambda x: User.query.execution_options(show_all=True).get(x), ids))
 
     def get_business_category_translation(self):
@@ -74,7 +74,7 @@ class DirectoryListingProcessor(object):
             return self.selected_business_category.name
 
     def send_directory_listing(self):
-        transfer_account = TransferAccount.query.get(self.recipient.default_transfer_account_id)
+        transfer_account = self.recipient.default_transfer_account
         token = transfer_account.token
 
         # find users who fit recipient's selected business category and are opted in for marketplace

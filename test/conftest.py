@@ -144,13 +144,16 @@ def new_disbursement(create_transfer_account_user):
 @pytest.fixture(scope='function')
 def new_credit_transfer(create_transfer_account_user, external_reserve_token):
     from server.models.credit_transfer import CreditTransfer
+    from uuid import uuid4
+
     credit_transfer = CreditTransfer(
         amount=1000,
         token=external_reserve_token,
         sender_user=create_transfer_account_user,
         recipient_user=create_transfer_account_user,
         transfer_type=TransferTypeEnum.PAYMENT,
-        transfer_subtype=TransferSubTypeEnum.STANDARD
+        transfer_subtype=TransferSubTypeEnum.STANDARD,
+        uuid=str(uuid4())
     )
     return credit_transfer
 
@@ -172,6 +175,19 @@ def proccess_phone_number_with_ctx(test_client):
 def save_device_info(test_client, init_database, create_transfer_account_user):
     from server.utils.user import save_device_info
     return save_device_info
+
+
+@pytest.fixture(scope='module')
+def create_filter(test_client, init_database, create_organisation):
+    from server.models.saved_filter import SavedFilter
+    saved_filter = SavedFilter(
+        name='TestFilter',
+        filter=dict(allowedValues=[1,2], id=1, keyName='balance', type='of'),
+        organisation_id=create_organisation.id
+    )
+    db.session.add(saved_filter)
+    db.session.commit()
+    return saved_filter
 
 
 @pytest.fixture(scope='function')
@@ -410,6 +426,30 @@ def init_database():
     with current_app.app_context():
         db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
         db.drop_all()
+
+
+@pytest.fixture(autouse=True)
+def mock_sms_apis(mocker):
+    # Always patch out all sms sending apis because we don't want to spam messages with our tests!!
+
+    from server.utils.phone import MessageProcessor
+
+    messages = []
+    def mock_sms_api(phone, message):
+        messages.append({'phone': phone, 'message': message})
+
+    # Aggressively patch methods inside the class so we don't accidentally leave one out
+    for method in dir(MessageProcessor):
+        if not method.startswith('__') and method not in ['channel_for_number', 'send_message']:
+            mocker.patch(f'server.message_processor.{method}', mock_sms_api)
+
+    return messages
+
+@pytest.fixture(autouse=True)
+def mock_pusher(mocker):
+    mocker.patch('server.pusher_client.trigger')
+    mocker.patch('server.pusher_client.authenticate')
+
 
 @pytest.fixture(scope="module")
 def monkeymodule(request):

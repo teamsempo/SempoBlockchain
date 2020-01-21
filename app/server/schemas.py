@@ -6,7 +6,9 @@ import toastedmarshmallow
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
+from server.models.exchange import Exchange
 from server.constants import GE_FILTER_ATTRIBUTES
+from server.exceptions import SubexchangeNotFound
 
 
 class LowerCase(fields.Field):
@@ -106,13 +108,27 @@ class TokenSchema(SchemaBase):
     symbol              = fields.Str()
     name                = fields.Str()
 
+    def get_exchange_rates(self, obj):
+        rates = {}
+        for to_token in self.context.get('exchange_pairs', []):
+            if to_token != obj:
+                try:
+                    rate = Exchange.get_exchange_rate(obj, to_token)
+                    rates[to_token.symbol] = rate
+
+                except SubexchangeNotFound:
+                    pass
+
+        return rates
+
+    exchange_rates = fields.Method("get_exchange_rates")
+
     # exchange_contracts  = fields.Nested("server.schemas.ExchangeContractSchema", many=True)
 
 class CreditTransferSchema(Schema):
 
     id      = fields.Int(dump_only=True)
-    # created = fields.DateTime(dump_only=True)
-    created = fields.DateTime(dump_only= True, attribute='resolved_date')
+    created = fields.DateTime(dump_only=True)
     authorising_user_email  = fields.Method('get_authorising_user_email')
 
     uuid = fields.String()
@@ -290,13 +306,6 @@ class TransferCardSchema(SchemaBase):
             return None
 
 
-class ReferralSchema(SchemaBase):
-    first_name      = fields.Str()
-    last_name       = fields.Str()
-    reason          = fields.Str()
-    phone           = fields.Str()
-
-
 class SavedFilterSchema(SchemaBase):
     name            = fields.Str()
     filter          = fields.Method('get_filter_json')
@@ -398,7 +407,7 @@ transfer_account_schema = TransferAccountSchema(
 
 transfer_accounts_schema = TransferAccountSchema(
     many=True,
-    only=('balance', 'created', 'id', 'users', 'token', 'primary_user_id', 'blockchain_address')
+    only=('balance', 'created', 'id', 'users', 'token', 'primary_user_id', 'blockchain_address', 'is_approved')
 )
 
 # transfer_accounts_schema = MiniTaSchema(many=True)
@@ -428,9 +437,6 @@ view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
 
 uploaded_resource_schema = UploadedResourceSchema()
-
-referral_schema = ReferralSchema()
-referrals_schema = ReferralSchema(many=True)
 
 filter_schema = SavedFilterSchema()
 filters_schema = SavedFilterSchema(many=True)

@@ -96,6 +96,17 @@ class BlockchainTransactionRPC(MethodView):
 
             return make_response(jsonify(response_object)), 200
 
+        if call == 'RETRY_FAILED_TASKS':
+
+            res = bt.retry_failed()
+
+            response_object = {
+                'message': 'Retrying failed tasks',
+                'data': res
+            }
+
+            return make_response(jsonify(response_object)), 200
+
         response_object = {
             'message': 'Call not recognised',
         }

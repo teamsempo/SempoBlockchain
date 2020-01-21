@@ -8,7 +8,6 @@ from server.models.device_info import DeviceInfo
 from server.models.feedback import Feedback
 from server.models.kyc_application import KycApplication
 from server.models.organisation import Organisation
-from server.models.referral import Referral
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
@@ -44,12 +43,6 @@ class TransferAccountFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
 
-class ReferralFactory(SQLAlchemyModelFactory):
-    class Meta:
-        model = Referral
-        sqlalchemy_session = db.session
-
-
 class FeedbackFactory(SQLAlchemyModelFactory):
     class Meta:
         model = Feedback
@@ -67,22 +60,11 @@ class KycApplicationFactory(SQLAlchemyModelFactory):
         model = KycApplication
         sqlalchemy_session = db.session
 
+
 class OrganisationFactory(SQLAlchemyModelFactory):
     class Meta:
         model = Organisation
         sqlalchemy_session = db.session
-
-
-class UssdSessionFactory(SQLAlchemyModelFactory):
-    class Meta:
-        model = UssdSession
-        sqlalchemy_session = db.session
-
-    session_id = Sequence(lambda n: n)
-    service_code = "123"
-    msisdn = fake.msisdn()
-    # we might want to tie this to an actual ussd menu for some tests?
-    ussd_menu_id = 1
 
 
 class UssdMenuFactory(SQLAlchemyModelFactory):
@@ -92,6 +74,25 @@ class UssdMenuFactory(SQLAlchemyModelFactory):
 
     name = 'start'
 
+
+class UssdSessionFactoryBase(SQLAlchemyModelFactory):
+    class Meta:
+        model = UssdSession
+        sqlalchemy_session = db.session
+
+    session_id = Sequence(lambda n: n)
+    service_code = "123"
+    msisdn = fake.msisdn()
+
+def UssdSessionFactory(**kwargs):
+    # Uses Class Naming Convention because it's actually a delayed execution Class
+    def inner():
+        unique_name = 'Foo' + str(Sequence(lambda n: n))
+        ussd_menu = UssdMenuFactory(name=unique_name, display_key=unique_name)
+
+        return UssdSessionFactoryBase(ussd_menu=ussd_menu, **kwargs)
+
+    return inner()
 
 class TokenFactory(SQLAlchemyModelFactory):
     class Meta:

@@ -3,6 +3,8 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 import json
+from server import db
+
 
 from helpers.factories import UserFactory, UssdSessionFactory
 from helpers.ussd_utils import make_kenyan_phone
@@ -29,7 +31,7 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected",
  [
      # exchange_token state tests
-     (exchange_token_state, standard_user, "1", "exchange_rate_pin_authorization"),
+     (exchange_token_state, standard_user, "1", "complete"),
      (exchange_token_state, standard_user, "2", "exchange_token_agent_number_entry"),
      (exchange_token_state, standard_user, "3", "exit_invalid_menu_option"),
      (exchange_token_state, standard_user, "asdf", "exit_invalid_menu_option"),
@@ -54,7 +56,6 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
-
 
 def test_invalid_user_recipient(test_client, init_database):
     session = exchange_token_agent_number_entry_state()

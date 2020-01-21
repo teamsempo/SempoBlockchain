@@ -181,64 +181,48 @@ class CreditTransferList extends React.Component {
   };
 
   _customSender(creditTransfer) {
+    let sender = creditTransfer.sender_user && this.props.users.byId[creditTransfer.sender_user];
+	  let firstName = sender && sender.first_name;
+	  let lastName = sender && sender.last_name;
+	  let email = creditTransfer.authorising_user_email;
+	  let blockchainAddress = creditTransfer.sender_blockchain_address;
+
     if (this.props.login.adminTier === 'view') {
-      return creditTransfer.sender_blockchain_address
-    }
-    let sender = this.props.users.byId[creditTransfer.sender_user];
-    if (sender !== null && typeof sender !== "undefined") {
-      return sender.first_name + ' ' + sender.last_name;
+      return blockchainAddress
+    } else if (sender && firstName) {
+      return firstName + ' ' + lastName
+    } else if (creditTransfer.transfer_type === 'DISBURSEMENT' && email) {
+      return <div style={{color: '#96DADC'}}> {email} </div>
     } else {
-      return null
+      return '-'
     }
   }
 
   _customRecipient(creditTransfer) {
+    let recipient = creditTransfer.recipient_user && this.props.users.byId[creditTransfer.recipient_user];
+	  let firstName = recipient && recipient.first_name;
+	  let lastName = recipient && recipient.last_name;
+	  let email = creditTransfer.authorising_user_email;
+	  let blockchainAddress = creditTransfer.recipient_blockchain_address;
+
     if (this.props.login.adminTier  === 'view') {
-      return creditTransfer.recipient_blockchain_address
-    }
-    let recipient = this.props.users.byId[creditTransfer.recipient_user];
-    if (recipient !== null && typeof recipient !== "undefined") {
-      return recipient.first_name + ' ' + recipient.last_name;
+      return blockchainAddress
+    } else if (recipient && firstName) {
+      return firstName + ' ' + lastName;
+    } else if (creditTransfer.transfer_type === 'RECLAMATION' && email) {
+      return <div style={{color: '#96DADC'}}> {email} </div>
     } else {
-      return null
+      return '-'
     }
   }
 
   render() {
     const { creditTransfers, is_single } = this.props;
-
 	  const loadingStatus = creditTransfers.loadStatus.isRequesting;
 
     let creditTransferList = Object.keys(this.state.credit_transfer_ids)
     .filter(id => typeof(this.props.creditTransfers.byId[id]) !== "undefined")
-    .map(id => {
-      var item = this.props.creditTransfers.byId[id];
-      if (item.sender_user) {
-        item.sender = (
-          this.props.users.byId[item.sender_user].first_name
-          + ' ' +
-          this.props.users.byId[item.sender_user].last_name
-        )
-      } else if (item.transfer_type === 'DISBURSEMENT' && item.authorising_user_email) {
-        item.sender = <div style={{color: '#96DADC'}}> {item.authorising_user_email} </div>
-      } else {
-        item.sender = '-'
-      }
-
-      if (item.recipient_user) {
-        item.recipient = (
-          this.props.users.byId[item.recipient_user].first_name
-          + ' ' +
-          this.props.users.byId[item.recipient_user].last_name
-        )
-      } else if (item.transfer_type === 'RECLAMATION' && item.authorising_user_email) {
-        item.recipient = <div style={{color: '#96DADC'}}> {item.authorising_user_email} </div>
-      } else {
-        item.recipient = '-'
-      }
-      return (item)
-    })
-    // .map(id => this.props.creditTransfers.byId[id])
+    .map(id => this.props.creditTransfers.byId[id])
     .sort((a, b) => (b.id - a.id));
 
 
@@ -397,17 +381,7 @@ class CreditTransferList extends React.Component {
                   }
 
                   if (hash) {
-                    if (!window.IS_USING_BITCOIN) {
-                      var tracker_link = (
-                        'https://' + window.ETH_CHAIN_NAME  +  (window.ETH_CHAIN_NAME? '.':'')
-                        + 'etherscan.io/tx/' + hash
-                      )
-                    } else {
-                      tracker_link = (
-                        'https://www.blockchain.com/' + (window.IS_BITCOIN_TESTNET? 'btctest' : 'btc') +
-                        '/tx/' + hash
-                      )
-                    }
+                    var tracker_link = window.ETH_EXPLORER_URL + '/tx/' + hash;
                   } else {
                     tracker_link = null
                   }

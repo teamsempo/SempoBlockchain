@@ -25,7 +25,7 @@ en:
       CON Enter Amount
       0. Back
     send_token_reason: |
-      CON Select Transfer reason 
+      CON Select Transfer reason
       %{options}
       9. Show other options
       0. Back
@@ -59,7 +59,7 @@ en:
       2. Cancel
       0. Back
     directory_listing: |
-      CON Choose Market Category 
+      CON Choose Market Category
       %{options}
       9. Show other options
       0. Back
@@ -95,7 +95,7 @@ en:
       2. Change my business
       0. Back
     about_my_business:
-      bio: END %{user_bio}
+      bio: END You sell %{user_bio}
       none: END No business set, please go to Change My Business to set it to something
     change_my_business_prompt: |
       CON Please enter a product or service you offer
@@ -177,20 +177,31 @@ en:
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
-    upsell_message: "%{first_name} %{last_name} tried to send you {community_token} but you are not registered. Send your information: name, phone number, area of residence, and the type of business you run 0757628885."
+    upsell_message_sender: "Recipient %{recipient_phone} is not yet registered. Please call or send their Name, Phone number, business and location to 0757628885"
+    upsell_message_recipient: "%{first_name} %{last_name} tried to send you %{token_name} but you are not registered. Send your information: name, phone number, area of residence, and the type of business you run 0757628885."
     send_directory_listing_message: "%{community_token_name} %{business_type} Market \n %{directory_listing_users}"
     no_directory_listing_found_message: Sorry we couldn't find businesses from your community that match your search criteria.
     send_token_sender_sms: Successfully sent a payment of %{amount} %{token_name} to %{other_user} on %{date} for %{reason} at %{time}. New %{token_name} balance is %{balance}
     send_token_recipient_sms: Successfully received a payment of %{amount} %{token_name} from %{other_user} for %{reason} on %{date} at %{time}. New %{token_name} balance is %{balance}
     exchange_token_sender_sms: Successfully sent a payment of %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} to %{other_user} on %{date} at %{time}. New %{own_token_name} balance is %{balance}
     exchange_token_agent_sms: Successfully received a payment of %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} from %{other_user} on %{date} at %{time}. New %{own_token_name} balance is %{balance}
-    exchange_rate_sms: |
+    exchange_rate_can_exchange_sms: |
       Exchange Rate:
       For 1 %{token_name} you get %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
       You can transfer a maximum of %{exchange_limit} %{token_name} at an agent every %{limit_period} days.
-    exchange_count_error_sms: Sorry you have exceeded your exchange token limit. You are allowed %{transaction_count} transaction per %{limit_period} days
-    exchange_amount_error_sms: Sorry you have exceeded your transaction amount limit. You are allowed up to %{limit} of your balance
+    exchange_rate_sms: |
+      Exchange Rate:
+      For 1 %{token_name} you get %{exchange_rate} KSH
+      1000 %{token_name} = %{exchange_sample_value} KSH
+    exchange_not_allowed_error_sms: Only a group account can exchange please contact 0757628885 for help
+    exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
+    exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
+    exchange_amount_error_sms: Sorry you have exceeded your %{token} transfer amount limit. You are allowed up to %{amount} %{token} per %{limit_period} days
+    insufficient_balance_sms: |
+      Payment of %{amount} %{token_name} to %{recipient} has failed due to insufficent balance.
+      Your Sarafu-Network balances are as follows:
+      %{token_balances}
     send_token_error_sms: Payment of %{amount} %{token_name} to %{recipient} has failed. Please try again later.
     send_balance_exchange_limit_sms: |
       Your Sarafu-Network balances are as follows:

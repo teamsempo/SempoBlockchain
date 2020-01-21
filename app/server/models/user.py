@@ -3,7 +3,7 @@ from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy import text
+from sqlalchemy import text, Table
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 import pyotp
 from flask import current_app, g
@@ -39,6 +39,13 @@ from server.exceptions import (
 )
 from server.constants import (
     ACCESS_ROLES
+)
+
+# self-referencing-m2m-relationship
+referrals = Table(
+    'referrals', ModelBase.metadata,
+    db.Column('referred_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('referrer_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
 
@@ -123,6 +130,8 @@ class User(ManyOrgBase, ModelBase):
     # roles = db.relationship('UserRole', backref='user', lazy=True,
     #                              foreign_keys='UserRole.user_id')
 
+    ussd_sessions = db.relationship('UssdSession', backref='user', lazy=True, foreign_keys='UssdSession.user_id')
+
     uploaded_images = db.relationship('UploadedResource', backref='user', lazy=True,
                                       foreign_keys='UploadedResource.user_id')
 
@@ -131,8 +140,11 @@ class User(ManyOrgBase, ModelBase):
 
     devices = db.relationship('DeviceInfo', backref='user', lazy=True)
 
-    referrals = db.relationship(
-        'Referral', backref='referring_user', lazy=True)
+    referrals = db.relationship('User',
+                                secondary=referrals,
+                                primaryjoin="User.id == referrals.c.referred_user_id",
+                                secondaryjoin="User.id == referrals.c.referrer_user_id",
+                                backref='referred_by')
 
     transfer_card = db.relationship(
         'TransferCard', backref='user', lazy=True, uselist=False)
@@ -246,6 +258,9 @@ class User(ManyOrgBase, ModelBase):
         if self._held_roles is None:
             return {}
         return self._held_roles
+
+    def remove_all_held_roles(self):
+        self._held_roles = {}
 
     def set_held_role(self, role: str, tier: Union[str, None]):
         if role not in ACCESS_ROLES:

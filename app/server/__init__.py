@@ -17,6 +17,8 @@ import i18n
 from eth_utils import to_checksum_address
 import sys
 import os
+from web3 import Web3, HTTPProvider
+
 
 from server.utils.phone import MessageProcessor
 
@@ -225,7 +227,7 @@ celery_app = Celery('tasks',
 
 
 encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
-dependent_on_tasks = None
+prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
@@ -251,4 +253,7 @@ mt = MiscTasker()
 
 from server.utils.ussd.ussd_tasks import UssdTasker
 ussd_tasker = UssdTasker()
+
+ge_w3 = Web3(HTTPProvider(config.GE_HTTP_PROVIDER))
+
 

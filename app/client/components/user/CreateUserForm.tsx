@@ -17,9 +17,10 @@ export interface ICreateUser {
   lastName?: string
   publicSerialNumber?: string,
   phone?: string,
-  additionalInitialDisbursement?: number
+  initialDisbursement?: number
   bio?: string
   gender?: string
+  referredBy?: string
   location?: string
   businessUsage?: string
   usageOtherSpecific?: string,
@@ -65,7 +66,11 @@ const validate = (values: ICreateUser) => {
 
 class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Props> & Props> {
   componentDidMount() {
-    this.props.initialize({ accountType: TransferAccountTypes.USER.toLowerCase(), gender: 'female' });
+    this.props.initialize({
+      accountType: TransferAccountTypes.USER.toLowerCase(),
+      gender: 'female',
+      initialDisbursement: window.DEFAULT_INITIAL_DISBURSEMENT / 100 || undefined
+    });
   }
 
   setSerialNumber(data: string) {
@@ -95,8 +100,8 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
     let initialDisbursementAmount;
     let businessUsage;
 
-    if (window.MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT > 0) {
-      initialDisbursementAmount = <InputField name="additionalInitialDisbursement" label={'Additional Initial Disbursement Amount'}>
+    if (window.DEFAULT_INITIAL_DISBURSEMENT > 0) {
+      initialDisbursementAmount = <InputField name="initialDisbursement" label={'Initial Disbursement Amount'}>
         {organisation !== null ? organisation.token.symbol : null}
       </InputField>
     }
@@ -104,7 +109,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
       if (businessUsageValue && businessUsageValue.toLowerCase() === "other") {
         businessUsage = <>
           <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
-          <InputField name="usageOtherSpecific" label='Please specify the category' isRequired />
+          <InputField name="usageOtherSpecific" label='Please specify the category' isRequired isNotOther />
         </>
       } else {
         businessUsage = <SelectField name="businessUsage" label='Business Category' options={this.optionizeUsages()} />
@@ -169,6 +174,7 @@ class CreateUserForm extends React.Component<InjectedFormProps<ICreateUser, Prop
             <InputField name="bio" label='Directory Entry' />
             <InputField name="location" label='Location' />
             <SelectField name="gender" label='Gender' options={["Female", "Male", "Other"]} hideNoneOption={true} />
+            <InputField name="referredBy" label={'Referred by user phone number'} isPhoneNumber />
 
             {selectedAccountTypeForm}
 

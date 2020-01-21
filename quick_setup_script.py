@@ -177,6 +177,8 @@ class Setup(object):
     def create_cic_organisation(
             self,
             organisation_name,
+            custom_welcome_message_key,
+            timezone,
             exchange_contract_id,
             name,
             symbol,
@@ -190,6 +192,8 @@ class Setup(object):
                           json={
                               'deploy_cic': True,
                               'organisation_name': organisation_name,
+                              'custom_welcome_message_key': custom_welcome_message_key,
+                              'timezone': timezone,
                               'exchange_contract_id': exchange_contract_id,
                               'name': name,
                               'symbol': symbol,
@@ -242,6 +246,17 @@ class Setup(object):
 
         return r.json()['data']['organisation']
 
+    def ussd_request(self, organisation_name, token_id):
+
+        r = requests.post(url=self.api_host + 'ussd/kenya',
+                          headers=dict(Authorization=self.api_token, Accept='application/json'),
+                          json={
+                              'token_id': token_id,
+                              'organisation_name': organisation_name
+                          })
+
+        return r.json()['data']['organisation']['id']
+
     def __init__(self, api_host='http://0.0.0.0:9000/api/v1/', email=None, password=None, api_token=None):
 
         self.api_host = api_host
@@ -255,56 +270,70 @@ class Setup(object):
         else:
             raise Exception("Must provide either username and password OR api token")
 
+def _base_setup(s, reserve_token_id):
+    exchange_contract_id = s.create_exchange_contract(reserve_token_id)
+    # exchange_contract_id = 1
 
-if __name__ == '__main__':
+    ge_org_id = s.create_cic_organisation(
+        organisation_name='Grassroots Economics',
+        custom_welcome_message_key='grassroots',
+        timezone='Africa/Nairobi',
+        exchange_contract_id=exchange_contract_id,
+        name='Sarafu',
+        symbol='SARAFU',
+        issue_amount_wei=int(10000000e18),
+        reserve_deposit_wei=int(10000e18),
+        reserve_ratio_ppm=250000
+    )
+    bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
 
-    # s = Setup(
-    #     api_host='https://dev.withsempo.com/api/v1/',
-    #     email=os.environ.get('dev_email'),
-    #     password=os.environ.get('dev_password')
+    tt = 4
+
+    # foobar_org_id = s.create_cic_organisation(
+    #     organisation_name='Foo Org',
+    #     exchange_contract_id=exchange_contract_id,
+    #     custom_welcome_me ssage_key=None,
+    #     timezone='Africa/Nairobi',
+    #     name='FooBar',
+    #     symbol='FOO',
+    #     issue_amount_wei=int(100000e18),
+    #     reserve_deposit_wei=int(10e18),
+    #     reserve_ratio_ppm=250000
     # )
+    # bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
 
+
+def ge_setup():
+    s = Setup(
+        api_host='https://dev.withsempo.com/api/v1/',
+        email=os.environ.get('dev_email'),
+        password=os.environ.get('dev_password')
+    )
+
+    reserve_token_id = 1
+
+    _base_setup(s, reserve_token_id)
+
+def local_setup():
     s = Setup(
         api_host='http://0.0.0.0:9000/api/v1/',
         email=os.environ.get('local_email'),
         password=os.environ.get('local_password')
     )
 
-    # s.bind_user_to_organsation_as_admin(6, 1)
-    # s.bind_user_to_organsation_as_admin(6, 2)
-    # s.bind_user_to_organsation_as_admin(6, 3)
-
-
     reserve_token_id = s.create_reserve_token(
         name='Kenyan Shilling',
         symbol='Ksh',
-        fund_amount_wei=int(1000e18)
+        fund_amount_wei=int(10000e18)
     )
-    # reserve_token_id = 1
 
-    exchange_contract_id = s.create_exchange_contract(reserve_token_id)
-    # exchange_contract_id = 4
-
-    ge_org_id = s.create_cic_organisation(
-        organisation_name='Grassroots Economics',
-        exchange_contract_id=exchange_contract_id,
-        name='Sarafu',
-        symbol='SARAFU',
-        issue_amount_wei=int(100000e18),
-        reserve_deposit_wei=int(10e18),
-        reserve_ratio_ppm=250000
-    )
-    bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
-
-    foobar_org_id = s.create_cic_organisation(
-        organisation_name='Foo Org',
-        exchange_contract_id=exchange_contract_id,
-        name='FooBar',
-        symbol='FOO',
-        issue_amount_wei=int(100000e18),
-        reserve_deposit_wei=int(10e18),
-        reserve_ratio_ppm=250000
-    )
-    bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
+    _base_setup(s, reserve_token_id)
 
     tt = 4
+
+
+if __name__ == '__main__':
+
+    # ge_setup()
+
+    local_setup()

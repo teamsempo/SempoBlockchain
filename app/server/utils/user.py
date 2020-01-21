@@ -29,7 +29,7 @@ from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, L
 from server.utils.i18n import i18n_for
 from server.utils.transfer_enums import TransferSubTypeEnum
 from server.utils.misc import rounded_dollars
-
+from server.utils.access_control import AccessControl
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -59,35 +59,38 @@ def find_oldest_user_for_transfer_account(transfer_account):
 
 
 def find_user_from_public_identifier(*public_identifiers):
+    """
+    :param public_identifiers: email, phone, public_serial_number, nfc_serial_number or address
+    :return: First user found
+    """
     user = None
 
-    for public_identifier in public_identifiers:
-
+    for public_identifier in list(filter(lambda x: x is not None, public_identifiers)):
         if public_identifier is None:
             continue
 
         user = User.query.execution_options(show_all=True).filter_by(
             email=str(public_identifier).lower()).first()
         if user:
-            continue
+            break
 
         try:
             user = User.query.execution_options(show_all=True).filter_by(
                 phone=proccess_phone_number(public_identifier)).first()
             if user:
-                continue
+                break
         except NumberParseException:
             pass
 
         user = User.query.execution_options(show_all=True).filter_by(
             public_serial_number=str(public_identifier).lower()).first()
         if user:
-            continue
+            break
 
         user = User.query.execution_options(show_all=True).filter_by(
             nfc_serial_number=public_identifier.upper()).first()
         if user:
-            continue
+            break
 
         try:
             checksummed = to_checksum_address(public_identifier)
@@ -97,7 +100,7 @@ def find_user_from_public_identifier(*public_identifiers):
             if blockchain_address and blockchain_address.transfer_account:
                 user = blockchain_address.transfer_account.primary_user
                 if user:
-                    continue
+                    break
 
         except Exception:
             pass
@@ -114,7 +117,8 @@ def update_transfer_account_user(user,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
-                                 is_groupaccount=False):
+                                 is_groupaccount=False,
+                                 default_organisation_id=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -130,10 +134,20 @@ def update_transfer_account_user(user,
     if location:
         user.location = location
 
+    if default_organisation_id:
+        user.default_organisation_id = default_organisation_id
+
     if use_precreated_pin:
         transfer_card = TransferCard.get_transfer_card(public_serial_number)
 
         user.set_pin(transfer_card.PIN)
+
+    if existing_transfer_account:
+        user.transfer_accounts.append(existing_transfer_account)
+
+    # remove all roles before updating
+    user.remove_all_held_roles()
+    flag_modified(user, '_held_roles')
 
     if not is_vendor:
         vendor_tier = None
@@ -153,9 +167,6 @@ def update_transfer_account_user(user,
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
 
-    if existing_transfer_account:
-        user.transfer_accounts.append(existing_transfer_account)
-
     return user
 
 
@@ -174,7 +185,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_tokenagent=False,
                                  is_groupaccount=False,
                                  is_self_sign_up=False,
-                                 business_usage=None):
+                                 business_usage=None,
+                                 initial_disbursement=None):
 
     user = User(first_name=first_name,
                 last_name=last_name,
@@ -249,8 +261,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         if token:
             transfer_account.token = token
 
-        if current_app.config['AUTO_APPROVE_TRANSFER_ACCOUNTS'] and not is_self_sign_up:
-            transfer_account.approve_and_disburse()
+        if not is_self_sign_up:
+            transfer_account.approve_and_disburse(initial_disbursement=initial_disbursement)
 
         db.session.add(transfer_account)
 
@@ -303,8 +315,13 @@ def set_custom_attributes(attribute_dict, user):
     # loads in any existing custom attributes
     custom_attributes = user.custom_attributes or []
     for key in attribute_dict['custom_attributes'].keys():
+        to_remove = list(filter(lambda a: a.name == key, custom_attributes))
+        for r in to_remove:
+            custom_attributes.remove(r)
+
         custom_attribute = CustomAttributeUserStorage(
             name=key, value=attribute_dict['custom_attributes'][key])
+
         custom_attributes.append(custom_attribute)
     custom_attributes = set_attachments(
         attribute_dict, user, custom_attributes)
@@ -391,6 +408,8 @@ def proccess_create_or_modify_user_request(
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
+    referred_by = attribute_dict.get('referred_by')
+
     blockchain_address = attribute_dict.get('blockchain_address')
 
     provided_public_serial_number = attribute_dict.get('public_serial_number')
@@ -435,8 +454,7 @@ def proccess_create_or_modify_user_request(
     primary_user_identifier = attribute_dict.get('primary_user_identifier')
     primary_user_pin = attribute_dict.get('primary_user_pin')
 
-    additional_initial_disbursement = attribute_dict.get(
-        'additional_initial_disbursement', None)
+    initial_disbursement = attribute_dict.get('initial_disbursement', None)
 
     is_vendor = attribute_dict.get('is_vendor', None)
     if is_vendor is None:
@@ -509,15 +527,6 @@ def proccess_create_or_modify_user_request(
                 response_object = {'message': 'Transfer card not found'}
                 return response_object, 400
 
-    if additional_initial_disbursement and not additional_initial_disbursement <= current_app.config[
-        'MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT']:
-        response_object = {
-            'message': 'Disbursement more than maximum allowed amount ({} {})'
-                .format(current_app.config['MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT'] / 100,
-                        current_app.config['CURRENCY_NAME'])
-        }
-        return response_object, 400
-
     business_usage = None
     if business_usage_id:
         business_usage = TransferUsage.query.get(business_usage_id)
@@ -526,6 +535,8 @@ def proccess_create_or_modify_user_request(
                 'message': f'Business Usage not found for id {business_usage_id}'
             }
             return response_object, 400
+
+    referred_by_user = find_user_from_public_identifier(referred_by)
 
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
@@ -544,6 +555,9 @@ def proccess_create_or_modify_user_request(
             is_beneficiary=is_beneficiary, is_vendor=is_vendor,
             is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
         )
+
+        if referred_by_user:
+            user.referred_by.append(referred_by_user)
 
         set_custom_attributes(attribute_dict, user)
         flag_modified(user, "custom_attributes")
@@ -570,7 +584,10 @@ def proccess_create_or_modify_user_request(
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
-        business_usage=business_usage)
+        business_usage=business_usage, initial_disbursement=initial_disbursement)
+
+    if referred_by_user:
+        user.referred_by.append(referred_by_user)
 
     if attribute_dict.get('gender'):
         attribute_dict['custom_attributes']['gender'] = attribute_dict.get('gender')
@@ -583,13 +600,6 @@ def proccess_create_or_modify_user_request(
     if is_self_sign_up and attribute_dict.get('deviceInfo', None) is not None:
         save_device_info(device_info=attribute_dict.get(
             'deviceInfo'), user=user)
-
-    if additional_initial_disbursement:
-        CreditTransferUtils.make_payment_transfer(
-            additional_initial_disbursement,
-            organisation.token,
-            receive_user=user,
-            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
 
     # Location fires an async task that needs to know user ID
     db.session.flush()
@@ -688,9 +698,18 @@ def change_current_pin(user: User, new_pin):
     change_pin(user, new_pin)
 
 
+def admin_reset_user_pin(user: User):
+    pin_reset_token = user.encode_single_use_JWS('R')
+    user.save_pin_reset_token(pin_reset_token)
+    user.failed_pin_attempts = 0
+
+    pin_reset_message = i18n_for(user, "general_sms.pin_reset")
+    message_processor.send_message(user.phone, pin_reset_message)
+
+
 def default_transfer_account(user: User) -> TransferAccount:
-    if user.default_transfer_account_id is not None:
-        return TransferAccount.query.get(user.default_transfer_account_id)
+    if user.default_transfer_account is not None:
+        return user.default_transfer_account
     else:
         raise TransferAccountNotFoundError("no default transfer account set")
 
@@ -700,7 +719,7 @@ def default_token(user: User) -> Token:
         transfer_account = default_transfer_account(user)
         token = transfer_account.token
     except TransferAccountNotFoundError:
-        if user.default_organisation_id is not None:
+        if user.default_organisation is not None:
             token = user.default_organisation.token
         else:
             token = Organisation.master_organisation().token
@@ -731,8 +750,17 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
         ma = most_common_uses.get(a.name)
         mb = most_common_uses.get(b.name)
 
-        # return most used, then default, then everything else
-        if ma is not None and mb is not None:
+        # return prioritied, then used, then everything else
+        if a.priority and b.priority:
+            if a.priority < b.priority:
+                return -1
+            else:
+                return 1
+        elif a.priority:
+            return -1
+        elif b.priority:
+            return 1
+        elif ma is not None and mb is not None:
             if ma >= mb:
                 return -1
             else:
@@ -741,11 +769,6 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
             return -1
         elif mb is not None:
             return 1
-        elif a.default or b.default:
-            if a.default:
-                return -1
-            else:
-                return 1
         else:
             return -1
 

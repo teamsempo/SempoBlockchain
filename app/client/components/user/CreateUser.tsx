@@ -32,7 +32,7 @@ interface OuterProps {
 declare global {
   interface Window {
     BENEFICIARY_TERM: string
-    MAXIMUM_CUSTOM_INITIAL_DISBURSEMENT: number
+    DEFAULT_INITIAL_DISBURSEMENT: number
     CURRENCY_NAME: string
   }
 }
@@ -71,13 +71,14 @@ class CreateUserUpdated extends React.Component<Props> {
       is_vendor: (form.accountType === 'vendor' || form.accountType === 'cashier'),
       is_tokenagent: form.accountType === 'tokenagent',
       is_groupaccount: form.accountType === 'groupaccount',
-      additional_initial_disbursement: (form.additionalInitialDisbursement || 0) * 100,
+      initial_disbursement: (form.initialDisbursement || 0) * 100,
       require_transfer_card_exists: this.props.login.requireTransferCardExists,
       existing_vendor_phone: form.existingVendorPhone,
       existing_vendor_pin: form.existingVendorPin,
       transfer_account_name: form.transferAccountName,
       location: form.location,
       business_usage_name: businessUsage,
+      referred_by: form.referredBy,
     })
   }
 

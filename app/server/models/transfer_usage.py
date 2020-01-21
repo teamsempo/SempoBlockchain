@@ -51,11 +51,11 @@ class TransferUsage(ModelBase):
                 'Transfer usage name {} is duplicate'.format(name))
 
     @classmethod
-    def find_or_create(cls, raw_name, default=False) -> "TransferUsage":
+    def find_or_create(cls, raw_name, default=False, **kwargs) -> "TransferUsage":
         name = raw_name.strip()
         usage = db.session.query(TransferUsage).filter(
             func.lower(TransferUsage.name) == func.lower(name)).first()
         if usage is None:
-            usage = cls(name=name, default=default)
+            usage = cls(name=name, default=default, **kwargs)
             db.session.add(usage)
         return usage
