@@ -169,6 +169,7 @@ class RDSMigrate:
 
             sempo_user.pin_hash = ge_user['encrypted_pin']
             sempo_user.is_activated = ge_user['status'] == 'Active'  # Is this the correct way to find this out?
+            sempo_user.default_transfer_account.is_approved = True
             sempo_user.is_disabled = False
             sempo_user.is_phone_verified = True
             sempo_user.is_self_sign_up = False
