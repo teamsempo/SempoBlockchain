@@ -22,6 +22,7 @@ from server.utils.phone import proccess_phone_number
 
 
 ITEMS_PER_MENU = 8
+USSD_MAX_LENGTH = 164
 MIN_EXCHANGE_AMOUNT_CENTS = 40
 
 
@@ -214,8 +215,7 @@ class KenyaUssdStateMachine(Machine):
     def set_usage_menu_number(self, user_input):
         current_menu_nr = self.session.get_data('usage_menu')
         if int(user_input) == 9:
-            max_menu = self.session.get_data('usage_menu_max')
-            current_menu_nr = current_menu_nr + 1 if current_menu_nr < max_menu else max_menu
+            current_menu_nr = current_menu_nr + 1
             self.session.set_data('usage_menu', current_menu_nr)
         elif int(user_input) == 10:
             current_menu_nr = current_menu_nr - 1 if current_menu_nr > 0 else 0
@@ -299,11 +299,11 @@ class KenyaUssdStateMachine(Machine):
 
         self.session.set_data('transfer_usage_mapping', transfer_usage_map)
         self.session.set_data('usage_menu', 0)
-        self.session.set_data('usage_menu_max', math.floor(len(usages)/ITEMS_PER_MENU))
 
     def get_select_transfer_usage(self, user_input):
         menu_page = self.session.get_data('usage_menu')
-        idx = menu_page * ITEMS_PER_MENU + int(user_input) - 1
+        usage_stack = self.session.get_data('usage_index_stack') or [0]
+        idx = usage_stack[menu_page] + int(user_input) - 1
         selected_tranfer_usage_id = self.session.get_data('transfer_usage_mapping')[idx]['id']
         return TransferUsage.query.get(selected_tranfer_usage_id)
 

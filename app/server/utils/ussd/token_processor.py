@@ -9,7 +9,8 @@ from server.exceptions import (
     NoTransferAllowedLimitError,
     TransferBalanceFractionLimitError,
     TransferCountLimitError,
-    TransferAmountLimitError
+    TransferAmountLimitError,
+    InsufficientBalanceError
 )
 from server.models.credit_transfer import CreditTransfer
 from server.models.exchange import Exchange
@@ -162,60 +163,8 @@ class TokenProcessor(object):
     @staticmethod
     def send_balance_sms(user: User):
 
-        def get_token_info(transfer_account: TransferAccount):
-            token = transfer_account.token
-            limit = TokenProcessor.get_default_limit(user, token, transfer_account)
-            exchange_rate = TokenProcessor.get_exchange_rate(user, token)
-            return {
-                "name": token.symbol,
-                "balance": transfer_account.balance,
-                "exchange_rate": exchange_rate,
-                "limit": limit,
-            }
+        token_balances_dollars, token_exchanges = TokenProcessor._get_token_balances(user)
 
-        def check_if_ge_limit(token_info):
-            return 'GE Liquid Token' in token_info['limit'].name
-            # return (token_info['exchange_rate'] is not None
-            #         and token_info['limit'] is not None
-            #         and token_info['limit'].transfer_balance_fraction is not None)
-
-        def ge_string(t):
-            if t['limit'].transfer_balance_fraction:
-                # TODO: This doesn't seem DRY with respect to 'get default exchange rate'
-                allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
-                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
-                return(
-                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
-                )
-            else:
-                return ""
-
-        def standard_string(t):
-            if t['limit'].total_amount:
-                allowed_amount = f"{rounded_dollars(str(t['limit'].total_amount))}"
-                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
-                return (
-                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
-                )
-            else:
-                return ""
-
-        # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
-        transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
-        token_info_list = list(map(get_token_info, transfer_accounts))
-
-        token_balances_dollars = "\n".join(map(lambda x: f"{x['name']} {rounded_dollars(x['balance'])}",
-                                               token_info_list))
-
-        reserve_token = user.get_reserve_token()
-        ge_tokens = list(filter(check_if_ge_limit, token_info_list))
-        is_ge = len(ge_tokens) > 0
-        if is_ge:
-            token_exchanges = "\n".join(map(ge_string, ge_tokens))
-        else:
-            token_exchanges = "\n".join(map(standard_string, token_info_list))
-
-        # TODO: Don't love the string comparison here, but it keeps thing short
         if token_exchanges in ["\n", '']:
             TokenProcessor.send_sms(
                 user,
@@ -306,6 +255,18 @@ class TokenProcessor(object):
                     amount, recipient_tx_time,
                     recipient_balance)
 
+        except InsufficientBalanceError as e:
+            token_balances_dollars, token_exchanges = TokenProcessor._get_token_balances(sender)
+
+            TokenProcessor.send_sms(
+                sender,
+                "insufficient_balance_sms",
+                amount=cents_to_dollars(amount),
+                token_name=default_token(sender).name,
+                recipient=recipient.user_details(),
+                token_balances=token_balances_dollars
+            )
+
         except Exception as e:
             # TODO: SLAP? all the others take input in cents
             TokenProcessor.send_sms(sender, "send_token_error_sms", amount=cents_to_dollars(amount),
@@ -359,3 +320,66 @@ class TokenProcessor(object):
                 token=e.token,
                 limit_period=e.limit_time_period_days
             )
+
+    @staticmethod
+    def _get_token_balances(user: User):
+        def get_token_info(transfer_account: TransferAccount):
+            token = transfer_account.token
+            limit = TokenProcessor.get_default_limit(user, token, transfer_account)
+            exchange_rate = TokenProcessor.get_exchange_rate(user, token)
+            return {
+                "name": token.symbol,
+                "balance": transfer_account.balance,
+                "exchange_rate": exchange_rate,
+                "limit": limit,
+            }
+
+        def check_if_ge_limit(token_info):
+            return 'GE Liquid Token' in token_info['limit'].name
+            # return (token_info['exchange_rate'] is not None
+            #         and token_info['limit'] is not None
+            #         and token_info['limit'].transfer_balance_fraction is not None)
+
+        def ge_string(t):
+            if t['limit'].transfer_balance_fraction:
+                # TODO: This doesn't seem DRY with respect to 'get default exchange rate'
+                allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
+                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
+                return (
+                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
+                )
+            else:
+                return ""
+
+        def standard_string(t):
+            if t['limit'].total_amount:
+                allowed_amount = f"{rounded_dollars(str(t['limit'].total_amount))}"
+                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
+                return (
+                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
+                )
+            else:
+                return ""
+
+            # transfer accounts could be created for other currencies exchanged with, but we don't want to list those
+
+        transfer_accounts = filter(lambda x: x.is_ghost is not True, user.transfer_accounts)
+        token_info_list = list(map(get_token_info, transfer_accounts))
+
+        token_balances_dollars = "\n".join(map(lambda x: f"{x['name']} {rounded_dollars(x['balance'])}",
+                                               token_info_list))
+
+        reserve_token = user.get_reserve_token()
+        ge_tokens = list(filter(check_if_ge_limit, token_info_list))
+        is_ge = len(ge_tokens) > 0
+        if is_ge:
+            exchange_list = list(map(ge_string, ge_tokens))
+        else:
+            exchange_list = list(map(standard_string, token_info_list))
+
+        if len(exchange_list) == 0:
+            token_exchanges = None
+        else:
+            token_exchanges = "\n".join(exchange_list)
+
+        return token_balances_dollars, token_exchanges
