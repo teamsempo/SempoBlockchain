@@ -1,5 +1,7 @@
 import sys
 import os
+from sqlalchemy import func
+
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
@@ -293,9 +295,11 @@ def create_business_categories():
             'en': 'Savings Group', 'sw': 'Chama'}}
     ]
     for index, business_category in enumerate(business_categories):
-        usage = TransferUsage.query.filter_by(name=business_category['name']).first()
+        name = business_category['name']
+        usage = db.session.query(TransferUsage).filter(
+            func.lower(TransferUsage.name) == func.lower(name)).first()
         if usage is None:
-            usage = TransferUsage(name=business_category['name'])
+            usage = TransferUsage(name=name)
             db.session.add(usage)
         usage.priority = index + 1
         usage.default = True

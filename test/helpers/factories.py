@@ -67,18 +67,6 @@ class OrganisationFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
 
-class UssdSessionFactory(SQLAlchemyModelFactory):
-    class Meta:
-        model = UssdSession
-        sqlalchemy_session = db.session
-
-    session_id = Sequence(lambda n: n)
-    service_code = "123"
-    msisdn = fake.msisdn()
-    # we might want to tie this to an actual ussd menu for some tests?
-    ussd_menu_id = 1
-
-
 class UssdMenuFactory(SQLAlchemyModelFactory):
     class Meta:
         model = UssdMenu
@@ -86,6 +74,25 @@ class UssdMenuFactory(SQLAlchemyModelFactory):
 
     name = 'start'
 
+
+class UssdSessionFactoryBase(SQLAlchemyModelFactory):
+    class Meta:
+        model = UssdSession
+        sqlalchemy_session = db.session
+
+    session_id = Sequence(lambda n: n)
+    service_code = "123"
+    msisdn = fake.msisdn()
+
+def UssdSessionFactory(**kwargs):
+    # Uses Class Naming Convention because it's actually a delayed execution Class
+    def inner():
+        unique_name = 'Foo' + str(Sequence(lambda n: n))
+        ussd_menu = UssdMenuFactory(name=unique_name, display_key=unique_name)
+
+        return UssdSessionFactoryBase(ussd_menu=ussd_menu, **kwargs)
+
+    return inner()
 
 class TokenFactory(SQLAlchemyModelFactory):
     class Meta:
