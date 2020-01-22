@@ -7,7 +7,7 @@ from celery import Celery
 from pusher import Pusher
 import boto3
 from twilio.rest import Client as TwilioClient
-from raven.contrib.flask import  # CHANGE
+from raven.contrib.flask import Sentry # CHANGE
 import messagebird
 import africastalking
 from datetime import datetime
