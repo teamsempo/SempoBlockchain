@@ -18,6 +18,8 @@ import LoadingSpinner from "../loadingSpinner.jsx";
 
 import { ModuleBox, PageWrapper, CenterLoadingSideBarActive } from '../styledElements'
 
+import { parseQuery } from '../../utils'
+
 const HeatMap = lazy(() => import('../heatmap/heatmap.jsx'));
 
 
@@ -51,16 +53,6 @@ class DashboardPage extends React.Component {
     this.subscribe();
   }
 
-  parseQuery(queryString) {
-    var query = {};
-    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
-    for (var i = 0; i < pairs.length; i++) {
-        var pair = pairs[i].split('=');
-        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-    }
-    return query;
-  }
-
   componentDidMount() {
     let transfer_type = 'ALL';
     let per_page = 50;
@@ -72,7 +64,7 @@ class DashboardPage extends React.Component {
       page: page
     });
 
-    const parsed = this.parseQuery(location.search);
+    const parsed = parseQuery(location.search);
 
     if (parsed.actok) {
       console.log('actok', parsed.actok)
