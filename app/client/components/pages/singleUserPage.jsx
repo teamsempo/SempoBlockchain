@@ -9,6 +9,7 @@ import {LightTheme} from '../theme.js'
 import SingleUserManagement from '../user/singleUserManagement.jsx';
 
 import { loadUser } from '../../reducers/userReducer'
+import organizationWrapper from '../organizationWrapper'
 
 const mapStateToProps = (state) => {
   return {
@@ -95,7 +96,7 @@ class SingleUserPage extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SingleUserPage);
+export default connect(mapStateToProps, mapDispatchToProps)(organizationWrapper(SingleUserPage));
 
 const WrapperDiv = styled.div`
   display: flex;
