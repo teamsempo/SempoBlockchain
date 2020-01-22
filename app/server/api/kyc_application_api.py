@@ -45,7 +45,8 @@ def handle_kyc_documents(data=None,document_country=None,document_type=None,kyc_
                 uploaded_document.kyc_application_id = kyc_details.id
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                # CHANGE
+                sentry.captureException() # CHANGE
                 pass
 
 

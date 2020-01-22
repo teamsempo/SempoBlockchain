@@ -28,7 +28,7 @@ class UssdMenu(ModelBase):
     def find_by_name(name: str) -> "UssdMenu":
         menus = UssdMenu.query.filter_by(name=name)
         if menus.count() == 0:
-            sentry.captureMessage("No USSD Menu with name {}".format(name))
+            sentry.captureMessage("No USSD Menu with name {}".format(name)) # CHANGE
             # should handle case if no invalid_request menu?
             return UssdMenu.query.filter_by(name='exit_invalid_request').first()
         else:

@@ -7,7 +7,7 @@ from celery import Celery
 from pusher import Pusher
 import boto3
 from twilio.rest import Client as TwilioClient
-from raven.contrib.flask import Sentry
+from raven.contrib.flask import  # CHANGE
 import messagebird
 import africastalking
 from datetime import datetime
@@ -86,7 +86,7 @@ def register_extensions(app):
             request.get_data(parse_form_data=False, cache=True)
 
     if not config.IS_TEST:
-        sentry.init_app(app, dsn=app.config['SENTRY_SERVER_DSN'])
+        sentry.init_app(app, dsn=app.config['SENTRY_SERVER_DSN']) # CHANGE https://forum.sentry.io/t/switching-to-sentry-python/4733    
     # limiter.init_app(app)
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -125,7 +125,7 @@ def register_blueprints(app):
             try:
                 task.delay()
             except Exception as e:
-                sentry.captureException()
+                sentry.captureException() # CHANGE
 
         return response
 
@@ -213,7 +213,7 @@ db = SQLAlchemy(session_options={
 })
 
 basic_auth = BasicAuth()
-sentry = Sentry()
+sentry = Sentry() # CHANGE
 
 # limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
 
