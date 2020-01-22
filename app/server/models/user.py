@@ -371,14 +371,12 @@ class User(ManyOrgBase, ModelBase):
 
     @staticmethod
     def salt_hash_secret(password):
-        secret = '4S0u6ZS0u1sEylUpT_AWO5umDkZ-uZWKmd-vP5BPyIY='.encode() # Temporary
-        f = Fernet(secret)
+        f = Fernet(current_app.config['SECRET_KEY'])
         return f.encrypt(bcrypt.hashpw(password.encode(), bcrypt.gensalt())).decode()
 
     @staticmethod
     def check_salt_hashed_secret(password, hashed_password):
-        secret = '4S0u6ZS0u1sEylUpT_AWO5umDkZ-uZWKmd-vP5BPyIY='.encode() # Temporary
-        f = Fernet(secret)
+        f = Fernet(current_app.config['SECRET_KEY'])
         hashed_password = f.decrypt(hashed_password.encode())
         return bcrypt.checkpw(password.encode(), hashed_password)
 

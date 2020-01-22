@@ -121,6 +121,7 @@ MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
 WEB_VERSION = specific_parser['APP']['WEB_VERSION']
 REQUIRE_TRANSFER_CARD_EXISTS = specific_parser['APP'].getboolean('REQUIRE_TRANSFER_CARD_EXISTS', False)
 
+PASSWORD_PEPPER     = specific_parser['APP']['PASSWORD_PEPPER']
 SECRET_KEY          = specific_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(specific_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
 APP_HOST            = specific_parser['APP']['APP_HOST']
