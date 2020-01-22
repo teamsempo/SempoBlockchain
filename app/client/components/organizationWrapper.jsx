@@ -13,7 +13,7 @@ const OrganizationWrapper = Component => class extends Component {
         if(query_params["org"] && this.props.login.organisationId != query_params["org"]){
             this.props.updateActiveOrgRequest(query_params["org_name"], query_params["org"])
         } else {
-            this.props.history.push({
+            this.props.history.replace({
                 search: generateQueryString({org_name: this.props.login.organisationName})
             })
         }
