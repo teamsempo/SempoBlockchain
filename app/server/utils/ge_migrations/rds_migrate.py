@@ -136,6 +136,10 @@ class RDSMigrate:
             print("Phone Deleted, Skipping")
             return
 
+        if ge_user['status'] == 'Deleted':
+            print("User Deleted, Skipping")
+            return
+
         processed_phone = proccess_phone_number(phone_number)
         existing_user = User.query.filter_by(phone=processed_phone).execution_options(show_all=True).first()
         if existing_user:
@@ -165,6 +169,7 @@ class RDSMigrate:
 
             sempo_user.pin_hash = ge_user['encrypted_pin']
             sempo_user.is_activated = ge_user['status'] == 'Active'  # Is this the correct way to find this out?
+            sempo_user.default_transfer_account.is_approved = True
             sempo_user.is_disabled = False
             sempo_user.is_phone_verified = True
             sempo_user.is_self_sign_up = False
@@ -209,8 +214,12 @@ class RDSMigrate:
         custom_attributes = []
         for accessor, label in wanted_custom_attributes:
             if accessor in ge_user:
+                if accessor == 'gender':
+                    value = ge_user[accessor].lower()
+                else:
+                    value = ge_user[accessor]
                 custom_attribute = CustomAttributeUserStorage(
-                    name=label, value=ge_user[accessor])
+                    name=label, value=value)
                 custom_attributes.append(custom_attribute)
         return custom_attributes
 
