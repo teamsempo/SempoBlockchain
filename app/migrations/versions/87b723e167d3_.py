@@ -1,8 +1,8 @@
 """Lengthen password columns, encrypt everything with pepper
 
-Revision ID: c5266db8142f
-Revises: 374a31e9843d
-Create Date: 2020-01-22 10:28:51.397024
+Revision ID: 87b723e167d3
+Revises: 5f4b4c9f586d
+Create Date: 2020-01-22 11:40:46.181534
 
 """
 from sqlalchemy.orm import Session
@@ -16,10 +16,10 @@ from flask import current_app
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 from server.models.user import User
 from server.models.token import Token
- 
+
 # revision identifiers, used by Alembic.
-revision = 'c5266db8142f'
-down_revision = '374a31e9843d'
+revision = '87b723e167d3'
+down_revision = '5f4b4c9f586d'
 branch_labels = None
 depends_on = None
 
