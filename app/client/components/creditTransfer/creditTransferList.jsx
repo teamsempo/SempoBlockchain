@@ -14,6 +14,7 @@ import {formatMoney} from "../../utils";
 import {ModuleBox} from "../styledElements";
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
+import { loadTransferAccounts } from '../../reducers/transferAccountReducer'
 
 const mapStateToProps = (state) => {
   return {
@@ -27,7 +28,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     modifyTransferRequest: (body, path) => dispatch(modifyTransferRequest({body, path})),
-    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path}))
+    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
+    loadTransferAccountList: (path) => dispatch(loadTransferAccounts({path})),
   };
 };
 
@@ -52,7 +54,7 @@ class CreditTransferList extends React.Component {
 	this.checkAllCreditTransfers = this.checkAllCreditTransfers.bind(this);
 	this.handleChange = this.handleChange.bind(this);
 	this.toggleSelectedCreditTransfer = this.toggleSelectedCreditTransfer.bind(this);
-	this.onNext = this.onNext.bind(this);
+  this.onNext = this.onNext.bind(this);
   }
 
   componentDidMount() {
@@ -62,16 +64,7 @@ class CreditTransferList extends React.Component {
 
     // handles credit transfer ids array
     if (creditTransferIds) {
-      // handles checkbox initial state (true or false)
-      creditTransferIds.map(i => {
-        this.setState(prevState => ({
-          credit_transfer_ids: {
-            ...prevState.credit_transfer_ids,
-            [i]: false
-          },
-        }));
-        this.setState({isLoading: false})
-      });
+      this.sortCreditTransfers(creditTransferIds)
     }
 
     // handles credit transfer list array
@@ -95,16 +88,7 @@ class CreditTransferList extends React.Component {
     // handles credit_transfer_ids array
     if (credit_transfer_ids !== newProps.credit_transfer_ids) {
       this.setState({credit_transfer_ids: {}});
-
-      credit_transfer_ids.map(i => {
-        this.setState(prevState => ({
-          credit_transfer_ids: {
-            ...prevState.credit_transfer_ids,
-            [i]: false
-          },
-          isLoading: false,
-        }))
-      })
+      // this.sortCreditTransfers(newProps.credit_transfer_ids)
     }
 
     // handles credit_transfer_list array
@@ -122,6 +106,29 @@ class CreditTransferList extends React.Component {
         }))
       })
     }
+  }
+
+  // handles credit transfer ids array
+  sortCreditTransfers = (creditTransferIds) => {
+
+    creditTransferIds.map(i => {
+
+      // retrieve any sender account that has not been retrieved
+      let sender_account_id = this.props.creditTransfers.byId[i].sender_transfer_account_id
+      if(!this.props.transferAccounts.byId[sender_account_id]){
+        if(this.props.creditTransfers.byId[i].transfer_type !== "DISBURSEMENT"){
+          this.props.loadTransferAccountList(sender_account_id)
+        }
+      }
+
+      this.setState(prevState => ({
+        credit_transfer_ids: {
+          ...prevState.credit_transfer_ids,
+          [i]: false
+        },
+      }));
+      this.setState({isLoading: false})
+    });
   }
 
   get_selected_ids_array(selected) {
@@ -311,7 +318,7 @@ class CreditTransferList extends React.Component {
                     // this is not ideal... would be better if credit transfer just had the associated transfer account
                     // which it does if not for the normalizing...
                     const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-                    currency = transferAccount && transferAccount.token && transferAccount.token.symbol;
+                    currency = transferAccount && transferAccount.token && transferAccount.token.symbol || this.props.login.organisationToken;
                   }
                   const money = formatMoney(cellInfo.value / 100, undefined, undefined, undefined, currency);
                   return <p style={{margin: 0}}>{money}</p>

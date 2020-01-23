@@ -83,7 +83,6 @@ function* saveOrgId({payload}) {
     } else {
       window.location.assign("/");
     }
-
     
     
   } catch (e) {
@@ -112,6 +111,7 @@ function createLoginSuccessObject(token) {
     webApiVersion: token.web_api_version,
     organisationName: token.active_organisation_name,
     organisationId: token.active_organisation_id,
+    organisationToken: token.active_organisation_token,
     organisations: token.organisations,
     requireTransferCardExists: token.require_transfer_card_exists
   }
