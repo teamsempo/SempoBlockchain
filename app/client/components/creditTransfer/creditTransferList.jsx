@@ -427,7 +427,7 @@ class CreditTransferList extends React.Component {
       );
       } else if (this.props.transferAccounts.loadStatus.error !== null) {
 	    return(
-	      <p>{this.props.transferAccounts.loadStatus.error}</p>
+	      <p>{this.props.transferAccounts.loadStatus.error.message}</p>
       )
       } else {
 	    return (
