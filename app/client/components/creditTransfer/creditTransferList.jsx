@@ -29,7 +29,6 @@ const mapDispatchToProps = (dispatch) => {
   return {
     modifyTransferRequest: (body, path) => dispatch(modifyTransferRequest({body, path})),
     loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
-    loadTransferAccountList: (path) => dispatch(loadTransferAccounts({path})),
   };
 };
 
@@ -112,14 +111,6 @@ class CreditTransferList extends React.Component {
   sortCreditTransfers = (creditTransferIds) => {
 
     creditTransferIds.map(i => {
-
-      // retrieve any sender account that has not been retrieved
-      let sender_account_id = this.props.creditTransfers.byId[i].sender_transfer_account_id
-      if(!this.props.transferAccounts.byId[sender_account_id]){
-        if(this.props.creditTransfers.byId[i].transfer_type !== "DISBURSEMENT"){
-          this.props.loadTransferAccountList(sender_account_id)
-        }
-      }
 
       this.setState(prevState => ({
         credit_transfer_ids: {
@@ -312,14 +303,7 @@ class CreditTransferList extends React.Component {
                 accessor: "transfer_amount",
                 headerClassName: 'react-table-header',
                 Cell: cellInfo => {
-                  let currency;
-                  const transferAccountId = cellInfo.original.sender_transfer_account_id;
-                  if (transferAccountId) {
-                    // this is not ideal... would be better if credit transfer just had the associated transfer account
-                    // which it does if not for the normalizing...
-                    const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-                    currency = transferAccount && transferAccount.token && transferAccount.token.symbol || this.props.login.organisationToken;
-                  }
+                  let currency = cellInfo.original.token && cellInfo.original.token.symbol
                   const money = formatMoney(cellInfo.value / 100, undefined, undefined, undefined, currency);
                   return <p style={{margin: 0}}>{money}</p>
                 },
