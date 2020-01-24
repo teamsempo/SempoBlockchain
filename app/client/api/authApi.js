@@ -1,6 +1,5 @@
 import {handleResponse, getToken, getTFAToken, getOrgId, generateFormattedURL} from '../utils'
 import { startConfiguration } from 'pusher-redux';
-import {store} from "../app";
 
 //Auth API Call
 export const requestApiToken = ({body}) => {
@@ -198,6 +197,24 @@ export const updateUserAPI = ({body, query}) => {
       throw error;
     })
 };
+
+export const deleteInviteAPI = ({body}) => {
+  return fetch(generateFormattedURL('/auth/permissions/'), {
+    headers: {
+      'Authorization': getToken(),
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    method: 'DELETE',
+    body: JSON.stringify(body)
+  }).then(response => {
+      return handleResponse(response)
+    })
+    .catch(error => {
+      throw error;
+    })
+};
+
 
 export const inviteUserAPI = ({body}) => {
   return fetch(generateFormattedURL('/auth/permissions/'), {

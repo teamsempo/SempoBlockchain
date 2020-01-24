@@ -14,7 +14,7 @@ import {
   UPDATE_ACTIVE_ORG,
   EDIT_ADMIN_USER_REQUEST, UpdateActiveOrgPayload, UpdateUserPayload,
   LOAD_ADMIN_USER_REQUEST,
-  VALIDATE_TFA_REQUEST, ValidateTfaPayload
+  VALIDATE_TFA_REQUEST, ValidateTfaPayload, DELETE_INVITE_REQUEST, DeleteInvitePayload
 } from "./types";
 
 export const updateActiveOrgRequest = (payload: UpdateActiveOrgPayload) => (
@@ -107,6 +107,14 @@ export const updateUser = (payload: UpdateUserPayload) => (
 export const inviteUser = (payload: InviteUserPayload) => (
   {
     type: INVITE_USER_REQUEST,
+    payload
+  }
+);
+
+
+export const deleteInvite = (payload: DeleteInvitePayload) => (
+  {
+    type: DELETE_INVITE_REQUEST,
     payload
   }
 );

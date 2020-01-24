@@ -22,7 +22,7 @@ const composeSetup = process.env.NODE_ENV !== 'prod' && typeof window === 'objec
   window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
   window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : compose
 
-export const store = createStore(
+const store = createStore(
   appReducer,
   composeSetup(
     applyMiddleware(sagaMiddleware)

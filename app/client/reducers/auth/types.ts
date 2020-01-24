@@ -137,6 +137,24 @@ interface UpdateAdminUsers {
 }
 export type AdminUserListAction = UpdateAdminUsers
 
+export interface Invite {
+  id: number,
+  email: string,
+  admin_tier: string,
+  created: string,
+}
+export const DEEP_UPDATE_INVITE_USER_LIST = "DEEP_UPDATE_INVITE_USER_LIST";
+interface DeepUpdateInviteUsers {
+  type: typeof DEEP_UPDATE_INVITE_USER_LIST,
+  invites: Invite
+}
+export const UPDATE_INVITE_USER_LIST = 'UPDATE_INVITE_USER_LIST';
+interface UpdateInviteUsers {
+  type: typeof UPDATE_INVITE_USER_LIST,
+  invites: Invite
+}
+export type InviteUserListAction = DeepUpdateInviteUsers | UpdateInviteUsers
+
 export const LOAD_ADMIN_USER_REQUEST = 'LOAD_ADMIN_USER_REQUEST';
 interface LoadAdminUserListRequest { type: typeof LOAD_ADMIN_USER_REQUEST }
 export const LOAD_ADMIN_USER_SUCCESS = 'LOAD_ADMIN_USER_SUCCESS';
@@ -192,6 +210,25 @@ interface InviteUserFailure {
   error: string
 }
 export type InviteUserAction = InviteUserRequest | InviteUserSuccess | InviteUserFailure
+
+export const DELETE_INVITE_REQUEST = 'DELETE_INVITE_REQUEST';
+export interface DeleteInvitePayload {
+  body: {
+    invite_id: number
+  }
+}
+interface DeleteInviteRequest {
+  type: typeof DELETE_INVITE_REQUEST,
+  payload: DeleteInvitePayload
+}
+export const DELETE_INVITE_SUCCESS = 'DELETE_INVITE_SUCCESS';
+interface DeleteInviteSuccess {type: typeof DELETE_INVITE_SUCCESS}
+export const DELETE_INVITE_FAILURE = 'DELETE_INVITE_FAILURE';
+interface DeleteInviteFailure {
+  type: typeof DELETE_INVITE_FAILURE,
+  error: string
+}
+export type DeleteInviteAction = DeleteInviteRequest | DeleteInviteSuccess | DeleteInviteFailure
 
 export const VALIDATE_TFA_REQUEST = 'VALIDATE_TFA_REQUEST';
 export interface ValidateTfaPayload {
