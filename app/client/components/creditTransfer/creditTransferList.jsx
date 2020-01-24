@@ -14,7 +14,6 @@ import {formatMoney} from "../../utils";
 import {ModuleBox} from "../styledElements";
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-import { loadTransferAccounts } from '../../reducers/transferAccountReducer'
 
 const mapStateToProps = (state) => {
   return {
