@@ -116,8 +116,7 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
 
     state_machine.feed_char("0000")
     assert state_machine.state == "complete"
-    market_enabled = next(filter(lambda x: x.name == 'market_enabled', user.custom_attributes), None)
-    assert market_enabled.value is False
+    assert user.is_market_enabled == False
     state_machine.send_sms.assert_called_with(user.phone, "opt_out_of_market_place_sms")
 
 
