@@ -162,7 +162,7 @@ export const authenticatePusher = () => {
         'Authorization': getToken()
       }
     },
-    authEndpoint: '/api/v1/pusher/auth'
+    authEndpoint: generateFormattedURL('/pusher/auth')
   });
 };
 
