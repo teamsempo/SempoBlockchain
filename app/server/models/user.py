@@ -12,8 +12,9 @@ import bcrypt
 import jwt
 import random
 import string
+import sentry_sdk
 
-from server import db, sentry, celery_app, bt
+from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
@@ -97,6 +98,7 @@ class User(ManyOrgBase, ModelBase):
     is_disabled = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
+    is_market_enabled = db.Column(db.Boolean, default=False)
 
     password_reset_tokens = db.Column(JSONB, default=[])
     pin_reset_tokens = db.Column(JSONB, default=[])
@@ -249,8 +251,7 @@ class User(ManyOrgBase, ModelBase):
 
                 geolocate_task.delay()
             except Exception as e:
-                print(e)
-                sentry.captureException()
+                sentry_sdk.captureException(e)
                 pass
 
     @hybrid_property
