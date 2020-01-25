@@ -4,7 +4,7 @@ import redis
 
 import config
 
-sentry_sdk.init(config.SENTRY_SERVER_DSN, release=config.WEB_VERSION)
+sentry_sdk.init(config.SENTRY_SERVER_DSN, release=config.VERSION)
 
 celery_app = Celery('tasks',
                     broker=config.REDIS_URL,

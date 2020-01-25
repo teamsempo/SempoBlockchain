@@ -91,9 +91,8 @@ def register_extensions(app):
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     celery_app.conf.update(app.config)
-
     if not config.IS_TEST:
-        sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=app.config['WEB_VERSION'])
+        sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
 
     print('celery joined on {} at {}'.format(
         app.config['REDIS_URL'], datetime.utcnow()))
