@@ -42,7 +42,7 @@ def save_photo_and_check_for_duplicate(url, new_filename, image_id):
         rekognition_task.delay()
     except Exception as e:
         print(e)
-        sentry.captureException() # CHANGE
+        sentry.captureException()
         pass
 
 
@@ -617,7 +617,7 @@ def proccess_create_or_modify_user_request(
                 send_onboarding_sms_messages(user)
             except Exception as e:
                 print(e)
-                sentry.captureException() # CHANGE
+                sentry.captureException()
                 pass
 
     response_object = {
