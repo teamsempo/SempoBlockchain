@@ -240,7 +240,7 @@ def test_get_permissions_api(test_client, complete_admin_auth_token):
                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert response.json['admins'] is not None
+    assert response.json['data']['admins'] is not None
 
 
 def get_admin_default_org_id(admin_user):
