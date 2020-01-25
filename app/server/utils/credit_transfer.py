@@ -507,7 +507,7 @@ def make_payment_transfer(transfer_amount,
 
         except Exception as e:
             print(e)
-            sentry.captureException() # CHANGE
+            sentry.captureException()
 
     return transfer
 

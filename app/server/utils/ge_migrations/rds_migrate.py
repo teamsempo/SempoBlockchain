@@ -350,7 +350,7 @@ class RDSMigrate:
 
             except Exception as e:
                 print(e)
-                sentry.captureException() # CHANGE
+                sentry.captureException()
                 pass
 
     def store_wei(self, address, balance):

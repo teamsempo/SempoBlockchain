@@ -193,7 +193,7 @@ def get_usd_to_satoshi_rate():
 
     except Exception as e:
         print(e)
-        sentry.captureException() # CHANGE
+        sentry.captureException()
         raise BlockchainError("Blockchain Error")
 
     finally:

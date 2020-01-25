@@ -93,7 +93,7 @@ class MessageProcessor(object):
 
             # If that fails, fallback to no sender ID
             if resp['SMSMessageData']['Message'] == 'InvalidSenderId':
-                server.sentry.captureMessage("InvalidSenderId {}".format(current_app.config.get('AT_SENDER_ID', None))) # CHANGE
+                server.sentry.captureMessage("InvalidSenderId {}".format(current_app.config.get('AT_SENDER_ID', None)))
 
                 resp = self.africastalking_client.send(
                     message,

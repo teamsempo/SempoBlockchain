@@ -17,7 +17,7 @@ def push_admin_credit_transfer(transfer):
             )
         except Exception as e:
             print(e)
-            sentry.captureException() # CHANGE
+            sentry.captureException()
 
 def push_user_transfer_confirmation(receive_user, transfer_random_key):
     try:
@@ -28,4 +28,4 @@ def push_user_transfer_confirmation(receive_user, transfer_random_key):
         )
     except Exception as e:
         print(e)
-        sentry.captureException() # CHANGE
+        sentry.captureException()

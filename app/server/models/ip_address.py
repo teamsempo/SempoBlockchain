@@ -37,5 +37,5 @@ class IpAddress(ModelBase):
                 mt.set_ip_location(self.id, ip)
             except Exception as e:
                 print(e)
-                sentry.captureException() # CHANGE
+                sentry.captureException()
                 pass
