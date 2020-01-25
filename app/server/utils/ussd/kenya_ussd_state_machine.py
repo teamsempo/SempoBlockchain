@@ -97,7 +97,6 @@ class KenyaUssdStateMachine(Machine):
 
     def change_preferred_language_to(self, language):
         self.user.preferred_language = language
-        self.send_sms(self.user.phone, "language_change_sms")
 
     def save_business_directory_info(self, user_input):
         attrs = {
@@ -157,7 +156,6 @@ class KenyaUssdStateMachine(Machine):
     def complete_initial_pin_change(self, user_input):
         try:
             change_initial_pin(user=self.user, new_pin=user_input)
-            self.send_sms(self.user.phone, "pin_change_success_sms")
         except Exception as e:
             self.send_sms(self.user.phone, "pin_change_error_sms")
             raise e
@@ -343,12 +341,12 @@ class KenyaUssdStateMachine(Machine):
         initial_language_selection_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
-             'dest': 'complete',
+             'dest': 'initial_pin_entry',
              'after': 'change_preferred_language_to_en',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
-             'dest': 'complete',
+             'dest': 'initial_pin_entry',
              'after': 'change_preferred_language_to_sw',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
@@ -378,7 +376,7 @@ class KenyaUssdStateMachine(Machine):
         initial_pin_confirmation_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
-             'dest': 'complete',
+             'dest': 'start',
              'after': ['complete_initial_pin_change', 'set_phone_as_verified'],
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
