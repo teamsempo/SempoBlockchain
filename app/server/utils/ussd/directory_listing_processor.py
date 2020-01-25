@@ -1,12 +1,16 @@
-import threading
 from sqlalchemy import text
+from sqlalchemy.sql import func
 
 from server import message_processor, db
 from server.utils.i18n import i18n_for
 from server.models.user import User
-from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
+from server.models.transfer_usage import TransferUsage
+from server.models.credit_transfer import CreditTransfer
 from server.utils.user import default_token
+
+from server.constants import NUMBER_OF_DIRECTORY_LISTING_RESULTS
+
 
 
 def user_directory_listing(user: User) -> str:
@@ -38,31 +42,41 @@ class DirectoryListingProcessor(object):
             - users who are opted in to market [custom_attribute 'market_enabled' has value true]
             - order query by transaction count and limit to top 5 transacting users
         """
-        # users with no credit transfers still have count of 1 since left join... not great but it works
-        sql = text('''
-            SELECT *, COUNT(*) co FROM
-                (SELECT u.id FROM "user" u
-                LEFT JOIN "credit_transfer" c ON u.id = c.recipient_user_id 
-                LEFT JOIN "custom_attribute_user_storage" ca ON ca.user_id = u.id
-                INNER JOIN "transfer_account" tr ON u.default_transfer_account_id = tr.id
-                INNER JOIN "token" tk ON tr.token_id = tk.id
-                WHERE u.business_usage_id = {} 
-                AND u.id != {}
-                AND tk.id = {}
-                AND (c.transfer_status = 'COMPLETE' OR c.transfer_status IS NULL)
-                AND (ca.name = 'market_enabled' OR ca.name IS NULL)
-                AND (ca.value::text = 'true' OR ca.value IS NULL)
-                ORDER BY c.updated DESC
-                LIMIT 100) C
-            GROUP BY id 
-            ORDER BY co DESC
-            LIMIT 5
-        '''.format(self.selected_business_category.id, self.recipient.id, token_id))
-        result = db.session.execute(sql)
-        ids = [row[0] for row in result]
+        count_list = (
+            db.session.query(
+                User.id,
+                func.count(CreditTransfer.id).label('count'))
+            .execution_options(show_all=True)
+            .join(User.credit_receives)
+            .join(TransferAccount, TransferAccount.id == User.default_transfer_account_id)
+            .group_by(User.id)
+            .filter(TransferAccount.token_id == token_id)
+            .filter(User.is_market_enabled == True)
+            .filter(User.business_usage_id == self.selected_business_category.id)
+            .filter(CreditTransfer.transfer_status == 'COMPLETE')
+            .limit(NUMBER_OF_DIRECTORY_LISTING_RESULTS).all()
+        )
 
-        # TODO: how to convert from id to user while presChoose Market Categoryerving order?
-        return list(map(lambda x: User.query.execution_options(show_all=True).get(x), ids))
+        user_ids = list(map(lambda x: x[0], count_list))
+
+        count_based_users = list(map(lambda x: User.query.execution_options(show_all=True).get(x), user_ids))
+
+        shortfall = NUMBER_OF_DIRECTORY_LISTING_RESULTS - len(count_based_users)
+
+        matching_category_users = []
+        if shortfall > 0:
+            matching_category_users = (
+                User.query
+                    .execution_options(show_all=True)
+                    .join(TransferAccount, TransferAccount.id == User.default_transfer_account_id)
+                    .filter(User.id.notin_(user_ids))
+                    .filter(TransferAccount.token_id == token_id)
+                    .filter(User.is_market_enabled == True)
+                    .filter(User.business_usage_id == self.selected_business_category.id)
+                    .limit(shortfall).all()
+            )
+
+        return count_based_users + matching_category_users
 
     def get_business_category_translation(self):
         try:

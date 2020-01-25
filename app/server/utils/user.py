@@ -7,6 +7,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
+import sentry_sdk
 
 from server import db
 from server.models.device_info import DeviceInfo
@@ -22,7 +23,7 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
-from server import celery_app, sentry, message_processor
+from server import celery_app, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
@@ -42,7 +43,7 @@ def save_photo_and_check_for_duplicate(url, new_filename, image_id):
         rekognition_task.delay()
     except Exception as e:
         print(e)
-        sentry.captureException()
+        sentry_sdk.capture_exception(e)
         pass
 
 
@@ -617,7 +618,7 @@ def proccess_create_or_modify_user_request(
                 send_onboarding_sms_messages(user)
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass
 
     response_object = {
