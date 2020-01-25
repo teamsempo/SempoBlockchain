@@ -1,7 +1,16 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery, select } from 'redux-saga/effects';
 import { normalize } from 'normalizr';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken, parseQuery} from '../utils'
+import {
+  handleError,
+  removeSessionToken,
+  storeSessionToken,
+  storeTFAToken,
+  storeOrgid,
+  removeOrgId,
+  removeTFAToken,
+  parseQuery,
+} from '../utils'
 import { adminUserSchema, inviteUserSchema } from '../schemas'
 
 import {
@@ -63,6 +72,7 @@ import {browserHistory} from "../app.jsx";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 
 function* updateStateFromAdmin(data) {
+  console.log('here1')
   //Schema expects a list of admin user objects
   let admin_list;
   let invite_list;
@@ -79,8 +89,11 @@ function* updateStateFromAdmin(data) {
     invite_list = [data.invite]
   }
 
+  console.log('here2')
+
   const normalizeAdminData = normalize(admin_list, adminUserSchema);
   const normalizeInviteData = normalize(invite_list, inviteUserSchema);
+  console.log('here3')
 
   const admins = normalizeAdminData.entities.admins;
   const invites = normalizeInviteData.entities.invites;
@@ -142,7 +155,7 @@ function* requestToken({payload}) {
     if (token_response.status === 'success') {
       yield put(createLoginSuccessObject(token_response));
       yield call(storeSessionToken, token_response.auth_token );
-      yield call (authenticatePusher);
+      yield call(authenticatePusher);
       return token_response
 
     } else if (token_response.tfa_url) {

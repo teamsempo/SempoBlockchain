@@ -156,14 +156,13 @@ export const ResetPasswordAPI = (payload) => {
 };
 
 export const authenticatePusher = () => {
-  console.log('authenticating pusher');
   startConfiguration({
     auth: {
       headers: {
         'Authorization': getToken()
       }
     },
-    authEndpoint: generateFormattedURL('/pusher/auth')
+    authEndpoint: '/api/v1/pusher/auth'
   });
 };
 
