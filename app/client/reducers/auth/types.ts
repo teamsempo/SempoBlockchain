@@ -146,12 +146,12 @@ export interface Invite {
 export const DEEP_UPDATE_INVITE_USER_LIST = "DEEP_UPDATE_INVITE_USER_LIST";
 interface DeepUpdateInviteUsers {
   type: typeof DEEP_UPDATE_INVITE_USER_LIST,
-  invites: Invite
+  invites: Invite[]
 }
 export const UPDATE_INVITE_USER_LIST = 'UPDATE_INVITE_USER_LIST';
 interface UpdateInviteUsers {
   type: typeof UPDATE_INVITE_USER_LIST,
-  invites: Invite
+  invites: Invite[]
 }
 export type InviteUserListAction = DeepUpdateInviteUsers | UpdateInviteUsers
 
