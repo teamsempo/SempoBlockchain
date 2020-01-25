@@ -72,7 +72,6 @@ import {browserHistory} from "../app.jsx";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 
 function* updateStateFromAdmin(data) {
-  console.log('here1')
   //Schema expects a list of admin user objects
   let admin_list;
   let invite_list;
@@ -89,11 +88,8 @@ function* updateStateFromAdmin(data) {
     invite_list = [data.invite]
   }
 
-  console.log('here2')
-
   const normalizeAdminData = normalize(admin_list, adminUserSchema);
   const normalizeInviteData = normalize(invite_list, inviteUserSchema);
-  console.log('here3')
 
   const admins = normalizeAdminData.entities.admins;
   const invites = normalizeInviteData.entities.invites;
