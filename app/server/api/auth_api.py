@@ -437,9 +437,7 @@ class LoginAPI(MethodView):
             return make_response(jsonify(response_object)), 200
 
         except Exception as e:
-           
             sentry_sdk.capture_exception(e)
-
             raise e
 
             # response_object = {
