@@ -241,6 +241,7 @@ def test_get_permissions_api(test_client, complete_admin_auth_token):
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
     assert response.json['data']['admins'] is not None
+    assert isinstance(response.json['data']['admins'], list)
 
 
 def get_admin_default_org_id(admin_user):
@@ -249,11 +250,11 @@ def get_admin_default_org_id(admin_user):
 
 @pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id_selector, response_code", [
     ('admin', 'foo1@acme.com', 'admin', lambda o: 2, 401),
-    ('admin', 'foo1@acme.com', 'admin', lambda o: None, 200),
+    ('admin', 'foo1@acme.com', 'admin', lambda o: None, 201),
     ('sempoadmin', 'foo@acme.com', 'admin', lambda o: 12332, 404),
     ('sempoadmin',  None, 'admin', get_admin_default_org_id, 400),
     ('sempoadmin', 'foo@acme.com', None, get_admin_default_org_id, 400),
-    ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 200),
+    ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 201),
     ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 400),
 ])
 
