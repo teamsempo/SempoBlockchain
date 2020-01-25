@@ -108,12 +108,7 @@ class KenyaUssdStateMachine(Machine):
         set_custom_attributes(attrs, self.user)
 
     def change_opted_in_market_status(self, user_input):
-        attrs = {
-            "custom_attributes": {
-                "market_enabled": False
-            }
-        }
-        set_custom_attributes(attrs, self.user)
+        self.user.is_market_enabled = False
         self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
 
     def send_terms_to_user_if_required(self, user_inpt):

@@ -8,9 +8,11 @@ import {LightTheme} from '../theme.js'
 import SingleTransferAccountManagement from '../transferAccount/singleTransferAccountWrapper.jsx';
 
 import { loadTransferAccounts } from '../../reducers/transferAccountReducer'
+import organizationWrapper from '../organizationWrapper';
 
 const mapStateToProps = (state) => {
   return {
+    login: state.login,
     loggedIn: (state.login.userId != null),
     transferAccounts: state.transferAccounts,
   };
@@ -30,12 +32,11 @@ class SingleTransferAccountPage extends React.Component {
   }
 
   componentDidMount() {
-      let pathname_array = location.pathname.split('/').slice(1);
-      let transferAccountID = parseInt(pathname_array[1]);
-
-      if (transferAccountID) {
-          this.props.loadTransferAccountList(transferAccountID)
-      }
+        let pathname_array = location.pathname.split('/').slice(1);
+        let transferAccountID = parseInt(pathname_array[1]);
+        if(transferAccountID) {
+            this.props.loadTransferAccountList(transferAccountID) //  load single account
+        }
   }
 
   render() {
@@ -45,17 +46,17 @@ class SingleTransferAccountPage extends React.Component {
 
       // check if transferAccount exists else show fallback
       if (this.props.transferAccounts.byId[transferAccountId]) {
-          var componentFallback = <SingleTransferAccountManagement transfer_account_id={transferAccountId} />
+        var componentFallback = <SingleTransferAccountManagement transfer_account_id={transferAccountId} />
 
       } else {
-          componentFallback =
-              <ModuleBox>
-                  <p style={{padding: '1em', textAlign: 'center'}}>No Such Account: {url_provided}</p>
-              </ModuleBox>
+        componentFallback =
+            <ModuleBox>
+                <p style={{padding: '1em', textAlign: 'center'}}>No Such Account: {url_provided}</p>
+            </ModuleBox>
       }
 
 
-      if (this.props.loggedIn && this.props.transferAccounts.loadStatus.isRequesting === true) {
+      if (this.props.loggedIn && (this.props.transferAccounts.loadStatus.isRequesting === true)) {
           return (
               <WrapperDiv>
 
@@ -66,17 +67,17 @@ class SingleTransferAccountPage extends React.Component {
               </WrapperDiv>
           );
       } else if (this.props.loggedIn) {
-          return (
-              <WrapperDiv>
+            return (
+                <WrapperDiv>
 
-                  <PageWrapper>
-                      <ThemeProvider theme={LightTheme}>
-                          {componentFallback}
-                      </ThemeProvider>
-                  </PageWrapper>
+                    <PageWrapper>
+                         <ThemeProvider theme={LightTheme}>
+                            {componentFallback}
+                        </ThemeProvider>
+                     </PageWrapper>
 
-              </WrapperDiv>
-          );
+                 </WrapperDiv>
+            );
       } else {
           return (
               <WrapperDiv>
@@ -87,7 +88,7 @@ class SingleTransferAccountPage extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SingleTransferAccountPage);
+export default connect(mapStateToProps, mapDispatchToProps)(organizationWrapper(SingleTransferAccountPage));
 
 const WrapperDiv = styled.div`
   display: flex;

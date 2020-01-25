@@ -98,6 +98,7 @@ class User(ManyOrgBase, ModelBase):
     is_disabled = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
+    is_market_enabled = db.Column(db.Boolean, default=False)
 
     password_reset_tokens = db.Column(JSONB, default=[])
     pin_reset_tokens = db.Column(JSONB, default=[])

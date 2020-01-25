@@ -176,6 +176,7 @@ class RDSMigrate:
             sempo_user.is_self_sign_up = False
             sempo_user.terms_accepted = False
             sempo_user.created = ge_user['created_at']
+            sempo_user.is_market_enabled = int(ge_user['market_enabled']) == 1
             sempo_user.custom_attributes = self.create_custom_attributes(ge_user)
 
             if ge_user['token_agents.id'] is not None:
@@ -206,7 +207,6 @@ class RDSMigrate:
             ('bio', 'bio'),
             ('national_id_number', 'national_id_number'),
             ('gender', 'gender'),
-            ('market_enabled', 'market_enabled'),
             ('referred_by_id', 'GE_referred_by_id'),
             ('phone_listed', 'phone_listed'),
             ('community_token_id', 'GE_community_token_id')
