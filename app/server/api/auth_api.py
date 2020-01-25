@@ -1,6 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
-from server import db, sentry
+import sentry_sdk
+from server import db
 # from server import limiter
 from phonenumbers.phonenumberutil import NumberParseException
 from server.models.user import User
@@ -437,7 +438,7 @@ class LoginAPI(MethodView):
 
         except Exception as e:
            
-            sentry.captureException()
+            sentry_sdk.capture_exception(e)
 
             raise e
 

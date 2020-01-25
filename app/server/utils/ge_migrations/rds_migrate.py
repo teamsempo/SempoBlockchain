@@ -3,8 +3,9 @@ import MySQLdb
 import time
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 import pprint
+import sentry_sdk
 
-from server import db, sentry
+from server import db
 
 from server.models.user import User
 from server.models.organisation import Organisation
@@ -350,7 +351,7 @@ class RDSMigrate:
 
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass
 
     def store_wei(self, address, balance):
