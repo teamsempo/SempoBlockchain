@@ -97,6 +97,16 @@ class KenyaUssdStateMachine(Machine):
 
     def change_preferred_language_to(self, language):
         self.user.preferred_language = language
+        self.send_sms(self.user.phone, "language_change_sms")
+
+    def initial_change_preferred_language_to_sw(self, user_input):
+        self.initial_change_preferred_language_to("sw")
+
+    def initial_change_preferred_language_to_en(self, user_input):
+        self.initial_change_preferred_language_to("en")
+
+    def initial_change_preferred_language_to(self, language):
+        self.user.preferred_language = language
 
     def save_business_directory_info(self, user_input):
         attrs = {
@@ -337,12 +347,12 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'initial_pin_entry',
-             'after': 'change_preferred_language_to_en',
+             'after': 'initial_change_preferred_language_to_en',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'initial_pin_entry',
-             'after': 'change_preferred_language_to_sw',
+             'after': 'initial_change_preferred_language_to_sw',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
