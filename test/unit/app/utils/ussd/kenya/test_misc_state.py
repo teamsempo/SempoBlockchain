@@ -71,7 +71,11 @@ directory_listing_other_state = partial(UssdSessionFactory, state="directory_lis
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
-    session.session_data = {'transfer_usage_mapping': fake_transfer_mapping(10), 'usage_menu': 1, 'usage_menu_max': 1}
+    session.session_data = {
+        'transfer_usage_mapping': fake_transfer_mapping(10),
+        'usage_menu': 1,
+        'usage_index_stack': [0, 8]
+    }
     user = user_factory()
     user.phone = phone()
     db.session.commit()
@@ -112,8 +116,7 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
 
     state_machine.feed_char("0000")
     assert state_machine.state == "complete"
-    market_enabled = next(filter(lambda x: x.name == 'market_enabled', user.custom_attributes), None)
-    assert market_enabled.value is False
+    assert user.is_market_enabled == False
     state_machine.send_sms.assert_called_with(user.phone, "opt_out_of_market_place_sms")
 
 

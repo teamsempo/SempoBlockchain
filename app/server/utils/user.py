@@ -7,6 +7,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
+import sentry_sdk
 
 from server import db
 from server.models.device_info import DeviceInfo
@@ -22,7 +23,7 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
-from server import celery_app, sentry, message_processor
+from server import celery_app, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
@@ -42,7 +43,7 @@ def save_photo_and_check_for_duplicate(url, new_filename, image_id):
         rekognition_task.delay()
     except Exception as e:
         print(e)
-        sentry.captureException()
+        sentry_sdk.capture_exception(e)
         pass
 
 
@@ -59,35 +60,38 @@ def find_oldest_user_for_transfer_account(transfer_account):
 
 
 def find_user_from_public_identifier(*public_identifiers):
+    """
+    :param public_identifiers: email, phone, public_serial_number, nfc_serial_number or address
+    :return: First user found
+    """
     user = None
 
-    for public_identifier in public_identifiers:
-
+    for public_identifier in list(filter(lambda x: x is not None, public_identifiers)):
         if public_identifier is None:
             continue
 
         user = User.query.execution_options(show_all=True).filter_by(
             email=str(public_identifier).lower()).first()
         if user:
-            continue
+            break
 
         try:
             user = User.query.execution_options(show_all=True).filter_by(
                 phone=proccess_phone_number(public_identifier)).first()
             if user:
-                continue
+                break
         except NumberParseException:
             pass
 
         user = User.query.execution_options(show_all=True).filter_by(
             public_serial_number=str(public_identifier).lower()).first()
         if user:
-            continue
+            break
 
         user = User.query.execution_options(show_all=True).filter_by(
             nfc_serial_number=public_identifier.upper()).first()
         if user:
-            continue
+            break
 
         try:
             checksummed = to_checksum_address(public_identifier)
@@ -97,7 +101,7 @@ def find_user_from_public_identifier(*public_identifiers):
             if blockchain_address and blockchain_address.transfer_account:
                 user = blockchain_address.transfer_account.primary_user
                 if user:
-                    continue
+                    break
 
         except Exception:
             pass
@@ -614,7 +618,7 @@ def proccess_create_or_modify_user_request(
                 send_onboarding_sms_messages(user)
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass
 
     response_object = {

@@ -18,6 +18,8 @@ import LoadingSpinner from "../loadingSpinner.jsx";
 
 import { ModuleBox, PageWrapper, CenterLoadingSideBarActive } from '../styledElements'
 
+import { parseQuery } from '../../utils'
+
 const HeatMap = lazy(() => import('../heatmap/heatmap.jsx'));
 
 
@@ -60,6 +62,14 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
+
+    const parsed = parseQuery(location.search);
+
+    if (parsed.actok) {
+      console.log('actok', parsed.actok)
+      this.props.activateAccount(parsed.actok)
+    }
+
   }
 
   componentWillUnmount() {

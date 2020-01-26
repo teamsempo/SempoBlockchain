@@ -26,12 +26,18 @@ def test_create_or_update_session(test_client, init_database):
     user = UserFactory(phone="123")
 
     # create a session in db
-    session = UssdSession(session_id="1", user_id=user.id, msisdn="123", ussd_menu_id=3, state="foo", service_code="*123#")
+
+    menu3 = UssdMenu(id=3, name='foo', display_key='foo')
+    db.session.add(menu3)
+
+    session = UssdSession(
+        session_id="1", user_id=user.id, msisdn="123", ussd_menu=menu3, state="foo", service_code="*123#"
+    )
     db.session.add(session)
     db.session.commit()
 
     # test updating existing
-    create_or_update_session("1", user, UssdMenu(id=4, name="bar"), "input", "*123#")
+    create_or_update_session("1", user, UssdMenu(id=4, name="bar", display_key='bar'), "input", "*123#")
     sessions = UssdSession.query.filter_by(session_id="1")
     assert sessions.count() == 1
     session = sessions.first()
@@ -42,7 +48,7 @@ def test_create_or_update_session(test_client, init_database):
     # test creating a new one
     sessions = UssdSession.query.filter_by(session_id="2")
     assert sessions.count() == 0
-    create_or_update_session("2", user, UssdMenu(id=5, name="bat"), "", "*123#")
+    create_or_update_session("2", user, UssdMenu(id=5, name="bat", display_key='bat'), "", "*123#")
     sessions = UssdSession.query.filter_by(session_id="2")
     assert sessions.count() == 1
     session = sessions.first()

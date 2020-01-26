@@ -25,27 +25,23 @@ sw:
       CON Weka kiwango
       0. Nyuma
     send_token_reason: |
-      CON Chagua kusudi la malipo 
+      CON Kusudi la malipo
       %{options}
-      9. Onyesha chaguzi zingine # This needs proper translations 
-      0. Nyuma
-    send_token_reason_other:  # This needs proper translations 
+      9. Onyesha chaguzi zingine
+    send_token_reason_other:
       first: |
-        CON Fafanua kusudi zaidi
+        CON Kusudi la malipo
         %{other_options}
         9. Onyesha chaguzi zingine
-        0. Nyuma
       middle: |
-        CON Fafanua kusudi zaidi
+        CON Kusudi la malipo
         %{other_options}
         9. Onyesha chaguzi zingine
         10. Onyesha chaguzi zilizopita
-        0. Nyuma
       last: |
         CON Fafanua kusudi zaidi
         %{other_options}
         10. Onyesha chaguzi zilizopita
-        0. Nyuma
     send_token_pin_authorization:
       first:
         CON Weka nambari ya siri.
@@ -59,28 +55,24 @@ sw:
       2. Futa
       0. Nyuma
     directory_listing: |
-      CON Chagua unachotaka Sokoni 
+      CON Sokoni
       %options%
-      9. Onyesha chaguzi zingine # translate this properly I did this with google translate
-      0. Nyuma
+      9. Onyesha chaguo lingine
     complete: END Ombi lako limetumwa. Utapokea uthibitishaji wa SMS kwa muda mfupi.
     directory_listing_other: # Add proper translations
       first: |
-        CON Chagua unachotaka Sokoni 
+        CON Sokoni
         %{other_options}
         9. Onyesha chaguzi zingine
-        0. Nyuma
       middle: |
-        CON Chagua unachotaka Sokoni 
+        CON Sokoni
         %{other_options}
-        9. Onyesha chaguzi zingine
+        9. Onyesha chaguo lingine
         10. Onyesha chaguzi zilizopita
-        0. Nyuma
       last: |
-        CON Chagua unachotaka Sokoni 
+        CON Sokoni
         %{other_options}
         10. Onyesha chaguzi zilizopita
-        0. Nyuma
     account_management: |
       CON Akaunti yangu
       1. Biashara Yangu
@@ -193,26 +185,30 @@ sw:
       Kiwango cha ubadilishaji:
       Kwa kila 1 %{token_name} utapata %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
-    exchange_not_allowed_error_sms: Kikundi pekee kikakubalika kubadilisha. Kwa maelezo piga 0757628885
+    exchange_not_allowed_error_sms: Kikundi pekee kinakubaliwa kubadilisha. Kwa maelezo piga 0757628885
     exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha mara %{count} kwa siku %{limit_period} pekee
-    exchange_fraction_error_sms: Samahani umepitisha kiwango ya kubadilisha %{token}. Unakubaliwa kubadilisha %{percent}% ya salio lako
+    exchange_fraction_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{percent}% ya salio lako
     exchange_amount_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{token} %{amount} kwa siku {limit_period} pekee
+    insufficient_balance_sms: |
+      Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika kwa sababu salio lako haitoshi.
+      Akaunti yako ya Sarafu-Network ina salio yafuatayo:
+      %{token_balances}
     send_token_error_sms: Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika. Jaribu tena baadaye.
     send_balance_exchange_limit_sms: |
-      Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
+      Akaunti yako ya Sarafu-Network ina salio yafuatayo:
       %{token_balances}
       Waweza badilisha kwa viwango vifuatavyo:
       %{token_exchanges}
       Mara moja kwa siku %{limit_period}
       Piga 0757628885 kwa usaidizi zaidi
     send_balance_exchange_sms: |
-      Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
+      Akaunti yako ya Sarafu-Network ina salio yafuatayo:
       %{token_balances}
       Waweza badilisha kwa viwango vifuatavyo:
       %{token_exchanges}
       Piga 0757628885 kwa usaidizi zaidi
     send_balance_sms: |
-      Akaunti yako ya Sarafu-Network ina masalio yafuatayo:
+      Akaunti yako ya Sarafu-Network ina salio yafuatayo:
       %{token_balances}
       Piga 0757628885 kwa usaidizi zaidi
     pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.

@@ -1,7 +1,7 @@
 from contextlib import contextmanager
-
 from flask import g, request
 import datetime
+from dateutil import parser
 
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.declarative import declared_attr
@@ -53,8 +53,13 @@ def paginate_query(query, queried_object=None, order_override=None):
     :returns: tuple of (item list, total number of items, total number of pages)
     """
 
+    updated_after = request.args.get('updated_after')
     page = request.args.get('page')
     per_page = request.args.get('per_page')
+
+    if updated_after:
+        parsed_time = parser.isoparse(updated_after)
+        query = query.filter(queried_object.updated > parsed_time)
 
     if order_override:
         query = query.order_by(order_override)

@@ -9,6 +9,8 @@ import LoginForm from '../auth/loginForm.jsx'
 import RegisterForm from '../auth/registerForm.jsx'
 import RequestResetEmailForm from '../auth/requestResetEmailForm.jsx'
 
+import { parseQuery } from '../../utils'
+
 const mapStateToProps = (state) => {
   return {
     loggedIn: (state.login.userId !== null),
@@ -34,7 +36,7 @@ export class authPage extends React.Component {
 
   componentDidMount() {
 
-    const parsed = this.parseQuery(location.search);
+    const parsed = parseQuery(location.search);
 
     if (parsed.actok) {
       this.props.activateAccount({body:{activation_token: parsed.actok}})
@@ -53,16 +55,6 @@ export class authPage extends React.Component {
     if (this.props.loggedIn !== prevProps.loggedIn) {
       this.setState({redirectToReferrer: true})
     }
-  }
-
-  parseQuery(queryString) {
-    var query = {};
-    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
-    for (var i = 0; i < pairs.length; i++) {
-        var pair = pairs[i].split('=');
-        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-    }
-    return query;
   }
 
   render() {

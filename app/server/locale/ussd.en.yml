@@ -25,27 +25,23 @@ en:
       CON Enter Amount
       0. Back
     send_token_reason: |
-      CON Select Transfer reason 
+      CON Transfer Reason
       %{options}
-      9. Show other options
-      0. Back
+      9. Show more
     send_token_reason_other:
       first: |
         CON Please specify
         %{other_options}
-        9. Show other options
-        0. Back
+        9. Show more
       middle: |
         CON Please specify 
         %{other_options}
-        9. Show other options
-        10. Show previous options
-        0. Back
+        9. Show more
+        10. Show previous
       last: |
         CON Please specify
         %{other_options}
-        10. Show previous options
-        0. Back
+        10. Show previous
     send_token_pin_authorization:
       first: |
         CON Please enter your PIN.
@@ -59,28 +55,24 @@ en:
       2. Cancel
       0. Back
     directory_listing: |
-      CON Choose Market Category 
+      CON Market Category
       %{options}
-      9. Show other options
-      0. Back
+      9. Show more
     complete: END Your request has been sent. You will receive an SMS shortly.
     directory_listing_other:
       first: |
-        CON Choose Market Category 
+        CON Market Category
         %{other_options}
-        9. Show other options
-        0. Back
+        9. Show more
       middle: |
-        CON Choose Market Category 
+        CON Market Category
         %{other_options}
-        9. Show other options
-        10. Show previous options
-        0. Back
+        9. Show more
+        10. Show previous
       last: |
-        CON Choose Market Category 
+        CON Market Category
         %{other_options}
-        10. Show previous options
-        0. Back
+        10. Show previous
     account_management: |
       CON My account
       1. My Business
@@ -179,7 +171,7 @@ en:
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
     upsell_message_sender: "Recipient %{recipient_phone} is not yet registered. Please call or send their Name, Phone number, business and location to 0757628885"
     upsell_message_recipient: "%{first_name} %{last_name} tried to send you %{token_name} but you are not registered. Send your information: name, phone number, area of residence, and the type of business you run 0757628885."
-    send_directory_listing_message: "%{community_token_name} %{business_type} Market \n %{directory_listing_users}"
+    send_directory_listing_message: "%{community_token_name} %{business_type} Market\n%{directory_listing_users}"
     no_directory_listing_found_message: Sorry we couldn't find businesses from your community that match your search criteria.
     send_token_sender_sms: Successfully sent a payment of %{amount} %{token_name} to %{other_user} on %{date} for %{reason} at %{time}. New %{token_name} balance is %{balance}
     send_token_recipient_sms: Successfully received a payment of %{amount} %{token_name} from %{other_user} for %{reason} on %{date} at %{time}. New %{token_name} balance is %{balance}
@@ -198,6 +190,10 @@ en:
     exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
     exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
     exchange_amount_error_sms: Sorry you have exceeded your %{token} transfer amount limit. You are allowed up to %{amount} %{token} per %{limit_period} days
+    insufficient_balance_sms: |
+      Payment of %{amount} %{token_name} to %{recipient} has failed due to insufficent balance.
+      Your Sarafu-Network balances are as follows:
+      %{token_balances}
     send_token_error_sms: Payment of %{amount} %{token_name} to %{recipient} has failed. Please try again later.
     send_balance_exchange_limit_sms: |
       Your Sarafu-Network balances are as follows:
