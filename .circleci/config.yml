@@ -164,6 +164,9 @@ jobs:
       - restore_cache:
           key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
       - run:
+          name: pip fix
+          command: pip install pip==20.0.2
+      - run:
           name: Setup AWS CLI
           command: |
             pip install -r ~/project/.circleci/requirements.txt

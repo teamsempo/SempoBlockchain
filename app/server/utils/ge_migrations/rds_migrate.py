@@ -148,7 +148,7 @@ class RDSMigrate:
             return
 
         business_usage = None
-        if ge_user['business_type'] is not None:
+        if ge_user.get('business_type') is not None:
 
             sempo_category = GE_BUSINESS_CATEGORY_MAPPINGS.get(ge_user['business_type'])
 
