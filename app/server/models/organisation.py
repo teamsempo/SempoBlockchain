@@ -1,6 +1,7 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 import pendulum
+import secrets
 
 from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
@@ -113,6 +114,9 @@ class Organisation(ModelBase):
     def __init__(self, token=None, is_master=False, **kwargs):
 
         super(Organisation, self).__init__(**kwargs)
+    
+        self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
+        self.external_auth_password = secrets.token_hex(16)
 
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():
