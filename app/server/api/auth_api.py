@@ -822,7 +822,7 @@ class BlockchainKeyAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
 
-class KoboCredentialsAPI(MethodView): # Change wording to generic auth creds
+class ExternalCredentialsAPI(MethodView): # Change wording to generic auth creds
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
@@ -970,7 +970,7 @@ auth_blueprint.add_url_rule(
 
 auth_blueprint.add_url_rule(
     '/auth/kobo/',
-    view_func=KoboCredentialsAPI.as_view('kobo_view'),
+    view_func=ExternalCredentialsAPI.as_view('kobo_view'),
     methods=['GET']
 )
 
