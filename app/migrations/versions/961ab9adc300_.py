@@ -9,6 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 from server.models.organisation import Organisation
+from server.utils.misc import encrypt_string
 import secrets
 
 # revision identifiers, used by Alembic.
@@ -27,7 +28,7 @@ def upgrade():
 
     for org in session.query(Organisation).execution_options(show_all=True).all():
         org.external_auth_username = 'admin_'+org.name.lower().replace(' ', '_')
-        org.external_auth_password = secrets.token_hex(16)
+        org.external_auth_password = encrypt_string(secrets.token_hex(16))
     session.commit()
 
 

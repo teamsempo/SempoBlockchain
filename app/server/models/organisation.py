@@ -10,6 +10,7 @@ from server import message_processor
 from server.utils.i18n import i18n_for
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
+from server.utils.misc import encrypt_string
 
 class Organisation(ModelBase):
     """
@@ -116,7 +117,7 @@ class Organisation(ModelBase):
         super(Organisation, self).__init__(**kwargs)
     
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
-        self.external_auth_password = secrets.token_hex(16)
+        self.external_auth_password = encrypt_string(secrets.token_hex(16))
 
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():

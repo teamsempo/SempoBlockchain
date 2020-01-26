@@ -16,6 +16,7 @@ from typing import Optional, Tuple, Dict
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
 from server.utils.feedback import request_feedback_questions
 from server.utils.intercom import create_intercom_secret
+from server.utils.misc import decrypt_string
 
 def get_complete_auth_token(user):
     auth_token = user.encode_auth_token().decode()
@@ -95,7 +96,7 @@ def requires_auth(f=None,
             org = Organisation.query.filter_by(external_auth_username = username).first()
             if org:
                 auth_type = 'external'
-                required_password = org.external_auth_password
+                required_password = decrypt_string(org.external_auth_password)
             # Otherwise, check if it is one of the configured BASIC_AUTH_CREDENTIALS
             else:
                 (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
