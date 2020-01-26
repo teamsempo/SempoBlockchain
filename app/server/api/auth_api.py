@@ -13,6 +13,7 @@ from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
+from server.utils.misc import decrypt_string
 
 import random
 
@@ -827,7 +828,7 @@ class ExternalCredentialsAPI(MethodView):
     def get(self):
         response_object = {
             'username': g.active_organisation.external_auth_username, # Change this to org's credentials
-            'password': g.active_organisation.external_auth_password
+            'password': decrypt_string(g.active_organisation.external_auth_password)
         }
 
         return make_response(jsonify(response_object)), 200

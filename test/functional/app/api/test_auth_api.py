@@ -11,6 +11,7 @@ import pyotp
 
 from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
+from server.utils.misc import decrypt_string
 
 # todo- permissions api, reset password, request reset password
 
@@ -298,7 +299,7 @@ def test_get_kobo_credentials_api(test_client, authed_sempo_admin_user):
     assert response.status_code == 200
     assert response.json['username'] == 'admin_sempo'
     org = Organisation.query.filter_by(external_auth_username = response.json['username']).first()
-    assert response.json['password'] == org.external_auth_password
+    assert response.json['password'] == decrypt_string(org.external_auth_password)
 
 def test_logout_api(test_client, authed_sempo_admin_user):
     """
