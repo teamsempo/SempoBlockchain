@@ -148,7 +148,7 @@ class RDSMigrate:
             return
 
         business_usage = None
-        if ge_user['business_type'] is not None:
+        if ge_user.get('business_type') is not None:
 
             sempo_category = GE_BUSINESS_CATEGORY_MAPPINGS.get(ge_user['business_type'])
 
@@ -329,8 +329,6 @@ class RDSMigrate:
                         balance_wei += int(v)
 
                 user = ge_address_to_user[user_address]
-                ta = user.get_transfer_account_for_token(token)
-                ta._balance_wei = balance_wei
 
                 print(f'transfering {balance_wei} wei to {user}')
 

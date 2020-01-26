@@ -281,8 +281,10 @@ def create_business_categories():
             'en': 'Food/Water', 'sw': 'Chakula/Maji'}},
         {'name': 'Fuel/Energy', 'icon': 'message', 'translations': {
             'en': 'Fuel/Energy', 'sw': 'Kuni/Makaa/Mafuta'}},
-        {'name': 'Education/Health', 'icon': 'message', 'translations': {
-            'en': 'Education/Health', 'sw': 'Elimu/Afya'}},
+        {'name': 'Education', 'icon': 'message', 'translations': {
+            'en': 'Education', 'sw': 'Elimu'}},
+        {'name': 'Health', 'icon': 'message', 'translations': {
+            'en': 'Health', 'sw': 'Afya'}},
         {'name': 'Shop', 'icon': 'message', 'translations': {
             'en': 'Shop', 'sw': 'Duka'}},
         {'name': 'Environment', 'icon': 'message', 'translations': {
