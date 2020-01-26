@@ -822,12 +822,12 @@ class BlockchainKeyAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
 
-class KoboCredentialsAPI(MethodView):
+class KoboCredentialsAPI(MethodView): # Change wording to generic auth creds
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
         response_object = {
-            'username': current_app.config['EXTERNAL_AUTH_USERNAME'],
+            'username': current_app.config['EXTERNAL_AUTH_USERNAME'], # Change this to org's credentials
             'password': current_app.config['EXTERNAL_AUTH_PASSWORD']
         }
 

@@ -20,6 +20,10 @@ class Organisation(ModelBase):
 
     name                = db.Column(db.String)
 
+    external_auth_username = db.Column(db.String)
+    
+    external_auth_password = db.Column(db.String)
+
     _timezone           = db.Column(db.String)
 
     # TODO: Create a mixin so that both user and organisation can use the same definition here
@@ -36,9 +40,9 @@ class Organisation(ModelBase):
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
-    org_level_transfer_account_id    = db.Column(db.Integer,
-                                                 db.ForeignKey('transfer_account.id',
-                                                               name="fk_org_level_account"))
+    org_level_transfer_account_id = db.Column(db.Integer,
+                                                db.ForeignKey('transfer_account.id',
+                                                name="fk_org_level_account"))
 
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
