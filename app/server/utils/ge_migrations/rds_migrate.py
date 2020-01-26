@@ -329,8 +329,6 @@ class RDSMigrate:
                         balance_wei += int(v)
 
                 user = ge_address_to_user[user_address]
-                ta = user.get_transfer_account_for_token(token)
-                ta._balance_wei = balance_wei
 
                 print(f'transfering {balance_wei} wei to {user}')
 
