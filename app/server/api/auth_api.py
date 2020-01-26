@@ -821,7 +821,7 @@ class BlockchainKeyAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
 
-class ExternalCredentialsAPI(MethodView): # Change wording to generic auth creds
+class ExternalCredentialsAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
