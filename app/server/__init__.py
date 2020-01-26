@@ -7,7 +7,8 @@ from celery import Celery
 from pusher import Pusher
 import boto3
 from twilio.rest import Client as TwilioClient
-from raven.contrib.flask import Sentry
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 import messagebird
 import africastalking
 from datetime import datetime
@@ -85,13 +86,13 @@ def register_extensions(app):
                 return make_response(jsonify({'message': 'Payload too large'})), 413
             request.get_data(parse_form_data=False, cache=True)
 
-    if not config.IS_TEST:
-        sentry.init_app(app, dsn=app.config['SENTRY_SERVER_DSN'])
     # limiter.init_app(app)
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     celery_app.conf.update(app.config)
+    if not config.IS_TEST:
+        sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
 
     print('celery joined on {} at {}'.format(
         app.config['REDIS_URL'], datetime.utcnow()))
@@ -125,7 +126,7 @@ def register_blueprints(app):
             try:
                 task.delay()
             except Exception as e:
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
 
         return response
 
@@ -213,7 +214,6 @@ db = SQLAlchemy(session_options={
 })
 
 basic_auth = BasicAuth()
-sentry = Sentry()
 
 # limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
 
