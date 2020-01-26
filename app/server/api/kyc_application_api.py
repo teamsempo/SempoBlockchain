@@ -1,6 +1,7 @@
+import sentry_sdk
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
-from server import db, sentry
+from server import db
 from server.models.bank_account import BankAccount
 from server.models.kyc_application import KycApplication
 from server.models.upload import UploadedResource
@@ -45,7 +46,7 @@ def handle_kyc_documents(data=None,document_country=None,document_type=None,kyc_
                 uploaded_document.kyc_application_id = kyc_details.id
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass
 
 

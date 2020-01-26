@@ -10,6 +10,8 @@ import AsyncButton from './../AsyncButton.jsx'
 
 import { Input, ErrorMessage, StyledButton } from './../styledElements'
 
+import { parseQuery } from '../../utils'
+
 const mapStateToProps = (state) => {
   return {
     resetPasswordState: state.resetPasswordState
@@ -37,26 +39,15 @@ class ResetPasswordFormContainer extends React.Component {
     };
   }
 
-  parseQuery(queryString) {
-    var query = {};
-    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
-    for (var i = 0; i < pairs.length; i++) {
-        var pair = pairs[i].split('=');
-        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-    }
-    return query;
-  }
-
   componentDidMount() {
 
-    const parsed = this.parseQuery(location.search);
+    const parsed = parseQuery(location.search);
     if (parsed.token) {
       console.log(parsed.token);
       this.setState({reset_password_token: parsed.token})
     }
 
   }
-
 
   attemptReset() {
 
