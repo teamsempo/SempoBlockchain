@@ -65,7 +65,7 @@ class OrganisationFactory(SQLAlchemyModelFactory):
     class Meta:
         model = Organisation
         sqlalchemy_session = db.session
-
+    name = 'Francines Company'
 
 class UssdMenuFactory(SQLAlchemyModelFactory):
     class Meta:
