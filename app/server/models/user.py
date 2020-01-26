@@ -247,6 +247,7 @@ class User(ManyOrgBase, ModelBase):
                 task = {'user_id': self.id, 'address': location}
                 geolocate_task = celery_app.signature('worker.celery_tasks.geolocate_address',
                                                       args=(task,))
+
                 geolocate_task.delay()
             except Exception as e:
                 print(e)

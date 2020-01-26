@@ -21,6 +21,7 @@ class BlockchainTasker(object):
         eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+
     def _execute_synchronous_celery(self, signature, timeout=None):
         async_result = signature.delay()
 
@@ -37,7 +38,6 @@ class BlockchainTasker(object):
         return response
 
     def _execute_task(self, signature):
-        # TODO: Read sig here, scan for simulator output
         ar = signature.delay()
         return ar.id
 
@@ -114,7 +114,6 @@ class BlockchainTasker(object):
 
         raise TimeoutError
 
-    # TODO: Move these out to a separate util file
     def retry_task(self, task_uuid):
         sig = celery_app.signature(self._eth_endpoint('retry_task'),
                                    kwargs={

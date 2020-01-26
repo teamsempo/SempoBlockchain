@@ -318,8 +318,7 @@ def local_setup():
     s = Setup(
         api_host='http://0.0.0.0:9000/api/v1/',
         email=os.environ.get('local_email'),
-        password=os.environ.get('local_password'),
-        api_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1ODA2MzEwMzEsImlhdCI6MTU4MDAyNjIzMSwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.pT4trWDH8UrTxRy3NX3FNSVNIVbJOA9UYh43ybuvg7Y'
+        password=os.environ.get('local_password')
     )
 
     reserve_token_id = s.create_reserve_token(
