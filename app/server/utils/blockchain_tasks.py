@@ -21,9 +21,7 @@ class BlockchainTasker(object):
         eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
-    # TODO: Move these out to a separate util file
     def _execute_synchronous_celery(self, signature, timeout=None):
-        # TODO: Read sig here, scan for simulator output
         async_result = signature.delay()
 
         try:
@@ -37,7 +35,7 @@ class BlockchainTasker(object):
             async_result.forget()
 
         return response
-    # TODO: Move these out to a separate util file
+
     def _execute_task(self, signature):
         # TODO: Read sig here, scan for simulator output
         ar = signature.delay()
