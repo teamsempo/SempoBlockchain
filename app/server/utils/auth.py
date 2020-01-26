@@ -91,8 +91,14 @@ def requires_auth(f=None,
 
         # If username as password attempt basic auth
         if username and password:
-
-            (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
+            # Check if username belongs to an org
+            org = Organisation.query.filter_by(external_auth_username = username).first()
+            if org:
+                auth_type = 'external'
+                required_password = org.external_auth_password
+            # Otherwise, check if it is one of the configured BASIC_AUTH_CREDENTIALS
+            else:
+                (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
             if required_password is None or required_password != password:
                 response_object = {
                     'message': 'invalid basic auth username or password'
