@@ -9,6 +9,7 @@ from datetime import datetime
 import pytest, json, config, base64
 import pyotp
 
+from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
 
 # todo- permissions api, reset password, request reset password
@@ -295,9 +296,9 @@ def test_get_kobo_credentials_api(test_client, authed_sempo_admin_user):
                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert response.json['username'] == config.EXTERNAL_AUTH_USERNAME
-    assert response.json['password'] == config.EXTERNAL_AUTH_PASSWORD
-
+    assert response.json['username'] == 'admin_sempo'
+    org = Organisation.query.filter_by(external_auth_username = response.json['username']).first()
+    assert response.json['password'] == org.external_auth_password
 
 def test_logout_api(test_client, authed_sempo_admin_user):
     """
