@@ -12,8 +12,9 @@ import bcrypt
 import jwt
 import random
 import string
+import sentry_sdk
 
-from server import db, sentry, celery_app, bt
+from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
@@ -250,8 +251,7 @@ class User(ManyOrgBase, ModelBase):
                 # TODO: Standardize this task (pipe through execute_synchronous_celery)
                 geolocate_task.delay()
             except Exception as e:
-                print(e)
-                sentry.captureException()
+                sentry_sdk.captureException(e)
                 pass
 
     @hybrid_property

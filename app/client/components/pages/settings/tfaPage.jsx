@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 
-import { GetTFAAPI } from "../../../api/authApi";
+import { GetTFAAPI } from "../../../api/authAPI";
 
 import TFAForm from "../../auth/TFAForm.jsx"
 import LoadingSpinner from "../../loadingSpinner.jsx"

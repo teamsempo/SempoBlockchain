@@ -1,10 +1,10 @@
+import sentry_sdk
 from celery import Celery, beat
-from raven import Client
 import redis
 
 import config
 
-client = Client(config.SENTRY_SERVER_DSN)
+sentry_sdk.init(config.SENTRY_SERVER_DSN, release=config.VERSION)
 
 celery_app = Celery('tasks',
                     broker=config.REDIS_URL,

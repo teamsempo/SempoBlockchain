@@ -5,6 +5,8 @@ from eth_utils import keccak
 
 from web3 import Web3
 
+VERSION = '1.0.4'  # Remember to bump this in every PR
+
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc

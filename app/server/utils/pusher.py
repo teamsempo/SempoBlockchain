@@ -1,5 +1,7 @@
+import sentry_sdk
+
 from flask import current_app
-from server import pusher_client, sentry
+from server import pusher_client
 from server.schemas import credit_transfer_schema
 from server.utils import credit_transfer
 
@@ -17,7 +19,7 @@ def push_admin_credit_transfer(transfer):
             )
         except Exception as e:
             print(e)
-            sentry.captureException()
+            sentry_sdk.capture_exception(e)
 
 def push_user_transfer_confirmation(receive_user, transfer_random_key):
     try:
@@ -28,4 +30,4 @@ def push_user_transfer_confirmation(receive_user, transfer_random_key):
         )
     except Exception as e:
         print(e)
-        sentry.captureException()
+        sentry_sdk.capture_exception(e)

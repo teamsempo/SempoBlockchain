@@ -3,6 +3,7 @@ from flask.views import MethodView
 from sqlalchemy import or_
 from functools import partial
 import json
+import sentry_sdk
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
@@ -28,7 +29,6 @@ class CreditTransferAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, credit_transfer_id):
-
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
         get_transfer_stats = request.args.get('get_stats', False)

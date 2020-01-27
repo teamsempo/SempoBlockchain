@@ -2,6 +2,7 @@ import phonenumbers
 import enum
 from flask import current_app
 import server
+import sentry_sdk
 
 def proccess_phone_number(phone_number, region=None, ignore_region=False):
     """
@@ -93,7 +94,7 @@ class MessageProcessor(object):
 
             # If that fails, fallback to no sender ID
             if resp['SMSMessageData']['Message'] == 'InvalidSenderId':
-                server.sentry.captureMessage("InvalidSenderId {}".format(current_app.config.get('AT_SENDER_ID', None)))
+                sentry_sdk.capture_message("InvalidSenderId {}".format(current_app.config.get('AT_SENDER_ID', None)))
 
                 resp = self.africastalking_client.send(
                     message,
