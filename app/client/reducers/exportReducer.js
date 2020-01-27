@@ -27,15 +27,9 @@ export const newExportRequest = (state = initialExportState, action) => {
 
 
 // Actions
-export const newExport = ({export_type, include_transfers, user_type, date_range, payable_period_start_date, payable_period_end_date, selected}) => (
+export const newExport = (payload) => (
     {
         type: NEW_EXPORT_REQUEST,
-        export_type,
-        include_transfers,
-        user_type,
-        date_range,
-        payable_period_start_date,
-        payable_period_end_date,
-        selected
+        payload
     }
 );
