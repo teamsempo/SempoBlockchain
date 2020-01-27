@@ -20,7 +20,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    activateAccount: (activation_token) => dispatch(activateAccount(activation_token))
+    activateAccount: (payload) => dispatch(activateAccount(payload))
   };
 };
 
@@ -39,8 +39,7 @@ export class authPage extends React.Component {
     const parsed = parseQuery(location.search);
 
     if (parsed.actok) {
-      console.log('actok', parsed.actok)
-      this.props.activateAccount(parsed.actok)
+      this.props.activateAccount({body:{activation_token: parsed.actok}})
     }
 
     if (parsed.r && parsed.u) {

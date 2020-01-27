@@ -3,7 +3,6 @@ import { all } from 'redux-saga/effects'
 import authSagas from './authSagas'
 import spreadsheetSagas from './spreadsheetSagas'
 import credit_transferSagas from "./creditTransferSagas";
-import qrCodeSagas from './qrCodeSaga';
 import transferAccountSagas from './transferAccountSagas';
 import newExportSaga from './exportSaga';
 import userSagas from './userSagas';
@@ -19,7 +18,6 @@ export default function* rootSaga() {
     authSagas(),
     spreadsheetSagas(),
     credit_transferSagas(),
-    qrCodeSagas(),
     watchOnAddFlashMessage(),
     transferAccountSagas(),
     newExportSaga(),
