@@ -20,7 +20,6 @@ import sys
 import os
 from web3 import Web3, HTTPProvider
 
-
 from server.utils.phone import MessageProcessor
 
 # try:
