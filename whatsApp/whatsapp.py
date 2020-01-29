@@ -335,7 +335,7 @@ def parse_queue_task(task):
 if __name__ =='__main__':
 
     print('whatsapp starting: ' + str(datetime.utcnow()))
-    sentry_sdk.init(config.SENTRY_SERVER_DSN, release=config.WEB_VERSION)
+    sentry_sdk.init(config.SENTRY_SERVER_DSN, release=config.VERSION)
 
 
     try:

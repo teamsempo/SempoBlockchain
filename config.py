@@ -5,7 +5,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.0.5'  # Remember to bump this in every PR
+VERSION = '1.0.6'  # Remember to bump this in every PR
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -123,7 +123,6 @@ DEFAULT_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('DEFAULT_INITIAL_D
 ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
-WEB_VERSION = specific_parser['APP']['WEB_VERSION']
 REQUIRE_TRANSFER_CARD_EXISTS = specific_parser['APP'].getboolean('REQUIRE_TRANSFER_CARD_EXISTS', False)
 
 SECRET_KEY          = specific_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
