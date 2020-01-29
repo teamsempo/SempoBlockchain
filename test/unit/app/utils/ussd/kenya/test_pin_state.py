@@ -123,7 +123,6 @@ def test_change_initial_pin(mocker, test_client, init_database):
     user = unactivated_user()
 
     state_machine = KenyaUssdStateMachine(session, user)
-    state_machine.send_sms = mocker.MagicMock()
 
     assert user.pin_hash is None
     assert user.is_activated is False
@@ -135,7 +134,6 @@ def test_change_initial_pin(mocker, test_client, init_database):
     assert user.is_activated is True
     assert user.is_phone_verified
 
-    state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
 
 
 def test_change_current_pin(mocker, test_client, init_database):

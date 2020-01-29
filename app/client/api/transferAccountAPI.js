@@ -1,36 +1,5 @@
-import {getToken, handleResponse, generateFormattedURL} from '../utils'
+import { apiClient } from './apiClient';
 
-// Load Transfer Account Details
-export const loadTransferAccountListAPI = ({query, path}) => {
-    return fetch(generateFormattedURL('/transfer_account/', query , path), {
-        headers: {
-            'Authorization': getToken()
-        },
-        method: 'GET'
-    })
-    .then(response => {
-        return handleResponse(response)
-    })
-    .catch(error => {
-        throw error;
-    })
-};
+export const loadTransferAccountListAPI = ({query, path}) => apiClient({url: '/transfer_account/', method: 'GET', query: query, path: path});
 
-// Edit Transfer Account Details
-export const editTransferAccountAPI = ({body, path}) => {
-    return fetch(generateFormattedURL('/transfer_account/', null , path), {
-        headers: {
-          'Authorization': getToken(),
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        method: 'PUT',
-        body: JSON.stringify(body)
-    })
-    .then(response => {
-        return handleResponse(response)
-    })
-    .catch(error => {
-        throw error;
-    })
-};
+export const editTransferAccountAPI = ({body, path}) => apiClient({url: '/transfer_account/', method: 'PUT', body: body, path: path});

@@ -33,7 +33,7 @@ class RequestResetEmailFormContainer extends React.Component {
       this.setState({email_missing: false});
       return
     }
-    this.props.requestPasswordResetEmail(this.state.email)
+    this.props.requestPasswordResetEmail({body: {email: this.state.email}})
   }
 
   onEmailFieldKeyPress(e) {

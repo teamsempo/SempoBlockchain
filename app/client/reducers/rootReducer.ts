@@ -11,7 +11,6 @@ import {
 } from './auth/reducers'
 import {login} from './auth/loginReducer'
 import { spreadsheetUpload, datasetSave, datasetList } from './spreadsheetReducer'
-import { qrCodeCheck, qrCodeTransfer } from './qrCodeReducer'
 import { newExportRequest } from "./exportReducer"
 import { message } from './messageReducer'
 import { creditTransfers } from './creditTransferReducer'
@@ -37,8 +36,6 @@ const appReducer = combineReducers({
   spreadsheetUpload,
   datasetSave,
   datasetList,
-  qrCodeCheck,
-  qrCodeTransfer,
   newExportRequest,
   message,
   transferAccounts,
