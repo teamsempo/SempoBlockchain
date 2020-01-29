@@ -8,7 +8,7 @@ from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
 
-from server import db
+from server import db, bt
 from server.models.device_info import DeviceInfo
 from server.models.organisation import Organisation
 from server.models.token import Token
@@ -172,7 +172,7 @@ def update_transfer_account_user(user,
 
 def create_transfer_account_user(first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
-                                 organisation: Organisation=None,
+                                 organisation: Organisation = None,
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
@@ -187,7 +187,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_self_sign_up=False,
                                  business_usage=None,
                                  initial_disbursement=None):
-
     user = User(first_name=first_name,
                 last_name=last_name,
                 preferred_language=preferred_language,
@@ -269,6 +268,53 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
     user.default_transfer_account = transfer_account
 
     return user
+
+
+def create_user_without_transfer_account(phone):
+    """
+    This method creates a user without a transfer account or blockchain wallet.
+    :param phone: string with user's msisdn
+    :return: User
+    """
+    user = User(phone=phone, is_ussd_self_sign_up=True)
+    return user
+
+
+def attach_transfer_account_to_user(user, organisation=None):
+    """
+    This method takes a user object argument, ideally one created through the ussd self sign up flow
+    https://docs.google.com/document/d/1UwGcNUFIlrRgpZiGkhMITeu_uqR7i3VcSRw_V89_q2c/edit (which should not have
+    a transfer account or wallet), it then creates a blockchain wallet whose address to attaches to the user object
+    as well as a transfer account that takes the created wallets's address, the user and an organization as arguments an
+    binds the account to the user.
+    The method also takes an organization object as an argument to match the user object to a specific organization.
+
+    :param user: The initial account the user created when they began the self sign up process.
+    :param organisation: The organization the user belongs to.
+    :return: A user with a transfer account,
+    """
+    if not organisation:
+        organisation = Organisation.master_organisation()
+
+    if user.primary_blockchain_address is None:
+        blockchain_address = bt.create_blockchain_wallet()
+        user.primary_blockchain_address = blockchain_address
+        user.set_held_role('BENEFICIARY', 'beneficiary')
+        user.add_user_to_organisation(organisation, is_admin=False)
+
+        db.session.add(user)
+
+        transfer_account = TransferAccount(bound_entity=user,
+                                           organisation=organisation,
+                                           blockchain_address=blockchain_address)
+
+        db.session.add(transfer_account)
+
+        user.default_transfer_account = transfer_account
+    else:
+        raise Exception('User already has a transfer account attached.')
+
+    db.session.commit()
 
 
 def save_device_info(device_info, user):
@@ -383,7 +429,7 @@ def send_one_time_code(phone, user):
             'Something went wrong. ERROR: {}'.format(e))
 
 
-def proccess_create_or_modify_user_request(
+def process_create_or_modify_user_request(
         attribute_dict,
         organisation=None,
         allow_existing_user_modify=False,
@@ -631,7 +677,6 @@ def proccess_create_or_modify_user_request(
 
 
 def send_onboarding_sms_messages(user):
-
     # First send the intro message
     organisation = getattr(g, 'active_organisation', None) or user.default_organisation
 
@@ -649,12 +694,10 @@ def send_onboarding_sms_messages(user):
 
 
 def send_terms_message_if_required(user):
-
     if not user.seen_latest_terms:
         terms_message = i18n_for(user, "general_sms.terms")
         message_processor.send_message(user.phone, terms_message)
         user.seen_latest_terms = True
-
 
 
 def send_onboarding_message(to_phone, first_name, credits, one_time_code):

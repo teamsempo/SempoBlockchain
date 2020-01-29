@@ -10,13 +10,13 @@ import math
 
 from transitions import Machine, State
 
-from server import message_processor, ussd_tasker
+from server import message_processor, ussd_tasker, bt
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
-    get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required
+    get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required, attach_transfer_account_to_user
 from server.utils.credit_transfer import dollars_to_cents
 from server.utils.phone import proccess_phone_number
 
@@ -82,6 +82,7 @@ class KenyaUssdStateMachine(Machine):
         'exit_pin_blocked',
         'exit_invalid_token_agent',
         'exit_invalid_exchange_amount',
+        'exit_account_creation_prompt',
         State(name='complete', on_enter=['send_terms_to_user_if_required'])
     ]
 
@@ -97,6 +98,8 @@ class KenyaUssdStateMachine(Machine):
 
     def change_preferred_language_to(self, language):
         self.user.preferred_language = language
+
+    def send_language_change_sms(self, language):
         self.send_sms(self.user.phone, "language_change_sms")
 
     def save_business_directory_info(self, user_input):
@@ -116,7 +119,7 @@ class KenyaUssdStateMachine(Machine):
         set_custom_attributes(attrs, self.user)
         self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
 
-    def send_terms_to_user_if_required(self, user_inpt):
+    def send_terms_to_user_if_required(self, user_input):
         send_terms_message_if_required(self.user)
 
     def set_phone_as_verified(self, user_input):
@@ -157,7 +160,6 @@ class KenyaUssdStateMachine(Machine):
     def complete_initial_pin_change(self, user_input):
         try:
             change_initial_pin(user=self.user, new_pin=user_input)
-            self.send_sms(self.user.phone, "pin_change_success_sms")
         except Exception as e:
             self.send_sms(self.user.phone, "pin_change_error_sms")
             raise e
@@ -307,6 +309,15 @@ class KenyaUssdStateMachine(Machine):
         selected_tranfer_usage_id = self.session.get_data('transfer_usage_mapping')[idx]['id']
         return TransferUsage.query.get(selected_tranfer_usage_id)
 
+    def process_account_creation_request(self, user_input):
+        try:
+            attach_transfer_account_to_user(self.user)
+            self.send_sms(self.user.phone, "account_creation_success_sms")
+        except Exception as e:
+            self.send_sms(self.user.phone, "account_creation_error_sms")
+            raise Exception('Account creation failed. Error: ', e)
+
+
     def menu_one_selected(self, user_input):
         return user_input == '1'
 
@@ -343,12 +354,12 @@ class KenyaUssdStateMachine(Machine):
         initial_language_selection_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
-             'dest': 'complete',
+             'dest': 'initial_pin_entry',
              'after': 'change_preferred_language_to_en',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
-             'dest': 'complete',
+             'dest': 'initial_pin_entry',
              'after': 'change_preferred_language_to_sw',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
@@ -378,8 +389,9 @@ class KenyaUssdStateMachine(Machine):
         initial_pin_confirmation_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
-             'dest': 'complete',
-             'after': ['complete_initial_pin_change', 'set_phone_as_verified'],
+             'dest': 'exit_account_creation_prompt',
+             'after': ['complete_initial_pin_change', 'set_phone_as_verified', 'send_terms_to_user_if_required',
+                       'process_account_creation_request'],
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
@@ -604,12 +616,12 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_en',
+             'after': ['change_preferred_language_to_en', 'send_language_change_sms'],
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'choose_language',
              'dest': 'complete',
-             'after': 'change_preferred_language_to_sw',
+             'after': ['change_preferred_language_to_sw', 'send_language_change_sms'],
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'choose_language',
