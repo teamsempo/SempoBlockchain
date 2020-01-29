@@ -15,7 +15,7 @@ fake.add_provider(phone_number)
 # why do i get dupes if i put it directly on standard_user...?
 phone = partial(fake.msisdn)
 
-standard_user = partial(UserFactory, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
+standard_user = partial(UserFactory, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0, preferred_language='en')
 
 initial_language_selection_state = partial(UssdSessionFactory, state="initial_language_selection")
 start_state = partial(UssdSessionFactory, state="start")
@@ -86,8 +86,6 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 
 
 @pytest.mark.parametrize("session_factory, user_input, language", [
-    (initial_language_selection_state, "1", "en"),
-    (initial_language_selection_state, "2", "sw"),
     (choose_language_state, "1", "en"),
     (choose_language_state, "2", "sw"),
 ])
@@ -95,7 +93,6 @@ def test_change_language(mocker, test_client, init_database, session_factory, us
     session = session_factory()
     user = standard_user()
     user.phone = phone()
-    assert user.preferred_language is None
 
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
