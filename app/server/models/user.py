@@ -97,6 +97,7 @@ class User(ManyOrgBase, ModelBase):
     is_disabled = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
+    is_ussd_self_sign_up = db.Column(db.Boolean, default=False)
 
     password_reset_tokens = db.Column(JSONB, default=[])
     pin_reset_tokens = db.Column(JSONB, default=[])
@@ -657,7 +658,8 @@ class User(ManyOrgBase, ModelBase):
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
 
-        self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
+        if not self.is_ussd_self_sign_up:
+            self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
 
     def __repr__(self):
         if self.has_admin_role:
