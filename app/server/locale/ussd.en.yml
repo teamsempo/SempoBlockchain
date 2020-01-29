@@ -1,10 +1,13 @@
 en:
   kenya:
     initial_language_selection: |
-      CON Welcome to Sarafu
-      1. English
-      2. Kiswahili
-      3. Help
+      CON Welcome to Sarafu Network !
+            Karibu Sarafu Network !
+            Select Language:
+            Chagua Lugha:
+            1. English
+            2. Kiswahili
+            3. Help
     initial_pin_entry: |
       CON Please enter a PIN to manage your account.
       0. Back
@@ -175,6 +178,7 @@ en:
       END Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
       To register send: name, number, location and business to 0757628885
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
+    exit_account_creation_prompt: END Your account is being created. You’ll receive an SMS when your account is ready.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
     upsell_message_sender: "Recipient %{recipient_phone} is not yet registered. Please call or send their Name, Phone number, business and location to 0757628885"
@@ -222,3 +226,5 @@ en:
       Call 0757628885 for more info
     pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
     pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help
+    account_creation_success_sms: Welcome to Sarafu! Your account was successfully created.  You have just received your first Sarafu. Dial *483*46# Airtel or *384*96# to use Sarafu.
+    account_creation_error_sms: Whoops! There was a problem creating your account. To try again Dial *483*46#. If issues persist contact support 0757628885.
