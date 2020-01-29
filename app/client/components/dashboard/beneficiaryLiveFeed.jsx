@@ -71,10 +71,7 @@ class BeneficiaryLiveFeed extends React.Component {
                             let showExchange = false;
 
                             const transferAccountId = transfer.sender_transfer_account_id;
-                            if (transferAccountId) {
-                              const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-                              currency = transferAccount && transferAccount.token && transferAccount.token.symbol;
-                            }
+                            currency = transfer.token && transfer.token.symbol
                             const transferFromMoney = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
 
                             if (transfer.from_exchange_to_transfer_id !== null && typeof(transfer.from_exchange_to_transfer_id) !== "undefined") {
@@ -106,7 +103,7 @@ class BeneficiaryLiveFeed extends React.Component {
                                     <UserSVG src="/static/media/exchange.svg"/>
                                     <UserGroup>
                                       <ClickableTopText onClick={() => this.navigateToAccount(transferAccountId)}>{sender_user_name} exchanged</ClickableTopText>
-                                      <BottomText><Highlight>{transferFromMoney}</Highlight> for
+                                      <BottomText><DarkHighlight>{transferFromMoney}</DarkHighlight> for
                                         <DarkHighlight> {transferToMoney}</DarkHighlight></BottomText>
                                     </UserGroup>
                                     {timeStatusBlock}
