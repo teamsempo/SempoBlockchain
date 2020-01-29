@@ -3,7 +3,8 @@ export interface ReauthRequest {type: typeof REAUTH_REQUEST}
 export const UPDATE_ACTIVE_ORG = 'UPDATE_ACTIVE_ORG';
 export interface UpdateActiveOrgPayload {
   organisationName: string,
-  organisationId: number
+  organisationId: number,
+  organisationToken: string
 }
 interface UpdateActiveOrg {
   type: typeof UPDATE_ACTIVE_ORG,
@@ -38,6 +39,7 @@ export interface LoginSuccess {
   webApiVersion: null | string,
   organisationName: null | string,
   organisationId: null | number,
+  organisationToken: null | string,
   usdToSatoshiRate: null | number,
   organisations?: string[],
   requireTransferCardExists: null | boolean,
