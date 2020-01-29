@@ -15,7 +15,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    saveDataset: (dataset) => dispatch(saveDataset(dataset)),
+    saveDataset: (body) => dispatch(saveDataset({body})),
     resetUploadState: () => dispatch(resetUploadState())
   };
 };

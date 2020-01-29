@@ -19,7 +19,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     resetExport: () => {dispatch({type: RESET_EXPORT})},
-    newExport: (payload) => dispatch(newExport(payload)),
+    newExport: (body) => dispatch(newExport({body})),
   };
 };
 
