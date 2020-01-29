@@ -346,6 +346,7 @@ def create_user_response_object(user, auth_token, message):
         'server_time': int(time.time() * 1000),
         'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
         'pusher_key': current_app.config['PUSHER_KEY'],
+        # todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
         'currency_decimals': current_app.config['CURRENCY_DECIMALS'],
         'currency_name': currency_name,
         'currency_conversion_rate': conversion_rate,
