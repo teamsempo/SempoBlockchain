@@ -2,19 +2,11 @@ import React from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 
-import { StyledButton, Input, ErrorMessage } from '../styledElements'
-
 import { uploadSpreadsheet } from '../../reducers/spreadsheetReducer'
-import {browserHistory} from "../../app.jsx";
-
-const mapStateToProps = (state) => {
-  return {
-  };
-};
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    uploadSpreadsheet: (spreadsheet, preview_id, url) => dispatch(uploadSpreadsheet(spreadsheet, preview_id, url))
+    uploadSpreadsheet: (payload) => dispatch(uploadSpreadsheet(payload))
   };
 };
 
@@ -26,11 +18,12 @@ class UploadButton extends React.Component {
 
   handleFileChange(event) {
 
-    if (this.props.is_vendor === true) {
-      var transfer_account_type = 'vendor'
-    } else {
-      transfer_account_type = window.BENEFICIARY_TERM_PLURAL.toLowerCase()
-    }
+    //todo: this needs to be updated as account type no longer handled via URL
+    // if (this.props.is_vendor === true) {
+    //   var transfer_account_type = 'vendor'
+    // } else {
+    //   transfer_account_type = window.BENEFICIARY_TERM_PLURAL.toLowerCase()
+    // }
 
     let spreadsheet = event.target.files[0];
 
@@ -41,7 +34,7 @@ class UploadButton extends React.Component {
       let reader = new FileReader();
 
       reader.onloadend = () => {
-        this.props.uploadSpreadsheet(spreadsheet, preview_id, transfer_account_type, reader.result);
+        this.props.uploadSpreadsheet({body: {spreadsheet: spreadsheet, preview_id: preview_id}});
       };
 
       reader.readAsDataURL(spreadsheet);
@@ -84,7 +77,7 @@ class UploadButton extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(UploadButton);
+export default connect(null, mapDispatchToProps)(UploadButton);
 
 const TheRealInputButton = styled.label`
   background-color: rgb(247, 250, 252);

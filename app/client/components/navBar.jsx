@@ -16,7 +16,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    updateActiveOrgRequest: (organisationName, organisationId) => dispatch(updateActiveOrgRequest({organisationName, organisationId})),
+    updateActiveOrgRequest: (organisationName, organisationId, organisationToken) => dispatch(updateActiveOrgRequest({organisationName, organisationId, organisationToken})),
   };
 };
 
@@ -59,7 +59,7 @@ class NavBar extends React.Component {
     }
 
     selectOrg(org) {
-      this.setState({isOrgSwitcherActive: false}, () => this.props.updateActiveOrgRequest(org.name, org.id));
+      this.setState({isOrgSwitcherActive: false}, () => this.props.updateActiveOrgRequest(org.name, org.id, org.token));
     }
 
     toggleSwitchOrgDropdown() {
