@@ -11,7 +11,7 @@ from eth_utils import keccak
 from eth_keys import keys
 from web3 import Web3
 
-from sempo_types import UUID
+from eth_worker.sempo_types import UUID
 import config
 
 ALLOWED_TASK_TYPES = ['SEND_ETH', 'FUNCTION', 'DEPLOY_CONTRACT']
