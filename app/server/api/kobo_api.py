@@ -28,7 +28,7 @@ class UserKoboAPI(MethodView):
         post_data = UserUtils.extract_kobo_custom_attributes(post_data)
 
         #  TODO: Kobo should have a more intelligent way of specifying the organisation
-        response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+        response_object, response_code = UserUtils.process_create_or_modify_user_request(
             post_data,
             organisation=g.user.fallback_active_organisation()
         )

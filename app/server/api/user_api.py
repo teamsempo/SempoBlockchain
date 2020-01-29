@@ -127,7 +127,7 @@ class UserAPI(MethodView):
         post_data = request.get_json()
         organisation = g.active_organisation
 
-        response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+        response_object, response_code = UserUtils.process_create_or_modify_user_request(
             post_data,
             organisation=organisation
         )

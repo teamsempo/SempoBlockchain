@@ -80,7 +80,7 @@ class DatasetAPI(MethodView):
                     attribute_dict[header_label] = attribute
 
             if contains_anything:
-                item_response_object, response_code = UserUtils.proccess_create_or_modify_user_request(attribute_dict,
+                item_response_object, response_code = UserUtils.process_create_or_modify_user_request(attribute_dict,
                                                                                                        force_dict_keys_lowercase=True,
                                                                                                        allow_existing_user_modify=True)
 

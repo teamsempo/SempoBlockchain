@@ -62,7 +62,7 @@ class RegisterAPI(MethodView):
 
         if phone is not None:
             # this is a registration from a mobile device THUS a vendor or recipient.
-            response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+            response_object, response_code = UserUtils.process_create_or_modify_user_request(
                 post_data,
                 is_self_sign_up=True,
             )
@@ -338,7 +338,7 @@ class LoginAPI(MethodView):
         # mobile user doesn't exist so default to creating a new wallet!
         if user is None and phone:
             # this is a registration from a mobile device THUS a vendor or recipient.
-            response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+            response_object, response_code = UserUtils.process_create_or_modify_user_request(
                 dict(phone=phone, deviceInfo=post_data.get('deviceInfo')),
                 is_self_sign_up=True,
             )
