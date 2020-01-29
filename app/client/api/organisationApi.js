@@ -1,16 +1,3 @@
-import {generateFormattedURL, getToken, handleResponse} from "../utils";
+import { apiClient } from './apiClient';
 
-export const loadOrganisationAPI = () => {
-  return fetch(generateFormattedURL('/me/organisation/'), {
-    headers: {
-      'Authorization': getToken()
-    },
-    method: 'GET'
-  })
-    .then(response => {
-      return handleResponse(response)
-    })
-    .catch(error => {
-      throw error;
-    })
-};
+export const loadOrganisationAPI = () => apiClient({url: '/me/organisation/', method: 'GET'});

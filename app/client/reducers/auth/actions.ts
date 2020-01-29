@@ -1,5 +1,5 @@
 import {
-  ACTIVATE_REQUEST,
+  ACTIVATE_REQUEST, ActivatePayload,
   INVITE_USER_REQUEST, InviteUserPayload,
   LOGIN_FAILURE,
   LOGIN_REQUEST, LoginRequestPayload,
@@ -9,7 +9,7 @@ import {
   REGISTER_REQUEST,
   REGISTER_SUCCESS,
   RegisterRequestPayload,
-  REQUEST_RESET_REQUEST,
+  REQUEST_RESET_REQUEST, ResetEmailPayload,
   RESET_PASSWORD_REQUEST, ResetPasswordPayload,
   UPDATE_ACTIVE_ORG,
   EDIT_ADMIN_USER_REQUEST, UpdateActiveOrgPayload, UpdateUserPayload,
@@ -70,17 +70,17 @@ export const deactivateRegister = () => (
   }
 );
 
-export const activateAccount = (activation_token: string) => (
+export const activateAccount = (payload: ActivatePayload) => (
   {
     type: ACTIVATE_REQUEST,
-    activation_token
+    payload
   }
 );
 
-export const requestPasswordResetEmail = (email: string) => (
+export const requestPasswordResetEmail = (payload: ResetEmailPayload) => (
   {
     type: REQUEST_RESET_REQUEST,
-    email
+    payload
   }
 );
 

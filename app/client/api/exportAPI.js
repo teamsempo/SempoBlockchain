@@ -1,26 +1,4 @@
-import {generateFormattedURL, getToken} from '../utils'
+import {apiClient} from "./apiClient";
 
-export const exportAPI = (export_type, include_transfers, user_type, date_range, payable_period_start_date, payable_period_end_date, selected) => {
-  return fetch(generateFormattedURL('/export/'), {
-    headers: {
-      'Authorization': getToken(),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: 'POST',
-    body: JSON.stringify({
-        export_type: export_type,
-        include_transfers: include_transfers,
-        user_type: user_type,
-        date_range: date_range,
-        payable_period_start_date: payable_period_start_date,
-        payable_period_end_date: payable_period_end_date,
-        selected: selected
-    })
-  }).then(response => {
-      return response.json();
-    })
-    .catch(error => {
-      throw error;
-    })
-};
+// for some reason error handling in saga?
+export const exportAPI = ({body}) => apiClient({url: '/export/', method: 'POST', body: body, errorHandling: false});

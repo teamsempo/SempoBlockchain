@@ -25,7 +25,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     editUser: (body, path) => dispatch(editUser({body, path})),
-    resetPin: (userId) => dispatch(resetPin(userId)),
+    resetPin: (body) => dispatch(resetPin({body})),
   };
 };
 
@@ -104,7 +104,7 @@ class SingleUserManagement extends React.Component {
 
   resetPin() {
     window.confirm(`Are you sure you wish to reset ${this.state.first_name} ${this.state.last_name}'s PIN?`) &&
-    this.props.resetPin(this.props.user.id)
+    this.props.resetPin({user_id: this.props.user.id})
   }
 
   render() {

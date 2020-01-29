@@ -54,8 +54,8 @@ GE_BUSINESS_CATEGORY_MAPPINGS = {
     'Food': 'Food/Water',
     'Water': 'Food/Water',
     'Energy': 'Fuel/Energy',
-    'Education': 'Education/Health',
-    'Health': 'Education/Health',
+    'Education': 'Education',
+    'Health': 'Health',
     'General shop': 'Shop',
     'Environment': 'Environment',
     'Transport': 'Transport',
@@ -95,6 +95,8 @@ DENOMINATION_DICT = {
         '10000': {'type': 'note', 'size': 1.5, 'color': '#68adf8'},
     }
 }
+
+NUMBER_OF_DIRECTORY_LISTING_RESULTS = 5
 
 # MOBILE ONLY SUPPORTS MATERIAL COMMUNITY ICONS
 # https://github.com/oblador/react-native-vector-icons/blob/master/glyphmaps/MaterialCommunityIcons.json

@@ -18,7 +18,6 @@ import {
   refreshApiToken,
   registerAPI,
   activateAPI,
-  authenticatePusher,
   requestResetEmailAPI,
   ResetPasswordAPI,
   getUserList,
@@ -26,7 +25,9 @@ import {
   inviteUserAPI,
   deleteInviteAPI,
   ValidateTFAAPI
-} from '../api/authApi'
+} from '../api/authAPI'
+
+import { authenticatePusher } from "../api/pusherAPI";
 
 import {
   REAUTH_REQUEST,
@@ -110,7 +111,6 @@ function* saveOrgId({payload}) {
     } else {
       window.location.assign("/");
     }
-
     
     
   } catch (e) {
@@ -139,6 +139,7 @@ function createLoginSuccessObject(token) {
     webApiVersion: token.web_api_version,
     organisationName: token.active_organisation_name,
     organisationId: token.active_organisation_id,
+    organisationToken: token.active_organisation_token,
     organisations: token.organisations,
     requireTransferCardExists: token.require_transfer_card_exists
   }
@@ -267,9 +268,9 @@ function* watchRegisterRequest() {
   yield takeEvery(REGISTER_REQUEST, register);
 }
 
-function* activate({activation_token}) {
+function* activate({payload}) {
   try {
-    const activated_account = yield call(activateAPI, activation_token);
+    const activated_account = yield call(activateAPI, payload);
 
     if (activated_account.auth_token && !activated_account.tfa_url) {
       yield put({type: ACTIVATE_SUCCESS, activated_account});
@@ -308,9 +309,9 @@ function* watchActivateRequest() {
   yield takeEvery(ACTIVATE_REQUEST, activate);
 }
 
-function* resetEmailRequest({email}) {
+function* resetEmailRequest({payload}) {
   try {
-    const resetEmailResponse = yield call(requestResetEmailAPI, email);
+    const resetEmailResponse = yield call(requestResetEmailAPI, payload);
     yield put({type: REQUEST_RESET_SUCCESS, resetEmailResponse});
   } catch (error) {
     yield put({type: REQUEST_RESET_FAILURE, error: error.statusText})
