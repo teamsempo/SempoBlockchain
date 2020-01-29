@@ -268,11 +268,15 @@ def create_ussd_menus():
         description='The token exchange amount is insufficient',
     )
 
+    update_or_create_menu(
+        name='exit_account_creation_prompt',
+        description='The self signup process has been initiated and the account is being created.'
+    )
+
     print_section_conclusion('Done creating USSD Menus')
 
 
 def create_business_categories():
-
     print_section_title('Creating Business Categories')
     business_categories = [
         {'name': 'Food/Water', 'icon': 'message', 'translations': {
@@ -308,7 +312,6 @@ def create_business_categories():
 
 
 def create_reserve_token(app):
-
     print_section_title("Setting up Reserve Token")
 
     reserve_token_address = app.config.get('RESERVE_TOKEN_ADDRESS')
@@ -342,7 +345,6 @@ def create_reserve_token(app):
 
 
 def create_master_organisation(reserve_token):
-
     print_section_title('Creating/Updating Master Organisation')
 
     master_organisation = Organisation.master_organisation()
@@ -356,6 +358,7 @@ def create_master_organisation(reserve_token):
         db.session.commit()
 
     print_section_conclusion('Done creating master organisation')
+
 
 def create_float_wallet(app):
     print_section_title('Creating/Updating Float Wallet')
@@ -373,6 +376,7 @@ def create_float_wallet(app):
         db.session.add(float_wallet)
 
         db.session.commit()
+
 
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
