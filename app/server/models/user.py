@@ -103,6 +103,7 @@ class User(ManyOrgBase, ModelBase):
     pin_reset_tokens = db.Column(JSONB, default=[])
 
     terms_accepted = db.Column(db.Boolean, default=True)
+    data_sharing_accepted = db.Column(db.Boolean, default=False)
 
     matched_profile_pictures = db.Column(JSON)
 
@@ -624,12 +625,11 @@ class User(ManyOrgBase, ModelBase):
         return "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
     def get_most_relevant_transfer_usages(self):
-        '''Finds the transfer usage/business categories there are most relevant for the user
+        """Finds the transfer usage/business categories there are most relevant for the user
         based on the last number of send and completed credit transfers supplemented with the
-        defaul business categories
+        default business categories
         :return: list of most relevant transfer usage objects for the usage
         """
-        '''
 
         sql = text('''
             SELECT *, COUNT(*) FROM
