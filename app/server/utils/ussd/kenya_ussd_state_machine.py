@@ -16,7 +16,8 @@ from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
-    get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required, attach_transfer_account_to_user
+    get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required, attach_transfer_account_to_user, \
+    update_transfer_account_user
 from server.utils.credit_transfer import dollars_to_cents
 from server.utils.phone import proccess_phone_number
 
@@ -57,6 +58,13 @@ class KenyaUssdStateMachine(Machine):
         'about_my_business',
         'change_my_business_prompt',
         'opt_out_of_market_place_pin_authorization',
+        'user_profile',
+        'first_name_entry',
+        'last_name_entry',
+        'gender_entry',
+        'location_entry',
+        'data_sharing_consent',
+        'data_sharing_consent_pin_authorization',
         # directory listing state
         'directory_listing',
         'directory_listing_other',
@@ -127,6 +135,45 @@ class KenyaUssdStateMachine(Machine):
 
     def save_pin_data(self, user_input):
         self.session.set_data('initial_pin', user_input)
+
+    def save_first_name_data(self, user_input):
+        self.session.set_data('first_name', user_input)
+
+    def save_username_info(self, user_input):
+        first_name = self.session.get_data('first_name')
+        last_name = user_input
+        update_transfer_account_user(self.user,
+                                     first_name=first_name,
+                                     last_name=last_name)
+
+    def save_gender_info(self, user_input):
+        gender = ''
+        if self.menu_one_selected(user_input):
+            gender = 'Male'
+        if self.menu_two_selected(user_input):
+            gender = 'Female'
+
+        attrs = {
+            "custom_attributes": {
+                "gender": gender
+            }
+        }
+        set_custom_attributes(attrs, self.user)
+
+    def save_location_info(self, user_input):
+        update_transfer_account_user(self.user, location=user_input)
+
+    def save_data_sharing_consent_data(self, user_input):
+        self.session.set_data('data_sharing_consent_selection', user_input)
+
+    def save_data_sharing_consent_info(self, user_input):
+        user_selection = self.session.get_data('data_sharing_consent_selection')
+        consented = False
+        if self.menu_one_selected(user_selection):
+            consented = True
+        if self.menu_two_selected(user_selection):
+            consented = False
+        update_transfer_account_user(self.user, data_sharing_accepted=consented)
 
     def is_valid_pin(self, user_input):
         pin_validity = False
@@ -333,6 +380,9 @@ class KenyaUssdStateMachine(Machine):
     def menu_five_selected(self, user_input):
         return user_input == '5'
 
+    def menu_six_selected(self, user_input):
+        return user_input == '6'
+
     def menu_nine_selected(self, user_input):
         return user_input == '9'
 
@@ -399,7 +449,7 @@ class KenyaUssdStateMachine(Machine):
         ]
         self.add_transitions(initial_pin_confirmation_transitions)
 
-        # event: directory_listing
+        # event: start_transitions
         start_transitions = [
             {'trigger': 'feed_char',
              'source': 'start',
@@ -496,6 +546,7 @@ class KenyaUssdStateMachine(Machine):
         ]
         self.add_transitions(send_token_reason_transitions)
 
+        # directory_listing transitions
         directory_listing_transitions = [
             {'trigger': 'feed_char',
              'source': 'directory_listing',
@@ -583,6 +634,10 @@ class KenyaUssdStateMachine(Machine):
              'source': 'account_management',
              'dest': 'opt_out_of_market_place_pin_authorization',
              'conditions': 'menu_five_selected'},
+            {'trigger': 'feed_char',
+             'source': 'account_management',
+             'dest': 'user_profile',
+             'conditions': 'menu_six_selected'},
             {'trigger': 'feed_char',
              'source': 'account_management',
              'dest': 'exit_invalid_menu_option'}
@@ -696,6 +751,81 @@ class KenyaUssdStateMachine(Machine):
              'conditions': 'is_blocked_pin'}
         ]
         self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
+
+        # event: user_profile transitions
+        user_profile_transitions = [
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'first_name_entry',
+             'conditions': 'menu_one_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'gender_entry',
+             'conditions': 'menu_two_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'location_entry',
+             'conditions': 'menu_three_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'data_sharing_consent',
+             'conditions': 'menu_four_selected'}
+        ]
+        self.add_transitions(user_profile_transitions)
+
+        # first_name_entry transitions
+        first_name_entry_transitions = [
+            {'trigger': 'feed_char',
+             'source': 'first_name_entry',
+             'dest': 'last_name_entry',
+             'after': 'save_first_name_data'},
+            {'trigger': 'feed_char',
+             'source': 'last_name_entry',
+             'dest': 'exit',
+             'after': 'save_username_info'}
+        ]
+        self.add_transitions(first_name_entry_transitions)
+
+        # gender_entry transition
+        self.add_transition(trigger='feed_char',
+                            source='gender_entry',
+                            dest='exit',
+                            after='save_gender_info')
+
+        # location_entry transition
+        self.add_transition(trigger='feed_char',
+                            source='location_entry',
+                            dest='exit',
+                            after='save_location_info')
+
+        # data_sharing_consent transitions
+        data_sharing_consent_transitions = [
+            {'trigger': 'feed_char',
+             'source': 'data_sharing_consent',
+             'dest': 'data_sharing_consent_pin_authorization',
+             'conditions': 'menu_one_selected',
+             'after': 'save_data_sharing_consent_data'},
+            {'trigger': 'feed_char',
+             'source': 'data_sharing_consent',
+             'dest': 'exit',
+             'conditions': 'menu_two_selected',
+             'after': 'save_data_sharing_consent_data'}
+        ]
+        self.add_transitions(data_sharing_consent_transitions)
+
+        # event: data_sharing_consent_pin_authorization transitions
+        data_sharing_consent_pin_authorization_transitions = [
+            {'trigger': 'feed_char',
+             'source': 'data_sharing_consent_pin_authorization',
+             'dest': 'exit',
+             'conditions': 'is_authorized_pin',
+             'after': 'save_data_sharing_consent_info'},
+            {'trigger': 'feed_char',
+             'source': 'data_sharing_consent_pin_authorization',
+             'dest': 'exit_pin_blocked',
+             'conditions': 'is_blocked_pin'}
+        ]
+        self.add_transitions(data_sharing_consent_pin_authorization_transitions)
 
         # event: exchange_token transitions
         exchange_token_transitions = [
