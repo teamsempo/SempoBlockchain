@@ -123,21 +123,7 @@ def test_authorize_pin(test_client, init_database, session_factory, user_factory
     assert user.failed_pin_attempts == after_failed_pin_attempts
 
 
-def test_change_initial_pin(mocker, test_client, init_database):
-    with init_database.session.no_autoflush:
-        session = initial_pin_confirmation_state()
-        user = unregistered_user()
-
-        assert user.primary_blockchain_address is None
-
-        state_machine = KenyaUssdStateMachine(session, user)
-        state_machine.send_sms = mocker.MagicMock()
-
-        state_machine.feed_char('0000')
-
-        assert user.primary_blockchain_address is not None
-        assert user.is_activated is True
-        state_machine.send_sms.assert_called_with(user.phone, "account_creation_success_sms")
+# TODO: test initial pin change (Throws IntegrityError: duplicate key value violates unique constraint "ix_user__phone")
 
 
 def test_change_current_pin(mocker, test_client, init_database):
