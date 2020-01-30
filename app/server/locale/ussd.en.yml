@@ -91,6 +91,7 @@ en:
       3. Check Balances
       4. Change PIN
       5. Opt Out of Market Place
+      6. My Profile
       0. Back
     my_business: |
       CON My Business
@@ -131,6 +132,39 @@ en:
     new_pin_confirmation: |
       CON Enter new PIN again
       0. Back
+    user_profile: |
+      CON My profile
+      1. Name
+      2. Gender
+      3. Location
+      4. Data sharing
+      0. Back
+    first_name_entry: |
+      CON Enter first name
+      0. Back
+    last_name_entry: |
+      CON Enter last name
+      0. Back
+    gender_entry: |
+      CON Enter your gender
+      1. Male
+      2. Female
+      0. Back
+    location_entry: |
+      CON Enter your location
+      0. Back
+    data_sharing_consent: |
+      CON Please confirm that your data can be shared
+      1. Confirm
+      2. Decline
+      0. Back
+    data_sharing_consent_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
     help: END For assistance call %{support_phone}
     exchange_token: |
       CON Exchange

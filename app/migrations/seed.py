@@ -153,6 +153,12 @@ def create_ussd_menus():
         parent_id=account_management_menu.id
     )
 
+    user_profile_menu = update_or_create_menu(
+        name='user_profile',
+        description='Manage user profile menu',
+        parent_id=account_management_menu.id
+    )
+
     print('******** Change PIN Menu ********************')
     update_or_create_menu(
         name='current_pin',
@@ -170,11 +176,41 @@ def create_ussd_menus():
         parent_id=account_management_menu.id
     )
 
-    print('***** Help Menu *********')
+    print('********* User Profile Menu **********')
     update_or_create_menu(
-        name='help',
-        description='Help menu',
-        parent_id=start_menu.id
+        name='first_name_entry',
+        description='First name entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='last_name_entry',
+        description='Last name entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='gender_entry',
+        description='Gender entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='location_entry',
+        description='Location entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='data_sharing_consent',
+        description='Data sharing consent prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='data_sharing_consent_pin_authorization',
+        description='PIN entry for authorization to confirm provision of consent for data to be shared',
+        parent_id=user_profile_menu.id
     )
 
     print('***** Exchange Rate Menu ******')
@@ -212,6 +248,13 @@ def create_ussd_menus():
         name='exchange_token_confirmation',
         description='Exchange Token confirmation menu',
         parent_id=exchange_token_menu.id
+    )
+
+    print('***** Help Menu *********')
+    update_or_create_menu(
+        name='help',
+        description='Help menu',
+        parent_id=start_menu.id
     )
 
     # Exit codes
