@@ -1,0 +1,20 @@
+branch-defaults:
+  sarafu-release:
+    environment: blockchain-app-sarafu
+  master:
+    environment: blockchain-app-dev
+    group_suffix: null
+global:
+  application_name: blockchain-app
+  branch: null
+  default_ec2_keyname: aws-eb
+  default_platform: Multi-container Docker 18.06.1-ce (Generic)
+  default_region: eu-west-1
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: eb-cli
+  repository: null
+  sc: git
+  workspace_type: Application
