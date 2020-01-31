@@ -81,7 +81,7 @@ class User(ManyOrgBase, ModelBase):
     password_hash = db.Column(db.String(200))
     one_time_code = db.Column(db.String)
     secret = db.Column(db.String())
-    _TFA_secret = db.Column(db.String(200))
+    _TFA_secret = db.Column(db.String(128))
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
     seen_latest_terms = db.Column(db.Boolean, default=False)
