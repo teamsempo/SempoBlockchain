@@ -8,9 +8,9 @@ import {
 
 import { exportAPI } from '../api/exportAPI'
 
-function* newExport({export_type, include_transfers, user_type, date_range, payable_period_start_date, payable_period_end_date, selected}) {
+function* newExport({ payload }) {
     try {
-        const result = yield call(exportAPI, export_type, include_transfers, user_type, date_range, payable_period_start_date, payable_period_end_date, selected);
+        const result = yield call(exportAPI, payload);
         if (result.status === 'success') {
           yield put({type: NEW_EXPORT_SUCCESS, result});
         } else {
