@@ -1,0 +1,33 @@
+AWSConfigurationTemplateVersion: 1.1.0.0
+EnvironmentConfigurationMetadata:
+  DateCreated: '1576707787000'
+  DateModified: '1576708809685'
+  Description: Configuration created from the EB CLI using "eb config save".
+EnvironmentTier:
+  Name: WebServer
+  Type: Standard
+OptionSettings:
+  aws:autoscaling:launchconfiguration:
+    EC2KeyName: aws-eb
+    IamInstanceProfile: EC2_with_secrets_access
+    InstanceType: t3a.medium
+  aws:autoscaling:updatepolicy:rollingupdate:
+    RollingUpdateEnabled: true
+    RollingUpdateType: Health
+  aws:ec2:instances:
+    InstanceTypes: t3a.medium
+  aws:elasticbeanstalk:command:
+    BatchSize: '30'
+    BatchSizeType: Percentage
+  aws:elasticbeanstalk:environment:
+    LoadBalancerType: application
+    ServiceRole: arn:aws:iam::290492953667:role/aws-elasticbeanstalk-service-role
+  aws:elasticbeanstalk:healthreporting:system:
+    SystemType: enhanced
+  aws:elb:loadbalancer:
+    CrossZone: true
+  aws:elb:policies:
+    ConnectionDrainingEnabled: true
+Platform:
+  PlatformArn: arn:aws:elasticbeanstalk:eu-west-1::platform/Multi-container Docker
+    running on 64bit Amazon Linux/2.16.0
