@@ -9,8 +9,8 @@ import {formatMoney} from "../../utils";
 
 const mapStateToProps = (state) => {
   return {
-    creditTransferStats: state.creditTransfers.transferStats
-
+    creditTransferStats: state.creditTransfers.transferStats,
+    login: state.login
   };
 };
 
@@ -20,7 +20,7 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-const MetricsBar = ({creditTransferStats}) => {
+const MetricsBar = ({creditTransferStats, login}) => {
   if (Object.keys(creditTransferStats).length === 0) {
     return (
       <p>No Transfer Data</p>
@@ -33,28 +33,28 @@ const MetricsBar = ({creditTransferStats}) => {
         <ModuleHeader>
           MASTER WALLET BALANCE
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.master_wallet_balance/100)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.master_wallet_balance/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
           TOTAL DISTRIBUTED
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.total_distributed/100)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.total_distributed/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
           TOTAL SPENT
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.total_spent/100)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.total_spent/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
           TOTAL EXCHANGED
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.total_exchanged/100)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.total_exchanged/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
     </Wrapper>
   );

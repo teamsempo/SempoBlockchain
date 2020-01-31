@@ -38,6 +38,10 @@ def round_to_decimals(amount, decimals=2):
 
 
 def rounded_dollars(amount):
+    """
+    :param amount: money amount in cents (e.g. 2500)
+    :return: rounded dollars as 25.00 (if <1000)
+    """
     if amount is None:
         return None
 
