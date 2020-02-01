@@ -283,7 +283,6 @@ def save_device_info(device_info, user):
     if add_device:
         device = DeviceInfo()
 
-        device.serial_number = device_info['serialNumber']
         device.unique_id = device_info['uniqueId']
         device.brand = device_info['brand']
         device.model = device_info['model']
