@@ -9,15 +9,17 @@ import { logout } from '../../reducers/auth/actions'
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
 
-import AnalyticsChart from '../dashboard/analyticsChart.jsx'
-import BeneficiaryFunnel from '../dashboard/userFunnelChart.jsx'
-import UsagePieChart from '../dashboard/usagePiechart.jsx'
-import MetricsBar from '../dashboard/metricsBar.jsx'
-import BeneficiaryLiveFeed from '../dashboard/beneficiaryLiveFeed.jsx'
+import { 
+  AnalyticsChart, 
+  BeneficiaryFunnel, 
+  UsagePieChart, 
+  MetricsBar, 
+  BeneficiaryLiveFeed,
+  DateRangePickerFilter 
+} from '../dashboard';
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 import { ModuleBox, PageWrapper, CenterLoadingSideBarActive } from '../styledElements'
-
 import { parseQuery } from '../../utils'
 
 const HeatMap = lazy(() => import('../heatmap/heatmap.jsx'));
@@ -129,8 +131,14 @@ class DashboardPage extends React.Component {
       return(
         <WrapperDiv>
           <PageWrapper>
+            <Main>
+              <ModuleBox>
+                <DateRangePickerFilter/>
+              </ModuleBox>
+            </Main>
 
             <Main>
+              
               <GraphMetricColumn>
 
                 <ModuleBox>
