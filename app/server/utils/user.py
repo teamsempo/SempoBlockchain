@@ -275,14 +275,9 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 def save_device_info(device_info, user):
     add_device = False
 
-    if device_info['serialNumber'] and not DeviceInfo.query.filter_by(
-            serial_number=device_info['serialNumber']).first():
-        # Add the device if the serial number is defined, and isn't already in db
-        add_device = True
-    elif not device_info['serialNumber'] and not DeviceInfo.query.filter_by(unique_id=device_info['uniqueId']).first():
-        # Otherwise add the device if the serial number is NOT defined unique id isn't already in db.
-        # This means that where serial number is defined but unique id is different, we DO NOT add
-        # (because unique ids can change under some circumstances, so they say)
+    if device_info['uniqueId'] and not DeviceInfo.query.filter_by(
+            unique_id=device_info['uniqueId']).first():
+        # Add the device if the uniqueId is defined, and isn't already in db
         add_device = True
 
     if add_device:
