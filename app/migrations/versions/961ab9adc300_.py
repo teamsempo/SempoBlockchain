@@ -24,14 +24,14 @@ def upgrade():
     session = Session(bind=conn)
 
     op.add_column('organisation', sa.Column('external_auth_username', sa.String(), nullable=True))
-    op.add_column('organisation', sa.Column('external_auth_password', sa.String(), nullable=True))
+    op.add_column('organisation', sa.Column('_external_auth_password', sa.String(), nullable=True))
 
     for org in session.query(Organisation).execution_options(show_all=True).all():
         org.external_auth_username = 'admin_'+org.name.lower().replace(' ', '_')
-        org.external_auth_password = encrypt_string(secrets.token_hex(16))
+        org.external_auth_password = secrets.token_hex(16)
     session.commit()
 
 
 def downgrade():
     op.drop_column('organisation', 'external_auth_username')
-    op.drop_column('organisation', 'external_auth_password')
+    op.drop_column('organisation', '_external_auth_password')

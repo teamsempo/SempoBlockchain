@@ -828,7 +828,7 @@ class ExternalCredentialsAPI(MethodView):
     def get(self):
         response_object = {
             'username': g.active_organisation.external_auth_username, # Change this to org's credentials
-            'password': decrypt_string(g.active_organisation.external_auth_password)
+            'password': g.active_organisation.external_auth_password
         }
 
         return make_response(jsonify(response_object)), 200
@@ -892,7 +892,7 @@ class TwoFactorAuthAPI(MethodView):
 
 
 class CheckBasicAuth(MethodView):
-    @requires_auth(allowed_basic_auth_types=('internal',), allow_query_string_auth=True)
+    @requires_auth(allowed_basic_auth_types=('internal', 'external'), allow_query_string_auth=True)
     def get(self):
         response_object = {
             'status': 'success',
@@ -969,8 +969,8 @@ auth_blueprint.add_url_rule(
 )
 
 auth_blueprint.add_url_rule(
-    '/auth/kobo/',
-    view_func=ExternalCredentialsAPI.as_view('kobo_view'),
+    '/auth/external/',
+    view_func=ExternalCredentialsAPI.as_view('external_credentials_view'),
     methods=['GET']
 )
 

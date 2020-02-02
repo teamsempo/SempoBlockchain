@@ -6,8 +6,7 @@ import secrets
 from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
 import server.models.transfer_account
-from server import message_processor
-from server.utils.i18n import i18n_for
+from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
 from server.utils.misc import encrypt_string
@@ -24,7 +23,7 @@ class Organisation(ModelBase):
 
     external_auth_username = db.Column(db.String)
     
-    external_auth_password = db.Column(db.String)
+    _external_auth_password = db.Column(db.String)
 
     _timezone           = db.Column(db.String)
 
@@ -72,6 +71,14 @@ class Organisation(ModelBase):
                 .query.execution_options(show_all=True).get(self.org_level_transfer_account_id)
         return None
 
+    @hybrid_property
+    def external_auth_password(self):
+        return decrypt_string(self._external_auth_password)
+
+    @external_auth_password.setter
+    def external_auth_password(self, value):
+        self._external_auth_password = encrypt_string(value)
+
     credit_transfers    = db.relationship("CreditTransfer",
                                           secondary=organisation_association_table,
                                           back_populates="organisations")
@@ -117,7 +124,7 @@ class Organisation(ModelBase):
         super(Organisation, self).__init__(**kwargs)
     
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
-        self.external_auth_password = encrypt_string(secrets.token_hex(16))
+        self.external_auth_password = secrets.token_hex(16)
 
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():

@@ -96,7 +96,7 @@ def requires_auth(f=None,
             org = Organisation.query.filter_by(external_auth_username = username).first()
             if org:
                 auth_type = 'external'
-                required_password = decrypt_string(org.external_auth_password)
+                required_password = org.external_auth_password
             # Otherwise, check if it is one of the configured BASIC_AUTH_CREDENTIALS
             else:
                 (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
