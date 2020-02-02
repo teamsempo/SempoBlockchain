@@ -118,6 +118,8 @@ def requires_auth(f=None,
                 }
                 return make_response(jsonify(response_object)), 401
 
+            g.active_organisation = org
+
             return f(*args, **kwargs)
 
         if auth_token:
