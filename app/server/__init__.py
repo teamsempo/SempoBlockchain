@@ -158,7 +158,7 @@ def register_blueprints(app):
     from server.api.contract_api import contracts_blueprint
     from server.api.ge_migration_api import ge_migration_blueprint
 
-    versioned_url = '/api/v' + app.config['WEB_VERSION']
+    versioned_url = '/api/v1'
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix=versioned_url + '/me')

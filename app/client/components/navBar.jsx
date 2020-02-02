@@ -5,18 +5,20 @@ import styled from 'styled-components';
 import { Link, NavLink } from 'react-router-dom';
 
 import { updateActiveOrgRequest } from '../reducers/auth/actions'
+import { replaceSpaces } from "../utils";
 
 const mapStateToProps = (state) => {
   return {
     loggedIn: (state.login.token != null),
     login: state.login,
-    email: state.login.email
+    email: state.login.email,
+    orgName: replaceSpaces(state.login.organisationName)
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    updateActiveOrgRequest: (organisationName, organisationId) => dispatch(updateActiveOrgRequest({organisationName, organisationId})),
+    updateActiveOrgRequest: (organisationName, organisationId, organisationToken) => dispatch(updateActiveOrgRequest({organisationName, organisationId, organisationToken})),
   };
 };
 
@@ -33,7 +35,11 @@ class NavBar extends React.Component {
     componentWillMount() {
       let deploymentName = window.DEPLOYMENT_NAME;
 
-      let custom_url = `https://s3.amazonaws.com/sempoctp-${deploymentName}/icon.${deploymentName === 'dev' ? 'svg' : 'png'}`;
+      //TODO: Allow setting of region for this
+      let s3_region = 'https://sempo-logos.s3-ap-southeast-2.amazonaws.com';
+      let custom_url = `${s3_region}/${this.props.orgName.toLowerCase()}.${deploymentName === 'dev' ? 'svg' : 'png'}`;
+
+      console.log('Custom URL is', custom_url);
 
       this.imageExists(custom_url,(exists) => {
         if (exists) {
@@ -59,7 +65,7 @@ class NavBar extends React.Component {
     }
 
     selectOrg(org) {
-      this.setState({isOrgSwitcherActive: false}, () => this.props.updateActiveOrgRequest(org.name, org.id));
+      this.setState({isOrgSwitcherActive: false}, () => this.props.updateActiveOrgRequest(org.name, org.id, org.token));
     }
 
     toggleSwitchOrgDropdown() {

@@ -5,7 +5,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.0.4'  # Remember to bump this in every PR
+VERSION = '1.0.8'  # Remember to bump this in every PR
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -103,8 +103,11 @@ if IS_PRODUCTION is None:
     raise KeyError("IS_PRODUCTION key not found")
 
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
+
+# todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
 CURRENCY_DECIMALS   = int(specific_parser['APP']['CURRENCY_DECIMALS'])
+
 DEFAULT_COUNTRY     = specific_parser['APP']['DEFAULT_COUNTRY']
 DEFAULT_LAT         = float(specific_parser['APP']['DEFAULT_LAT'])
 DEFAULT_LNG         = float(specific_parser['APP']['DEFAULT_LNG'])
@@ -120,7 +123,6 @@ DEFAULT_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('DEFAULT_INITIAL_D
 ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
-WEB_VERSION = specific_parser['APP']['WEB_VERSION']
 REQUIRE_TRANSFER_CARD_EXISTS = specific_parser['APP'].getboolean('REQUIRE_TRANSFER_CARD_EXISTS', False)
 
 PASSWORD_PEPPER     = specific_parser['APP']['PASSWORD_PEPPER']
