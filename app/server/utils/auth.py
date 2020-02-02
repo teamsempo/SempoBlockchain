@@ -16,6 +16,7 @@ from typing import Optional, Tuple, Dict
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
 from server.utils.feedback import request_feedback_questions
 from server.utils.intercom import create_intercom_secret
+from server.utils.misc import decrypt_string
 
 def get_complete_auth_token(user):
     auth_token = user.encode_auth_token().decode()
@@ -91,8 +92,14 @@ def requires_auth(f=None,
 
         # If username as password attempt basic auth
         if username and password:
-
-            (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
+            # Check if username belongs to an org
+            org = Organisation.query.filter_by(external_auth_username = username).first()
+            if org:
+                auth_type = 'external'
+                required_password = org.external_auth_password
+            # Otherwise, check if it is one of the configured BASIC_AUTH_CREDENTIALS
+            else:
+                (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
             if required_password is None or required_password != password:
                 response_object = {
                     'message': 'invalid basic auth username or password'
@@ -110,6 +117,8 @@ def requires_auth(f=None,
                     'message': 'Basic Auth type is {}. Must be: {}'.format(auth_type, allowed_basic_auth_types)
                 }
                 return make_response(jsonify(response_object)), 401
+
+            g.active_organisation = org
 
             return f(*args, **kwargs)
 
@@ -293,7 +302,8 @@ def get_user_organisations(user):
     organisations = dict(
         active_organisation_name=active_organisation.name,
         active_organisation_id=active_organisation.id,
-        organisations=[dict(id=org.id, name=org.name) for org in user.organisations]
+        active_organisation_token=active_organisation.token.symbol,
+        organisations=[dict(id=org.id, name=org.name, token=org.token.symbol) for org in user.organisations]
     )
 
     return organisations
@@ -345,6 +355,7 @@ def create_user_response_object(user, auth_token, message):
         'server_time': int(time.time() * 1000),
         'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
         'pusher_key': current_app.config['PUSHER_KEY'],
+        # todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
         'currency_decimals': current_app.config['CURRENCY_DECIMALS'],
         'currency_name': currency_name,
         'currency_conversion_rate': conversion_rate,
@@ -361,7 +372,7 @@ def create_user_response_object(user, auth_token, message):
         'kyc_active': True,  # todo; kyc active function
         'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
         'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
-        'web_api_version': current_app.config['WEB_VERSION'],
+        'web_api_version': '1',
         'require_transfer_card_exists': current_app.config['REQUIRE_TRANSFER_CARD_EXISTS']
     }
 

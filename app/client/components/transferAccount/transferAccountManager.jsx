@@ -172,7 +172,8 @@ class TransferAccountManager extends React.Component {
         newTransfer = null;
     }
 
-    const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100)}</p>;
+    const currency = this.props.transferAccount && this.props.transferAccount.token && this.props.transferAccount.token.symbol
+    const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100,  undefined, undefined, undefined, currency)}</p>;
 
     let tracker_link = window.ETH_EXPLORER_URL + '/address/' + this.props.transferAccount.blockchain_address;
 

@@ -5,7 +5,7 @@ import { subscribe, unsubscribe } from 'pusher-redux';
 
 import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
 
-import { logout, activateAccount } from '../../reducers/auth/actions'
+import { logout } from '../../reducers/auth/actions'
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
 
@@ -33,8 +33,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     logout:       () => dispatch(logout()),
-    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
-    activateAccount: (activation_token) => dispatch(activateAccount(activation_token))
+    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path}))
   };
 };
 

@@ -22,6 +22,7 @@ interface LoginState {
   organisationName: null | string,
   //TODO(refactor): is it number or string?
   organisationId: null | number,
+  organisationToken: null | string,
   usdToSatoshiRate: null | number,
   error: null | string,
   tfaURL: null | string,
@@ -42,6 +43,7 @@ const initialLoginState: LoginState = {
   webApiVersion: null,
   organisationName: null,
   organisationId: null,
+  organisationToken: null,
   organisations: null,
   requireTransferCardExists: null,
   usdToSatoshiRate: null,
@@ -67,6 +69,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         webApiVersion: action.webApiVersion,
         organisationName: action.organisationName,
         organisationId: action.organisationId,
+        organisationToken: action.organisationToken,
         organisations: action.organisations,
         requireTransferCardExists: action.requireTransferCardExists,
         email: action.email,
