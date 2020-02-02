@@ -1,4 +1,4 @@
-"""empty message
+"""Adds external auth password
 
 Revision ID: 961ab9adc300
 Revises: df0fbf496520

@@ -8,6 +8,7 @@ from time import sleep
 from datetime import datetime
 import pytest, json, config, base64
 import pyotp
+from cryptography.fernet import Fernet
 
 from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
@@ -364,8 +365,10 @@ def test_reset_password_valid_token(test_client, authed_sempo_admin_user):
                                 data=json.dumps(dict(new_password=password, reset_password_token=password_reset_token)),
                                 content_type='application/json', follow_redirects=True)
 
+    f = Fernet(config.PASSWORD_PEPPER)
+    decrypted_hash = f.decrypt(authed_sempo_admin_user.password_hash.encode())
     assert bcrypt.checkpw(
-        password.encode(), authed_sempo_admin_user.password_hash.encode())
+        password.encode(), decrypted_hash)
     assert authed_sempo_admin_user.password_reset_tokens == []
     assert response.status_code == 200
 
