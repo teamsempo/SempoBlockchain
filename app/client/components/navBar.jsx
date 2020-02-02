@@ -34,7 +34,12 @@ class NavBar extends React.Component {
 
     componentWillMount() {
       let deploymentName = window.DEPLOYMENT_NAME;
-      let custom_url = `https://s3.amazonaws.com/sempo-${this.props.orgName}/icon.${deploymentName === 'dev' ? 'svg' : 'png'}`;
+
+      //TODO: Allow setting of region for this
+      let s3_region = 'https://sempo-logos.s3-ap-southeast-2.amazonaws.com';
+      let custom_url = `${s3_region}/${this.props.orgName.toLowerCase()}.${deploymentName === 'dev' ? 'svg' : 'png'}`;
+
+      console.log('Custom URL is', custom_url);
 
       this.imageExists(custom_url,(exists) => {
         if (exists) {
