@@ -34,6 +34,7 @@ class DateRangePickerFilter extends React.Component {
     render() {
         return (
             <DateRangePicker
+                isOutsideRange={() => false}
                 startDatePlaceholderText={"Start Date"}
                 endDatePlaceholderText={"End Date"}
                 withPortal={true}

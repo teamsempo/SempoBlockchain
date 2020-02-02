@@ -7,7 +7,8 @@ import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
 
 import { logout } from '../../reducers/auth/actions'
 
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
+import { loadCreditTransferList, loadCreditTransferStats } from "../../reducers/creditTransferReducer"
+
 
 import { 
   AnalyticsChart, 
@@ -35,7 +36,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     logout:       () => dispatch(logout()),
-    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path}))
+    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
+    loadCreditTransferStats: (query, path) => dispatch(loadCreditTransferStats({query, path}))
   };
 };
 
@@ -71,7 +73,6 @@ class DashboardPage extends React.Component {
       console.log('actok', parsed.actok)
       this.props.activateAccount(parsed.actok)
     }
-
   }
 
   componentWillUnmount() {
@@ -98,6 +99,18 @@ class DashboardPage extends React.Component {
 
   unsubscribe() {
     unsubscribe('MainChannel', 'credit_transfer', PUSHER_CREDIT_TRANSFER);
+  }
+
+  submitFilter = (startDate, endDate) => {
+    // only send request if range is completely filled
+    if(startDate && endDate) {
+
+      this.props.loadCreditTransferStats({
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString()
+      })
+    }
+    
   }
 
   render() {
@@ -133,7 +146,7 @@ class DashboardPage extends React.Component {
           <PageWrapper>
             <Main>
               <ModuleBox>
-                <DateRangePickerFilter/>
+                <DateRangePickerFilter submitFilter={this.submitFilter}/>
               </ModuleBox>
             </Main>
 
