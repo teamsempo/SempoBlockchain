@@ -445,6 +445,10 @@ def proccess_create_or_modify_user_request(
         geo = geo_location.split(' ')
         lat = geo[0]
         lng = geo[1]
+    else:
+        # TODO: Work out how this passed tests when this wasn't definied properly!?!
+        lat = None
+        lng = None
 
     use_precreated_pin = attribute_dict.get('use_precreated_pin')
     use_last_4_digits_of_id_as_initial_pin = attribute_dict.get(

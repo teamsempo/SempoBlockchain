@@ -128,8 +128,7 @@ class UserAPI(MethodView):
         post_data = request.get_json()
         organisation = g.get('active_organisation')
         if organisation is None:
-            # TODO: Refactor.. Query string needed for kobo
-            organisation = Organisation.query.get(request.args.get('org'))
+            return make_response(jsonify({'message': 'Organisation must be set'})), 400
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
