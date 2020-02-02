@@ -89,9 +89,9 @@ function* watchEditUser() {
   yield takeEvery(EDIT_USER_REQUEST, editUser);
 }
 
-function* resetPin({userId}) {
+function* resetPin({ payload }) {
   try {
-    const reset_response = yield call(resetPinAPI, userId);
+    const reset_response = yield call(resetPinAPI, payload);
 
     yield call(updateStateFromUser, reset_response.data);
 

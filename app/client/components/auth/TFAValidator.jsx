@@ -16,7 +16,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    validateTFARequest: (otp, otp_expiry_interval) => dispatch(validateTFARequest({otp, otp_expiry_interval})),
+    validateTFARequest: (payload) => dispatch(validateTFARequest(payload)),
   };
 };
 
@@ -44,7 +44,7 @@ export class TFAValidator extends React.Component {
       return
     }
 
-    this.props.validateTFARequest(this.state.otp, this.state.rememberComputer? 9999: 1)
+    this.props.validateTFARequest({body: {otp: this.state.otp, otp_expiry_interval: this.state.rememberComputer? 9999: 1}})
   }
 
   onCodeKeyPress(e) {
