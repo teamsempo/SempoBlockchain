@@ -34,7 +34,7 @@ def create_master_organisation(test_client, init_database, external_reserve_toke
     master_organisation = Organisation.master_organisation()
     if master_organisation is None:
         print('Creating master organisation')
-        master_organisation = Organisation(is_master=True, token=external_reserve_token)
+        master_organisation = Organisation(name='FrancineCorp', is_master=True, token=external_reserve_token)
         db.session.add(master_organisation)
         db.session.commit()
 
