@@ -265,12 +265,12 @@ class MeCreditTransferAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         try:
-            transfer = make_payment_transfer(transfer_amount,
-                                             send_user,
-                                             send_transfer_account,
-                                             receive_user,
-                                             receive_transfer_account,
-                                             transfer_use,
+            transfer = make_payment_transfer(transfer_amount=transfer_amount,
+                                             send_user=send_user,
+                                             send_transfer_account=send_transfer_account,
+                                             receive_user=receive_user,
+                                             receive_transfer_account=receive_transfer_account,
+                                             transfer_use=transfer_use,
                                              uuid=uuid)
 
         except AccountNotApprovedError as e:
