@@ -198,7 +198,7 @@ class TokenProcessor(object):
 
         exchange_limit = rounded_dollars(TokenProcessor.get_default_exchange_limit(default_limit, user))
         exchange_rate = round_to_sig_figs(exchange_rate_full_precision, 3)
-        exchange_sample_value = rounded_dollars(exchange_rate_full_precision * float(1000))
+        exchange_sample_value = round(exchange_rate_full_precision * float(1000))
 
         if exchange_limit:
             TokenProcessor.send_sms(

@@ -4,6 +4,7 @@ import time
 from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func
 import datetime, json
+import sentry_sdk
 
 from server.exceptions import (
     NoTransferAccountError,
@@ -14,7 +15,7 @@ from server.exceptions import (
     TransferAccountNotFoundError
 )
 
-from server import db, sentry, red, bt
+from server import db, red, bt
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
@@ -507,7 +508,7 @@ def make_payment_transfer(transfer_amount,
 
         except Exception as e:
             print(e)
-            sentry.captureException()
+            sentry_sdk.capture_exception(e)
 
     return transfer
 

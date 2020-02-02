@@ -1,7 +1,8 @@
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm.attributes import flag_modified
+import sentry_sdk
 
-from server import db, sentry
+from server import db
 from server.models.utils import ModelBase
 
 
@@ -28,7 +29,7 @@ class UssdMenu(ModelBase):
     def find_by_name(name: str) -> "UssdMenu":
         menus = UssdMenu.query.filter_by(name=name)
         if menus.count() == 0:
-            sentry.captureMessage("No USSD Menu with name {}".format(name))
+            sentry_sdk.capture_message("No USSD Menu with name {}".format(name))
             # should handle case if no invalid_request menu?
             return UssdMenu.query.filter_by(name='exit_invalid_request').first()
         else:

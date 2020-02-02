@@ -57,7 +57,6 @@ class TransferAccountListPage extends React.Component {
 
 
       const path = null;
-
       this.props.loadTransferAccountList(query, path);
   }
   

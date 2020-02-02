@@ -6,10 +6,10 @@ import { store } from "./app.jsx";
 
 export function formatMoney(
     amount,
-    decimalCount = window.CURRENCY_DECIMALS,
+    decimalCount,
     decimal = ".",
     thousands = ",",
-    currency = window.CURRENCY_NAME
+    currency
 ) {
     try {
         decimalCount = Math.abs(decimalCount);
@@ -197,6 +197,14 @@ export const getToken = () => {
 export const replaceUnderscores = stringlike => {
     if (stringlike) {
         return stringlike.toString().replace(/_/g, " ");
+    } else {
+        return "";
+    }
+};
+
+export const replaceSpaces = stringlike => {
+    if (stringlike) {
+        return stringlike.toString().replace(/ /g, "-");
     } else {
         return "";
     }
