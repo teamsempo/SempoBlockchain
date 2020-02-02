@@ -4,6 +4,7 @@ from sqlalchemy import or_
 from functools import partial
 import json
 import sentry_sdk
+import base64
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
@@ -455,8 +456,10 @@ class CreditTransferStatsApi(MethodView):
 
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
-        print(start_date)
-        print(end_date)
+        encoded_filters = request.args.get('filters')
+        encoded_filters = encoded_filters.replace(" ", "+")
+        decoded_filters = base64.b64decode(encoded_filters)
+        print(decoded_filters)
         transfer_stats = calculate_transfer_stats(total_time_series=True, start_date=start_date, end_date=end_date)
 
         response_object = {

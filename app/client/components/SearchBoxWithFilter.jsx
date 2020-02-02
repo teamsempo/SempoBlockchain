@@ -3,10 +3,25 @@ import { connect } from 'react-redux';
 import { ModuleBox, StyledSelect, Input, StyledButton} from "./styledElements";
 import styled from "styled-components";
 import matchSorter from "match-sorter";
+import PropTypes from 'prop-types';
 
 import { replaceUnderscores } from "../utils";
 import {loadFilters, createFilter} from "../reducers/filterReducer";
 import LoadingSpinner from "./loadingSpinner.jsx";
+
+const propTypes = {
+  onFiltersChanged: PropTypes.func,
+  withSearch: PropTypes.bool,
+  toggleTitle: PropTypes.string
+}
+
+const defaultProps = {
+  onFiltersChanged: (filter) => {
+    console.log("Filter applied:", filter)
+  },
+  withSearch: true,
+  toggleTitle: "Filters"
+}
 
 const mapStateToProps = (state) => {
   return {
@@ -188,15 +203,18 @@ class SearchBoxWithFilter extends React.Component {
 
     this.setState(
       {filters: [...this.state.filters, newFilter]},
-      () => this.setState({
-        keyName: 'select', value: 'select', keyNameValues: {}, filterType: 'of', GtLtThreshold: 0, dropdownActive: false
-      })
+      () => {
+        this.setState({
+          keyName: 'select', value: 'select', keyNameValues: {}, filterType: 'of', GtLtThreshold: 0, dropdownActive: false
+        })
+        this.props.onFiltersChanged(this.state.filters)
+      }
     )
   }
 
   removeFilter(evt) {
     let newFilters = [...this.state.filters].filter(filter => (filter.id !== parseInt(evt.target.name)));
-    this.setState({filters: newFilters})
+    this.setState({filters: newFilters}, () => this.props.onFiltersChanged(this.state.filters))
   }
 
   toggleSelected(key) {
@@ -468,26 +486,41 @@ class SearchBoxWithFilter extends React.Component {
         </div>
     }
 
+    
+
     return(
       <div>
-        <ModuleBox>
-          <SearchWrapper>
-            <svg style={{ width: 18, height: 18, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10 }}
-                 height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'>
-              <path d='M12.6 11.2c.037.028.073.059.107.093l3 3a1 1 0 1 1-1.414 1.414l-3-3a1.009 1.009 0 0 1-.093-.107 7 7 0 1 1 1.4-1.4zM7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10z' fillRule='evenodd' fill='#6a7680' />
-            </svg>
-            <SearchInput name="phrase" value={phrase} placeholder="Search..." onChange={this.handleChange} />
-
+        {this.props.withSearch ?
+            <ModuleBox>
+              <SearchWrapper>
+                <svg style={{ width: 18, height: 18, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10 }}
+                      height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'>
+                  <path d='M12.6 11.2c.037.028.073.059.107.093l3 3a1 1 0 1 1-1.414 1.414l-3-3a1.009 1.009 0 0 1-.093-.107 7 7 0 1 1 1.4-1.4zM7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10z' fillRule='evenodd' fill='#6a7680' />
+                </svg>
+                <SearchInput name="phrase" value={phrase} placeholder="Search..." onChange={this.handleChange} />
+    
+                <FilterWrapper onClick={this.toggleFilter}>
+                  <FilterText>{filterActive ? 'Cancel' : this.props.toggleTitle}</FilterText>
+                  <svg style={{ width: 12, height: 12, padding: '0 10px', transform: filterActive ? 'rotate(45deg)' : null, transition: 'all .15s ease' }} height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'>
+                    <path d='M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z'
+                    fillRule='evenodd' fill='#6a7680' />
+                  </svg>
+                </FilterWrapper>
+    
+              </SearchWrapper>
+            </ModuleBox>
+          :
+          <ModuleBox>
             <FilterWrapper onClick={this.toggleFilter}>
-              <FilterText>{filterActive ? 'Cancel' : 'Filters'}</FilterText>
+              <FilterText>{filterActive ? 'Cancel' : this.props.toggleTitle}</FilterText>
               <svg style={{ width: 12, height: 12, padding: '0 10px', transform: filterActive ? 'rotate(45deg)' : null, transition: 'all .15s ease' }} height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'>
                 <path d='M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z'
                 fillRule='evenodd' fill='#6a7680' />
               </svg>
             </FilterWrapper>
-
-          </SearchWrapper>
-        </ModuleBox>
+          </ModuleBox>
+          
+        }
 
         {savedFilters}
         {addedFilters}
@@ -498,6 +531,9 @@ class SearchBoxWithFilter extends React.Component {
     )
   }
 }
+
+SearchBoxWithFilter.defaultProps = defaultProps,
+SearchBoxWithFilter.propTypes = propTypes
 
 export default connect(mapStateToProps, mapDispatchToProps)(SearchBoxWithFilter);
 
