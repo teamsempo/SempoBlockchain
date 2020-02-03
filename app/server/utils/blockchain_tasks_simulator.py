@@ -17,7 +17,7 @@ def deploy_contract(kwargs, args):
     return FakeCeleryAsyncResult()
 
 def call_contract_function(kwargs, args):
-    return FakeCeleryAsyncResult(result=18)
+    return FakeCeleryAsyncResult(result=int(1e19))
 
 def transact_with_contract_function(kwargs, args):
     return FakeCeleryAsyncResult()
