@@ -5,6 +5,7 @@ from server import db
 from server.models.utils import paginate_query
 from server.models.user import User
 from server.models.transfer_account import TransferAccount
+from server.models.organisation import Organisation
 from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
@@ -125,7 +126,9 @@ class UserAPI(MethodView):
     def post(self, user_id):
 
         post_data = request.get_json()
-        organisation = g.active_organisation
+        organisation = g.get('active_organisation')
+        if organisation is None:
+            return make_response(jsonify({'message': 'Organisation must be set'})), 400
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
