@@ -32,6 +32,7 @@ const ErrorMessage = function(props) {
 
 const mapStateToProps = (state) => {
   return {
+    editStatus: state.businessVerification.editStatus,
     business: state.businessVerification.businessVerificationState,
     uploadState: state.businessVerification.uploadDocumentStatus,
   };
@@ -93,7 +94,12 @@ class BusinessDocuments extends React.Component {
     const validateNewInput = this._validateData(this.props.business); // run the new input against the validator
 
     if (Object.keys(validateNewInput).every((k) => { return validateNewInput[k] === true })) {
-      this.props.nextStep()
+      if (this.props.isFinal) {
+        let business = this.props.business;
+        this.props.editBusinessProfile({kyc_status: 'PENDING'}, business.id);
+      } else {
+        this.props.nextStep()
+      }
     } else {
       // if anything fails then update the UI validation state but NOT the UI Data State
       this.setState(Object.assign(validateNewInput, this._validationErrors(validateNewInput)));
@@ -159,7 +165,7 @@ class BusinessDocuments extends React.Component {
         <ThemeProvider theme={DefaultTheme}>
           <div>
             <AsyncButton buttonText={'Back'} onClick={this.props.backStep}/>
-            <AsyncButton buttonText={'Next'} onClick={this.isValidated}/>
+            <AsyncButton buttonText={this.props.isFinal ? 'COMPLETE' : 'Next'} onClick={this.isValidated} isLoading={this.props.editStatus.isRequesting}/>
           </div>
         </ThemeProvider>
 

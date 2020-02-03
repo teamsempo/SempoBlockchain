@@ -321,11 +321,14 @@ class KycApplicationAPI(MethodView):
             user = User.query.get(user_id)
             create_kyc_application.user = user or g.user
 
-        if not is_mobile and not user_id and type == 'BUSINESS':
-            if type == 'BUSINESS':
+        if not is_mobile:
+            # not mobile
+            if not user_id and type == 'BUSINESS':
+                # not a admin applying for another user
                 # ngo organisation
                 create_kyc_application.organisation = g.active_organisation
-            if type == 'INDIVIDUAL':
+            else:
+                # admin applying for another user (individual or business)
                 create_kyc_application.kyc_status = 'INCOMPLETE'
 
         db.session.add(create_kyc_application)

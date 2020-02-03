@@ -18,9 +18,9 @@ const ErrorMessage = function(props) {
   )
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
   return {
-    userId: state.businessVerification.stepState.userId,
+    userId: ownProps.userId,
     editStatus: state.businessVerification.editStatus,
     businessProfile: state.businessVerification.businessVerificationState,
   };
