@@ -1,5 +1,7 @@
 import sys
 import os
+from sqlalchemy import func
+
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
@@ -279,8 +281,10 @@ def create_business_categories():
             'en': 'Food/Water', 'sw': 'Chakula/Maji'}},
         {'name': 'Fuel/Energy', 'icon': 'message', 'translations': {
             'en': 'Fuel/Energy', 'sw': 'Kuni/Makaa/Mafuta'}},
-        {'name': 'Education/Health', 'icon': 'message', 'translations': {
-            'en': 'Education/Health', 'sw': 'Elimu/Afya'}},
+        {'name': 'Education', 'icon': 'message', 'translations': {
+            'en': 'Education', 'sw': 'Elimu'}},
+        {'name': 'Health', 'icon': 'message', 'translations': {
+            'en': 'Health', 'sw': 'Afya'}},
         {'name': 'Shop', 'icon': 'message', 'translations': {
             'en': 'Shop', 'sw': 'Duka'}},
         {'name': 'Environment', 'icon': 'message', 'translations': {
@@ -293,9 +297,11 @@ def create_business_categories():
             'en': 'Savings Group', 'sw': 'Chama'}}
     ]
     for index, business_category in enumerate(business_categories):
-        usage = TransferUsage.query.filter_by(name=business_category['name']).first()
+        name = business_category['name']
+        usage = db.session.query(TransferUsage).filter(
+            func.lower(TransferUsage.name) == func.lower(name)).first()
         if usage is None:
-            usage = TransferUsage(name=business_category['name'])
+            usage = TransferUsage(name=name)
             db.session.add(usage)
         usage.priority = index + 1
         usage.default = True

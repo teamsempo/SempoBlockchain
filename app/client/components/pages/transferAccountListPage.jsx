@@ -10,6 +10,7 @@ import TransferAccountListWithFilterWrapper from '../transferAccount/transferAcc
 import UploadButton from "../uploader/uploadButton.jsx";
 
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import organizationWrapper from '../organizationWrapper';
 
 const mapStateToProps = (state) => {
   return {
@@ -56,7 +57,6 @@ class TransferAccountListPage extends React.Component {
 
 
       const path = null;
-
       this.props.loadTransferAccountList(query, path);
   }
   

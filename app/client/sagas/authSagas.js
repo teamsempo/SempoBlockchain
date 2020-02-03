@@ -1,7 +1,7 @@
 import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
 import { normalize } from 'normalizr';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken} from '../utils'
+import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken, parseQuery} from '../utils'
 import { adminUserSchema } from '../schemas'
 
 import {
@@ -9,14 +9,15 @@ import {
   refreshApiToken,
   registerAPI,
   activateAPI,
-  authenticatePusher,
   requestResetEmailAPI,
   ResetPasswordAPI,
   getUserList,
   updateUserAPI,
   inviteUserAPI,
   ValidateTFAAPI
-} from '../api/authApi'
+} from '../api/authAPI'
+
+import { authenticatePusher } from "../api/pusherAPI";
 
 import {
   REAUTH_REQUEST,
@@ -75,7 +76,16 @@ function* saveOrgId({payload}) {
   try {
     yield call(storeOrgid, payload.organisationId.toString());
 
-    window.location.reload()
+    let query_params = parseQuery(window.location.search)
+
+    // if query param and payload are matching then just reload to update navbar
+    if(query_params["org"] && payload.organisationId == query_params["org"]){
+      window.location.reload()
+    } else {
+      window.location.assign("/");
+    }
+    
+    
   } catch (e) {
     removeOrgId()
   }
@@ -102,6 +112,7 @@ function createLoginSuccessObject(token) {
     webApiVersion: token.web_api_version,
     organisationName: token.active_organisation_name,
     organisationId: token.active_organisation_id,
+    organisationToken: token.active_organisation_token,
     organisations: token.organisations,
     requireTransferCardExists: token.require_transfer_card_exists
   }
@@ -230,9 +241,9 @@ function* watchRegisterRequest() {
   yield takeEvery(REGISTER_REQUEST, register);
 }
 
-function* activate({activation_token}) {
+function* activate({payload}) {
   try {
-    const activated_account = yield call(activateAPI, activation_token);
+    const activated_account = yield call(activateAPI, payload);
 
     if (activated_account.auth_token && !activated_account.tfa_url) {
       yield put({type: ACTIVATE_SUCCESS, activated_account});
@@ -271,9 +282,9 @@ function* watchActivateRequest() {
   yield takeEvery(ACTIVATE_REQUEST, activate);
 }
 
-function* resetEmailRequest({email}) {
+function* resetEmailRequest({payload}) {
   try {
-    const resetEmailResponse = yield call(requestResetEmailAPI, email);
+    const resetEmailResponse = yield call(requestResetEmailAPI, payload);
     yield put({type: REQUEST_RESET_SUCCESS, resetEmailResponse});
   } catch (error) {
     yield put({type: REQUEST_RESET_FAILURE, error: error.statusText})

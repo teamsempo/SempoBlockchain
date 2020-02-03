@@ -73,7 +73,7 @@ class NewTransferManager extends React.Component {
         }
 
         confirmTransferString = `Are you sure you wish to make a ${transfer_type}`
-          + (transfer_amount ? ` of ${transfer_amount/100} ${window.CURRENCY_NAME}` : ` set of ${target_balance/100} ${window.CURRENCY_NAME}`) + ` to ${recipient_transfer_accounts_ids.length} users?`;
+          + (transfer_amount ? ` of ${transfer_amount/100} ${this.props.login.organisationToken}` : ` set of ${target_balance/100} ${this.props.login.organisationToken}`) + ` to ${recipient_transfer_accounts_ids.length} users?`;
 
         window.confirm(confirmTransferString) && this.props.createTransferRequest({
             is_bulk,
@@ -100,7 +100,7 @@ class NewTransferManager extends React.Component {
         }
 
         confirmTransferString = `Are you sure you wish to make a ${transfer_type}`
-          + (transfer_amount ? ` of ${transfer_amount/100} ${window.CURRENCY_NAME}` : ` set of ${target_balance/100} ${window.CURRENCY_NAME}`) + ` to 1 user?`;
+          + (transfer_amount ? ` of ${transfer_amount/100} ${this.props.login.organisationToken}` : ` set of ${target_balance/100} ${this.props.login.organisationToken}`) + ` to 1 user?`;
 
         window.confirm(confirmTransferString) && this.props.createTransferRequest({
             recipient_transfer_account_id,
@@ -157,7 +157,7 @@ class NewTransferManager extends React.Component {
                                 onChange={this.handleChange}
                                 style={{width:'7em', margin: '0'}}
                             />
-                           {window.CURRENCY_NAME}
+                           {this.props.login.organisationToken}
                            { convertedBitcoin}
                           </SubRow>
                           <SubRow style={{margin: '0 0 0 2em', width: 'inherit'}}>
