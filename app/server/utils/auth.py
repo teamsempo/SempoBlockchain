@@ -302,8 +302,8 @@ def get_user_organisations(user):
     organisations = dict(
         active_organisation_name=active_organisation.name,
         active_organisation_id=active_organisation.id,
-        active_organisation_token=active_organisation.token.symbol,
-        organisations=[dict(id=org.id, name=org.name, token=org.token.symbol) for org in user.organisations]
+        active_organisation_token= getattr(active_organisation.token, 'symbol', None),
+        organisations=[dict(id=org.id, name=org.name, token=getattr(org.token, 'symbol', None)) for org in user.organisations]
     )
 
     return organisations
