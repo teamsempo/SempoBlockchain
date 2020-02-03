@@ -67,14 +67,18 @@ class ExchangeContractAPI(MethodView):
         db.session.add(exchange_contract)
         db.session.commit()
 
+        exchange_contract_id = exchange_contract.id
+
         @copy_current_request_context
-        def deploy(_deploying_address, _exchange_contract):
+        def deploy(_deploying_address, _exchange_contract_id):
             contract_registry_address = bt.deploy_exchange_network(_deploying_address)
+            _exchange_contract = ExchangeContract.query.get(_exchange_contract_id)
             _exchange_contract.contract_registry_blockchain_address = contract_registry_address
+
             db.session.commit()
 
         t = threading.Thread(target=deploy,
-                             args=(deploying_address, exchange_contract))
+                             args=(deploying_address, exchange_contract_id))
         t.daemon = True
         t.start()
 
