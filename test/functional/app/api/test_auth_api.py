@@ -8,8 +8,36 @@ from time import sleep
 from datetime import datetime
 import pytest, json, config, base64
 import pyotp
+from cryptography.fernet import Fernet
 
+from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
+
+
+def interal_auth_username():
+    return config.INTERNAL_AUTH_USERNAME
+
+
+def interal_auth_password():
+    return config.INTERNAL_AUTH_PASSWORD
+
+
+def external_auth_username():
+    org = Organisation.query.first()
+    return org.external_auth_username
+
+
+def external_auth_password():
+    org = Organisation.query.first()
+    return org.external_auth_password
+
+
+def fake_username():
+    return 'FakeUser'
+
+
+def fake_password():
+    return 'FakePass'
 
 # todo- permissions api, reset password, request reset password
 
@@ -280,24 +308,24 @@ def test_create_permissions_api(test_client, authed_sempo_admin_user,
     assert response.status_code == response_code
 
 
-def test_get_kobo_credentials_api(test_client, authed_sempo_admin_user):
+def test_get_external_credentials_api(test_client, authed_sempo_admin_user):
     """
     GIVEN a Flask Application
-    WHEN '/api/auth/kobo/' is requested (GET)
-    THEN check kobo details username and password are returned
+    WHEN '/api/auth/external/' is requested (GET)
+    THEN check external details username and password are returned
     """
     authed_sempo_admin_user.is_activated = True
     authed_sempo_admin_user.TFA_enabled = True
     authed_sempo_admin_user.set_held_role('ADMIN', 'admin')
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
     tfa_token = authed_sempo_admin_user.encode_TFA_token(9999).decode()
-    response = test_client.get('/api/v1/auth/kobo/',
+    response = test_client.get('/api/v1/auth/external/',
                                headers=dict(Authorization=auth_token + '|' + tfa_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert response.json['username'] == config.EXTERNAL_AUTH_USERNAME
-    assert response.json['password'] == config.EXTERNAL_AUTH_PASSWORD
-
+    assert response.json['username'] == 'admin_sempo'
+    org = Organisation.query.filter_by(external_auth_username = response.json['username']).first()
+    assert response.json['password'] == org.external_auth_password
 
 def test_logout_api(test_client, authed_sempo_admin_user):
     """
@@ -337,8 +365,10 @@ def test_reset_password_valid_token(test_client, authed_sempo_admin_user):
                                 data=json.dumps(dict(new_password=password, reset_password_token=password_reset_token)),
                                 content_type='application/json', follow_redirects=True)
 
+    f = Fernet(config.PASSWORD_PEPPER)
+    decrypted_hash = f.decrypt(authed_sempo_admin_user.password_hash.encode())
     assert bcrypt.checkpw(
-        password.encode(), authed_sempo_admin_user.password_hash.encode())
+        password.encode(), decrypted_hash)
     assert authed_sempo_admin_user.password_reset_tokens == []
     assert response.status_code == 200
 
@@ -373,14 +403,13 @@ def test_reset_password_used_token(test_client, authed_sempo_admin_user):
     assert response.status_code == 401
     assert response.json['message'] == 'Token already used'
 
-
 @pytest.mark.parametrize("username,password,status_code", [
-    (config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD, 200),
-    (config.EXTERNAL_AUTH_USERNAME, config.EXTERNAL_AUTH_PASSWORD, 401),
-    ("fake_username", "fake_password", 401),
+    (interal_auth_username, interal_auth_password, 200),
+    (external_auth_username, external_auth_password, 200),
+    (fake_username, fake_password, 401),
     (None, None, 401)
 ])
-def test_basic_auth(test_client, username, password, status_code):
+def test_basic_auth(test_client, authed_sempo_admin_user, username, password, status_code):
     """
     GIVEN a Flask Application
     WHEN the '/api/auth/check/basic/' api is requested (GET)
@@ -389,7 +418,7 @@ def test_basic_auth(test_client, username, password, status_code):
 
     if username and password:
         basic_auth = 'Basic ' + base64.b64encode(
-            bytes(username + ":" + password, 'ascii')).decode('ascii')
+            bytes(username() + ":" + password(), 'ascii')).decode('ascii')
     else:
         basic_auth = ''
 
@@ -400,12 +429,37 @@ def test_basic_auth(test_client, username, password, status_code):
     assert response.status_code == status_code
 
 @pytest.mark.parametrize("username,password,status_code", [
-    (config.INTERNAL_AUTH_USERNAME, config.INTERNAL_AUTH_PASSWORD, 200),
-    (config.EXTERNAL_AUTH_USERNAME, config.EXTERNAL_AUTH_PASSWORD, 401),
-    ("fake_username", "fake_password", 401),
+    (interal_auth_username, interal_auth_password, 401),
+    (external_auth_username, external_auth_password, 401),
+    (fake_username, fake_password, 401),
     (None, None, 401)
 ])
-def test_basic_query_string_auth(test_client, username, password, status_code):
+def test_correctly_reject_basic_auth(test_client, authed_sempo_admin_user, username, password, status_code):
+    """
+    GIVEN a Flask Application
+    WHEN the '/api/auth/check/basic/' api is requested (GET)
+    THEN check the response is valid
+    """
+
+    if username and password:
+        basic_auth = 'Basic ' + base64.b64encode(
+            bytes(username() + ":" + password(), 'ascii')).decode('ascii')
+    else:
+        basic_auth = ''
+
+    response = test_client.get('/api/v1/auth/check/token/',
+                               headers=dict(Authorization=basic_auth, Accept='application/json'),
+                               content_type='application/json', follow_redirects=True)
+
+    assert response.status_code == status_code
+
+@pytest.mark.parametrize("username,password,status_code", [
+    (interal_auth_username, interal_auth_password, 200),
+    (external_auth_username, external_auth_password, 200),
+    (fake_username, fake_password, 401),
+    (None, None, 401)
+])
+def test_basic_query_string_auth(test_client, username, authed_sempo_admin_user, password, status_code):
     """
     GIVEN a Flask Application
     WHEN the '/api/auth/check/basic/' api is requested (GET) with credentials in query string
@@ -413,7 +467,7 @@ def test_basic_query_string_auth(test_client, username, password, status_code):
     """
 
     if username and password:
-        query = f'?username={username}&password={password}'
+        query = f'?username={username()}&password={password()}'
     else:
         query = ''
 
