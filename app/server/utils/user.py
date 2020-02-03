@@ -112,7 +112,7 @@ def find_user_from_public_identifier(*public_identifiers):
 def update_transfer_account_user(user,
                                  first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
-                                 location=None,
+                                 location=None, lat=None, lng=None,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
@@ -134,6 +134,10 @@ def update_transfer_account_user(user,
         user.public_serial_number = public_serial_number
     if location:
         user.location = location
+    if lat:
+        user.lat = lat
+    if lng:
+        user.lng = lng
 
     if default_organisation_id:
         user.default_organisation_id = default_organisation_id
@@ -177,7 +181,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
-                                 location=None,
+                                 location=None, lat=None, lng=None,
                                  use_precreated_pin=False,
                                  use_last_4_digits_of_id_as_initial_pin=False,
                                  existing_transfer_account=None,
@@ -191,6 +195,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     user = User(first_name=first_name,
                 last_name=last_name,
+                location=location, lat=lat, lng=lng,
                 preferred_language=preferred_language,
                 phone=phone,
                 email=email,
@@ -252,7 +257,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         )
 
         transfer_account.name = transfer_account_name
-        transfer_account.location = location
         transfer_account.is_vendor = is_vendor
         transfer_account.is_beneficiary = is_beneficiary
 
@@ -275,20 +279,14 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 def save_device_info(device_info, user):
     add_device = False
 
-    if device_info['serialNumber'] and not DeviceInfo.query.filter_by(
-            serial_number=device_info['serialNumber']).first():
-        # Add the device if the serial number is defined, and isn't already in db
-        add_device = True
-    elif not device_info['serialNumber'] and not DeviceInfo.query.filter_by(unique_id=device_info['uniqueId']).first():
-        # Otherwise add the device if the serial number is NOT defined unique id isn't already in db.
-        # This means that where serial number is defined but unique id is different, we DO NOT add
-        # (because unique ids can change under some circumstances, so they say)
+    if device_info['uniqueId'] and not DeviceInfo.query.filter_by(
+            unique_id=device_info['uniqueId']).first():
+        # Add the device if the uniqueId is defined, and isn't already in db
         add_device = True
 
     if add_device:
         device = DeviceInfo()
 
-        device.serial_number = device_info['serialNumber']
         device.unique_id = device_info['uniqueId']
         device.brand = device_info['brand']
         device.model = device_info['model']
@@ -434,7 +432,17 @@ def proccess_create_or_modify_user_request(
                             or attribute_dict.get('payment_card_qr_code')
                             or attribute_dict.get('payment_card_barcode'))
 
-    location = attribute_dict.get('location')
+    location = attribute_dict.get('location')  # address location
+    geo_location = attribute_dict.get('geo_location')  # geo location as str of lat, lng
+
+    if geo_location:
+        geo = geo_location.split(' ')
+        lat = geo[0]
+        lng = geo[1]
+    else:
+        # TODO: Work out how this passed tests when this wasn't definied properly!?!
+        lat = None
+        lng = None
 
     use_precreated_pin = attribute_dict.get('use_precreated_pin')
     use_last_4_digits_of_id_as_initial_pin = attribute_dict.get(
@@ -578,7 +586,7 @@ def proccess_create_or_modify_user_request(
         organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
-        location=location,
+        location=location, lat=lat, lng=lng,
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,

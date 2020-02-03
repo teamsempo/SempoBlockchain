@@ -201,3 +201,11 @@ export const replaceUnderscores = stringlike => {
         return "";
     }
 };
+
+export const replaceSpaces = stringlike => {
+    if (stringlike) {
+        return stringlike.toString().replace(/ /g, "-");
+    } else {
+        return "";
+    }
+};
