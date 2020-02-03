@@ -317,9 +317,10 @@ class KycApplicationAPI(MethodView):
             beneficial_owners=beneficial_owners,
         )
 
-        user = User.query.get(user_id)
+        if user_id:
+            user = User.query.get(user_id)
+            create_kyc_application.user = user or g.user
 
-        create_kyc_application.user = user or g.user
         if not is_mobile and not user_id and type == 'BUSINESS':
             if type == 'BUSINESS':
                 # ngo organisation
