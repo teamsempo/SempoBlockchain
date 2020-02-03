@@ -13,6 +13,7 @@ from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
+from server.utils.misc import decrypt_string
 
 import random
 
@@ -821,13 +822,13 @@ class BlockchainKeyAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
 
-class KoboCredentialsAPI(MethodView):
+class ExternalCredentialsAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
         response_object = {
-            'username': current_app.config['EXTERNAL_AUTH_USERNAME'],
-            'password': current_app.config['EXTERNAL_AUTH_PASSWORD']
+            'username': g.active_organisation.external_auth_username, # Change this to org's credentials
+            'password': g.active_organisation.external_auth_password
         }
 
         return make_response(jsonify(response_object)), 200
@@ -891,7 +892,7 @@ class TwoFactorAuthAPI(MethodView):
 
 
 class CheckBasicAuth(MethodView):
-    @requires_auth(allowed_basic_auth_types=('internal',), allow_query_string_auth=True)
+    @requires_auth(allowed_basic_auth_types=('internal', 'external'), allow_query_string_auth=True)
     def get(self):
         response_object = {
             'status': 'success',
@@ -968,8 +969,8 @@ auth_blueprint.add_url_rule(
 )
 
 auth_blueprint.add_url_rule(
-    '/auth/kobo/',
-    view_func=KoboCredentialsAPI.as_view('kobo_view'),
+    '/auth/external/',
+    view_func=ExternalCredentialsAPI.as_view('external_credentials_view'),
     methods=['GET']
 )
 
