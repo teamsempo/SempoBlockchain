@@ -13,7 +13,7 @@ const FormValidation = {
       }
     }
   },
-  notOther:  (value: string) => (value.toLowerCase() === 'other') ? undefined : "'Other' is not a valid input"
+  notOther:  (value: string) => (value.toLowerCase() === 'other') ? "'Other' is not a valid input" : undefined
 };
 
 export default FormValidation;
