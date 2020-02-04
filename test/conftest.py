@@ -157,6 +157,23 @@ def new_credit_transfer(create_transfer_account_user, external_reserve_token):
     )
     return credit_transfer
 
+@pytest.fixture(scope='function')
+def other_new_credit_transfer(create_transfer_account_user, external_reserve_token):
+    # Janky copy paste job because of how pytest works
+    from server.models.credit_transfer import CreditTransfer
+    from uuid import uuid4
+
+    credit_transfer = CreditTransfer(
+        amount=1000,
+        token=external_reserve_token,
+        sender_user=create_transfer_account_user,
+        recipient_user=create_transfer_account_user,
+        transfer_type=TransferTypeEnum.PAYMENT,
+        transfer_subtype=TransferSubTypeEnum.STANDARD,
+        uuid=str(uuid4())
+    )
+    return credit_transfer
+
 
 @pytest.fixture(scope='function')
 def create_credit_transfer(new_credit_transfer):

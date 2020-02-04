@@ -186,9 +186,12 @@ def matching_transfer_type_and_subtype_filter(transfer: CreditTransfer, query: Q
 
 
 @curry
-def withdrawal_or_agent_out_filter(transfer: CreditTransfer, query: Query):
-    return query.filter(or_(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL,
-                            CreditTransfer.transfer_subtype == TransferSubTypeEnum.AGENT_OUT))
+def withdrawal_or_agent_out_and_not_excluded_filter(transfer: CreditTransfer, query: Query):
+    return (query
+            .filter(or_(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL,
+                        CreditTransfer.transfer_subtype == TransferSubTypeEnum.AGENT_OUT))
+            .filter(CreditTransfer.exclude_from_limit_calcs == False)
+            )
 
 
 @curry
@@ -301,13 +304,13 @@ LIMITS = [
     TransferLimit('GE Liquid Token - Standard User',
                   [AGENT_OUT_PAYMENT, WITHDRAWAL],
                   is_user_and_liquid_token, 7,
-                  transfer_filter=withdrawal_or_agent_out_filter,
+                  transfer_filter=withdrawal_or_agent_out_and_not_excluded_filter,
                   no_transfer_allowed=True),
 
     TransferLimit('GE Liquid Token - Group Account User',
                   [AGENT_OUT_PAYMENT, WITHDRAWAL],
                   is_group_and_liquid_token, 30,
-                  transfer_filter=withdrawal_or_agent_out_filter,
+                  transfer_filter=withdrawal_or_agent_out_and_not_excluded_filter,
                   transfer_count=1, transfer_balance_fraction=0.50)
 ]
 

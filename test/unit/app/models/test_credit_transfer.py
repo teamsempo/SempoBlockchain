@@ -1,5 +1,5 @@
 import pytest
-from server.exceptions import AccountLimitError
+from server.exceptions import AccountLimitError, TransferCountLimitError
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum
 
 
@@ -170,3 +170,23 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_agent_out
     with pytest.raises(AccountLimitError):
         create_credit_transfer.check_sender_transfer_limits()
 
+
+def test_exclude_transfer_from_ge_limit(create_credit_transfer, other_new_credit_transfer):
+    from server.models import token
+    # Check GE LIMITS for Liquid Token (payment, agent_out subtype) on check LIMITS
+    create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    create_credit_transfer.token.token_type = token.TokenType.LIQUID
+    create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+
+    other_new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    other_new_credit_transfer.token.token_type = token.TokenType.LIQUID
+    other_new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+    other_new_credit_transfer.sender_transfer_account.balance = 2000
+    other_new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
+    with pytest.raises(TransferCountLimitError):
+        other_new_credit_transfer.check_sender_transfer_limits()
+
+    create_credit_transfer.exclude_from_limit_calcs = True
+
+    assert len(other_new_credit_transfer.check_sender_transfer_limits()) == 3
