@@ -253,7 +253,7 @@ class User(ManyOrgBase, ModelBase):
 
                 geolocate_task.delay()
             except Exception as e:
-                sentry_sdk.captureException(e)
+                sentry_sdk.capture_exception(e)
                 pass
 
     @hybrid_property
