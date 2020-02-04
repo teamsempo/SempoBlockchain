@@ -3,16 +3,8 @@ import { DateRangePicker } from 'react-dates'
 import { loadCreditTransferStats } from "../../reducers/creditTransferReducer"
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { ModuleBox } from '../styledElements'
-import SearchBoxWithFilter from '../SearchBoxWithFilter'
-
-const mapStateToProps = (state) => {
-    return {
-        mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
-      .map((id) => {return {...{id, ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]}, ...state.transferAccounts.byId[id]}})
-      .filter(mergedObj => mergedObj.users && mergedObj.users.length >= 1),
-    }
-}
+import {StyledButton} from '../styledElements'
+import moment from 'moment'
 
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -24,27 +16,8 @@ class DashboardFilter extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            filterActive: false,
             startDate: null,
-            endDate: null,
-            filters: []
-        }
-        this.searchKeys = [
-            'balance',
-            'created',
-            'first_name',
-            'last_name',
-            'id',
-            'is_approved',
-            'phone',
-            'public_serial_number'
-          ];
-      
-        this.filterKeys = {
-        'balance': amount => amount/100,
-        'created': null,
-        'is_approved': null,
-        'location': null
+            endDate: null
         }
     }
 
@@ -55,60 +28,58 @@ class DashboardFilter extends React.Component {
         }, () => this.updateStats())
     }
 
-    toggleFilter = () => {
-        this.setState({filterActive: !this.state.filterActive})
-    }
-
-    onFiltersChanged = (filters) => {
-        this.setState({
-            filters: filters
-        }, () => this.updateStats())
-    }
-
     updateStats = () => {
-        let {startDate, endDate, filters} = this.state
-        console.log(filters)
+        let {startDate, endDate} = this.state
+        if(!startDate && !endDate) {
+            this.props.loadCreditTransferStats()
+        } 
+    }
+
+    submitFilter = () => {
+        let {startDate, endDate} = this.state
         if(startDate && endDate) {
             this.props.loadCreditTransferStats({
               start_date: startDate.toISOString(),
               end_date: endDate.toISOString(),
-              filters: btoa(JSON.stringify(filters))
-            })
-        } else {
-            this.props.loadCreditTransferStats({
-                filters: btoa(JSON.stringify(filters))
             })
         }
     }
 
     render() {
-        var item_list = this.props.mergedTransferAccountUserList.sort((a, b) => (b.id - a.id));
+
+        // TODO: this should go somewhere else
+        moment.updateLocale('en', {
+            longDateFormat : {
+                L: "MM/DD/YY"
+            }
+        });
         return (
             <div>
-                <ModuleBox>
-                    <DateRangePicker
-                        isOutsideRange={() => false}
-                        startDatePlaceholderText={"Start Date"}
-                        endDatePlaceholderText={"End Date"}
-                        withPortal={true}
-                        startDate={this.state.startDate} // momentPropTypes.momentObj or null,
-                        startDateId="your_unique_start_date_id" // PropTypes.string.isRequired,
-                        endDate={this.state.endDate} // momentPropTypes.momentObj or null,
-                        endDateId="your_unique_end_date_id" // PropTypes.string.isRequired,
-                        onDatesChange={this.onDatesChange} // PropTypes.func.isRequired,
-                        focusedInput={this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
-                        onFocusChange={focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
-                    />
-                </ModuleBox>
-                <SearchBoxWithFilter
-                    toggleTitle={"Account Filters"}
-                    withSearch={false}
-                    item_list={item_list}
-                    onFiltersChanged={this.onFiltersChanged}
-                    searchKeys={this.searchKeys}
-                    filterKeys={this.filterKeys}>
-                    <div>{this.props.children}</div>
-                </SearchBoxWithFilter>
+
+                    <FilterContainer>
+                        <DateRangePicker
+                            displayFormat={() => moment.localeData().longDateFormat('L')}
+                            daySize={35}
+                            small={true}
+                            isOutsideRange={() => false}
+                            showClearDates={true}
+                            startDatePlaceholderText={"Start Date"}
+                            endDatePlaceholderText={"End Date"}
+                            startDate={this.state.startDate} // momentPropTypes.momentObj or null,
+                            startDateId="your_unique_start_date_id" // PropTypes.string.isRequired,
+                            endDate={this.state.endDate} // momentPropTypes.momentObj or null,
+                            endDateId="your_unique_end_date_id" // PropTypes.string.isRequired,
+                            onDatesChange={this.onDatesChange} // PropTypes.func.isRequired,
+                            focusedInput={this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
+                            onFocusChange={focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
+                        />
+                        <StyledButton onClick={(this.state.startDate && this.state.endDate) ? this.submitFilter : () => {}} style={{fontWeight: '400', margin: '0em 1em', lineHeight: '25px', height: '30px', backgroundColor: (!this.state.startDate || !this.state.endDate) && "grey", textTransform: "capitalize"}}>
+                            Filter
+                        </StyledButton>
+                    </FilterContainer>
+
+                {/* add more filters here */}
+                {this.props.children}
                 
             </div>
             
@@ -116,4 +87,8 @@ class DashboardFilter extends React.Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DashboardFilter);
+const FilterContainer = styled.div`
+    margin: 1em;
+`
+
+export default connect(null, mapDispatchToProps)(DashboardFilter);

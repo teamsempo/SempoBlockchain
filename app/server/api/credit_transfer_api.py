@@ -456,10 +456,6 @@ class CreditTransferStatsApi(MethodView):
 
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
-        encoded_filters = request.args.get('filters')
-        encoded_filters = encoded_filters.replace(" ", "+")
-        decoded_filters = base64.b64decode(encoded_filters)
-        print(decoded_filters)
         transfer_stats = calculate_transfer_stats(total_time_series=True, start_date=start_date, end_date=end_date)
 
         response_object = {
