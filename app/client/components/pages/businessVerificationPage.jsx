@@ -83,20 +83,16 @@ class BusinessVerificationPage extends React.Component {
     const steps = [
       {name: 'Account Details', component: <BusinessDetails userId={this.state.userId} />},
       {name: 'Documents', component: <BusinessDocuments isFinal={!this.state.is_bank_account}/>},
-    ];
-
-    const bankSteps = [
       {name: 'Bank Location', component: <BusinessBankLocation/>},
       {name: 'Bank Details', component: <BusinessBankDetails/>},
       {name: 'Bank Documents', component: <BusinessBankDocuments/>},
+      {name: 'Pending Verification', component: <BusinessVerificationPending/>}
     ];
 
-    const finalStep = {name: 'Pending Verification', component: <BusinessVerificationPending/>};
-
-    if (this.state.is_bank_account) {
-      finalSteps = steps.concat(bankSteps).concat(finalStep)
+    if (!this.state.is_bank_account) {
+      finalSteps = steps.splice(2,3)
     } else {
-      finalSteps = steps.concat(finalStep)
+      finalSteps = steps
     }
 
     if (businessProfile.kyc_status === 'VERIFIED') {
@@ -121,7 +117,6 @@ class BusinessVerificationPage extends React.Component {
         </WrapperDiv>
       )
     } else if (stepStatus.activeStep >= 0 || Object.values(businessProfile).length > 0) {
-
       return (
         <WrapperDiv>
           <PageWrapper style={{display: 'flex', flexDirection: 'column'}}>

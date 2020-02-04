@@ -5,7 +5,11 @@ import styled, {ThemeProvider} from 'styled-components';
 import { Row, Input, StyledSelect } from '../styledElements';
 
 import { CountryDropdown, RegionDropdown } from 'react-country-region-selector';
-import { editBusinessProfile, createBusinessProfile } from "../../reducers/businessVerificationReducer";
+import {
+  editBusinessProfile,
+  createBusinessProfile,
+  UPDATE_ACTIVE_STEP
+} from "../../reducers/businessVerificationReducer";
 import AsyncButton from "../AsyncButton.jsx";
 import { DefaultTheme } from "../theme.js";
 
@@ -30,6 +34,7 @@ const mapDispatchToProps = (dispatch) => {
   return {
     editBusinessProfile: (body, path) => dispatch(editBusinessProfile({body, path})),
     createBusinessProfile: (body) => dispatch(createBusinessProfile({body})),
+    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 1}),
   };
 };
 
@@ -119,10 +124,11 @@ class BusinessDetails extends React.Component {
 
       if (business.length > 0) {
         // business profile exists in db
+        this.props.nextStep();
         this.props.editBusinessProfile(userInput, this.props.businessProfile.id);
       } else {
         // creating a new business profile in db
-
+        this.props.nextStep();
         this.props.createBusinessProfile(createBusinessProfile);
       }
 

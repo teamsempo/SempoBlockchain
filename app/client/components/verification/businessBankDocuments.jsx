@@ -47,7 +47,8 @@ const mapDispatchToProps = (dispatch) => {
   return {
     editBusinessProfile: (body, path) => dispatch(editBusinessProfile({body, path})),
     uploadDocument: (body) => dispatch(uploadDocument({body})),
-    backStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 3})
+    backStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 3}),
+    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 5})
   };
 };
 
@@ -99,6 +100,7 @@ class BusinessBankDocuments extends React.Component {
 
     if (Object.keys(validateNewInput).every((k) => { return validateNewInput[k] === true })) {
       let business = this.props.business;
+      this.props.nextStep();
       this.props.editBusinessProfile({kyc_status: 'PENDING'}, business.id);
     } else {
       // if anything fails then update the UI validation state but NOT the UI Data State

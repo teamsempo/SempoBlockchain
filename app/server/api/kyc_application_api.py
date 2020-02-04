@@ -83,7 +83,7 @@ class KycApplicationAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 404
 
-            if not user_id and AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
+            if user_id and AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'admin'}):
                 response_object = {
                     'message': 'Successfully loaded business verification details',
                     'data': {'kyc_application': kyc_application_schema.dump(kyc_details).data}

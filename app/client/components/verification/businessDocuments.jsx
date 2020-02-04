@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import styled, {ThemeProvider} from 'styled-components';
-import {UPDATE_ACTIVE_STEP, uploadDocument} from "../../reducers/businessVerificationReducer";
+import {editBusinessProfile, UPDATE_ACTIVE_STEP, uploadDocument} from "../../reducers/businessVerificationReducer";
 import DateTime from "../dateTime.jsx";
 
 import { DefaultTheme } from "../theme";
@@ -40,6 +40,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    editBusinessProfile: (body, path) => dispatch(editBusinessProfile({body, path})),
     uploadDocument: (body) => dispatch(uploadDocument({body})),
     nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 2}),
     backStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0})
@@ -96,6 +97,7 @@ class BusinessDocuments extends React.Component {
     if (Object.keys(validateNewInput).every((k) => { return validateNewInput[k] === true })) {
       if (this.props.isFinal) {
         let business = this.props.business;
+        this.props.nextStep();
         this.props.editBusinessProfile({kyc_status: 'PENDING'}, business.id);
       } else {
         this.props.nextStep()

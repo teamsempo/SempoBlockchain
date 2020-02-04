@@ -448,8 +448,7 @@ kyc_application_state_schema = KycApplicationSchema(
     exclude=("trulioo_id", "wyre_id", "first_name", "last_name", "phone",
              "business_legal_name", "business_type",
              "tax_id", "website", "date_established",
-             "country", "street_address", "street_address_2"
-                                          "city", "region", "postal_code",
+             "country", "street_address", "street_address_2", "city", "region", "postal_code",
              "beneficial_owners", "bank_accounts",
              "uploaded_documents", "dob"
              ))
