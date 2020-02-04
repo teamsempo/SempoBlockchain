@@ -17,7 +17,24 @@ def deploy_contract(kwargs, args):
     return FakeCeleryAsyncResult()
 
 def call_contract_function(kwargs, args):
-    return FakeCeleryAsyncResult(result=int(1e19))
+    function_results = { 
+        'totalSupply': int(1e19),
+        'balanceOf': int(1e19),
+        'decimals': 18,
+        'allowance': int(1e18),
+        'default': 18
+    }
+    if 'function' in kwargs:
+        function_name = kwargs['function']
+        if function_name in function_results:
+            result = function_results[function_name]
+        else:
+            print('[WARN] Contract function \'${function_name}\' does not have a default simulator result. Using default value')
+            result = function_results['default']
+    else:
+        print('[WARN] Contract function called without \'function\' argument provided in kwargs.')
+        result = function_results['default']
+    return FakeCeleryAsyncResult(result=result)
 
 def transact_with_contract_function(kwargs, args):
     return FakeCeleryAsyncResult()
