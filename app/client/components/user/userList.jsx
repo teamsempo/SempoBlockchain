@@ -97,17 +97,10 @@ class UserList extends React.Component {
 							showPageSizeOptions={false}
 							className='react-table'
 							resizable={false}
-							getTdProps={(state, rowInfo, column) => {
+							getTdProps={(state, rowInfo) => {
 							return {
 								onClick: (e, handleOriginal) => {
-								// handle click on checkbox
-								if (column.id === "id") {
-									this.toggleSelectedTransferAccount(rowInfo.original.id);
-									return
-								}
-
 								browserHistory.push('/users/' + rowInfo.row.id);
-
 								if (handleOriginal) {
 									handleOriginal();
 								}
