@@ -89,7 +89,7 @@ def user_phone_is_verified(credit_transfer):
 def user_individual_kyc_is_verified(credit_transfer):
     return _sender_matches_kyc_criteria(
         credit_transfer,
-        lambda app: app.kyc_status == 'VERIFIED' and app.type == 'INDIVIDUAL'
+        lambda app: app.kyc_status == 'VERIFIED' and app.type == 'INDIVIDUAL' and not app.multiple_documents_verified
     )
 
 
