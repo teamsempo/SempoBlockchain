@@ -1,4 +1,4 @@
-from typing import List, Callable, Optional, Union, Tuple
+from typing import List, Callable, Optional, Union, Tuple, Iterable
 import datetime
 from functools import reduce
 from toolz import curry, pipe
@@ -7,9 +7,11 @@ from sqlalchemy.orm import Query
 
 from server.exceptions import TransferLimitCreationError
 
+from server.models.kyc_application import KycApplication
 from server.models import token
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum, TransferStatusEnum
+from server.utils.access_control import AccessControl
 import config
 
 AppliedToTypes = List[Union[TransferTypeEnum,
@@ -22,11 +24,14 @@ WITHDRAWAL = TransferTypeEnum.WITHDRAWAL
 AGENT_OUT = TransferSubTypeEnum.AGENT_OUT
 AGENT_IN = TransferSubTypeEnum.AGENT_IN
 STANDARD = TransferSubTypeEnum.STANDARD
+RECLAMATION = TransferSubTypeEnum.RECLAMATION
 
 STANDARD_PAYMENT = (PAYMENT, STANDARD)
 AGENT_OUT_PAYMENT = (PAYMENT, AGENT_OUT)
 AGENT_IN_PAYMENT = (PAYMENT, AGENT_IN)
+RECLAMATION_PAYMENT = (PAYMENT, RECLAMATION)
 
+GENERAL_PAYMENTS = [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT, RECLAMATION_PAYMENT]
 
 def get_transfer_limits(credit_transfer: CreditTransfer):
     relevant_limits = []
@@ -57,6 +62,18 @@ def get_transfer_limits(credit_transfer: CreditTransfer):
 
 # ~~~~~~SIMPLE CHECKS~~~~~~
 
+def sempo_admin_involved(credit_transfer):
+    if credit_transfer.recipient_user and AccessControl.has_sufficient_tier(
+            credit_transfer.recipient_user.roles, 'ADMIN', 'sempoadmin'):
+        return True
+
+    if credit_transfer.sender_user and AccessControl.has_sufficient_tier(
+            credit_transfer.sender_user.roles, 'ADMIN', 'sempoadmin'):
+        return True
+
+    return False
+
+
 def sender_user_exists(credit_transfer):
     return credit_transfer.sender_user
 
@@ -70,20 +87,24 @@ def user_phone_is_verified(credit_transfer):
 
 
 def user_individual_kyc_is_verified(credit_transfer):
+    return _sender_matches_kyc_criteria(
+        credit_transfer,
+        lambda app: app.kyc_status == 'VERIFIED' and app.type == 'INDIVIDUAL'
+    )
+
+
+def user_business_or_multidoc_kyc_verified(credit_transfer):
+    return _sender_matches_kyc_criteria(
+        credit_transfer,
+        lambda app: app.kyc_status == 'VERIFIED'
+                    and (app.type == 'BUSINESS' or app.multiple_documents_verified)
+    )
+
+
+def _sender_matches_kyc_criteria(credit_transfer, criteria):
     if credit_transfer.sender_user is not None:
-        kyc = credit_transfer.sender_user.kyc_applications
-        if len(kyc) > 0 and kyc[0].kyc_status == 'VERIFIED' and kyc[0].type == 'INDIVIDUAL':
-            return True
-
-    return False
-
-
-def user_business_kyc_is_verified(credit_transfer):
-    if credit_transfer.sender_user is not None:
-        kyc = credit_transfer.sender_user.kyc_applications
-        if len(kyc) > 0 and kyc[0].kyc_status == 'VERIFIED' and kyc[0].type == 'BUSINESS':
-            return True
-
+        matches_criteria = next((app for app in credit_transfer.sender_user.kyc_applications if criteria(app)), None)
+        return bool(matches_criteria)
     return False
 
 
@@ -99,20 +120,22 @@ def transfer_is_agent_out_subtype(credit_transfer):
     return credit_transfer.transfer_subtype is TransferSubTypeEnum.AGENT_OUT
 
 # ~~~~~~COMPOSITE CHECKS~~~~~~
-
+def base_check(credit_transfer):
+    # Only ever check transfers with a sender user and no sempoadmin (those involving sempoadmins are always allowed)
+    return sender_user_exists(credit_transfer) and not sempo_admin_involved(credit_transfer)
 
 def is_user_and_any_token(credit_transfer):
-    return sender_user_exists(credit_transfer) \
+    return base_check(credit_transfer) \
            and (token_is_reserve_type(credit_transfer) or token_is_liquid_type(credit_transfer))
 
 
 def is_user_and_liquid_token(credit_transfer):
-    return sender_user_exists(credit_transfer) and token_is_liquid_type(credit_transfer) \
+    return base_check(credit_transfer) and token_is_liquid_type(credit_transfer) \
            and not user_has_group_account_role(credit_transfer)
 
 
 def is_group_and_liquid_token(credit_transfer):
-    return sender_user_exists(credit_transfer) and token_is_liquid_type(credit_transfer) \
+    return base_check(credit_transfer) and token_is_liquid_type(credit_transfer) \
            and user_has_group_account_role(credit_transfer)
 
 
@@ -123,7 +146,7 @@ def is_any_token_and_user_is_not_phone_and_not_kyc_verified(credit_transfer):
 
 def is_any_token_and_user_is_phone_but_not_kyc_verified(credit_transfer):
     return is_user_and_any_token(credit_transfer) and user_phone_is_verified(credit_transfer) and not (
-        user_individual_kyc_is_verified(credit_transfer) or user_business_kyc_is_verified(credit_transfer)
+            user_individual_kyc_is_verified(credit_transfer) or user_business_or_multidoc_kyc_verified(credit_transfer)
     )
 
 
@@ -132,7 +155,7 @@ def is_any_token_and_user_is_kyc_verified(credit_transfer):
 
 
 def is_any_token_and_user_is_kyc_business_verified(credit_transfer):
-    return is_user_and_any_token(credit_transfer) and user_business_kyc_is_verified(credit_transfer)
+    return is_user_and_any_token(credit_transfer) and user_business_or_multidoc_kyc_verified(credit_transfer)
 
 # ~~~~~~LIMIT FILTERS~~~~~~
 
@@ -227,10 +250,10 @@ class TransferLimit(object):
 
 
 LIMITS = [
-    TransferLimit('Sempo Level 0: P7', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 0: P7', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_not_phone_and_not_kyc_verified, 7,
                   total_amount=5000),
-    TransferLimit('Sempo Level 0: P30', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 0: P30', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
                   total_amount=10000),
 
@@ -238,31 +261,33 @@ LIMITS = [
                   is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
                   no_transfer_allowed=True),
 
-    TransferLimit('Sempo Level 1: P7', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 1: P7', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_phone_but_not_kyc_verified, 7,
                   total_amount=5000),
-    TransferLimit('Sempo Level 1: P30', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 1: P30', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
                   total_amount=20000),
     TransferLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT],
                   is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
                   no_transfer_allowed=True),
 
-    TransferLimit('Sempo Level 2: P7', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 2: P7', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_kyc_verified, 7,
                   total_amount=50000),
-    TransferLimit('Sempo Level 2: P30', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 2: P30', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_kyc_verified, 30,
                   total_amount=100000),
-    TransferLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT], is_any_token_and_user_is_kyc_verified, 7,
+    TransferLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT],
+                  is_any_token_and_user_is_kyc_verified, 7,
                   total_amount=50000),
-    TransferLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT], is_any_token_and_user_is_kyc_verified, 30,
+    TransferLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT],
+                  is_any_token_and_user_is_kyc_verified, 30,
                   total_amount=100000),
 
-    TransferLimit('Sempo Level 3: P7', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 3: P7', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_kyc_business_verified, 7,
                   total_amount=500000),
-    TransferLimit('Sempo Level 3: P30', [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT],
+    TransferLimit('Sempo Level 3: P30', GENERAL_PAYMENTS,
                   is_any_token_and_user_is_kyc_business_verified, 30,
                   total_amount=1000000),
     TransferLimit('Sempo Level 3: WD7', [WITHDRAWAL, DEPOSIT],
@@ -274,12 +299,14 @@ LIMITS = [
 
 
     TransferLimit('GE Liquid Token - Standard User',
-                  [AGENT_OUT_PAYMENT, WITHDRAWAL], is_user_and_liquid_token, 7,
+                  [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                  is_user_and_liquid_token, 7,
                   transfer_filter=withdrawal_or_agent_out_filter,
                   no_transfer_allowed=True),
 
     TransferLimit('GE Liquid Token - Group Account User',
-                  [AGENT_OUT_PAYMENT, WITHDRAWAL], is_group_and_liquid_token, 30,
+                  [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                  is_group_and_liquid_token, 30,
                   transfer_filter=withdrawal_or_agent_out_filter,
                   transfer_count=1, transfer_balance_fraction=0.50)
 ]

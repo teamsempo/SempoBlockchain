@@ -41,6 +41,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     transfer_metadata = db.Column(JSONB)
 
+    exclude_from_limit_calcs = db.Column(db.Boolean, default=False)
+
     resolution_message = db.Column(db.String())
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
