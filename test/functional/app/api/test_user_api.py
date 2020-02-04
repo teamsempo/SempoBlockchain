@@ -10,21 +10,18 @@ fake = Faker()
 fake.add_provider(phone_number)
 
 
-@pytest.mark.parametrize("phone, initial_disbursement, business_usage_name, referred_by, tier, status_code", [
-    (None, 400, 'Fuel/Energy', '+61401391419', 'superadmin', 400),
-    ('+61401391418', 1000, 'Fuel/Energy', '+61401391419', 'superadmin', 200),
-    ('+61401391418', 400, 'Food/Water', '+61401391419', 'view', 403)
+@pytest.mark.parametrize("phone, business_usage_name, referred_by, tier, status_code", [
+    (None, 'Fuel/Energy', '+61401391419', 'superadmin', 400),
+    (fake.msisdn(), 'Fuel/Energy', fake.msisdn(), 'superadmin', 200),
+    (fake.msisdn(), 'Food/Water', fake.msisdn(), 'view', 403)
 ])
 def test_create_user(test_client, authed_sempo_admin_user, init_database, phone,
-                     initial_disbursement, business_usage_name,
-                     referred_by, tier, status_code):
+                     business_usage_name, referred_by, tier, status_code):
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)
         auth = get_complete_auth_token(authed_sempo_admin_user)
     else:
         auth = None
-
-    new_phone = fake.msisdn()
 
     response = test_client.post(
         "/api/v1/user/",
@@ -41,29 +38,29 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, phone,
             'is_vendor': False,
             'is_tokenagent': False,
             'is_groupaccount': False,
-            'initial_disbursement': initial_disbursement,
+            'initial_disbursement': 400,
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
             'referred_by': referred_by
         })
 
     assert response.status_code == status_code
-    if response.status_code == 201:
+    if response.status_code == 200:
         data = response.json['data']
         assert isinstance(data['user'], object)
         assert data['user']['first_name'] == 'John'
         assert data['user']['last_name'] == 'Smith'
-        assert data['user']['bio'] == 'EasyMart'
-        assert data['user']['gender'] == 'female'
-        assert data['user']['phone'] == proccess_phone_number(new_phone)
+        assert data['user']['custom_attributes']['bio'] == 'EasyMart'
+        assert data['user']['custom_attributes']['gender'] == 'female'
+        assert data['user']['phone'] == proccess_phone_number(phone)
         assert data['user']['is_vendor'] is False
         assert data['user']['is_tokenagent'] is False
         assert data['user']['is_groupaccount'] is False
-        assert data['user']['transfer_account']['balance'] == initial_disbursement
+        assert data['user']['transfer_accounts'][0]['balance'] == 400
         assert data['user']['location'] == 'Elwood'
         assert data['user']['business_usage_id'] == init_database.session.query(TransferUsage)\
             .filter_by(name=business_usage_name).first().id
-        # assert data['user']['referred_by'] == referred_by  #todo: not returned in schema, fixed in PR123
+        # assert data['user']['referred_by'] == referred_by  #todo: not returned in schema, fixed in #PR123
 
 
 @pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, tier, status_code", [
