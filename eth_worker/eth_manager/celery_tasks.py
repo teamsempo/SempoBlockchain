@@ -23,7 +23,7 @@ base_task_config = {
     'autoretry_for': (Exception,),
     'max_retries': 3,
     'soft_time_limit': 300,
-    'retry_backoff': True,
+    'retry_backoff': True
 }
 
 low_priority_config = {
