@@ -105,7 +105,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(self._eth_endpoint('retry_failed'), args={})
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
-    def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
+    def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None, queue='celery'):
         """
         Creates a blockchain wallet on the blockchain worker
         :param wei_target_balance: How much eth to top the wallet's balance up to
@@ -121,7 +121,7 @@ class BlockchainTasker(object):
         wallet_address = self._execute_synchronous_celery(self._eth_endpoint('create_new_blockchain_wallet'), args)
 
         if wei_target_balance or 0 > 0:
-            self.topup_wallet_if_required(wallet_address)
+            self.topup_wallet_if_required(wallet_address, queue=queue)
 
         return wallet_address
 
