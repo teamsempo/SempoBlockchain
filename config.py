@@ -5,7 +5,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.0.13'  # Remember to bump this in every PR
+VERSION = '1.0.15'  # Remember to bump this in every PR
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -161,6 +161,13 @@ ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
 ETH_DATABASE_HOST = specific_parser['DATABASE'].get('eth_host') or DATABASE_HOST
 ETH_WORKER_DB_POOL_SIZE = specific_parser['DATABASE'].getint('eth_worker_pool_size', 40)
 ETH_WORKER_DB_POOL_OVERFLOW = specific_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
+
+# Removes dependency on redis/celery/ganache
+# Never ever ever enable this on prod, or anywhere you care about integrity
+ENABLE_SIMULATOR_MODE = specific_parser['APP'].getboolean('enable_simulator_mode', False)
+if ENABLE_SIMULATOR_MODE:
+    print('[WARN] Simulator Mode is enabled. If you are seeing this message on a production system, \
+or anywhere you care about workers actually running you should shut down and adjust your config')
 
 def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,

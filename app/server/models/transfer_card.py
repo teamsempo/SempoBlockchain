@@ -60,6 +60,6 @@ class TransferCard(ModelBase):
         total_disbursed = 0
 
         for disbursement in disbursements:
-            total_disbursed += disbursement.transfer_amount
+            total_disbursed += float(disbursement.transfer_amount)
 
         self.amount_loaded = total_disbursed
