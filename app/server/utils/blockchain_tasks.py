@@ -7,7 +7,8 @@ import os
 import random
 from time import sleep
 
-from server import celery_app
+from . import task_runner
+
 from server.utils.exchange import (
     bonding_curve_tokens_to_reserve,
     bonding_curve_reserve_to_tokens,
@@ -16,15 +17,13 @@ from server.utils.exchange import (
 
 
 class BlockchainTasker(object):
-
     def _eth_endpoint(self, endpoint):
         eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
 
-    def _execute_synchronous_celery(self, signature, timeout=None):
-        async_result = signature.delay()
-
+    def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None):
+        async_result = task_runner.delay_task(task, kwargs, args)
         try:
             response = async_result.get(
                 timeout=timeout or current_app.config['SYNCRONOUS_TASK_TIMEOUT'],
@@ -34,25 +33,17 @@ class BlockchainTasker(object):
             raise e
         finally:
             async_result.forget()
-
         return response
 
-    def _execute_task(self, signature):
-        ar = signature.delay()
-        return ar.id
-
     def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
-        call_sig = celery_app.signature(
-            self._eth_endpoint('call_contract_function'),
-            kwargs={
-                'contract_address': contract_address,
-                'abi_type': contract_type,
-                'function': func,
-                'args': args,
-                'signing_address': signing_address
-            })
-
-        return self._execute_synchronous_celery(call_sig)
+        kwargs = {
+            'contract_address': contract_address,
+            'abi_type': contract_type,
+            'function': func,
+            'args': args,
+            'signing_address': signing_address
+        }
+        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), kwargs)
 
     def _synchronous_transaction_task(self,
                                       signing_address,
@@ -60,20 +51,16 @@ class BlockchainTasker(object):
                                       func, args=None,
                                       gas_limit=None,
                                       prior_tasks=None):
-
-        signature = celery_app.signature(
-            self._eth_endpoint('transact_with_contract_function'),
-            kwargs={
-                'signing_address': signing_address,
-                'contract_address': contract_address,
-                'abi_type': contract_type,
-                'function': func,
-                'args': args,
-                'gas_limit': gas_limit,
-                'prior_tasks': prior_tasks
-            })
-
-        return self._execute_task(signature)
+        kwargs = {
+            'signing_address': signing_address,
+            'contract_address': contract_address,
+            'abi_type': contract_type,
+            'function': func,
+            'args': args,
+            'gas_limit': gas_limit,
+            'prior_tasks': prior_tasks
+        }
+        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), kwargs).id
 
     def get_blockchain_task(self, task_uuid):
         """
@@ -86,11 +73,7 @@ class BlockchainTasker(object):
             priors: list of prior task uuids
         }
         """
-
-        sig = celery_app.signature(self._eth_endpoint('get_task'),
-                                   kwargs={'task_uuid': task_uuid})
-
-        return self._execute_synchronous_celery(sig)
+        return self._execute_synchronous_celery(self._eth_endpoint('get_task'), {'task_uuid': task_uuid})
 
     def await_task_success(self,
                            task_uuid,
@@ -115,19 +98,10 @@ class BlockchainTasker(object):
         raise TimeoutError
 
     def retry_task(self, task_uuid):
-        sig = celery_app.signature(self._eth_endpoint('retry_task'),
-                                   kwargs={
-                                       'task_uuid': task_uuid,
-                                   })
-
-        sig.delay()
+        task_runner.delay_task(self._eth_endpoint('retry_task'), {'task_uuid': task_uuid })
 
     def retry_failed(self):
-        sig = celery_app.signature(self._eth_endpoint('retry_failed'))
-
-        return self._execute_synchronous_celery(sig)
-
-
+        return self._execute_synchronous_celery(self._eth_endpoint('retry_failed'), args={})
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
     def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
@@ -138,14 +112,12 @@ class BlockchainTasker(object):
         :param private_key:
         :return: The wallet's address
         """
-        sig = celery_app.signature(self._eth_endpoint('create_new_blockchain_wallet'),
-                                   kwargs={
-                                       'wei_target_balance': wei_target_balance,
-                                       'wei_topup_threshold': wei_topup_threshold,
-                                       'private_key': private_key
-                                   })
-
-        wallet_address = self._execute_synchronous_celery(sig)
+        args={
+            'wei_target_balance': wei_target_balance,
+            'wei_topup_threshold': wei_topup_threshold,
+            'private_key': private_key
+        }
+        wallet_address = self._execute_synchronous_celery(self._eth_endpoint('create_new_blockchain_wallet'), args)
 
         if wei_target_balance or 0 > 0:
             self.topup_wallet_if_required(wallet_address)
@@ -161,15 +133,13 @@ class BlockchainTasker(object):
         :param prior_tasks: tasks that must successfully complete first befotehand
         :return: task uuid
         """
-        transfer_sig = celery_app.signature(self._eth_endpoint('send_eth'),
-                                            kwargs={
-                                                'signing_address': signing_address,
-                                                'amount_wei': amount_wei,
-                                                'recipient_address': recipient_address,
-                                                'prior_tasks': prior_tasks
-                                            })
-
-        return self._execute_task(transfer_sig)
+        kwargs={
+            'signing_address': signing_address,
+            'amount_wei': amount_wei,
+            'recipient_address': recipient_address,
+            'prior_tasks': prior_tasks
+        }
+        return task_runner.delay_task(self._eth_endpoint('send_eth'), kwargs).id
 
     def deploy_contract(
             self,
@@ -178,18 +148,14 @@ class BlockchainTasker(object):
             constructor_args: Optional[List] = None,
             constructor_kwargs: Optional[Dict] = None,
             prior_tasks: Optional[List[int]] = None) -> int:
-
-        deploy_sig = celery_app.signature(
-            self._eth_endpoint('deploy_contract'),
-            kwargs={
-                'signing_address': signing_address,
-                'contract_name': contract_name,
-                'args': constructor_args,
-                'kwargs': constructor_kwargs,
-                'prior_tasks': prior_tasks
-            })
-
-        return self._execute_task(deploy_sig)
+        kwargs={
+            'signing_address': signing_address,
+            'contract_name': contract_name,
+            'args': constructor_args,
+            'kwargs': constructor_kwargs,
+            'prior_tasks': prior_tasks
+        }
+        return task_runner.delay_task(self._eth_endpoint('deploy_contract'), kwargs)
 
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,
@@ -439,17 +405,11 @@ class BlockchainTasker(object):
         :param deploying_address: The address of the wallet used to deploy the network
         :return: registry contract address
         """
-
-        sig = celery_app.signature(self._eth_endpoint('deploy_exchange_network'),
-                                   args=[deploying_address])
-
-        return self._execute_synchronous_celery(sig, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
+        return self._execute_synchronous_celery(self._eth_endpoint('deploy_exchange_network'), args = [deploying_address], timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
-        sig = celery_app.signature(self._eth_endpoint('deploy_and_fund_reserve_token'),
-                                   args=[deploying_address, name, symbol, fund_amount_wei])
-
-        return self._execute_synchronous_celery(sig, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10)
+        args = [deploying_address, name, symbol, fund_amount_wei]
+        return self._execute_synchronous_celery(self._eth_endpoint('deploy_and_fund_reserve_token'), args = args, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10)
 
     def deploy_smart_token(self,
                            deploying_address,
@@ -460,20 +420,16 @@ class BlockchainTasker(object):
                            reserve_token_address,
                            reserve_ratio_ppm):
 
-        sig = celery_app.signature(self._eth_endpoint('deploy_smart_token'),
-                                   args=[deploying_address,
-                                         name, symbol, decimals,
-                                         int(reserve_deposit_wei),
-                                         int(issue_amount_wei),
-                                         contract_registry_address,
-                                         reserve_token_address,
-                                         int(reserve_ratio_ppm)])
+        args=[deploying_address,
+              name, symbol, decimals,
+              int(reserve_deposit_wei),
+              int(issue_amount_wei),
+              contract_registry_address,
+              reserve_token_address,
+              int(reserve_ratio_ppm)]
 
-        return self._execute_synchronous_celery(sig, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15)
+        return self._execute_synchronous_celery(self._eth_endpoint('deploy_smart_token'), args = args, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15)
 
     def topup_wallet_if_required(self, wallet_address):
-        sig = celery_app.signature(self._eth_endpoint('topup_wallet_if_required'),
-                                   args=[wallet_address])
-
-        return self._execute_synchronous_celery(sig)
+        return self._execute_synchronous_celery(self._eth_endpoint('topup_wallet_if_required'), args = [wallet_address])
 
