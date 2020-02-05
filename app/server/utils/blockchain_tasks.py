@@ -409,7 +409,6 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(self._eth_endpoint('deploy_exchange_network'), args = [deploying_address], timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
-        print('TEST')
         args = [deploying_address, name, symbol, fund_amount_wei]
         return self._execute_synchronous_celery(self._eth_endpoint('deploy_and_fund_reserve_token'), args = args, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10)
 
