@@ -6,9 +6,8 @@ eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoin
 import config
 
 
-def execute_synchronous_celery(signature):
-    async_result = signature.delay()
-
+def execute_synchronous_celery(signature, queue='celery'):
+    async_result = signature.apply_async(queue=queue)
     try:
         response = async_result.get(
             timeout=config.SYNCRONOUS_TASK_TIMEOUT,
@@ -23,6 +22,6 @@ def execute_synchronous_celery(signature):
     return response
 
 
-def execute_task(signature):
-    ar = signature.delay()
-    return ar.id
+def execute_task(signature, queue='celery'):
+    async_result = signature.apply_async(queue=queue)
+    return async_result.id

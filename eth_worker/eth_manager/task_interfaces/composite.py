@@ -20,7 +20,7 @@ def get_contract_address(task_uuid):
     return pipe(task_uuid, await_tr, lambda r: r.get('contract_address'))
 
 
-def topup_wallets():
+def topup_wallets(queue='low-priority'):
     wallets = persistence_interface.get_all_wallets()
 
     for wallet in wallets:
@@ -37,10 +37,10 @@ def topup_wallets():
             signature(utils.eth_endpoint('topup_wallet_if_required'),
                       kwargs={
                           'address': wallet.address
-                      }).delay()
+                      }).apply_async(queue=queue)
 
 
-def topup_if_required(address):
+def topup_if_required(address, queue='low-priority'):
     balance = w3.eth.getBalance(address)
 
     wallet = persistence_interface.get_wallet_by_address(address)
@@ -56,7 +56,7 @@ def topup_if_required(address):
                             'prior_tasks': []
                         })
 
-        task_uuid = utils.execute_task(sig)
+        task_uuid = utils.execute_task(sig, queue=queue)
 
         persistence_interface.set_wallet_last_topup_task_uuid(address, task_uuid)
 

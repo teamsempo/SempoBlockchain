@@ -23,9 +23,18 @@ base_task_config = {
     'autoretry_for': (Exception,),
     'max_retries': 3,
     'soft_time_limit': 300,
-    'retry_backoff': True
+    'retry_backoff': True,
 }
 
+low_priority_config = {
+    **base_task_config,
+    'queue': 'low-priority'
+}
+
+low_priority_no_retry_config = {
+    **low_priority_config,
+    'max_retries': 0
+}
 no_retry_config = {
     **base_task_config,
     'max_retries': 0
@@ -85,15 +94,13 @@ def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold
     return wallet.address
 
 
-@celery_app.task(**base_task_config)
+@celery_app.task(**low_priority_config)
 def topup_wallets(self):
-    # TODO: Reenable this once there's a worker for it
-    return True
-    # eth_manager.task_interfaces.composite.topup_wallets()
+    eth_manager.task_interfaces.composite.topup_wallets()
 
 
 # Set retry attempts to zero since beat will retry shortly anyway
-@celery_app.task(**no_retry_config)
+@celery_app.task(**low_priority_no_retry_config)
 def topup_wallet_if_required(self, address):
     return eth_manager.task_interfaces.composite.topup_if_required(address)
 
