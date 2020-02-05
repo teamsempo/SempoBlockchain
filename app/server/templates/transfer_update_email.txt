@@ -14,4 +14,4 @@ Beneficiary: {{ beneficiary }}
 
 Payments are processed by our partner Wyre. Wyre Payments, Inc. is a registered money service business (NMLS ID: 1574869).
 
-If this message is an error, or you need assistance please contact team@sempo.ai.
+If this message is an error, or you need assistance please contact team@withsempo.com.
