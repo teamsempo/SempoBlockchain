@@ -80,17 +80,17 @@ class CreditTransferList extends React.Component {
     this.setState({isLoading: false})
   }
 
-  componentDidUpdate(newProps) {
+  componentDidUpdate(prevProps) {
     let { credit_transfer_ids, item_list } = this.props;
 
     // handles credit_transfer_ids array
-    if (credit_transfer_ids !== newProps.credit_transfer_ids) {
+    if (credit_transfer_ids !== prevProps.credit_transfer_ids) {
       this.setState({credit_transfer_ids: {}});
-      // this.sortCreditTransfers(newProps.credit_transfer_ids)
+      this.sortCreditTransfers(credit_transfer_ids)
     }
 
     // handles credit_transfer_list array
-    if (item_list !== newProps.item_list) {
+    if (item_list !== prevProps.item_list) {
 
       this.setState({credit_transfer_ids: {}});
 
