@@ -34,6 +34,8 @@ class KycApplication(ModelBase):
     # INDIVIDUAL or BUSINESS... MASTER (deprecated)
     type                = db.Column(db.String)
 
+    multiple_documents_verified = db.Column(db.Boolean, default=False)
+
     first_name          = db.Column(db.String)
     last_name           = db.Column(db.String)
     phone               = db.Column(db.String)
