@@ -7,7 +7,7 @@ import ReactTable from 'react-table'
 
 import { TopRow, StyledButton, ModuleHeader } from '../styledElements.js'
 
-import { loadUserList, updateUser } from '../../reducers/auth/actions'
+import { loadUserList, updateUser, deleteInvite } from '../../reducers/auth/actions'
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 const mapStateToProps = (state) => {
@@ -15,7 +15,9 @@ const mapStateToProps = (state) => {
   	login: state.login,
     loggedIn: (state.login.userId != null),
 		adminUsers: state.adminUsers,
-		adminUserList: Object.keys(state.adminUsers.byId).map(id => state.adminUsers.byId[id]),
+		//todo: not the cleanest, but need to make IDs unique
+		adminUserList: Object.keys(state.adminUsers.adminsById).map(id => state.adminUsers.adminsById[id]).map(i => {if(typeof i.id!=="string"){i.id = 'u'+i.id}return i;}),
+		inviteUserList: Object.keys(state.adminUsers.invitesById).map(id => state.adminUsers.invitesById[id]).map(i => {if(typeof i.id!=="string"){i.id = 'i'+i.id}return i;}),
 		updateUserRequest: state.updateUserRequest,
   };
 };
@@ -23,7 +25,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     loadUserList: () => dispatch(loadUserList()),
-    updateUser: (body, query) => dispatch(updateUser({body, query}))
+    updateUser: (body, query) => dispatch(updateUser({body, query})),
+		deleteInvite: (payload) => dispatch(deleteInvite(payload))
   };
 };
 
@@ -43,36 +46,48 @@ class AdminUserList extends React.Component {
   	this.props.loadUserList()
   }
 
-  updateUserAccountPermissions(user_id, admin_tier, deactivated) {
-  	this.props.updateUser(
-  		{
-			user_id: user_id,
-			admin_tier: admin_tier,
-			deactivated: deactivated},
-			{
+  updateUserAccountPermissions(user_id, query, deactivated) {
+  	let userId = user_id.substring(1,); // convert 'u1' to 1
 
-			}
-			)
+  	if (query === 'resend') {
+  		this.props.updateUser({
+			invite_id: userId,
+			resend: true
+			}, {})
+		} else if (query === 'delete') {
+  		this.props.deleteInvite({body:{invite_id: parseInt(userId)}})
+		} else {
+			this.props.updateUser({
+				user_id: userId,
+				admin_tier: query,
+				deactivated: deactivated}, {})
+		}
   }
 
 
-  displayCorrectStatus(id) {
-	  if (this.props.adminUserList.find(x => x.id === id).is_disabled) {
-	  	var StatusComponent =
+  displayCorrectStatus(item) {
+  	let statusComponent;
+  	if (typeof item.is_disabled === "undefined") {
+  		// email invite
+  		statusComponent =
+				<StatusWrapper>
+				  <DisabledIcon style={{backgroundColor: 'rgba(39, 164, 167, 0.8)'}}>Invited</DisabledIcon>
+			  </StatusWrapper>
+		} else if (item.is_disabled) {
+	  	statusComponent =
 			  <StatusWrapper>
 				  <DisabledIcon style={{backgroundColor: 'rgba(255, 0, 0, 0.8)'}}>Disabled</DisabledIcon>
 			  </StatusWrapper>
-
-      } else if (!this.props.adminUserList.find(x => x.id === id).is_activated) {
-	  	StatusComponent =
+      } else if (!item.is_activated) {
+	  	statusComponent =
 			  <StatusWrapper>
 				  <DisabledIcon style={{backgroundColor: 'rgba(39, 164, 167, 0.8)'}}>Unactivated</DisabledIcon>
 			  </StatusWrapper>
 	  }
-	  return StatusComponent
+	  return statusComponent
   }
 
-  displayActionItems(id) {
+  displayActionItems(i) {
   	let default_action_items = [
   		{'query': 'superadmin', 'display': 'Change to Super Admin', 'deactivated': null},
       {'query': 'admin', 'display': 'Change to Admin', 'deactivated': null},
@@ -80,29 +95,32 @@ class AdminUserList extends React.Component {
       {'query': 'view', 'display': 'Change to View Only', 'deactivated': null}
     ];
 
-	if (this.props.adminUserList.find(x => x.id === id).is_disabled) {
-		var formatted_action_item = {'query': null, 'display': 'Enable User', 'deactivated': false};
-		default_action_items.push(formatted_action_item);
+	if (typeof i.is_disabled === "undefined") {
+    // email invite
+		default_action_items = [
+			{'query': 'resend', 'display': 'Resend Invite', 'deactivated': false},
+			{'query': 'delete', 'display': 'Delete Invite', 'deactivated': true},
+			]
+  } else if (i.is_disabled) {
+		default_action_items.push({'query': null, 'display': 'Enable User', 'deactivated': false});
 	} else {
-  		formatted_action_item = {'query': null, 'display': 'Disable User', 'deactivated': true};
-  		default_action_items.push(formatted_action_item);
+		default_action_items.push({'query': null, 'display': 'Disable User', 'deactivated': true});
 	}
 
-  	if (this.state.action) {
+	if (this.state.action) {
 		return(
-		 default_action_items.map(item => <ActionItem style={{color: (item.deactivated === false ? '#30a4a6' : ''), width: '100%'}} key={item.query} onClick={() => this.setState({action: !this.state.action, user_id: null}, this.updateUserAccountPermissions(id, item.query, item.deactivated))}>{item.display}</ActionItem>)
-		)
-	}
+		 default_action_items.map(item => <ActionItem style={{color: (item.deactivated === false ? '#30a4a6' : ''), width: '100%'}} key={item.query} onClick={() => this.setState({action: !this.state.action, user_id: null}, this.updateUserAccountPermissions(i.id, item.query, item.deactivated))}>{item.display}</ActionItem>)
+		)}
   }
 
-  displayActionComponent(id) {
-  	const isSelected = this.state.user_id === id;
+  displayActionComponent(item) {
+  	const isSelected = this.state.user_id === item.id;
 
   	if (isSelected) {
   		var ActionItems =
 			<ActionWrapper
-				  style={{display: (this.state.user_id === id ? '' : 'none')}}>
-				{this.displayActionItems(id)}
+				  style={{display: (this.state.user_id === item.id ? '' : 'none')}}>
+				{this.displayActionItems(item)}
 	  		</ActionWrapper>
 	} else {
   		ActionItems = null;
@@ -110,9 +128,9 @@ class AdminUserList extends React.Component {
 
 	return(
 		<div>
-		  <IconWrapper style={{border: (this.state.user_id === id ? 'solid 1px rgba(0,0,0,0.05)' : '')}} onClick={() => this.setState({
+		  <IconWrapper style={{border: (this.state.user_id === item.id ? 'solid 1px rgba(0,0,0,0.05)' : '')}} onClick={() => this.setState({
 			  action: !this.state.action,
-			  user_id: id
+			  user_id: item.id
 		  })}>
 			  <IconSVG src="/static/media/action-icon.svg"/>
 		  </IconWrapper>
@@ -125,7 +143,7 @@ class AdminUserList extends React.Component {
   }
 
   render() {
-  	const { adminUsers, adminUserList } = this.props;
+  	const { adminUsers, adminUserList, inviteUserList } = this.props;
 	  const loadingStatus = adminUsers.loadStatus.isRequesting || adminUsers.createStatus.isRequesting;
 
 	  if (loadingStatus) {
@@ -137,8 +155,10 @@ class AdminUserList extends React.Component {
     }
 
 	  if (adminUsers.loadStatus.success) {
-		  const tableLength = adminUserList.length;
-		  const sortedUserList = adminUserList.sort((a, b) => (a.id - b.id));
+
+		  const invitedUsers = inviteUserList || [];
+		  const sortedUserList = adminUserList.concat(invitedUsers).sort((a, b) => (a.id - b.id));
+		  const tableLength = sortedUserList.length;
 
 		  return (
 			  <Wrapper>
@@ -174,19 +194,19 @@ class AdminUserList extends React.Component {
                 Header: "Status",
                 accessor: "id",
                 headerClassName: 'react-table-header',
-							  Cell: cellInfo => this.displayCorrectStatus(cellInfo.value)
+							  Cell: cellInfo => this.displayCorrectStatus(cellInfo.original),
               },
               {
                 Header: "",
                 accessor: "id",
                 headerClassName: 'react-table-header',
                 width: 60,
-                Cell: cellInfo => this.displayActionComponent(cellInfo.value)
+                Cell: cellInfo => this.displayActionComponent(cellInfo.original)
               }
             ]}
 					  data={sortedUserList}
 					  loading={loadingStatus} // Display the loading overlay when we need it
-					  defaultPageSize={tableLength}
+					  pageSize={tableLength}
 					  sortable={false}
 					  showPagination={false}
 					  showPageSizeOptions={false}
