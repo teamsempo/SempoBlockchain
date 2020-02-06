@@ -1,3 +1,4 @@
+import enum
 import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -14,6 +15,7 @@ import random
 import string
 
 from server import db, sentry, celery_app, bt
+
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
@@ -49,6 +51,11 @@ referrals = Table(
 )
 
 
+class SignupMethodEnum(enum.Enum):
+    MOBILE_SIGNUP = 'MOBILE_SIGNUP',
+    USSD_SELF_SIGNUP = 'USSD_SELF_SIGNUP'
+
+
 class User(ManyOrgBase, ModelBase):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
@@ -82,6 +89,7 @@ class User(ManyOrgBase, ModelBase):
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
     seen_latest_terms = db.Column(db.Boolean, default=False)
+    sign_up_method = db.Column(db.String)
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
 
@@ -97,13 +105,11 @@ class User(ManyOrgBase, ModelBase):
     is_disabled = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
-    is_ussd_self_sign_up = db.Column(db.Boolean, default=False)
 
     password_reset_tokens = db.Column(JSONB, default=[])
     pin_reset_tokens = db.Column(JSONB, default=[])
 
     terms_accepted = db.Column(db.Boolean, default=True)
-    data_sharing_accepted = db.Column(db.Boolean, default=False)
 
     matched_profile_pictures = db.Column(JSON)
 
@@ -658,7 +664,7 @@ class User(ManyOrgBase, ModelBase):
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
 
-        if not self.is_ussd_self_sign_up:
+        if self.sign_up_method != SignupMethodEnum.USSD_SELF_SIGNUP.value:
             self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
 
     def __repr__(self):
