@@ -65,14 +65,13 @@ class ExchangeContractAPI(MethodView):
 
         exchange_contract.add_reserve_token(reserve_token)
         db.session.add(exchange_contract)
-        db.session.flush()
+        db.session.commit()
 
         exchange_contract_id = exchange_contract.id
 
         @copy_current_request_context
         def deploy(_deploying_address, _exchange_contract_id):
             contract_registry_address = bt.deploy_exchange_network(_deploying_address)
-
             _exchange_contract = ExchangeContract.query.get(_exchange_contract_id)
             _exchange_contract.contract_registry_blockchain_address = contract_registry_address
 
