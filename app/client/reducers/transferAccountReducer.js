@@ -24,11 +24,11 @@ const byId = (state = {}, action) => {
         var newState = {};
 
         action.credit_transfer_list.map(transfer => {
-          if (transfer.transfer_type === 'DISBURSEMENT') {
+          if (transfer.transfer_subtype === 'DISBURSEMENT') {
             let updatedTransferAccount = {[transfer.recipient_transfer_account.id]: {credit_receives: [transfer.id]}};
             newState = {...newState, ...updatedTransferAccount};
 
-          } else if (transfer.transfer_type === 'RECLAMATION') {
+          } else if (transfer.transfer_subtype === 'RECLAMATION') {
             let updatedTransferAccount = {[transfer.sender_transfer_account.id]: {credit_sends: [transfer.id]}};
             newState = {...newState, ...updatedTransferAccount};
 
