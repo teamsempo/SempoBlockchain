@@ -14,7 +14,7 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
-from server.models.user import User
+from server.models.user import User, SignupMethodEnum
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount
@@ -280,7 +280,7 @@ def create_user_without_transfer_account(phone):
     :param phone: string with user's msisdn
     :return: User
     """
-    user = User(phone=phone, is_ussd_self_sign_up=True)
+    user = User(phone=phone, signup_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
     return user
 
 
