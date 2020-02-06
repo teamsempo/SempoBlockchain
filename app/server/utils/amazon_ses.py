@@ -109,7 +109,7 @@ def get_email_template(TEMPLATE_FILE):
 
 def ses_email_handler(recipient, subject, textbody, htmlbody = None):
 
-    sender = "admin@sempo.ai"
+    sender = "admin@withsempo.com"
     awsregion = "us-west-2"
     htmlbody = htmlbody or textbody
     charset = "UTF-8"
