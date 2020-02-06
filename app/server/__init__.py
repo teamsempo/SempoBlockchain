@@ -104,7 +104,7 @@ def register_blueprints(app):
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.celery_tasks = []
 
-        if request.url.startswith('http://') and '.sempo.ai' in request.url:
+        if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
             code = 301
             return redirect(url, code=code)
@@ -124,6 +124,7 @@ def register_blueprints(app):
 
         for task in g.celery_tasks:
             try:
+                # TODO: Standardize this task (pipe through execute_synchronous_celery)
                 task.delay()
             except Exception as e:
                 sentry_sdk.capture_exception(e)
