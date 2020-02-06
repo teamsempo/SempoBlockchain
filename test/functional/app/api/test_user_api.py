@@ -10,12 +10,12 @@ fake = Faker()
 fake.add_provider(phone_number)
 
 
-@pytest.mark.parametrize("phone, business_usage_name, referred_by, tier, status_code", [
-    (None, 'Fuel/Energy', '+61401391419', 'superadmin', 400),
-    (fake.msisdn(), 'Fuel/Energy', fake.msisdn(), 'superadmin', 200),
-    (fake.msisdn(), 'Food/Water', fake.msisdn(), 'view', 403)
+@pytest.mark.parametrize("user_phone_accessor, phone, business_usage_name, referred_by, tier, status_code", [
+    (lambda o: o.phone, None, 'Fuel/Energy', '+61401391419', 'superadmin', 400),
+    (lambda o: o.phone, fake.msisdn(), 'Fuel/Energy', fake.msisdn(), 'superadmin', 200),
+    (lambda o: o.phone, fake.msisdn(), 'Food/Water', fake.msisdn(), 'view', 403)
 ])
-def test_create_user(test_client, authed_sempo_admin_user, init_database, phone,
+def test_create_user(test_client, authed_sempo_admin_user, init_database, create_transfer_account_user, user_phone_accessor, phone,
                      business_usage_name, referred_by, tier, status_code):
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)
@@ -41,9 +41,9 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, phone,
             'initial_disbursement': 0,
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
-            'referred_by': referred_by
+            'referred_by': user_phone_accessor(create_transfer_account_user) #create the user who is referring
         })
-
+    
     assert response.status_code == status_code
     if response.status_code == 200:
         data = response.json['data']
