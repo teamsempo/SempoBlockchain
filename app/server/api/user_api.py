@@ -199,7 +199,7 @@ class UserAPI(MethodView):
 
 
 class ResetPinAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'admin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()
