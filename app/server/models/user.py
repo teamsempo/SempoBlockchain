@@ -251,7 +251,7 @@ class User(ManyOrgBase, ModelBase):
                 task = {'user_id': self.id, 'address': location}
                 task_runner('worker.celery_tasks.geolocate_address', args=(task,))
             except Exception as e:
-                sentry_sdk.captureException(e)
+                sentry_sdk.capture_exception(e)
                 pass
 
     @hybrid_property
