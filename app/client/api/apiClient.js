@@ -15,7 +15,7 @@ import {generateFormattedURL, getTFAToken, getToken, handleResponse} from "../ut
  * @returns {Promise<Response>}
  */
 export const apiClient = ({url, method=method.toUpperCase(), isAuthed=true, isTFA=false, isForm=false, query=null, body=null, path=null, errorHandling=true}) => {
-  if (['PUT', 'POST', 'GET'].indexOf(method) === -1) {
+  if (['PUT', 'POST', 'GET', 'DELETE'].indexOf(method) === -1) {
     throw Error('Method provided is not supported')
   }
 
