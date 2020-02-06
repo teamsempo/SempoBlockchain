@@ -20,6 +20,7 @@ from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
+from server.utils import task_runner
 
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
@@ -248,12 +249,9 @@ class User(ManyOrgBase, ModelBase):
 
             try:
                 task = {'user_id': self.id, 'address': location}
-                geolocate_task = celery_app.signature('worker.celery_tasks.geolocate_address',
-                                                      args=(task,))
-
-                geolocate_task.delay()
+                task_runner('worker.celery_tasks.geolocate_address', args=(task,))
             except Exception as e:
-                sentry_sdk.captureException(e)
+                sentry_sdk.capture_exception(e)
                 pass
 
     @hybrid_property

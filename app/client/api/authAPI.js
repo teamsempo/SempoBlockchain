@@ -20,4 +20,6 @@ export const getUserList = () => apiClient({url: '/auth/permissions/', method: '
 
 export const updateUserAPI = ({body, query}) => apiClient({url: '/auth/permissions/', method: 'PUT', body: body, query: query});
 
+export const deleteInviteAPI = ({body}) => apiClient({url: '/auth/permissions/', method: 'DELETE', body: body});
+
 export const inviteUserAPI = ({body}) => apiClient({url: '/auth/permissions/', method: 'POST', body: body});

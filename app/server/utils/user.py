@@ -39,7 +39,7 @@ def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     try:
         rekognition_task = celery_app.signature('worker.celery_tasks.check_for_duplicate_person',
                                                 args=(new_filename, image_id))
-
+        # TODO: Standardize this task (pipe through execute_synchronous_celery)
         rekognition_task.delay()
     except Exception as e:
         print(e)
@@ -181,7 +181,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
-                                 location=None, lat=None, lng=None,
+                                 lat=None, lng=None,
                                  use_precreated_pin=False,
                                  use_last_4_digits_of_id_as_initial_pin=False,
                                  existing_transfer_account=None,
@@ -195,7 +195,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     user = User(first_name=first_name,
                 last_name=last_name,
-                location=location, lat=lat, lng=lng,
+                lat=lat, lng=lng,
                 preferred_language=preferred_language,
                 phone=phone,
                 email=email,
@@ -586,7 +586,7 @@ def proccess_create_or_modify_user_request(
         organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
-        location=location, lat=lat, lng=lng,
+        lat=lat, lng=lng,
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,

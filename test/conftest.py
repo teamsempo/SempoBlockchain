@@ -53,7 +53,7 @@ def create_organisation(test_client, init_database, external_reserve_token):
 def new_sempo_admin_user(test_client, init_database, create_organisation):
     from server.models.user import User
     user = User()
-    user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
+    user.create_admin_auth(email='tristan@withsempo.com', password='TestPassword', tier='sempoadmin')
     user.organisations.append(create_organisation)
     user.default_organisation = create_organisation
 

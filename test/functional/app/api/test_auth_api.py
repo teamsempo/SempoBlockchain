@@ -123,9 +123,9 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
     assert response.status_code == status_code
 
 @pytest.mark.parametrize("email,password,status_code", [
-    ("tristan@sempo.ai", "TestPassword", 200),
-    ("tristan@sempo.ai", "IncorrectTestPassword", 401),
-    ("tristan+123@sempo.ai", "IncorrectTestPassword", 401),
+    ("tristan@withsempo.com", "TestPassword", 200),
+    ("tristan@withsempo.com", "IncorrectTestPassword", 401),
+    ("tristan+123@withsempo.com", "IncorrectTestPassword", 401),
 ])
 def test_request_api_token(test_client, authed_sempo_admin_user, email, password, status_code):
     """
@@ -203,7 +203,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
 
     @pytest.mark.parametrize("email, tier, status_code", [
         ("test@test.com","admin",201),
-        ("tristan@sempo.ai","admin", 403),
+        ("tristan@withsempo.com","admin", 403),
     ])
     def test_add_user_to_whitelist(test_client, authed_sempo_admin_user, email, tier, status_code):
         """
@@ -222,7 +222,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
 
 # todo- need to mock boto3 SES api so i'm not bombarded with emails
 # @pytest.mark.parametrize("email,status_code", [
-#     ("tristan+1@sempo.ai", 201),
+#     ("tristan+1@withsempo.com", 201),
 #     ("tristan", 403),
 # ])
 # def test_register_and_activate_api(test_client, init_database, email, status_code):
@@ -268,7 +268,8 @@ def test_get_permissions_api(test_client, complete_admin_auth_token):
                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert response.json['admins'] is not None
+    assert response.json['data']['admins'] is not None
+    assert isinstance(response.json['data']['admins'], list)
 
 
 def get_admin_default_org_id(admin_user):
@@ -277,11 +278,11 @@ def get_admin_default_org_id(admin_user):
 
 @pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id_selector, response_code", [
     ('admin', 'foo1@acme.com', 'admin', lambda o: 2, 401),
-    ('admin', 'foo1@acme.com', 'admin', lambda o: None, 200),
+    ('admin', 'foo1@acme.com', 'admin', lambda o: None, 201),
     ('sempoadmin', 'foo@acme.com', 'admin', lambda o: 12332, 404),
     ('sempoadmin',  None, 'admin', get_admin_default_org_id, 400),
     ('sempoadmin', 'foo@acme.com', None, get_admin_default_org_id, 400),
-    ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 200),
+    ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 201),
     ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 400),
 ])
 
