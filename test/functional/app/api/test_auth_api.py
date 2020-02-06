@@ -123,9 +123,9 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
     assert response.status_code == status_code
 
 @pytest.mark.parametrize("email,password,status_code", [
-    ("tristan@sempo.ai", "TestPassword", 200),
-    ("tristan@sempo.ai", "IncorrectTestPassword", 401),
-    ("tristan+123@sempo.ai", "IncorrectTestPassword", 401),
+    ("tristan@withsempo.com", "TestPassword", 200),
+    ("tristan@withsempo.com", "IncorrectTestPassword", 401),
+    ("tristan+123@withsempo.com", "IncorrectTestPassword", 401),
 ])
 def test_request_api_token(test_client, authed_sempo_admin_user, email, password, status_code):
     """
@@ -203,7 +203,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
 
     @pytest.mark.parametrize("email, tier, status_code", [
         ("test@test.com","admin",201),
-        ("tristan@sempo.ai","admin", 403),
+        ("tristan@withsempo.com","admin", 403),
     ])
     def test_add_user_to_whitelist(test_client, authed_sempo_admin_user, email, tier, status_code):
         """
@@ -222,7 +222,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
 
 # todo- need to mock boto3 SES api so i'm not bombarded with emails
 # @pytest.mark.parametrize("email,status_code", [
-#     ("tristan+1@sempo.ai", 201),
+#     ("tristan+1@withsempo.com", 201),
 #     ("tristan", 403),
 # ])
 # def test_register_and_activate_api(test_client, init_database, email, status_code):

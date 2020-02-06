@@ -289,7 +289,7 @@ def run_setup():
 
     print('Creating admin user')
     amount_to_load = 1000
-    admin_user = get_or_create_admin_user('admin@sempo.ai', 'TestPassword', new_organisation)
+    admin_user = get_or_create_admin_user('admin@withsempo.com', 'TestPassword', new_organisation)
     admin_transfer_account = admin_user.transfer_account
     load_account(admin_transfer_account.blockchain_address, int(20e18))
     send_eth_task = bt.send_eth(
