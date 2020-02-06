@@ -35,23 +35,23 @@ balance_inquiry_pin_authorization_state = partial(UssdSessionFactory, state="bal
 
 
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected",
-                         [
-                             # initial_pin_entry transitions tests
-                             (initial_pin_entry_state, standard_user, "0000", "initial_pin_confirmation"),
-                             (initial_pin_entry_state, standard_user, "AAAA", "exit_invalid_pin"),
-                             # current_pin state tests
-                             (current_pin_state, standard_user, "0000", "new_pin"),
-                             (current_pin_state, pin_blocked_user, "1111", "exit_pin_blocked"),
-                             # new_pin state tests
-                             (new_pin_state, standard_user, "2222", "new_pin_confirmation"),
-                             (new_pin_state, standard_user, "0000", "exit_invalid_pin"),
-                             # new_pin_confirmation state tests
-                             (new_pin_confirmation_state, standard_user, "2222", "complete"),
-                             (new_pin_confirmation_state, standard_user, "1212", "exit_pin_mismatch"),
-                             # opt_out_of_market_place_pin_authorization state tests
-                             (opt_out_of_market_place_pin_authorization_state, pin_blocked_user, "1111",
-                              "exit_pin_blocked")
-                         ])
+ [
+     # initial_pin_entry transitions tests
+     (initial_pin_entry_state, standard_user, "0000", "initial_pin_confirmation"),
+     (initial_pin_entry_state, standard_user, "AAAA", "exit_invalid_pin"),
+     # current_pin state tests
+     (current_pin_state, standard_user, "0000", "new_pin"),
+     (current_pin_state, pin_blocked_user, "1111", "exit_pin_blocked"),
+     # new_pin state tests
+     (new_pin_state, standard_user, "2222", "new_pin_confirmation"),
+     (new_pin_state, standard_user, "0000", "exit_invalid_pin"),
+     # new_pin_confirmation state tests
+     (new_pin_confirmation_state, standard_user, "2222", "complete"),
+     (new_pin_confirmation_state, standard_user, "1212", "exit_pin_mismatch"),
+     # opt_out_of_market_place_pin_authorization state tests
+     (opt_out_of_market_place_pin_authorization_state, pin_blocked_user, "1111",
+      "exit_pin_blocked")
+ ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
     session = session_factory()
     user = user_factory()
@@ -64,52 +64,52 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected, before_failed_pin_attempts, "
                          "after_failed_pin_attempts",
-                         [
-                             # send token pin auth combinations
-                             (send_token_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
-                             (send_token_pin_authorization_state, standard_user, "1212",
-                              "send_token_pin_authorization", 1, 2),
-                             (send_token_pin_authorization_state, standard_user, "0000",
-                              "send_token_confirmation", 1, 0),
-                             (send_token_pin_authorization_state, standard_user, "1212",
-                              "exit_pin_blocked", 2, 3),
-                             (send_token_pin_authorization_state, standard_user, "0000",
-                              "send_token_confirmation", 2, 0),
-                             # balance inquiry pin auth combinations
-                             (balance_inquiry_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3,
-                              3),
-                             (balance_inquiry_pin_authorization_state, standard_user, "1212",
-                              "balance_inquiry_pin_authorization", 1, 2),
-                             (balance_inquiry_pin_authorization_state, standard_user, "0000",
-                              "complete", 1, 0),
-                             (balance_inquiry_pin_authorization_state, standard_user, "1212",
-                              "exit_pin_blocked", 2, 3),
-                             (balance_inquiry_pin_authorization_state, standard_user, "0000",
-                              "complete", 2, 0),
-                             # exchange token pin auth combinations
-                             (exchange_token_pin_authorization_state, pin_blocked_user, "1111", "exit_pin_blocked", 3,
-                              3),
-                             (exchange_token_pin_authorization_state, standard_user, "1212",
-                              "exchange_token_pin_authorization", 1, 2),
-                             (exchange_token_pin_authorization_state, standard_user, "0000",
-                              "exchange_token_confirmation", 1, 0),
-                             (exchange_token_pin_authorization_state, standard_user, "1212",
-                              "exit_pin_blocked", 2, 3),
-                             (exchange_token_pin_authorization_state, standard_user, "0000",
-                              "exchange_token_confirmation", 2, 0),
-                             # exchange rate pin auth combinations
-                             (
-                                     exchange_rate_pin_authorization_state, pin_blocked_user, "1111",
-                                     "exit_pin_blocked", 3, 3),
-                             (exchange_rate_pin_authorization_state, standard_user, "1212",
-                              "exchange_rate_pin_authorization", 1, 2),
-                             (exchange_rate_pin_authorization_state, standard_user, "0000",
-                              "complete", 1, 0),
-                             (exchange_rate_pin_authorization_state, standard_user, "1212",
-                              "exit_pin_blocked", 2, 3),
-                             (exchange_rate_pin_authorization_state, standard_user, "0000",
-                              "complete", 2, 0),
-                         ])
+ [
+     # send token pin auth combinations
+     (send_token_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
+     (send_token_pin_authorization_state, standard_user, "1212",
+      "send_token_pin_authorization", 1, 2),
+     (send_token_pin_authorization_state, standard_user, "0000",
+      "send_token_confirmation", 1, 0),
+     (send_token_pin_authorization_state, standard_user, "1212",
+      "exit_pin_blocked", 2, 3),
+     (send_token_pin_authorization_state, standard_user, "0000",
+      "send_token_confirmation", 2, 0),
+     # balance inquiry pin auth combinations
+     (balance_inquiry_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3,
+      3),
+     (balance_inquiry_pin_authorization_state, standard_user, "1212",
+      "balance_inquiry_pin_authorization", 1, 2),
+     (balance_inquiry_pin_authorization_state, standard_user, "0000",
+      "complete", 1, 0),
+     (balance_inquiry_pin_authorization_state, standard_user, "1212",
+      "exit_pin_blocked", 2, 3),
+     (balance_inquiry_pin_authorization_state, standard_user, "0000",
+      "complete", 2, 0),
+     # exchange token pin auth combinations
+     (exchange_token_pin_authorization_state, pin_blocked_user, "1111", "exit_pin_blocked", 3,
+      3),
+     (exchange_token_pin_authorization_state, standard_user, "1212",
+      "exchange_token_pin_authorization", 1, 2),
+     (exchange_token_pin_authorization_state, standard_user, "0000",
+      "exchange_token_confirmation", 1, 0),
+     (exchange_token_pin_authorization_state, standard_user, "1212",
+      "exit_pin_blocked", 2, 3),
+     (exchange_token_pin_authorization_state, standard_user, "0000",
+      "exchange_token_confirmation", 2, 0),
+     # exchange rate pin auth combinations
+     (
+             exchange_rate_pin_authorization_state, pin_blocked_user, "1111",
+             "exit_pin_blocked", 3, 3),
+     (exchange_rate_pin_authorization_state, standard_user, "1212",
+      "exchange_rate_pin_authorization", 1, 2),
+     (exchange_rate_pin_authorization_state, standard_user, "0000",
+      "complete", 1, 0),
+     (exchange_rate_pin_authorization_state, standard_user, "1212",
+      "exit_pin_blocked", 2, 3),
+     (exchange_rate_pin_authorization_state, standard_user, "0000",
+      "complete", 2, 0),
+ ])
 def test_authorize_pin(test_client, init_database, session_factory, user_factory, user_input, expected,
                        before_failed_pin_attempts, after_failed_pin_attempts):
     session = session_factory()
