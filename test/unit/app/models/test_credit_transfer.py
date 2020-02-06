@@ -1,5 +1,5 @@
 import pytest
-from server.exceptions import AccountLimitError
+from server.exceptions import AccountLimitError, TransferCountLimitError
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum
 
 
@@ -70,8 +70,16 @@ def test_new_credit_transfer_check_sender_transfer_limits(create_credit_transfer
         if 'Sempo Level 2: P' in limit.name
     ]
 
-    # Check Sempo Level 3 LIMITS (payment only)
+    # Check Sempo Level 3 LIMITS for business (payment only)
     kyc.type = 'BUSINESS'
+    assert create_credit_transfer.check_sender_transfer_limits() == [
+        limit for limit in LIMITS
+        if 'Sempo Level 3: P' in limit.name
+    ]
+
+    # Check Sempo Level 3 LIMITS for multiple verified (payment only)
+    kyc.type = 'INDIVIDUAL'
+    kyc.multiple_documents_verified = True
     assert create_credit_transfer.check_sender_transfer_limits() == [
         limit for limit in LIMITS
         if 'Sempo Level 3: P' in limit.name
@@ -136,6 +144,27 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
         c.resolve_as_completed()
         db.session.flush()
 
+# TODO: These tests suck because they impact each other (try doing this one at the end)
+def test_exclude_transfer_from_ge_limit(create_credit_transfer, other_new_credit_transfer):
+    from server.models import token
+    # Check GE LIMITS for Liquid Token (payment, agent_out subtype) on check LIMITS
+    create_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    create_credit_transfer.token.token_type = token.TokenType.LIQUID
+    create_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+
+    other_new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    other_new_credit_transfer.token.token_type = token.TokenType.LIQUID
+    other_new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+    other_new_credit_transfer.sender_transfer_account.balance = 2000
+    other_new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
+    with pytest.raises(TransferCountLimitError):
+        other_new_credit_transfer.check_sender_transfer_limits()
+
+    create_credit_transfer.exclude_from_limit_calcs = True
+
+    assert len(other_new_credit_transfer.check_sender_transfer_limits()) == 3
+
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(create_credit_transfer):
     from server.models import token
@@ -148,6 +177,20 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_lim
     # Sempo Level 0 LIMITS (payment only) on check LIMITS
     with pytest.raises(AccountLimitError):
         create_credit_transfer.check_sender_transfer_limits()
+
+
+def test_sempoadmin_doesnt_have_limits(create_credit_transfer):
+    from server.models import token
+
+    create_credit_transfer.transfer_amount = 100000
+
+    create_credit_transfer.token.token_type = token.TokenType.RESERVE
+    create_credit_transfer.sender_user.kyc_applications = []
+    create_credit_transfer.sender_user.set_held_role('ADMIN', 'sempoadmin')
+
+    create_credit_transfer.check_sender_transfer_limits()
+
+    create_credit_transfer.sender_user.set_held_role('ADMIN', None)
 
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_withdrawal(create_credit_transfer):
@@ -169,4 +212,3 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_agent_out
     create_credit_transfer.sender_transfer_account.balance = 1000
     with pytest.raises(AccountLimitError):
         create_credit_transfer.check_sender_transfer_limits()
-

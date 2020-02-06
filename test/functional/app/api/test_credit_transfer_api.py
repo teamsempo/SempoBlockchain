@@ -36,7 +36,13 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
     if recipient_transfer_accounts_ids:
         recipient_transfer_accounts_ids = [recipient_transfer_accounts_ids]
 
+    # Hack to prevent previous tests from causing future tests to fail
+    # TODO: Change design of entire testing process to enable quick setup of blockchain etc, but not have tests so path dependent
+    create_transfer_account_user.credit_sends = []
+    create_transfer_account_user.credit_receives = []
+
     sender_user_id = sender_user_id_accessor(create_transfer_account_user)
+
     recipient_user_id = recipient_user_id_accessor(create_transfer_account_user)
 
     if transfer_type == 'PAYMENT' and sender_user_id:
