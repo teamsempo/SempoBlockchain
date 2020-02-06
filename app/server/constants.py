@@ -38,7 +38,7 @@ DEFAULT_ATTRIBUTES = ['email', 'phone', 'blockchain_address', 'public_serial_num
 GE_FILTER_ATTRIBUTES = [
     'gender',
     'GE_wallet_address',
-    # 'bio',
+    'bio',
     'GE_community_token_id'
 ]
 
