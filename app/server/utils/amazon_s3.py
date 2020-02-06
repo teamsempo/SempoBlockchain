@@ -68,11 +68,14 @@ def generate_new_filename(original_filename, file_type = 'UnknownType', user_id 
 
     return file_type.lower() + '-user_' + str(user_id) + '-' + export_time + '.' + extension
 
+def make_sure_path_exists(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
 
 def get_local_save_path(new_filename):
     local_save_directory = os.path.join(current_app.config['BASEDIR'], "tmp/")
+    make_sure_path_exists(local_save_directory)
     return os.path.join(local_save_directory, new_filename)
-
 
 def save_to_s3_from_url(external_url, new_filename):
 
