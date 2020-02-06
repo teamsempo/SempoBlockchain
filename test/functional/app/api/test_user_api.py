@@ -38,7 +38,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, phone,
             'is_vendor': False,
             'is_tokenagent': False,
             'is_groupaccount': False,
-            'initial_disbursement': 400,
+            'initial_disbursement': 0,
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
             'referred_by': referred_by
@@ -56,7 +56,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, phone,
         assert data['user']['is_vendor'] is False
         assert data['user']['is_tokenagent'] is False
         assert data['user']['is_groupaccount'] is False
-        assert data['user']['transfer_accounts'][0]['balance'] == 400
+        assert data['user']['transfer_accounts'][0]['balance'] == 0
         assert data['user']['location'] == 'Elwood'
         assert data['user']['business_usage_id'] == init_database.session.query(TransferUsage)\
             .filter_by(name=business_usage_name).first().id
