@@ -185,7 +185,7 @@ def consecutive_success_or_pending_txn_count(singing_address_id, starting_nonce=
 def get_usd_to_satoshi_rate():
 
     blockchain_task = celery_app.signature('worker.celery_tasks.get_usd_to_satoshi_rate')
-
+    # TODO: Convert to task_runner
     result = blockchain_task.apply_async()
 
     try:

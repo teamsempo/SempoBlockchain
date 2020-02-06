@@ -6,7 +6,7 @@ def test_new_sempo_admin_user(new_sempo_admin_user):
     WHEN a new admin User is created
     THEN check the email, password is hashed, not authenticated, and role fields are defined correctly
     """
-    assert new_sempo_admin_user.email == 'tristan@sempo.ai'
+    assert new_sempo_admin_user.email == 'tristan@withsempo.com'
     assert new_sempo_admin_user.password_hash is not None
     assert new_sempo_admin_user.password_hash != 'TestPassword'
     assert not new_sempo_admin_user.is_activated
