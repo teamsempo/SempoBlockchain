@@ -9,6 +9,7 @@ import CreditTransferListWithFilterWrapper from '../creditTransfer/creditTransfe
 import UploadButton from "../uploader/uploadButton.jsx";
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
+import organizationWrapper from '../organizationWrapper';
 
 const mapStateToProps = (state) => {
   return {
@@ -66,7 +67,7 @@ class CreditTransferListPage extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(CreditTransferListPage);
+export default connect(mapStateToProps, mapDispatchToProps)(organizationWrapper(CreditTransferListPage));
 
 const IconSVG = styled.img`
   width: 35px;

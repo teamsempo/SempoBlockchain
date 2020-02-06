@@ -16,7 +16,12 @@ import {
   RESET_PASSWORD_REQUEST,
   RESET_PASSWORD_SUCCESS, ResetEmailAction, ResetPasswordAction,
   INVITE_USER_FAILURE, INVITE_USER_REQUEST, INVITE_USER_SUCCESS, InviteUserAction,
+  UPDATE_INVITE_USER_LIST,
+  DEEP_UPDATE_INVITE_USER_LIST, Invite, InviteUserListAction,
   UPDATE_ADMIN_USER_LIST,
+  DELETE_INVITE_REQUEST,
+  DELETE_INVITE_SUCCESS,
+  DELETE_INVITE_FAILURE, DeleteInviteAction,
   EDIT_ADMIN_USER_FAILURE,
   EDIT_ADMIN_USER_REQUEST,
   EDIT_ADMIN_USER_SUCCESS, UpdateUserAction,
@@ -92,10 +97,21 @@ export const resetPasswordState = (state = initialState, action: ResetPasswordAc
   }
 };
 
-const byId = (state: AdminUser[] = [] || {}, action: AdminUserListAction): AdminUser[] => {
+const adminsById = (state: AdminUser[] = [] || {}, action: AdminUserListAction): AdminUser[] => {
   switch (action.type) {
     case UPDATE_ADMIN_USER_LIST:
       return DEEEEEEP(state, action.admins);
+    default:
+      return state;
+  }
+};
+
+const invitesById = (state: Invite[] = [] || {}, action: InviteUserListAction): Invite[] => {
+  switch (action.type) {
+    case DEEP_UPDATE_INVITE_USER_LIST:
+      return DEEEEEEP(state, action.invites);
+    case UPDATE_INVITE_USER_LIST:
+      return action.invites;
     default:
       return state;
   }
@@ -152,13 +168,27 @@ export const createStatus = (state = initialState, action: InviteUserAction) => 
     }
 };
 
+export const deleteStatus = (state = initialState, action: DeleteInviteAction) => {
+    switch (action.type) {
+        case DELETE_INVITE_REQUEST:
+            return {...state, isRequesting: true, error: null, success: false};
+        case DELETE_INVITE_SUCCESS:
+            return {...state, isRequesting: false, success: true};
+        case DELETE_INVITE_FAILURE:
+            return {...state, isRequesting: false, error: action.error};
+        default:
+            return state;
+    }
+};
+
 export const adminUsers = combineReducers({
-    byId,
+    adminsById,
+    invitesById,
     loadStatus,
     editStatus,
     createStatus,
+    deleteStatus,
 });
-
 
 export const validateTFA = (state = initialState, action: ValidateTfaAction) => {
     switch (action.type) {

@@ -3,8 +3,9 @@ import MySQLdb
 import time
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 import pprint
+import sentry_sdk
 
-from server import db, sentry
+from server import db
 
 from server.models.user import User
 from server.models.organisation import Organisation
@@ -136,6 +137,10 @@ class RDSMigrate:
             print("Phone Deleted, Skipping")
             return
 
+        if ge_user['status'] == 'Deleted':
+            print("User Deleted, Skipping")
+            return
+
         processed_phone = proccess_phone_number(phone_number)
         existing_user = User.query.filter_by(phone=processed_phone).execution_options(show_all=True).first()
         if existing_user:
@@ -143,7 +148,7 @@ class RDSMigrate:
             return
 
         business_usage = None
-        if ge_user['business_type'] is not None:
+        if ge_user.get('business_type') is not None:
 
             sempo_category = GE_BUSINESS_CATEGORY_MAPPINGS.get(ge_user['business_type'])
 
@@ -165,11 +170,13 @@ class RDSMigrate:
 
             sempo_user.pin_hash = ge_user['encrypted_pin']
             sempo_user.is_activated = ge_user['status'] == 'Active'  # Is this the correct way to find this out?
+            sempo_user.default_transfer_account.is_approved = True
             sempo_user.is_disabled = False
             sempo_user.is_phone_verified = True
             sempo_user.is_self_sign_up = False
             sempo_user.terms_accepted = False
             sempo_user.created = ge_user['created_at']
+            sempo_user.is_market_enabled = int(ge_user['market_enabled']) == 1
             sempo_user.custom_attributes = self.create_custom_attributes(ge_user)
 
             if ge_user['token_agents.id'] is not None:
@@ -200,7 +207,6 @@ class RDSMigrate:
             ('bio', 'bio'),
             ('national_id_number', 'national_id_number'),
             ('gender', 'gender'),
-            ('market_enabled', 'market_enabled'),
             ('referred_by_id', 'GE_referred_by_id'),
             ('phone_listed', 'phone_listed'),
             ('community_token_id', 'GE_community_token_id')
@@ -209,8 +215,12 @@ class RDSMigrate:
         custom_attributes = []
         for accessor, label in wanted_custom_attributes:
             if accessor in ge_user:
+                if accessor == 'gender':
+                    value = ge_user[accessor].lower()
+                else:
+                    value = ge_user[accessor]
                 custom_attribute = CustomAttributeUserStorage(
-                    name=label, value=ge_user[accessor])
+                    name=label, value=value)
                 custom_attributes.append(custom_attribute)
         return custom_attributes
 
@@ -319,8 +329,6 @@ class RDSMigrate:
                         balance_wei += int(v)
 
                 user = ge_address_to_user[user_address]
-                ta = user.get_transfer_account_for_token(token)
-                ta._balance_wei = balance_wei
 
                 print(f'transfering {balance_wei} wei to {user}')
 
@@ -341,7 +349,7 @@ class RDSMigrate:
 
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass
 
     def store_wei(self, address, balance):

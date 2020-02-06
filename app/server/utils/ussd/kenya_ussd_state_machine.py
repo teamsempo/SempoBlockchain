@@ -99,6 +99,15 @@ class KenyaUssdStateMachine(Machine):
         self.user.preferred_language = language
         self.send_sms(self.user.phone, "language_change_sms")
 
+    def initial_change_preferred_language_to_sw(self, user_input):
+        self.initial_change_preferred_language_to("sw")
+
+    def initial_change_preferred_language_to_en(self, user_input):
+        self.initial_change_preferred_language_to("en")
+
+    def initial_change_preferred_language_to(self, language):
+        self.user.preferred_language = language
+
     def save_business_directory_info(self, user_input):
         attrs = {
             "custom_attributes": {
@@ -108,12 +117,7 @@ class KenyaUssdStateMachine(Machine):
         set_custom_attributes(attrs, self.user)
 
     def change_opted_in_market_status(self, user_input):
-        attrs = {
-            "custom_attributes": {
-                "market_enabled": False
-            }
-        }
-        set_custom_attributes(attrs, self.user)
+        self.user.is_market_enabled = False
         self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
 
     def send_terms_to_user_if_required(self, user_inpt):
@@ -157,7 +161,6 @@ class KenyaUssdStateMachine(Machine):
     def complete_initial_pin_change(self, user_input):
         try:
             change_initial_pin(user=self.user, new_pin=user_input)
-            self.send_sms(self.user.phone, "pin_change_success_sms")
         except Exception as e:
             self.send_sms(self.user.phone, "pin_change_error_sms")
             raise e
@@ -343,13 +346,13 @@ class KenyaUssdStateMachine(Machine):
         initial_language_selection_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
-             'dest': 'complete',
-             'after': 'change_preferred_language_to_en',
+             'dest': 'initial_pin_entry',
+             'after': 'initial_change_preferred_language_to_en',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
-             'dest': 'complete',
-             'after': 'change_preferred_language_to_sw',
+             'dest': 'initial_pin_entry',
+             'after': 'initial_change_preferred_language_to_sw',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
@@ -378,7 +381,7 @@ class KenyaUssdStateMachine(Machine):
         initial_pin_confirmation_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
-             'dest': 'complete',
+             'dest': 'start',
              'after': ['complete_initial_pin_change', 'set_phone_as_verified'],
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',

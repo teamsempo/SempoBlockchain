@@ -165,6 +165,8 @@ class CreditTransferSchema(Schema):
 
     transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
 
+    token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
+
     sender_transfer_account_id      = fields.Int()
     recipient_transfer_account_id   = fields.Int()
 

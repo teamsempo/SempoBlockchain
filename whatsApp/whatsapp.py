@@ -1,7 +1,7 @@
 from time import sleep
 from datetime import datetime
 
-from raven import Client
+import sentry_sdk
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -335,8 +335,8 @@ def parse_queue_task(task):
 if __name__ =='__main__':
 
     print('whatsapp starting: ' + str(datetime.utcnow()))
+    sentry_sdk.init(config.SENTRY_SERVER_DSN, release=config.VERSION)
 
-    client = Client(config.SENTRY_SERVER_DSN)
 
     try:
 

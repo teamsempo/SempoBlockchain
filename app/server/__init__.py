@@ -7,7 +7,8 @@ from celery import Celery
 from pusher import Pusher
 import boto3
 from twilio.rest import Client as TwilioClient
-from raven.contrib.flask import Sentry
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 import messagebird
 import africastalking
 from datetime import datetime
@@ -85,13 +86,13 @@ def register_extensions(app):
                 return make_response(jsonify({'message': 'Payload too large'})), 413
             request.get_data(parse_form_data=False, cache=True)
 
-    if not config.IS_TEST:
-        sentry.init_app(app, dsn=app.config['SENTRY_SERVER_DSN'])
     # limiter.init_app(app)
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     celery_app.conf.update(app.config)
+    if not config.IS_TEST:
+        sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
 
     print('celery joined on {} at {}'.format(
         app.config['REDIS_URL'], datetime.utcnow()))
@@ -103,7 +104,7 @@ def register_blueprints(app):
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.celery_tasks = []
 
-        if request.url.startswith('http://') and '.sempo.ai' in request.url:
+        if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
             code = 301
             return redirect(url, code=code)
@@ -123,9 +124,10 @@ def register_blueprints(app):
 
         for task in g.celery_tasks:
             try:
+                # TODO: Standardize this task (pipe through execute_synchronous_celery)
                 task.delay()
             except Exception as e:
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
 
         return response
 
@@ -157,7 +159,7 @@ def register_blueprints(app):
     from server.api.contract_api import contracts_blueprint
     from server.api.ge_migration_api import ge_migration_blueprint
 
-    versioned_url = '/api/v' + app.config['WEB_VERSION']
+    versioned_url = '/api/v1'
 
     app.register_blueprint(index_view)
     app.register_blueprint(me_blueprint, url_prefix=versioned_url + '/me')
@@ -213,7 +215,6 @@ db = SQLAlchemy(session_options={
 })
 
 basic_auth = BasicAuth()
-sentry = Sentry()
 
 # limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
 

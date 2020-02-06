@@ -88,6 +88,19 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 @pytest.mark.parametrize("session_factory, user_input, language", [
     (initial_language_selection_state, "1", "en"),
     (initial_language_selection_state, "2", "sw"),
+])
+def test_change_language_initial(mocker, test_client, init_database, session_factory, user_input, language):
+    session = session_factory()
+    user = standard_user()
+    assert user.preferred_language is None
+
+    state_machine = KenyaUssdStateMachine(session, user)
+
+    state_machine.feed_char(user_input)
+    assert state_machine.state == "initial_pin_entry"
+    assert user.preferred_language == language
+
+@pytest.mark.parametrize("session_factory, user_input, language", [
     (choose_language_state, "1", "en"),
     (choose_language_state, "2", "sw"),
 ])
@@ -116,8 +129,7 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
 
     state_machine.feed_char("0000")
     assert state_machine.state == "complete"
-    market_enabled = next(filter(lambda x: x.name == 'market_enabled', user.custom_attributes), None)
-    assert market_enabled.value is False
+    assert user.is_market_enabled == False
     state_machine.send_sms.assert_called_with(user.phone, "opt_out_of_market_place_sms")
 
 
