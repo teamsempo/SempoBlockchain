@@ -6,7 +6,7 @@ import json
 
 from helpers.factories import UserFactory, UssdSessionFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
-from server.models.user import User
+from server.models.user import User, SignupMethodEnum
 
 fake = Faker()
 fake.add_provider(phone_number)
@@ -15,7 +15,7 @@ phone = partial(fake.msisdn)
 
 base_user = partial(UserFactory, phone='+61400000000')
 unactivated_user = partial(base_user, is_activated=False)
-unregistered_user = partial(base_user, is_activated=False, is_ussd_self_sign_up=True)
+unregistered_user = partial(base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.view)
 standard_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
 pin_blocked_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=3)
 
@@ -62,8 +62,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     assert state_machine.state == expected
 
 
-@pytest.mark.parametrize("session_factory, user_factory, user_input, expected, before_failed_pin_attempts, "
-                         "after_failed_pin_attempts",
+@pytest.mark.parametrize("session_factory, user_factory, user_input, expected, before_failed_pin_attempts, after_failed_pin_attempts",
  [
      # send token pin auth combinations
      (send_token_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
@@ -76,8 +75,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
      (send_token_pin_authorization_state, standard_user, "0000",
       "send_token_confirmation", 2, 0),
      # balance inquiry pin auth combinations
-     (balance_inquiry_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3,
-      3),
+     (balance_inquiry_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
      (balance_inquiry_pin_authorization_state, standard_user, "1212",
       "balance_inquiry_pin_authorization", 1, 2),
      (balance_inquiry_pin_authorization_state, standard_user, "0000",
@@ -87,8 +85,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
      (balance_inquiry_pin_authorization_state, standard_user, "0000",
       "complete", 2, 0),
      # exchange token pin auth combinations
-     (exchange_token_pin_authorization_state, pin_blocked_user, "1111", "exit_pin_blocked", 3,
-      3),
+     (exchange_token_pin_authorization_state, pin_blocked_user, "1111", "exit_pin_blocked", 3, 3),
      (exchange_token_pin_authorization_state, standard_user, "1212",
       "exchange_token_pin_authorization", 1, 2),
      (exchange_token_pin_authorization_state, standard_user, "0000",
@@ -98,9 +95,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
      (exchange_token_pin_authorization_state, standard_user, "0000",
       "exchange_token_confirmation", 2, 0),
      # exchange rate pin auth combinations
-     (
-             exchange_rate_pin_authorization_state, pin_blocked_user, "1111",
-             "exit_pin_blocked", 3, 3),
+     (exchange_rate_pin_authorization_state, pin_blocked_user, "1111", "exit_pin_blocked", 3, 3),
      (exchange_rate_pin_authorization_state, standard_user, "1212",
       "exchange_rate_pin_authorization", 1, 2),
      (exchange_rate_pin_authorization_state, standard_user, "0000",

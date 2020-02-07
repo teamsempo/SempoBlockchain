@@ -6,19 +6,22 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text, Table
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
+from cryptography.fernet import Fernet
 import pyotp
+import config
 from flask import current_app, g
 import datetime
 import bcrypt
 import jwt
 import random
 import string
+import sentry_sdk
 
-from server import db, sentry, celery_app, bt
-
+from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
+from server.utils import task_runner
 
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
@@ -82,7 +85,7 @@ class User(ManyOrgBase, ModelBase):
     _public_serial_number = db.Column(db.String())
     nfc_serial_number = db.Column(db.String())
 
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(200))
     one_time_code = db.Column(db.String)
     secret = db.Column(db.String())
     _TFA_secret = db.Column(db.String(128))
@@ -105,6 +108,7 @@ class User(ManyOrgBase, ModelBase):
     is_disabled = db.Column(db.Boolean, default=False)
     is_phone_verified = db.Column(db.Boolean, default=False)
     is_self_sign_up = db.Column(db.Boolean, default=True)
+    is_market_enabled = db.Column(db.Boolean, default=False)
 
     password_reset_tokens = db.Column(JSONB, default=[])
     pin_reset_tokens = db.Column(JSONB, default=[])
@@ -252,13 +256,9 @@ class User(ManyOrgBase, ModelBase):
 
             try:
                 task = {'user_id': self.id, 'address': location}
-                geolocate_task = celery_app.signature('worker.celery_tasks.geolocate_address',
-                                                      args=(task,))
-
-                geolocate_task.delay()
+                task_runner('worker.celery_tasks.geolocate_address', args=(task,))
             except Exception as e:
-                print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass
 
     @hybrid_property
@@ -379,11 +379,14 @@ class User(ManyOrgBase, ModelBase):
 
     @staticmethod
     def salt_hash_secret(password):
-        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        f = Fernet(config.PASSWORD_PEPPER)
+        return f.encrypt(bcrypt.hashpw(password.encode(), bcrypt.gensalt())).decode()
 
     @staticmethod
     def check_salt_hashed_secret(password, hashed_password):
-        return bcrypt.checkpw(password.encode(), hashed_password.encode())
+        f = Fernet(config.PASSWORD_PEPPER)
+        hashed_password = f.decrypt(hashed_password.encode())
+        return bcrypt.checkpw(password.encode(), hashed_password)
 
     def hash_password(self, password):
         self.password_hash = self.salt_hash_secret(password)

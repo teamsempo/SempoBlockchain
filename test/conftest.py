@@ -34,7 +34,7 @@ def create_master_organisation(test_client, init_database, external_reserve_toke
     master_organisation = Organisation.master_organisation()
     if master_organisation is None:
         print('Creating master organisation')
-        master_organisation = Organisation(is_master=True, token=external_reserve_token)
+        master_organisation = Organisation(name='FrancineCorp', is_master=True, token=external_reserve_token)
         db.session.add(master_organisation)
         db.session.commit()
 
@@ -53,7 +53,7 @@ def create_organisation(test_client, init_database, external_reserve_token):
 def new_sempo_admin_user(test_client, init_database, create_organisation):
     from server.models.user import User
     user = User()
-    user.create_admin_auth(email='tristan@sempo.ai', password='TestPassword', tier='sempoadmin')
+    user.create_admin_auth(email='tristan@withsempo.com', password='TestPassword', tier='sempoadmin')
     user.organisations.append(create_organisation)
     user.default_organisation = create_organisation
 
@@ -143,6 +143,23 @@ def new_disbursement(create_transfer_account_user):
 
 @pytest.fixture(scope='function')
 def new_credit_transfer(create_transfer_account_user, external_reserve_token):
+    from server.models.credit_transfer import CreditTransfer
+    from uuid import uuid4
+
+    credit_transfer = CreditTransfer(
+        amount=1000,
+        token=external_reserve_token,
+        sender_user=create_transfer_account_user,
+        recipient_user=create_transfer_account_user,
+        transfer_type=TransferTypeEnum.PAYMENT,
+        transfer_subtype=TransferSubTypeEnum.STANDARD,
+        uuid=str(uuid4())
+    )
+    return credit_transfer
+
+@pytest.fixture(scope='function')
+def other_new_credit_transfer(create_transfer_account_user, external_reserve_token):
+    # Janky copy paste job because of how pytest works
     from server.models.credit_transfer import CreditTransfer
     from uuid import uuid4
 

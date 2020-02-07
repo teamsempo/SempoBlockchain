@@ -1,22 +1,33 @@
-import { call, fork, put, take, all, cancelled, cancel, takeEvery } from 'redux-saga/effects';
+import { call, fork, put, take, all, cancelled, cancel, takeEvery, select } from 'redux-saga/effects';
 import { normalize } from 'normalizr';
 
-import {handleError, removeSessionToken, storeSessionToken, storeTFAToken, storeOrgid, removeOrgId, removeTFAToken} from '../utils'
-import { adminUserSchema } from '../schemas'
+import {
+  handleError,
+  removeSessionToken,
+  storeSessionToken,
+  storeTFAToken,
+  storeOrgid,
+  removeOrgId,
+  removeTFAToken,
+  parseQuery,
+} from '../utils'
+import { adminUserSchema, inviteUserSchema } from '../schemas'
 
 import {
   requestApiToken,
   refreshApiToken,
   registerAPI,
   activateAPI,
-  authenticatePusher,
   requestResetEmailAPI,
   ResetPasswordAPI,
   getUserList,
   updateUserAPI,
   inviteUserAPI,
+  deleteInviteAPI,
   ValidateTFAAPI
-} from '../api/authApi'
+} from '../api/authAPI'
+
+import { authenticatePusher } from "../api/pusherAPI";
 
 import {
   REAUTH_REQUEST,
@@ -42,12 +53,17 @@ import {
   LOAD_ADMIN_USER_SUCCESS,
   LOAD_ADMIN_USER_FAILURE,
   UPDATE_ADMIN_USER_LIST,
+  DEEP_UPDATE_INVITE_USER_LIST,
+  UPDATE_INVITE_USER_LIST,
   EDIT_ADMIN_USER_REQUEST,
   EDIT_ADMIN_USER_SUCCESS,
   EDIT_ADMIN_USER_FAILURE,
   INVITE_USER_REQUEST,
   INVITE_USER_SUCCESS,
   INVITE_USER_FAILURE,
+  DELETE_INVITE_REQUEST,
+  DELETE_INVITE_SUCCESS,
+  DELETE_INVITE_FAILURE,
   VALIDATE_TFA_REQUEST,
   VALIDATE_TFA_SUCCESS,
   VALIDATE_TFA_FAILURE
@@ -58,24 +74,45 @@ import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 
 function* updateStateFromAdmin(data) {
   //Schema expects a list of admin user objects
+  let admin_list;
+  let invite_list;
+
   if (data.admins) {
-    var admin_list = data.admins
+    admin_list = data.admins
   } else {
     admin_list = [data.admin]
   }
 
-  const normalizedData = normalize(admin_list, adminUserSchema);
+  if (data.invites) {
+    invite_list = data.invites
+  } else {
+    invite_list = [data.invite]
+  }
 
-  const admins = normalizedData.entities.admins;
+  const normalizeAdminData = normalize(admin_list, adminUserSchema);
+  const normalizeInviteData = normalize(invite_list, inviteUserSchema);
+
+  const admins = normalizeAdminData.entities.admins;
+  const invites = normalizeInviteData.entities.invites;
 
   yield put({type: UPDATE_ADMIN_USER_LIST, admins});
+  yield put({type: DEEP_UPDATE_INVITE_USER_LIST, invites})
 }
 
 function* saveOrgId({payload}) {
   try {
     yield call(storeOrgid, payload.organisationId.toString());
 
-    window.location.reload()
+    let query_params = parseQuery(window.location.search)
+
+    // if query param and payload are matching then just reload to update navbar
+    if(query_params["org"] && payload.organisationId == query_params["org"]){
+      window.location.reload()
+    } else {
+      window.location.assign("/");
+    }
+    
+    
   } catch (e) {
     removeOrgId()
   }
@@ -102,6 +139,7 @@ function createLoginSuccessObject(token) {
     webApiVersion: token.web_api_version,
     organisationName: token.active_organisation_name,
     organisationId: token.active_organisation_id,
+    organisationToken: token.active_organisation_token,
     organisations: token.organisations,
     requireTransferCardExists: token.require_transfer_card_exists
   }
@@ -114,7 +152,7 @@ function* requestToken({payload}) {
     if (token_response.status === 'success') {
       yield put(createLoginSuccessObject(token_response));
       yield call(storeSessionToken, token_response.auth_token );
-      yield call (authenticatePusher);
+      yield call(authenticatePusher);
       return token_response
 
     } else if (token_response.tfa_url) {
@@ -230,9 +268,9 @@ function* watchRegisterRequest() {
   yield takeEvery(REGISTER_REQUEST, register);
 }
 
-function* activate({activation_token}) {
+function* activate({payload}) {
   try {
-    const activated_account = yield call(activateAPI, activation_token);
+    const activated_account = yield call(activateAPI, payload);
 
     if (activated_account.auth_token && !activated_account.tfa_url) {
       yield put({type: ACTIVATE_SUCCESS, activated_account});
@@ -271,9 +309,9 @@ function* watchActivateRequest() {
   yield takeEvery(ACTIVATE_REQUEST, activate);
 }
 
-function* resetEmailRequest({email}) {
+function* resetEmailRequest({payload}) {
   try {
-    const resetEmailResponse = yield call(requestResetEmailAPI, email);
+    const resetEmailResponse = yield call(requestResetEmailAPI, payload);
     yield put({type: REQUEST_RESET_SUCCESS, resetEmailResponse});
   } catch (error) {
     yield put({type: REQUEST_RESET_FAILURE, error: error.statusText})
@@ -302,7 +340,7 @@ function* userList() {
   try {
     const load_result = yield call(getUserList);
 
-    yield call(updateStateFromAdmin, load_result);
+    yield call(updateStateFromAdmin, load_result.data);
 
     yield put({type: LOAD_ADMIN_USER_SUCCESS, load_result});
 
@@ -319,17 +357,47 @@ function* updateUserRequest({payload}) {
     try {
       const result = yield call(updateUserAPI, payload);
 
-      yield call(updateStateFromAdmin, result.data);
+      if (result.data) {
+       yield call(updateStateFromAdmin, result.data);
+      }
 
       yield put({type: EDIT_ADMIN_USER_SUCCESS, result});
 
+      yield put({type: ADD_FLASH_MESSAGE, error: false, message: result.message});
+
     } catch (error) {
-        yield put({type: EDIT_ADMIN_USER_FAILURE, error: error})
+        yield put({type: EDIT_ADMIN_USER_FAILURE, error: error});
+        yield put({type: ADD_FLASH_MESSAGE, error: false, message: error});
     }
 }
 
 function* watchUpdateUserRequest() {
     yield takeEvery(EDIT_ADMIN_USER_REQUEST, updateUserRequest);
+}
+
+
+const getInviteState = state => state.adminUsers.invitesById;
+
+function* deleteInvite({ payload }) {
+    try {
+      const result = yield call(deleteInviteAPI, payload);
+      yield put({type: DELETE_INVITE_SUCCESS, result});
+
+      // delete item from local state
+      let inviteState = yield select(getInviteState);
+      let invites = {...inviteState};
+      delete invites[payload.body.invite_id];
+
+      yield put({type: UPDATE_INVITE_USER_LIST, invites});
+      yield put({type: ADD_FLASH_MESSAGE, error: false, message: result.message});
+    } catch (fetch_error) {
+      const error = yield call(handleError, fetch_error);
+      yield put({type: DELETE_INVITE_FAILURE, error: error.message})
+    }
+}
+
+function* watchDeleteInviteRequest() {
+    yield takeEvery(DELETE_INVITE_REQUEST, deleteInvite);
 }
 
 function* inviteUserRequest({ payload }) {
@@ -385,6 +453,7 @@ export default function* authSagas() {
     watchLoadUserList(),
     watchUpdateUserRequest(),
     watchInviteUserRequest(),
+    watchDeleteInviteRequest(),
     watchValidateTFA()
   ])
 }

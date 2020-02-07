@@ -108,6 +108,15 @@ class KenyaUssdStateMachine(Machine):
     def send_language_change_sms(self, language):
         self.send_sms(self.user.phone, "language_change_sms")
 
+    def initial_change_preferred_language_to_sw(self, user_input):
+        self.initial_change_preferred_language_to("sw")
+
+    def initial_change_preferred_language_to_en(self, user_input):
+        self.initial_change_preferred_language_to("en")
+
+    def initial_change_preferred_language_to(self, language):
+        self.user.preferred_language = language
+
     def save_business_directory_info(self, user_input):
         attrs = {
             "custom_attributes": {
@@ -117,12 +126,7 @@ class KenyaUssdStateMachine(Machine):
         set_custom_attributes(attrs, self.user)
 
     def change_opted_in_market_status(self, user_input):
-        attrs = {
-            "custom_attributes": {
-                "market_enabled": False
-            }
-        }
-        set_custom_attributes(attrs, self.user)
+        self.user.is_market_enabled = False
         self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
 
     def send_terms_to_user_if_required(self, user_input):
@@ -391,12 +395,12 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'initial_pin_entry',
-             'after': 'change_preferred_language_to_en',
+             'after': 'initial_change_preferred_language_to_en',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',
              'dest': 'initial_pin_entry',
-             'after': 'change_preferred_language_to_sw',
+             'after': 'initial_change_preferred_language_to_sw',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
              'source': 'initial_language_selection',

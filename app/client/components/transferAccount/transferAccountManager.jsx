@@ -41,7 +41,6 @@ class TransferAccountManager extends React.Component {
         transfer_amount: '',
         showSpreadsheetData: true,
         balance: '',
-        location: '',
         is_approved: 'n/a',
         one_time_code: '',
         focused: false,
@@ -77,7 +76,6 @@ class TransferAccountManager extends React.Component {
           this.setState({
               balance: transferAccount.balance,
               created: transferAccount.created,
-              location: transferAccount.location,
               is_approved: transferAccount.is_approved,
               payable_epoch: transferAccount.payable_epoch,
               payable_period_type: transferAccount.payable_period_type,
@@ -105,7 +103,6 @@ class TransferAccountManager extends React.Component {
     const nfc_card_id = this.state.nfc_card_id;
     const qr_code = this.state.qr_code;
     const phone = this.state.phone;
-    const location = this.state.location;
 
     if (this.state.payable_epoch) {
         var payable_epoch = this.state.payable_epoch._d;
@@ -123,7 +120,6 @@ class TransferAccountManager extends React.Component {
             phone,
             nfc_card_id,
             qr_code,
-            location,
             payable_epoch,
             payable_period_length,
             payable_period_type,
@@ -176,7 +172,8 @@ class TransferAccountManager extends React.Component {
         newTransfer = null;
     }
 
-    const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100)}</p>;
+    const currency = this.props.transferAccount && this.props.transferAccount.token && this.props.transferAccount.token.symbol
+    const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100,  undefined, undefined, undefined, currency)}</p>;
 
     let tracker_link = window.ETH_EXPLORER_URL + '/address/' + this.props.transferAccount.blockchain_address;
 
@@ -237,9 +234,6 @@ class TransferAccountManager extends React.Component {
                           </ButtonWrapper>
                       </TopRow>
                       <Row style={{margin: '0em 1em'}}>
-                          <SubRow>
-                              <InputLabel>Location: </InputLabel><ManagerInput name="location" placeholder="n/a" value={this.state.location || ''} onChange={this.handleChange}/>
-                          </SubRow>
                           <SubRow>
                               <InputLabel>Status: </InputLabel>
                               <StatusSelect name="is_approved" value={this.state.is_approved} onChange={this.handleChange}>

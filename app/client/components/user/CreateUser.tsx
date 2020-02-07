@@ -33,7 +33,6 @@ declare global {
   interface Window {
     BENEFICIARY_TERM: string
     DEFAULT_INITIAL_DISBURSEMENT: number
-    CURRENCY_NAME: string
   }
 }
 

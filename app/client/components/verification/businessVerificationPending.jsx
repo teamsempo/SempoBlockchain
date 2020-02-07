@@ -6,7 +6,7 @@ export default class BusinessVerificationPending extends React.Component {
     return(
       <div>
         <h3>Pending Verification</h3>
-        <SecondaryText>We will verify your profile within the next 5 business days. We might get in contact to request further supporting information. For questions, please contact team@sempo.ai</SecondaryText>
+        <SecondaryText>We will verify your profile within the next 5 business days. We might get in contact to request further supporting information. For questions, please contact team@withsempo.com</SecondaryText>
       </div>
     )
   }

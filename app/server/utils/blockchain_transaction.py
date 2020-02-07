@@ -3,11 +3,11 @@ from sqlalchemy import or_, and_
 from server.models.blockchain_transaction import BlockchainTransaction
 from server.models.blockchain_address import BlockchainAddress
 from server.exceptions import BlockchainError
-from server import db, celery_app, sentry
+from server import db, celery_app
 import datetime
 import random
 import time
-
+import sentry_sdk
 
 def add_full_transaction_details(details_dict, method='POST', force_transaction_creation=False):
 
@@ -185,7 +185,7 @@ def consecutive_success_or_pending_txn_count(singing_address_id, starting_nonce=
 def get_usd_to_satoshi_rate():
 
     blockchain_task = celery_app.signature('worker.celery_tasks.get_usd_to_satoshi_rate')
-
+    # TODO: Convert to task_runner
     result = blockchain_task.apply_async()
 
     try:
@@ -193,7 +193,7 @@ def get_usd_to_satoshi_rate():
 
     except Exception as e:
         print(e)
-        sentry.captureException()
+        sentry_sdk.capture_exception(e)
         raise BlockchainError("Blockchain Error")
 
     finally:

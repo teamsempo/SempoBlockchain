@@ -3,7 +3,8 @@ export interface ReauthRequest {type: typeof REAUTH_REQUEST}
 export const UPDATE_ACTIVE_ORG = 'UPDATE_ACTIVE_ORG';
 export interface UpdateActiveOrgPayload {
   organisationName: string,
-  organisationId: number
+  organisationId: number,
+  organisationToken: string
 }
 interface UpdateActiveOrg {
   type: typeof UPDATE_ACTIVE_ORG,
@@ -38,6 +39,7 @@ export interface LoginSuccess {
   webApiVersion: null | string,
   organisationName: null | string,
   organisationId: null | number,
+  organisationToken: null | string,
   usdToSatoshiRate: null | number,
   organisations?: string[],
   requireTransferCardExists: null | boolean,
@@ -76,9 +78,14 @@ export interface RegisterInactive {type: typeof REGISTER_INACTIVE}
 export type RegisterAction = RegisterRequest | RegisterSuccess | RegisterFailure | RegisterInactive
 
 export const ACTIVATE_REQUEST = 'ACTIVATE_REQUEST';
+export interface ActivatePayload {
+  body: {
+    activation_token: string
+  }
+}
 export interface ActivateRequest {
   type: typeof ACTIVATE_REQUEST,
-  activation_token: string
+  payload: ActivatePayload
 }
 export const ACTIVATE_SUCCESS = 'ACTIVATE_SUCCESS';
 interface ActivateSuccess {type: typeof ACTIVATE_SUCCESS}
@@ -90,9 +97,14 @@ interface ActivateFailure {
 export type ActivateAction = ActivateRequest | ActivateSuccess | ActivateFailure
 
 export const REQUEST_RESET_REQUEST = 'REQUEST_RESET_REQUEST';
+export interface ResetEmailPayload {
+  body: {
+    email: string
+  }
+}
 export interface ResetEmailRequest {
   type: typeof REQUEST_RESET_REQUEST,
-  email: string
+  payload: ResetEmailPayload
 }
 export const REQUEST_RESET_SUCCESS = 'REQUEST_RESET_SUCCESS';
 interface ResetEmailSuccess {type: typeof REQUEST_RESET_SUCCESS}
@@ -105,9 +117,11 @@ export type ResetEmailAction = ResetEmailRequest | ResetEmailSuccess | ResetEmai
 
 export const RESET_PASSWORD_REQUEST = 'RESET_PASSWORD_REQUEST';
 export interface ResetPasswordPayload {
-  new_password: string,
-  reset_password_token: string,
-  old_password: string
+  body: {
+    new_password: string,
+    reset_password_token: string,
+    old_password: string
+  }
 }
 interface ResetPasswordRequest {
   type: typeof RESET_PASSWORD_REQUEST,
@@ -136,6 +150,24 @@ interface UpdateAdminUsers {
   admins: AdminUser
 }
 export type AdminUserListAction = UpdateAdminUsers
+
+export interface Invite {
+  id: number,
+  email: string,
+  admin_tier: string,
+  created: string,
+}
+export const DEEP_UPDATE_INVITE_USER_LIST = "DEEP_UPDATE_INVITE_USER_LIST";
+interface DeepUpdateInviteUsers {
+  type: typeof DEEP_UPDATE_INVITE_USER_LIST,
+  invites: Invite[]
+}
+export const UPDATE_INVITE_USER_LIST = 'UPDATE_INVITE_USER_LIST';
+interface UpdateInviteUsers {
+  type: typeof UPDATE_INVITE_USER_LIST,
+  invites: Invite[]
+}
+export type InviteUserListAction = DeepUpdateInviteUsers | UpdateInviteUsers
 
 export const LOAD_ADMIN_USER_REQUEST = 'LOAD_ADMIN_USER_REQUEST';
 interface LoadAdminUserListRequest { type: typeof LOAD_ADMIN_USER_REQUEST }
@@ -193,10 +225,31 @@ interface InviteUserFailure {
 }
 export type InviteUserAction = InviteUserRequest | InviteUserSuccess | InviteUserFailure
 
+export const DELETE_INVITE_REQUEST = 'DELETE_INVITE_REQUEST';
+export interface DeleteInvitePayload {
+  body: {
+    invite_id: number
+  }
+}
+interface DeleteInviteRequest {
+  type: typeof DELETE_INVITE_REQUEST,
+  payload: DeleteInvitePayload
+}
+export const DELETE_INVITE_SUCCESS = 'DELETE_INVITE_SUCCESS';
+interface DeleteInviteSuccess {type: typeof DELETE_INVITE_SUCCESS}
+export const DELETE_INVITE_FAILURE = 'DELETE_INVITE_FAILURE';
+interface DeleteInviteFailure {
+  type: typeof DELETE_INVITE_FAILURE,
+  error: string
+}
+export type DeleteInviteAction = DeleteInviteRequest | DeleteInviteSuccess | DeleteInviteFailure
+
 export const VALIDATE_TFA_REQUEST = 'VALIDATE_TFA_REQUEST';
 export interface ValidateTfaPayload {
-  otp: string,
-  otp_expiry_interval: number
+  body: {
+    otp: string
+    otp_expiry_interval: number
+  }
 }
 interface ValidateTfaRequest {
   type: typeof VALIDATE_TFA_REQUEST,

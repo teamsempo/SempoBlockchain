@@ -4,7 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from server import db
 from server.models.utils import ModelBase
 import server.models.credit_transfer
-from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferSubTypeEnum
 from server.exceptions import NoTransferCardError
 
 
@@ -52,13 +52,14 @@ class TransferCard(ModelBase):
         disbursements = (server.models.credit_transfer.CreditTransfer.query
                          .execution_options(show_all=True)
                          .filter_by(recipient_user_id=self.user_id)
-                         .filter_by(transfer_type=TransferTypeEnum.DISBURSEMENT)
+                         .filter_by(transfer_type=TransferTypeEnum.PAYMENT)
+                         .filter_by(transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
                          .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
                          .all())
 
         total_disbursed = 0
 
         for disbursement in disbursements:
-            total_disbursed += disbursement.transfer_amount
+            total_disbursed += float(disbursement.transfer_amount)
 
         self.amount_loaded = total_disbursed

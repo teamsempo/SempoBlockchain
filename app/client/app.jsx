@@ -8,6 +8,7 @@ import createSagaMiddleware from 'redux-saga'
 import { delayConfiguration } from 'pusher-redux';
 import * as Sentry from '@sentry/browser';
 import { createBrowserHistory } from 'history'
+import { version } from '../package.json';
 
 
 import appReducer from './reducers/rootReducer'
@@ -30,7 +31,7 @@ export const store = createStore(
 );
 
 // Setup sentry
-Sentry.init({ dsn: window.SENTRY_REACT_DSN });
+Sentry.init({ dsn: window.SENTRY_REACT_DSN, release: 'sempo-blockchain-react@'+version });
 
 // Pusher Options
 const pusherOptions = {

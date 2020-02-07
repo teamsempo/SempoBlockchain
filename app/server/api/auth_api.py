@@ -1,6 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
-from server import db, sentry
+import sentry_sdk
+from server import db
 # from server import limiter
 from phonenumbers.phonenumberutil import NumberParseException
 from server.models.user import User
@@ -12,6 +13,7 @@ from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
+from server.utils.misc import decrypt_string
 
 import random
 
@@ -436,9 +438,7 @@ class LoginAPI(MethodView):
             return make_response(jsonify(response_object)), 200
 
         except Exception as e:
-
-            sentry.captureException()
-
+            sentry_sdk.capture_exception(e)
             raise e
 
             # response_object = {
@@ -689,25 +689,36 @@ class PermissionsAPI(MethodView):
     def get(self):
 
         admins = User.query.filter_by(has_admin_role=True).all()
+        invites = EmailWhitelist.query.filter_by(used=False, allow_partial_match=False).all()
 
         admin_list = []
         for admin in admins:
 
-            tier = admin.admin_tier
-
             admin_list.append({
                 'id': admin.id,
                 'email': admin.email,
-                'admin_tier': tier,
+                'admin_tier': admin.admin_tier,
                 'created': admin.created,
                 'is_activated': admin.is_activated,
                 'is_disabled': admin.is_disabled
             })
 
+        invite_list = []
+        for invite in invites:
+            invite_list.append({
+                'id': invite.id,
+                'email': invite.email,
+                'admin_tier': invite.tier,
+                'created': invite.created,
+            })
+
         response_object = {
             'status': 'success',
             'message': 'Admin List Loaded',
-            'admins': admin_list
+            'data': {
+                'admins': admin_list,
+                'invites': invite_list
+            },
         }
 
         return make_response(jsonify(response_object)), 200
@@ -755,57 +766,92 @@ class PermissionsAPI(MethodView):
 
         db.session.commit()
 
-        all_invites = EmailWhitelist.query.all()
-
-        print(all_invites)
-
         response_object = {
             'message': 'An invite has been sent!',
-            'referral_code': invite.referral_code
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(response_object)), 201
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self):
 
-        post_data = request.get_json()
+        put_data = request.get_json()
 
-        user_id = post_data.get('user_id')
-        admin_tier = post_data.get('admin_tier')
-        deactivated = post_data.get('deactivated', None)
+        user_id = put_data.get('user_id')
+        admin_tier = put_data.get('admin_tier')
+        deactivated = put_data.get('deactivated', None)
 
-        user = User.query.get(user_id)
+        invite_id = put_data.get('invite_id')
+        resend = put_data.get('resend', False)
 
-        if not user:
+        if resend:
+            invite = EmailWhitelist.query.get(invite_id)
+
+            if not invite:
+                return make_response(jsonify({'message': 'Invite not found'})), 404
+
+            organisation = Organisation.query.get(invite.organisation_id)
+            if not organisation:
+                response_object = {'message': 'Organisation Not Found'}
+                return make_response(jsonify(response_object)), 404
+
+            invite.set_referral_code()
+            invite.sent += 1
+
+            db.session.flush()
+
+            send_invite_email(invite, organisation)
+
+            return make_response(jsonify({'message': 'An invite has been re-sent!'})), 200
+
+        else:
+            if not user_id:
+                return make_response(jsonify({'message': 'User ID not provided'})), 400
+            user = User.query.get(user_id)
+
+            if not user:
+                response_object = {
+                    'status': 'fail',
+                    'message': 'User not found'
+                }
+
+                return make_response(jsonify(response_object)), 404
+
+            if admin_tier:
+                user.set_held_role('ADMIN',admin_tier)
+
+            if deactivated is not None:
+                user.is_disabled = deactivated
+
             response_object = {
-                'status': 'fail',
-                'message': 'User not found'
-            }
-
-            return make_response(jsonify(response_object)), 401
-
-        if admin_tier:
-            user.set_held_role('ADMIN',admin_tier)
-
-        if deactivated is not None:
-            user.is_disabled = deactivated
-
-        response_object = {
-            'message': 'Account status modified',
-            'data': {
-                'admin': {
-                    'id': user.id,
-                    'email': user.email,
-                    'admin_tier': user.admin_tier,
-                    'created': user.created,
-                    'is_activated': user.is_activated,
-                    'is_disabled': user.is_disabled
+                'message': 'Account status modified',
+                'data': {
+                    'admin': {
+                        'id': user.id,
+                        'email': user.email,
+                        'admin_tier': user.admin_tier,
+                        'created': user.created,
+                        'is_activated': user.is_activated,
+                        'is_disabled': user.is_disabled
+                    }
                 }
             }
-        }
 
-        return make_response(jsonify(response_object)), 200
+            return make_response(jsonify(response_object)), 200
+
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def delete(self):
+        delete_data = request.get_json()
+        invite_id = delete_data.get('invite_id')
+
+        invite = EmailWhitelist.query.get(invite_id)
+
+        if not invite:
+            return make_response(jsonify({'message': 'Invite not found'})), 404
+
+        db.session.delete(invite)
+
+        return make_response(jsonify({'message': 'Deleted Invite'})), 202
 
 
 class BlockchainKeyAPI(MethodView):
@@ -822,13 +868,13 @@ class BlockchainKeyAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
 
-class KoboCredentialsAPI(MethodView):
+class ExternalCredentialsAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
         response_object = {
-            'username': current_app.config['EXTERNAL_AUTH_USERNAME'],
-            'password': current_app.config['EXTERNAL_AUTH_PASSWORD']
+            'username': g.active_organisation.external_auth_username, # Change this to org's credentials
+            'password': g.active_organisation.external_auth_password
         }
 
         return make_response(jsonify(response_object)), 200
@@ -892,7 +938,7 @@ class TwoFactorAuthAPI(MethodView):
 
 
 class CheckBasicAuth(MethodView):
-    @requires_auth(allowed_basic_auth_types=('internal',), allow_query_string_auth=True)
+    @requires_auth(allowed_basic_auth_types=('internal', 'external'), allow_query_string_auth=True)
     def get(self):
         response_object = {
             'status': 'success',
@@ -959,7 +1005,7 @@ auth_blueprint.add_url_rule(
 auth_blueprint.add_url_rule(
     '/auth/permissions/',
     view_func=PermissionsAPI.as_view('permissions_view'),
-    methods=['POST', 'PUT', 'GET']
+    methods=['POST', 'PUT', 'GET', 'DELETE']
 )
 
 auth_blueprint.add_url_rule(
@@ -969,8 +1015,8 @@ auth_blueprint.add_url_rule(
 )
 
 auth_blueprint.add_url_rule(
-    '/auth/kobo/',
-    view_func=KoboCredentialsAPI.as_view('kobo_view'),
+    '/auth/external/',
+    view_func=ExternalCredentialsAPI.as_view('external_credentials_view'),
     methods=['GET']
 )
 

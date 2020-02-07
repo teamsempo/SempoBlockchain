@@ -31,29 +31,25 @@ def test_get_directory_listing_users(test_client, init_database, dl_processor):
     category = dl_processor.selected_business_category
     user = dl_processor.recipient
 
-    def create_user(cat, token):
-        user = UserFactory(phone=phone(), business_usage_id=cat.id)
-        create_transfer_account_for_user(user, token, 200)
-        return user
+    def create_user(cat, token, is_market_enabled):
+        _user = UserFactory(phone=phone(), business_usage_id=cat.id, is_market_enabled=is_market_enabled)
+        create_transfer_account_for_user(_user, token, 200)
+        return _user
 
-    market_disabled_user = create_user(category, token1)
-    attrs = {
-        "custom_attributes": {
-            "market_enabled": False
-        }
-    }
-    set_custom_attributes(attrs, market_disabled_user)
+    market_disabled_user = create_user(category, token1, False)
+
+    # different token user
+    token2 = Token.query.filter_by(symbol="SM2").first()
+    create_user(category, token2, True)
 
     # different category user
-    token2 = Token.query.filter_by(symbol="SM2").first()
-    create_user(category, token2)
-
     category2 = TransferUsage(name='Test', icon='message')
-    different_business_category_user = create_user(category2, token1)
+    different_business_category_user = create_user(category2, token1, True)
 
-    shown_user = create_user(category, token1)
+    shown_user = create_user(category, token1, True)
+
     # user did more transactions
-    more_transactions_user = create_user(category, token1)
+    more_transactions_user = create_user(category, token1, True)
     make_payment_transfer(100, token=token1, send_user=different_business_category_user,
                           receive_user=more_transactions_user,
                           transfer_use=str(int(category.id)), is_ghost_transfer=False,
