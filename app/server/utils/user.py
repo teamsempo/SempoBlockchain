@@ -118,8 +118,7 @@ def update_transfer_account_user(user,
                                  is_vendor=False,
                                  is_tokenagent=False,
                                  is_groupaccount=False,
-                                 default_organisation_id=None,
-                                 data_sharing_accepted=None):
+                                 default_organisation_id=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -167,9 +166,6 @@ def update_transfer_account_user(user,
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
-
-    if data_sharing_accepted:
-        user.data_sharing_accepted = data_sharing_accepted
 
     return user
 

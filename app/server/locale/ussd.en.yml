@@ -153,18 +153,6 @@ en:
     location_entry: |
       CON Enter your location
       0. Back
-    data_sharing_consent: |
-      CON Please confirm that your data can be shared
-      1. Confirm
-      2. Decline
-      0. Back
-    data_sharing_consent_pin_authorization:
-      first: |
-        CON Please enter your PIN.
-        0. Back
-      retry: |
-        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
-        0. Back
     help: END For assistance call %{support_phone}
     exchange_token: |
       CON Exchange

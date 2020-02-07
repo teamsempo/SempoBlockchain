@@ -21,15 +21,12 @@ last_name_entry_state = partial(UssdSessionFactory, state='last_name_entry',
                                 session_data=json.loads('{"first_name": "Philip"}'))
 gender_entry_state = partial(UssdSessionFactory, state='gender_entry')
 location_entry_state = partial(UssdSessionFactory, state='location_entry')
-data_sharing_consent_pin_authorization_state = partial(UssdSessionFactory,
-                                                       state='data_sharing_consent_pin_authorization',
-                                                       session_data=json.loads('{"data_sharing_consent_selection": "1"}'))
 
 
 @pytest.mark.parametrize('session_factory, user_factory, user_input, expected',
-                         [
-                             (last_name_entry_state, standard_user, 'Wafula', 'exit'),
-                         ])
+ [
+     (last_name_entry_state, standard_user, 'Wafula', 'exit'),
+ ])
 def test_name_change(test_client, init_database, session_factory, user_factory, user_input, expected):
     session = session_factory()
     user = user_factory()
@@ -47,9 +44,9 @@ def test_name_change(test_client, init_database, session_factory, user_factory, 
 
 
 @pytest.mark.parametrize('session_factory, user_factory, user_input, expected',
-                         [
-                             (gender_entry_state, standard_user, '1', 'exit'),
-                         ])
+ [
+     (gender_entry_state, standard_user, '1', 'exit'),
+ ])
 def test_gender_change(test_client, init_database, session_factory, user_factory, user_input, expected):
     session = session_factory()
     user = user_factory()
@@ -66,9 +63,9 @@ def test_gender_change(test_client, init_database, session_factory, user_factory
 
 
 @pytest.mark.parametrize('session_factory, user_factory, user_input, expected',
-                         [
-                             (location_entry_state, standard_user, 'Kibera', 'exit'),
-                         ])
+ [
+     (location_entry_state, standard_user, 'Kibera', 'exit'),
+ ])
 def test_location_change(test_client, init_database, session_factory, user_factory, user_input, expected):
     session = session_factory()
     user = user_factory(id=1)
@@ -82,20 +79,3 @@ def test_location_change(test_client, init_database, session_factory, user_facto
     assert user.location == 'Kibera'
     assert state_machine.state == expected
 
-
-@pytest.mark.parametrize('session_factory, user_factory, user_input, expected',
-                         [
-                             (data_sharing_consent_pin_authorization_state, standard_user, '0000', 'exit'),
-                         ])
-def test_data_sharing_consent_change(test_client, init_database, session_factory, user_factory, user_input, expected):
-    session = session_factory()
-    user = user_factory()
-    user.phone = phone()
-
-    assert user.data_sharing_accepted is None
-
-    state_machine = KenyaUssdStateMachine(session, user)
-    state_machine.feed_char(user_input)
-
-    assert user.data_sharing_accepted is True
-    assert state_machine.state == expected

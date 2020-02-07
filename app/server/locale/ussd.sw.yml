@@ -150,18 +150,6 @@ sw:
     location_entry: |
       CON Weka eneo lako
       0. Nyuma
-    data_sharing_consent: |
-      CON Tafadhali thibitisha kuwa umeruhusu data yako kutumika
-      1. Thibitisha
-      2. Kataa
-      0. Nyuma
-    data_sharing_consent_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
-        0. Nyuma
-      retry: |
-        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
-        0. Nyuma
     help: END Kwa usaidizi piga simu %{support_phone}
     exchange_token: |
       CON Badilisha

@@ -201,18 +201,6 @@ def create_ussd_menus():
         parent_id=user_profile_menu.id
     )
 
-    update_or_create_menu(
-        name='data_sharing_consent',
-        description='Data sharing consent prompt.',
-        parent_id=user_profile_menu.id
-    )
-
-    update_or_create_menu(
-        name='data_sharing_consent_pin_authorization',
-        description='PIN entry for authorization to confirm provision of consent for data to be shared',
-        parent_id=user_profile_menu.id
-    )
-
     print('***** Exchange Rate Menu ******')
     exchange_token_menu = update_or_create_menu(
         name='exchange_token',
