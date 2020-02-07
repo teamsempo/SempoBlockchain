@@ -145,7 +145,7 @@ class UserAPI(MethodView):
         put_data = request.get_json()
         put_data['user_id'] = user_id
 
-        response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+        response_object, response_code = UserUtils.process_create_or_modify_user_request(
             put_data,
             organisation=g.active_organisation,
             allow_existing_user_modify=True,

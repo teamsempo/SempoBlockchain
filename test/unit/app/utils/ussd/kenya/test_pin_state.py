@@ -15,7 +15,7 @@ phone = partial(fake.msisdn)
 
 base_user = partial(UserFactory, phone='+61400000000')
 unactivated_user = partial(base_user, is_activated=False)
-unregistered_user = partial(base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.view)
+unregistered_user = partial(base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
 standard_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
 pin_blocked_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=3)
 
