@@ -119,7 +119,8 @@ def update_transfer_account_user(user,
                                  is_vendor=False,
                                  is_tokenagent=False,
                                  is_groupaccount=False,
-                                 default_organisation_id=None):
+                                 default_organisation_id=None,
+                                 business_usage=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -149,6 +150,9 @@ def update_transfer_account_user(user,
 
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
+
+    if business_usage:
+        user.business_usage_id = business_usage.id
 
     # remove all roles before updating
     user.remove_all_held_roles()
@@ -317,6 +321,7 @@ def set_custom_attributes(attribute_dict, user):
         to_remove = list(filter(lambda a: a.name == key, custom_attributes))
         for r in to_remove:
             custom_attributes.remove(r)
+            db.session.delete(r)
 
         custom_attribute = CustomAttributeUserStorage(
             name=key, value=attribute_dict['custom_attributes'][key])
@@ -387,6 +392,7 @@ def proccess_create_or_modify_user_request(
         organisation=None,
         allow_existing_user_modify=False,
         is_self_sign_up=False,
+        modify_only=False,
 ):
     """
     Takes a create or modify user request and determines the response. Normally what's in the top level API function,
@@ -403,6 +409,8 @@ def proccess_create_or_modify_user_request(
 
     if not attribute_dict.get('custom_attributes'):
         attribute_dict['custom_attributes'] = {}
+
+    user_id = attribute_dict.get('user_id')
 
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
@@ -547,8 +555,21 @@ def proccess_create_or_modify_user_request(
 
     referred_by_user = find_user_from_public_identifier(referred_by)
 
+    if referred_by and not referred_by_user:
+        response_object = {
+            'message': f'Referrer user not found for public identifier {referred_by}'
+        }
+        return response_object, 400
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
+
+    if modify_only:
+        existing_user = User.query.get(user_id)
+
+    if modify_only and existing_user is None:
+        response_object = {'message': 'User not found'}
+        return response_object, 404
 
     if existing_user:
         if not allow_existing_user_modify:
@@ -557,15 +578,24 @@ def proccess_create_or_modify_user_request(
 
         user = update_transfer_account_user(
             existing_user,
-            first_name=first_name, last_name=last_name, preferred_language=preferred_language,
-            phone=phone, email=email, public_serial_number=public_serial_number,
+            first_name=first_name, 
+            last_name=last_name, 
+            preferred_language=preferred_language,
+            phone=phone, 
+            email=email, 
+            location=location,
+            public_serial_number=public_serial_number,
             use_precreated_pin=use_precreated_pin,
             existing_transfer_account=existing_transfer_account,
-            is_beneficiary=is_beneficiary, is_vendor=is_vendor,
-            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
+            is_beneficiary=is_beneficiary, 
+            is_vendor=is_vendor,
+            is_tokenagent=is_tokenagent, 
+            is_groupaccount=is_groupaccount,
+            business_usage=business_usage
         )
 
         if referred_by_user:
+            user.referred_by.clear()  # otherwise prior referrals will remain...
             user.referred_by.append(referred_by_user)
 
         set_custom_attributes(attribute_dict, user)

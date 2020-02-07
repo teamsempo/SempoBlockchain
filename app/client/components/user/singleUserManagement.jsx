@@ -18,7 +18,8 @@ import {TransferAccountTypes} from "../transferAccount/types";
 const mapStateToProps = (state, ownProps) => {
   return {
     users: state.users,
-    user: state.users.byId[parseInt(ownProps.userId)]
+    user: state.users.byId[parseInt(ownProps.userId)],
+    transferUsages: state.transferUsages.transferUsages
   };
 };
 
@@ -40,6 +41,9 @@ class SingleUserManagement extends React.Component {
       phone: '',
       location: '',
       account_type: '',
+      referred_by: '',
+      custom_attr_keys: [],
+      businessUsageName: null,
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -47,6 +51,9 @@ class SingleUserManagement extends React.Component {
   componentDidMount() {
     const { user } = this.props;
     let account_type;
+    let custom_attr_keys;
+    let custom_attr_key;
+    let custom_attr_value;
 
     if (user !== null) {
       if (user.is_beneficiary) {
@@ -59,6 +66,16 @@ class SingleUserManagement extends React.Component {
         account_type = TransferAccountTypes.GROUPACCOUNT
       }
 
+      custom_attr_keys = Object.keys(user.custom_attributes);
+      custom_attr_keys.map(key => {
+        if (!user.custom_attributes[key].uploaded_image_id) {
+          custom_attr_key = key;
+          custom_attr_value = replaceUnderscores(user.custom_attributes[key]);
+          this.setState({[custom_attr_key]: custom_attr_value})
+        }
+      });
+
+      let transferUsage = this.props.transferUsages.filter(t => t.id === user.business_usage_id)[0];
 
       this.setState({
         first_name: user.first_name,
@@ -67,34 +84,41 @@ class SingleUserManagement extends React.Component {
         public_serial_number: user.public_serial_number,
         phone: user.phone,
         location: user.location,
-        account_type: account_type
+        account_type: account_type,
+        referred_by: user.referred_by,
+        custom_attr_keys: custom_attr_keys,
+        businessUsageName: transferUsage && transferUsage.name,
       });
     }
   }
 
   editUser() {
-    const first_name = this.state.first_name;
-    const last_name = this.state.last_name;
-    const nfc_serial_number = this.state.nfc_serial_number;
-    const public_serial_number = this.state.public_serial_number;
-    const phone = this.state.phone;
-    const location = this.state.location;
-    const account_type = this.state.account_type;
+    const { first_name, last_name, nfc_serial_number, public_serial_number,
+      phone, location, account_type, referred_by, custom_attr_keys, businessUsageName } = this.state;
 
     const single_transfer_account_id = this.props.userId.toString();
 
+    let attr_dict = {};
+    custom_attr_keys.map(key => {
+      attr_dict[key] = this.state[key]
+      return attr_dict
+    });
+
     this.props.editUser({
-        first_name,
-        last_name,
-        nfc_serial_number,
-        public_serial_number,
-        phone,
-        location,
-        is_vendor: (account_type === 'VENDOR' || account_type === 'CASHIER'),
-        is_tokenagent: account_type === 'TOKENAGENT',
-        is_groupaccount: account_type === 'GROUPACCOUNT',
-        },
-        single_transfer_account_id
+      first_name,
+      last_name,
+      nfc_serial_number,
+      public_serial_number,
+      phone,
+      location,
+      is_vendor: (account_type === 'VENDOR' || account_type === 'CASHIER'),
+      is_tokenagent: account_type === 'TOKENAGENT',
+      is_groupaccount: account_type === 'GROUPACCOUNT',
+      referred_by: referred_by,
+      custom_attributes: attr_dict,
+      business_usage_name: businessUsageName,
+      },
+      single_transfer_account_id
     );
   }
 
@@ -108,7 +132,9 @@ class SingleUserManagement extends React.Component {
   }
 
   render() {
+    const { transferUsages } = this.props;
     let accountTypes = Object.keys(TransferAccountTypes);
+    let businessUsage;
     let blockchain_address = '';
     if (this.props.user.transfer_account) {
       blockchain_address =  this.props.user.transfer_account.blockchain_address;
@@ -136,14 +162,27 @@ class SingleUserManagement extends React.Component {
             return (
               <SubRow key={key}>
                 <InputLabel>{replaceUnderscores(key)}: </InputLabel>
-                <div style={{marginLeft: '0.5em', marginRight: '4em'}}>
-                  {replaceUnderscores(this.props.user.custom_attributes[key])}
-                </div>
+                <ManagerInput name={key} value={this.state[key] || ''} onChange={this.handleChange}/>
               </SubRow>
             )
           }
         }
       );
+    }
+
+    if (transferUsages.length > 0 && this.state.businessUsageName) {
+      businessUsage =
+        <SubRow>
+          <InputLabel>Business Category</InputLabel>
+          <StyledSelect style={{fontWeight: '400', margin: '1em', lineHeight: '25px', height: '25px'}} name="businessUsageName" label='Business Category' value={this.state.businessUsageName} onChange={this.handleChange}>
+            <option name="select" value="select" disabled>Select</option>
+            {this.props.transferUsages.map((transferUsage, index) => {
+              return(
+                <option key={index} name={transferUsage.name} value={transferUsage.value}>{transferUsage.name}</option>
+              )
+            })}
+          </StyledSelect>
+        </SubRow>
     }
 
       return (
@@ -234,19 +273,36 @@ class SingleUserManagement extends React.Component {
                                      isLoading={this.props.users.pinStatus.isRequesting}
                                      buttonText="Reset Pin"/>
                       </SubRow>
+                      <SubRow>
+                        <InputLabel>Referred By</InputLabel>
+                        <ManagerInput name="referred_by" value={this.state.referred_by || ''} onChange={this.handleChange}/>
+                      </SubRow>
                     </Row>
-                      <Row style={{margin: '0em 1em', flexWrap: 'wrap'}}>
-                        {custom_attribute_list || null}
-                      </Row>
-                      <Row style={{margin: '0em 1em'}}>
-                        <SubRow>
-                        { profilePicture || null }
-                        </SubRow>
-                        <SubRow>
-                        </SubRow>
-                      </Row>
                   </Wrapper>
               </ModuleBox>
+
+            {this.state.custom_attr_keys.length >= 1 || this.state.businessUsageName ? <ModuleBox>
+              <Wrapper>
+                <TopRow>
+                  <ModuleHeader>OTHER ATTRIBUTES</ModuleHeader>
+                </TopRow>
+                <Row style={{margin: '0em 1em'}}>
+                  {custom_attribute_list || null}
+                </Row>
+                <Row style={{margin: '0em 1em'}}>
+                  <SubRow>
+                    {businessUsage || null}
+                  </SubRow>
+                </Row>
+                <Row style={{margin: '0em 1em'}}>
+                  <SubRow>
+                  { profilePicture || null }
+                  </SubRow>
+                  <SubRow>
+                  </SubRow>
+                </Row>
+              </Wrapper>
+            </ModuleBox> : null }
           </div>
       );
   }
