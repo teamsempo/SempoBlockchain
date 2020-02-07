@@ -12,7 +12,7 @@ import config
 from eth_manager.exceptions import PreBlockchainError, TaskRetriesExceededError
 from eth_manager import utils
 from eth_manager.contract_registry import ContractRegistry
-from eth_worker.sempo_types import UUIDList, UUID
+from sempo_types import UUIDList, UUID
 
 RETRY_TRANSACTION_BASE_TIME = 2
 ETH_CHECK_TRANSACTION_BASE_TIME = 2
