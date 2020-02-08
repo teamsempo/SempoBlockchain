@@ -1,4 +1,4 @@
-"""empty message
+"""Add string to track user signup method
 
 Revision ID: 326a61cf9fde
 Revises: 0d586d339657

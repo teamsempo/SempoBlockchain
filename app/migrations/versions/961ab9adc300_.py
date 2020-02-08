@@ -14,7 +14,7 @@ import secrets
 
 # revision identifiers, used by Alembic.
 revision = '961ab9adc300'
-down_revision = 'df0fbf496520'
+down_revision = '326a61cf9fde'
 branch_labels = None
 depends_on = None
 
