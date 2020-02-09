@@ -39,13 +39,9 @@ def dollars_to_cents(amount_dollars):
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None):
 
     dateFilter = []
-    userDateFilter = []
     if start_date is not None and end_date is not None:
         dateFilter.append(CreditTransfer.created >= start_date)
         dateFilter.append(CreditTransfer.created <= end_date)
-
-        userDateFilter.append(User.created >= start_date)
-        userDateFilter.append(User.created <= end_date)
 
     disbursement_filters = [
         CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
@@ -81,12 +77,12 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
     beneficiary_filters = [User.has_beneficiary_role == True]
 
-    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters).filter(*userDateFilter).count()
+    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters).count()
 
     vendor_filters = [User.has_vendor_role == True]
 
     total_vendors = db.session.query(User)\
-        .filter(*vendor_filters).filter(*userDateFilter).count()
+        .filter(*vendor_filters).count()
 
     total_users = total_beneficiaries + total_vendors
 
