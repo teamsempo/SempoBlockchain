@@ -155,6 +155,8 @@ DATABASE_HOST = specific_parser['DATABASE']['host']
 DATABASE_NAME = specific_parser['DATABASE'].get('database') \
                 or common_parser['DATABASE']['database']
 
+DATABASE_PORT = specific_parser['DATABASE'].get('port') or common_parser['DATABASE']['port']
+
 ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']
 
@@ -173,7 +175,7 @@ def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
-                                                common_parser['DATABASE']['port'],
+                                                DATABASE_PORT,
                                                 name)
 
 
