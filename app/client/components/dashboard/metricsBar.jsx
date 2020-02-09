@@ -33,28 +33,28 @@ const MetricsBar = ({creditTransferStats, login}) => {
         <ModuleHeader>
           MASTER WALLET BALANCE
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.master_wallet_balance/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.master_wallet_balance/100, 0, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
           TOTAL DISTRIBUTED
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.total_distributed/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.total_distributed/100, 0, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
           TOTAL SPENT
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.total_spent/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.total_spent/100, 0, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
           TOTAL EXCHANGED
         </ModuleHeader>
-        <Metric>{formatMoney(creditTransferStats.total_exchanged/100, undefined, undefined, undefined, login.organisationToken)}</Metric>
+        <Metric>{formatMoney(creditTransferStats.total_exchanged/100, 0, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
     </Wrapper>
   );
@@ -81,6 +81,7 @@ const MetricWrap = styled.div`
 `;
 
 const Metric = styled.p`
+  text-align: center;
   margin-top: 0;
   font-size: 16px;
   color: #4A4A4A;
