@@ -156,7 +156,8 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         'master_wallet_balance': master_wallet_balance,
         'daily_transaction_volume': transaction_vol_list,
         'daily_disbursement_volume': disbursement_vol_list,
-        'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume}
+        'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
+        'filter_active': True if (start_date is not None and end_date is not None) else False
     }
 
     return data
