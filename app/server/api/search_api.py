@@ -10,10 +10,9 @@ search_blueprint = Blueprint('search', __name__)
 
 
 class SearchAPI(MethodView):
-    def get(self, search_term='deroos'):
-        search_term = re.sub(r'[!\'()|&]', ' ', search_term).strip()
-        search_term = re.sub(r'\s+', ' & ', search_term)
-
+    def get(self, search_term='mic'):
+        # TODO: Parse search term into discrete terms (I.e. mich:*der:*)
+        # TODO: Search users and transactions
         qr = db.session.query(
             db.distinct(SearchView.id),
             SearchView.first_name,
@@ -26,7 +25,6 @@ class SearchAPI(MethodView):
             SearchView.tsv_first_name.match(search_term+':*', postgresql_regconfig='english'),
             SearchView.tsv_last_name.match(search_term+':*', postgresql_regconfig='english')
         )).all()
-        print(qr)
         return {'a': qr}
 
 search_blueprint.add_url_rule(
