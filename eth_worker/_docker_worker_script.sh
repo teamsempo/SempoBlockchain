@@ -20,7 +20,7 @@ else
   if [ "$ret" -ne 0 ]; then
     exit $ret
   fi
-  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=celery
+  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=celery,high-priority
 fi
 
 #

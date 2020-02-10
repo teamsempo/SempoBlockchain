@@ -65,30 +65,7 @@
       ]
     },
     {
-      "name": "eth_processor",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
-      "essential": false,
-      "memory": 256,
-      "links": [
-      ],
-      "mountPoints": [],
-      "environment": [
-        {
-          "name": "CONTAINER_TYPE",
-          "value": "PROCESSOR"
-        },
-        {
-          "name": "SERVER_HAS_S3_AUTH",
-          "value": true
-        },
-        {
-          "name": "PYTHONUNBUFFERED",
-          "value": 0
-        }
-      ]
-    },
-    {
-      "name": "eth_processor",
+      "name": "low_pri_eth_worker",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": false,
       "memory": 256,
