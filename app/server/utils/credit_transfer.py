@@ -25,7 +25,7 @@ from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 
 
 def cents_to_dollars(amount_cents):
@@ -36,56 +36,84 @@ def dollars_to_cents(amount_dollars):
     return float(amount_dollars) * 100
 
 
-def calculate_transfer_stats(total_time_series=False):
+def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None):
 
+    dateFilter = []
+    if start_date is not None and end_date is not None:
+        dateFilter.append(CreditTransfer.created >= start_date)
+        dateFilter.append(CreditTransfer.created <= end_date)
+
+    disbursement_filters = [
+        CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+        CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+        CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT]
+    
     total_distributed = (
         db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT)
-            .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).first().total
-    )
+            .filter(*disbursement_filters).filter(*dateFilter).first().total
+    ) or 0
+
+    standard_payment_filters = [
+        CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+        CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+        CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD
+    ]
 
     total_spent = (
         db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-            .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().total
-    )
+            .filter(*standard_payment_filters).filter(*dateFilter).first().total
+    ) or 0
+
+    exchanged_filters = [
+        CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+        CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
+        CreditTransfer.token == g.active_organisation.token
+    ]
 
     total_exchanged = (
         db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-            .filter(CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE)
-            .filter(CreditTransfer.token == g.active_organisation.token).first().total
-    )
+            .filter(*exchanged_filters).filter(*dateFilter).first().total
+    ) or 0
 
-    total_beneficiaries = db.session.query(User).filter(User.has_beneficiary_role == True).count()
+    beneficiary_filters = [User.has_beneficiary_role == True]
+
+    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters).count()
+
+    vendor_filters = [User.has_vendor_role == True]
 
     total_vendors = db.session.query(User)\
-        .filter(User.has_vendor_role == True).count()
+        .filter(*vendor_filters).count()
 
     total_users = total_beneficiaries + total_vendors
 
     has_transferred_count = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
         .label('transfer_count'))\
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).first().transfer_count
+        .filter(*standard_payment_filters).filter(*dateFilter).first().transfer_count
 
     # zero_balance_count = db.session.query(func.count(TransferAccount.id).label('zero_balance_count'))\
     #     .filter(TransferAccount.balance == 0).first().zero_balance_count
+
+    exhaused_balance_filters = [
+        CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+        TransferAccount._balance_wei == 0
+    ]
 
     exhausted_balance_count = db.session.query(func.count(func.distinct(
         CreditTransfer.sender_transfer_account_id))
         .label('transfer_count')) \
         .join(CreditTransfer.sender_transfer_account)\
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT) \
-        .filter(TransferAccount.balance == 0).first().transfer_count
+        .filter(*exhaused_balance_filters).filter(*dateFilter).first().transfer_count
 
     daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                 func.date_trunc('day', CreditTransfer.created).label('date'))\
         .group_by(func.date_trunc('day', CreditTransfer.created))\
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT).all()
+        .filter(*standard_payment_filters).filter(*dateFilter).all()
+
 
     daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                  func.date_trunc('day', CreditTransfer.created).label('date')) \
         .group_by(func.date_trunc('day', CreditTransfer.created)) \
-        .filter(CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT) \
-        .filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT).all()
+        .filter(*disbursement_filters).filter(*dateFilter).all()
 
     try:
         master_wallet_balance = cached_funds_available()
@@ -124,7 +152,8 @@ def calculate_transfer_stats(total_time_series=False):
         'master_wallet_balance': master_wallet_balance,
         'daily_transaction_volume': transaction_vol_list,
         'daily_disbursement_volume': disbursement_vol_list,
-        'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume}
+        'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
+        'filter_active': True if (start_date is not None and end_date is not None) else False
     }
 
     return data

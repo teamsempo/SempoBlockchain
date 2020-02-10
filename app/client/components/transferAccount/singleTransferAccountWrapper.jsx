@@ -20,11 +20,12 @@ class SingleTransferAccountWrapper extends React.Component {
   }
 
   render() {
+    let creditTransferIds;
     const transferAccountId = this.props.transfer_account_id;
     const transferAccount = this.props.transferAccounts.byId[transferAccountId];
 
     if (transferAccount.credit_receives || transferAccount.credit_sends) {
-      var creditTransferIds = transferAccount.credit_receives.concat(transferAccount.credit_sends);
+      creditTransferIds = transferAccount.credit_receives.concat(transferAccount.credit_sends);
     }
 
     return (

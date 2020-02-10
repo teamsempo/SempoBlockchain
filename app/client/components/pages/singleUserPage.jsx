@@ -9,6 +9,7 @@ import {LightTheme} from '../theme.js'
 import SingleUserManagement from '../user/singleUserManagement.jsx';
 
 import { loadUser } from '../../reducers/userReducer'
+import { loadTransferUsages } from '../../reducers/transferUsage/actions'
 import organizationWrapper from '../organizationWrapper'
 
 const mapStateToProps = (state) => {
@@ -19,7 +20,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        loadUser: (path) => dispatch(loadUser({path})),
+      loadUser: (path) => dispatch(loadUser({path})),
+      loadTransferUsages: () => dispatch(loadTransferUsages())
     };
 };
 
@@ -36,6 +38,7 @@ class SingleUserPage extends React.Component {
 
       if (userId) {
           this.props.loadUser(userId);
+          this.props.loadTransferUsages();
       }
   }
 
