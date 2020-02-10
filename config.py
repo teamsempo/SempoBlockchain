@@ -5,7 +5,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.0.21'  # Remember to bump this in every PR
+VERSION = '1.0.23'  # Remember to bump this in every PR
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -155,6 +155,8 @@ DATABASE_HOST = specific_parser['DATABASE']['host']
 DATABASE_NAME = specific_parser['DATABASE'].get('database') \
                 or common_parser['DATABASE']['database']
 
+DATABASE_PORT = specific_parser['DATABASE'].get('port') or common_parser['DATABASE']['port']
+
 ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']
 
@@ -173,7 +175,7 @@ def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
-                                                common_parser['DATABASE']['port'],
+                                                DATABASE_PORT,
                                                 name)
 
 
