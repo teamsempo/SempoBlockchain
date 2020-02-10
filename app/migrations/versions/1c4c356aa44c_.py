@@ -22,12 +22,7 @@ trigger_tuples = [
     ('user', 'first_name'),
     ('user', 'last_name'),
 ]
-index_set = [
-    'tsv_email',
-    'tsv_phone',
-    'tsv_firstname',
-    'tsv_lastname'
-]
+
 def upgrade():
     conn = op.get_bind()
 
@@ -50,11 +45,12 @@ def upgrade():
 
     op.create_index(op.f('ix_search_view_id'), 'search_view', ['id'], unique=True)
 
-    op.create_index(op.f('ix_tsv_email'), 'search_view', ['ix_tsv_email'], postgresql_using='gin')
-    op.create_index(op.f('ix_tsv_phone'), 'search_view', ['ix_tsv_phone'], postgresql_using='gin')
-    op.create_index(op.f('ix_tsv_firstname'), 'search_view', ['ix_tsv_firstname'], postgresql_using='gin')
-    op.create_index(op.f('ix_tsv_lastname'), 'search_view', ['ix_tsv_lastname'], postgresql_using='gin')
-
+    op.create_index(op.f('ix_tsv_email'), 'search_view', ['tsv_email'], postgresql_using='gin')
+    op.create_index(op.f('ix_tsv_phone'), 'search_view', ['tsv_phone'], postgresql_using='gin')
+    op.create_index(op.f('ix_tsv_firstname'), 'search_view', ['tsv_first_name'], postgresql_using='gin')
+    op.create_index(op.f('ix_tsv_lastname'), 'search_view', ['tsv_last_name'], postgresql_using='gin')
 
 def downgrade():
-    pass
+    conn = op.get_bind()
+    # drop the materialized view
+    conn.execute(sa.sql.text('DROP MATERIALIZED VIEW search_view'))
