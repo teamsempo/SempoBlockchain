@@ -133,6 +133,11 @@ def update_transfer_account_user(user,
         user.email = email
     if public_serial_number:
         user.public_serial_number = public_serial_number
+        transfer_card = TransferCard.get_transfer_card(public_serial_number)
+        user.default_transfer_account.transfer_card = transfer_card
+    else:
+        transfer_card = None
+
     if location:
         user.location = location
     if lat:
@@ -143,9 +148,7 @@ def update_transfer_account_user(user,
     if default_organisation_id:
         user.default_organisation_id = default_organisation_id
 
-    if use_precreated_pin:
-        transfer_card = TransferCard.get_transfer_card(public_serial_number)
-
+    if use_precreated_pin and transfer_card:
         user.set_pin(transfer_card.PIN)
 
     if existing_transfer_account:
@@ -624,39 +627,48 @@ def process_create_or_modify_user_request(
             response_object = {'message': 'User already exists for Identifier'}
             return response_object, 400
 
-        user = update_transfer_account_user(
-            existing_user,
-            first_name=first_name, 
-            last_name=last_name, 
-            preferred_language=preferred_language,
-            phone=phone, 
-            email=email, 
-            location=location,
-            public_serial_number=public_serial_number,
-            use_precreated_pin=use_precreated_pin,
-            existing_transfer_account=existing_transfer_account,
-            is_beneficiary=is_beneficiary, 
-            is_vendor=is_vendor,
-            is_tokenagent=is_tokenagent, 
-            is_groupaccount=is_groupaccount,
-            business_usage=business_usage
-        )
+        try:
 
-        if referred_by_user:
-            user.referred_by.clear()  # otherwise prior referrals will remain...
-            user.referred_by.append(referred_by_user)
+            user = update_transfer_account_user(
+                existing_user,
+                first_name=first_name,
+                last_name=last_name,
+                preferred_language=preferred_language,
+                phone=phone,
+                email=email,
+                location=location,
+                public_serial_number=public_serial_number,
+                use_precreated_pin=use_precreated_pin,
+                existing_transfer_account=existing_transfer_account,
+                is_beneficiary=is_beneficiary,
+                is_vendor=is_vendor,
+                is_tokenagent=is_tokenagent,
+                is_groupaccount=is_groupaccount,
+                business_usage=business_usage
+            )
 
-        set_custom_attributes(attribute_dict, user)
-        flag_modified(user, "custom_attributes")
+            if referred_by_user:
+                user.referred_by.clear()  # otherwise prior referrals will remain...
+                user.referred_by.append(referred_by_user)
 
-        db.session.commit()
+            set_custom_attributes(attribute_dict, user)
+            flag_modified(user, "custom_attributes")
 
-        response_object = {
-            'message': 'User Updated',
-            'data': {'user': user_schema.dump(user).data}
-        }
+            db.session.commit()
 
-        return response_object, 200
+            response_object = {
+                'message': 'User Updated',
+                'data': {'user': user_schema.dump(user).data}
+            }
+
+            return response_object, 200
+
+        except Exception as e:
+            response_object = {
+                'message': str(e)
+            }
+
+            return response_object, 400
 
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name, preferred_language=preferred_language,
