@@ -38,21 +38,21 @@ const MetricsBar = ({creditTransferStats, login}) => {
 
       <MetricWrap>
         <ModuleHeader>
-          TOTAL DISTRIBUTED
+        {"TOTAL DISTRIBUTED" + (creditTransferStats.filter_active ? " IN PERIOD" : "")}
         </ModuleHeader>
         <Metric>{formatMoney(creditTransferStats.total_distributed/100, 0, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
-          TOTAL SPENT
+        {"TOTAL SPENT" + (creditTransferStats.filter_active ? " IN PERIOD" : "")}
         </ModuleHeader>
         <Metric>{formatMoney(creditTransferStats.total_spent/100, 0, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
-          TOTAL EXCHANGED
+        {"TOTAL EXCHANGED" + (creditTransferStats.filter_active ? " IN PERIOD" : "")}
         </ModuleHeader>
         <Metric>{formatMoney(creditTransferStats.total_exchanged/100, 0, undefined, undefined, login.organisationToken)}</Metric>
       </MetricWrap>

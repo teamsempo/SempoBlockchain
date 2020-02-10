@@ -60,7 +60,7 @@ class userFunnelChart extends React.Component {
       };
 
       var data = {
-          labels: ['Users', beneficiaryTermPlural, 'Made Purchase', 'Exhausted Balance'],
+          labels: ['Users', beneficiaryTermPlural, 'Made Purchase' + (this.props.creditTransferStats.filter_active ? " In Period" : ""), 'Exhausted Balance' + (this.props.creditTransferStats.filter_active ? " In Period" : "")],
           datasets: [
               {
                   label: `Count`,
