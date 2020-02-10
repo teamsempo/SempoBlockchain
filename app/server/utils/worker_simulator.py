@@ -15,10 +15,11 @@ endpoint_simulators = {
     'eth_manager.celery_tasks.send_eth': blockchain_tasks_simulator.send_eth,
 }
 
-def simulate(task, kwargs, args):
+def simulate(task, kwargs, args, queue):
     print('[WARN] Worker Simulator is running. This task will NOT be executed on the blockchain. Never use this mode in prod, or else bad stuff will happen')
+    print('Task: {} \nQueue: {}'.format(task, queue))
     if task in endpoint_simulators:
         return endpoint_simulators[task](kwargs, args)
     else:
-        print('[WARN] Task \'${task}\' does not have a simulator. Please add one to worker_simulator.endpoint_simulators. Using generic response.')
+        print('[WARN] Task \'{}\' does not have a simulator. Please add one to worker_simulator.endpoint_simulators. Using generic response.'.format(task))
         return blockchain_tasks_simulator.FakeCeleryAsyncResult()
