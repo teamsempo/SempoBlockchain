@@ -6,12 +6,13 @@ from server import db, bt
 
 from server.models.search import SearchView
 from sqlalchemy.sql.expression import func
+from server.models.transfer_account import TransferAccount
 
 search_blueprint = Blueprint('search', __name__)
 
 
 class SearchAPI(MethodView):
-    def get(self, search_string='mic deroo +19027192231'):
+    def get(self, search_string='mic'):
        
         # Note: Using tsquery wildcards here. Good docs of them here:
         # https://www.postgresql.org/docs/current/datatype-textsearch.html#DATATYPE-TSQUERY
@@ -21,12 +22,22 @@ class SearchAPI(MethodView):
         search_terms = search_string.split(' ')
         tsquery = ':* | '.join(search_terms)+':*'
 
+        qr = db.session.query(TransferAccount).all()
+        print(qr)
+    #    for b, a in qr:
+    #        print(a)
+    #        print(a.id)
+    #        print(b)
+    #        print(b.id)
+    #        print(b.default_transfer_account_id)
         query_result = db.session.query(
             db.distinct(SearchView.id),
             SearchView.first_name,
             SearchView.last_name,
             SearchView.email,
             SearchView._phone,
+            SearchView.default_transfer_account_id,
+            TransferAccount._balance_wei,
             # This ugly (but functional) multi-tscolumn ranking is modified from Ben Smithgall's great guide
             # https://www.codeforamerica.org/blog/2015/07/02/multi-table-full-text-search-with-postgres-flask-and-sqlalchemy/
             db.func.max(db.func.full_text.ts_rank(
@@ -39,9 +50,10 @@ class SearchAPI(MethodView):
                 ), db.func.to_tsquery(tsquery, postgresql_regconfig='english')
             )).label('rank')
             ).group_by(
-                SearchView.id, SearchView.first_name, SearchView.last_name, SearchView.email, SearchView._phone
-            ).order_by(db.text('rank DESC')).all()
-        return {'a': query_result}
+                SearchView.id, SearchView.first_name, SearchView.last_name, SearchView.email, SearchView._phone, SearchView.default_transfer_account_id, TransferAccount._balance_wei
+            ).order_by(db.text('rank DESC')
+            ).all()
+        return {'results': query_result}
 
 search_blueprint.add_url_rule(
     '/search/',

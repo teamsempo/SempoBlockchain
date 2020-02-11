@@ -13,6 +13,7 @@ class SearchView(db.Model):
     tsv_phone = db.Column(TSVECTOR)
     tsv_first_name = db.Column(TSVECTOR)
     tsv_last_name = db.Column(TSVECTOR)
+    default_transfer_account_id = db.Column(db.Integer)
 
 class TSRank(GenericFunction):
     package = 'full_text'

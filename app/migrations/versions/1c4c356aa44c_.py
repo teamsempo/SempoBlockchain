@@ -34,6 +34,7 @@ def upgrade():
                 u._phone,
                 u.first_name,
                 u.last_name,
+                u.default_transfer_account_id,
                 to_tsvector(u.email) AS tsv_email,
                 to_tsvector(u._phone) AS tsv_phone,
                 to_tsvector(u.first_name) AS tsv_first_name,
@@ -41,7 +42,6 @@ def upgrade():
             FROM "user" u
         );
     '''))
-
 
     op.create_index(op.f('ix_search_view_id'), 'search_view', ['id'], unique=True)
 
