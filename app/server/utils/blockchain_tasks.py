@@ -45,13 +45,13 @@ class BlockchainTasker(object):
         }
         return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), kwargs, queue=queue)
 
-    def _synchronous_transaction_task(self,
-                                      signing_address,
-                                      contract_address, contract_type,
-                                      func, args=None,
-                                      gas_limit=None,
-                                      prior_tasks=None,
-                                      queue='high-priority'):
+    def _transaction_task(self,
+                          signing_address,
+                          contract_address, contract_type,
+                          func, args=None,
+                          gas_limit=None,
+                          prior_tasks=None,
+                          queue='high-priority'):
         kwargs = {
             'signing_address': signing_address,
             'contract_address': contract_address,
@@ -61,7 +61,10 @@ class BlockchainTasker(object):
             'gas_limit': gas_limit,
             'prior_tasks': prior_tasks
         }
-        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), kwargs=kwargs, queue=queue).id
+        return task_runner.delay_task(
+            self._eth_endpoint('transact_with_contract_function'),
+            kwargs=kwargs, queue=queue
+        ).id
 
     def get_blockchain_task(self, task_uuid):
         """
@@ -184,7 +187,7 @@ class BlockchainTasker(object):
 
 
         if signing_address == from_address:
-            return self._synchronous_transaction_task(
+            return self._transaction_task(
                 signing_address=signing_address,
                 contract_address=token.address,
                 contract_type='ERC20',
@@ -196,7 +199,7 @@ class BlockchainTasker(object):
                 prior_tasks=prior_tasks
             )
 
-        return self._synchronous_transaction_task(
+        return self._transaction_task(
             signing_address=signing_address,
             contract_address=token.address,
             contract_type='ERC20',
@@ -216,7 +219,7 @@ class BlockchainTasker(object):
 
         # TODO: Fix the signature on this
 
-        return self._synchronous_transaction_task(
+        return self._transaction_task(
             signing_address=signing_address,
             contract_address=token.address,
             contract_type='ERC20',
@@ -258,7 +261,7 @@ class BlockchainTasker(object):
         # if topup_task_uuid:
         #     prior_tasks.append(topup_task_uuid)
 
-        return self._synchronous_transaction_task(
+        return self._transaction_task(
             signing_address=signing_address,
             contract_address=exchange_contract.blockchain_address,
             contract_type='bancor_converter',
