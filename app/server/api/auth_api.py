@@ -85,7 +85,9 @@ class RegisterAPI(MethodView):
         exact_match = False
 
         tier = None
-        if '@sempo.ai' in email or '@withsempo.com' in email:
+        sempoadmin_email = current_app.config['SEMPOADMIN_EMAIL']
+
+        if sempoadmin_email and sempoadmin_email in email:
             email_ok = True
             tier = 'sempoadmin'
 

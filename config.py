@@ -61,7 +61,7 @@ if load_from_s3:
     specific_read_result = specific_obj['Body'].read().decode('utf-8')
     specific_parser.read_string(specific_read_result)
 
-    common_obj = client.get_object(Bucket=SECRET_BUCKET, Key='common_config.ini')
+    common_obj = client.get_object(Bucket=SECRET_BUCKET, Key='common_secrets.ini')
     common_read_result = common_obj['Body'].read().decode('utf-8')
     common_parser.read_string(common_read_result)
 
@@ -69,12 +69,12 @@ else:
     # Load config from local
 
     # This occurs in local environments
-    folder_common_path = os.path.join(CONFIG_DIR, 'config_files/common_config.ini')
+    folder_common_path = os.path.join(CONFIG_DIR, 'config_files/common_secrets.ini')
     folder_specific_path = os.path.join(CONFIG_DIR, 'config_files/' + CONFIG_FILENAME)
 
     # This occurs in docker environments, where the config folder is copied and unpacked to the parent directory
     # We can't avoid unpacking the config folder due to docker stupidness around conditional file copying
-    raw_common_path = os.path.join(CONFIG_DIR, 'common_config.ini')
+    raw_common_path = os.path.join(CONFIG_DIR, 'common_secrets.ini')
     raw_specific_path = os.path.join(CONFIG_DIR, CONFIG_FILENAME)
 
     common_path = folder_common_path if os.path.isfile(folder_common_path) else raw_common_path
@@ -132,8 +132,10 @@ APP_HOST            = specific_parser['APP']['APP_HOST']
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 
-INTERNAL_AUTH_USERNAME = common_parser['APP']['BASIC_AUTH_USERNAME'] + '_' + DEPLOYMENT_NAME
-INTERNAL_AUTH_PASSWORD = common_parser['APP']['BASIC_AUTH_PASSWORD']
+SEMPOADMIN_EMAIL = specific_parser['APP'].get('sempoadmin_email')
+
+INTERNAL_AUTH_USERNAME = specific_parser['APP']['BASIC_AUTH_USERNAME'] + '_' + DEPLOYMENT_NAME
+INTERNAL_AUTH_PASSWORD = specific_parser['APP']['BASIC_AUTH_PASSWORD']
 
 EXTERNAL_AUTH_USERNAME = 'admin_auth_' + DEPLOYMENT_NAME
 EXTERNAL_AUTH_PASSWORD = hashlib.sha256(SECRET_KEY.encode()).hexdigest()[0:8]
