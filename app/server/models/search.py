@@ -1,5 +1,6 @@
 from server import db
 from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy.sql.functions import GenericFunction
 
 class SearchView(db.Model):
     __tablename__ = 'search_view'
@@ -12,3 +13,7 @@ class SearchView(db.Model):
     tsv_phone = db.Column(TSVECTOR)
     tsv_first_name = db.Column(TSVECTOR)
     tsv_last_name = db.Column(TSVECTOR)
+
+class TSRank(GenericFunction):
+    package = 'full_text'
+    name = 'ts_rank'
