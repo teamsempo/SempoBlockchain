@@ -65,12 +65,14 @@ def create_app():
 
     register_extensions(app)
     register_blueprints(app)
+    register_cache(app)
 
     app.json_encoder = ExtendedJSONEncoder
 
-    cache.init_app(app)
-    
     return app
+
+def register_cache(app):
+    cache.init_app(app)
 
 def register_extensions(app):
     db.init_app(app)
