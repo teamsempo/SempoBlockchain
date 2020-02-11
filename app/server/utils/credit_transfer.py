@@ -15,7 +15,7 @@ from server.exceptions import (
     TransferAccountNotFoundError
 )
 
-from server import db, red, bt
+from server import db, red, bt, cache
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
@@ -35,7 +35,7 @@ def cents_to_dollars(amount_cents):
 def dollars_to_cents(amount_dollars):
     return float(amount_dollars) * 100
 
-
+@cache.cached(timeout=60, query_string=True)
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None):
 
     dateFilter = []

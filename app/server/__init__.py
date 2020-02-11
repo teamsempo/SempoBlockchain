@@ -1,4 +1,5 @@
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
+from flask_caching import Cache
 import json
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -67,6 +68,8 @@ def create_app():
 
     app.json_encoder = ExtendedJSONEncoder
 
+    cache.init_app(app)
+    
     return app
 
 def register_extensions(app):
@@ -220,6 +223,9 @@ basic_auth = BasicAuth()
 
 s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
                   aws_secret_access_key=config.AWS_SES_SECRET)
+
+# simple cache for endpoints
+cache = Cache(config={"CACHE_TYPE": "simple"})
 
 celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
