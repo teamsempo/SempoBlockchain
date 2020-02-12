@@ -93,7 +93,7 @@ def topup_wallets(self):
 
 
 # Set retry attempts to zero since beat will retry shortly anyway
-@celery_app.task(**no_retry_config)
+@celery_app.task(**low_priority_no_retry_config)
 def topup_wallet_if_required(self, address):
     return eth_manager.task_interfaces.composite.topup_if_required(address)
 
