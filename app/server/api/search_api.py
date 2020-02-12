@@ -4,6 +4,7 @@ import re
 import json
 
 from server import db, bt
+from server.utils.auth import requires_auth
 from server.schemas import transfer_accounts_schema
 from server.models.search import SearchView
 from sqlalchemy.sql.expression import func
@@ -13,18 +14,22 @@ search_blueprint = Blueprint('search', __name__)
 
 
 class SearchAPI(MethodView):
-    def get(self, search_string='m'):
+    @requires_auth(allowed_roles={'ADMIN': 'any'})
+    def get(self, search_string=''):
        
         # Note: Using tsquery wildcards here. Good docs of them here:
         # https://www.postgresql.org/docs/current/datatype-textsearch.html#DATATYPE-TSQUERY
         # 'Fran deRoo' -> 'Fran:* | deRoo:*'
         # Matches strings like "Francine deRoos"
         # Will also match "Michiel deRoos" because of the or clause, but this will be ranked lower
-        search_string = search_string.strip()
-        tsquery = ''
-        if len(search_string) > 0:
-            search_terms = search_string.split(' ')
-            tsquery = ':* | '.join(search_terms)+':*'
+        search_terms = search_string.strip().split(' ')
+        tsquery = ':* | '.join(search_terms)+':*'
+        if search_string == '':
+            all_transfer_accounts = TransferAccount.query.filter(TransferAccount.is_ghost != True
+            ).execution_options(show_all=True
+            ).all()
+            result = transfer_accounts_schema.dump(all_transfer_accounts)
+            return { 'data': {'transfer_accounts': result.data} }
 
         # First get users who match search string
         user_search_result = db.session.query(
@@ -47,14 +52,15 @@ class SearchAPI(MethodView):
 
         # Then use those results to join aginst TransferAccount
         # TODO: Switch between joining against TransferAccount, and Transfers
-        result = db.session.query(TransferAccount
+        searched_transfer_accounts = db.session.query(TransferAccount
             # Note: Manual join here since sqlalchemy doesn't support foreign keys in materialized views
             ).join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id
             ).execution_options(show_all=True
             ).order_by(db.text('rank DESC')
-            ).filter(user_search_result.c.rank > 0.0).all()
-        print(result)
-        result = transfer_accounts_schema.dump(result)
+            ).filter(user_search_result.c.rank > 0.0
+            ).filter(TransferAccount.is_ghost != True).all()
+        
+        result = transfer_accounts_schema.dump(searched_transfer_accounts)
         return { 'data': {'transfer_accounts': result.data} }
 
 
