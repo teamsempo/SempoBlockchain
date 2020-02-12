@@ -15,7 +15,8 @@ phone = partial(fake.msisdn)
 
 base_user = partial(UserFactory, phone='+61400000000')
 unactivated_user = partial(base_user, is_activated=False)
-unregistered_user = partial(base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
+unregistered_base_user = partial(UserFactory, phone='+61400000444')
+unregistered_user = partial(unregistered_base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
 standard_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
 pin_blocked_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=3)
 
@@ -61,6 +62,31 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
 
+def test_change_initial_pin(mocker, test_client, init_database, create_master_organisation):
+    session = initial_pin_confirmation_state()
+    user = unregistered_user()
+
+    assert user.primary_blockchain_address is None
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.send_sms = mocker.MagicMock()
+
+    state_machine.feed_char('0000')
+
+    assert user.primary_blockchain_address is not None
+    assert user.is_activated is True
+    state_machine.send_sms.assert_called_with(user.phone, "account_creation_success_sms")
+
+def test_change_current_pin(mocker, test_client, init_database):
+    session = new_pin_confirmation_state()
+    user = standard_user()
+
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.send_sms = mocker.MagicMock()
+
+    state_machine.feed_char("2222")
+
+    assert user.verify_pin("2222") is True
+    state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
 
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected, before_failed_pin_attempts, after_failed_pin_attempts",
  [
@@ -116,34 +142,3 @@ def test_authorize_pin(test_client, init_database, session_factory, user_factory
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
     assert user.failed_pin_attempts == after_failed_pin_attempts
-
-
-def test_change_initial_pin(mocker, test_client, init_database):
-    session = initial_pin_confirmation_state()
-    user = unregistered_user()
-
-    assert user.primary_blockchain_address is None
-
-    state_machine = KenyaUssdStateMachine(session, user)
-    state_machine.send_sms = mocker.MagicMock()
-
-    state_machine.feed_char('0000')
-
-    assert user.primary_blockchain_address is not None
-    assert user.is_activated is True
-    state_machine.send_sms.assert_called_with(user.phone, "account_creation_success_sms")
-
-
-def test_change_current_pin(mocker, test_client, init_database):
-    session = new_pin_confirmation_state()
-    user = standard_user()
-
-    state_machine = KenyaUssdStateMachine(session, user)
-    state_machine.send_sms = mocker.MagicMock()
-
-    state_machine.feed_char("2222")
-
-    assert user.verify_pin("2222") is True
-    state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
-
-# TODO: test pin confirmation failed + blocked + reset flow?
