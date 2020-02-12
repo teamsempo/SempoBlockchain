@@ -22,14 +22,6 @@ class SearchAPI(MethodView):
         search_terms = search_string.split(' ')
         tsquery = ':* | '.join(search_terms)+':*'
 
-        qr = db.session.query(TransferAccount).all()
-        print(qr)
-    #    for b, a in qr:
-    #        print(a)
-    #        print(a.id)
-    #        print(b)
-    #        print(b.id)
-    #        print(b.default_transfer_account_id)
         query_result = db.session.query(
             db.distinct(SearchView.id),
             SearchView.first_name,
@@ -49,10 +41,10 @@ class SearchAPI(MethodView):
                     db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B')
                 ), db.func.to_tsquery(tsquery, postgresql_regconfig='english')
             )).label('rank')
-            ).group_by(
+            ).join(TransferAccount, TransferAccount.id == SearchView.default_transfer_account_id).group_by(
                 SearchView.id, SearchView.first_name, SearchView.last_name, SearchView.email, SearchView._phone, SearchView.default_transfer_account_id, TransferAccount._balance_wei
             ).order_by(db.text('rank DESC')
-            ).all()
+            ).execution_options(show_all=True).all()
         return {'results': query_result}
 
 search_blueprint.add_url_rule(
