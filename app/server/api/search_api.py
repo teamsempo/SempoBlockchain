@@ -16,7 +16,7 @@ search_blueprint = Blueprint('search', __name__)
 class SearchAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, search_string=''):
-       
+        search_string = request.args.get('search_string') or ''
         # Note: Using tsquery wildcards here. Good docs of them here:
         # https://www.postgresql.org/docs/current/datatype-textsearch.html#DATATYPE-TSQUERY
         # 'Fran deRoo' -> 'Fran:* | deRoo:*'
@@ -25,9 +25,9 @@ class SearchAPI(MethodView):
         search_terms = search_string.strip().split(' ')
         tsquery = ':* | '.join(search_terms)+':*'
         if search_string == '':
-            all_transfer_accounts = TransferAccount.query.filter(TransferAccount.is_ghost != True
-            ).execution_options(show_all=True
-            ).all()
+            all_transfer_accounts = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
+            .execution_options(show_all=True)\
+            .all()
             result = transfer_accounts_schema.dump(all_transfer_accounts)
             return { 'data': {'transfer_accounts': result.data} }
 
@@ -38,27 +38,24 @@ class SearchAPI(MethodView):
             # This ugly (but functional) multi-tscolumn ranking is a modified from Ben Smithgall's blog post
             # https://www.codeforamerica.org/blog/2015/07/02/multi-table-full-text-search-with-postgres-flask-and-sqlalchemy/
             db.func.max(db.func.full_text.ts_rank(
-                db.func.setweight(db.func.coalesce(SearchView.tsv_email, ''), 'D').concat( # Priority D
-                    db.func.setweight(db.func.coalesce(SearchView.tsv_phone, ''), 'A') # Priority A
-                ).concat(
-                    db.func.setweight(db.func.coalesce(SearchView.tsv_first_name, ''), 'B') # Priority B 
-                ).concat(
-                    db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B') # Priority B 
-                ), db.func.to_tsquery(tsquery, postgresql_regconfig='english')
-            )).label('rank')
-            ).group_by(
-                SearchView,
-            ).execution_options(show_all=True).subquery()
+                db.func.setweight(db.func.coalesce(SearchView.tsv_email, ''), 'D')\
+                    .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_phone, ''), 'A'))\
+                    .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_first_name, ''), 'B'))\
+                    .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B')),
+                    db.func.to_tsquery(tsquery, postgresql_regconfig='english')))\
+            .label('rank'))\
+            .group_by(SearchView)\
+            .subquery()
 
         # Then use those results to join aginst TransferAccount
         # TODO: Switch between joining against TransferAccount, and Transfers
-        searched_transfer_accounts = db.session.query(TransferAccount
-            # Note: Manual join here since sqlalchemy doesn't support foreign keys in materialized views
-            ).join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id
-            ).execution_options(show_all=True
-            ).order_by(db.text('rank DESC')
-            ).filter(user_search_result.c.rank > 0.0
-            ).filter(TransferAccount.is_ghost != True).all()
+        searched_transfer_accounts = db.session.query(TransferAccount)\
+            .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
+            .execution_options(show_all=True)\
+            .order_by(db.text('rank DESC'))\
+            .filter(user_search_result.c.rank > 0.0)\
+            .filter(TransferAccount.is_ghost != True)\
+            .all()
         
         result = transfer_accounts_schema.dump(searched_transfer_accounts)
         return { 'data': {'transfer_accounts': result.data} }
@@ -69,7 +66,4 @@ search_blueprint.add_url_rule(
     view_func=SearchAPI.as_view('search_view'),
     methods=['GET']
 )
-
-
-
 
