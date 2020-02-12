@@ -29,38 +29,35 @@ class SearchAPI(MethodView):
         search_terms = search_string.strip().split(' ')
         tsquery = ':* | '.join(search_terms)+':*'
         if search_string == '':
-            all_transfer_accounts = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
-            .execution_options(show_all=True)\
-            .all()
-            result = transfer_accounts_schema.dump(all_transfer_accounts)
-            return { 'data': {'transfer_accounts': result.data} }
+            final_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
+                .execution_options(show_all=True)
+        else:
+            # First get users who match search string
+            user_search_result = db.session.query(
+                db.distinct(SearchView.id),
+                SearchView,
+                # This ugly (but functional) multi-tscolumn ranking is a modified from Ben Smithgall's blog post
+                # https://www.codeforamerica.org/blog/2015/07/02/multi-table-full-text-search-with-postgres-flask-and-sqlalchemy/
+                db.func.max(db.func.full_text.ts_rank(
+                    db.func.setweight(db.func.coalesce(SearchView.tsv_email, ''), 'D')\
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_phone, ''), 'A'))\
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_first_name, ''), 'B'))\
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B')),
+                        db.func.to_tsquery(tsquery, postgresql_regconfig='english')))\
+                .label('rank'))\
+                .group_by(SearchView)\
+                .subquery()
 
-        # First get users who match search string
-        user_search_result = db.session.query(
-            db.distinct(SearchView.id),
-            SearchView,
-            # This ugly (but functional) multi-tscolumn ranking is a modified from Ben Smithgall's blog post
-            # https://www.codeforamerica.org/blog/2015/07/02/multi-table-full-text-search-with-postgres-flask-and-sqlalchemy/
-            db.func.max(db.func.full_text.ts_rank(
-                db.func.setweight(db.func.coalesce(SearchView.tsv_email, ''), 'D')\
-                    .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_phone, ''), 'A'))\
-                    .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_first_name, ''), 'B'))\
-                    .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B')),
-                    db.func.to_tsquery(tsquery, postgresql_regconfig='english')))\
-            .label('rank'))\
-            .group_by(SearchView)\
-            .subquery()
+            # Then use those results to join aginst TransferAccount
+            # TODO: Switch between joining against TransferAccount, and Transfers
+            final_query = db.session.query(TransferAccount)\
+                .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
+                .execution_options(show_all=True)\
+                .order_by(db.text('rank DESC'))\
+                .filter(user_search_result.c.rank > 0.0)\
+                .filter(TransferAccount.is_ghost != True)\
 
-        # Then use those results to join aginst TransferAccount
-        # TODO: Switch between joining against TransferAccount, and Transfers
-        transfer_accounts_query = db.session.query(TransferAccount)\
-            .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
-            .execution_options(show_all=True)\
-            .order_by(db.text('rank DESC'))\
-            .filter(user_search_result.c.rank > 0.0)\
-            .filter(TransferAccount.is_ghost != True)\
-
-        transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
+        transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
         result = transfer_accounts_schema.dump(transfer_accounts)
 
         # Copying existing transfer_account API for compatability
