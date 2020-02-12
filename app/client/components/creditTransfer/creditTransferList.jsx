@@ -178,11 +178,14 @@ class CreditTransferList extends React.Component {
   };
 
   _customSender(creditTransfer) {
+    let transferAccounts = this.props.transferAccounts.byId;
+    let senderTransferAccount = transferAccounts[creditTransfer.sender_transfer_account_id];
+
     let sender = creditTransfer.sender_user && this.props.users.byId[creditTransfer.sender_user];
 	  let firstName = sender && sender.first_name;
 	  let lastName = sender && sender.last_name;
 	  let email = creditTransfer.authorising_user_email;
-	  let blockchainAddress = creditTransfer.sender_blockchain_address;
+	  let blockchainAddress = senderTransferAccount && senderTransferAccount.blockchain_address;
 
     if (this.props.login.adminTier === 'view') {
       return blockchainAddress
@@ -196,11 +199,14 @@ class CreditTransferList extends React.Component {
   }
 
   _customRecipient(creditTransfer) {
+    let transferAccounts = this.props.transferAccounts.byId;
+    let recipientTransferAccount = transferAccounts[creditTransfer.recipient_transfer_account_id];
+
     let recipient = creditTransfer.recipient_user && this.props.users.byId[creditTransfer.recipient_user];
 	  let firstName = recipient && recipient.first_name;
 	  let lastName = recipient && recipient.last_name;
 	  let email = creditTransfer.authorising_user_email;
-	  let blockchainAddress = creditTransfer.recipient_blockchain_address;
+	  let blockchainAddress = recipientTransferAccount && recipientTransferAccount.blockchain_address;
 
     if (this.props.login.adminTier  === 'view') {
       return blockchainAddress
