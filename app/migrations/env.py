@@ -80,8 +80,8 @@ def run_migrations_online():
     context.configure(connection=connection,
                       target_metadata=target_metadata,
                       process_revision_directives=process_revision_directives,
-                      **current_app.extensions['migrate'].configure_args,
-                      include_object=include_object)
+                      include_object=include_object,
+                      **current_app.extensions['migrate'].configure_args)
 
     try:
         with context.begin_transaction():
