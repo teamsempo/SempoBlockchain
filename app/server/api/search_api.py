@@ -22,6 +22,14 @@ search_blueprint = Blueprint('search', __name__)
 class SearchAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
+        """
+        This endpoint searches transfer accounts and credit transfers. It will check first name/last name/phone number/email address
+        Parameters:
+            - search_string: Any string you want to search. When empty or not provided, all results will be returned. 
+            - search_type: Valid inputs are transfer_accounts, and credit_transfers.
+        Return Value:
+            Results object, similar to the existing transfer_accounts and credit_transfers API return values
+        """
         search_string = request.args.get('search_string') or ''
 
         # Valid search types are: `transfer_accounts` and `credit_transfers`
@@ -109,7 +117,6 @@ class SearchAPI(MethodView):
         resp = make_response(bytes_data, 200)
         resp.mimetype = 'application/json'
         return resp
-
 
 search_blueprint.add_url_rule(
     '/search/',

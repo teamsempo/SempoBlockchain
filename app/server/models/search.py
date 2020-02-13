@@ -2,6 +2,8 @@ from server import db
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.sql.functions import GenericFunction
 
+# Note: this represents a matrerialized view.
+# Changes here will NOT automatically turn into database migrations
 class SearchView(db.Model):
     __tablename__ = 'search_view'
     id = db.Column(db.String, primary_key=True)
