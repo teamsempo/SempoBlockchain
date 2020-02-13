@@ -80,8 +80,7 @@ class SearchAPI(MethodView):
                 .group_by(SearchView)\
                 .subquery()
 
-            # Then use those results to join aginst TransferAccount
-            # TODO: Switch between joining against TransferAccount, and Transfers
+            # Then use those results to join aginst TransferAccount or CreditTransfer
             if search_type == 'transfer_accounts':
                 final_query = db.session.query(TransferAccount)\
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
