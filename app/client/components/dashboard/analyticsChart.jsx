@@ -79,7 +79,7 @@ class AnalyticsChart extends React.Component {
 
   render() {
 
-      if (Object.keys(this.props.creditTransferStats).length == 0) {
+      if (Object.keys(this.props.creditTransferStats).length === 3) {
           return (
               <p>No Transfer Data</p>
           );

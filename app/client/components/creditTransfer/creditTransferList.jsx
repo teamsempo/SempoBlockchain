@@ -410,7 +410,9 @@ class CreditTransferList extends React.Component {
             getTdProps={(state, rowInfo) => {
               return {
                 onClick: (e, handleOriginal) => {
-                  this.toggleSelectedCreditTransfer(rowInfo.row.id);
+                  if (rowInfo) {
+                    this.toggleSelectedCreditTransfer(rowInfo.row.id);
+                  }
                   if (handleOriginal) {
                     handleOriginal();
                   }
