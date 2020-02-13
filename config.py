@@ -172,7 +172,7 @@ if ENABLE_SIMULATOR_MODE:
 or anywhere you care about workers actually running you should shut down and adjust your config')
 
 def get_database_uri(name, host, censored=True):
-    return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,	
+    return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
                                                 DATABASE_PORT,
