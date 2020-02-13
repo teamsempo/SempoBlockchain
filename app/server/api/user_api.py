@@ -30,14 +30,12 @@ class UserAPI(MethodView):
                     public_serial_number=public_serial_number.strip()).first()
 
                 if user:
-                    transfer_account = TransferAccount.query.get(
-                        user.transfer_account_id)
 
-                    if transfer_account:
+                    if user.default_transfer_account:
                         response_object = {
                             'message': 'Successfully found transfer account!',
                             'data': {
-                                'balance': transfer_account.balance
+                                'balance': user.default_transfer_account.balance
                             }
                         }
 
