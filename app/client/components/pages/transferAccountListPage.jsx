@@ -10,10 +10,10 @@ import TransferAccountListWithFilterWrapper from '../transferAccount/transferAcc
 import UploadButton from "../uploader/uploadButton.jsx";
 
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
-import organizationWrapper from '../organizationWrapper';
 
 const mapStateToProps = (state) => {
   return {
+    login: state.login,
     transferAccounts: state.transferAccounts,
     mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
       .map((id) => {return {...{id, ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]}, ...state.transferAccounts.byId[id]}})
@@ -41,37 +41,25 @@ class TransferAccountListPage extends React.Component {
   }
 
   buildFilterForAPI() {
-      if (location.pathname.includes('vendors')) {
-          var query = {account_type: 'vendor'};
+    let query = {};
 
-      } else if (location.pathname.includes(window.BENEFICIARY_TERM_PLURAL.toLowerCase())) {
-          query = {account_type: 'beneficiary'};
-
-      } else {
-          query = {};
-      }
-
-      if (this.props.transferAccounts.loadStatus.lastQueried) {
-        query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
-      }
+    if (this.props.transferAccounts.loadStatus.lastQueried) {
+      query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
+    }
 
 
-      const path = null;
-      this.props.loadTransferAccountList(query, path);
+    const path = null;
+    this.props.loadTransferAccountList(query, path);
   }
   
   render() {
-    const is_vendor = location.pathname.includes('vendors');
-    const is_beneficiary = location.pathname.includes(window.BENEFICIARY_TERM_PLURAL.toLowerCase());
+    let transferAccountList = this.props.mergedTransferAccountUserList;
 
-    if (is_vendor || is_beneficiary) {
-        // just vendors or beneficiaries
-        var transferAccountList = this.props.mergedTransferAccountUserList.filter(transferAccount => {return transferAccount.is_vendor === is_vendor})
-    } else {
-        // all transfer accounts
-        transferAccountList = this.props.mergedTransferAccountUserList
+    if (this.props.login.adminTier === 'view') {
+      transferAccountList = Object.keys(this.props.transferAccounts.byId)
+        .map(id => this.props.transferAccounts.byId[id])
     }
-    
+
     let isNoData = (Object.keys(transferAccountList).length === 0);
 
     let uploadButtonText =
