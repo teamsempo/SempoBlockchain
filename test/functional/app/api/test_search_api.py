@@ -69,5 +69,5 @@ def test_transfer_usage_api_get(test_client, complete_admin_auth_token, create_o
             if transfer_account['users']:
                 user_names.append(transfer_account['users'][0]['first_name'])
         assert expected_results[e] == user_names
-    db.session.execute('DROP MATERIALIZED VIEW search_view')
+    db.session.execute('DROP MATERIALIZED VIEW search_view CASCADE;')
     db.session.commit()
