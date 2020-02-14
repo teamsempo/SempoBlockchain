@@ -288,7 +288,7 @@ def create_user_without_transfer_account(phone):
     :param phone: string with user's msisdn
     :return: User
     """
-    user = User(phone=phone, signup_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
+    user = User(phone=phone, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
     return user
 
 
