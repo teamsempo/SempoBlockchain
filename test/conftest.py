@@ -442,7 +442,7 @@ def init_database():
 
     with current_app.app_context():
         try:
-            db.session.execute('DROP TABLE IF EXISTS search_view CASCADE;')
+            db.session.execute('DROP MATERIALIZED VIEW IF EXISTS search_view CASCADE;')
         except:
             pass
         db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
