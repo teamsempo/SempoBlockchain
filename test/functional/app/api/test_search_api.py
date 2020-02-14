@@ -72,4 +72,3 @@ def test_transfer_usage_api_get(test_client, complete_admin_auth_token, create_o
         assert expected_results[e] == user_names
     db.session.execute('DROP MATERIALIZED VIEW search_view CASCADE;')
     db.session.commit()
-    assert 1 == 1
