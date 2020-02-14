@@ -16,6 +16,7 @@ def test_transfer_usage_api_get(test_client, complete_admin_auth_token, create_o
 
     # This is a hack because the test DB isn't being built with migrations (and thus doesn't have tsvectors)
     db.session.execute("drop table search_view;")
+    db.session.commit()
     db.session.execute('''
         CREATE MATERIALIZED VIEW search_view AS (
             SELECT
@@ -71,3 +72,4 @@ def test_transfer_usage_api_get(test_client, complete_admin_auth_token, create_o
         assert expected_results[e] == user_names
     db.session.execute('DROP MATERIALIZED VIEW search_view CASCADE;')
     db.session.commit()
+    assert 1 == 1
