@@ -60,8 +60,6 @@ function* updateStateFromCreditTransfer(result) {
     yield put({type: ADD_FLASH_MESSAGE, error: result.bulk_responses[0].status !== 201, message: result.bulk_responses[0].message});
   }
 
-  console.log(result.data)
-
   const metrics = result.data.transfer_stats;
   if (metrics) {
       yield put({type: UPDATE_METRICS, metrics});
