@@ -166,7 +166,7 @@ ETH_WORKER_DB_POOL_OVERFLOW = specific_parser['DATABASE'].getint('eth_worker_poo
 
 # Removes dependency on redis/celery/ganache
 # Never ever ever enable this on prod, or anywhere you care about integrity
-ENABLE_SIMULATOR_MODE = specific_parser['APP'].getboolean('enable_simulator_mode', False)
+ENABLE_SIMULATOR_MODE = specific_parser['APP'].getboolean('enable_simulator_mode', True)
 if ENABLE_SIMULATOR_MODE:
     print('[WARN] Simulator Mode is enabled. If you are seeing this message on a production system, \
 or anywhere you care about workers actually running you should shut down and adjust your config')

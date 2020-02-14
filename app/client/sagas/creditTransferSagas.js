@@ -4,7 +4,6 @@ import { normalize } from 'normalizr'
 import {
   PUSHER_CREDIT_TRANSFER,
   UPDATE_CREDIT_TRANSFER_LIST,
-  UPDATE_CREDIT_TRANSFER_STATS,
   LOAD_CREDIT_TRANSFER_LIST_REQUEST,
   LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
   LOAD_CREDIT_TRANSFER_LIST_FAILURE,
@@ -14,14 +13,14 @@ import {
   CREATE_TRANSFER_REQUEST,
   CREATE_TRANSFER_SUCCESS,
   CREATE_TRANSFER_FAILURE,
-  LOAD_CREDIT_TRANSFER_STATS_ERROR,
-  LOAD_CREDIT_TRANSFER_STATS_REQUEST
 } from '../reducers/creditTransferReducer.js';
+
+import { UPDATE_METRICS } from '../reducers/metricReducer';
 
 import { UPDATE_TRANSFER_ACCOUNTS, UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS } from '../reducers/transferAccountReducer.js';
 import { UPDATE_USER_LIST } from "../reducers/userReducer";
 
-import { loadCreditTransferListAPI, modifyTransferAPI, newTransferAPI, loadCreditTransferStatsAPI } from '../api/creditTransferAPI.js'
+import { loadCreditTransferListAPI, modifyTransferAPI, newTransferAPI } from '../api/creditTransferAPI.js'
 import { creditTransferSchema } from "../schemas";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 import {handleError} from "../utils";
@@ -61,9 +60,11 @@ function* updateStateFromCreditTransfer(result) {
     yield put({type: ADD_FLASH_MESSAGE, error: result.bulk_responses[0].status !== 201, message: result.bulk_responses[0].message});
   }
 
-  const transfer_stats = result.data.transfer_stats;
-  if (transfer_stats) {
-      yield put({type: UPDATE_CREDIT_TRANSFER_STATS, transfer_stats});
+  console.log(result.data)
+
+  const metrics = result.data.transfer_stats;
+  if (metrics) {
+      yield put({type: UPDATE_METRICS, metrics});
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
 
@@ -94,19 +95,6 @@ function* watchLoadCreditTransferList() {
   yield takeEvery(LOAD_CREDIT_TRANSFER_LIST_REQUEST, loadCreditTransferList);
 }
 
-function* loadCreditTransferStats({payload}) {
-  try {
-    const credit_stat_load_result = yield call(loadCreditTransferStatsAPI, payload)
-    const transfer_stats = credit_stat_load_result.data.transfer_stats
-    yield put({type: UPDATE_CREDIT_TRANSFER_STATS, transfer_stats});
-  } catch (fetch_error) {
-    yield put({type: LOAD_CREDIT_TRANSFER_STATS_ERROR, error: fetch_error})
-  }
-}
-
-function* watchLoadCreditTransferStats() {
-  yield takeEvery(LOAD_CREDIT_TRANSFER_STATS_REQUEST, loadCreditTransferStats)
-}
 
 function* loadPusherCreditTransfer( pusher_data ) {
   try {
@@ -178,7 +166,6 @@ function* watchCreateTransfer() {
 export default function* credit_transferSagas() {
   yield all([
     watchLoadCreditTransferList(),
-    watchLoadCreditTransferStats(),
     watchModifyTransfer(),
     watchCreateTransfer(),
     watchPusherCreditTransfer(),

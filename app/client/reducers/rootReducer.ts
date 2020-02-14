@@ -21,6 +21,7 @@ import { businessVerification } from "./businessVerificationReducer"
 import { wyre } from "./wyreReducer"
 import {TransferUsageReducer} from "./transferUsage/reducers";
 import {OrganisationReducer} from "./organisation/reducers";
+import { metrics } from "./metricReducer";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
@@ -41,6 +42,7 @@ const appReducer = combineReducers({
   transferAccounts,
   users,
   creditTransfers,
+  metrics,
   filters,
   businessVerification,
   wyre,

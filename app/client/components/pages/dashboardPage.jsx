@@ -5,7 +5,7 @@ import { subscribe, unsubscribe } from 'pusher-redux';
 
 import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
 import { logout } from '../../reducers/auth/actions'
-import { loadCreditTransferList, loadCreditTransferStats } from "../../reducers/creditTransferReducer"
+import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
 
 import { 
@@ -37,7 +37,6 @@ const mapDispatchToProps = (dispatch) => {
     logout:       () => dispatch(logout()),
     loadTransferAccountList: (query, path) => dispatch(loadTransferAccounts({query, path})),
     loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
-    loadCreditTransferStats: (query, path) => dispatch(loadCreditTransferStats({query, path}))
   };
 };
 

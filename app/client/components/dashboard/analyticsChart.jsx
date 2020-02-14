@@ -2,12 +2,11 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import {Line} from 'react-chartjs-2';
-import {creditTransferList} from "../../reducers/creditTransferReducer";
 import {ModuleHeader} from '../styledElements.js'
 
 const mapStateToProps = (state) => {
   return {
-    creditTransferStats: state.creditTransfers.transferStats,
+    creditTransferStats: state.metrics.metricsState,
     login: state.login
   };
 };

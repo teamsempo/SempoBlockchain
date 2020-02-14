@@ -1,16 +1,22 @@
 import React from 'react'
 import { DateRangePicker } from 'react-dates'
-import { loadCreditTransferStats } from "../../reducers/creditTransferReducer"
+import { loadMetrics } from "../../reducers/metricReducer"
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import {StyledButton} from '../styledElements'
 import moment from 'moment'
 
+const mapStateToProps = (state) => {
+    return {
+        loadStatus: state.metrics.loadStatus
+    }
+}
+
 const mapDispatchToProps = (dispatch) => {
     return {
-      loadCreditTransferStats: (query, path) => dispatch(loadCreditTransferStats({query, path}))
+      loadMetrics: (query, path) => dispatch(loadMetrics({query, path}))
     };
-  };
+};
 
 class DashboardFilter extends React.Component {
     constructor(props) {
@@ -31,14 +37,14 @@ class DashboardFilter extends React.Component {
     updateStats = () => {
         let {startDate, endDate} = this.state
         if(!startDate && !endDate) {
-            this.props.loadCreditTransferStats()
+            this.props.loadMetrics()
         } 
     }
 
     submitFilter = () => {
         let {startDate, endDate} = this.state
         if(startDate && endDate) {
-            this.props.loadCreditTransferStats({
+            this.props.loadMetrics({
               start_date: startDate.toISOString(),
               end_date: endDate.toISOString(),
             })
@@ -73,7 +79,7 @@ class DashboardFilter extends React.Component {
                             focusedInput={this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
                             onFocusChange={focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
                         />
-                        <StyledButton onClick={(this.state.startDate && this.state.endDate) ? this.submitFilter : () => {}} style={{fontWeight: '400', margin: '0em 1em', lineHeight: '25px', height: '30px', backgroundColor: (!this.state.startDate || !this.state.endDate) && "grey", textTransform: "capitalize"}}>
+                        <StyledButton onClick={(this.state.startDate && this.state.endDate) ? this.submitFilter : () => {}} style={{fontWeight: '400', margin: '0em 1em', lineHeight: '25px', height: '30px', backgroundColor: (!this.state.startDate || !this.state.endDate) && "grey", textTransform: "capitalize", cursor: (this.state.startDate || this.state.endDate) && 'pointer'}}>
                             Filter
                         </StyledButton>
                     </FilterContainer>
@@ -91,4 +97,4 @@ const FilterContainer = styled.div`
     margin: 1em;
 `
 
-export default connect(null, mapDispatchToProps)(DashboardFilter);
+export default connect(mapStateToProps, mapDispatchToProps)(DashboardFilter);

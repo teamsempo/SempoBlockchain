@@ -12,6 +12,7 @@ import businessVerificationSaga from './businessVerificationSaga';
 import wyreSaga from './wyreSaga';
 import transferUsageSagas from "./transferUsageSagas";
 import organisationSagas from "./organisationSagas";
+import metricSaga from "./metricSaga";
 
 export default function* rootSaga() {
   yield all([
@@ -26,6 +27,7 @@ export default function* rootSaga() {
     businessVerificationSaga(),
     wyreSaga(),
     transferUsageSagas(),
-    organisationSagas()
+    organisationSagas(),
+    metricSaga()
   ])
 }
