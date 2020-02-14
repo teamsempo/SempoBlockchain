@@ -99,7 +99,6 @@ const FilterContainer = styled.div`
     margin: 1em;
     display: flex;
     align-items: center;
-    background-color: blue;
 `
 
 export default connect(mapStateToProps, mapDispatchToProps)(DashboardFilter);
