@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import {StyledButton} from '../styledElements'
 import moment from 'moment'
+import LoadingSpinner from '../loadingSpinner'
 
 const mapStateToProps = (state) => {
     return {
@@ -59,6 +60,7 @@ class DashboardFilter extends React.Component {
                 L: "MM/DD/YY"
             }
         });
+
         return (
             <div>
 
@@ -80,7 +82,7 @@ class DashboardFilter extends React.Component {
                             onFocusChange={focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
                         />
                         <StyledButton onClick={(this.state.startDate && this.state.endDate) ? this.submitFilter : () => {}} style={{fontWeight: '400', margin: '0em 1em', lineHeight: '25px', height: '30px', backgroundColor: (!this.state.startDate || !this.state.endDate) && "grey", textTransform: "capitalize", cursor: (this.state.startDate || this.state.endDate) && 'pointer'}}>
-                            Filter
+                            {this.props.loadStatus.isRequesting ? <div className="miniSpinner"></div> : "Filter"}
                         </StyledButton>
                     </FilterContainer>
 
@@ -95,6 +97,9 @@ class DashboardFilter extends React.Component {
 
 const FilterContainer = styled.div`
     margin: 1em;
+    display: flex;
+    align-items: center;
+    background-color: blue;
 `
 
 export default connect(mapStateToProps, mapDispatchToProps)(DashboardFilter);
