@@ -209,3 +209,31 @@ export const replaceSpaces = stringlike => {
         return "";
     }
 };
+
+export const getDateArray = (start, end) => {
+    var arr = new Array(),
+        dt = new Date(start);
+
+    while (dt <= end) {
+        arr.push(new Date(dt));
+        dt.setDate(dt.getDate() + 1);
+    }
+
+    return arr;
+};
+
+export const get_zero_filled_values = (key, value_array, date_array) => {
+    let value_dict = {};
+
+    value_array.map(data => (value_dict[new Date(data.date)] = data[key]));
+
+    let transaction_volume = date_array.map(date => {
+        if (value_dict[date] !== undefined) {
+            return value_dict[date] / 100;
+        } else {
+            return 0;
+        }
+    });
+
+    return transaction_volume;
+};

@@ -9,7 +9,8 @@ import { loadCreditTransferList } from "../../reducers/creditTransferReducer"
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
 
 import { 
-  AnalyticsChart, 
+  VolumeChart, 
+  AverageChart,
   BeneficiaryFunnel, 
   UsagePieChart, 
   MetricsBar, 
@@ -158,7 +159,11 @@ class DashboardPage extends React.Component {
                 <GraphMetricColumn>
 
                   <ModuleBox>
-                    <AnalyticsChart/>
+                    <VolumeChart/>
+                  </ModuleBox>
+
+                  <ModuleBox>
+                    <AverageChart/>
                   </ModuleBox>
 
                   <ModuleBox>

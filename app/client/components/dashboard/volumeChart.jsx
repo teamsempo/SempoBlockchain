@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 
 import {Line} from 'react-chartjs-2';
 import {ModuleHeader} from '../styledElements.js'
+import {get_zero_filled_values, getDateArray} from '../../utils'
 
 const mapStateToProps = (state) => {
   return {
@@ -11,46 +12,9 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-  };
-};
+class VolumeChart extends React.Component {
 
-
-class AnalyticsChart extends React.Component {
-
-  getDateArray(start, end) {
-
-    var
-      arr = new Array(),
-      dt = new Date(start);
-
-    while (dt <= end) {
-      arr.push(new Date(dt));
-      dt.setDate(dt.getDate() + 1);
-    }
-
-    return arr;
-
-  }
-
-  get_zero_filled_volume(volume_array, date_array) {
-    let volume_dict = {};
-
-    volume_array.map(data => volume_dict[new Date(data.date)] = data.volume);
-
-    let transaction_volume = date_array.map(date => {
-      if (volume_dict[date] !== undefined) {
-        return volume_dict[date] / 100
-      } else {
-        return 0
-      }
-    });
-
-    return transaction_volume
-  }
-
-  constuct_dataset_object(label, color, dataset) {
+  construct_dataset_object(label, color, dataset) {
     return {
         label: label,
         fill: false,
@@ -95,16 +59,19 @@ class AnalyticsChart extends React.Component {
         let minDate=new Date(Math.min.apply(null,all_dates));
         let maxDate=new Date(Math.max.apply(null,all_dates));
 
-        let date_array = this.getDateArray(minDate, maxDate);
-        // console.log(date_array)
+        let date_array = getDateArray(minDate, maxDate);
 
-        let transaction_volume = this.get_zero_filled_volume(
-          this.props.creditTransferStats.daily_transaction_volume, date_array)
+        let transaction_volume = get_zero_filled_values(
+          'volume',
+          this.props.creditTransferStats.daily_transaction_volume, 
+          date_array)
 
-        let disbursement_volume = this.get_zero_filled_volume(
-          this.props.creditTransferStats.daily_disbursement_volume, date_array)
-
-          // this.props.creditTransferStats.daily_transaction_volume.map((data) => data.volume / 100);
+        let disbursement_volume = get_zero_filled_values(
+          'volume',
+          this.props.creditTransferStats.daily_disbursement_volume, 
+          date_array)
+        
+          console.log(this.props.creditTransferStats)
 
         var options = {
           animation: false,
@@ -170,12 +137,12 @@ class AnalyticsChart extends React.Component {
         var data = {
             labels: date_array,
             datasets: [
-              this.constuct_dataset_object(
+              this.construct_dataset_object(
                 'Daily Transaction Volume',
                 'rgba(75,192,192,0.7)',
                 transaction_volume
                 ),
-              this.constuct_dataset_object(
+              this.construct_dataset_object(
                 'Daily Disbursement Volume',
                 'rgba(204,142,233,0.7)',
                 disbursement_volume
@@ -195,4 +162,4 @@ class AnalyticsChart extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(AnalyticsChart);
+export default connect(mapStateToProps, null)(VolumeChart);
