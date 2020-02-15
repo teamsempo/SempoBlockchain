@@ -70,8 +70,6 @@ class VolumeChart extends React.Component {
           'volume',
           this.props.creditTransferStats.daily_disbursement_volume, 
           date_array)
-        
-          console.log(this.props.creditTransferStats)
 
         var options = {
           animation: false,

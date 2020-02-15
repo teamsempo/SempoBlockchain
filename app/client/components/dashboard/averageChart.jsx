@@ -53,8 +53,6 @@ class AverageChart extends React.Component {
                 this.props.creditTransferStats.daily_transaction_average, 
                 date_array)
 
-            console.log(transaction_average)
-
             var options = {
                 animation: false,
                 maintainAspectRatio: false,
@@ -109,7 +107,6 @@ class AverageChart extends React.Component {
                     ),
                 ]
             };
-            console.log(this.data)
             return (
                 <div >
                     <ModuleHeader> Transaction Average </ModuleHeader>
