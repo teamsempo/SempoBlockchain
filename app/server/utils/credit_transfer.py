@@ -26,6 +26,7 @@ from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 def cents_to_dollars(amount_cents):
@@ -90,9 +91,6 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         .label('transfer_count'))\
         .filter(*standard_payment_filters).filter(*dateFilter).first().transfer_count
 
-    # zero_balance_count = db.session.query(func.count(TransferAccount.id).label('zero_balance_count'))\
-    #     .filter(TransferAccount.balance == 0).first().zero_balance_count
-
     exhaused_balance_filters = [
         CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
         TransferAccount._balance_wei == 0
@@ -114,6 +112,13 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
                                                  func.date_trunc('day', CreditTransfer.created).label('date')) \
         .group_by(func.date_trunc('day', CreditTransfer.created)) \
         .filter(*disbursement_filters).filter(*dateFilter).all()
+
+    transfer_use_filters = [
+        CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+        CreditTransfer.transfer_use.isnot(None),
+        
+    ]
+    transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use)).filter(*transfer_use_filters).group_by(CreditTransfer.transfer_use.cast(JSONB)).all()
 
     try:
         master_wallet_balance = cached_funds_available()
@@ -152,6 +157,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         'master_wallet_balance': master_wallet_balance,
         'daily_transaction_volume': transaction_vol_list,
         'daily_disbursement_volume': disbursement_vol_list,
+        'transfer_use_breakdown': transfer_use_breakdown,
         'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
         'filter_active': True if (start_date is not None and end_date is not None) else False
     }
