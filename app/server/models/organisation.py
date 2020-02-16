@@ -45,6 +45,8 @@ class Organisation(ModelBase):
                                                 db.ForeignKey('transfer_account.id',
                                                 name="fk_org_level_account"))
 
+    initial_disbursement_amount = db.Column(db.Float(precision=2))
+
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
     org_level_transfer_account = db.relationship(
