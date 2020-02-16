@@ -198,7 +198,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_groupaccount=False,
                                  is_self_sign_up=False,
                                  business_usage=None,
-                                 initial_disbursement=None):
+                                 initial_disbursement=None,
+                                 sign_up_method=None):
     user = User(first_name=first_name,
                 last_name=last_name,
                 lat=lat, lng=lng,
@@ -207,7 +208,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 email=email,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
-                business_usage=business_usage)
+                business_usage=business_usage,
+                sign_up_method=sign_up_method)
 
     precreated_pin = None
     is_activated = False
@@ -466,6 +468,8 @@ def process_create_or_modify_user_request(
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
+    sign_up_method = attribute_dict.get('sign_up_method')
+
     referred_by = attribute_dict.get('referred_by')
 
     blockchain_address = attribute_dict.get('blockchain_address')
@@ -683,7 +687,7 @@ def process_create_or_modify_user_request(
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
-        business_usage=business_usage, initial_disbursement=initial_disbursement)
+        business_usage=business_usage, initial_disbursement=initial_disbursement, sign_up_method=sign_up_method)
 
     if referred_by_user:
         user.referred_by.append(referred_by_user)
