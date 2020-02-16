@@ -16,9 +16,10 @@ phone = partial(fake.msisdn)
 base_user = partial(UserFactory, phone='+61400000000')
 unactivated_user = partial(base_user, is_activated=False)
 unregistered_base_user = partial(UserFactory, phone='+61400000444')
-unregistered_user = partial(unregistered_base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
 standard_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
 pin_blocked_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=3)
+web_sign_up_user = partial(base_user, is_activated=False, sign_up_method=SignupMethodEnum.WEB_SIGNUP.value)
+ussd_self_sign_up_user = partial(unregistered_base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
 
 initial_pin_entry_state = partial(UssdSessionFactory, state="initial_pin_entry")
 initial_pin_confirmation_state = partial(UssdSessionFactory, state="initial_pin_confirmation",
@@ -62,19 +63,26 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
 
-def test_change_initial_pin(mocker, test_client, init_database, create_master_organisation):
-    session = initial_pin_confirmation_state()
-    user = unregistered_user()
 
-    assert user.primary_blockchain_address is None
+@pytest.mark.parametrize('user_factory, user_input, expected',
+ [
+     (web_sign_up_user, '0000', 'start'),
+     (ussd_self_sign_up_user, '0000', 'exit_account_creation_prompt'),
+ ])
+def test_change_initial_pin(mocker, test_client, init_database, create_master_organisation, user_factory, user_input, expected):
+    session = initial_pin_confirmation_state()
+    user = user_factory()
+
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
-    state_machine.feed_char('0000')
+    assert user.is_activated is False
 
-    assert user.primary_blockchain_address is not None
+    state_machine.feed_char(user_input)
+
     assert user.is_activated is True
-    state_machine.send_sms.assert_called_with(user.phone, "account_creation_success_sms")
+    assert state_machine.state == expected
+
 
 def test_change_current_pin(mocker, test_client, init_database):
     session = new_pin_confirmation_state()
@@ -87,6 +95,7 @@ def test_change_current_pin(mocker, test_client, init_database):
 
     assert user.verify_pin("2222") is True
     state_machine.send_sms.assert_called_with(user.phone, "pin_change_success_sms")
+
 
 @pytest.mark.parametrize("session_factory, user_factory, user_input, expected, before_failed_pin_attempts, after_failed_pin_attempts",
  [
