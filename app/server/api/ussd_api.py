@@ -38,8 +38,7 @@ class ProcessKenyaUssd(MethodView):
             user = get_user_by_phone(phone_number, 'KE')
             # api chains all inputs that came through with *
             latest_input = user_input.split('*')[-1]
-            if None in [user, session_id]:
-
+            if user is None:
                 temp_user = create_user_without_transfer_account(phone_number)
                 current_menu = UssdMenu.find_by_name('initial_language_selection')
                 ussd_session = create_or_update_session(session_id=session_id,
