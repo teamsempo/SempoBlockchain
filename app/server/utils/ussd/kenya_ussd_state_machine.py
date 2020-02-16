@@ -11,7 +11,8 @@ import math
 from transitions import Machine, State
 
 from server import message_processor, ussd_tasker, bt
-from server.models.user import User
+from server.models.user import User, SignupMethodEnum
+from server.models.organisation import Organisation
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
@@ -144,9 +145,8 @@ class KenyaUssdStateMachine(Machine):
     def save_username_info(self, user_input):
         first_name = self.session.get_data('first_name')
         last_name = user_input
-        update_transfer_account_user(self.user,
-                                     first_name=first_name,
-                                     last_name=last_name)
+        self.user.first_name = first_name
+        self.user.last_name = last_name
 
     def save_gender_info(self, user_input):
         gender = ''
@@ -163,7 +163,7 @@ class KenyaUssdStateMachine(Machine):
         set_custom_attributes(attrs, self.user)
 
     def save_location_info(self, user_input):
-        update_transfer_account_user(self.user, location=user_input)
+        self.user.location = user_input
 
     def is_valid_pin(self, user_input):
         pin_validity = False
@@ -346,14 +346,21 @@ class KenyaUssdStateMachine(Machine):
         selected_tranfer_usage_id = self.session.get_data('transfer_usage_mapping')[idx]['id']
         return TransferUsage.query.get(selected_tranfer_usage_id)
 
+    def is_ussd_self_sign_up(self, user_input):
+        return self.user.sign_up_method == SignupMethodEnum.USSD_SELF_SIGNUP.value
+
+    def is_web_sign_up(self, user_input):
+        return self.user.sign_up_method == SignupMethodEnum.WEB_SIGNUP.value
+
     def process_account_creation_request(self, user_input):
         try:
-            attach_transfer_account_to_user(self.user)
+            # find GE organization to attach users to
+            grassroots_economics = Organisation.query.filter_by(name='Grassroots Economics').first() or None
+            attach_transfer_account_to_user(self.user, organisation=grassroots_economics)
             self.send_sms(self.user.phone, "account_creation_success_sms")
         except Exception as e:
             self.send_sms(self.user.phone, "account_creation_error_sms")
             raise Exception('Account creation failed. Error: ', e)
-
 
     def menu_one_selected(self, user_input):
         return user_input == '1'
@@ -432,7 +439,12 @@ class KenyaUssdStateMachine(Machine):
              'dest': 'exit_account_creation_prompt',
              'after': ['complete_initial_pin_change', 'set_phone_as_verified', 'send_terms_to_user_if_required',
                        'process_account_creation_request'],
-             'conditions': 'new_pins_match'},
+             'conditions': ['is_ussd_self_sign_up', 'new_pins_match']},
+            {'trigger': 'feed_char',
+             'source': 'initial_pin_confirmation',
+             'dest': 'start',
+             'after': ['complete_initial_pin_change', 'set_phone_as_verified', 'send_terms_to_user_if_required'],
+             'conditions': ['is_web_sign_up', 'new_pins_match']},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'exit_pin_mismatch'}
