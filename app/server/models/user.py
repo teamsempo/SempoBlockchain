@@ -55,8 +55,9 @@ referrals = Table(
 
 
 class SignupMethodEnum(enum.Enum):
-    MOBILE_SIGNUP = 'MOBILE_SIGNUP',
+    MOBILE_SIGNUP = 'MOBILE_SIGNUP'
     USSD_SELF_SIGNUP = 'USSD_SELF_SIGNUP'
+    WEB_SIGNUP = 'WEB_SIGNUP'
 
 
 class User(ManyOrgBase, ModelBase):
