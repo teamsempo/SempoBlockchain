@@ -13,6 +13,7 @@ import wyreSaga from './wyreSaga';
 import transferUsageSagas from "./transferUsageSagas";
 import organisationSagas from "./organisationSagas";
 import metricSaga from "./metricSaga";
+import creditTransferFilterSaga from "./creditTransferFilterSaga"
 
 export default function* rootSaga() {
   yield all([
@@ -28,6 +29,7 @@ export default function* rootSaga() {
     wyreSaga(),
     transferUsageSagas(),
     organisationSagas(),
-    metricSaga()
+    metricSaga(),
+    creditTransferFilterSaga()
   ])
 }

@@ -7,3 +7,5 @@ export const modifyTransferAPI = ({body, path}) => apiClient({url: '/credit_tran
 export const newTransferAPI = ({body}) => apiClient({url: '/credit_transfer/', method: 'POST', body: body});
 
 export const loadCreditTransferStatsAPI = ({query, path}) => apiClient({url: '/credit_transfer/stats/', method: "GET", query: query, path: path});
+
+export const loadCreditTransferFiltersAPI = ({query, path}) => apiClient({url: '/credit_transfer/filters/', method: "GET", query: query, path: path})

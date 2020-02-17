@@ -21,6 +21,8 @@ from server.utils.credit_transfer import (
     make_target_balance_transfer,
     make_blockchain_transfer)
 
+from server.utils.transfer_filter import TRANSFER_FILTERS
+
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
 
@@ -468,6 +470,18 @@ class CreditTransferStatsApi(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
+class CreditTransferFiltersApi(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'any'})
+    def get(self):
+        response_object = {
+            'status' : 'success',
+            'message': 'Successfully Loaded.',
+            'data': {
+                'filters': json.dumps(TRANSFER_FILTERS)
+            }
+        }
+        return make_response(jsonify(response_object)), 200
+
 # add Rules for API Endpoints
 credit_transfer_blueprint.add_url_rule(
     '/credit_transfer/',
@@ -491,5 +505,11 @@ credit_transfer_blueprint.add_url_rule(
 credit_transfer_blueprint.add_url_rule(
     '/credit_transfer/stats/',
     view_func=CreditTransferStatsApi.as_view('credit_transfer_stats_view'),
+    methods=['GET']
+)
+
+credit_transfer_blueprint.add_url_rule(
+    '/credit_transfer/filters/',
+    view_func=CreditTransferFiltersApi.as_view('credit_transfer_filters_view'),
     methods=['GET']
 )
