@@ -14,12 +14,14 @@ import {
   CREATE_TRANSFER_REQUEST,
   CREATE_TRANSFER_SUCCESS,
   CREATE_TRANSFER_FAILURE,
+  LOAD_CREDIT_TRANSFER_STATS_ERROR,
+  LOAD_CREDIT_TRANSFER_STATS_REQUEST
 } from '../reducers/creditTransferReducer.js';
 
 import { UPDATE_TRANSFER_ACCOUNTS, UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS } from '../reducers/transferAccountReducer.js';
 import { UPDATE_USER_LIST } from "../reducers/userReducer";
 
-import { loadCreditTransferListAPI, modifyTransferAPI, newTransferAPI } from '../api/creditTransferAPI.js'
+import { loadCreditTransferListAPI, modifyTransferAPI, newTransferAPI, loadCreditTransferStatsAPI } from '../api/creditTransferAPI.js'
 import { creditTransferSchema } from "../schemas";
 import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
 import {handleError} from "../utils";
@@ -92,6 +94,20 @@ function* watchLoadCreditTransferList() {
   yield takeEvery(LOAD_CREDIT_TRANSFER_LIST_REQUEST, loadCreditTransferList);
 }
 
+function* loadCreditTransferStats({payload}) {
+  try {
+    const credit_stat_load_result = yield call(loadCreditTransferStatsAPI, payload)
+    const transfer_stats = credit_stat_load_result.data.transfer_stats
+    yield put({type: UPDATE_CREDIT_TRANSFER_STATS, transfer_stats});
+  } catch (fetch_error) {
+    yield put({type: LOAD_CREDIT_TRANSFER_STATS_ERROR, error: fetch_error})
+  }
+}
+
+function* watchLoadCreditTransferStats() {
+  yield takeEvery(LOAD_CREDIT_TRANSFER_STATS_REQUEST, loadCreditTransferStats)
+}
+
 function* loadPusherCreditTransfer( pusher_data ) {
   try {
     yield call(updateStateFromCreditTransfer, pusher_data);
@@ -162,8 +178,9 @@ function* watchCreateTransfer() {
 export default function* credit_transferSagas() {
   yield all([
     watchLoadCreditTransferList(),
+    watchLoadCreditTransferStats(),
     watchModifyTransfer(),
     watchCreateTransfer(),
-    watchPusherCreditTransfer()
+    watchPusherCreditTransfer(),
   ])
 }

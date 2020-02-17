@@ -198,7 +198,7 @@ class TokenProcessor(object):
 
         exchange_limit = rounded_dollars(TokenProcessor.get_default_exchange_limit(default_limit, user))
         exchange_rate = round_to_sig_figs(exchange_rate_full_precision, 3)
-        exchange_sample_value = rounded_dollars(exchange_rate_full_precision * float(1000))
+        exchange_sample_value = round(exchange_rate_full_precision * float(1000))
 
         if exchange_limit:
             TokenProcessor.send_sms(
@@ -267,11 +267,22 @@ class TokenProcessor(object):
                 token_balances=token_balances_dollars
             )
 
+        except TransferAmountLimitError as e:
+            # Use a different message here from that used for exchange,
+            # because the issue is caused by KYC (ie something the user can change by providing), rather than
+            # our price-stability controls
+            TokenProcessor.send_sms(
+                sender,
+                "transfer_amount_error_sms",
+                amount=rounded_dollars(e.transfer_amount_limit),
+                token=e.token,
+                limit_period=e.limit_time_period_days
+            )
+
         except Exception as e:
             # TODO: SLAP? all the others take input in cents
             TokenProcessor.send_sms(sender, "send_token_error_sms", amount=cents_to_dollars(amount),
                                     token_name=default_token(sender).name, recipient=recipient.user_details())
-            raise e
 
     @staticmethod
     def exchange_token(sender: User, agent: User, amount: float):

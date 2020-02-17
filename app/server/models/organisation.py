@@ -1,14 +1,15 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 import pendulum
+import secrets
 
 from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
 import server.models.transfer_account
-from server import message_processor
-from server.utils.i18n import i18n_for
+from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
+from server.utils.misc import encrypt_string
 
 class Organisation(ModelBase):
     """
@@ -19,6 +20,10 @@ class Organisation(ModelBase):
     is_master           = db.Column(db.Boolean, default=False, index=True)
 
     name                = db.Column(db.String)
+
+    external_auth_username = db.Column(db.String)
+    
+    _external_auth_password = db.Column(db.String)
 
     _timezone           = db.Column(db.String)
 
@@ -36,9 +41,9 @@ class Organisation(ModelBase):
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
-    org_level_transfer_account_id    = db.Column(db.Integer,
-                                                 db.ForeignKey('transfer_account.id',
-                                                               name="fk_org_level_account"))
+    org_level_transfer_account_id = db.Column(db.Integer,
+                                                db.ForeignKey('transfer_account.id',
+                                                name="fk_org_level_account"))
 
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
@@ -65,6 +70,14 @@ class Organisation(ModelBase):
             return server.models.transfer_account.TransferAccount\
                 .query.execution_options(show_all=True).get(self.org_level_transfer_account_id)
         return None
+
+    @hybrid_property
+    def external_auth_password(self):
+        return decrypt_string(self._external_auth_password)
+
+    @external_auth_password.setter
+    def external_auth_password(self, value):
+        self._external_auth_password = encrypt_string(value)
 
     credit_transfers    = db.relationship("CreditTransfer",
                                           secondary=organisation_association_table,
@@ -109,6 +122,9 @@ class Organisation(ModelBase):
     def __init__(self, token=None, is_master=False, **kwargs):
 
         super(Organisation, self).__init__(**kwargs)
+    
+        self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
+        self.external_auth_password = secrets.token_hex(16)
 
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():

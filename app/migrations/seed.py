@@ -1,5 +1,7 @@
 import sys
 import os
+from sqlalchemy import func
+
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
@@ -275,27 +277,31 @@ def create_business_categories():
 
     print_section_title('Creating Business Categories')
     business_categories = [
-        {'name': 'food_water', 'icon': 'message', 'translations': {
+        {'name': 'Food/Water', 'icon': 'message', 'translations': {
             'en': 'Food/Water', 'sw': 'Chakula/Maji'}},
-        {'name': 'fuel_energy', 'icon': 'message', 'translations': {
+        {'name': 'Fuel/Energy', 'icon': 'message', 'translations': {
             'en': 'Fuel/Energy', 'sw': 'Kuni/Makaa/Mafuta'}},
-        {'name': 'education_health', 'icon': 'message', 'translations': {
-            'en': 'Education/Health', 'sw': 'Elimu/Afya'}},
-        {'name': 'shop', 'icon': 'message', 'translations': {
+        {'name': 'Education', 'icon': 'message', 'translations': {
+            'en': 'Education', 'sw': 'Elimu'}},
+        {'name': 'Health', 'icon': 'message', 'translations': {
+            'en': 'Health', 'sw': 'Afya'}},
+        {'name': 'Shop', 'icon': 'message', 'translations': {
             'en': 'Shop', 'sw': 'Duka'}},
-        {'name': 'environment', 'icon': 'message', 'translations': {
+        {'name': 'Environment', 'icon': 'message', 'translations': {
             'en': 'Environment', 'sw': 'Mazingira'}},
-        {'name': 'transport', 'icon': 'message', 'translations': {
+        {'name': 'Transport', 'icon': 'message', 'translations': {
             'en': 'Transport', 'sw': 'Usafiri'}},
-        {'name': 'farming_labour', 'icon': 'message', 'translations': {
+        {'name': 'Farming/Labour', 'icon': 'message', 'translations': {
             'en': 'Farming/Labour', 'sw': 'Mkulima/Mfanyikazi'}},
-        {'name': 'savings_group', 'icon': 'message', 'translations': {
+        {'name': 'Savings Group', 'icon': 'message', 'translations': {
             'en': 'Savings Group', 'sw': 'Chama'}}
     ]
     for index, business_category in enumerate(business_categories):
-        usage = TransferUsage.query.filter_by(name=business_category['name']).first()
+        name = business_category['name']
+        usage = db.session.query(TransferUsage).filter(
+            func.lower(TransferUsage.name) == func.lower(name)).first()
         if usage is None:
-            usage = TransferUsage(name=business_category['name'])
+            usage = TransferUsage(name=name)
             db.session.add(usage)
         usage.priority = index + 1
         usage.default = True

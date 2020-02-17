@@ -1,4 +1,5 @@
-from server import db, sentry, celery_app, mt
+import sentry_sdk
+from server import db, celery_app, mt
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import INET
 
@@ -37,5 +38,5 @@ class IpAddress(ModelBase):
                 mt.set_ip_location(self.id, ip)
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass

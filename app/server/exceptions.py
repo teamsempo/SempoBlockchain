@@ -14,22 +14,20 @@ class AccountLimitError(Exception):
         self.limit_time_period_days = limit_time_period_days
         self.token = token
 
-class NoTransferAllowedLimitError(AccountLimitError):
-    def __init__(self, token):
-        super().__init__(message='No transfers are allowed', limit_time_period_days=0, token=token)
-
-
     def __repr__(self):
         return self.message
 
+    def __str__(self):
+        return self.message
+
+class NoTransferAllowedLimitError(AccountLimitError):
+    def __init__(self, token):
+        super().__init__(message='No transfers are allowed', limit_time_period_days=0, token=token)
 
 class TransferCountLimitError(AccountLimitError):
     def __init__(self, transfer_count_limit: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_count_limit = transfer_count_limit
-
-    def __repr__(self):
-        return self.message
 
 
 class TransferBalanceFractionLimitError(AccountLimitError):
@@ -38,17 +36,12 @@ class TransferBalanceFractionLimitError(AccountLimitError):
         self.transfer_balance_fraction_limit = transfer_balance_fraction_limit
         self.transfer_amount_avail = transfer_amount_avail
 
-    def __repr__(self):
-        return self.message
 
 class TransferAmountLimitError(AccountLimitError):
     def __init__(self, transfer_amount_limit: int, transfer_amount_avail: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_amount_limit = transfer_amount_limit
         self.transfer_amount_avail = transfer_amount_avail
-
-    def __repr__(self):
-        return self.message
 
 
 class NameScanException(Exception):

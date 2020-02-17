@@ -7,6 +7,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
+import sentry_sdk
 
 from server import db
 from server.models.device_info import DeviceInfo
@@ -22,7 +23,7 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
-from server import celery_app, sentry, message_processor
+from server import celery_app, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
@@ -38,11 +39,11 @@ def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     try:
         rekognition_task = celery_app.signature('worker.celery_tasks.check_for_duplicate_person',
                                                 args=(new_filename, image_id))
-
+        # TODO: Standardize this task (pipe through execute_synchronous_celery)
         rekognition_task.delay()
     except Exception as e:
         print(e)
-        sentry.captureException()
+        sentry_sdk.capture_exception(e)
         pass
 
 
@@ -111,14 +112,15 @@ def find_user_from_public_identifier(*public_identifiers):
 def update_transfer_account_user(user,
                                  first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
-                                 location=None,
+                                 location=None, lat=None, lng=None,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
                                  is_groupaccount=False,
-                                 default_organisation_id=None):
+                                 default_organisation_id=None,
+                                 business_usage=None):
     if first_name:
         user.first_name = first_name
     if last_name:
@@ -131,19 +133,29 @@ def update_transfer_account_user(user,
         user.email = email
     if public_serial_number:
         user.public_serial_number = public_serial_number
+        transfer_card = TransferCard.get_transfer_card(public_serial_number)
+        user.default_transfer_account.transfer_card = transfer_card
+    else:
+        transfer_card = None
+
     if location:
         user.location = location
+    if lat:
+        user.lat = lat
+    if lng:
+        user.lng = lng
 
     if default_organisation_id:
         user.default_organisation_id = default_organisation_id
 
-    if use_precreated_pin:
-        transfer_card = TransferCard.get_transfer_card(public_serial_number)
-
+    if use_precreated_pin and transfer_card:
         user.set_pin(transfer_card.PIN)
 
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
+
+    if business_usage:
+        user.business_usage_id = business_usage.id
 
     # remove all roles before updating
     user.remove_all_held_roles()
@@ -176,7 +188,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
-                                 location=None,
+                                 lat=None, lng=None,
                                  use_precreated_pin=False,
                                  use_last_4_digits_of_id_as_initial_pin=False,
                                  existing_transfer_account=None,
@@ -190,6 +202,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     user = User(first_name=first_name,
                 last_name=last_name,
+                lat=lat, lng=lng,
                 preferred_language=preferred_language,
                 phone=phone,
                 email=email,
@@ -251,7 +264,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         )
 
         transfer_account.name = transfer_account_name
-        transfer_account.location = location
         transfer_account.is_vendor = is_vendor
         transfer_account.is_beneficiary = is_beneficiary
 
@@ -274,20 +286,14 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 def save_device_info(device_info, user):
     add_device = False
 
-    if device_info['serialNumber'] and not DeviceInfo.query.filter_by(
-            serial_number=device_info['serialNumber']).first():
-        # Add the device if the serial number is defined, and isn't already in db
-        add_device = True
-    elif not device_info['serialNumber'] and not DeviceInfo.query.filter_by(unique_id=device_info['uniqueId']).first():
-        # Otherwise add the device if the serial number is NOT defined unique id isn't already in db.
-        # This means that where serial number is defined but unique id is different, we DO NOT add
-        # (because unique ids can change under some circumstances, so they say)
+    if device_info['uniqueId'] and not DeviceInfo.query.filter_by(
+            unique_id=device_info['uniqueId']).first():
+        # Add the device if the uniqueId is defined, and isn't already in db
         add_device = True
 
     if add_device:
         device = DeviceInfo()
 
-        device.serial_number = device_info['serialNumber']
         device.unique_id = device_info['uniqueId']
         device.brand = device_info['brand']
         device.model = device_info['model']
@@ -318,6 +324,7 @@ def set_custom_attributes(attribute_dict, user):
         to_remove = list(filter(lambda a: a.name == key, custom_attributes))
         for r in to_remove:
             custom_attributes.remove(r)
+            db.session.delete(r)
 
         custom_attribute = CustomAttributeUserStorage(
             name=key, value=attribute_dict['custom_attributes'][key])
@@ -388,6 +395,7 @@ def proccess_create_or_modify_user_request(
         organisation=None,
         allow_existing_user_modify=False,
         is_self_sign_up=False,
+        modify_only=False,
 ):
     """
     Takes a create or modify user request and determines the response. Normally what's in the top level API function,
@@ -404,6 +412,8 @@ def proccess_create_or_modify_user_request(
 
     if not attribute_dict.get('custom_attributes'):
         attribute_dict['custom_attributes'] = {}
+
+    user_id = attribute_dict.get('user_id')
 
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
@@ -433,7 +443,17 @@ def proccess_create_or_modify_user_request(
                             or attribute_dict.get('payment_card_qr_code')
                             or attribute_dict.get('payment_card_barcode'))
 
-    location = attribute_dict.get('location')
+    location = attribute_dict.get('location')  # address location
+    geo_location = attribute_dict.get('geo_location')  # geo location as str of lat, lng
+
+    if geo_location:
+        geo = geo_location.split(' ')
+        lat = geo[0]
+        lng = geo[1]
+    else:
+        # TODO: Work out how this passed tests when this wasn't definied properly!?!
+        lat = None
+        lng = None
 
     use_precreated_pin = attribute_dict.get('use_precreated_pin')
     use_last_4_digits_of_id_as_initial_pin = attribute_dict.get(
@@ -538,38 +558,69 @@ def proccess_create_or_modify_user_request(
 
     referred_by_user = find_user_from_public_identifier(referred_by)
 
+    if referred_by and not referred_by_user:
+        response_object = {
+            'message': f'Referrer user not found for public identifier {referred_by}'
+        }
+        return response_object, 400
+
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
+
+    if modify_only:
+        existing_user = User.query.get(user_id)
+
+    if modify_only and existing_user is None:
+        response_object = {'message': 'User not found'}
+        return response_object, 404
 
     if existing_user:
         if not allow_existing_user_modify:
             response_object = {'message': 'User already exists for Identifier'}
             return response_object, 400
 
-        user = update_transfer_account_user(
-            existing_user,
-            first_name=first_name, last_name=last_name, preferred_language=preferred_language,
-            phone=phone, email=email, public_serial_number=public_serial_number,
-            use_precreated_pin=use_precreated_pin,
-            existing_transfer_account=existing_transfer_account,
-            is_beneficiary=is_beneficiary, is_vendor=is_vendor,
-            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
-        )
+        try:
 
-        if referred_by_user:
-            user.referred_by.append(referred_by_user)
+            user = update_transfer_account_user(
+                existing_user,
+                first_name=first_name,
+                last_name=last_name,
+                preferred_language=preferred_language,
+                phone=phone,
+                email=email,
+                location=location,
+                public_serial_number=public_serial_number,
+                use_precreated_pin=use_precreated_pin,
+                existing_transfer_account=existing_transfer_account,
+                is_beneficiary=is_beneficiary,
+                is_vendor=is_vendor,
+                is_tokenagent=is_tokenagent,
+                is_groupaccount=is_groupaccount,
+                business_usage=business_usage
+            )
 
-        set_custom_attributes(attribute_dict, user)
-        flag_modified(user, "custom_attributes")
+            if referred_by_user:
+                user.referred_by.clear()  # otherwise prior referrals will remain...
+                user.referred_by.append(referred_by_user)
 
-        db.session.commit()
+            set_custom_attributes(attribute_dict, user)
+            flag_modified(user, "custom_attributes")
 
-        response_object = {
-            'message': 'User Updated',
-            'data': {'user': user_schema.dump(user).data}
-        }
+            db.session.commit()
 
-        return response_object, 200
+            response_object = {
+                'message': 'User Updated',
+                'data': {'user': user_schema.dump(user).data}
+            }
+
+            return response_object, 200
+
+        except Exception as e:
+            response_object = {
+                'message': str(e)
+            }
+
+            return response_object, 400
 
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name, preferred_language=preferred_language,
@@ -577,7 +628,7 @@ def proccess_create_or_modify_user_request(
         organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
-        location=location,
+        lat=lat, lng=lng,
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
@@ -617,7 +668,7 @@ def proccess_create_or_modify_user_request(
                 send_onboarding_sms_messages(user)
             except Exception as e:
                 print(e)
-                sentry.captureException()
+                sentry_sdk.capture_exception(e)
                 pass
 
     response_object = {

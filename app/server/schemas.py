@@ -64,6 +64,7 @@ class UserSchema(SchemaBase):
 
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
+    referred_by              = fields.Method("get_referrer_phone")
 
     transfer_accounts        = fields.Nested('TransferAccountSchema',
                                              many=True,
@@ -76,6 +77,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
+            # todo: is there a reason only GE attributes are returned??
             if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
                 parsed_dict[attribute.name] = attribute.value.strip('"')
 
@@ -89,6 +91,16 @@ class UserSchema(SchemaBase):
 
                 processed_profile_pictures.append(profile)
         return processed_profile_pictures
+
+    def get_referrer_phone(self, obj):
+        if obj.referred_by:
+            referrer = obj.referred_by[0]
+            if referrer.phone:
+                return referrer.phone
+            if referrer.public_serial_number:
+                return referrer.public_serial_number
+            if referrer.email:
+                return referrer.email
 
 
 class UploadedResourceSchema(SchemaBase):
@@ -152,6 +164,8 @@ class CreditTransferSchema(Schema):
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
     transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
+
+    token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
     sender_transfer_account_id      = fields.Int()
     recipient_transfer_account_id   = fields.Int()

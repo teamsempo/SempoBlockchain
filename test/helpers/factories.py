@@ -18,7 +18,6 @@ from server.models.token import Token
 fake = Faker()
 fake.add_provider(phone_number)
 
-
 class UserFactory(SQLAlchemyModelFactory):
     class Meta:
         model = User
@@ -65,7 +64,7 @@ class OrganisationFactory(SQLAlchemyModelFactory):
     class Meta:
         model = Organisation
         sqlalchemy_session = db.session
-
+    name = 'Francines Company'
 
 class UssdMenuFactory(SQLAlchemyModelFactory):
     class Meta:

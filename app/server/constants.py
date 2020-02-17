@@ -38,7 +38,7 @@ DEFAULT_ATTRIBUTES = ['email', 'phone', 'blockchain_address', 'public_serial_num
 GE_FILTER_ATTRIBUTES = [
     'gender',
     'GE_wallet_address',
-    # 'bio',
+    'bio',
     'GE_community_token_id'
 ]
 
@@ -51,16 +51,16 @@ SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES = [
 ]
 
 GE_BUSINESS_CATEGORY_MAPPINGS = {
-    'Food': 'food_water',
-    'Water': 'food_water',
-    'Energy': 'fuel_energy',
-    'Education': 'education_health',
-    'Health': 'education_health',
-    'General shop': 'shop',
-    'Environment': 'environment',
-    'Transport': 'transport',
-    'Labour': 'farming_labour',
-    'Other': 'savings_group'
+    'Food': 'Food/Water',
+    'Water': 'Food/Water',
+    'Energy': 'Fuel/Energy',
+    'Education': 'Education',
+    'Health': 'Health',
+    'General shop': 'Shop',
+    'Environment': 'Environment',
+    'Transport': 'Transport',
+    'Labour': 'Farming/Labour',
+    'Other': 'Savings Group'
 }
 
 GE_MIGRATION_TOKENS = {
@@ -95,6 +95,8 @@ DENOMINATION_DICT = {
         '10000': {'type': 'note', 'size': 1.5, 'color': '#68adf8'},
     }
 }
+
+NUMBER_OF_DIRECTORY_LISTING_RESULTS = 5
 
 # MOBILE ONLY SUPPORTS MATERIAL COMMUNITY ICONS
 # https://github.com/oblador/react-native-vector-icons/blob/master/glyphmaps/MaterialCommunityIcons.json

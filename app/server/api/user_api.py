@@ -5,6 +5,7 @@ from server import db
 from server.models.utils import paginate_query
 from server.models.user import User
 from server.models.transfer_account import TransferAccount
+from server.models.organisation import Organisation
 from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
@@ -29,14 +30,12 @@ class UserAPI(MethodView):
                     public_serial_number=public_serial_number.strip()).first()
 
                 if user:
-                    transfer_account = TransferAccount.query.get(
-                        user.transfer_account_id)
 
-                    if transfer_account:
+                    if user.default_transfer_account:
                         response_object = {
                             'message': 'Successfully found transfer account!',
                             'data': {
-                                'balance': transfer_account.balance
+                                'balance': user.default_transfer_account.balance
                             }
                         }
 
@@ -84,7 +83,7 @@ class UserAPI(MethodView):
                 }
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
         else:
             if account_type_filter == 'beneficiary':
@@ -119,13 +118,15 @@ class UserAPI(MethodView):
                     'users': user_list,
                 }
             }
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()
-        organisation = g.active_organisation
+        organisation = g.get('active_organisation')
+        if organisation is None:
+            return make_response(jsonify({'message': 'Organisation must be set'})), 400
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
@@ -140,63 +141,23 @@ class UserAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, user_id):
         put_data = request.get_json()
+        put_data['user_id'] = user_id
 
-        first_name = put_data.get('first_name')
-        last_name = put_data.get('last_name')
+        response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+            put_data,
+            organisation=g.active_organisation,
+            allow_existing_user_modify=True,
+            modify_only=True
+        )
 
-        email = put_data.get('email')
-        phone = put_data.get('phone')
-        public_serial_number = put_data.get('public_serial_number')
-        location = put_data.get('location')
+        if response_code == 200:
+            db.session.commit()
 
-        is_vendor = put_data.get('is_vendor', None)
-        if is_vendor is None:
-            is_vendor = put_data.get('vendor', False)
-
-        is_tokenagent = put_data.get('is_tokenagent', False)
-        is_groupaccount = put_data.get('is_groupaccount', False)
-
-        # is_beneficiary defaults to the opposite of is_vendor
-        is_beneficiary = put_data.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
-
-        default_organisation_id = put_data.get('default_organisation_id')
-
-        if user_id is None:
-            return make_response(jsonify({'message': 'No user_id provided'})), 400
-
-        user = User.query.get(user_id)
-
-        if not user:
-            response_object = {
-                'message': 'User not found'
-            }
-            return make_response(jsonify(response_object)), 404
-
-        updated_user = UserUtils.update_transfer_account_user(user,
-                                                              first_name=first_name, last_name=last_name,
-                                                              email=email, phone=phone,
-                                                              public_serial_number=public_serial_number,
-                                                              location=location,
-                                                              is_vendor=is_vendor, is_beneficiary=is_beneficiary,
-                                                              is_groupaccount=is_groupaccount,
-                                                              is_tokenagent=is_tokenagent,
-                                                              default_organisation_id=default_organisation_id)
-
-        db.session.flush()
-
-        response_object = {
-            'status': 'success',
-            'message': 'Successfully Edited User.',
-            'data': {
-                'user': user_schema.dump(updated_user).data
-            }
-        }
-
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(response_object)), response_code
 
 
 class ResetPinAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'admin'}, allowed_basic_auth_types=('external'))
     def post(self, user_id):
 
         post_data = request.get_json()

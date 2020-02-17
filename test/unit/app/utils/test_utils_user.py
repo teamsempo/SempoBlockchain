@@ -17,8 +17,25 @@ import pytest
 #     import config
 #     assert create_transfer_account_user.one_time_code is not None
 #     assert create_transfer_account_user.transfer_account is not None
-from helpers.factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory
-from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages, admin_reset_user_pin
+from helpers.factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory, fake
+from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages, admin_reset_user_pin, proccess_create_or_modify_user_request
+
+@pytest.mark.parametrize("last_name, location, lat, lng, initial_disbursement", [
+    ('Hound', 'Melbourne, Victoria Australia', -37.8104277, 144.9629153, 400),
+    ('Hound', 'Melbourne, Victoria Australia', None, None, 400),
+    ('Hound', None, -37.8104277, 144.9629153, 400),
+    (None, None, None, None, None)
+])
+def test_create_transfer_account_user(
+        test_client, init_database, create_master_organisation,
+        last_name, location, lat, lng, initial_disbursement):
+
+    assert proccess_create_or_modify_user_request(
+        attribute_dict=dict(
+        first_name='Lilly', last_name=last_name,
+        phone=fake.msisdn(),
+        location=location, lat=lat, lng=lng,
+        initial_disbursement=initial_disbursement))
 
 
 def test_create_user_with_existing_transfer_account(create_user_with_existing_transfer_account, create_transfer_account):
@@ -83,7 +100,7 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
     assert isinstance(user.pin_reset_tokens, list)
     assert len(user.pin_reset_tokens) == 1
 
-    send_message.assert_has_calls([mocker.call(user.phone, 'Dial *483*46# to change your PIN')])
+    send_message.assert_has_calls([mocker.call(user.phone, 'Dial *384*96# Safaricom or *483*46# Airtel to change your PIN')])
 
 
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [

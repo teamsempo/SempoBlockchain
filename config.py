@@ -5,6 +5,8 @@ from eth_utils import keccak
 
 from web3 import Web3
 
+VERSION = '1.0.29'  # Remember to bump this in every PR
+
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
@@ -101,8 +103,11 @@ if IS_PRODUCTION is None:
     raise KeyError("IS_PRODUCTION key not found")
 
 PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
+
+# todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
 CURRENCY_DECIMALS   = int(specific_parser['APP']['CURRENCY_DECIMALS'])
+
 DEFAULT_COUNTRY     = specific_parser['APP']['DEFAULT_COUNTRY']
 DEFAULT_LAT         = float(specific_parser['APP']['DEFAULT_LAT'])
 DEFAULT_LNG         = float(specific_parser['APP']['DEFAULT_LNG'])
@@ -118,9 +123,9 @@ DEFAULT_INITIAL_DISBURSEMENT = int(specific_parser['APP'].get('DEFAULT_INITIAL_D
 ONBOARDING_SMS = specific_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = specific_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = specific_parser['APP']['MOBILE_VERSION']
-WEB_VERSION = specific_parser['APP']['WEB_VERSION']
 REQUIRE_TRANSFER_CARD_EXISTS = specific_parser['APP'].getboolean('REQUIRE_TRANSFER_CARD_EXISTS', False)
 
+PASSWORD_PEPPER     = specific_parser['APP']['PASSWORD_PEPPER']
 SECRET_KEY          = specific_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(specific_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
 APP_HOST            = specific_parser['APP']['APP_HOST']
@@ -150,6 +155,8 @@ DATABASE_HOST = specific_parser['DATABASE']['host']
 DATABASE_NAME = specific_parser['DATABASE'].get('database') \
                 or common_parser['DATABASE']['database']
 
+DATABASE_PORT = specific_parser['DATABASE'].get('port') or common_parser['DATABASE']['port']
+
 ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']
 
@@ -157,11 +164,18 @@ ETH_DATABASE_HOST = specific_parser['DATABASE'].get('eth_host') or DATABASE_HOST
 ETH_WORKER_DB_POOL_SIZE = specific_parser['DATABASE'].getint('eth_worker_pool_size', 40)
 ETH_WORKER_DB_POOL_OVERFLOW = specific_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
 
+# Removes dependency on redis/celery/ganache
+# Never ever ever enable this on prod, or anywhere you care about integrity
+ENABLE_SIMULATOR_MODE = specific_parser['APP'].getboolean('enable_simulator_mode', False)
+if ENABLE_SIMULATOR_MODE:
+    print('[WARN] Simulator Mode is enabled. If you are seeing this message on a production system, \
+or anywhere you care about workers actually running you should shut down and adjust your config')
+
 def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
-                                                common_parser['DATABASE']['port'],
+                                                DATABASE_PORT,
                                                 name)
 
 
