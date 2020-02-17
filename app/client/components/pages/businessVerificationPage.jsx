@@ -90,7 +90,8 @@ class BusinessVerificationPage extends React.Component {
     ];
 
     if (!this.state.is_bank_account) {
-      finalSteps = steps.splice(2,3)
+      steps.splice(2,3);
+      finalSteps = steps
     } else {
       finalSteps = steps
     }
