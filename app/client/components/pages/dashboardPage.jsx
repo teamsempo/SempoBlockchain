@@ -31,7 +31,6 @@ const mapStateToProps = (state) => {
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
     login: state.login,
-    state: state
   };
 };
 
