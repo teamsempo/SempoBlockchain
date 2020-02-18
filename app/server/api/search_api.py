@@ -74,7 +74,11 @@ class SearchAPI(MethodView):
                     db.func.setweight(db.func.coalesce(SearchView.tsv_email, ''), 'D')\
                         .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_phone, ''), 'A'))\
                         .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_first_name, ''), 'B'))\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B')),
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B'))\
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_public_serial_number, ''), 'A'))\
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_primary_blockchain_address, ''), 'A'))\
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_location, ''), 'C'))\
+                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_default_transfer_account_id, ''), 'A')),
                         db.func.to_tsquery(tsquery, postgresql_regconfig='english')))\
                 .label('rank'))\
                 .group_by(SearchView)\

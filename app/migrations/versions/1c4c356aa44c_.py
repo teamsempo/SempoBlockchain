@@ -34,11 +34,18 @@ def upgrade():
                 u._phone,
                 u.first_name,
                 u.last_name,
+                u._public_serial_number,
+                u._location,
+                u.primary_blockchain_address,
                 u.default_transfer_account_id,
                 to_tsvector(u.email) AS tsv_email,
                 to_tsvector(u._phone) AS tsv_phone,
                 to_tsvector(u.first_name) AS tsv_first_name,
-                to_tsvector(u.last_name) AS tsv_last_name
+                to_tsvector(u.last_name) AS tsv_last_name,
+                to_tsvector(u._public_serial_number) AS tsv_public_serial_number,
+                to_tsvector(u._location) AS tsv_location,
+                to_tsvector(u.primary_blockchain_address) AS tsv_primary_blockchain_address,
+                to_tsvector(CAST (u.default_transfer_account_id AS VARCHAR(10))) AS tsv_default_transfer_account_id
             FROM "user" u
         );
     '''))
@@ -48,6 +55,10 @@ def upgrade():
     op.create_index(op.f('ix_tsv_phone'), 'search_view', ['tsv_phone'], postgresql_using='gin')
     op.create_index(op.f('ix_tsv_firstname'), 'search_view', ['tsv_first_name'], postgresql_using='gin')
     op.create_index(op.f('ix_tsv_lastname'), 'search_view', ['tsv_last_name'], postgresql_using='gin')
+    op.create_index(op.f('_public_serial_number'), 'search_view', ['tsv_public_serial_number'], postgresql_using='gin')
+    op.create_index(op.f('_location'), 'search_view', ['tsv_location'], postgresql_using='gin')
+    op.create_index(op.f('primary_blockchain_address'), 'search_view', ['tsv_primary_blockchain_address'], postgresql_using='gin')
+    op.create_index(op.f('default_transfer_account_id'), 'search_view', ['tsv_default_transfer_account_id'], postgresql_using='gin')
 
     # Function to refresh index
     conn.execute(sa.sql.text('''

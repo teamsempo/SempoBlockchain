@@ -15,6 +15,10 @@ class SearchView(db.Model):
     tsv_phone = db.Column(TSVECTOR)
     tsv_first_name = db.Column(TSVECTOR)
     tsv_last_name = db.Column(TSVECTOR)
+    tsv_public_serial_number = db.Column(TSVECTOR)
+    tsv_primary_blockchain_address = db.Column(TSVECTOR)
+    tsv_default_transfer_account_id = db.Column(TSVECTOR)
+    tsv_location = db.Column(TSVECTOR)
     default_transfer_account_id = db.Column(db.Integer)
 
 class TSRank(GenericFunction):
