@@ -14,7 +14,6 @@ function* loadCreditTransferFilters({payload}) {
         const credit_transfer_filters_load_result = yield call(loadCreditTransferFiltersAPI, payload)
         const filters = credit_transfer_filters_load_result.data.filters
         const parsed = JSON.parse(filters)
-
         yield put({type: UPDATE_CREDIT_TRANSFER_FILTERS, filters: parsed});
 
         yield put({type: LOAD_CREDIT_TRANSFER_FILTERS_SUCCESS})

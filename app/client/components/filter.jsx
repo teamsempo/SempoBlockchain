@@ -4,6 +4,8 @@ import styled from "styled-components";
 import PropTypes from 'prop-types';
 import { replaceUnderscores } from "../utils";
 
+import {USER_FILTER_FIELD, USER_FILTER_TYPE} from '../constants';
+
 const propTypes = {
     possibleFilters: PropTypes.object,
     onFiltersChanged: PropTypes.func,
@@ -28,45 +30,61 @@ class Filter extends React.Component {
             keyName: 'select',
             value: 'select',
             filterType: 'of',
+            comparator: '<',
             keyNameValues: {},
             possibleFilters: null,
             filterActive: false,
             dropdownActive: false,
             saveFilterDropdown: false,
             loadFiltersDropdown: false,
-            filterName: null,
-            attributeListIsFullyFloatParsable: false,
+            filterName: null
         };
     }
 
     keyNameChange = (name, value) => {
-        var keyNameValues = this.props.possibleFilters[value];
-    
-        if (keyNameValues !== undefined) {
+        var keyNameProperties = this.props.possibleFilters[value]
+        var keyNameValues = keyNameProperties.values;
           // resets keyName and keyNameValues to default to avoid controlled/uncontrolled checkbox error
           // maps over new keyNameValues,
-    
-          this.setState(
-            {
-              [name]: 'select',
-              keyNameValues: {},
-              filterType: 'of',
-              GtLtThreshold: 0,
-              dropdownActive: false
-            }, () => {
-            let attributeListIsFullyFloatParsable = true;
-            keyNameValues.map(i => {
-              if (isNaN(parseFloat(i))) {attributeListIsFullyFloatParsable = false}
-              this.setState(prevState => ({
-                [name]: value,
-                keyNameValues: {
-                  ...prevState.keyNameValues,
-                  [i]: false
+        
+        if (keyNameProperties.type === USER_FILTER_TYPE.DATE_RANGE){
+            this.setState(
+                {
+                    [name]: value,
+                    keyNameValues: {},
+                    filterType: USER_FILTER_TYPE.DATE_RANGE,
+                    GtLtThreshold: 0,
+                    dropdownActive: false
                 }
-              }))
-            })
-            this.setState({attributeListIsFullyFloatParsable})
-          });
+            );
+        } else if (keyNameProperties.type === USER_FILTER_TYPE.INT_RANGE) {
+            this.setState(
+                {
+                    [name]: value,
+                    keyNameValues: {},
+                    filterType: USER_FILTER_TYPE.DATE_RANGE,
+                    GtLtThreshold: 0,
+                    dropdownActive: false
+                }
+            );
+        } else {
+            this.setState(
+                {
+                    [name]: value,
+                    keyNameValues: {},
+                    filterType: USER_FILTER_TYPE.DISCRETE,
+                    GtLtThreshold: 0,
+                    dropdownActive: false
+                }, () => {
+                keyNameValues.map(i => {
+                    this.setState(prevState => ({
+                    keyNameValues: {
+                        ...prevState.keyNameValues,
+                        [i]: false
+                    }
+                    }))
+                })
+            });
         }
     }
 
@@ -84,20 +102,21 @@ class Filter extends React.Component {
     addFilter = () => {
         let id = this.state.filters.length + 1;
     
-        if (this.state.filterType === 'of') {
-          var newFilter = {
-            'id': id,
-            'type': 'of',
-            'keyName': this.state.keyName,
-            'allowedValues': this.get_selected_ids_array(this.state.keyNameValues)
-          }
+        if (this.state.filterType === USER_FILTER_TYPE.DISCRETE) {
+            let values = this.get_selected_ids_array(this.state.keyNameValues)
+            var newFilter = {
+                'id': id,
+                'type': USER_FILTER_TYPE.DISCRETE,
+                'keyName': this.state.keyName,
+                'allowedValues': values
+            }
         } else {
-          newFilter = {
-            'id': id,
-            'type': this.state.filterType,
-            'keyName': this.state.keyName,
-            'threshold': parseFloat(this.state.GtLtThreshold)
-          }
+            newFilter = {
+                'id': id,
+                'type': this.state.comparator,
+                'keyName': this.state.keyName,
+                'threshold': parseFloat(this.state.GtLtThreshold)
+            }
         }
     
         this.setState(
@@ -139,8 +158,9 @@ class Filter extends React.Component {
         )
     }
 
-    filterTypeChange(name, value) {
-        this.setState({filterType: value})
+    comparatorChange(value) {
+        console.log(value)
+        this.setState({comparator: value})
     }
 
     get_selected_ids_array = (selected) => {
@@ -151,17 +171,16 @@ class Filter extends React.Component {
     }
 
     filterTypePicker = () => {
-        let { attributeListIsFullyFloatParsable, filterType, keyName } = this.state
+        let { filterType, keyName, comparator } = this.state
         var filter_type_picker = <div />;
 
         if (keyName !== 'select'){
-            if (!attributeListIsFullyFloatParsable) {
+            if (filterType === USER_FILTER_TYPE.DISCRETE) {
                 filter_type_picker = <FilterText style={{padding: '0 10px'}}>is one of</FilterText>
             } else {
                 filter_type_picker = (
-                    <StyledSelectKey name="keyName" value={filterType} onChange={(evt) => this.filterTypeChange(evt.target.name, evt.target.value)}>
+                    <StyledSelectKey name="keyName" value={comparator} onChange={(evt) => this.comparatorChange(evt.target.value)}>
                     <option name='value' value={"<"}>is less than</option>
-                    <option name='value' value={"of"}>is one of</option>
                     <option name='value' value={">"}>is greater than</option>
                     </StyledSelectKey>
                 )
@@ -170,11 +189,12 @@ class Filter extends React.Component {
         return filter_type_picker
     }
 
+
     valuePicker = () => {
         let { possibleFilters } = this.props
         let { keyName, filterType, dropdownActive, value, keyNameValues } = this.state
         var valuePicker = <div/>;
-        if (keyName !== 'select' && filterType === 'of') {
+        if (keyName !== 'select' && filterType === USER_FILTER_TYPE.DISCRETE) {
             valuePicker =
               <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                 <div style={{width: '200px'}}>
@@ -187,7 +207,7 @@ class Filter extends React.Component {
                   <Checkboxes
                     style={{display: (dropdownActive ? 'block' : 'none')}}
                     onMouseLeave={() => this.setState({dropdownActive: !this.state.dropdownActive})}>
-                    {typeof(possibleFilters[keyName]) !== 'undefined' ? possibleFilters[keyName].map((key, index) => (
+                    {typeof(possibleFilters[keyName].values) !== 'undefined' ? possibleFilters[keyName].values.map((key, index) => (
                         <CheckboxLabel key={index}>
                           <input type="checkbox" value={key} checked={keyNameValues[key]} onChange={() => this.toggleSelected(key)}/>
                           {replaceUnderscores(key)}
@@ -216,6 +236,7 @@ class Filter extends React.Component {
     }
 
     handleChange = (evt) => {
+        console.log(evt)
         this.setState({ [evt.target.name]: evt.target.value });
     }
 
@@ -241,7 +262,7 @@ class Filter extends React.Component {
             addedFilters =
               <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', margin: '0 1em', flexFlow: 'row wrap'}}>
                 {filters.map((filter, index) => {
-                  if (filter.type === 'of') {
+                  if (filter.type === USER_FILTER_TYPE.DISCRETE) {
                     return (
                       <FilterBubble key={index}>
                         <FilterText style={{color: '#FFF'}}>

@@ -1,7 +1,7 @@
 import enum
 
-MALE = 'Male'
-FEMALE = 'Female'
+MALE = 'male'
+FEMALE = 'female'
 
 BENEFICIARY = 'Beneficiary'
 VENDOR = 'Vendor'
@@ -15,30 +15,26 @@ class TransferFilterEnum:
     DATE_RANGE      = 'date_range'
     DISCRETE        = "discrete"
 
-TRANSFER_FILTERS = [
-    {
-        'field': 'Created',
+TRANSFER_FILTERS = {
+    'created': {
         'table': 'user',
         'type' : TransferFilterEnum.DATE_RANGE,
     },
-    {
-        'field': 'User Type',
+    'User Type': {
         'table': 'user',
         'type': TransferFilterEnum.DISCRETE,
         'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT, ADMIN]
     },
-    {
-        'field': 'Gender',
+    'gender': {
         'table': 'custom_attribute_user_storage',
         'type': TransferFilterEnum.DISCRETE,
         'values' : [MALE, FEMALE]
     },
-    {
-        'field': 'Balance',
+    'balance': {
         'table': 'transfer_account',
         'type' : TransferFilterEnum.INT_RANGE
     }
-]
+}
 
 def process_transfer_filters():
     # parse and prepare filters for calculating transfer stats

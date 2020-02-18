@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 
 import {loadFilters, createFilter} from "../reducers/filterReducer";
 import LoadingSpinner from "./loadingSpinner.jsx";
+import {USER_FILTER_FIELD, USER_FILTER_TYPE} from '../constants';
 
 import Filter from './filter';
 
@@ -22,7 +23,8 @@ const defaultProps = {
 
 const mapStateToProps = (state) => {
   return {
-  	filters: state.filters,
+    filters: state.filters,
+    creditTransferFilters: state.creditTransferFilters.creditTransferFilterState
   };
 };
 
@@ -127,6 +129,7 @@ class SearchBoxWithFilter extends React.Component {
     this.setState({
       filters
     })
+    console.log(filters)
   }
 
   handleChange = (evt) => {
@@ -152,7 +155,7 @@ class SearchBoxWithFilter extends React.Component {
       };
 
       const test_conditions = (filter,value) => {
-        if (filter.type === 'of') {
+        if (filter.type === USER_FILTER_TYPE.DISCRETE) {
           if (filter.allowedValues.includes((value || '').toString())) {
             // attribute value is in allowed value, add account to filtered
             add_account()
@@ -170,7 +173,6 @@ class SearchBoxWithFilter extends React.Component {
 
       //Filtering Standard Attributes
       Object.keys(item).map(attribute_name => {
-
         let key = filter.keyName;
         if (attribute_name === key) {
           // attribute name matches key name, apply filter test
@@ -294,7 +296,7 @@ class SearchBoxWithFilter extends React.Component {
         }
 
         {savedFilters}
-        {filterActive && <Filter possibleFilters={this.state.possibleFilters} onFiltersChanged={this.onFiltersChanged}/>}
+        {filterActive && <Filter possibleFilters={this.props.creditTransferFilters} onFiltersChanged={this.onFiltersChanged}/>}
 
         <div>{React.cloneElement(this.props.children, { item_list: item_list })}</div>
       </div>
