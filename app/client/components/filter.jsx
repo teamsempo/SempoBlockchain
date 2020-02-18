@@ -139,6 +139,10 @@ class Filter extends React.Component {
         )
     }
 
+    filterTypeChange(name, value) {
+        this.setState({filterType: value})
+    }
+
     get_selected_ids_array = (selected) => {
         Object.filter = (obj, predicate) => Object.keys(obj)
           .filter( key => predicate(obj[key]) ).reduce( (res, key) => (res[key] = obj[key], res), {} );
@@ -177,7 +181,6 @@ class Filter extends React.Component {
                   <div style={{width: 'inherit', position: 'relative'}} onClick={this.dropdownActive}>
                     <StyledSelectKey style={{width: 'inherit'}} name="value" value={value} onClick={this.dropdownActive} onChange={this.handleChange}>
                       <option name="value" value="select" disabled>select value</option>
-                      {/*{typeof(custom_attribute_dict[keyName]) !== 'undefined' ? custom_attribute_dict[keyName].map((key, index) => {return (<option name='value' value={key} key={index}>{key}</option>)}) : null}*/}
                     </StyledSelectKey>
                     <div style={{position: 'absolute', top: 0, right: 0, bottom: 0, left: 0}}/>
                   </div>
