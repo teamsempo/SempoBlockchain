@@ -7,11 +7,10 @@ from server.utils.auth import get_complete_auth_token
 from server.utils.user import create_transfer_account_user
 from server import db
 
-def test_transfer_usage_api_get(test_client, complete_admin_auth_token, create_organisation):
+def test_search_api(test_client, complete_admin_auth_token, create_organisation):
     """
-    GIVEN a Flask application
-    WHEN the '/api/transfer_usage/' page is requested (GET)
-    THEN check the response has status 200 and a list
+    When the '/api/v1/search/' page is requested with search parameters
+    check that the results are in the correct order
     """
 
     # This is a hack because the test DB isn't being built with migrations (and thus doesn't have tsvectors)
