@@ -18,7 +18,7 @@ unactivated_user = partial(base_user, is_activated=False)
 unregistered_base_user = partial(UserFactory, phone='+61400000444')
 standard_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=0)
 pin_blocked_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), failed_pin_attempts=3)
-web_sign_up_user = partial(base_user, is_activated=False, sign_up_method=SignupMethodEnum.WEB_SIGNUP.value)
+none_ussd_self_sign_up_user = partial(base_user, is_activated=False)
 ussd_self_sign_up_user = partial(unregistered_base_user, is_activated=False, sign_up_method=SignupMethodEnum.USSD_SELF_SIGNUP.value)
 
 initial_pin_entry_state = partial(UssdSessionFactory, state="initial_pin_entry")
@@ -66,7 +66,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
 
 @pytest.mark.parametrize('user_factory, user_input, expected',
  [
-     (web_sign_up_user, '0000', 'start'),
+     (none_ussd_self_sign_up_user, '0000', 'start'),
      (ussd_self_sign_up_user, '0000', 'exit_account_creation_prompt'),
  ])
 def test_change_initial_pin(mocker, test_client, init_database, create_master_organisation, user_factory, user_input, expected):

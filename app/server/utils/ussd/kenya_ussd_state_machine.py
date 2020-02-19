@@ -349,9 +349,6 @@ class KenyaUssdStateMachine(Machine):
     def is_ussd_self_sign_up(self, user_input):
         return self.user.sign_up_method == SignupMethodEnum.USSD_SELF_SIGNUP.value
 
-    def is_web_sign_up(self, user_input):
-        return self.user.sign_up_method == SignupMethodEnum.WEB_SIGNUP.value
-
     def process_account_creation_request(self, user_input):
         try:
             # find GE organization to attach users to
@@ -444,7 +441,7 @@ class KenyaUssdStateMachine(Machine):
              'source': 'initial_pin_confirmation',
              'dest': 'start',
              'after': ['complete_initial_pin_change', 'set_phone_as_verified', 'send_terms_to_user_if_required'],
-             'conditions': ['is_web_sign_up', 'new_pins_match']},
+             'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'exit_pin_mismatch'}

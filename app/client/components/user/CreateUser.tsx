@@ -10,7 +10,6 @@ import {Organisation} from "../../reducers/organisation/types";
 import {ReduxState} from "../../reducers/rootReducer";
 import {loadOrganisation} from "../../reducers/organisation/actions";
 import CreateUserForm, {ICreateUserUpdate} from './CreateUserForm';
-import {SignUpMethods} from "./signUpMethods";
 
 interface DispatchProps {
   createUser: (body: any) => void,
@@ -78,8 +77,7 @@ class CreateUserUpdated extends React.Component<Props> {
       transfer_account_name: form.transferAccountName,
       location: form.location,
       business_usage_name: businessUsage,
-      referred_by: form.referredBy,
-      sign_up_method: SignUpMethods.WEB_SIGNUP
+      referred_by: form.referredBy
     })
   }
 
