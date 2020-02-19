@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import styled, {ThemeProvider} from 'styled-components';
-import {UPDATE_ACTIVE_STEP, uploadDocument} from "../../reducers/businessVerificationReducer";
+import {editBusinessProfile, UPDATE_ACTIVE_STEP, uploadDocument} from "../../reducers/businessVerificationReducer";
 import DateTime from "../dateTime.jsx";
 
 import { DefaultTheme } from "../theme";
@@ -32,6 +32,7 @@ const ErrorMessage = function(props) {
 
 const mapStateToProps = (state) => {
   return {
+    editStatus: state.businessVerification.editStatus,
     business: state.businessVerification.businessVerificationState,
     uploadState: state.businessVerification.uploadDocumentStatus,
   };
@@ -39,6 +40,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    editBusinessProfile: (body, path) => dispatch(editBusinessProfile({body, path})),
     uploadDocument: (body) => dispatch(uploadDocument({body})),
     nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 2}),
     backStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0})
@@ -93,7 +95,13 @@ class BusinessDocuments extends React.Component {
     const validateNewInput = this._validateData(this.props.business); // run the new input against the validator
 
     if (Object.keys(validateNewInput).every((k) => { return validateNewInput[k] === true })) {
-      this.props.nextStep()
+      if (this.props.isFinal) {
+        let business = this.props.business;
+        this.props.nextStep();
+        this.props.editBusinessProfile({kyc_status: 'PENDING'}, business.id);
+      } else {
+        this.props.nextStep()
+      }
     } else {
       // if anything fails then update the UI validation state but NOT the UI Data State
       this.setState(Object.assign(validateNewInput, this._validationErrors(validateNewInput)));
@@ -159,7 +167,7 @@ class BusinessDocuments extends React.Component {
         <ThemeProvider theme={DefaultTheme}>
           <div>
             <AsyncButton buttonText={'Back'} onClick={this.props.backStep}/>
-            <AsyncButton buttonText={'Next'} onClick={this.isValidated}/>
+            <AsyncButton buttonText={this.props.isFinal ? 'COMPLETE' : 'Next'} onClick={this.isValidated} isLoading={this.props.editStatus.isRequesting}/>
           </div>
         </ThemeProvider>
 

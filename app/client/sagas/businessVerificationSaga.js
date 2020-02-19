@@ -49,14 +49,6 @@ function* editBusinessVerification({ payload }) {
 
     yield call(updateStateFromBusinessVerificationStep, edit_result.data);
 
-    if (edit_result.data.kyc_application.kyc_status === 'PENDING') {
-      yield put({type: UPDATE_ACTIVE_STEP, activeStep: 5})
-    }
-
-    if (edit_result.data.kyc_application.kyc_status === 'INCOMPLETE') {
-      yield put({type: UPDATE_ACTIVE_STEP, activeStep: 1})
-    }
-
     yield put({type: EDIT_BUSINESS_VERIFICATION_SUCCESS});
 
   } catch (fetch_error) {
