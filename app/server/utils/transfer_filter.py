@@ -89,6 +89,7 @@ def handle_custom_user_storage_filter(keyname, filters):
         value = filter_action['value']
         filter_string += f"{'OR' if i > 0 else ''} \"{TRANSFER_FILTERS[keyname]['table']}\".value {comparator} '\"{value}\"' "
     print(filter_string)
+
     return text(filter_string)
 
 def handle_filter(keyname, filters):

@@ -5,6 +5,10 @@ from flask import make_response, jsonify, current_app, g
 from sqlalchemy.sql import func, text
 import datetime, json
 import sentry_sdk
+from toolz import curry, pipe
+from sqlalchemy.orm import aliased
+from sqlalchemy.sql.expression import cast
+import sqlalchemy
 
 from server.exceptions import (
     NoTransferAccountError,
@@ -40,7 +44,8 @@ def dollars_to_cents(amount_dollars):
     return float(amount_dollars) * 100
 
 
-def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None, user_filter=[]):
+def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
+                             user_filter=[]):
 
     date_filter = []
     filter_active = False
@@ -54,6 +59,43 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
         CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
         CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT]
+
+    all_ct = CreditTransfer.query.execution_options(show_all=True).all()
+
+    user_filter = [CustomAttributeUserStorage.value == '"male"',
+                   CustomAttributeUserStorage.name == 'gender']
+
+    ca_filter_list = [('gender', 'IN', '"female"'), ('spouse_age', 'GT', '23')]
+
+    def apply_ca_filters(query, ca_filter_list):
+
+        def apply_single_filter(inner_query, _filt):
+
+            name = _filt[0]
+            comparator = _filt[1]
+            val = _filt[2]
+
+            ca_alias = aliased(CustomAttributeUserStorage)
+            if comparator == 'IN':
+                val = val if isinstance(val, list) else [val]
+                return inner_query.join(ca_alias, CustomAttributeUserStorage.user_id == ca_alias.user_id)\
+                    .filter(ca_alias.name == name).filter(ca_alias.value.in_(val))
+
+            if comparator == 'GT':
+                return inner_query.join(ca_alias, CustomAttributeUserStorage.user_id == ca_alias.user_id) \
+                    .filter(ca_alias.name == name).filter(cast(ca_alias.value, sqlalchemy.Float) > float(val))
+
+        for filt in ca_filter_list:
+            query = apply_single_filter(query, filt)
+
+        return query
+
+    q = (apply_ca_filters(db.session.query(CreditTransfer).join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == CreditTransfer.sender_user_id),
+                          ca_filter_list).filter(CreditTransfer.transfer_status == 'COMPLETE').all())
+
+    # (name is 'age' and value is 22 and name is years_employed and value is 14)
+
+    ttt = 4
 
     standard_payment_filters = [
         CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
@@ -80,17 +122,27 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         CreditTransfer.transfer_use.isnot(None),
     ]
 
+
+    def uf_if_need(query):
+
+        if not user_filter:
+            return query
+
+        return (
+            query
+                .join(User, CreditTransfer.sender_user_id == User.id)
+                .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id)
+                .filter(*user_filter)
+            )
+
+    def apply_and_return(query, filters):
+        return query.filter(*filters).filter(*date_filter).first().total or 0
+
+
     def calculate_transaction_totals():
         total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
 
-        if user_filter:
-            total_distributed = total_distributed \
-                .join(User, CreditTransfer.sender_user_id == User.id) \
-                .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
-                .filter(*user_filter)
-
-        total_distributed = (total_distributed.filter(*disbursement_filters).filter(*date_filter).first().total) or 0
-
+        total_distributed = apply_and_return(uf_if_need(total_distributed), disbursement_filters)
 
         total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
                 
