@@ -30,13 +30,39 @@ class SearchAPI(MethodView):
         Return Value:
             Results object, similar to the existing transfer_accounts and credit_transfers API return values
         """
-        search_string = request.args.get('search_string') or ''
+        # HANDLE PARAM : search_stirng
+        search_string = request.args.get('search_string') or ''      
 
+        # HANDLE PARAM : search_type
         # Valid search types are: `transfer_accounts` and `credit_transfers`
         search_type = request.args.get('search_type') or 'transfer_accounts'
         if search_type not in ['transfer_accounts', 'credit_transfers']:
             response_object = {
                 'message': 'Invalid search_type \'{}\'. Please use type \'transfer_accounts\' or \'credit_transfers\''.format(search_type),
+            }
+            return make_response(jsonify(response_object)), 400
+
+        # HANDLE PARAM : sorting_options
+        # Valid params differ depending on sorting_options. See: sorting_options
+        shared_sorting_options = ['first_name', 'last_name', 'email', 'rank']
+        sorting_options = { 'transfer_accounts': [*shared_sorting_options,'balance', 'status', 'date_account_created'] ,
+                            'credit_transfers':[*shared_sorting_options, 'amount', 'transfer_type', 'approval', 'date_transaction_created'] }
+        sort_by = request.args.get('sort_by') or 'rank'
+        if sort_by not in sorting_options[search_type]:
+            response_object = {
+                # Example output:
+                # "Invalid sort_by value 'pizza'. Please use one of the following: 'first_name', 'last_name', 'email', 'rank', 'balance', 'status', 'date_account_created'"
+                'message': 'Invalid sort_by value \'{}\'. Please use one of the following: {}'\
+                    .format(sort_by, ', '.join('\'{}\''.format(a) for a in sorting_options[search_type])),
+            }
+            return make_response(jsonify(response_object)), 400
+
+        # HANDLE PARAM : order
+        # Valid orders types are: `ASC` and `DESC`
+        order = request.args.get('order') or 'DESC'
+        if order not in ['ASC', 'DESC']:
+            response_object = {
+                'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order),
             }
             return make_response(jsonify(response_object)), 400
 
@@ -86,6 +112,7 @@ class SearchAPI(MethodView):
 
             # Then use those results to join aginst TransferAccount or CreditTransfer
             if search_type == 'transfer_accounts':
+            # TransferAccount Search Logic
                 final_query = db.session.query(TransferAccount)\
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
                     .execution_options(show_all=True)\
@@ -95,6 +122,7 @@ class SearchAPI(MethodView):
                 transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
                 result = transfer_accounts_schema.dump(transfer_accounts)
                 data = { 'transfer_accounts': result.data }
+            # CreditTransfer Search Logic
             else:
                 final_query = db.session.query(CreditTransfer)\
                     .join(user_search_result, 
