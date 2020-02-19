@@ -21,7 +21,7 @@ from server.utils.credit_transfer import (
     make_target_balance_transfer,
     make_blockchain_transfer)
 
-from server.utils.transfer_filter import TRANSFER_FILTERS
+from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
 
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
@@ -458,7 +458,9 @@ class CreditTransferStatsApi(MethodView):
 
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
-        transfer_stats = calculate_transfer_stats(total_time_series=True, start_date=start_date, end_date=end_date)
+        encoded_filters = request.args.get('params')
+        filters = process_transfer_filters(encoded_filters)
+        transfer_stats = calculate_transfer_stats(total_time_series=True, start_date=start_date, end_date=end_date, user_filter=filters)
 
         response_object = {
             'status': 'success',

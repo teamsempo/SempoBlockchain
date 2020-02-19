@@ -142,7 +142,7 @@ class Filter extends React.Component {
         const keys = (possibleFilters !== undefined && possibleFilters !== null ? Object.keys(possibleFilters).filter(key => (key !== 'profile_picture')) : []);
 
         return (
-            <div style={{margin: '1em', display: 'flex', flexDirection: 'row', alignItems: 'center', flexFlow: 'row wrap'}}>
+            <div style={{margin: '1em', marginRight: "0em", display: 'flex', flexDirection: 'row', alignItems: 'center', flexFlow: 'row wrap'}}>
 
                 <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                     <FilterText style={{padding: '0 10px 0 0'}}>Filter:</FilterText>
@@ -159,7 +159,6 @@ class Filter extends React.Component {
     }
 
     comparatorChange(value) {
-        console.log(value)
         this.setState({comparator: value})
     }
 
@@ -236,7 +235,6 @@ class Filter extends React.Component {
     }
 
     handleChange = (evt) => {
-        console.log(evt)
         this.setState({ [evt.target.name]: evt.target.value });
     }
 
@@ -327,11 +325,14 @@ const StyledSelectKey = styled(StyledSelect)`
   box-shadow: 0 0 0 1px rgba(44,45,48,.15);
   font: 400 12px system-ui;
   color: #777;
+  background-color: white;
   padding: 0 0 0 10px;
   margin: 5px;
   line-height: 25px;
   height: 25px;
-  
+  &:hover {
+    background-color: white;
+  }
 `;
 
 const ThresholdInput = styled(Input)`

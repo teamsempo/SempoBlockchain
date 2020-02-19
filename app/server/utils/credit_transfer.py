@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import time
 from flask import make_response, jsonify, current_app, g
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, text
 import datetime, json
 import sentry_sdk
 
@@ -26,6 +26,7 @@ from server.models.custom_attribute_user_storage import CustomAttributeUserStora
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
+from server.utils.transfer_filter import TRANSFER_FILTERS
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import cast
@@ -39,7 +40,7 @@ def dollars_to_cents(amount_dollars):
     return float(amount_dollars) * 100
 
 
-def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None):
+def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None, user_filter=[]):
 
     date_filter = []
     filter_active = False
@@ -48,7 +49,6 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         date_filter.append(CreditTransfer.created <= end_date)
         filter_active = True
 
-    user_filter = []
 
     disbursement_filters = [
         CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
@@ -84,7 +84,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
 
         if user_filter:
-            total_distributed \
+            total_distributed = total_distributed \
                 .join(User, CreditTransfer.sender_user_id == User.id) \
                 .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
                 .filter(*user_filter)
@@ -95,7 +95,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
                 
         if user_filter:
-            total_spent \
+            total_spent = total_spent \
                 .join(User, CreditTransfer.sender_user_id == User.id) \
                 .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
                 .filter(*user_filter)
@@ -106,7 +106,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
         
         if user_filter:
-            total_exchanged \
+            total_exchanged = total_exchanged \
                 .join(User, CreditTransfer.sender_user_id == User.id) \
                 .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
                 .filter(*user_filter)
@@ -144,7 +144,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
                                                     func.date_trunc('day', CreditTransfer.created).label('date'))
 
         if user_filter:
-            daily_transaction_volume \
+            daily_transaction_volume = daily_transaction_volume \
                 .join(User, CreditTransfer.sender_user_id == User.id) \
                 .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
                 .filter(*user_filter)
@@ -172,7 +172,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                     func.date_trunc('day', CreditTransfer.created).label('date'))
         if user_filter:
-            daily_disbursement_volume \
+            daily_disbursement_volume = daily_disbursement_volume \
                 .join(User, CreditTransfer.sender_user_id == User.id) \
                 .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
                 .filter(*user_filter)
@@ -197,7 +197,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
 
         if user_filter:
-            transfer_use_breakdown \
+            transfer_use_breakdown = transfer_use_breakdown \
                 .join(User, CreditTransfer.sender_user_id == User.id) \
                 .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
                 .filter(*user_filter)
@@ -211,7 +211,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         daily_transaction_average = db.session.query(func.avg(CreditTransfer.transfer_amount).label('average'),func.date_trunc('day', CreditTransfer.created).label('date')) \
             
         if user_filter:
-            daily_transaction_average \
+            daily_transaction_average = daily_transaction_average \
                 .join(User, CreditTransfer.sender_user_id == User.id) \
                 .join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id) \
                 .filter(*user_filter)

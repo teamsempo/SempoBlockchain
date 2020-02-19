@@ -3,6 +3,7 @@ import merge from "deepmerge";
 import { LOGIN_FAILURE } from "./reducers/auth/types";
 import { put } from "redux-saga/es/effects";
 import { store } from "./app.jsx";
+import { USER_FILTER_FIELD, USER_FILTER_TYPE } from "./constants";
 
 export function formatMoney(
     amount,
@@ -236,4 +237,21 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
     });
 
     return transaction_volume;
+};
+
+export const processFiltersForQuery = filters => {
+    let encoded_filters = encodeURIComponent("%$user_filters%");
+    filters.forEach(filter => {
+        if (USER_FILTER_TYPE.DISCRETE == filter.type) {
+            encoded_filters += encodeURIComponent("," + filter.keyName + "%");
+            filter.allowedValues.forEach(value => {
+                encoded_filters += encodeURIComponent("=" + value + "%");
+            });
+        } else {
+            encoded_filters += encodeURIComponent("," + filter.keyName + "%");
+            let parsed_filter = filter.type + filter.threshold + "%";
+            encoded_filters += encodeURIComponent(parsed_filter);
+        }
+    });
+    return encoded_filters;
 };
