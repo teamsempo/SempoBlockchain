@@ -35,6 +35,7 @@ class SearchAPI(MethodView):
 
         # HANDLE PARAM : search_type
         # Valid search types are: `transfer_accounts` and `credit_transfers`
+        # Default: transfer_accounts
         search_type = request.args.get('search_type') or 'transfer_accounts'
         if search_type not in ['transfer_accounts', 'credit_transfers']:
             response_object = {
@@ -44,6 +45,7 @@ class SearchAPI(MethodView):
 
         # HANDLE PARAM : sorting_options
         # Valid params differ depending on sorting_options. See: sorting_options
+        # Default: rank
         shared_sorting_options = ['first_name', 'last_name', 'email', 'rank']
         sorting_options = { 'transfer_accounts': [*shared_sorting_options,'balance', 'status', 'date_account_created'] ,
                             'credit_transfers':[*shared_sorting_options, 'amount', 'transfer_type', 'approval', 'date_transaction_created'] }
@@ -59,12 +61,27 @@ class SearchAPI(MethodView):
 
         # HANDLE PARAM : order
         # Valid orders types are: `ASC` and `DESC`
+        # Default: DESC
         order = request.args.get('order') or 'DESC'
         if order not in ['ASC', 'DESC']:
             response_object = {
                 'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order),
             }
             return make_response(jsonify(response_object)), 400
+
+        # Build order by object
+        sort_types_to_database_types = {'first_name': 'a',
+                                        'last_name': 'a',
+                                        'email': 'a',
+                                        'rank': 'a',
+                                        'balance': 'a',
+                                        'status': 'a',
+                                        'date_account_created': 'a',
+                                        'amount': 'a',
+                                        'transfer_type': 'a',
+                                        'approval': 'a',
+                                        'date_transaction_created': ''
+                                        }
 
         # Note: Using tsquery wildcards here. Good docs of them here:
         # https://www.postgresql.org/docs/current/datatype-textsearch.html#DATATYPE-TSQUERY
@@ -117,6 +134,8 @@ class SearchAPI(MethodView):
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
                     .execution_options(show_all=True)\
                     .order_by(db.text('rank DESC'))\
+                    # Make this custom
+                    .order_by(user_search_result.c['first_name'])\ 
                     .filter(user_search_result.c.rank > 0.0)\
                     .filter(TransferAccount.is_ghost != True)
                 transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
