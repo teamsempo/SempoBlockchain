@@ -189,6 +189,7 @@ sw:
     exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha mara %{count} kwa siku %{limit_period} pekee
     exchange_fraction_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{percent}% ya salio lako
     exchange_amount_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{token} %{amount} kwa siku {limit_period} pekee
+    transfer_amount_error_sms: Umefikisha kiwango cha utumizi wa Sarafu. Tafadhalia wasiliana nasi kwa 0757628885 ili kuongeza zaidi matumizi ya Sarafu
     insufficient_balance_sms: |
       Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika kwa sababu salio lako haitoshi.
       Akaunti yako ya Sarafu-Network ina salio yafuatayo: %{token_balances}
