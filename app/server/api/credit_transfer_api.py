@@ -14,12 +14,13 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
-from server.utils.credit_transfer import calculate_transfer_stats, find_user_with_transfer_account_from_identifiers
+from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
+from server.utils.metrics import calculate_transfer_stats
 
 from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
 
