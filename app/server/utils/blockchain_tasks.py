@@ -22,7 +22,9 @@ class BlockchainTasker(object):
         celery_tasks_name = 'celery_tasks'
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
 
-    def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
+    def _execute_synchronous_celery(
+            self, task, kwargs=None, args=None, timeout=None, queue='high-priority'
+    ):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
         try:
             response = async_result.get(
@@ -35,7 +37,9 @@ class BlockchainTasker(object):
             async_result.forget()
         return response
 
-    def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None, queue='high-priority'):
+    def _synchronous_call(
+            self, contract_address, contract_type, func, args=None, signing_address=None, queue='high-priority'
+    ):
         kwargs = {
             'contract_address': contract_address,
             'abi_type': contract_type,
@@ -51,7 +55,7 @@ class BlockchainTasker(object):
                           func, args=None,
                           gas_limit=None,
                           prior_tasks=None,
-                          queue='high-priority'):
+                          queue=None):
         kwargs = {
             'signing_address': signing_address,
             'contract_address': contract_address,
@@ -108,7 +112,9 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(self._eth_endpoint('retry_failed'), args={})
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
-    def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None, queue='high-priority'):
+    def create_blockchain_wallet(
+            self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None, queue='high-priority'
+    ):
         """
         Creates a blockchain wallet on the blockchain worker
         :param wei_target_balance: How much eth to top the wallet's balance up to
@@ -121,7 +127,9 @@ class BlockchainTasker(object):
             'wei_topup_threshold': wei_topup_threshold,
             'private_key': private_key
         }
-        wallet_address = self._execute_synchronous_celery(self._eth_endpoint('create_new_blockchain_wallet'), args, queue=queue)
+        wallet_address = self._execute_synchronous_celery(
+            self._eth_endpoint('create_new_blockchain_wallet'), args, queue=queue
+        )
 
         if wei_target_balance or 0 > 0:
             self.topup_wallet_if_required(wallet_address, queue=queue)
@@ -409,11 +417,19 @@ class BlockchainTasker(object):
         :param deploying_address: The address of the wallet used to deploy the network
         :return: registry contract address
         """
-        return self._execute_synchronous_celery(self._eth_endpoint('deploy_exchange_network'), args = [deploying_address], timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deploy_exchange_network'),
+            args=[deploying_address],
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25
+        )
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
         args = [deploying_address, name, symbol, fund_amount_wei]
-        return self._execute_synchronous_celery(self._eth_endpoint('deploy_and_fund_reserve_token'), args = args, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10)
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deploy_and_fund_reserve_token'),
+            args=args,
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10
+        )
 
     def deploy_smart_token(self,
                            deploying_address,
@@ -432,8 +448,16 @@ class BlockchainTasker(object):
               reserve_token_address,
               int(reserve_ratio_ppm)]
 
-        return self._execute_synchronous_celery(self._eth_endpoint('deploy_smart_token'), args = args, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15)
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deploy_smart_token'),
+            args=args,
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15
+        )
 
     def topup_wallet_if_required(self, wallet_address, queue='low-priority'):
-        return self._execute_synchronous_celery(self._eth_endpoint('topup_wallet_if_required'), args = [wallet_address], queue=queue)
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('topup_wallet_if_required'),
+            args=[wallet_address],
+            queue=queue
+        )
 
