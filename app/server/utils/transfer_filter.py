@@ -88,11 +88,11 @@ def handle_filters_per_keyname(to_handle, key_name, filters):
         curr_table = TRANSFER_FILTERS[key_name]['table']
         if(curr_table == CustomAttributeUserStorage.__tablename__):
             _filters = filters[curr_table] if curr_table in filters and isinstance(filters[curr_table], list) else []
-            _filters.extend(handle_custom_user_storage_filter(key_name, to_handle))
+            _filters.append(handle_custom_user_storage_filter(key_name, to_handle))
             filters[curr_table] = _filters
         else:
             _filters = filters[curr_table] if curr_table in filters and isinstance(filters[curr_table], list) else []
-            _filters.extend(handle_filter(key_name, to_handle))
+            _filters.append(handle_filter(key_name, to_handle))
             filters[curr_table] = _filters
     return filters
 

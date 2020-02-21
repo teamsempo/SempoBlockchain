@@ -17,7 +17,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql import func, text
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import case
+from sqlalchemy import case, or_
 import sqlalchemy
 
 import pandas as pd
@@ -211,8 +211,6 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     return data
 
 
-ca_filter_list_ex = [('gender', 'EQ', '"female"'), ('spouse_age', 'GT', '23')]
-
 def apply_user_filters(query, filters):
     # if attribute is not CA table, do the required join and apply filters
     for table_name, filts in filters.items():
@@ -220,7 +218,6 @@ def apply_user_filters(query, filters):
             query = query.join(TransferAccount, TransferAccount.id == CreditTransfer.sender_transfer_account_id)
             query = apply_single_column_filter(query, filts, TransferAccount)
         elif table_name == CustomAttributeUserStorage.__tablename__:
-            # query = query.join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == CreditTransfer.sender_transfer_account_id)
             query = apply_ca_pivot_table(query, filts)
         elif table_name == User.__tablename__:
             query = query.join(User, User.id == CreditTransfer.sender_user_id)
@@ -229,8 +226,8 @@ def apply_user_filters(query, filters):
 
 def apply_ca_pivot_table(query, filters):
 
+    # get all custom attributes and create pivot table
     new_cs = [CustomAttributeUserStorage.user_id]
-
     for value in db.session.query(CustomAttributeUserStorage.name).distinct():
         value = value[0]
         new_cs.append(
@@ -240,43 +237,48 @@ def apply_ca_pivot_table(query, filters):
             )).label(value)
         )
 
+    # join pivot table of custom attributes
     pivot = db.session.query(*new_cs).group_by(CustomAttributeUserStorage.user_id).subquery()
     query = query.outerjoin(pivot, CreditTransfer.sender_user_id == pivot.c.user_id)
     
-    for _filt in filters:
-        column = _filt[0]
-        comparator = _filt[1]
-        val = _filt[2]
+    for batches in filters:
+        to_batch = []
+        for _filt in batches:
+            column = _filt[0]
+            comparator = _filt[1]
+            val = _filt[2]
 
-        if comparator == 'EQ':
-            val = val if isinstance(val, list) else [val]
-            val = [f'\"{element}\"' for element in val] # needs ot be in form '"{item}"' for json string match
-            query = query.filter(pivot.c[column].in_(val))
-        # TODO: account for datetime
-        elif comparator == 'GT':
-            query = query.filter(pivot.c[column] > val)
-        elif comparator == "LT":
-            query = query.filter(pivot.c[column] < val)
-   
+            if comparator == 'EQ':
+                val = val if isinstance(val, list) else [val]
+                val = [f'\"{element}\"' for element in val] # needs ot be in form '"{item}"' for json string match
+                to_batch.append(pivot.c[column].in_(val))
+            # TODO: account for datetime
+            elif comparator == 'GT':
+               to_batch.append(pivot.c[column] > val)
+            elif comparator == "LT":
+                to_batch.append(pivot.c[column] < val)
+        query = query.filter(or_(*to_batch))
 
     return query
 
 def apply_single_column_filter(query, filters, target_table):
 
-    for _filt in filters:
-        column = _filt[0]
-        comparator = _filt[1]
-        val = _filt[2]
+    for batches in filters:
+        to_batch = []
+        for _filt in batches:
+            column = _filt[0]
+            comparator = _filt[1]
+            val = _filt[2]
 
-        if comparator == 'EQ':
-            val = val if isinstance(val, list) else [val]
-            query = query.filter(getattr(target_table, column).in_(val))
-        # TODO: account for datetime
-        elif comparator == 'GT':
-            query = query.filter(getattr(target_table, column) > val)
-        elif comparator == "LT":
-            query = query.filter(getattr(target_table, column) < val)
-
+            if comparator == 'EQ':
+                val = val if isinstance(val, list) else [val]
+                to_batch.append(getattr(target_table, column).in_(val))
+            # TODO: account for datetime
+            elif comparator == 'GT':
+                to_batch.append(getattr(target_table, column) > val)
+            elif comparator == "LT":
+                to_batch.append(getattr(target_table, column) < val)
+        query = query.filter(or_(*to_batch))
     return query
 
 def cached_funds_available(allowed_cache_age_seconds=60):
