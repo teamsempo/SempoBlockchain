@@ -102,7 +102,7 @@ class Filter extends React.Component {
     addFilter = () => {
         let id = this.state.filters.length + 1;
     
-        if (this.state.filterType === USER_FILTER_TYPE.DISCRETE) {
+        if (this.state.filterType === USER_FILTER_TYPE.DISCRETE || USER_FILTER_TYPE.BOOLEAN_MAPPING == this.state.filterType) {
             let values = this.get_selected_ids_array(this.state.keyNameValues)
             var newFilter = {
                 'id': id,
@@ -174,7 +174,7 @@ class Filter extends React.Component {
         var filter_type_picker = <div />;
 
         if (keyName !== 'select'){
-            if (filterType === USER_FILTER_TYPE.DISCRETE) {
+            if (filterType === USER_FILTER_TYPE.DISCRETE || USER_FILTER_TYPE.BOOLEAN_MAPPING == filterType) {
                 filter_type_picker = <FilterText style={{padding: '0 10px'}}>is one of</FilterText>
             } else {
                 filter_type_picker = (
@@ -193,7 +193,7 @@ class Filter extends React.Component {
         let { possibleFilters } = this.props
         let { keyName, filterType, dropdownActive, value, keyNameValues } = this.state
         var valuePicker = <div/>;
-        if (keyName !== 'select' && filterType === USER_FILTER_TYPE.DISCRETE) {
+        if (keyName !== 'select' && (filterType === USER_FILTER_TYPE.DISCRETE || filterType === USER_FILTER_TYPE.BOOLEAN_MAPPING )) {
             valuePicker =
               <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                 <div style={{width: '200px'}}>
@@ -260,7 +260,7 @@ class Filter extends React.Component {
             addedFilters =
               <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', margin: '0 1em', flexFlow: 'row wrap'}}>
                 {filters.map((filter, index) => {
-                  if (filter.type === USER_FILTER_TYPE.DISCRETE) {
+                  if (filter.type === USER_FILTER_TYPE.DISCRETE || filter.type === USER_FILTER_TYPE.BOOLEAN_MAPPING) {
                     return (
                       <FilterBubble key={index}>
                         <FilterText style={{color: '#FFF'}}>

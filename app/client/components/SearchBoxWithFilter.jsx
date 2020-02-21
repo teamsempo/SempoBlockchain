@@ -155,7 +155,7 @@ class SearchBoxWithFilter extends React.Component {
       };
 
       const test_conditions = (filter,value) => {
-        if (filter.type === USER_FILTER_TYPE.DISCRETE) {
+        if (filter.type === USER_FILTER_TYPE.DISCRETE || filter.type === USER_FILTER_TYPE.BOOLEAN_MAPPING) {
           if (filter.allowedValues.includes((value || '').toString())) {
             // attribute value is in allowed value, add account to filtered
             add_account()

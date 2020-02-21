@@ -17,6 +17,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql import func, text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import case
 import sqlalchemy
 
 import pandas as pd
@@ -62,14 +63,13 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         CreditTransfer.transfer_use.isnot(None),
     ]
 
-
     def calculate_transaction_totals():
         total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-        # total_distributed = apply_user_filters(total_distributed, user_filter)
+        total_distributed = apply_user_filters(total_distributed, user_filter)
         total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter).first().total or 0
-        
+
         total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-        # total_spent = apply_user_filters(total_spent, user_filter)
+        total_spent = apply_user_filters(total_spent, user_filter)
         total_spent = (total_spent.filter(*standard_payment_filters).filter(*date_filter).first().total) or 0
 
 
@@ -80,8 +80,14 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         return total_distributed, total_spent, total_exchanged
 
     def calculate_user_totals():
-        total_beneficiaries = db.session.query(User).filter(*beneficiary_filters).count()
-        total_vendors = db.session.query(User).filter(*vendor_filters).count()
+        total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
+        # total_beneficiaries = apply_user_filters(total_beneficiaries, user_filter)
+        total_beneficiaries = total_beneficiaries.count()
+
+        total_vendors = db.session.query(User).filter(*vendor_filters)
+        # total_vendors = apply_user_filters(total_vendors, user_filter)
+        total_vendors = total_vendors.count()
+
         total_users = total_beneficiaries + total_vendors
 
         has_transferred_count = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
@@ -105,6 +111,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
         daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                     func.date_trunc('day', CreditTransfer.created).label('date'))
+        daily_transaction_volume = apply_user_filters(daily_transaction_volume, user_filter)
         daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
             .filter(*standard_payment_filters) \
             .filter(*date_filter) \
@@ -127,6 +134,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     def calculate_daily_disbursement_volume():
         daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                     func.date_trunc('day', CreditTransfer.created).label('date'))
+        daily_disbursement_volume = apply_user_filters(daily_disbursement_volume, user_filter)
         daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
             .filter(*disbursement_filters) \
             .filter(*date_filter) \
@@ -145,6 +153,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
     def calculate_transfer_use_breakdown():
         transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
+        transfer_use_breakdown = apply_user_filters(transfer_use_breakdown, user_filter)
         transfer_use_breakdown = transfer_use_breakdown.filter(*transfer_use_filters) \
             .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
                 .all()
@@ -152,6 +161,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     
     def calculate_daily_transaction_average():
         daily_transaction_average = db.session.query(func.avg(CreditTransfer.transfer_amount).label('average'),func.date_trunc('day', CreditTransfer.created).label('date')) 
+        daily_transaction_average = apply_user_filters(daily_transaction_average, user_filter)
         daily_transaction_average = daily_transaction_average.group_by(func.date_trunc('day', CreditTransfer.created)) \
             .filter(*standard_payment_filters) \
             .filter(*date_filter) \
@@ -200,6 +210,74 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
     return data
 
+
+ca_filter_list_ex = [('gender', 'EQ', '"female"'), ('spouse_age', 'GT', '23')]
+
+def apply_user_filters(query, filters):
+    # if attribute is not CA table, do the required join and apply filters
+    for table_name, filts in filters.items():
+        if table_name == TransferAccount.__tablename__:
+            query = query.join(TransferAccount, TransferAccount.id == CreditTransfer.sender_transfer_account_id)
+            query = apply_single_column_filter(query, filts, TransferAccount)
+        elif table_name == CustomAttributeUserStorage.__tablename__:
+            # query = query.join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == CreditTransfer.sender_transfer_account_id)
+            query = apply_ca_pivot_table(query, filts)
+        elif table_name == User.__tablename__:
+            query = query.join(User, User.id == CreditTransfer.sender_user_id)
+            query = apply_single_column_filter(query, filts, User)
+    return query
+
+def apply_ca_pivot_table(query, filters):
+
+    new_cs = [CustomAttributeUserStorage.user_id]
+
+    for value in db.session.query(CustomAttributeUserStorage.name).distinct():
+        value = value[0]
+        new_cs.append(
+             func.max(case(
+                [(CustomAttributeUserStorage.name == value, CustomAttributeUserStorage.value)],
+                else_=None
+            )).label(value)
+        )
+
+    pivot = db.session.query(*new_cs).group_by(CustomAttributeUserStorage.user_id).subquery()
+    query = query.outerjoin(pivot, CreditTransfer.sender_user_id == pivot.c.user_id)
+    
+    for _filt in filters:
+        column = _filt[0]
+        comparator = _filt[1]
+        val = _filt[2]
+
+        if comparator == 'EQ':
+            val = val if isinstance(val, list) else [val]
+            val = [f'\"{element}\"' for element in val] # needs ot be in form '"{item}"' for json string match
+            query = query.filter(pivot.c[column].in_(val))
+        # TODO: account for datetime
+        elif comparator == 'GT':
+            query = query.filter(pivot.c[column] > val)
+        elif comparator == "LT":
+            query = query.filter(pivot.c[column] < val)
+   
+
+    return query
+
+def apply_single_column_filter(query, filters, target_table):
+
+    for _filt in filters:
+        column = _filt[0]
+        comparator = _filt[1]
+        val = _filt[2]
+
+        if comparator == 'EQ':
+            val = val if isinstance(val, list) else [val]
+            query = query.filter(getattr(target_table, column).in_(val))
+        # TODO: account for datetime
+        elif comparator == 'GT':
+            query = query.filter(getattr(target_table, column) > val)
+        elif comparator == "LT":
+            query = query.filter(getattr(target_table, column) < val)
+
+    return query
 
 def cached_funds_available(allowed_cache_age_seconds=60):
     """

@@ -242,7 +242,7 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
 export const processFiltersForQuery = filters => {
     let encoded_filters = encodeURIComponent("%$user_filters%");
     filters.forEach(filter => {
-        if (USER_FILTER_TYPE.DISCRETE == filter.type) {
+        if (USER_FILTER_TYPE.DISCRETE == filter.type || USER_FILTER_TYPE.BOOLEAN_MAPPING == filter.type) {
             encoded_filters += encodeURIComponent("," + filter.keyName + "%");
             filter.allowedValues.forEach(value => {
                 encoded_filters += encodeURIComponent("=" + value + "%");
