@@ -97,6 +97,15 @@ class Organisation(ModelBase):
                                        lazy=True, foreign_keys='KycApplication.organisation_id')
 
     custom_welcome_message_key = db.Column(db.String)
+    _default_disbursement_wei = db.Column(db.Numeric(27), default=0)
+
+    @property
+    def default_disbursement(self):
+        return float((self._default_disbursement_wei or 0) / int(1e16))
+
+    @default_disbursement.setter
+    def default_disbursement(self, val):
+        self._default_disbursement_wei = val * int(1e16)
 
     @staticmethod
     def master_organisation() -> "Organisation":
