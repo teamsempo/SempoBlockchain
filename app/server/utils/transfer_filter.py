@@ -36,7 +36,7 @@ TRANSFER_FILTERS = {
         'type': TransferFilterEnum.DISCRETE,
         'values' : [MALE, FEMALE]
     },
-    'balance': {
+    'account_balance': {
         'table': TransferAccount.__tablename__,
         'type' : TransferFilterEnum.INT_RANGE
     }

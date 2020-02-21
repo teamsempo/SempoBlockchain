@@ -79,7 +79,7 @@ class TransferAccount(OneOrgBase, ModelBase):
 
         return float_wallet
 
-    @hybrid_property
+    @property
     def balance(self):
         # division/multipication by int(1e16) occurs  because
         # the db stores amounts in integer WEI: 1 BASE-UNIT (ETH/USD/ETC) * 10^18
@@ -89,7 +89,7 @@ class TransferAccount(OneOrgBase, ModelBase):
         # hardware that can only handle small ints (like the transfer cards and old android devices)
 
         # rounded to whole value of balance
-        return (self._balance_wei or 0) / int(1e18)
+        return float((self._balance_wei or 0) / int(1e16))
 
     @balance.setter
     def balance(self, val):
@@ -138,6 +138,11 @@ class TransferAccount(OneOrgBase, ModelBase):
     @hybrid_property
     def primary_user_id(self):
         return self.primary_user.id
+
+    # rounded balance
+    @hybrid_property
+    def account_balance(self):
+        return (self._balance_wei or 0) / int(1e18)
 
     @hybrid_property
     def master_wallet_approval_status(self):
