@@ -1,6 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify
 import datetime
 import orjson
+import re
 
 from flask.views import MethodView
 import re
@@ -45,9 +46,9 @@ class SearchAPI(MethodView):
         # 'Fran deRoo' -> 'Fran:* | deRoo:*'
         # Matches strings like "Francine deRoos"
         # Will also match "Michiel deRoos" because of the or clause, but this will be ranked lower
+        search_string = re.sub('\s+',' ',search_string)
         search_terms = search_string.strip().split(' ')
         tsquery = ':* | '.join(search_terms)+':*'
-
         # Return everything if the search string is empty
         if search_string == '':
             if search_type == 'transfer_accounts':
