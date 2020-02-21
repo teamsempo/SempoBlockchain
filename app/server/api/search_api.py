@@ -52,14 +52,12 @@ class SearchAPI(MethodView):
         # Return everything if the search string is empty
         if search_string == '':
             if search_type == 'transfer_accounts':
-                final_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
-                    .execution_options(show_all=True)
+                final_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)
                 transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
                 result = transfer_accounts_schema.dump(transfer_accounts)
                 data = { 'transfer_accounts': result.data }
             else:
-                final_query = CreditTransfer.query.filter()\
-                    .execution_options(show_all=True)
+                final_query = CreditTransfer.query.filter()
                 credit_transfers, total_items, total_pages = paginate_query(final_query, CreditTransfer)
                 result = credit_transfers_schema.dump(credit_transfers)
                 data = { 'credit_transfers': result.data }
@@ -89,7 +87,6 @@ class SearchAPI(MethodView):
             if search_type == 'transfer_accounts':
                 final_query = db.session.query(TransferAccount)\
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
-                    .execution_options(show_all=True)\
                     .order_by(db.text('rank DESC'))\
                     .filter(user_search_result.c.rank > 0.0)\
                     .filter(TransferAccount.is_ghost != True)
@@ -102,7 +99,6 @@ class SearchAPI(MethodView):
                         or_(user_search_result.c.default_transfer_account_id == CreditTransfer.recipient_transfer_account_id,\
                         user_search_result.c.default_transfer_account_id == CreditTransfer.sender_transfer_account_id)
                     )\
-                    .execution_options(show_all=True)\
                     .order_by(db.text('rank DESC'))\
                     .filter(user_search_result.c.rank > 0.0)
                 credit_transfers, total_items, total_pages = paginate_query(final_query, CreditTransfer)
