@@ -134,8 +134,7 @@ class SearchAPI(MethodView):
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
                     .execution_options(show_all=True)\
                     .order_by(db.text('rank DESC'))\
-                    # Make this custom
-                    .order_by(user_search_result.c['first_name'])\ 
+                    .order_by(user_search_result.c['first_name'])\
                     .filter(user_search_result.c.rank > 0.0)\
                     .filter(TransferAccount.is_ghost != True)
                 transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
