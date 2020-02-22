@@ -213,6 +213,9 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
 
 def apply_user_filters(query, filters):
+    if(filters is None):
+        return query
+
     # if attribute is not CA table, do the required join and apply filters
     for table_name, filts in filters.items():
         if table_name == TransferAccount.__tablename__:

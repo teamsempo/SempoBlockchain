@@ -52,6 +52,9 @@ TRANSFER_FILTERS = {
 
 def process_transfer_filters(encoded_filters):
     # parse and prepare filters for calculating transfer stats
+    if(encoded_filters is None):
+        return
+
     tokenized_filters = encoded_filters.split("%")
     filters = {}
     curr_keyName = None
