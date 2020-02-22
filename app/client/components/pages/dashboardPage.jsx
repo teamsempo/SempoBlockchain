@@ -11,7 +11,6 @@ import { loadCreditTransferFilters } from '../../reducers/creditTransferFilterRe
 
 import { 
   VolumeChart, 
-  AverageChart,
   BeneficiaryFunnel, 
   UsagePieChart, 
   MetricsBar, 
@@ -164,10 +163,6 @@ class DashboardPage extends React.Component {
 
                   <ModuleBox>
                     <VolumeChart/>
-                  </ModuleBox>
-
-                  <ModuleBox>
-                    <AverageChart/>
                   </ModuleBox>
 
                   <ModuleBox>

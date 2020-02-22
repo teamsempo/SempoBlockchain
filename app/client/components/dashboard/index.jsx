@@ -1,5 +1,4 @@
 export { default as VolumeChart } from './volumeChart.jsx'
-export { default as AverageChart } from './averageChart.jsx'
 export { default as BeneficiaryFunnel } from './userFunnelChart.jsx'
 export { default as UsagePieChart } from './usagePiechart.jsx'
 export { default as MetricsBar } from './metricsBar.jsx'
