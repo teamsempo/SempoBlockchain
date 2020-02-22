@@ -41,6 +41,10 @@ class Filter extends React.Component {
         };
     }
 
+    componentDidMount(){
+      console.log(this.props.possibleFilters)
+    }
+
     keyNameChange = (name, value) => {
         var keyNameProperties = this.props.possibleFilters[value]
         var keyNameValues = keyNameProperties.values;
@@ -149,7 +153,7 @@ class Filter extends React.Component {
                     <StyledSelectKey name="keyName" value={keyName} onChange={(evt) => this.keyNameChange(evt.target.name, evt.target.value)}>
                     <option name="key" value="select" disabled>select attribute</option>
                     {typeof(keys) !== 'undefined' ? keys.map((key, index) =>
-                        <option name='value' value={key} key={index}>{replaceUnderscores(key)}</option>
+                        <option name='value' value={key} key={index}>{replaceUnderscores(possibleFilters[key]['name'] || key)}</option>
                     ) : null}
                     </StyledSelectKey>
                 </div>

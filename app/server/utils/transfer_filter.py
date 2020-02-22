@@ -23,20 +23,24 @@ class TransferFilterEnum:
 
 TRANSFER_FILTERS = {
     'created': {
+        'name': "Created",
         'table': User.__tablename__,
         'type' : TransferFilterEnum.DATE_RANGE,
     },
-    'User Type': {
+    'user_type': {
+        'name': "User Type",
         'table': User.__tablename__,
         'type': TransferFilterEnum.BOOLEAN_MAPPING,
         'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
     },
     'gender': {
+        'name': "Gender",
         'table': CustomAttributeUserStorage.__tablename__,
         'type': TransferFilterEnum.DISCRETE,
         'values' : [MALE, FEMALE]
     },
     'account_balance': {
+        'name': "Balance",
         'table': TransferAccount.__tablename__,
         'type' : TransferFilterEnum.INT_RANGE
     }

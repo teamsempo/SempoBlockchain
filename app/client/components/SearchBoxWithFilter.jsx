@@ -89,14 +89,19 @@ class SearchBoxWithFilter extends React.Component {
 
     const proccess_attribute = (name, value) => {
       if (value !== undefined && value !== null) {
+        
         if (attribute_dict[name] === undefined) {
           // This means that the attribute name has not been seen at all, which means we can just create array
-          attribute_dict[name] = [value]
+          attribute_dict[name] = {
+            values: [value],
+            type: typeof(value) == 'number' ? USER_FILTER_TYPE.INT_RANGE : USER_FILTER_TYPE.DISCRETE
+          }
+          
         } else {
           // Attribute name has been seen, check if attribute VALUE has been seen
-          if (attribute_dict[name].indexOf(value) === -1) {
+          if (attribute_dict[name].values.indexOf(value) === -1) {
             //hasn't been seen, so add
-            attribute_dict[name].push(value)
+            attribute_dict[name].values.push(value)
           }
         }
       }
@@ -129,7 +134,6 @@ class SearchBoxWithFilter extends React.Component {
     this.setState({
       filters
     })
-    console.log(filters)
   }
 
   handleChange = (evt) => {
@@ -296,7 +300,7 @@ class SearchBoxWithFilter extends React.Component {
         }
 
         {savedFilters}
-        {filterActive && <Filter possibleFilters={this.props.creditTransferFilters} onFiltersChanged={this.onFiltersChanged}/>}
+        {filterActive && <Filter possibleFilters={this.state.possibleFilters} onFiltersChanged={this.onFiltersChanged}/>}
 
         <div>{React.cloneElement(this.props.children, { item_list: item_list })}</div>
       </div>
