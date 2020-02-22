@@ -74,6 +74,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
 
         total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        total_exchanged = apply_user_filters(total_exchanged, user_filter)
         total_exchanged = (total_exchanged.filter(*exchanged_filters).filter(*date_filter).first().total) or 0
         
 

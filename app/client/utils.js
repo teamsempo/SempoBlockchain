@@ -3,7 +3,7 @@ import merge from "deepmerge";
 import { LOGIN_FAILURE } from "./reducers/auth/types";
 import { put } from "redux-saga/es/effects";
 import { store } from "./app.jsx";
-import { USER_FILTER_FIELD, USER_FILTER_TYPE } from "./constants";
+import { USER_FILTER_TYPE } from "./constants";
 
 export function formatMoney(
     amount,
@@ -242,7 +242,10 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
 export const processFiltersForQuery = filters => {
     let encoded_filters = encodeURIComponent("%$user_filters%");
     filters.forEach(filter => {
-        if (USER_FILTER_TYPE.DISCRETE == filter.type || USER_FILTER_TYPE.BOOLEAN_MAPPING == filter.type) {
+        if (
+            USER_FILTER_TYPE.DISCRETE == filter.type ||
+            USER_FILTER_TYPE.BOOLEAN_MAPPING == filter.type
+        ) {
             encoded_filters += encodeURIComponent("," + filter.keyName + "%");
             filter.allowedValues.forEach(value => {
                 encoded_filters += encodeURIComponent("=" + value + "%");

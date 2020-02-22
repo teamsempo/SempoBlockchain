@@ -4,7 +4,7 @@ import styled from "styled-components";
 import PropTypes from 'prop-types';
 import { replaceUnderscores } from "../utils";
 
-import {USER_FILTER_FIELD, USER_FILTER_TYPE} from '../constants';
+import {USER_FILTER_TYPE} from '../constants';
 
 const propTypes = {
     possibleFilters: PropTypes.object,

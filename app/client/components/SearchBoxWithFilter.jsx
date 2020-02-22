@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 
 import {loadFilters, createFilter} from "../reducers/filterReducer";
 import LoadingSpinner from "./loadingSpinner.jsx";
-import {USER_FILTER_FIELD, USER_FILTER_TYPE} from '../constants';
+import {USER_FILTER_TYPE} from '../constants';
 
 import Filter from './filter';
 
