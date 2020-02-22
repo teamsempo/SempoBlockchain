@@ -3,6 +3,9 @@ import { StyledSelect, Input, StyledButton} from "./styledElements";
 import styled from "styled-components";
 import PropTypes from 'prop-types';
 import { replaceUnderscores } from "../utils";
+import { SingleDatePicker } from 'react-dates';
+
+import moment from 'moment';
 
 import {USER_FILTER_TYPE} from '../constants';
 
@@ -26,6 +29,8 @@ class Filter extends React.Component {
         super()
         this.state = {
             phrase: '',
+            date: moment(),
+            focused: false,
             filters: [],
             keyName: 'select',
             value: 'select',
@@ -66,7 +71,7 @@ class Filter extends React.Component {
                 {
                     [name]: value,
                     keyNameValues: {},
-                    filterType: USER_FILTER_TYPE.DATE_RANGE,
+                    filterType: USER_FILTER_TYPE.INT_RANGE,
                     GtLtThreshold: 0,
                     dropdownActive: false
                 }
@@ -119,7 +124,7 @@ class Filter extends React.Component {
                 'id': id,
                 'type': this.state.comparator,
                 'keyName': this.state.keyName,
-                'threshold': parseFloat(this.state.GtLtThreshold)
+                'threshold': this.state.filterType === USER_FILTER_TYPE.DATE_RANGE ? this.state.date.format("YYYY-MM-DD") : parseFloat(this.state.GtLtThreshold)
             }
         }
     
@@ -178,13 +183,13 @@ class Filter extends React.Component {
         var filter_type_picker = <div />;
 
         if (keyName !== 'select'){
-            if (filterType === USER_FILTER_TYPE.DISCRETE || USER_FILTER_TYPE.BOOLEAN_MAPPING == filterType) {
+            if (filterType === USER_FILTER_TYPE.DISCRETE || USER_FILTER_TYPE.BOOLEAN_MAPPING === filterType) {
                 filter_type_picker = <FilterText style={{padding: '0 10px'}}>is one of</FilterText>
             } else {
                 filter_type_picker = (
                     <StyledSelectKey name="keyName" value={comparator} onChange={(evt) => this.comparatorChange(evt.target.value)}>
-                    <option name='value' value={"<"}>is less than</option>
-                    <option name='value' value={">"}>is greater than</option>
+                    <option name='value' value={"<"}>{filterType === USER_FILTER_TYPE.DATE_RANGE ?  "before" : "is less than"}</option>
+                    <option name='value' value={">"}>{filterType === USER_FILTER_TYPE.DATE_RANGE ?  "after" : "is greater than"}</option>
                     </StyledSelectKey>
                 )
             }
@@ -227,7 +232,25 @@ class Filter extends React.Component {
         } else if (keyName !== 'select') {
             valuePicker =
               <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                {/* <ThresholdInput type="number" name="GtLtThreshold" value={this.state.GtLtThreshold} onChange={this.handleChange}/> */}
+                {filterType === USER_FILTER_TYPE.DATE_RANGE ? 
+                <StyledWrapper>
+                  <SingleDatePicker
+                    noBorder={false}
+                    small={true}
+                    isOutsideRange={() => false}
+                    date={this.state.date} // momentPropTypes.momentObj or null
+                    onDateChange={date => this.setState({ date: date })} // PropTypes.func.isRequired
+                    numberOfMonths={1}
+                    focused={this.state.focused} // PropTypes.bool
+                    onFocusChange={({ focused }) => this.setState({ focused })} // PropTypes.func.isRequired
+                    id="your_unique_id" // PropTypes.string.isRequired,
+                  />
+                </StyledWrapper>
+                :
                 <ThresholdInput type="number" name="GtLtThreshold" value={this.state.GtLtThreshold} onChange={this.handleChange}/>
+
+                }
                 {this.addFilterBtn()}
               </div>
         }
@@ -239,6 +262,8 @@ class Filter extends React.Component {
     }
 
     handleChange = (evt) => {
+        console.log(evt.target.name)
+        console.log(evt.target.value)
         this.setState({ [evt.target.name]: evt.target.value });
     }
 
@@ -398,4 +423,21 @@ const CloseWrapper = styled.div`
 	z-index: 54;
 	width: 100vw;
 	height: 100vh;
+`;
+
+const StyledWrapper = styled.div`
+    .SingleDatePickerInput {
+      border-radius: 5px;
+    }
+    .DateInput__small {
+      border-radius: 5px;
+    }
+    .DateInput_input__small {
+      height: 12px;
+      border-radius: 5px;
+      border-bottom: 2px solid white;
+    }
+    .DateInput_input__focused {
+
+    }
 `;

@@ -123,9 +123,9 @@ def handle_other_types(keyname, filters):
         val = _filt['value']
 
         if comparator == '>':
-            formatted_filters.append((keyname, "GT", float(val)))
+            formatted_filters.append((keyname, "GT", val if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
         elif comparator == '<':
-            formatted_filters.append((keyname, "LT", float(val)))
+            formatted_filters.append((keyname, "LT", val if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
         else:
             return
 
