@@ -28,7 +28,7 @@ TRANSFER_FILTERS = {
         'type' : TransferFilterEnum.DATE_RANGE,
     },
     'user_type': {
-        'name': "User Type",
+        'name': "Type",
         'table': User.__tablename__,
         'type': TransferFilterEnum.BOOLEAN_MAPPING,
         'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]

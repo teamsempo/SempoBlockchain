@@ -12,7 +12,8 @@ import {USER_FILTER_TYPE} from '../constants';
 const propTypes = {
     possibleFilters: PropTypes.object,
     onFiltersChanged: PropTypes.func,
-    visible: PropTypes.bool
+    visible: PropTypes.bool,
+    label: PropTypes.string
 }
   
 const defaultProps = {
@@ -20,7 +21,8 @@ const defaultProps = {
     onFiltersChanged: () => {
         console.log("Filters changed")
     },
-    visible: true
+    visible: true,
+    label: "Filter:"
 }
 
 class Filter extends React.Component {
@@ -154,7 +156,7 @@ class Filter extends React.Component {
             <div style={{margin: '1em', marginRight: "0em", display: 'flex', flexDirection: 'row', alignItems: 'center', flexFlow: 'row wrap'}}>
 
                 <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                    <FilterText style={{padding: '0 10px 0 0'}}>Filter:</FilterText>
+        <FilterText style={{padding: '0 10px 0 0'}}>{this.props.label}</FilterText>
                     <StyledSelectKey name="keyName" value={keyName} onChange={(evt) => this.keyNameChange(evt.target.name, evt.target.value)}>
                     <option name="key" value="select" disabled>select attribute</option>
                     {typeof(keys) !== 'undefined' ? keys.map((key, index) =>

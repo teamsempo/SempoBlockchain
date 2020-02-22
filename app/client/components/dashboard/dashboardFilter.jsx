@@ -80,7 +80,7 @@ class DashboardFilter extends React.Component {
             <div>
 
                     <FilterContainer>
-                        <Filter possibleFilters={this.props.creditTransferFilters} onFiltersChanged={this.onFiltersChanged}/>
+                        <Filter label={"Filter by user:"} possibleFilters={this.props.creditTransferFilters} onFiltersChanged={this.onFiltersChanged}/>
                         <div style={{display: 'flex', alignItems: 'center'}}>
                             <DateRangePicker
                                 displayFormat={() => moment.localeData().longDateFormat('L')}
