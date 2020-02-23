@@ -20,6 +20,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import case, or_
 import sqlalchemy
 
+
+
 import pandas as pd
 import datetime, json
 
@@ -64,16 +66,16 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     ]
 
     total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_distributed = apply_user_filters(total_distributed, user_filter)
+    total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
     total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter).first().total or 0
 
     total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_spent = apply_user_filters(total_spent, user_filter)
+    total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
     total_spent = (total_spent.filter(*standard_payment_filters).filter(*date_filter).first().total) or 0
 
 
     total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_exchanged = apply_user_filters(total_exchanged, user_filter)
+    total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
     total_exchanged = (total_exchanged.filter(*exchanged_filters).filter(*date_filter).first().total) or 0
 
     total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
@@ -100,7 +102,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
     daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                 func.date_trunc('day', CreditTransfer.created).label('date'))
-    daily_transaction_volume = apply_user_filters(daily_transaction_volume, user_filter)
+    daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
     daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
         .filter(*standard_payment_filters) \
         .filter(*date_filter) \
@@ -108,14 +110,14 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
     daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                 func.date_trunc('day', CreditTransfer.created).label('date'))
-    daily_disbursement_volume = apply_user_filters(daily_disbursement_volume, user_filter)
+    daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
     daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
         .filter(*disbursement_filters) \
         .filter(*date_filter) \
             .all()
 
     transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
-    transfer_use_breakdown = apply_user_filters(transfer_use_breakdown, user_filter)
+    transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
     transfer_use_breakdown = transfer_use_breakdown.filter(*transfer_use_filters) \
         .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
             .all()
@@ -164,24 +166,36 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
     return data
 
+def apply_filters(query, filters, query_table):
 
-def apply_user_filters(query, filters):
-    if(filters is None):
-        return query
+    user_join_attribute, account_join_attribute = determine_join_conditions(query_table)
 
-    # if attribute is not CA table, do the required join and apply filters
-    for table_name, filts in filters.items():
-        if table_name == TransferAccount.__tablename__:
-            query = query.join(TransferAccount, TransferAccount.id == CreditTransfer.sender_transfer_account_id)
-            query = apply_single_column_filter(query, filts, TransferAccount)
-        elif table_name == CustomAttributeUserStorage.__tablename__:
-            query = apply_ca_pivot_table(query, filts)
-        elif table_name == User.__tablename__:
-            query = query.join(User, User.id == CreditTransfer.sender_user_id)
-            query = apply_single_column_filter(query, filts, User)
+    for filter_table_name, _filts in filters.items():
+        if filter_table_name == TransferAccount.__tablename__:
+                # only join transfer account if table is not transfer account
+                if query_table.__tablename__ == filter_table_name: 
+                    query = apply_single_column_filter(query, _filts, TransferAccount, None, None) 
+                else:
+                    query = apply_single_column_filter(query, _filts, TransferAccount, account_join_attribute, None)
+
+        elif filter_table_name == User.__tablename__:
+                # only join user account if table is not user 
+                if query_table.__tablename__ == filter_table_name:
+                    query = apply_single_column_filter(query, _filts, User, None, None)
+                else:
+                    query = apply_single_column_filter(query, _filts, User, None, user_join_attribute)
+
+        elif filter_table_name == CustomAttributeUserStorage.__tablename__ and user_join_attribute is not None:
+            query = apply_ca_filters(query, _filts, user_join_attribute)
     return query
 
-def apply_ca_pivot_table(query, filters):
+def determine_join_conditions(table):
+    if table == CreditTransfer:
+        return CreditTransfer.sender_user_id, CreditTransfer.sender_transfer_account_id
+    if table == User:
+        return User.id, None
+
+def apply_ca_filters(query, filters, user_join_condition):
 
     # get all custom attributes and create pivot table
     new_cs = [CustomAttributeUserStorage.user_id]
@@ -196,7 +210,7 @@ def apply_ca_pivot_table(query, filters):
 
     # join pivot table of custom attributes
     pivot = db.session.query(*new_cs).group_by(CustomAttributeUserStorage.user_id).subquery()
-    query = query.outerjoin(pivot, CreditTransfer.sender_user_id == pivot.c.user_id)
+    query = query.outerjoin(pivot, user_join_condition == pivot.c.user_id)
     
     for batches in filters:
         to_batch = []
@@ -209,7 +223,6 @@ def apply_ca_pivot_table(query, filters):
                 val = val if isinstance(val, list) else [val]
                 val = [f'\"{element}\"' for element in val] # needs ot be in form '"{item}"' for json string match
                 to_batch.append(pivot.c[column].in_(val))
-            # TODO: account for datetime
             elif comparator == 'GT':
                to_batch.append(pivot.c[column] > val)
             elif comparator == "LT":
@@ -218,7 +231,13 @@ def apply_ca_pivot_table(query, filters):
 
     return query
 
-def apply_single_column_filter(query, filters, target_table):
+def apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None):
+
+
+    if target_table.__tablename__ == TransferAccount.__tablename__ and account_join_attribute is not None:
+        query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
+    elif target_table.__tablename__ == User.__tablename__ and user_join_attribute is not None:
+        query = query.join(User, User.id == user_join_attribute)
 
     for batches in filters:
         to_batch = []
@@ -230,7 +249,6 @@ def apply_single_column_filter(query, filters, target_table):
             if comparator == 'EQ':
                 val = val if isinstance(val, list) else [val]
                 to_batch.append(getattr(target_table, column).in_(val))
-            # TODO: account for datetime
             elif comparator == 'GT':
                 to_batch.append(getattr(target_table, column) > val)
             elif comparator == "LT":
