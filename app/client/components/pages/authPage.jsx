@@ -1,26 +1,26 @@
-import React from 'react';
-import styled from 'styled-components';
-import {Redirect, Route, Switch, Link} from "react-router-dom";
-import { connect } from 'react-redux';
+import React from "react";
+import styled from "styled-components";
+import { Redirect, Route, Switch, Link } from "react-router-dom";
+import { connect } from "react-redux";
 
-import {activateAccount} from '../../reducers/auth/actions'
+import { activateAccount } from "../../reducers/auth/actions";
 
-import LoginForm from '../auth/loginForm.jsx'
-import RegisterForm from '../auth/registerForm.jsx'
-import RequestResetEmailForm from '../auth/requestResetEmailForm.jsx'
+import LoginForm from "../auth/loginForm.jsx";
+import RegisterForm from "../auth/registerForm.jsx";
+import RequestResetEmailForm from "../auth/requestResetEmailForm.jsx";
 
-import { parseQuery } from '../../utils'
+import { parseQuery } from "../../utils";
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
-    loggedIn: (state.login.userId !== null),
+    loggedIn: state.login.userId !== null,
     loginState: state.login
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    activateAccount: (payload) => dispatch(activateAccount(payload))
+    activateAccount: payload => dispatch(activateAccount(payload))
   };
 };
 
@@ -30,85 +30,100 @@ export class authPage extends React.Component {
     this.state = {
       redirectToReferrer: false,
       email: null,
-      referralCode: null,
+      referralCode: null
     };
   }
 
   componentDidMount() {
-
     const parsed = parseQuery(location.search);
 
     if (parsed.actok) {
-      this.props.activateAccount({body:{activation_token: parsed.actok}})
+      this.props.activateAccount({ body: { activation_token: parsed.actok } });
     }
 
     if (parsed.r && parsed.u) {
       this.setState({
-        login: (!parsed.r === 'true'),
+        login: !parsed.r === "true",
         email: parsed.u,
         referralCode: parsed.c
-      })
+      });
     }
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.loggedIn !== prevProps.loggedIn) {
-      this.setState({redirectToReferrer: true})
+      this.setState({ redirectToReferrer: true });
     }
   }
 
   render() {
     let deploymentName = window.DEPLOYMENT_NAME;
-      const { from } = this.props.location.state || { from: { pathname: "/" } };
+    const { from } = this.props.location.state || { from: { pathname: "/" } };
 
-      if (this.state.redirectToReferrer) {
-          return <Redirect to={from} />;
-      }
+    if (this.state.redirectToReferrer) {
+      return <Redirect to={from} />;
+    }
 
-      return (
-          <WrapperDiv>
-              <LoginModuleBox>
-                  <div>
-                  <SempoLogoSVG src="/static/media/sempo_logo_teal.png"/>
-                </div>
-                <Switch>
-                  <Route path={this.props.match.url + '/forgot/'} component={forgotPassword} />
-                  <Route path={this.props.match.url + '/sign-up/'}
-                         render={()=><Signup email={this.state.email} referralCode={this.state.referralCode}/>}/>
-                  <Route component={LoginForm} />
-                </Switch>
-              </LoginModuleBox>
-              <DeploymentNameText>sempo | {deploymentName}</DeploymentNameText>
-              <TermsWrapper>
-                <TermsText href='https://withsempo.com/legal/privacy-policy/'>Privacy Policy</TermsText>
-                <TermsText href='https://withsempo.com/legal/platform-terms/'>Terms of Service</TermsText>
-              </TermsWrapper>
-          </WrapperDiv>
-      )
+    return (
+      <WrapperDiv>
+        <LoginModuleBox>
+          <div>
+            <SempoLogoSVG src="/static/media/sempo_logo_teal.png" />
+          </div>
+          <Switch>
+            <Route
+              path={this.props.match.url + "/forgot/"}
+              component={forgotPassword}
+            />
+            <Route
+              path={this.props.match.url + "/sign-up/"}
+              render={() => (
+                <Signup
+                  email={this.state.email}
+                  referralCode={this.state.referralCode}
+                />
+              )}
+            />
+            <Route component={LoginForm} />
+          </Switch>
+        </LoginModuleBox>
+        <DeploymentNameText>sempo | {deploymentName}</DeploymentNameText>
+        <TermsWrapper>
+          <TermsText href="https://withsempo.com/legal/privacy-policy/">
+            Privacy Policy
+          </TermsText>
+          <TermsText href="https://withsempo.com/legal/platform-terms/">
+            Terms of Service
+          </TermsText>
+        </TermsWrapper>
+      </WrapperDiv>
+    );
   }
-};
+}
 
-export default connect(mapStateToProps, mapDispatchToProps)(authPage);
-
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(authPage);
 
 const forgotPassword = () => (
   <div>
-    <div style={{position: 'relative'}}>
-      <RequestResetEmailForm/>
+    <div style={{ position: "relative" }}>
+      <RequestResetEmailForm />
     </div>
     <Footer>
-        <FooterText>
-          <FooterLink to="/login">Back to Login</FooterLink>
-        </FooterText>
+      <FooterText>
+        <FooterLink to="/login">Back to Login</FooterLink>
+      </FooterText>
     </Footer>
   </div>
-)
+);
 
-const Signup = ({email, referralCode}) => (
+const Signup = ({ email, referralCode }) => (
   <div>
-   <div className="form" style={{position: 'relative'}}>
-    <RegisterForm email={email} referralCode={referralCode}/>
-   </div>
+    <div className="form" style={{ position: "relative" }}>
+      <RegisterForm email={email} referralCode={referralCode} />
+    </div>
     <Footer>
       <FooterText>
         Already have a Sempo account?
@@ -116,7 +131,7 @@ const Signup = ({email, referralCode}) => (
       </FooterText>
     </Footer>
   </div>
-)
+);
 
 const TermsText = styled.a`
   margin: 10px;
@@ -166,13 +181,13 @@ export const FooterLink = styled(Link)`
   text-decoration: none;
   margin-left: 0.5em;
   &:hover {
-  text-decoration: underline;
+    text-decoration: underline;
   }
 `;
 
 const DeploymentNameText = styled.p`
   font-weight: 400;
-  color: #9E9E9E;
+  color: #9e9e9e;
   margin: 0;
 `;
 
@@ -182,7 +197,7 @@ const LoginModuleBox = styled.div`
   padding: 40px;
   margin: 1em 0;
   background-color: #fff;
-  box-shadow: 0px 2px 0px 0 rgba(51,51,79,.08);
+  box-shadow: 0px 2px 0px 0 rgba(51, 51, 79, 0.08);
   overflow: hidden;
   position: relative;
   @media (max-width: 480px) {

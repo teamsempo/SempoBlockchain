@@ -1,58 +1,62 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import styled from 'styled-components';
+import React from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
 
-import UploadButton from '../uploader/uploadButton.jsx'
-import UploadedTable from '../uploader/uploadedTable.jsx'
-import SideBar from '../navBar.jsx'
+import UploadButton from "../uploader/uploadButton.jsx";
+import UploadedTable from "../uploader/uploadedTable.jsx";
+import SideBar from "../navBar.jsx";
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
-    loggedIn: (state.login.token != null),
+    loggedIn: state.login.token != null,
     spreadsheetData: state.spreadsheetUpload.data
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-  };
+const mapDispatchToProps = dispatch => {
+  return {};
 };
 
-
-const uploadPage = ({loggedIn, spreadsheetData, location}) => {
-
-  const is_vendor = location.search.indexOf('type=vendor') !== -1;
-
+const uploadPage = ({ loggedIn, spreadsheetData, location }) => {
+  const is_vendor = location.search.indexOf("type=vendor") !== -1;
 
   if (spreadsheetData) {
-    var inner_div = <UploadedTable data = {spreadsheetData} is_vendor={is_vendor} />
+    var inner_div = (
+      <UploadedTable data={spreadsheetData} is_vendor={is_vendor} />
+    );
   } else {
-    inner_div = <PageWrapper><UploadButton uploadButtonText="Upload Spreadsheet" /></PageWrapper>
+    inner_div = (
+      <PageWrapper>
+        <UploadButton uploadButtonText="Upload Spreadsheet" />
+      </PageWrapper>
+    );
   }
 
   if (loggedIn) {
-      return (
-          <WrapperDiv>
-              <SideBar/>
+    return (
+      <WrapperDiv>
+        <SideBar />
 
-              <Break/>
+        <Break />
 
-              {inner_div}
-
-          </WrapperDiv>
-      );
+        {inner_div}
+      </WrapperDiv>
+    );
   } else {
-          return (
-              <WrapperDiv>
-                  <SideBar/>
+    return (
+      <WrapperDiv>
+        <SideBar />
 
-                  <div style={{margin: '1em'}}>Please log in</div>
-              </WrapperDiv>
-          );
-      }
+        <div style={{ margin: "1em" }}>Please log in</div>
+      </WrapperDiv>
+    );
+  }
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(uploadPage);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(uploadPage);
 
 const WrapperDiv = styled.div`
   //width: 100vw;
@@ -74,4 +78,3 @@ const PageWrapper = styled.div`
   justify-content: center;
   display: flex;
 `;
-

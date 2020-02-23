@@ -1,23 +1,22 @@
 /* global window,document */
-import React, {Component, lazy, Suspense} from 'react';
-import { connect } from 'react-redux';
+import React, { Component, lazy, Suspense } from "react";
+import { connect } from "react-redux";
 
-import MapGL from 'react-map-gl';
-import DeckGLOverlay from './deckglOverlay.jsx';
-
+import MapGL from "react-map-gl";
+import DeckGLOverlay from "./deckglOverlay.jsx";
 
 // Set your mapbox token here
-const MAPBOX_TOKEN = "pk.eyJ1Ijoic2VtcG9uaWNrIiwiYSI6ImNqZnJtNHkybzA0OWMyd25lczcyeXJwMTYifQ.0CJmw4sMU_VuX4wsPlb53Q"; // eslint-disable-line
+const MAPBOX_TOKEN =
+  "pk.eyJ1Ijoic2VtcG9uaWNrIiwiYSI6ImNqZnJtNHkybzA0OWMyd25lczcyeXJwMTYifQ.0CJmw4sMU_VuX4wsPlb53Q"; // eslint-disable-line
 
 // Source data CSV
 const DATA_URL =
-  'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv'; // eslint-disable-line
+  "https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv"; // eslint-disable-line
 
-
-
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
-    creditTransferLocationList: Object.keys(state.creditTransfers.byId).map(id => state.creditTransfers.byId[id])
+    creditTransferLocationList: Object.keys(state.creditTransfers.byId)
+      .map(id => state.creditTransfers.byId[id])
       // .filter(d => d.transfer_type === "PAYMENT")
       .filter(d => !isNaN(d.lng))
       .filter(d => !isNaN(d.lat))
@@ -39,7 +38,7 @@ class HeatMap extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener('resize', this._resize.bind(this));
+    window.addEventListener("resize", this._resize.bind(this));
     this._resize();
   }
 
@@ -52,7 +51,7 @@ class HeatMap extends Component {
 
   _onViewportChange(viewport) {
     this.setState({
-      viewport: {...this.state.viewport, ...viewport}
+      viewport: { ...this.state.viewport, ...viewport }
     });
   }
 
@@ -61,7 +60,7 @@ class HeatMap extends Component {
 
     var data = this.props.creditTransferLocationList;
 
-    data.push([0,0]);
+    data.push([0, 0]);
 
     return (
       <MapGL
@@ -76,4 +75,7 @@ class HeatMap extends Component {
   }
 }
 
-export default connect(mapStateToProps, null)(HeatMap);
+export default connect(
+  mapStateToProps,
+  null
+)(HeatMap);

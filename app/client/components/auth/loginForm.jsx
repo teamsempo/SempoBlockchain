@@ -1,25 +1,24 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import styled from 'styled-components';
-import {Link} from "react-router-dom";
+import React from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
+import { Link } from "react-router-dom";
 
-import AsyncButton from './../AsyncButton.jsx'
-import { loginRequest } from '../../reducers/auth/actions'
+import AsyncButton from "./../AsyncButton.jsx";
+import { loginRequest } from "../../reducers/auth/actions";
 
-import { Input, StyledButton, ErrorMessage } from './../styledElements'
-import { Footer, FooterLink, FooterText} from "../pages/authPage.jsx";
+import { Input, StyledButton, ErrorMessage } from "./../styledElements";
+import { Footer, FooterLink, FooterText } from "../pages/authPage.jsx";
 import TFAForm from "./TFAForm.jsx";
 
-
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     login_status: state.login
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    loginRequest: (payload) => dispatch(loginRequest(payload)),
+    loginRequest: payload => dispatch(loginRequest(payload))
   };
 };
 
@@ -27,8 +26,8 @@ export class LoginFormContainer extends React.Component {
   constructor() {
     super();
     this.state = {
-      username: '',
-      password: '',
+      username: "",
+      password: "",
       user_missing: false,
       password_missing: false,
       invalid_login: false
@@ -36,118 +35,129 @@ export class LoginFormContainer extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setState({invalid_login: (nextProps.login_status.error)})
-
+    this.setState({ invalid_login: nextProps.login_status.error });
   }
 
   attemptlogin() {
-    if (this.state.username == '') {
-      this.setState({user_missing: true});
-      return
+    if (this.state.username == "") {
+      this.setState({ user_missing: true });
+      return;
     }
-    if (this.state.password == '') {
-      this.setState({password_missing: true});
-      return
+    if (this.state.password == "") {
+      this.setState({ password_missing: true });
+      return;
     }
-    this.props.loginRequest({body:{username: this.state.username, password: this.state.password}})
+    this.props.loginRequest({
+      body: { username: this.state.username, password: this.state.password }
+    });
   }
 
   onUserFieldKeyPress(e) {
     var username = e.target.value;
-    this.setState({username: username, user_missing: false, invalid_login: false});
+    this.setState({
+      username: username,
+      user_missing: false,
+      invalid_login: false
+    });
     if (e.nativeEvent.keyCode != 13) return;
-    this.attemptlogin()
+    this.attemptlogin();
   }
 
   onPasswordFieldKeyPress(e) {
     var password = e.target.value;
-    this.setState({password: password, password_missing: false, invalid_login: false});
+    this.setState({
+      password: password,
+      password_missing: false,
+      invalid_login: false
+    });
     if (e.nativeEvent.keyCode != 13) return;
-    this.attemptlogin()
+    this.attemptlogin();
   }
 
-  onClick(){
-    this.attemptlogin()
+  onClick() {
+    this.attemptlogin();
   }
-
 
   render() {
-
-    if (this.props.login_status.tfaURL || this.props.login_status.tfaFailure ) {
+    if (this.props.login_status.tfaURL || this.props.login_status.tfaFailure) {
       return (
-        <div style={{margin: '1em'}}>
-          <div style={{textAlign: 'center'}}>
-          Two-Step Authentication Required
+        <div style={{ margin: "1em" }}>
+          <div style={{ textAlign: "center" }}>
+            Two-Step Authentication Required
           </div>
-          <TFAForm tfaURL={this.props.login_status.tfaURL}/>
+          <TFAForm tfaURL={this.props.login_status.tfaURL} />
         </div>
-      )
+      );
     }
     return (
       <LoginForm
-        onUserFieldKeyPress = {(e) => this.onUserFieldKeyPress(e)}
-        onPasswordFieldKeyPress = {(e) => this.onPasswordFieldKeyPress(e)}
-        onClick = {() => this.onClick()}
-        user_missing = {this.state.user_missing}
-        password_missing = {this.state.password_missing}
-        invalid_login = {this.state.invalid_login}
-        isLoggingIn = {this.props.login_status.isLoggingIn}
+        onUserFieldKeyPress={e => this.onUserFieldKeyPress(e)}
+        onPasswordFieldKeyPress={e => this.onPasswordFieldKeyPress(e)}
+        onClick={() => this.onClick()}
+        user_missing={this.state.user_missing}
+        password_missing={this.state.password_missing}
+        invalid_login={this.state.invalid_login}
+        isLoggingIn={this.props.login_status.isLoggingIn}
       />
     );
   }
 }
 
 const LoginForm = function(props) {
-
-
   if (props.user_missing) {
-    var error_message = 'Email Missing'
+    var error_message = "Email Missing";
   } else if (props.password_missing) {
-    error_message = 'Password Missing'
+    error_message = "Password Missing";
   } else if (props.invalid_login) {
-    error_message = props.invalid_login
+    error_message = props.invalid_login;
   } else {
-    error_message = ''
+    error_message = "";
   }
 
-  return(
+  return (
     <div>
+      <div style={{ display: "block", position: "relative" }}>
+        <ErrorMessage>{error_message}</ErrorMessage>
 
-      <div style={{display: 'block', position: 'relative'}}>
-
-        <ErrorMessage>
-          {error_message}
-        </ErrorMessage>
-
-        <Input type="email"
-               id="UserField"
-               onKeyUp={props.onUserFieldKeyPress}
-               placeholder="Email"
+        <Input
+          type="email"
+          id="UserField"
+          onKeyUp={props.onUserFieldKeyPress}
+          placeholder="Email"
         />
 
-        <Input type="password"
-               id="PasswordField"
-               onKeyUp={props.onPasswordFieldKeyPress}
-               placeholder="Password"
+        <Input
+          type="password"
+          id="PasswordField"
+          onKeyUp={props.onPasswordFieldKeyPress}
+          placeholder="Password"
         />
 
-        <ResetPasswordLink to="/login/forgot">Forgot Password</ResetPasswordLink>
-
+        <ResetPasswordLink to="/login/forgot">
+          Forgot Password
+        </ResetPasswordLink>
       </div>
 
-        <AsyncButton onClick={props.onClick} isLoading={props.isLoggingIn} buttonStyle={{width: 'calc(100% - 1em)', display: 'flex'}} buttonText="LOGIN"/>
+      <AsyncButton
+        onClick={props.onClick}
+        isLoading={props.isLoggingIn}
+        buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+        buttonText="LOGIN"
+      />
 
-        <Footer>
-          <FooterText>
-            Don’t have a Sempo account?
-            <FooterLink to="/login/sign-up">Sign Up</FooterLink>
-          </FooterText>
-        </Footer>
-
+      <Footer>
+        <FooterText>
+          Don’t have a Sempo account?
+          <FooterLink to="/login/sign-up">Sign Up</FooterLink>
+        </FooterText>
+      </Footer>
     </div>
   );
-
-};export default connect(mapStateToProps, mapDispatchToProps)(LoginFormContainer);
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(LoginFormContainer);
 
 const ResetPasswordLink = styled(Link)`
   cursor: pointer;
