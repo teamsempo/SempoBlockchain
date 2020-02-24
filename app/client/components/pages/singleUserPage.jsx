@@ -42,17 +42,6 @@ class SingleUserPage extends React.Component {
       }
   }
 
-  componentDidUpdate (prevProps) {
-    if (prevProps.location.key !== this.props.location.key) {
-        let pathname_array = location.pathname.split('/').slice(1);
-        let userId = parseInt(pathname_array[1]);
-
-        if (userId) {
-            this.props.loadUser(userId);
-        }
-    }
-}
-
   render() {
       let pathname_array = location.pathname.split('/').slice(1);
       let url_provided = pathname_array[1];
