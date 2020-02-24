@@ -6,7 +6,8 @@ from flask.views import MethodView
 import re
 import json
 from sqlalchemy.sql.expression import func
-from sqlalchemy import or_
+from sqlalchemy import or_, desc, asc
+from sqlalchemy.orm import aliased
 
 from server import db, bt
 from server.utils.auth import requires_auth
@@ -46,42 +47,48 @@ class SearchAPI(MethodView):
         # HANDLE PARAM : sorting_options
         # Valid params differ depending on sorting_options. See: sorting_options
         # Default: rank
-        shared_sorting_options = ['first_name', 'last_name', 'email', 'rank']
-        sorting_options = { 'transfer_accounts': [*shared_sorting_options,'balance', 'status', 'date_account_created'] ,
-                            'credit_transfers':[*shared_sorting_options, 'amount', 'transfer_type', 'approval', 'date_transaction_created'] }
-        sort_by = request.args.get('sort_by') or 'rank'
-        if sort_by not in sorting_options[search_type]:
+        # Build order by object
+        sort_types_to_database_types = {'first_name': 'first_name',
+                                        'last_name': 'first_name',
+                                        'email': 'first_name',
+                                        'date_account_created': 'created',
+                                        'rank': 'rank',
+                                        'balance': TransferAccount._balance_wei,
+                                        'status': TransferAccount.is_approved,
+                                        'amount': CreditTransfer.transfer_amount,
+                                        'transfer_type': CreditTransfer.transfer_type,
+                                        'approval': CreditTransfer.transfer_status,
+                                        'date_transaction_created': CreditTransfer.resolved_date
+                                        }
+
+        user_sorting_options = ['first_name', 'last_name', 'email', 'date_account_created']
+        sender_sorting_options = list(map(lambda s: 'sender_'+s, user_sorting_options)) # sender_first_name, sender_last_name, etc...
+        recipient_sorting_options = list(map(lambda s: 'recipient_'+s, user_sorting_options)) # recipient_first_name, recipient_last_name, etc...
+        sorting_options = { 'transfer_accounts': [*user_sorting_options, 'rank', 'balance', 'status'] ,
+                            'credit_transfers':[*sender_sorting_options, *recipient_sorting_options, 'rank', 'amount', 'transfer_type', 'approval', 'date_transaction_created'] }
+        sort_by_arg = request.args.get('sort_by') or 'rank'
+        if sort_by_arg not in sorting_options[search_type]:
             response_object = {
                 # Example output:
                 # "Invalid sort_by value 'pizza'. Please use one of the following: 'first_name', 'last_name', 'email', 'rank', 'balance', 'status', 'date_account_created'"
                 'message': 'Invalid sort_by value \'{}\'. Please use one of the following: {}'\
-                    .format(sort_by, ', '.join('\'{}\''.format(a) for a in sorting_options[search_type])),
+                    .format(sort_by_arg, ', '.join('\'{}\''.format(a) for a in sorting_options[search_type])),
             }
             return make_response(jsonify(response_object)), 400
+        sort_by = sort_types_to_database_types[sort_by_arg.replace('sender_', '').replace('recipient_', '')]
 
         # HANDLE PARAM : order
         # Valid orders types are: `ASC` and `DESC`
         # Default: DESC
-        order = request.args.get('order') or 'DESC'
-        if order not in ['ASC', 'DESC']:
+        order_arg = request.args.get('order') or 'DESC'
+        if order_arg not in ['ASC', 'DESC']:
             response_object = {
-                'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order),
+                'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order_arg),
             }
             return make_response(jsonify(response_object)), 400
-
-        # Build order by object
-        sort_types_to_database_types = {'first_name': 'a',
-                                        'last_name': 'a',
-                                        'email': 'a',
-                                        'rank': 'a',
-                                        'balance': 'a',
-                                        'status': 'a',
-                                        'date_account_created': 'a',
-                                        'amount': 'a',
-                                        'transfer_type': 'a',
-                                        'approval': 'a',
-                                        'date_transaction_created': ''
-                                        }
+        order = desc
+        if order_arg == 'ASC':
+            order = asc
 
         # Note: Using tsquery wildcards here. Good docs of them here:
         # https://www.postgresql.org/docs/current/datatype-textsearch.html#DATATYPE-TSQUERY
@@ -96,6 +103,13 @@ class SearchAPI(MethodView):
             if search_type == 'transfer_accounts':
                 final_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
                     .execution_options(show_all=True)
+                if sort_by_arg == 'rank':
+                    final_query = final_query.order_by(order(db.text('rank')))
+                elif sort_by_arg in user_sorting_options:
+                    final_query = final_query.order_by(order(user_search_result.c[sort_types_to_database_types[sort_by]]))
+                else:
+                    final_query = final_query.order_by(order(sort_by))
+
                 transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
                 result = transfer_accounts_schema.dump(transfer_accounts)
                 data = { 'transfer_accounts': result.data }
@@ -133,23 +147,43 @@ class SearchAPI(MethodView):
                 final_query = db.session.query(TransferAccount)\
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
                     .execution_options(show_all=True)\
-                    .order_by(db.text('rank DESC'))\
-                    .order_by(user_search_result.c['first_name'])\
                     .filter(user_search_result.c.rank > 0.0)\
                     .filter(TransferAccount.is_ghost != True)
+                if sort_by_arg == 'rank':
+                    final_query = final_query.order_by(order(db.text('rank')))
+                elif sort_by_arg in user_sorting_options:
+                    final_query = final_query.order_by(order(user_search_result.c[sort_types_to_database_types[sort_by]]))
+                else:
+                    final_query = final_query.order_by(order(sort_by))
+
                 transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
                 result = transfer_accounts_schema.dump(transfer_accounts)
                 data = { 'transfer_accounts': result.data }
             # CreditTransfer Search Logic
             else:
+                sender = aliased(user_search_result)
+                recipient = aliased(user_search_result)
                 final_query = db.session.query(CreditTransfer)\
-                    .join(user_search_result, 
-                        or_(user_search_result.c.default_transfer_account_id == CreditTransfer.recipient_transfer_account_id,\
-                        user_search_result.c.default_transfer_account_id == CreditTransfer.sender_transfer_account_id)
+                    .outerjoin(recipient, 
+                        recipient.c.default_transfer_account_id == CreditTransfer.recipient_transfer_account_id
+                    )\
+                    .outerjoin(sender, 
+                        sender.c.default_transfer_account_id == CreditTransfer.sender_transfer_account_id
                     )\
                     .execution_options(show_all=True)\
-                    .order_by(db.text('rank DESC'))\
-                    .filter(user_search_result.c.rank > 0.0)
+                    .filter(or_(recipient.c.rank > 0.0, sender.c.rank > 0.0))
+
+                if sort_by == 'rank':
+                    final_query = final_query.order_by(recipient.c.rank + sender.c.rank)
+                elif sort_by_arg in user_sorting_options:
+                    final_query = final_query.order_by(order(user_search_result.c[sort_types_to_database_types[sort_by]]))
+                elif sort_by_arg in sender_sorting_options:
+                    final_query = final_query.order_by(order(sender.c[sort_types_to_database_types[sort_by]]))
+                elif sort_by_arg in recipient_sorting_options:
+                    final_query = final_query.order_by(order(recipient.c[sort_types_to_database_types[sort_by]]))
+                else:
+                    final_query = final_query.order_by(order(sort_by))
+
                 credit_transfers, total_items, total_pages = paginate_query(final_query, CreditTransfer)
                 result = credit_transfers_schema.dump(credit_transfers)
                 data = { 'credit_transfers': result.data }
