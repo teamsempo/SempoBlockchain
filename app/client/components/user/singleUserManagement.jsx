@@ -14,6 +14,7 @@ import {editUser, resetPin} from '../../reducers/userReducer'
 import QrReadingModal from "../qrReadingModal.jsx";
 
 import {TransferAccountTypes} from "../transferAccount/types";
+import {GenderTypes} from "./types";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -134,6 +135,7 @@ class SingleUserManagement extends React.Component {
   render() {
     const { transferUsages } = this.props;
     let accountTypes = Object.keys(TransferAccountTypes);
+    let genderTypes = Object.keys(GenderTypes);
     let businessUsage;
     let blockchain_address = '';
     if (this.props.user.transfer_account) {
@@ -158,13 +160,25 @@ class SingleUserManagement extends React.Component {
       }
 
       custom_attribute_list = Object.keys(this.props.user.custom_attributes).map(key => {
-          if (!this.props.user.custom_attributes[key].uploaded_image_id) {
-            return (
-              <SubRow key={key}>
-                <InputLabel>{replaceUnderscores(key)}: </InputLabel>
-                <ManagerInput name={key} value={this.state[key] || ''} onChange={this.handleChange}/>
-              </SubRow>
-            )
+        let custom_attrs = this.props.user.custom_attributes;
+        if (key === 'gender') {
+          return (
+            <SubRow key={key}>
+              <InputLabel>{replaceUnderscores(key)}: </InputLabel>
+              <StyledSelect style={{fontWeight: '400', margin: '1em', lineHeight: '25px', height: '25px'}} name={key} value={this.state[key]} onChange={this.handleChange}>
+                {genderTypes.map((genderType, index) => {
+                  return <option key={index} name={key} value={genderType}>{genderType}</option>
+                })}
+              </StyledSelect>
+            </SubRow>
+          )
+        } else if (!custom_attrs[key].uploaded_image_id) {
+          return (
+            <SubRow key={key}>
+              <InputLabel>{replaceUnderscores(key)}: </InputLabel>
+              <ManagerInput name={key} value={this.state[key] || ''} onChange={this.handleChange}/>
+            </SubRow>
+          )
           }
         }
       );
