@@ -25,8 +25,8 @@ app/server/static/javascript/bundle.*
 
 #Config
 /config_files/*
-!/config_files/public/*
-!/config_files/blank_templates/*
+!/config_files/public
+!/config_files/blank_templates
 !/config_files/generate_dev_secrets.py
 
 # Misc
