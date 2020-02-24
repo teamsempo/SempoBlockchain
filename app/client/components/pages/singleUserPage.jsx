@@ -97,14 +97,3 @@ const WrapperDiv = styled.div`
   flex-direction: column;
   position: relative;
 `;
-
-const UploadButtonWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  margin: auto 1em;
-  @media (max-width: 767px) {
-  //overflow: hidden;
-  //text-overflow: ellipsis;
-  //box-shadow: 0px 2px 0px 0 rgba(51,51,79,.08);
-  }
-`;
