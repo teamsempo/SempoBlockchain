@@ -16,6 +16,7 @@ from server.schemas import transfer_accounts_schema, credit_transfers_schema
 from server.models.search import SearchView
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
+from server.models.user import User
 
 search_blueprint = Blueprint('search', __name__)
 
@@ -47,20 +48,33 @@ class SearchAPI(MethodView):
         # HANDLE PARAM : sorting_options
         # Valid params differ depending on sorting_options. See: sorting_options
         # Default: rank
+        
+        # Aliases used for joining the separate sender and recipient objects to transfers
+        sender = aliased(User)
+        recipient = aliased(User)
         # Build order by object
-        sort_types_to_database_types = {'first_name': 'first_name',
-                                        'last_name': 'first_name',
-                                        'email': 'first_name',
-                                        'date_account_created': 'created',
+        sort_types_to_database_types = {'first_name': User.first_name,
+                                        'last_name': User.last_name,
+                                        'email': User.email,
+                                        'date_account_created': User.created,
                                         'rank': 'rank',
                                         'balance': TransferAccount._balance_wei,
                                         'status': TransferAccount.is_approved,
                                         'amount': CreditTransfer.transfer_amount,
                                         'transfer_type': CreditTransfer.transfer_type,
                                         'approval': CreditTransfer.transfer_status,
-                                        'date_transaction_created': CreditTransfer.resolved_date
+                                        'date_transaction_created': CreditTransfer.resolved_date,
+                                        'sender_first_name': sender.first_name,
+                                        'sender_last_name': sender.last_name,
+                                        'sender_email': sender.email,
+                                        'sender_date_account_created': recipient.created,
+                                        'recipient_first_name': recipient.first_name,
+                                        'recipient_last_name': recipient.last_name,
+                                        'recipient_email': recipient.email,
+                                        'recipient_date_account_created': recipient.created
                                         }
 
+        # These lists are to validate the user input-- not using sort_types_to_database_types since credit_transfers and transfer_accounts have unique options 
         user_sorting_options = ['first_name', 'last_name', 'email', 'date_account_created']
         sender_sorting_options = list(map(lambda s: 'sender_'+s, user_sorting_options)) # sender_first_name, sender_last_name, etc...
         recipient_sorting_options = list(map(lambda s: 'recipient_'+s, user_sorting_options)) # recipient_first_name, recipient_last_name, etc...
@@ -75,7 +89,7 @@ class SearchAPI(MethodView):
                     .format(sort_by_arg, ', '.join('\'{}\''.format(a) for a in sorting_options[search_type])),
             }
             return make_response(jsonify(response_object)), 400
-        sort_by = sort_types_to_database_types[sort_by_arg.replace('sender_', '').replace('recipient_', '')]
+        sort_by = sort_types_to_database_types[sort_by_arg]
 
         # HANDLE PARAM : order
         # Valid orders types are: `ASC` and `DESC`
@@ -102,11 +116,11 @@ class SearchAPI(MethodView):
         if search_string == '':
             if search_type == 'transfer_accounts':
                 final_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
-                    .execution_options(show_all=True)
+                    .execution_options(show_all=True)\
+                    .join(User, User.default_transfer_account_id == TransferAccount.id)
                 if sort_by_arg == 'rank':
-                    final_query = final_query.order_by(order(db.text('rank')))
-                elif sort_by_arg in user_sorting_options:
-                    final_query = final_query.order_by(order(user_search_result.c[sort_types_to_database_types[sort_by]]))
+                    # There's no search rank when there's no query string, so do chrono instead
+                    final_query = final_query.order_by(order(User.created))                    
                 else:
                     final_query = final_query.order_by(order(sort_by))
 
@@ -115,7 +129,15 @@ class SearchAPI(MethodView):
                 data = { 'transfer_accounts': result.data }
             else:
                 final_query = CreditTransfer.query.filter()\
-                    .execution_options(show_all=True)
+                    .execution_options(show_all=True)\
+                    .outerjoin(sender, sender.default_transfer_account_id == CreditTransfer.sender_transfer_account_id)\
+                    .outerjoin(recipient, recipient.default_transfer_account_id == CreditTransfer.recipient_transfer_account_id)
+                if sort_by_arg == 'rank':
+                    # There's no search rank when there's no query string, so do chrono instead
+                    final_query = final_query.order_by(order(CreditTransfer.created))                    
+                else:
+                    final_query = final_query.order_by(order(sort_by))
+
                 credit_transfers, total_items, total_pages = paginate_query(final_query, CreditTransfer)
                 result = credit_transfers_schema.dump(credit_transfers)
                 data = { 'credit_transfers': result.data }
@@ -146,13 +168,12 @@ class SearchAPI(MethodView):
             # TransferAccount Search Logic
                 final_query = db.session.query(TransferAccount)\
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
+                    .join(User, user_search_result.c.default_transfer_account_id == User.default_transfer_account_id)\
                     .execution_options(show_all=True)\
                     .filter(user_search_result.c.rank > 0.0)\
                     .filter(TransferAccount.is_ghost != True)
                 if sort_by_arg == 'rank':
-                    final_query = final_query.order_by(order(db.text('rank')))
-                elif sort_by_arg in user_sorting_options:
-                    final_query = final_query.order_by(order(user_search_result.c[sort_types_to_database_types[sort_by]]))
+                    final_query = final_query.order_by(order(user_search_result.c.rank))
                 else:
                     final_query = final_query.order_by(order(sort_by))
 
@@ -161,26 +182,27 @@ class SearchAPI(MethodView):
                 data = { 'transfer_accounts': result.data }
             # CreditTransfer Search Logic
             else:
-                sender = aliased(user_search_result)
-                recipient = aliased(user_search_result)
+                sender_search_result = aliased(user_search_result)
+                recipient_search_result = aliased(user_search_result)
+                # Join the search results objects to sort by rank, as well as aliased user objects (sender/recipient) for other sorting options
                 final_query = db.session.query(CreditTransfer)\
-                    .outerjoin(recipient, 
-                        recipient.c.default_transfer_account_id == CreditTransfer.recipient_transfer_account_id
+                    .outerjoin(sender_search_result, 
+                        sender_search_result.c.default_transfer_account_id == CreditTransfer.sender_transfer_account_id
+                    )\
+                    .outerjoin(recipient_search_result, 
+                        recipient_search_result.c.default_transfer_account_id == CreditTransfer.recipient_transfer_account_id
                     )\
                     .outerjoin(sender, 
-                        sender.c.default_transfer_account_id == CreditTransfer.sender_transfer_account_id
+                        sender_search_result.c.default_transfer_account_id == sender.default_transfer_account_id
+                    )\
+                    .outerjoin(recipient, 
+                        recipient_search_result.c.default_transfer_account_id == recipient.default_transfer_account_id
                     )\
                     .execution_options(show_all=True)\
-                    .filter(or_(recipient.c.rank > 0.0, sender.c.rank > 0.0))
+                    .filter(or_(recipient_search_result.c.rank > 0.0, sender_search_result.c.rank > 0.0))
 
-                if sort_by == 'rank':
-                    final_query = final_query.order_by(recipient.c.rank + sender.c.rank)
-                elif sort_by_arg in user_sorting_options:
-                    final_query = final_query.order_by(order(user_search_result.c[sort_types_to_database_types[sort_by]]))
-                elif sort_by_arg in sender_sorting_options:
-                    final_query = final_query.order_by(order(sender.c[sort_types_to_database_types[sort_by]]))
-                elif sort_by_arg in recipient_sorting_options:
-                    final_query = final_query.order_by(order(recipient.c[sort_types_to_database_types[sort_by]]))
+                if sort_by_arg == 'rank':
+                    final_query = final_query.order_by(order(recipient_search_result.c.rank + sender_search_result.c.rank))
                 else:
                     final_query = final_query.order_by(order(sort_by))
 
