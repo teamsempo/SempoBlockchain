@@ -6,7 +6,8 @@ import SideBar from '../navBar.jsx'
 import {PageWrapper, ModuleBox, CenterLoadingSideBarActive} from '../styledElements.js'
 import LoadingSpinner from '../loadingSpinner.jsx'
 import {LightTheme} from '../theme.js'
-import SingleUserManagement from '../user/singleUserManagement.jsx';
+// import SingleUserManagement from '../user/singleUserManagement.jsx';
+import SingleUserManagement from '../user/SingleUserManagement.tsx';
 
 import { loadUser } from '../../reducers/userReducer'
 import { loadTransferUsages } from '../../reducers/transferUsage/actions'
@@ -26,12 +27,6 @@ const mapDispatchToProps = (dispatch) => {
 };
 
 class SingleUserPage extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-    };
-  }
-
   componentDidMount() {
       let pathname_array = location.pathname.split('/').slice(1);
       let userId = parseInt(pathname_array[1]);

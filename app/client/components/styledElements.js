@@ -181,6 +181,16 @@ export const Row = styled.div`
   }
 `;
 
+export const SubRow = styled.div`
+  display: flex;
+  align-items: center;
+  width: 33%;
+  @media (max-width: 767px) {
+  width: 100%;
+  justify-content: space-between;
+  }
+`;
+
 export const InputObject = styled.label`
   display:block;
   padding: 1em;
@@ -233,4 +243,13 @@ export const FooterBar = styled.div`
     display: flex;
     border-top: solid 1px rgba(0,0,0,0.05);
     padding: 1em;
+`;
+
+export const ButtonWrapper = styled.div`
+  margin: auto 1em;
+  @media (max-width: 767px) {
+  margin: auto 1em;
+  display: flex;
+  flex-direction: column;
+  }
 `;
