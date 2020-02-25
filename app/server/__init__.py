@@ -85,7 +85,7 @@ def register_extensions(app):
         # This is required to validate a signature on webhooks
         # This MUST go before Sentry integration as sentry triggers form parsing
         if not config.IS_TEST and (
-                request.path.startswith('/api/slack/') or request.path.startswith('/api/poli_payments_webhook/')):
+                request.path.startswith('/api/v1/slack/') or request.path.startswith('/api/v1/poli_payments_webhook/')):
             if request.content_length > 1024 * 1024:  # 1mb
                 # Payload too large
                 return make_response(jsonify({'message': 'Payload too large'})), 413
