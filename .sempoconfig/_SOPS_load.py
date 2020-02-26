@@ -33,7 +33,7 @@ if i == 'y':
         if filename != 'meta.ini':
             print('---Found file: {}---'.format(filename))
 
-            out_path = '../config_files/{}'.format(filename)
+            out_path = '../config_files/secret/{}'.format(filename)
             meta_path = './meta.ini'
 
             new_hash = shahash(out_path)
