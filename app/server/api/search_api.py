@@ -116,7 +116,6 @@ class SearchAPI(MethodView):
         if search_string == '':
             if search_type == 'transfer_accounts':
                 final_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
-                    .execution_options(show_all=True)\
                     .join(User, User.default_transfer_account_id == TransferAccount.id)
                 if sort_by_arg == 'rank':
                     # There's no search rank when there's no query string, so do chrono instead
@@ -129,7 +128,6 @@ class SearchAPI(MethodView):
                 data = { 'transfer_accounts': result.data }
             else:
                 final_query = CreditTransfer.query.filter()\
-                    .execution_options(show_all=True)\
                     .outerjoin(sender, sender.default_transfer_account_id == CreditTransfer.sender_transfer_account_id)\
                     .outerjoin(recipient, recipient.default_transfer_account_id == CreditTransfer.recipient_transfer_account_id)
                 if sort_by_arg == 'rank':
