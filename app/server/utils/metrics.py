@@ -19,10 +19,6 @@ from sqlalchemy.sql import func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import case, or_
 import sqlalchemy
-
-
-
-import pandas as pd
 import datetime, json
 
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
