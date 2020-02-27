@@ -23,8 +23,8 @@ def index():
 
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
-@index_view.route('/<accounts>')
-def accounts(accounts):
+@index_view.route('/accounts')
+def accounts():
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/accounts/<account_id>')
@@ -47,9 +47,6 @@ def upload():
 # def upload(account_type):
 #     return render_template('index.html')
 
-@index_view.route('/vendors')
-def vendor():
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/deprecatedVendor')
 def deprecatedVendor():
