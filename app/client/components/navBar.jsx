@@ -284,6 +284,7 @@ const StandardNavBarHeaderText = styled.p`
   text-decoration: none;
   text-overflow: ellipsis;
   overflow: auto;
+  overflow-x: hidden;
 `;
 
 const BoldedNavBarHeaderText = styled(StandardNavBarHeaderText)`

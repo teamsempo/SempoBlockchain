@@ -77,20 +77,11 @@ class DashboardPage extends React.Component {
   }
 
   buildFilterForAPI() {
-    if (location.pathname.includes('vendors')) {
-        var query = {account_type: 'vendor'};
-
-    } else if (location.pathname.includes(window.BENEFICIARY_TERM_PLURAL.toLowerCase())) {
-        query = {account_type: 'beneficiary'};
-
-    } else {
-        query = {};
-    }
+    let query = {};
 
     if (this.props.transferAccounts.loadStatus.lastQueried) {
       query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
     }
-
 
     const path = null;
     this.props.loadTransferAccountList(query, path);

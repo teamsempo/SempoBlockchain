@@ -104,9 +104,9 @@ class CreditTransferAPI(MethodView):
             else:
                 transfer_stats = None
 
-            if g.user.roles:
+            if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump(transfers).data
-            elif g.user.has_admin_role:
+            elif AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'view'):
                 transfer_list = view_credit_transfers_schema.dump(transfers).data
 
             response_object = {

@@ -29,8 +29,7 @@ class BeneficiaryLiveFeed extends React.Component {
     }
 
     render() {
-        let users = this.props.users;
-        let creditTransferList = this.props.creditTransferList;
+      const { users, transferAccounts, creditTransfers, creditTransferList } = this.props;
         let beneficiaryTerm = window.BENEFICIARY_TERM;
         
         if (Object.keys(creditTransferList).length == 0) {
@@ -44,12 +43,17 @@ class BeneficiaryLiveFeed extends React.Component {
                     <ModuleHeader>{beneficiaryTerm} LIVE FEED</ModuleHeader>
                     <LiveFeed>
                         {creditTransferList.sort((a, b) => (b.id - a.id)).map((transfer) => {
+                          let recipient_transfer_account = transferAccounts.byId[transfer.recipient_transfer_account_id];
+                          let recipient_blockchain_address = recipient_transfer_account && recipient_transfer_account.blockchain_address;
+                          let sender_transfer_account = transferAccounts.byId[transfer.sender_transfer_account_id];
+                          let sender_blockchain_address = sender_transfer_account && sender_transfer_account.blockchain_address;
+
+
                             if (transfer.recipient_user !== null && typeof(transfer.recipient_user) !== "undefined") {
                               var recipient_user = users.byId[transfer.recipient_user];
                               var recipient_user_name = recipient_user.first_name + ' ' + recipient_user.last_name
-                            } else if (transfer.recipient_blockchain_address !== null) {
-                              recipient_user_name = 'Address '
-                                // + transfer.recipient_blockchain_address.slice(0,8) + '...';
+                            } else if (recipient_blockchain_address !== null) {
+                              recipient_user_name = 'Address '+ recipient_blockchain_address.slice(0,8) + '...';
                             } else {
                                 recipient_user_name = null;
                             }
@@ -57,9 +61,8 @@ class BeneficiaryLiveFeed extends React.Component {
                             if (transfer.sender_user !== null && typeof(transfer.sender_user) !== "undefined") {
                                 var sender_user = users.byId[transfer.sender_user];
                                 var sender_user_name = sender_user.first_name + ' ' + sender_user.last_name
-                            } else if (transfer.sender_blockchain_address !== null) {
-                              sender_user_name = 'Address '
-                                // + transfer.sender_blockchain_address.slice(0,8) + '...';
+                            } else if (sender_blockchain_address !== null) {
+                              sender_user_name = 'Address ' + sender_blockchain_address.slice(0,8) + '...';
                             } else {
                                 sender_user_name = null
                             }
@@ -71,14 +74,14 @@ class BeneficiaryLiveFeed extends React.Component {
                             let showExchange = false;
 
                             const transferAccountId = transfer.sender_transfer_account_id;
-                            currency = transfer.token && transfer.token.symbol
+                            currency = transfer.token && transfer.token.symbol;
                             const transferFromMoney = formatMoney(transfer.transfer_amount / 100, undefined, undefined, undefined, currency);
 
                             if (transfer.from_exchange_to_transfer_id !== null && typeof(transfer.from_exchange_to_transfer_id) !== "undefined") {
-                              exchangeToTransfer = this.props.creditTransfers.byId[transfer.from_exchange_to_transfer_id];
+                              exchangeToTransfer = creditTransfers.byId[transfer.from_exchange_to_transfer_id];
                               const transferAccountId = exchangeToTransfer.sender_transfer_account_id;
                               if (transferAccountId) {
-                                const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+                                const transferAccount = transferAccounts.byId[transferAccountId];
                                 recipientCurrency = transferAccount && transferAccount.token && transferAccount.token.symbol;
                               }
                               transferToMoney = formatMoney(exchangeToTransfer.transfer_amount / 100, undefined, undefined, undefined, recipientCurrency);
