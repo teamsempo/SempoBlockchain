@@ -18,8 +18,8 @@ jobs:
           name: Decrypt SOPS Secrets
           command: |
             mkdir config_files/secret
-            ./sops --decrypt .sempoconfig/common_config.ini > ./config_files/secret/common_config.ini
-            ./sops --decrypt .sempoconfig/docker_test_config.ini > ./config_files/secret/docker_test_config.ini
+            ./sops --decrypt .sempoconfig/common_secrets.ini > ./config_files/secret/common_secrets.ini
+            ./sops --decrypt .sempoconfig/docker_test_secrets.ini > ./config_files/secret/docker_test_secrets.ini
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
