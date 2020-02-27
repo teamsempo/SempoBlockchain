@@ -244,6 +244,8 @@ class EditUserForm extends React.Component<InjectedFormProps<ICreateUserUpdate, 
               </Row>
               <Row>
                 <SubRow>
+                  {/*
+                    // @ts-ignore */}
                   <GetVerified userId={selectedUser.id}/>
                 </SubRow>
               </Row>
