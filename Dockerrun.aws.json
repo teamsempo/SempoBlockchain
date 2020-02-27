@@ -7,8 +7,7 @@
       "essential": true,
       "memoryReservation": 256,
       "cpu": 1,
-      "links": [
-        ],
+      "links": ["pgbouncer:pgbouncer"],
       "environment": [
         {
           "name": "CONTAINER_TYPE",
@@ -23,6 +22,21 @@
           "value": 0
         }
       ]
+    },
+    {
+      "name": "pgbouncer",
+      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:pgbouncer",
+      "essential": true,
+      "memory": 32,
+      "cpu": 1,
+      "environment": [],
+      "portMappings": [
+        {
+          "hostPort": 6543,
+          "containerPort": 6543
+        }
+      ],
+      "links": []
     },
     {
       "name": "proxy",
@@ -46,8 +60,7 @@
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": false,
       "memory": 256,
-      "links": [
-      ],
+      "links": ["pgbouncer:pgbouncer"],
       "mountPoints": [],
       "environment": [
         {
@@ -68,9 +81,8 @@
       "name": "high_pri_eth_worker",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": true,
-      "memory": 256,
-      "links": [
-      ],
+      "memory": 128,
+      "links": ["pgbouncer:pgbouncer"],
       "mountPoints": [],
       "environment": [
         {
@@ -91,9 +103,8 @@
       "name": "low_pri_eth_worker",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
       "essential": true,
-      "memory": 256,
-      "links": [
-      ],
+      "memory": 128,
+      "links": ["pgbouncer:pgbouncer"],
       "mountPoints": [],
       "environment": [
         {
@@ -115,8 +126,7 @@
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:worker",
       "essential": false,
       "memory": 128,
-      "links": [
-      ],
+      "links": ["pgbouncer:pgbouncer"],
       "mountPoints": [],
       "environment": [
         {

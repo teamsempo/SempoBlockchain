@@ -14,6 +14,7 @@ cd ../
 docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$GIT_HASH
 docker build -t proxy ./proxy
 docker build -t eth_worker . -f ./eth_worker/Dockerfile
+docker build -t pgbouncer . -f ./pgbouncer/Dockerfile
 
 eval $(aws ecr get-login --no-include-email --region ap-southeast-2 --profile ECS);
 
@@ -22,6 +23,9 @@ docker push $REPOSITORY_URI:server
 
 docker tag proxy:latest $REPOSITORY_URI:proxy
 docker push $REPOSITORY_URI:proxy
+
+docker tag pgbouncer:latest $REPOSITORY_URI:pgbouncer
+docker push $REPOSITORY_URI:pgbouncer
 
 docker tag eth_worker:latest $REPOSITORY_URI:eth_worker
 docker push $REPOSITORY_URI:eth_worker

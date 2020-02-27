@@ -97,6 +97,7 @@ if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
                                                                                             DEPLOYMENT_NAME.lower()))
 
 
+BOUNCER_ENABLED = specific_parser['APP'].getboolean('BOUNCER_ENABLED', False)
 IS_TEST = specific_parser['APP'].getboolean('IS_TEST', False)
 IS_PRODUCTION = specific_parser['APP'].getboolean('IS_PRODUCTION')
 if IS_PRODUCTION is None:
@@ -151,11 +152,15 @@ DATABASE_USER = os.environ.get("DATABASE_USER") or specific_parser['DATABASE'].g
 DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD") or specific_parser['DATABASE']['password']
 
 DATABASE_HOST = specific_parser['DATABASE']['host']
+DATABASE_PORT = specific_parser['DATABASE'].get('port') or common_parser['DATABASE']['port']
+if BOUNCER_ENABLED:
+    DATABASE_HOST = specific_parser['BOUNCER']['host']
+    DATABASE_PORT = specific_parser['BOUNCER'].get('port') or common_parser['BOUNCER']['port']
+
 
 DATABASE_NAME = specific_parser['DATABASE'].get('database') \
                 or common_parser['DATABASE']['database']
 
-DATABASE_PORT = specific_parser['DATABASE'].get('port') or common_parser['DATABASE']['port']
 
 ETH_DATABASE_NAME = specific_parser['DATABASE'].get('eth_database') \
                     or common_parser['DATABASE']['eth_database']

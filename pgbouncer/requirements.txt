@@ -1,0 +1,3 @@
+boto3==1.7.33
+eth_utils
+web3==5.0.2

@@ -223,6 +223,8 @@ workflows:
               only:
                 - master
                 - auto_topup
-                - priority-queue
+                - locking_strat
+                - pg_testing
           requires:
-            - test
+            - build
+

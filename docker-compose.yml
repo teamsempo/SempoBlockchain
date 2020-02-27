@@ -10,9 +10,10 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
-    - postgres
-    - eth_worker
-
+      - postgres
+      - eth_worker
+      - pgbouncer
+   
   eth_worker:
     build:
       context: app/server
@@ -45,6 +46,13 @@ services:
     - ganache
     - eth_postgres
 
+  pgbouncer:
+    build: pgbouncer
+    ports:
+      - "6543:6543"  
+      - "5000:5000"  
+    depends_on:
+      - app
 
   proxy:
     build: proxy
