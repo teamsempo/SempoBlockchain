@@ -71,7 +71,7 @@ class AnalyticsChart extends React.Component {
   }
 
   render() {
-    if (Object.keys(this.props.creditTransferStats).length == 0) {
+    if (Object.keys(this.props.creditTransferStats).length <= 0) {
       return <p>No Transfer Data</p>;
     } else {
       let transaction_dates = this.props.creditTransferStats.daily_transaction_volume.map(
