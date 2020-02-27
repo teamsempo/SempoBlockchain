@@ -1,46 +1,45 @@
 import React from "react";
-import { connect } from 'react-redux';
-import { ModuleBox, Input} from "./styledElements";
+import { connect } from "react-redux";
+import { ModuleBox, Input } from "./styledElements";
 import styled from "styled-components";
 import matchSorter from "match-sorter";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 
-import {loadFilters, createFilter} from "../reducers/filterReducer";
+import { loadFilters, createFilter } from "../reducers/filterReducer";
 import LoadingSpinner from "./loadingSpinner.jsx";
-import {USER_FILTER_TYPE} from '../constants';
+import { USER_FILTER_TYPE } from "../constants";
 
-import Filter from './filter';
+import Filter from "./filter";
 
 const propTypes = {
   withSearch: PropTypes.bool,
   toggleTitle: PropTypes.string
-}
+};
 
 const defaultProps = {
   withSearch: true,
   toggleTitle: "Filters"
-}
+};
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     filters: state.filters,
     creditTransferFilters: state.creditTransferFilters.creditTransferFilterState
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
     loadFilters: () => dispatch(loadFilters()),
-    createFilter: (body) => dispatch(createFilter({body}))
+    createFilter: body => dispatch(createFilter({ body }))
   };
 };
 
 class SearchBoxWithFilter extends React.Component {
-  constructor()
-  {
+  constructor() {
     super();
     this.state = {
-      phrase: '',
+      phrase: "",
       filters: [],
       possibleFilters: null,
       filterActive: false,
@@ -52,13 +51,13 @@ class SearchBoxWithFilter extends React.Component {
 
   componentDidMount() {
     let custom_attribute_dict = this.getPossibleFilters();
-    this.setState({ possibleFilters: custom_attribute_dict })
+    this.setState({ possibleFilters: custom_attribute_dict });
   }
 
   componentDidUpdate(newProps) {
     if (this.props.item_list !== newProps.item_list) {
       let custom_attribute_dict = this.getPossibleFilters();
-      this.setState({ possibleFilters: custom_attribute_dict })
+      this.setState({ possibleFilters: custom_attribute_dict });
     }
   }
 
@@ -66,22 +65,25 @@ class SearchBoxWithFilter extends React.Component {
     this.props.createFilter({
       filter_name: this.state.filterName,
       filter_attributes: this.state.filters
-    })
-  }
+    });
+  };
 
   loadFilters = () => {
     if (!this.state.loadFiltersDropdown) {
       // load filters hasn't been clicked
-      this.props.loadFilters()
+      this.props.loadFilters();
     }
     // toggle dropdown
-    this.setState({loadFiltersDropdown: !this.state.loadFiltersDropdown});
-  }
+    this.setState({ loadFiltersDropdown: !this.state.loadFiltersDropdown });
+  };
 
-  loadSavedFilter = (filterId) => {
+  loadSavedFilter = filterId => {
     const savedFilter = this.props.filters.byId[filterId];
-    this.setState({filters: savedFilter.filter, filterName: savedFilter.name});
-  }
+    this.setState({
+      filters: savedFilter.filter,
+      filterName: savedFilter.name
+    });
+  };
 
   getPossibleFilters = () => {
     var attribute_dict = {};
@@ -89,19 +91,20 @@ class SearchBoxWithFilter extends React.Component {
 
     const proccess_attribute = (name, value) => {
       if (value !== undefined && value !== null) {
-        
         if (attribute_dict[name] === undefined) {
           // This means that the attribute name has not been seen at all, which means we can just create array
           attribute_dict[name] = {
             values: [value],
-            type: typeof(value) == 'number' ? USER_FILTER_TYPE.INT_RANGE : USER_FILTER_TYPE.DISCRETE
-          }
-          
+            type:
+              typeof value == "number"
+                ? USER_FILTER_TYPE.INT_RANGE
+                : USER_FILTER_TYPE.DISCRETE
+          };
         } else {
           // Attribute name has been seen, check if attribute VALUE has been seen
           if (attribute_dict[name].values.indexOf(value) === -1) {
             //hasn't been seen, so add
-            attribute_dict[name].values.push(value)
+            attribute_dict[name].values.push(value);
           }
         }
       }
@@ -111,46 +114,50 @@ class SearchBoxWithFilter extends React.Component {
       // get attributes names and possible values
       item_list
         .filter(item => item.custom_attributes !== undefined)
-        .map(item => Object.keys(item.custom_attributes).map(attribute_name => {
-          let attribute_value = item.custom_attributes[attribute_name];
-          proccess_attribute(attribute_name, attribute_value)
-        }));
+        .map(item =>
+          Object.keys(item.custom_attributes).map(attribute_name => {
+            let attribute_value = item.custom_attributes[attribute_name];
+            proccess_attribute(attribute_name, attribute_value);
+          })
+        );
 
       item_list.map(item => {
-        Object.keys(this.props.filterKeys).map( key => {
+        Object.keys(this.props.filterKeys).map(key => {
           let attribute_value = item[key];
           if (this.props.filterKeys[key] !== null) {
-            proccess_attribute(key, this.props.filterKeys[key](attribute_value))
+            proccess_attribute(
+              key,
+              this.props.filterKeys[key](attribute_value)
+            );
           } else {
-            proccess_attribute(key, attribute_value)
+            proccess_attribute(key, attribute_value);
           }
-        })
-      })
+        });
+      });
     }
-    return attribute_dict
-  }
+    return attribute_dict;
+  };
 
-  onFiltersChanged = (filters) => {
+  onFiltersChanged = filters => {
     this.setState({
       filters
-    })
-  }
+    });
+  };
 
-  handleChange = (evt) => {
+  handleChange = evt => {
     this.setState({ [evt.target.name]: evt.target.value });
-  }
+  };
 
   toggleFilter = () => {
-    this.setState({filterActive: !this.state.filterActive})
-  }
+    this.setState({ filterActive: !this.state.filterActive });
+  };
 
   saveFilterDropdown = () => {
-    this.setState({saveFilterDropdown: !this.state.saveFilterDropdown})
-  }
+    this.setState({ saveFilterDropdown: !this.state.saveFilterDropdown });
+  };
 
   applyFilter = (item_list, filter) => {
     return item_list.reduce((filtered, item) => {
-
       let added = false;
 
       const add_account = () => {
@@ -158,19 +165,22 @@ class SearchBoxWithFilter extends React.Component {
         added = true;
       };
 
-      const test_conditions = (filter,value) => {
-        if (filter.type === USER_FILTER_TYPE.DISCRETE || filter.type === USER_FILTER_TYPE.BOOLEAN_MAPPING) {
-          if (filter.allowedValues.includes((value || '').toString())) {
+      const test_conditions = (filter, value) => {
+        if (
+          filter.type === USER_FILTER_TYPE.DISCRETE ||
+          filter.type === USER_FILTER_TYPE.BOOLEAN_MAPPING
+        ) {
+          if (filter.allowedValues.includes((value || "").toString())) {
             // attribute value is in allowed value, add account to filtered
-            add_account()
+            add_account();
           }
-        } else if (filter.type === '<') {
+        } else if (filter.type === "<") {
           if (value < filter.threshold) {
-            add_account()
+            add_account();
           }
-        } else if (filter.type === '>') {
+        } else if (filter.type === ">") {
           if (value > filter.threshold) {
-            add_account()
+            add_account();
           }
         }
       };
@@ -182,136 +192,256 @@ class SearchBoxWithFilter extends React.Component {
           // attribute name matches key name, apply filter test
           var attribute_value = item[attribute_name];
           if (this.props.filterKeys[key] !== null) {
-            attribute_value = this.props.filterKeys[key](attribute_value)
+            attribute_value = this.props.filterKeys[key](attribute_value);
           }
 
-          test_conditions(filter, attribute_value)
+          test_conditions(filter, attribute_value);
         }
-
       });
 
       if (added === false && item.custom_attributes !== undefined) {
         //Filtering Custom Attributes
         Object.keys(item.custom_attributes).map(attribute_name => {
           if (attribute_name === filter.keyName) {
-           let attribute_value = item.custom_attributes[attribute_name];
-           test_conditions(filter, attribute_value)
+            let attribute_value = item.custom_attributes[attribute_name];
+            test_conditions(filter, attribute_value);
           }
-        })
+        });
       }
 
       return filtered;
     }, []);
-  }
+  };
 
   render() {
-    const {
-      phrase, filters, filterActive, saveFilterDropdown
-    } = this.state;
+    const { phrase, filters, filterActive, saveFilterDropdown } = this.state;
 
     var item_list = this.props.item_list;
 
     // Phrase Search
-    if (phrase !== '') {
-      item_list = matchSorter(item_list, this.state.phrase, {keys: this.props.searchKeys});
+    if (phrase !== "") {
+      item_list = matchSorter(item_list, this.state.phrase, {
+        keys: this.props.searchKeys
+      });
     }
 
     if (filters.length > 0 && item_list.length > 0) {
       this.state.filters.map(filter => {
-        item_list = this.applyFilter(item_list, filter)
+        item_list = this.applyFilter(item_list, filter);
       });
     }
 
     if (this.props.filters.loadStatus.isRequesting) {
-      var filterList =
-        <div style={{padding: '1em'}}>
-          <LoadingSpinner/>
+      var filterList = (
+        <div style={{ padding: "1em" }}>
+          <LoadingSpinner />
         </div>
+      );
     } else if (this.props.filters.loadStatus.success) {
-      let filterListKeys = Object.keys(this.props.filters.byId).filter(id => typeof(this.props.filters.byId[id]) !== "undefined").map(id => this.props.filters.byId[id]);
-      filterList = filterListKeys.map((filter, index) => {return (<CheckboxLabel name={filter.id} key={index} onClick={() => this.loadSavedFilter(filter.id)}>{filter.name}</CheckboxLabel>)});
+      let filterListKeys = Object.keys(this.props.filters.byId)
+        .filter(id => typeof this.props.filters.byId[id] !== "undefined")
+        .map(id => this.props.filters.byId[id]);
+      filterList = filterListKeys.map((filter, index) => {
+        return (
+          <CheckboxLabel
+            name={filter.id}
+            key={index}
+            onClick={() => this.loadSavedFilter(filter.id)}
+          >
+            {filter.name}
+          </CheckboxLabel>
+        );
+      });
     } else {
-      filterList = null
+      filterList = null;
     }
 
     if (filterActive && filters.length !== 0) {
-      var savedFilters =
-        <div style={{margin: '0 1em', position: 'relative'}}>
-          <ModuleBox style={{margin: 0, padding: 0, fontSize: '0.8em', width: 'fit-content'}} onClick={this.saveFilterDropdown}>
-            <SavedFilterButton>{saveFilterDropdown ? null : <SVG style={{padding: '0 5px 0 0'}} src="/static/media/save.svg"/>}{saveFilterDropdown ? 'Cancel' : 'Save Filter'}</SavedFilterButton>
+      var savedFilters = (
+        <div style={{ margin: "0 1em", position: "relative" }}>
+          <ModuleBox
+            style={{
+              margin: 0,
+              padding: 0,
+              fontSize: "0.8em",
+              width: "fit-content"
+            }}
+            onClick={this.saveFilterDropdown}
+          >
+            <SavedFilterButton>
+              {saveFilterDropdown ? null : (
+                <SVG
+                  style={{ padding: "0 5px 0 0" }}
+                  src="/static/media/save.svg"
+                />
+              )}
+              {saveFilterDropdown ? "Cancel" : "Save Filter"}
+            </SavedFilterButton>
           </ModuleBox>
-          <SavedFilters style={{display: (this.state.saveFilterDropdown ? 'block' : 'none')}}>
-            <ThresholdInput name="filterName" value={this.state.filterName} placeholder='Filter name...' onChange={this.handleChange}/>
-            <FilterText onClick={this.saveFilter} style={{padding: '0 0 5px 10px'}}>Save Filter</FilterText>
+          <SavedFilters
+            style={{
+              display: this.state.saveFilterDropdown ? "block" : "none"
+            }}
+          >
+            <ThresholdInput
+              name="filterName"
+              value={this.state.filterName}
+              placeholder="Filter name..."
+              onChange={this.handleChange}
+            />
+            <FilterText
+              onClick={this.saveFilter}
+              style={{ padding: "0 0 5px 10px" }}
+            >
+              Save Filter
+            </FilterText>
           </SavedFilters>
         </div>
+      );
     } else if (filterActive) {
-      savedFilters =
-        <div style={{margin: '0 1em', display: 'flex', position: 'relative'}}>
-          <ModuleBox style={{margin: 0, padding: 0, fontSize: '0.8em'}} onClick={this.loadFilters}>
+      savedFilters = (
+        <div style={{ margin: "0 1em", display: "flex", position: "relative" }}>
+          <ModuleBox
+            style={{ margin: 0, padding: 0, fontSize: "0.8em" }}
+            onClick={this.loadFilters}
+          >
             <SavedFilterButton>
-              <SVG style={{padding: '0 5px 0 0'}} src="/static/media/save.svg"/>
+              <SVG
+                style={{ padding: "0 5px 0 0" }}
+                src="/static/media/save.svg"
+              />
               View Saved Filters
             </SavedFilterButton>
           </ModuleBox>
-          <SavedFilters style={{display: (this.state.loadFiltersDropdown ? 'block' : 'none')}}>
+          <SavedFilters
+            style={{
+              display: this.state.loadFiltersDropdown ? "block" : "none"
+            }}
+          >
             {filterList}
           </SavedFilters>
           <CloseWrapper
-			  onClick={() => this.setState({loadFiltersDropdown: !this.state.loadFiltersDropdown})}
-			  style={{display: (this.state.loadFiltersDropdown ? '' : 'none')}}/>
+            onClick={() =>
+              this.setState({
+                loadFiltersDropdown: !this.state.loadFiltersDropdown
+              })
+            }
+            style={{ display: this.state.loadFiltersDropdown ? "" : "none" }}
+          />
         </div>
+      );
     }
 
-    
-
-    return(
+    return (
       <div>
-        {this.props.withSearch ?
-            <ModuleBox>
-              <SearchWrapper>
-                <svg style={{ width: 18, height: 18, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10 }}
-                      height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'>
-                  <path d='M12.6 11.2c.037.028.073.059.107.093l3 3a1 1 0 1 1-1.414 1.414l-3-3a1.009 1.009 0 0 1-.093-.107 7 7 0 1 1 1.4-1.4zM7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10z' fillRule='evenodd' fill='#6a7680' />
+        {this.props.withSearch ? (
+          <ModuleBox>
+            <SearchWrapper>
+              <svg
+                style={{
+                  width: 18,
+                  height: 18,
+                  paddingTop: 10,
+                  paddingRight: 10,
+                  paddingBottom: 10,
+                  paddingLeft: 10
+                }}
+                height="16"
+                viewBox="0 0 16 16"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12.6 11.2c.037.028.073.059.107.093l3 3a1 1 0 1 1-1.414 1.414l-3-3a1.009 1.009 0 0 1-.093-.107 7 7 0 1 1 1.4-1.4zM7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10z"
+                  fillRule="evenodd"
+                  fill="#6a7680"
+                />
+              </svg>
+              <SearchInput
+                name="phrase"
+                value={phrase}
+                placeholder="Search..."
+                onChange={this.handleChange}
+              />
+
+              <FilterWrapper onClick={this.toggleFilter}>
+                <FilterText>
+                  {filterActive ? "Cancel" : this.props.toggleTitle}
+                </FilterText>
+                <svg
+                  style={{
+                    width: 12,
+                    height: 12,
+                    padding: "0 10px",
+                    transform: filterActive ? "rotate(45deg)" : null,
+                    transition: "all .15s ease"
+                  }}
+                  height="16"
+                  viewBox="0 0 16 16"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z"
+                    fillRule="evenodd"
+                    fill="#6a7680"
+                  />
                 </svg>
-                <SearchInput name="phrase" value={phrase} placeholder="Search..." onChange={this.handleChange} />
-    
-                <FilterWrapper onClick={this.toggleFilter}>
-                  <FilterText>{filterActive ? 'Cancel' : this.props.toggleTitle}</FilterText>
-                  <svg style={{ width: 12, height: 12, padding: '0 10px', transform: filterActive ? 'rotate(45deg)' : null, transition: 'all .15s ease' }} height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'>
-                    <path d='M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z'
-                    fillRule='evenodd' fill='#6a7680' />
-                  </svg>
-                </FilterWrapper>
-    
-              </SearchWrapper>
-            </ModuleBox>
-          :
+              </FilterWrapper>
+            </SearchWrapper>
+          </ModuleBox>
+        ) : (
           <ModuleBox>
             <FilterWrapper onClick={this.toggleFilter}>
-              <FilterText>{filterActive ? 'Cancel' : this.props.toggleTitle}</FilterText>
-              <svg style={{ width: 12, height: 12, padding: '0 10px', transform: filterActive ? 'rotate(45deg)' : null, transition: 'all .15s ease' }} height='16' viewBox='0 0 16 16' width='16' xmlns='http://www.w3.org/2000/svg'>
-                <path d='M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z'
-                fillRule='evenodd' fill='#6a7680' />
+              <FilterText>
+                {filterActive ? "Cancel" : this.props.toggleTitle}
+              </FilterText>
+              <svg
+                style={{
+                  width: 12,
+                  height: 12,
+                  padding: "0 10px",
+                  transform: filterActive ? "rotate(45deg)" : null,
+                  transition: "all .15s ease"
+                }}
+                height="16"
+                viewBox="0 0 16 16"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z"
+                  fillRule="evenodd"
+                  fill="#6a7680"
+                />
               </svg>
             </FilterWrapper>
           </ModuleBox>
-          
-        }
+        )}
 
         {savedFilters}
-        {filterActive && <Filter possibleFilters={this.state.possibleFilters} onFiltersChanged={this.onFiltersChanged}/>}
+        {filterActive && (
+          <Filter
+            possibleFilters={this.state.possibleFilters}
+            onFiltersChanged={this.onFiltersChanged}
+          />
+        )}
 
-        <div>{React.cloneElement(this.props.children, { item_list: item_list })}</div>
+        <div>
+          {React.cloneElement(this.props.children, { item_list: item_list })}
+        </div>
       </div>
-    )
+    );
   }
 }
 
-SearchBoxWithFilter.defaultProps = defaultProps,
-SearchBoxWithFilter.propTypes = propTypes
+(SearchBoxWithFilter.defaultProps = defaultProps),
+  (SearchBoxWithFilter.propTypes = propTypes);
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchBoxWithFilter);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(SearchBoxWithFilter);
 
 const SearchWrapper = styled.div`
   display: flex;
@@ -322,14 +452,14 @@ const SearchWrapper = styled.div`
 
 const SearchInput = styled.input`
   margin: 2px 0 0 -40px;
-  border: solid #FFF;
+  border: solid #fff;
   border-width: 0 0 2px 0;
   padding: 1em 1em 1em 40px;
   width: 100%;
   outline: none;
   background: transparent;
   &:focus {
-  border-color: #2D9EA0;
+    border-color: #2d9ea0;
   }
 `;
 
@@ -347,7 +477,7 @@ const FilterWrapper = styled.div`
   align-items: center;
   border-left: solid 1px #e8e8ea;
   &:hover {
-  background-color: #f7fafc;
+    background-color: #f7fafc;
   }
 `;
 
@@ -369,13 +499,13 @@ const CheckboxLabel = styled.label`
   color: #777;
   display: block;
   &:hover {
-  background-color: #f7fafc;
+    background-color: #f7fafc;
   }
   &::selection {
-  background: none;
+    background: none;
   }
   &:last-child {
-  border-bottom: none;
+    border-bottom: none;
   }
 `;
 
@@ -387,30 +517,31 @@ const SavedFilterButton = styled.div`
   color: #777;
   padding: 0.6em;
   &:hover {
-  background-color: #f7fafc;
+    background-color: #f7fafc;
   }
 `;
 
 const SavedFilters = styled.div`
-    display: block;
-    border-radius: 2px;
-    margin-top: 10px;
-    position: absolute;
-    top: 29px;
-    width: 200px;
-    z-index: 55;
-    background-color: rgb(255,255,255);
-    width: inherit;
-    /* border-radius: 2px; */
-    box-shadow: 0 0 0 1px rgba(44,45,48,.15), 0 5px 10px rgba(44,45,48,.12);
+  display: block;
+  border-radius: 2px;
+  margin-top: 10px;
+  position: absolute;
+  top: 29px;
+  width: 200px;
+  z-index: 55;
+  background-color: rgb(255, 255, 255);
+  width: inherit;
+  /* border-radius: 2px; */
+  box-shadow: 0 0 0 1px rgba(44, 45, 48, 0.15),
+    0 5px 10px rgba(44, 45, 48, 0.12);
 `;
 
 const CloseWrapper = styled.div`
-	position: fixed;
-	top: 0;
-	left: 0;
-	background-color: transparent;
-	z-index: 54;
-	width: 100vw;
-	height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: transparent;
+  z-index: 54;
+  width: 100vw;
+  height: 100vh;
 `;

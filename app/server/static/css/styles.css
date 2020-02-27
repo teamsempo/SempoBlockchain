@@ -1,5 +1,5 @@
 body {
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   font-weight: 200;
   color: #555;
   background-color: #f7f7f7;
@@ -9,26 +9,27 @@ body {
   box-sizing: border-box;
 }
 
-
-#table tr:hover {background-color: #F7FAFC;}
+#table tr:hover {
+  background-color: #f7fafc;
+}
 
 /* used to override default password strength input */
 .default-input {
-  width: calc(100% - 2em)!important;
+  width: calc(100% - 2em) !important;
   outline: none;
   display: block;
-  margin: 0.5em!important;
+  margin: 0.5em !important;
   padding: 0.5em;
-  border: 1px solid rgba(0,0,0,.15)!important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
   background-color: #fff;
   background-image: none;
   background-clip: padding-box;
-  font-size: 1em!important;
+  font-size: 1em !important;
   font-weight: 200;
-  color: #495057!important;
-  transition: all .25s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-sizing: content-box!important;
-  font-family: 'Open Sans', sans-serif!important;
+  color: #495057 !important;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-sizing: content-box !important;
+  font-family: "Open Sans", sans-serif !important;
 }
 
 .default-input:focus {
@@ -36,25 +37,25 @@ body {
 }
 
 .ReactPasswordStrength-input {
-  font-size: 1em!important;
-  padding: 0!important;
-  font-weight: 300!important;
-  width: 100%!important;
+  font-size: 1em !important;
+  padding: 0 !important;
+  font-weight: 300 !important;
+  width: 100% !important;
 }
 
 .ReactPasswordStrength-strength-bar {
-  top: 9px!important;
-  right: 8px!important;
+  top: 9px !important;
+  right: 8px !important;
 }
 
 .ReactPasswordStrength.is-strength-4 .ReactPasswordStrength-strength-bar {
-  width: calc(100% + 16px)!important;
+  width: calc(100% + 16px) !important;
 }
 
 .ReactPasswordStrength-strength-desc {
-  padding: .8em!important;
-  font-size: .8em!important;
-  top: 0!important;
+  padding: 0.8em !important;
+  font-size: 0.8em !important;
+  top: 0 !important;
 }
 
 .default-button {
@@ -66,14 +67,14 @@ body {
   line-height: 40px;
   padding: 0 14px;
   margin: 0.5em;
-  box-shadow: 0px 2px 0px 0 rgba(51,51,79,.08);
+  box-shadow: 0px 2px 0px 0 rgba(51, 51, 79, 0.08);
   background: #30a4a6;
   font-size: 1em;
   font-weight: 200;
   text-transform: uppercase;
-  letter-spacing: .025em;
-  color: #FFF;
-  transition: all .15s ease;
+  letter-spacing: 0.025em;
+  color: #fff;
+  transition: all 0.15s ease;
 }
 
 .default-button:hover {
@@ -83,113 +84,125 @@ body {
 /* REACT TABLE STYLING */
 
 .ReactTable {
-  border: 0!important;
+  border: 0 !important;
 }
 
 .ReactTable .-pagination {
-  box-shadow: none!important;
+  box-shadow: none !important;
 }
 
 .react-table-first-cell {
-  color: #4A4A4A;
+  color: #4a4a4a;
   display: inline;
   margin: 0;
   font-size: 15px;
   font-weight: 600;
 }
 
-.ReactTable .rt-thead .rt-th, .ReactTable .rt-thead .rt-td {
-    padding: 5px 1em!important;
-    text-align: left;
-    font-size: 15px;
-    color: #6a7680;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border-top: solid 1px rgba(0,0,0,0.05);
-    border-bottom: solid 1px rgba(0,0,0,0.05);
-    border-right: 0!important;
-    outline: none;
+.ReactTable .rt-thead .rt-th,
+.ReactTable .rt-thead .rt-td {
+  padding: 5px 1em !important;
+  text-align: left;
+  font-size: 15px;
+  color: #6a7680;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-top: solid 1px rgba(0, 0, 0, 0.05);
+  border-bottom: solid 1px rgba(0, 0, 0, 0.05);
+  border-right: 0 !important;
+  outline: none;
 }
 
-.ReactTable .rt-thead .rt-th.-sort-desc, .ReactTable .rt-thead .rt-td.-sort-desc {
-  box-shadow: inset 0 -2px 0 0 #2D9EA0!important;
+.ReactTable .rt-thead .rt-th.-sort-desc,
+.ReactTable .rt-thead .rt-td.-sort-desc {
+  box-shadow: inset 0 -2px 0 0 #2d9ea0 !important;
 }
 
-.ReactTable .rt-thead .rt-th.-sort-asc, .ReactTable .rt-thead .rt-td.-sort-asc {
-  box-shadow: inset 0 2px 0 0 #2D9EA0!important;
+.ReactTable .rt-thead .rt-th.-sort-asc,
+.ReactTable .rt-thead .rt-td.-sort-asc {
+  box-shadow: inset 0 2px 0 0 #2d9ea0 !important;
 }
 
 .ReactTable .rt-thead.-header {
-  background-color: #F7FAFC;
-  box-shadow: none!important;
+  background-color: #f7fafc;
+  box-shadow: none !important;
 }
 
 .ReactTable .rt-tbody .rt-td {
-  border: 0!important;
+  border: 0 !important;
   padding: 1em;
 }
 
 .rt-th .react-table-header .action {
-  max-width: 5%!important;
+  max-width: 5% !important;
 }
 
 .rt-tr-group:hover {
-  background-color: #F7FAFC;
+  background-color: #f7fafc;
 }
 /* LOADING SPINNER */
 
 /*.spinner {*/
-  /*margin: 100px auto;*/
-  /*width: 80px;*/
-  /*height: 40px;*/
-  /*text-align: center;*/
-  /*font-size: 10px;*/
+/*margin: 100px auto;*/
+/*width: 80px;*/
+/*height: 40px;*/
+/*text-align: center;*/
+/*font-size: 10px;*/
 /*}*/
 
 /*.spinner > div {*/
-  /*margin: 0.2em;*/
-  /*background-color: #B8C5D0;*/
-  /*height: 100%;*/
-  /*width: 6px;*/
-  /*display: inline-block;*/
+/*margin: 0.2em;*/
+/*background-color: #B8C5D0;*/
+/*height: 100%;*/
+/*width: 6px;*/
+/*display: inline-block;*/
 
-  /*-webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;*/
-  /*animation: sk-stretchdelay 1.2s infinite ease-in-out;*/
+/*-webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;*/
+/*animation: sk-stretchdelay 1.2s infinite ease-in-out;*/
 /*}*/
 
 /*.spinner .rect2 {*/
-  /*-webkit-animation-delay: -1.1s;*/
-  /*animation-delay: -1.1s;*/
+/*-webkit-animation-delay: -1.1s;*/
+/*animation-delay: -1.1s;*/
 /*}*/
 
 /*.spinner .rect3 {*/
-  /*-webkit-animation-delay: -1.0s;*/
-  /*animation-delay: -1.0s;*/
+/*-webkit-animation-delay: -1.0s;*/
+/*animation-delay: -1.0s;*/
 /*}*/
 
 /*.spinner .rect4 {*/
-  /*-webkit-animation-delay: -0.9s;*/
-  /*animation-delay: -0.9s;*/
+/*-webkit-animation-delay: -0.9s;*/
+/*animation-delay: -0.9s;*/
 /*}*/
 
 /*.spinner .rect5 {*/
-  /*-webkit-animation-delay: -0.8s;*/
-  /*animation-delay: -0.8s;*/
+/*-webkit-animation-delay: -0.8s;*/
+/*animation-delay: -0.8s;*/
 /*}*/
 
 @-webkit-keyframes sk-stretchdelay {
-  0%, 40%, 100% { -webkit-transform: scaleY(0.4) }
-  20% { -webkit-transform: scaleY(1.0) }
+  0%,
+  40%,
+  100% {
+    -webkit-transform: scaleY(0.4);
+  }
+  20% {
+    -webkit-transform: scaleY(1);
+  }
 }
 
 @keyframes sk-stretchdelay {
-  0%, 40%, 100% {
+  0%,
+  40%,
+  100% {
     transform: scaleY(0.4);
     -webkit-transform: scaleY(0.4);
-  }  20% {
-    transform: scaleY(1.0);
-    -webkit-transform: scaleY(1.0);
+  }
+  20% {
+    transform: scaleY(1);
+    -webkit-transform: scaleY(1);
   }
 }
 
@@ -217,8 +230,12 @@ body {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* CHECKMARK ANIMATION */
@@ -230,7 +247,7 @@ body {
   stroke-miterlimit: 10;
   stroke: #30a4a6;
   fill: none;
-  animation: stroke .6s cubic-bezier(0.650, 0.000, 0.450, 1.000) forwards;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
 
 .checkmark {
@@ -243,14 +260,15 @@ body {
   stroke-miterlimit: 10;
   margin: 1em auto;
   box-shadow: inset 0px 0px 0px #30a4a6;
-  animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+  animation: fill 0.4s ease-in-out 0.4s forwards,
+    scale 0.3s ease-in-out 0.9s both;
 }
 
 .checkmark__check {
   transform-origin: 50% 50%;
   stroke-dasharray: 48;
   stroke-dashoffset: 48;
-  animation: stroke .3s cubic-bezier(0.650, 0.000, 0.450, 1.000) .8s forwards;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
 
 @keyframes stroke {
@@ -260,7 +278,8 @@ body {
 }
 
 @keyframes scale {
-  0%, 100% {
+  0%,
+  100% {
     transform: none;
   }
   50% {
@@ -320,7 +339,7 @@ ol.progtrckr li.progtrckr-todo {
 
 ol.progtrckr li.progtrckr-doing {
   color: black;
-  border-bottom: 4px solid #CCCCCC;
+  border-bottom: 4px solid #cccccc;
 }
 
 ol.progtrckr li.progtrckr-done {
@@ -354,7 +373,7 @@ ol.progtrckr li.progtrckr-todo:hover:before {
 ol.progtrckr li.progtrckr-doing:before {
   content: "\2022";
   color: white;
-  background-color: #CCCCCC;
+  background-color: #cccccc;
   width: 1.2em;
   line-height: 1.2em;
   border-radius: 1.2em;

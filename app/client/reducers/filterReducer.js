@@ -1,4 +1,4 @@
-import { combineReducers } from 'redux';
+import { combineReducers } from "redux";
 import { DEEEEEEP } from "../utils";
 
 export const UPDATE_FILTER_LIST = "UPDATE_FILTER_LIST";
@@ -32,13 +32,13 @@ const initialLoadStatusState = {
 const loadStatus = (state = initialLoadStatusState, action) => {
   switch (action.type) {
     case LOAD_FILTERS_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case LOAD_FILTERS_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case LOAD_FILTERS_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -48,7 +48,7 @@ const loadStatus = (state = initialLoadStatusState, action) => {
 const initialCreateStatusState = {
   isRequesting: false,
   error: null,
-  success: false,
+  success: false
 };
 
 const createStatus = (state = initialCreateStatusState, action) => {
@@ -57,38 +57,37 @@ const createStatus = (state = initialCreateStatusState, action) => {
       return initialCreateStatusState;
 
     case CREATE_FILTER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case CREATE_FILTER_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case CREATE_FILTER_FAILURE:
-      return {...state, isRequesting: false, success: false, error: action.error};
+      return {
+        ...state,
+        isRequesting: false,
+        success: false,
+        error: action.error
+      };
 
     default:
       return state;
   }
 };
 
-
 export const filters = combineReducers({
-    byId,
-    loadStatus,
-    createStatus
+  byId,
+  loadStatus,
+  createStatus
 });
 
-
 // ACTIONS
-export const loadFilters = (payload) => (
-  {
-    type: LOAD_FILTERS_REQUEST,
-    payload,
-  }
-);
+export const loadFilters = payload => ({
+  type: LOAD_FILTERS_REQUEST,
+  payload
+});
 
-export const createFilter = (payload) => (
-  {
-    type: CREATE_FILTER_REQUEST,
-    payload,
-  }
-);
+export const createFilter = payload => ({
+  type: CREATE_FILTER_REQUEST,
+  payload
+});
