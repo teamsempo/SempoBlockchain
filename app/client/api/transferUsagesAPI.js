@@ -1,3 +1,3 @@
 import { apiClient } from './apiClient';
 
-export const loadTransferUsagesAPI = () => apiClient({url: '/transfer_usage/', method: 'GET'});
+export const loadTransferUsagesAPI = ({query}) => apiClient({url: '/transfer_usage/', method: 'GET', query: query});

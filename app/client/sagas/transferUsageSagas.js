@@ -18,9 +18,9 @@ function* updateStateFromTransferUsage(data) {
 }
 
 // Load Transfer Account List Saga
-function* loadTransferUsages() {
+function* loadTransferUsages({payload}) {
   try {
-    const load_result = yield call(loadTransferUsagesAPI);
+    const load_result = yield call(loadTransferUsagesAPI, payload);
 
     yield call(updateStateFromTransferUsage, load_result.data);
 

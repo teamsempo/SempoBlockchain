@@ -13,7 +13,7 @@ interface DispatchProps {
 
 interface StateProps {
   users: any,
-  user: any,
+  selectedUser: any,
   transferUsages: TransferUsage[]
 }
 
@@ -25,22 +25,21 @@ type Form = ICreateUserUpdate
 type Props = DispatchProps & StateProps & OuterProps
 
 class SingleUserManagement extends React.Component<Props> {
-
   onEditUser(form: Form) {
     const single_transfer_account_id = this.props.userId.toString();
-    // const { custom_attr_keys } = this.state;
+    const { selectedUser } = this.props;
 
     let businessUsage = form.businessUsage;
     if (businessUsage && businessUsage.toLowerCase() === "other") {
       businessUsage = form.usageOtherSpecific;
     }
 
-    //todo: get this working
+    let custom_attr_keys = selectedUser && Object.keys(selectedUser.custom_attributes);
     let attr_dict = {};
-    // custom_attr_keys.map(key => {
-    //   attr_dict[key] = this.state[key];
-    //   return attr_dict
-    // });
+    custom_attr_keys.map(key => {
+      attr_dict[key] = form[key];
+      return attr_dict
+    });
 
     this.props.editUser({
       first_name: form.firstName,
@@ -59,25 +58,27 @@ class SingleUserManagement extends React.Component<Props> {
     );
   }
 
-  onResetPin(form: Form) {
-    window.confirm(`Are you sure you wish to reset ${form.firstName} ${form.lastName}'s PIN?`) &&
-    this.props.resetPin({user_id: this.props.user.id})
+  onResetPin() {
+    const { selectedUser } = this.props;
+    window.confirm(`Are you sure you wish to reset ${selectedUser.first_name} ${selectedUser.last_name}'s PIN?`) &&
+    this.props.resetPin({user_id: this.props.selectedUser.id})
   }
 
   render() {
     return <EditUserForm
       users={this.props.users}
+      selectedUser={this.props.selectedUser}
       transferUsages={this.props.transferUsages}
       onSubmit={(form: Form) => this.onEditUser(form)}
-      onResetPin={(form: Form) => this.onResetPin(form)}
+      onResetPin={() => this.onResetPin()}
     />;
   }
 }
 
-const mapStateToProps = (state: ReduxState, ownProps): StateProps => {
+const mapStateToProps = (state: ReduxState, ownProps: any): StateProps => {
   return {
     users: state.users,
-    user: state.users.byId[parseInt(ownProps.userId)],
+    selectedUser: state.users.byId[parseInt(ownProps.userId)],
     transferUsages: state.transferUsages.transferUsages
   };
 };
@@ -90,4 +91,3 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SingleUserManagement);
-

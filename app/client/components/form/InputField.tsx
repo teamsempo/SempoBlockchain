@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import {Field} from "redux-form";
 
 import FormValidation from "./FormValidation";
@@ -8,6 +8,7 @@ import {AdaptedInput} from "./WrappedInput";
 interface InputFieldJson {
   name: string,
   type?: "text" | "checkbox" | "email" | "password",
+  disabled?: boolean,
   label?: string,
   placeholder?: string,
   isRequired?: boolean,
@@ -18,7 +19,7 @@ interface InputFieldJson {
 
 
 export default function InputField(props: InputFieldJson) {
-  const { name, label, isRequired, isPhoneNumber, isNotOther, placeholder, type, children} = props;
+  const { name, label, isRequired, isPhoneNumber, isNotOther, placeholder, type, disabled, children} = props;
 
   let validate = [];
   if (isRequired) {
@@ -39,6 +40,7 @@ export default function InputField(props: InputFieldJson) {
     validate={validate}
     isRequired={isRequired}
     label={label}
+    disabled={disabled}
     children={children}
   />
 };

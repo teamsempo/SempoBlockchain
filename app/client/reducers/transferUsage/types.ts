@@ -10,8 +10,14 @@ interface UpdateTransferUsages {
 export type TransferUsagesAction = UpdateTransferUsages
 
 export const LOAD_TRANSFER_USAGES_REQUEST = "LOAD_TRANSFER_USAGES_REQUEST";
+export interface LoadTransferUsagePayload {
+  query?: {
+    show_all?: boolean
+  }
+}
 interface LoadTransferUsagesRequest {
   type: typeof LOAD_TRANSFER_USAGES_REQUEST,
+  payload: LoadTransferUsagePayload
 }
 export const LOAD_TRANSFER_USAGES_SUCCESS = "LOAD_TRANSFER_USAGES_SUCCESS";
 interface LoadTransferUsagesSuccess {
