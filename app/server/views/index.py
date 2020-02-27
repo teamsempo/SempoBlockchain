@@ -23,9 +23,15 @@ def index():
 
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
+
+@index_view.route('/transfers')
+def transfers():
+    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
+
+
 @index_view.route('/accounts')
 def accounts():
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
+    return render_template('index.html', js_bundle_main=get_js_bundle_filename())
 
 @index_view.route('/accounts/<account_id>')
 def single_account(account_id):
