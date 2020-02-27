@@ -50,6 +50,10 @@ interface StateProps {
 
 type Props = OuterProps & StateProps
 
+interface attr_dict {
+  [key: string]: any
+}
+
 const validate = (values: IEditUser) => {
   const errors: any = {};
 
@@ -65,7 +69,7 @@ class EditUserForm extends React.Component<InjectedFormProps<ICreateUserUpdate, 
     let account_type;
     let { selectedUser, transferUsages } = this.props;
     let transferUsage = transferUsages.filter(t => t.id === selectedUser.business_usage_id)[0];
-    let transferUsageName = transferUsage && transferUsage.name
+    let transferUsageName = transferUsage && transferUsage.name;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
 
     if (selectedUser.is_beneficiary) {
@@ -81,7 +85,7 @@ class EditUserForm extends React.Component<InjectedFormProps<ICreateUserUpdate, 
     let custom_attr_keys = customAttributes && Object.keys(customAttributes);
     let attr_dict = {};
     custom_attr_keys.map(key => {
-      attr_dict[key] = customAttributes[key];
+      (attr_dict as attr_dict)[key] = customAttributes[key];
       return attr_dict
     });
 

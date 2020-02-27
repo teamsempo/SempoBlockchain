@@ -24,6 +24,10 @@ interface OuterProps {
 type Form = ICreateUserUpdate
 type Props = DispatchProps & StateProps & OuterProps
 
+interface attr_dict {
+  [key: string]: any
+}
+
 class SingleUserManagement extends React.Component<Props> {
   onEditUser(form: Form) {
     const single_transfer_account_id = this.props.userId.toString();
@@ -37,7 +41,7 @@ class SingleUserManagement extends React.Component<Props> {
     let custom_attr_keys = selectedUser && Object.keys(selectedUser.custom_attributes);
     let attr_dict = {};
     custom_attr_keys.map(key => {
-      attr_dict[key] = form[key];
+      (attr_dict as attr_dict)[key] = form[key];
       return attr_dict
     });
 
