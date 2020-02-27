@@ -1,13 +1,13 @@
-import React from 'react';
-import styled from 'styled-components';
-import { connect } from 'react-redux';
+import React from "react";
+import styled from "styled-components";
+import { connect } from "react-redux";
 
-import {StyledButton, StyledSelect, ModuleBox} from '../styledElements'
-import AsyncButton from './../AsyncButton.jsx'
+import { StyledButton, StyledSelect, ModuleBox } from "../styledElements";
+import AsyncButton from "./../AsyncButton.jsx";
 
-import { createTransferRequest } from '../../reducers/creditTransferReducer'
+import { createTransferRequest } from "../../reducers/creditTransferReducer";
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
@@ -15,9 +15,9 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    createTransferRequest: (body) => dispatch(createTransferRequest({body})),
+    createTransferRequest: body => dispatch(createTransferRequest({ body }))
   };
 };
 
@@ -25,17 +25,16 @@ class NewTransferManager extends React.Component {
   constructor() {
     super();
     this.state = {
-        action: 'select',
-        create_transfer_type: 'DISBURSEMENT',
-        transfer_amount: '',
-
+      action: "select",
+      create_transfer_type: "DISBURSEMENT",
+      transfer_amount: ""
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.createNewTransfer = this.createNewTransfer.bind(this);
   }
 
-  handleChange (evt) {
+  handleChange(evt) {
     this.setState({ [evt.target.name]: evt.target.value });
   }
 
@@ -60,118 +59,184 @@ class NewTransferManager extends React.Component {
         // BULK TRANSFER
         is_bulk = true;
 
-        if (transfer_type === 'DISBURSEMENT') {
-            transfer_amount = this.state.transfer_amount * 100;
+        if (transfer_type === "DISBURSEMENT") {
+          transfer_amount = this.state.transfer_amount * 100;
         }
 
-        if (transfer_type === 'BALANCE') {
-            target_balance = this.state.transfer_amount * 100;
+        if (transfer_type === "BALANCE") {
+          target_balance = this.state.transfer_amount * 100;
         }
 
-        if (transfer_type === 'RECLAMATION') {
-            transfer_amount = this.state.transfer_amount * 100;
+        if (transfer_type === "RECLAMATION") {
+          transfer_amount = this.state.transfer_amount * 100;
         }
 
-        confirmTransferString = `Are you sure you wish to make a ${transfer_type}`
-          + (transfer_amount ? ` of ${transfer_amount/100} ${this.props.login.organisationToken}` : ` set of ${target_balance/100} ${this.props.login.organisationToken}`) + ` to ${recipient_transfer_accounts_ids.length} users?`;
+        confirmTransferString =
+          `Are you sure you wish to make a ${transfer_type}` +
+          (transfer_amount
+            ? ` of ${transfer_amount / 100} ${
+                this.props.login.organisationToken
+              }`
+            : ` set of ${target_balance / 100} ${
+                this.props.login.organisationToken
+              }`) +
+          ` to ${recipient_transfer_accounts_ids.length} users?`;
 
-        window.confirm(confirmTransferString) && this.props.createTransferRequest({
+        window.confirm(confirmTransferString) &&
+          this.props.createTransferRequest({
             is_bulk,
             recipient_transfer_accounts_ids,
             transfer_amount,
             target_balance,
-            transfer_type,
-        });
+            transfer_type
+          });
       } else if (this.props.transfer_account_ids.length === 1) {
         // SINGLE TRANSFER
-        if (transfer_type === 'DISBURSEMENT') {
-            recipient_transfer_account_id = recipient_transfer_accounts_ids[0];
-            transfer_amount = this.state.transfer_amount * 100;
+        if (transfer_type === "DISBURSEMENT") {
+          recipient_transfer_account_id = recipient_transfer_accounts_ids[0];
+          transfer_amount = this.state.transfer_amount * 100;
         }
 
-        if (transfer_type === 'RECLAMATION') {
-            sender_transfer_account_id = recipient_transfer_accounts_ids[0];
-            transfer_amount = this.state.transfer_amount * 100;
+        if (transfer_type === "RECLAMATION") {
+          sender_transfer_account_id = recipient_transfer_accounts_ids[0];
+          transfer_amount = this.state.transfer_amount * 100;
         }
 
-        if (transfer_type === 'BALANCE') {
-            recipient_transfer_account_id = recipient_transfer_accounts_ids[0];
-            target_balance = this.state.transfer_amount * 100;
+        if (transfer_type === "BALANCE") {
+          recipient_transfer_account_id = recipient_transfer_accounts_ids[0];
+          target_balance = this.state.transfer_amount * 100;
         }
 
-        confirmTransferString = `Are you sure you wish to make a ${transfer_type}`
-          + (transfer_amount ? ` of ${transfer_amount/100} ${this.props.login.organisationToken}` : ` set of ${target_balance/100} ${this.props.login.organisationToken}`) + ` to 1 user?`;
+        confirmTransferString =
+          `Are you sure you wish to make a ${transfer_type}` +
+          (transfer_amount
+            ? ` of ${transfer_amount / 100} ${
+                this.props.login.organisationToken
+              }`
+            : ` set of ${target_balance / 100} ${
+                this.props.login.organisationToken
+              }`) +
+          ` to 1 user?`;
 
-        window.confirm(confirmTransferString) && this.props.createTransferRequest({
+        window.confirm(confirmTransferString) &&
+          this.props.createTransferRequest({
             recipient_transfer_account_id,
             sender_transfer_account_id,
             transfer_amount,
             target_balance,
-            transfer_type,
-        });
+            transfer_type
+          });
       } else {
-        window.alert('Must select at least one user')
+        window.alert("Must select at least one user");
       }
     } else {
-      window.alert('Must enter an amount')
+      window.alert("Must enter an amount");
     }
   }
 
   render() {
-
     if (this.props.login.usdToSatoshiRate) {
-      let amount = Math.round(this.state.transfer_amount/this.props.login.usdToSatoshiRate*100) /100;
+      let amount =
+        Math.round(
+          (this.state.transfer_amount / this.props.login.usdToSatoshiRate) * 100
+        ) / 100;
       var convertedBitcoin = (
-        <div style={{marginLeft: '1em', width: '7em'}}>
-          ({(amount == 0? '-': amount)} USD)
+        <div style={{ marginLeft: "1em", width: "7em" }}>
+          ({amount == 0 ? "-" : amount} USD)
         </div>
-      )
+      );
     } else {
-      convertedBitcoin = null
+      convertedBitcoin = null;
     }
 
-      return(
-          <ModuleBox>
-              <Wrapper>
-                  <TopRow>
-                      <StyledSelect style={{fontWeight: '400', margin: 'auto 1em', lineHeight: '25px', height: '25px'}} name="create_transfer_type" defaultValue={this.state.create_transfer_type}
-                              onChange={this.handleChange}>
-                        <option name="create_transfer_type" value="DISBURSEMENT">DISBURSEMENT</option>
-                        <option name="create_transfer_type" value="BALANCE">BALANCE</option>
-                        {
-                          window.IS_USING_BITCOIN? null : <option name="create_transfer_type" value="RECLAMATION">RECLAMATION</option>
-                        }
-                      </StyledSelect>
-                      <div style={{margin: '0.8em'}}>
-                          <StyledButton onClick={() => this.props.cancelNewTransfer()} style={{fontWeight: '400', margin: '0em 0.5em', lineHeight: '25px', height: '25px'}}>Cancel</StyledButton>
-                      </div>
-                  </TopRow>
-                  <div style={{margin: '1em 0'}}>
-                      <Row style={{margin: '0em 1em'}}>
-                          <SubRow style={{width: 'inherit'}}>
-                            <ManagerInput
-                                type="number"
-                                name="transfer_amount"
-                                placeholder="enter amount:"
-                                value={this.state.transfer_amount}
-                                onChange={this.handleChange}
-                                style={{width:'7em', margin: '0'}}
-                            />
-                           {this.props.login.organisationToken}
-                           { convertedBitcoin}
-                          </SubRow>
-                          <SubRow style={{margin: '0 0 0 2em', width: 'inherit'}}>
-                              <AsyncButton onClick={this.createNewTransfer} miniSpinnerStyle={{height: '10px', width: '10px'}} buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0 0 5px 0', lineHeight: '25px', height: '25px'}} isLoading={this.props.creditTransfers.createStatus.isRequesting} buttonText={((this.state.create_transfer_type === 'BALANCE') ? 'SET ' : 'CREATE ') + this.state.create_transfer_type}/>
-                          </SubRow>
-                      </Row>
-                  </div>
-              </Wrapper>
-          </ModuleBox>
-      )
+    return (
+      <ModuleBox>
+        <Wrapper>
+          <TopRow>
+            <StyledSelect
+              style={{
+                fontWeight: "400",
+                margin: "auto 1em",
+                lineHeight: "25px",
+                height: "25px"
+              }}
+              name="create_transfer_type"
+              defaultValue={this.state.create_transfer_type}
+              onChange={this.handleChange}
+            >
+              <option name="create_transfer_type" value="DISBURSEMENT">
+                DISBURSEMENT
+              </option>
+              <option name="create_transfer_type" value="BALANCE">
+                BALANCE
+              </option>
+              {window.IS_USING_BITCOIN ? null : (
+                <option name="create_transfer_type" value="RECLAMATION">
+                  RECLAMATION
+                </option>
+              )}
+            </StyledSelect>
+            <div style={{ margin: "0.8em" }}>
+              <StyledButton
+                onClick={() => this.props.cancelNewTransfer()}
+                style={{
+                  fontWeight: "400",
+                  margin: "0em 0.5em",
+                  lineHeight: "25px",
+                  height: "25px"
+                }}
+              >
+                Cancel
+              </StyledButton>
+            </div>
+          </TopRow>
+          <div style={{ margin: "1em 0" }}>
+            <Row style={{ margin: "0em 1em" }}>
+              <SubRow style={{ width: "inherit" }}>
+                <ManagerInput
+                  type="number"
+                  name="transfer_amount"
+                  placeholder="enter amount:"
+                  value={this.state.transfer_amount}
+                  onChange={this.handleChange}
+                  style={{ width: "7em", margin: "0" }}
+                />
+                {this.props.login.organisationToken}
+                {convertedBitcoin}
+              </SubRow>
+              <SubRow style={{ margin: "0 0 0 2em", width: "inherit" }}>
+                <AsyncButton
+                  onClick={this.createNewTransfer}
+                  miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                  buttonStyle={{
+                    display: "inline-flex",
+                    fontWeight: "400",
+                    margin: "0 0 5px 0",
+                    lineHeight: "25px",
+                    height: "25px"
+                  }}
+                  isLoading={
+                    this.props.creditTransfers.createStatus.isRequesting
+                  }
+                  buttonText={
+                    (this.state.create_transfer_type === "BALANCE"
+                      ? "SET "
+                      : "CREATE ") + this.state.create_transfer_type
+                  }
+                />
+              </SubRow>
+            </Row>
+          </div>
+        </Wrapper>
+      </ModuleBox>
+    );
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(NewTransferManager);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(NewTransferManager);
 
 const Wrapper = styled.div`
   display: flex;
@@ -188,10 +253,10 @@ const Row = styled.div`
   display: flex;
   align-items: center;
   @media (max-width: 767px) {
-  width: calc(100% - 2em);
-  margin: 0 1em;
-  flex-direction: column;
-  align-items: end;
+    width: calc(100% - 2em);
+    margin: 0 1em;
+    flex-direction: column;
+    align-items: end;
   }
 `;
 
@@ -200,8 +265,8 @@ const SubRow = styled.div`
   align-items: center;
   width: 33%;
   @media (max-width: 767px) {
-  width: 100%;
-  justify-content: space-between;
+    width: 100%;
+    justify-content: space-between;
   }
 `;
 
@@ -214,6 +279,6 @@ const ManagerInput = styled.input`
   width: 50%;
   font-size: 15px;
   &:focus {
-  border-color: #2D9EA0;
+    border-color: #2d9ea0;
   }
 `;
