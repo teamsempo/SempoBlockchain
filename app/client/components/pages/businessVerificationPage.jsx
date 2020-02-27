@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import styled, {ThemeProvider} from 'styled-components';
 
-import {WrapperDiv, PageWrapper, ModuleHeader, ModuleBox, CenterLoadingSideBarActive } from '../styledElements';
+import {WrapperDiv, PageWrapper, ModuleHeader, ModuleBox, CenterLoadingSideBarActive, Row } from '../styledElements';
 import { LightTheme } from '../theme.js'
 
 import {
@@ -40,10 +40,14 @@ const mapDispatchToProps = (dispatch) => {
 class BusinessVerificationPage extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      userId: null,
+      is_bank_account: true,
+    };
+    this.handleInputChange = this.handleInputChange.bind(this);
   }
 
-  componentDidMount() {
+  componentWillMount() {
     const { stepStatus, businessProfile } = this.props;
     let pathname_array = location.pathname.split('/').slice(1);
     let pathUserId = parseInt(pathname_array[1]);
@@ -52,24 +56,45 @@ class BusinessVerificationPage extends React.Component {
       // only load business profile if none exists
       if (stepStatus && stepStatus.userId) {
         query = {'user_id': stepStatus.userId }
+        this.setState({userId: stepStatus.userId})
       } else {
-        query = {'user_id': pathUserId }
+        query = {'user_id': pathUserId };
+        this.setState({userId: pathUserId })
       }
       this.props.loadBusinessProfile(query)
     }
   }
 
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value,
+    });
+  }
+
   render() {
     let { loadStatus, businessProfile, stepStatus } = this.props;
+    let { userId } = this.state;
 
+    let finalSteps;
     const steps = [
-      {name: 'Account Details', component: <BusinessDetails/>},
-      {name: 'Documents', component: <BusinessDocuments/>},
+      {name: 'Account Details', component: <BusinessDetails userId={this.state.userId} />},
+      {name: 'Documents', component: <BusinessDocuments isFinal={!this.state.is_bank_account}/>},
       {name: 'Bank Location', component: <BusinessBankLocation/>},
       {name: 'Bank Details', component: <BusinessBankDetails/>},
       {name: 'Bank Documents', component: <BusinessBankDocuments/>},
       {name: 'Pending Verification', component: <BusinessVerificationPending/>}
     ];
+
+    if (!this.state.is_bank_account) {
+      steps.splice(2,3);
+      finalSteps = steps
+    } else {
+      finalSteps = steps
+    }
 
     if (businessProfile.kyc_status === 'VERIFIED') {
       return(
@@ -93,7 +118,6 @@ class BusinessVerificationPage extends React.Component {
         </WrapperDiv>
       )
     } else if (stepStatus.activeStep >= 0 || Object.values(businessProfile).length > 0) {
-
       return (
         <WrapperDiv>
           <PageWrapper style={{display: 'flex', flexDirection: 'column'}}>
@@ -102,7 +126,7 @@ class BusinessVerificationPage extends React.Component {
                 <ModuleBox>
                   <ModuleHeader>Account Verification</ModuleHeader>
 
-                  <StepWizard steps={steps} activeStep={stepStatus.activeStep}/>
+                  <StepWizard steps={finalSteps} activeStep={stepStatus.activeStep}/>
 
                 </ModuleBox>
 
@@ -140,6 +164,16 @@ class BusinessVerificationPage extends React.Component {
                       </li>
                     </ul>
 
+                    {(userId === null || typeof userId === "undefined") ? null : <Row>
+                      <InputObject>
+                        <InputLabel>
+                          Bank Account
+                        </InputLabel>
+                        <div style={{display:'flex'}}><input type="checkbox" name="is_bank_account" onChange={this.handleInputChange} checked={this.state.is_bank_account}/>
+                        <p style={{margin: 0}}>{this.state.is_bank_account ? 'Yes' : 'No'}</p></div>
+                      </InputObject>
+                    </Row>}
+
                     <AsyncButton buttonText={'Get Started'} onClick={this.props.nextStep}/>
 
                   </div>
@@ -160,3 +194,16 @@ class BusinessVerificationPage extends React.Component {
   }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BusinessVerificationPage);
+
+const InputObject = styled.label`
+  display:block;
+  padding: 1em;
+  font-size: 15px;
+`;
+
+const InputLabel = styled.div`
+  display:block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 5px;
+`;

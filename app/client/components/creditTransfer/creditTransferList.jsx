@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import ReactTable from 'react-table';
 
-import { TopRow, StyledSelect, FooterBar } from '../styledElements.js';
+import { TopRow, StyledSelect } from '../styledElements.js';
 
 import { modifyTransferRequest } from '../../reducers/creditTransferReducer';
 
@@ -12,8 +12,6 @@ import DateTime from '../dateTime.jsx'
 import AsyncButton from '../AsyncButton.jsx';
 import {formatMoney} from "../../utils";
 import {ModuleBox} from "../styledElements";
-
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
 
 const mapStateToProps = (state) => {
   return {
@@ -26,8 +24,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    modifyTransferRequest: (body, path) => dispatch(modifyTransferRequest({body, path})),
-    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
+    modifyTransferRequest: (body, path) => dispatch(modifyTransferRequest({body, path}))
   };
 };
 
@@ -177,6 +174,10 @@ class CreditTransferList extends React.Component {
     })
   };
 
+  navigateToAccount = (accountId) => {
+    window.location.assign('/accounts/' + accountId)
+  };
+
   _customSender(creditTransfer) {
     let transferAccounts = this.props.transferAccounts.byId;
     let senderTransferAccount = transferAccounts[creditTransfer.sender_transfer_account_id];
@@ -190,7 +191,7 @@ class CreditTransferList extends React.Component {
     if (this.props.login.adminTier === 'view') {
       return blockchainAddress
     } else if (sender && firstName) {
-      return firstName + ' ' + lastName
+      return <a style={{cursor: 'pointer'}} onClick={() => this.navigateToAccount(creditTransfer.sender_transfer_account_id)}>{firstName + ' ' + lastName}</a>
     } else if (creditTransfer.transfer_type === 'DISBURSEMENT' && email) {
       return <div style={{color: '#96DADC'}}> {email} </div>
     } else {
@@ -211,7 +212,7 @@ class CreditTransferList extends React.Component {
     if (this.props.login.adminTier  === 'view') {
       return blockchainAddress
     } else if (recipient && firstName) {
-      return firstName + ' ' + lastName;
+      return <a style={{cursor: 'pointer'}} onClick={() => this.navigateToAccount(creditTransfer.recipient_transfer_account_id)}>{firstName + ' ' + lastName}</a>
     } else if (creditTransfer.transfer_type === 'RECLAMATION' && email) {
       return <div style={{color: '#96DADC'}}> {email} </div>
     } else {
@@ -220,7 +221,7 @@ class CreditTransferList extends React.Component {
   }
 
   render() {
-    const { creditTransfers, is_single } = this.props;
+    const { creditTransfers } = this.props;
 	  const loadingStatus = creditTransfers.loadStatus.isRequesting;
 
     let creditTransferList = Object.keys(this.state.credit_transfer_ids)
@@ -403,7 +404,7 @@ class CreditTransferList extends React.Component {
 					  loading={loadingStatus} // Display the loading overlay when we need it
 					  pageSize={20}
 					  sortable={true}
-					  showPagination={!is_single}
+					  showPagination={true}
 					  showPageSizeOptions={false}
 					  className='react-table'
 					  resizable={false}
@@ -437,9 +438,6 @@ class CreditTransferList extends React.Component {
 
 export default connect(mapStateToProps, mapDispatchToProps)(CreditTransferList);
 
-CreditTransferList.defaultProps = {
-  is_single: false,
-};
 
 const Wrapper = styled.div`
   display: flex;

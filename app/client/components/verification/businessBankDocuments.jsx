@@ -4,7 +4,12 @@ import styled, {ThemeProvider} from 'styled-components';
 
 
 import DateTime from "../dateTime.jsx";
-import {editBusinessProfile, UPDATE_ACTIVE_STEP, uploadDocument} from "../../reducers/businessVerificationReducer";
+import {
+  editBusinessProfile,
+  editStatus,
+  UPDATE_ACTIVE_STEP,
+  uploadDocument
+} from "../../reducers/businessVerificationReducer";
 import {DefaultTheme} from "../theme";
 import AsyncButton from "../AsyncButton.jsx";
 import LoadingSpinner from "../loadingSpinner.jsx";
@@ -32,6 +37,7 @@ const ErrorMessage = function(props) {
 
 const mapStateToProps = (state) => {
   return {
+    editStatus: state.businessVerification.editStatus,
     business: state.businessVerification.businessVerificationState,
     uploadState: state.businessVerification.uploadDocumentStatus,
   };
@@ -41,7 +47,8 @@ const mapDispatchToProps = (dispatch) => {
   return {
     editBusinessProfile: (body, path) => dispatch(editBusinessProfile({body, path})),
     uploadDocument: (body) => dispatch(uploadDocument({body})),
-    backStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 3})
+    backStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 3}),
+    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 5})
   };
 };
 
@@ -93,6 +100,7 @@ class BusinessBankDocuments extends React.Component {
 
     if (Object.keys(validateNewInput).every((k) => { return validateNewInput[k] === true })) {
       let business = this.props.business;
+      this.props.nextStep();
       this.props.editBusinessProfile({kyc_status: 'PENDING'}, business.id);
     } else {
       // if anything fails then update the UI validation state but NOT the UI Data State
@@ -152,7 +160,7 @@ class BusinessBankDocuments extends React.Component {
         <ThemeProvider theme={DefaultTheme}>
           <div>
             <AsyncButton buttonText={'Back'} onClick={this.props.backStep}/>
-            <AsyncButton buttonText={'COMPLETE'} onClick={this.isValidated}/>
+            <AsyncButton buttonText={'COMPLETE'} onClick={this.isValidated} isLoading={this.props.editStatus.isRequesting}/>
           </div>
         </ThemeProvider>
 

@@ -17,12 +17,11 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = (dispatch, ownProps) => {
+const mapDispatchToProps = (dispatch) => {
   return {
     loadBusinessProfile: (query) => dispatch(loadBusinessProfile({query})),
     clearUserId: () => dispatch({type: RESET_ACTIVE_STEP_STATE}),
     clearBusienssState: () => dispatch({type: RESET_BUSINESS_VERIFICATION_STATE}),
-    nextStep: () => dispatch({type: UPDATE_ACTIVE_STEP, activeStep: 0, userId: ownProps.userId})
   };
 };
 
@@ -67,7 +66,7 @@ class GetVerified extends React.Component {
       }
 
       if (userId) {
-        text = <Link to={`/users/${userId}/verification`} onClick={this.props.nextStep.bind(this)}>Add User KYC</Link>
+        text = <Link to={`/users/${userId}/verification`}>Add User KYC</Link>
       }
     }
 

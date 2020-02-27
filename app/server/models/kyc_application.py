@@ -50,7 +50,7 @@ class KycApplication(ModelBase):
     street_address_2    = db.Column(db.String)
     city                = db.Column(db.String)
     region              = db.Column(db.String)
-    postal_code         = db.Column(db.Integer)
+    postal_code         = db.Column(db.String)
     beneficial_owners   = db.Column(JSON)
     other_data          = db.Column(JSON)
 
