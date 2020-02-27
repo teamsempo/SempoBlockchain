@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import DeckGL, {HexagonLayer} from 'deck.gl';
+import React, { Component } from "react";
+import DeckGL, { HexagonLayer } from "deck.gl";
 
 const LIGHT_SETTINGS = {
   lightsPosition: [-0.144528, 49.739968, 8000, -3.807751, 54.104682, 8000],
@@ -19,7 +19,7 @@ const colorRange = [
   [209, 55, 78]
 ];
 
-const elevationScale = {min: 1, max: 50};
+const elevationScale = { min: 1, max: 50 };
 
 const defaultProps = {
   radius: 2000,
@@ -90,12 +90,12 @@ export default class DeckGLOverlay extends Component {
     if (this.state.elevationScale === elevationScale.max) {
       this._stopAnimate();
     } else {
-      this.setState({elevationScale: this.state.elevationScale + 1});
+      this.setState({ elevationScale: this.state.elevationScale + 1 });
     }
   }
 
   render() {
-    const {viewport, data, radius, coverage, upperPercentile} = this.props;
+    const { viewport, data, radius, coverage, upperPercentile } = this.props;
 
     if (!data) {
       return null;
@@ -103,7 +103,7 @@ export default class DeckGLOverlay extends Component {
 
     const layers = [
       new HexagonLayer({
-        id: 'heatmap',
+        id: "heatmap",
         colorRange,
         coverage,
         data: data,
@@ -124,5 +124,5 @@ export default class DeckGLOverlay extends Component {
   }
 }
 
-DeckGLOverlay.displayName = 'DeckGLOverlay';
+DeckGLOverlay.displayName = "DeckGLOverlay";
 DeckGLOverlay.defaultProps = defaultProps;
