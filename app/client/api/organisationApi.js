@@ -1,3 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient } from "./apiClient";
 
-export const loadOrganisationAPI = () => apiClient({url: '/me/organisation/', method: 'GET'});
+export const loadOrganisationAPI = () =>
+  apiClient({ url: "/me/organisation/", method: "GET" });

@@ -1,5 +1,5 @@
-import { combineReducers } from 'redux';
-import {DEEEEEEP} from "../utils";
+import { combineReducers } from "redux";
+import { DEEEEEEP } from "../utils";
 
 export const UPDATE_USER_LIST = "UPDATE_USER_LIST";
 
@@ -40,13 +40,13 @@ const initialLoadStatusState = {
 const loadStatus = (state = initialLoadStatusState, action) => {
   switch (action.type) {
     case LOAD_USER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case LOAD_USER_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case LOAD_USER_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -62,13 +62,13 @@ const initialEditStatusState = {
 const editStatus = (state = initialEditStatusState, action) => {
   switch (action.type) {
     case EDIT_USER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case EDIT_USER_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case EDIT_USER_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -83,25 +83,24 @@ const initialPinStatus = {
 const pinStatus = (state = initialPinStatus, action) => {
   switch (action.type) {
     case RESET_PIN_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case RESET_PIN_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case RESET_PIN_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
   }
 };
 
-
 const initialCreateStatusState = {
   isRequesting: false,
   error: null,
   success: false,
-  one_time_code: null,
+  one_time_code: null
 };
 
 const createStatus = (state = initialCreateStatusState, action) => {
@@ -110,7 +109,7 @@ const createStatus = (state = initialCreateStatusState, action) => {
       return initialCreateStatusState;
 
     case CREATE_USER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case CREATE_USER_SUCCESS:
       return {
@@ -123,48 +122,43 @@ const createStatus = (state = initialCreateStatusState, action) => {
       };
 
     case CREATE_USER_FAILURE:
-      return {...state, isRequesting: false, success: false, error: action.error};
+      return {
+        ...state,
+        isRequesting: false,
+        success: false,
+        error: action.error
+      };
 
     default:
       return state;
   }
 };
 
-
 export const users = combineReducers({
-    byId,
-    loadStatus,
-    editStatus,
-    createStatus,
-    pinStatus
+  byId,
+  loadStatus,
+  editStatus,
+  createStatus,
+  pinStatus
 });
 
-
 // ACTIONS
-export const loadUser = (payload) => (
-  {
-    type: LOAD_USER_REQUEST,
-    payload,
-  }
-);
+export const loadUser = payload => ({
+  type: LOAD_USER_REQUEST,
+  payload
+});
 
-export const editUser = (payload) => (
-  {
-    type: EDIT_USER_REQUEST,
-    payload,
-  }
-);
+export const editUser = payload => ({
+  type: EDIT_USER_REQUEST,
+  payload
+});
 
-export const resetPin = (payload) => (
-  {
-    type: RESET_PIN_REQUEST,
-    payload,
-  }
-);
+export const resetPin = payload => ({
+  type: RESET_PIN_REQUEST,
+  payload
+});
 
-export const createUser = (payload) => (
-  {
-    type: CREATE_USER_REQUEST,
-    payload,
-  }
-);
+export const createUser = payload => ({
+  type: CREATE_USER_REQUEST,
+  payload
+});

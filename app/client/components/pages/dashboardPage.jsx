@@ -1,43 +1,52 @@
-import React, { Suspense, lazy } from 'react';
-import { connect } from 'react-redux';
-import styled from 'styled-components';
-import { subscribe, unsubscribe } from 'pusher-redux';
+import React, { Suspense, lazy } from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
+import { subscribe, unsubscribe } from "pusher-redux";
 
-import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
-import { logout } from '../../reducers/auth/actions'
-import { loadCreditTransferList, loadCreditTransferStats } from "../../reducers/creditTransferReducer"
+import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
+import { logout } from "../../reducers/auth/actions";
+import {
+  loadCreditTransferList,
+  loadCreditTransferStats
+} from "../../reducers/creditTransferReducer";
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
 
-import { 
-  AnalyticsChart, 
-  BeneficiaryFunnel, 
-  UsagePieChart, 
-  MetricsBar, 
+import {
+  AnalyticsChart,
+  BeneficiaryFunnel,
+  UsagePieChart,
+  MetricsBar,
   BeneficiaryLiveFeed,
-  DashboardFilter 
-} from '../dashboard';
+  DashboardFilter
+} from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
-import { ModuleBox, PageWrapper, CenterLoadingSideBarActive } from '../styledElements'
-import { parseQuery } from '../../utils'
+import {
+  ModuleBox,
+  PageWrapper,
+  CenterLoadingSideBarActive
+} from "../styledElements";
+import { parseQuery } from "../../utils";
 
-const HeatMap = lazy(() => import('../heatmap/heatmap.jsx'));
+const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
 
-
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
-    login: state.login,
+    login: state.login
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    logout:       () => dispatch(logout()),
-    loadTransferAccountList: (query, path) => dispatch(loadTransferAccounts({query, path})),
-    loadCreditTransferList: (query, path) => dispatch(loadCreditTransferList({query, path})),
-    loadCreditTransferStats: (query, path) => dispatch(loadCreditTransferStats({query, path}))
+    logout: () => dispatch(logout()),
+    loadTransferAccountList: (query, path) =>
+      dispatch(loadTransferAccounts({ query, path })),
+    loadCreditTransferList: (query, path) =>
+      dispatch(loadCreditTransferList({ query, path })),
+    loadCreditTransferStats: (query, path) =>
+      dispatch(loadCreditTransferStats({ query, path }))
   };
 };
 
@@ -45,9 +54,9 @@ class DashboardPage extends React.Component {
   constructor() {
     super();
     this.state = {
-       subscribe,
-       unsubscribe,
-       loading: true,
+      subscribe,
+      unsubscribe,
+      loading: true
     };
   }
 
@@ -57,7 +66,7 @@ class DashboardPage extends React.Component {
   }
 
   componentDidMount() {
-    let transfer_type = 'ALL';
+    let transfer_type = "ALL";
     let per_page = 50;
     let page = 1;
     this.props.loadCreditTransferList({
@@ -66,31 +75,22 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
-    this.buildFilterForAPI()
+    this.buildFilterForAPI();
 
     const parsed = parseQuery(location.search);
 
     if (parsed.actok) {
-      console.log('actok', parsed.actok)
-      this.props.activateAccount(parsed.actok)
+      console.log("actok", parsed.actok);
+      this.props.activateAccount(parsed.actok);
     }
   }
 
   buildFilterForAPI() {
-    if (location.pathname.includes('vendors')) {
-        var query = {account_type: 'vendor'};
-
-    } else if (location.pathname.includes(window.BENEFICIARY_TERM_PLURAL.toLowerCase())) {
-        query = {account_type: 'beneficiary'};
-
-    } else {
-        query = {};
-    }
+    let query = {};
 
     if (this.props.transferAccounts.loadStatus.lastQueried) {
       query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
     }
-
 
     const path = null;
     this.props.loadTransferAccountList(query, path);
@@ -105,9 +105,14 @@ class DashboardPage extends React.Component {
     const additionalParams = () => {};
 
     let login = this.props.login;
-    let pusher_channel = window.PUSHER_ENV_CHANNEL + '-' + login.organisationId;
+    let pusher_channel = window.PUSHER_ENV_CHANNEL + "-" + login.organisationId;
 
-    subscribe(pusher_channel,'credit_transfer', PUSHER_CREDIT_TRANSFER, additionalParams);
+    subscribe(
+      pusher_channel,
+      "credit_transfer",
+      PUSHER_CREDIT_TRANSFER,
+      additionalParams
+    );
 
     // access it within the data object = {
     //  type: String,
@@ -119,77 +124,72 @@ class DashboardPage extends React.Component {
   }
 
   unsubscribe() {
-    unsubscribe('MainChannel', 'credit_transfer', PUSHER_CREDIT_TRANSFER);
+    unsubscribe("MainChannel", "credit_transfer", PUSHER_CREDIT_TRANSFER);
   }
 
   render() {
-    if (this.props.creditTransfers.loadStatus.isRequesting === true || this.props.transferAccounts.loadStatus.isRequesting === true) {
+    if (
+      this.props.creditTransfers.loadStatus.isRequesting === true ||
+      this.props.transferAccounts.loadStatus.isRequesting === true
+    ) {
       return (
         <WrapperDiv>
-
           <CenterLoadingSideBarActive>
-            <LoadingSpinner/>
+            <LoadingSpinner />
           </CenterLoadingSideBarActive>
-
         </WrapperDiv>
       );
     } else if (Object.values(this.props.creditTransfers.byId).length === 0) {
       return (
         <WrapperDiv>
-
           <PageWrapper>
             <ModuleBox>
-                <NoDataMessageWrapper>
-                  <IconSVG src="/static/media/no_data_icon.svg"/>
-                  <p>There is no data available. Please upload a spreadsheet.</p>
-                </NoDataMessageWrapper>
+              <NoDataMessageWrapper>
+                <IconSVG src="/static/media/no_data_icon.svg" />
+                <p>There is no data available. Please upload a spreadsheet.</p>
+              </NoDataMessageWrapper>
             </ModuleBox>
           </PageWrapper>
-
         </WrapperDiv>
       );
-
-    } else if (this.props.creditTransfers.loadStatus.success === true && this.props.transferAccounts.loadStatus.success === true) {
-      return(
+    } else if (
+      this.props.creditTransfers.loadStatus.success === true &&
+      this.props.transferAccounts.loadStatus.success === true
+    ) {
+      return (
         <WrapperDiv>
           <PageWrapper>
             <DashboardFilter>
               <Main>
-                
                 <GraphMetricColumn>
-
                   <ModuleBox>
-                    <AnalyticsChart/>
+                    <AnalyticsChart />
                   </ModuleBox>
 
                   <ModuleBox>
-                    <MetricsBar/>
+                    <MetricsBar />
                   </ModuleBox>
 
                   <ModuleBox>
-                    <BeneficiaryFunnel/>
+                    <BeneficiaryFunnel />
                   </ModuleBox>
-
                 </GraphMetricColumn>
 
                 <LiveFeedColumn>
                   <ModuleBox>
-                    <UsagePieChart/>
+                    <UsagePieChart />
                   </ModuleBox>
-
 
                   <ModuleBox>
-                    <BeneficiaryLiveFeed/>
+                    <BeneficiaryLiveFeed />
                   </ModuleBox>
-
                 </LiveFeedColumn>
-
               </Main>
 
-              <Main style={{ marginTop: 0, maxHeight: '80vh'}}>
+              <Main style={{ marginTop: 0, maxHeight: "80vh" }}>
                 <ModuleBox>
                   <Suspense fallback={<div>Loading Map...</div>}>
-                    <HeatMap/>
+                    <HeatMap />
                   </Suspense>
                 </ModuleBox>
               </Main>
@@ -205,9 +205,12 @@ class DashboardPage extends React.Component {
       );
     }
   }
-};
+}
 
-export default connect(mapStateToProps, mapDispatchToProps)(DashboardPage);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DashboardPage);
 
 const WrapperDiv = styled.div`
   //width: 100vw;
@@ -222,7 +225,7 @@ const WrapperDiv = styled.div`
 const Main = styled.div`
   display: flex;
   @media (max-width: 767px) {
-  flex-direction: column;
+    flex-direction: column;
   }
 `;
 

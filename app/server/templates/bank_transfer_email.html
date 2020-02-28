@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-<body>
+  <body>
     Hello,
-    <br/><br/>
+    <br /><br />
 
-    You requested to fund your Sempo wallet with <b>{{ amount }}{{ currency }}.</b> Transfer ID: {{ transfer_id }}.
+    You requested to fund your Sempo wallet with
+    <b>{{ amount }}{{ currency }}.</b> Transfer ID: {{ transfer_id }}.
 
-    <br/><br/>
+    <br /><br />
 
     <div>{{ instructions }}</div>
 
-    <br/>
+    <br />
 
     <div>
-        <h3>Wire Details</h3>
-        <p><b>Account Number:</b> {{ account_number }}</p>
+      <h3>Wire Details</h3>
+      <p><b>Account Number:</b> {{ account_number }}</p>
 
-        <p><b>Routing Number:</b> {{ routing_number }}</p>
-        <p><b>SWIFT Code:</b> {{ swift_code }}</p>
+      <p><b>Routing Number:</b> {{ routing_number }}</p>
+      <p><b>SWIFT Code:</b> {{ swift_code }}</p>
 
-        <p><b>Account Type:</b> {{ account_type }}</p>
+      <p><b>Account Type:</b> {{ account_type }}</p>
 
-        <p><b>Bank Address:</b> {{ bank_address }}</p>
-        <p><b>Beneficiary:</b> {{ beneficiary }}</p>
+      <p><b>Bank Address:</b> {{ bank_address }}</p>
+      <p><b>Beneficiary:</b> {{ beneficiary }}</p>
     </div>
 
-    <br/><br/>
-    Payments are processed by our partner Wyre. Wyre Payments, Inc. is a registered money service business (NMLS ID: 1574869).
-    <br/>
-    If this message is an error, or you need assistance please contact team@withsempo.com.
-
-</body>
+    <br /><br />
+    Payments are processed by our partner Wyre. Wyre Payments, Inc. is a
+    registered money service business (NMLS ID: 1574869).
+    <br />
+    If this message is an error, or you need assistance please contact
+    team@withsempo.com.
+  </body>
 </html>

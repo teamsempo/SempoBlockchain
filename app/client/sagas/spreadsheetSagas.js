@@ -1,7 +1,7 @@
-import { put, takeEvery, call, all } from 'redux-saga/effects'
-import { browserHistory } from '../app.jsx'
+import { put, takeEvery, call, all } from "redux-saga/effects";
+import { browserHistory } from "../app.jsx";
 
-import {ADD_FLASH_MESSAGE} from "../reducers/messageReducer";
+import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
 
 import {
   SPREADSHEET_UPLOAD_REQUEST,
@@ -13,26 +13,28 @@ import {
   LOAD_DATASET_LIST_REQUEST,
   LOAD_DATASET_LIST_SUCCESS,
   LOAD_DATASET_LIST_FAILURE
-} from '../reducers/spreadsheetReducer.js';
+} from "../reducers/spreadsheetReducer.js";
 
-import { uploadSpreadsheetAPI, saveDatasetAPI, loadDatasetListAPI } from '../api/spreadsheetAPI.js'
-import {handleError} from "../utils";
+import {
+  uploadSpreadsheetAPI,
+  saveDatasetAPI,
+  loadDatasetListAPI
+} from "../api/spreadsheetAPI.js";
+import { handleError } from "../utils";
 
 function* spreadsheetUpload({ payload }) {
   try {
     const upload_result = yield call(uploadSpreadsheetAPI, payload);
-    yield put({type: SPREADSHEET_UPLOAD_SUCCESS, upload_result});
+    yield put({ type: SPREADSHEET_UPLOAD_SUCCESS, upload_result });
     //todo: this needs to be updated as account type no longer handled via URL
     // browserHistory.push('/upload?type=' + transfer_account_type)
-    browserHistory.push('/upload')
-
+    browserHistory.push("/upload");
   } catch (fetch_error) {
-
     const error = yield call(handleError, fetch_error);
 
-    yield put({type: SPREADSHEET_UPLOAD_FAILURE, error: error, preview_id});
+    yield put({ type: SPREADSHEET_UPLOAD_FAILURE, error: error, preview_id });
 
-    yield put({type: ADD_FLASH_MESSAGE, error: true, message: error.message});
+    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
 }
 
@@ -43,10 +45,9 @@ function* watchSpreadsheetUpload() {
 function* saveDataset({ payload }) {
   try {
     const save_result = yield call(saveDatasetAPI, payload);
-    yield put({type: SAVE_DATASET_SUCCESS, save_result});
-
+    yield put({ type: SAVE_DATASET_SUCCESS, save_result });
   } catch (error) {
-    yield put({type: SAVE_DATASET_FAILURE, error: error.statusText})
+    yield put({ type: SAVE_DATASET_FAILURE, error: error.statusText });
   }
 }
 
@@ -57,9 +58,9 @@ function* watchSaveDataset() {
 function* loadDatasetList() {
   try {
     const load_result = yield call(loadDatasetListAPI);
-    yield put({type: LOAD_DATASET_LIST_SUCCESS, load_result});
+    yield put({ type: LOAD_DATASET_LIST_SUCCESS, load_result });
   } catch (error) {
-    yield put({type: LOAD_DATASET_LIST_FAILURE, error: error.statusText})
+    yield put({ type: LOAD_DATASET_LIST_FAILURE, error: error.statusText });
   }
 }
 
@@ -72,5 +73,5 @@ export default function* spreadsheetSagas() {
     watchSaveDataset(),
     watchSpreadsheetUpload(),
     watchLoadDatasetList()
-  ])
+  ]);
 }

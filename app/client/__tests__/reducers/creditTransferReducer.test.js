@@ -1,35 +1,49 @@
-import configureMockStore from 'redux-mock-store'
-import { connect } from 'react-redux';
-import { take, fork, put, takeEvery, call, all, cancelled, cancel, race} from 'redux-saga/effects'
-import createSagaMiddleware from 'redux-saga'
-import { loadCreditTransferList } from '../../reducers/creditTransferReducer';
+import configureMockStore from "redux-mock-store";
+import { connect } from "react-redux";
+import {
+  take,
+  fork,
+  put,
+  takeEvery,
+  call,
+  all,
+  cancelled,
+  cancel,
+  race
+} from "redux-saga/effects";
+import createSagaMiddleware from "redux-saga";
+import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
 
 import {
   LOAD_CREDIT_TRANSFER_LIST_REQUEST,
-  LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
-} from '../../reducers/creditTransferReducer.js';
-import fetchMock from 'fetch-mock'
-import enzyme from 'enzyme'
+  LOAD_CREDIT_TRANSFER_LIST_SUCCESS
+} from "../../reducers/creditTransferReducer.js";
+import fetchMock from "fetch-mock";
+import enzyme from "enzyme";
 
 const sagaMiddleware = createSagaMiddleware();
 
 const middlewares = [sagaMiddleware];
 const mockStore = configureMockStore(middlewares);
 
-describe('async actions', () => {
-  it('creates a loadCreditTransferList request', () => {
+describe("async actions", () => {
+  it("creates a loadCreditTransferList request", () => {
     const filter = null;
     const id = null;
 
     const expectedActions = [
       { type: LOAD_CREDIT_TRANSFER_LIST_REQUEST },
-      { type: LOAD_CREDIT_TRANSFER_LIST_SUCCESS, body: {transferList: [], transferStats: {}} }
+      {
+        type: LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
+        body: { transferList: [], transferStats: {} }
+      }
     ];
-    const store = mockStore({transferList: [], transferStats: {}});
+    const store = mockStore({ transferList: [], transferStats: {} });
 
-    const mapDispatchToProps = (dispatch) => {
+    const mapDispatchToProps = dispatch => {
       return {
-        loadCreditTransferList: (filter, id) => dispatch(loadCreditTransferList(filter, id)),
+        loadCreditTransferList: (filter, id) =>
+          dispatch(loadCreditTransferList(filter, id))
       };
     };
     connect(mapDispatchToProps);
@@ -40,21 +54,21 @@ describe('async actions', () => {
       // } catch (error) {
       //   put({type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error: error.statusText})
       // }
-      expect(store.getActions()).toEqual(expectedActions)
+      expect(store.getActions()).toEqual(expectedActions);
     });
-  })
+  });
 });
 
-describe('actions', () => {
-  it('should create an action to add a todo', () => {
+describe("actions", () => {
+  it("should create an action to add a todo", () => {
     const filter = null;
     const id = null;
 
-    const text = 'Finish docs';
+    const text = "Finish docs";
     const expectedAction = {
       type: LOAD_CREDIT_TRANSFER_LIST_REQUEST,
       text
     };
-    expect(loadCreditTransferList(filter, id)).toEqual(expectedAction)
-  })
+    expect(loadCreditTransferList(filter, id)).toEqual(expectedAction);
+  });
 });
