@@ -29,6 +29,12 @@ class SearchAPI(MethodView):
         Parameters:
             - search_string: Any string you want to search. When empty or not provided, all results will be returned. 
             - search_type: Valid inputs are transfer_accounts, and credit_transfers.
+            - order: Which order to return results in (ASC or DESC)
+            - sort_by: What to sort by. `rank` works for both, and sorts by search relevance.
+                - Transfer Accounts can be sorted by: 'first_name', 'last_name', 'email', 'date_account_created', 'rank', 'balance', 'status'
+                - Credit Transfers can be sorted by: 'sender_first_name', 'sender_last_name', 'sender_email', 'sender_date_account_created', 
+                  'recipient_first_name', 'recipient_last_name', 'recipient_email', 'recipient_date_account_created', 'rank', 'amount', 
+                  'transfer_type', 'approval', 'date_transaction_created'
         Return Value:
             Results object, similar to the existing transfer_accounts and credit_transfers API return values
         """
@@ -45,8 +51,8 @@ class SearchAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        # HANDLE PARAM : sorting_options
-        # Valid params differ depending on sorting_options. See: sorting_options
+        # HANDLE PARAM : sort_by
+        # Valid params differ depending on sort_by. See: sort_by
         # Default: rank
         
         # Aliases used for joining the separate sender and recipient objects to transfers
@@ -109,6 +115,7 @@ class SearchAPI(MethodView):
         # 'Fran deRoo' -> 'Fran:* | deRoo:*'
         # Matches strings like "Francine deRoos"
         # Will also match "Michiel deRoos" because of the or clause, but this will be ranked lower
+        search_string = re.sub('\s+',' ',search_string)
         search_terms = search_string.strip().split(' ')
         tsquery = ':* | '.join(search_terms)+':*'
 
@@ -167,7 +174,6 @@ class SearchAPI(MethodView):
                 final_query = db.session.query(TransferAccount)\
                     .join(user_search_result, user_search_result.c.default_transfer_account_id == TransferAccount.id)\
                     .join(User, user_search_result.c.default_transfer_account_id == User.default_transfer_account_id)\
-                    .execution_options(show_all=True)\
                     .filter(user_search_result.c.rank > 0.0)\
                     .filter(TransferAccount.is_ghost != True)
                 if sort_by_arg == 'rank':
@@ -196,7 +202,6 @@ class SearchAPI(MethodView):
                     .outerjoin(recipient, 
                         recipient_search_result.c.default_transfer_account_id == recipient.default_transfer_account_id
                     )\
-                    .execution_options(show_all=True)\
                     .filter(or_(recipient_search_result.c.rank > 0.0, sender_search_result.c.rank > 0.0))
 
                 if sort_by_arg == 'rank':
