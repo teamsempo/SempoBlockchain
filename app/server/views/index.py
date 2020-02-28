@@ -58,8 +58,13 @@ def upload():
 def deprecatedVendor():
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
+
+@index_view.route('/settings')
+def settings():
+    return render_template('index.html', js_bundle_main=get_js_bundle_filename())
+
 @index_view.route('/settings/<subroute>')
-def settings(subroute):
+def settings_subroute(subroute):
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/activate-account/')
