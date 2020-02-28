@@ -1,14 +1,14 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 import { Link } from "react-router-dom";
 
 export const PageWrapper = styled.div`
   margin-left: 234px;
   width: calc(100vw - 234px);
   @media (max-width: 767px) {
-  margin-top: 50px;
-  margin-left: 0;
-  width: 100vw;
-  flex-direction: column;
+    margin-top: 50px;
+    margin-left: 0;
+    width: 100vw;
+    flex-direction: column;
   }
 `;
 
@@ -20,8 +20,8 @@ export const CenterLoadingSideBarActive = styled.div`
   display: flex;
   justify-content: center;
   @media (max-width: 767px) {
-  margin-left: 0;
-  width: 100vw;
+    margin-left: 0;
+    width: 100vw;
   }
 `;
 
@@ -31,25 +31,25 @@ export const Input = styled.input`
   display: flex;
   margin: 0.5em;
   padding: 0.5em;
-  border: 1px solid rgba(0,0,0,.15);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   background-color: #fff;
   background-image: none;
   background-clip: padding-box;
   font-size: 1em;
   font-weight: 200;
   color: #495057;
-  transition: all .25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
   &:focus {
-  border-color: #34b0b3;
+    border-color: #34b0b3;
   }
 `;
 
 export const ModuleBox = styled.div`
-    margin: 1em;
-    background-color: #fff;
-    box-shadow: 0px 2px 0px 0 rgba(51,51,79,.08);
-    overflow: hidden;
-    position: relative;
+  margin: 1em;
+  background-color: #fff;
+  box-shadow: 0px 2px 0px 0 rgba(51, 51, 79, 0.08);
+  overflow: hidden;
+  position: relative;
 `;
 
 export const RestrictedModuleBox = styled(ModuleBox)`
@@ -68,62 +68,61 @@ export const RestrictedModuleBox = styled(ModuleBox)`
 // `;
 
 export const StyledButton = styled.button`
-    outline: none;
-    border: 0;
-    white-space: nowrap;
-    display: inline-block;
-    height: 40px;
-    line-height: 40px;
-    padding: 0 14px;
-    margin: 0.5em;
-    box-shadow: 0px 2px 0px 0 rgba(51,51,79,.08);
-    background: ${props => props.theme.background};
-    font-size: 1em;
-    font-weight: 200;
-    text-transform: uppercase;
-    -webkit-letter-spacing: .025em;
-    -moz-letter-spacing: .025em;
-    -ms-letter-spacing: .025em;
-    letter-spacing: .025em;
-    color: ${props => props.theme.color};
-    text-decoration: none;
-    -webkit-transition: all .15s ease;
-    transition: all .15s ease;
-    &:hover {
+  outline: none;
+  border: 0;
+  white-space: nowrap;
+  display: inline-block;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 14px;
+  margin: 0.5em;
+  box-shadow: 0px 2px 0px 0 rgba(51, 51, 79, 0.08);
+  background: ${props => props.theme.background};
+  font-size: 1em;
+  font-weight: 200;
+  text-transform: uppercase;
+  -webkit-letter-spacing: 0.025em;
+  -moz-letter-spacing: 0.025em;
+  -ms-letter-spacing: 0.025em;
+  letter-spacing: 0.025em;
+  color: ${props => props.theme.color};
+  text-decoration: none;
+  -webkit-transition: all 0.15s ease;
+  transition: all 0.15s ease;
+  &:hover {
     background-color: ${props => props.theme.backgroundColor};
-    }
+  }
 `;
 
 export const StyledSelect = styled.select`
-    //-webkit-appearance: none;
-    // border-radius: 0;
-    outline: none;
-    border: 0;
-    white-space: nowrap;
-    display: inline-block;
-    height: 40px;
-    line-height: 40px;
-    padding: 0 14px;
-    margin: 0.5em;
-    box-shadow: 0px 2px 0px 0 rgba(51,51,79,.08);
-    background: ${props => props.theme.background};
-    font-size: 1em;
-    font-weight: 200;
-    text-transform: uppercase;
-    -webkit-letter-spacing: .025em;
-    -moz-letter-spacing: .025em;
-    -ms-letter-spacing: .025em;
-    letter-spacing: .025em;
-    color: ${props => props.theme.color};
-    text-decoration: none;
-    -webkit-transition: all .15s ease;
-    transition: all .15s ease;
-    &:hover {
+  //-webkit-appearance: none;
+  // border-radius: 0;
+  outline: none;
+  border: 0;
+  white-space: nowrap;
+  display: inline-block;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 14px;
+  margin: 0.5em;
+  box-shadow: 0px 2px 0px 0 rgba(51, 51, 79, 0.08);
+  background: ${props => props.theme.background};
+  font-size: 1em;
+  font-weight: 200;
+  text-transform: uppercase;
+  -webkit-letter-spacing: 0.025em;
+  -moz-letter-spacing: 0.025em;
+  -ms-letter-spacing: 0.025em;
+  letter-spacing: 0.025em;
+  color: ${props => props.theme.color};
+  text-decoration: none;
+  -webkit-transition: all 0.15s ease;
+  transition: all 0.15s ease;
+  &:hover {
     //background-color: #34b0b3;
     background-color: ${props => props.theme.backgroundColor};
-    }
+  }
 `;
-
 
 export const PlainTextButton = styled.button`
   margin: 0.5em;
@@ -133,7 +132,6 @@ export const PlainTextButton = styled.button`
   color: #495057;
   border: none;
 `;
-
 
 export const ErrorMessage = styled.div`
   height: 1.2em;
@@ -153,7 +151,7 @@ export const ModuleHeader = styled.h4`
   font-size: 15px;
   color: #6a7680;
   font-weight: 600;
-  letter-spacing: 1px
+  letter-spacing: 1px;
 `;
 
 export const Wrapper = styled.div`
@@ -167,7 +165,7 @@ export const TopRow = styled.div`
   justify-content: space-between;
   align-items: center;
   @media (max-width: 767px) {
-  min-width: fit-content;
+    min-width: fit-content;
   }
 `;
 
@@ -176,19 +174,19 @@ export const Row = styled.div`
   flex-direction: row;
   width: 100%;
   @media (max-width: 767px) {
-  flex-direction: column;
-  width: calc(100% - 2em);
+    flex-direction: column;
+    width: calc(100% - 2em);
   }
 `;
 
 export const InputObject = styled.label`
-  display:block;
+  display: block;
   padding: 1em;
   font-size: 15px;
 `;
 
 export const InputLabel = styled.div`
-  display:block;
+  display: block;
   font-size: 14px;
 `;
 
@@ -209,8 +207,8 @@ export const Modal = styled.div`
   width: 100%; /* Full width */
   height: 100%; /* Full height */
   overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 `;
 
 export const ModalContent = styled.div`
@@ -227,10 +225,10 @@ export const ModalClose = styled.img`
   font-size: 28px;
   font-weight: bold;
   height: 20px;
- `;
+`;
 
 export const FooterBar = styled.div`
-    display: flex;
-    border-top: solid 1px rgba(0,0,0,0.05);
-    padding: 1em;
+  display: flex;
+  border-top: solid 1px rgba(0, 0, 0, 0.05);
+  padding: 1em;
 `;
