@@ -158,7 +158,7 @@ const invitesById = (
 ): Invite[] => {
   switch (action.type) {
     case DEEP_UPDATE_INVITE_USER_LIST:
-      if (action.invites) return DEEEEEEP(state, action.invites) || state;
+      if (action.invites) return DEEEEEEP(state, action.invites);
       else return state;
     case UPDATE_INVITE_USER_LIST:
       return action.invites;
