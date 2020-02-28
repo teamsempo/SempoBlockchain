@@ -10,10 +10,17 @@ from sqlalchemy.sql.expression import cast
 MALE = 'male'
 FEMALE = 'female'
 
-BENEFICIARY = 'has_beneficiary_role'
-VENDOR = 'has_vendor_role'
-TOKEN_AGENT = 'has_token_agent_role'
-GROUP_ACCOUNT = 'has_group_account_role'
+BENEFICIARY = "Beneficiary"
+VENDOR = "Vendor"
+TOKEN_AGENT = "Token Agent"
+GROUP_ACCOUNT = "Group Account"
+
+BOOLEAN_MAPPINGS = {
+    BENEFICIARY: "has_beneficiary_role",
+    VENDOR: "has_vendor_role",
+    TOKEN_AGENT: "has_token_agent_role",
+    GROUP_ACCOUNT: "has_group_account_role"
+}
 
 class TransferFilterEnum:
     INT_RANGE       = "int_range"
@@ -28,7 +35,7 @@ TRANSFER_FILTERS = {
         'type' : TransferFilterEnum.DATE_RANGE,
     },
     'user_type': {
-        'name': "Type",
+        'name': "User Type",
         'table': User.__tablename__,
         'type': TransferFilterEnum.BOOLEAN_MAPPING,
         'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
@@ -103,7 +110,8 @@ def handle_boolean_mapping(keyname, filters):
     formatted_filters = []
     for _filt in filters:
         comparator = _filt['comparator']
-        val = _filt['value']
+        mapping_name = _filt['value']
+        val = BOOLEAN_MAPPINGS[mapping_name]
         formatted_filters.append((val, "EQ", True))
     return formatted_filters
 
