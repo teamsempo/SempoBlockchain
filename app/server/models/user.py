@@ -307,7 +307,7 @@ class User(ManyOrgBase, ModelBase):
     def has_token_agent_role(self):
         return AccessControl.has_any_tier(self.roles, 'TOKEN_AGENT')
 
-    @has_beneficiary_role.expression
+    @has_token_agent_role.expression
     def has_token_agent_role(cls):
         return cls._held_roles.has_key('TOKEN_AGENT')
 
@@ -315,7 +315,7 @@ class User(ManyOrgBase, ModelBase):
     def has_group_account_role(self):
         return AccessControl.has_any_tier(self.roles, 'GROUP_ACCOUNT')
 
-    @has_beneficiary_role.expression
+    @has_group_account_role.expression
     def has_group_account_role(cls):
         return cls._held_roles.has_key('GROUP_ACCOUNT')
 
