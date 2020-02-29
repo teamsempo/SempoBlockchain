@@ -94,7 +94,7 @@ class SearchBoxWithFilter extends React.Component {
         if (attribute_dict[name] === undefined) {
           // This means that the attribute name has not been seen at all, which means we can just create array
           attribute_dict[name] = {
-            values: [value],
+            values: new Set([value]),
             type:
               typeof value == "number"
                 ? USER_FILTER_TYPE.INT_RANGE
@@ -102,9 +102,9 @@ class SearchBoxWithFilter extends React.Component {
           };
         } else {
           // Attribute name has been seen, check if attribute VALUE has been seen
-          if (attribute_dict[name].values.indexOf(value) === -1) {
+          if (attribute_dict[name].values.has(value)) {
             //hasn't been seen, so add
-            attribute_dict[name].values.push(value);
+            attribute_dict[name].values.add(value);
           }
         }
       }
