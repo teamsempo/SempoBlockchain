@@ -142,7 +142,7 @@ class TransferAccount(OneOrgBase, ModelBase):
     # rounded balance
     @hybrid_property
     def account_balance(self):
-        return (self._balance_wei or 0) / int(1e18)
+        return (self._balance_wei or 0) / int(1e16)
 
     @hybrid_property
     def master_wallet_approval_status(self):
