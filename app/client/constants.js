@@ -6,5 +6,5 @@ export const USER_FILTER_TYPE = {
 };
 
 export const USER_FILTER_ATTRIBUTE = {
-  BALANCE: "account_balance"
+  BALANCE: "rounded_account_balance"
 };

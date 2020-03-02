@@ -102,7 +102,7 @@ class SearchBoxWithFilter extends React.Component {
           };
         } else {
           // Attribute name has been seen, check if attribute VALUE has been seen
-          if (attribute_dict[name].values.has(value)) {
+          if (!attribute_dict[name].values.has(value)) {
             //hasn't been seen, so add
             attribute_dict[name].values.add(value);
           }
@@ -176,6 +176,8 @@ class SearchBoxWithFilter extends React.Component {
           }
         } else if (filter.type === "<") {
           if (value < filter.threshold) {
+            console.log(value);
+            console.log(filter.threshold);
             add_account();
           }
         } else if (filter.type === ">") {

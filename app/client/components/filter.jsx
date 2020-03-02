@@ -79,7 +79,7 @@ class Filter extends React.Component {
           dropdownActive: false
         },
         () => {
-          keyNameValues.map(i => {
+          [...keyNameValues].map(i => {
             this.setState(prevState => ({
               keyNameValues: {
                 ...prevState.keyNameValues,
@@ -126,8 +126,6 @@ class Filter extends React.Component {
       };
     } else {
       let value = parseFloat(this.state.GtLtThreshold);
-      if (this.state.keyName === USER_FILTER_ATTRIBUTE.BALANCE)
-        value = value * 100;
       newFilter = {
         id: id,
         type: this.state.comparator,
@@ -274,6 +272,11 @@ class Filter extends React.Component {
       (filterType === USER_FILTER_TYPE.DISCRETE ||
         filterType === USER_FILTER_TYPE.BOOLEAN_MAPPING)
     ) {
+      let valueArray =
+        typeof possibleFilters[keyName].values !== "undefined"
+          ? [...possibleFilters[keyName].values]
+          : [];
+
       valuePicker = (
         <div
           style={{
@@ -314,8 +317,8 @@ class Filter extends React.Component {
                 this.setState({ dropdownActive: !this.state.dropdownActive })
               }
             >
-              {typeof possibleFilters[keyName].values !== "undefined"
-                ? possibleFilters[keyName].values.map((key, index) => (
+              {valueArray.length !== 0
+                ? valueArray.map((key, index) => (
                     <CheckboxLabel key={index}>
                       <input
                         type="checkbox"
