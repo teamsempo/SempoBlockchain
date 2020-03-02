@@ -88,6 +88,7 @@ class TransferAccount(OneOrgBase, ModelBase):
         # We use cents for historical reasons, and to enable graceful degredation/rounding on
         # hardware that can only handle small ints (like the transfer cards and old android devices)
 
+        # rounded to whole value of balance
         return float((self._balance_wei or 0) / int(1e16))
 
     @balance.setter
@@ -137,6 +138,11 @@ class TransferAccount(OneOrgBase, ModelBase):
     @hybrid_property
     def primary_user_id(self):
         return self.primary_user.id
+
+    # rounded balance
+    @hybrid_property
+    def account_balance(self):
+        return (self._balance_wei or 0) / int(1e16)
 
     @hybrid_property
     def master_wallet_approval_status(self):

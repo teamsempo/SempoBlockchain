@@ -1,27 +1,31 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import styled from 'styled-components';
+import React from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
 
 import {
-  loadBusinessProfile, RESET_ACTIVE_STEP_STATE, RESET_BUSINESS_VERIFICATION_STATE, UPDATE_ACTIVE_STEP
+  loadBusinessProfile,
+  RESET_ACTIVE_STEP_STATE,
+  RESET_BUSINESS_VERIFICATION_STATE,
+  UPDATE_ACTIVE_STEP
 } from "../reducers/businessVerificationReducer";
 
 import LoadingSpinner from "./loadingSpinner.jsx";
 import { Link } from "react-router-dom";
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     adminTier: state.login.adminTier,
     loadStatus: state.businessVerification.loadStatus,
-    businessProfile: state.businessVerification.businessVerificationState,
+    businessProfile: state.businessVerification.businessVerificationState
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    loadBusinessProfile: (query) => dispatch(loadBusinessProfile({query})),
-    clearUserId: () => dispatch({type: RESET_ACTIVE_STEP_STATE}),
-    clearBusienssState: () => dispatch({type: RESET_BUSINESS_VERIFICATION_STATE}),
+    loadBusinessProfile: query => dispatch(loadBusinessProfile({ query })),
+    clearUserId: () => dispatch({ type: RESET_ACTIVE_STEP_STATE }),
+    clearBusienssState: () =>
+      dispatch({ type: RESET_BUSINESS_VERIFICATION_STATE })
   };
 };
 
@@ -33,7 +37,7 @@ class GetVerified extends React.Component {
 
   componentWillMount() {
     const { userId } = this.props;
-    this.props.clearUserId({'userId': userId});
+    this.props.clearUserId({ userId: userId });
     this.props.clearBusienssState();
   }
 
@@ -41,60 +45,68 @@ class GetVerified extends React.Component {
     const { userId } = this.props;
     let query;
     if (userId) {
-      query = {'user_id': userId}
+      query = { user_id: userId };
     }
-    this.props.loadBusinessProfile(query)
+    this.props.loadBusinessProfile(query);
   }
 
   render() {
     let { loadStatus, businessProfile, adminTier, userId } = this.props;
-    var iconColor = '#ff1705';
-    var text = 'Please contact support.';
+    var iconColor = "#ff1705";
+    var text = "Please contact support.";
     var addFunds = null;
 
     if (loadStatus.isRequesting) {
       return (
         <WrapperDiv>
-          <LoadingSpinner/>
+          <LoadingSpinner />
         </WrapperDiv>
-      )
+      );
     }
 
-    if (businessProfile.kyc_status === 'INCOMPLETE' || (!Object.values(businessProfile).length > 0)) {
-      if (adminTier === 'superadmin') {
-        text = <Link to='settings/verification'>Get Verified</Link>
+    if (
+      businessProfile.kyc_status === "INCOMPLETE" ||
+      !Object.values(businessProfile).length > 0
+    ) {
+      if (adminTier === "superadmin") {
+        text = <Link to="settings/verification">Get Verified</Link>;
       }
 
       if (userId) {
-        text = <Link to={`/users/${userId}/verification`}>Add User KYC</Link>
+        text = <Link to={`/users/${userId}/verification`}>Add User KYC</Link>;
       }
     }
 
-    if (businessProfile.kyc_status === 'PENDING') {
-      iconColor = '#FF9800';
-      text = 'Pending.';
+    if (businessProfile.kyc_status === "PENDING") {
+      iconColor = "#FF9800";
+      text = "Pending.";
       addFunds = null;
     }
 
-    if (businessProfile.kyc_status === 'VERIFIED') {
-      iconColor = '#00C759';
-      text = 'Verified.';
+    if (businessProfile.kyc_status === "VERIFIED") {
+      iconColor = "#00C759";
+      text = "Verified.";
       addFunds = null;
 
-      if (!userId && adminTier === 'superadmin' || adminTier === 'admin') {
-        addFunds = <div><br/><Link to='settings/fund-wallet'>Add Funds</Link></div>
+      if ((!userId && adminTier === "superadmin") || adminTier === "admin") {
+        addFunds = (
+          <div>
+            <br />
+            <Link to="settings/fund-wallet">Add Funds</Link>
+          </div>
+        );
       }
     }
 
-    return(
-      <div style={{margin: '1em'}}>
+    return (
+      <div style={{ margin: "1em" }}>
         <StyledAccountWrapper>
           <StyledHeader>Account Status:</StyledHeader>
           <StyledContent backgroundColor={iconColor}>{text}</StyledContent>
           {addFunds}
         </StyledAccountWrapper>
       </div>
-    )
+    );
   }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(GetVerified);
@@ -109,22 +121,22 @@ const WrapperDiv = styled.div`
 
 const StyledHeader = styled.p`
   font-weight: 600;
-  margin: 0 0 .6em;
+  margin: 0 0 0.6em;
 `;
 
 const StyledContent = styled.p`
   font-weight: 400;
   margin: 0;
   &:before {
-  content: "\\2713";
-  color: white;
-  background-color: ${props => props.backgroundColor};
-  width: 60px;
-  font-size: 14px;
-  border-radius: 1.2em;
-  padding: 1px 5px;
-  display: inline;
-  margin-right: 10px;
+    content: "\\2713";
+    color: white;
+    background-color: ${props => props.backgroundColor};
+    width: 60px;
+    font-size: 14px;
+    border-radius: 1.2em;
+    padding: 1px 5px;
+    display: inline;
+    margin-right: 10px;
   }
 `;
 

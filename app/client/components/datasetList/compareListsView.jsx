@@ -1,88 +1,72 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import styled from 'styled-components';
+import React from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
 
-import { loadDatasetList } from '../../reducers/spreadsheetReducer'
+import { loadDatasetList } from "../../reducers/spreadsheetReducer";
 
-import { Input, StyledButton, ErrorMessage } from './../styledElements'
+import { Input, StyledButton, ErrorMessage } from "./../styledElements";
 
-import DatasetFeed from './datasetFeed.jsx'
+import DatasetFeed from "./datasetFeed.jsx";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     datasetList: state.datasetList,
     login: state.login,
-    loggedIn: (state.login.token != null),
+    loggedIn: state.login.token != null
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    loadDatasetList: (payload) => dispatch(loadDatasetList())
+    loadDatasetList: payload => dispatch(loadDatasetList())
   };
 };
 
 class CompareListsView extends React.Component {
   constructor() {
     super();
-    this.state = {
-    };
+    this.state = {};
   }
 
   componentDidMount() {
-    this.props.loadDatasetList()
+    this.props.loadDatasetList();
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.loggedIn!==this.props.loggedIn) {
-        this.props.loadDatasetList()
+    if (nextProps.loggedIn !== this.props.loggedIn) {
+      this.props.loadDatasetList();
     }
   }
 
   render() {
-
-
     if (Object.keys(this.props.datasetList.data).length === 0) {
-      return (
-        <LoadingSpinner/>
-      )
+      return <LoadingSpinner />;
     }
 
     return (
-      <div style={{display: 'flex', marginTop: '1em'}}>
+      <div style={{ display: "flex", marginTop: "1em" }}>
         <FeedContainer>
-          <div style={{fontWeight: 600}}>
-            Merge:
-          </div>
-          <FeedTitle>
-            Your Datasets
-          </FeedTitle>
+          <div style={{ fontWeight: 600 }}>Merge:</div>
+          <FeedTitle>Your Datasets</FeedTitle>
           <DatasetFeed
-            datasetList={
-            Object.keys(this.props.datasetList.data).map((key) => this.props.datasetList.data[key])
-            .filter(item => item.uploader_id === this.props.login.userId)
-            }
+            datasetList={Object.keys(this.props.datasetList.data)
+              .map(key => this.props.datasetList.data[key])
+              .filter(item => item.uploader_id === this.props.login.userId)}
           />
         </FeedContainer>
 
         <FeedContainer>
-          <div style={{fontWeight: 600}}>
-            With:
-          </div>
-          <FeedTitle>
-            Other Datasets
-          </FeedTitle>
+          <div style={{ fontWeight: 600 }}>With:</div>
+          <FeedTitle>Other Datasets</FeedTitle>
           <DatasetFeed
-            datasetList={
-            Object.keys(this.props.datasetList.data).map((key) => this.props.datasetList.data[key])
-            .filter(item => item.uploader_id !== this.props.login.userId)
-            }
+            datasetList={Object.keys(this.props.datasetList.data)
+              .map(key => this.props.datasetList.data[key])
+              .filter(item => item.uploader_id !== this.props.login.userId)}
           />
         </FeedContainer>
       </div>
-
-    )
+    );
   }
 }
 

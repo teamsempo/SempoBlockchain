@@ -1,23 +1,21 @@
-import React from 'react';
-import {connect} from "react-redux";
-import styled from 'styled-components';
+import React from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
 
-import Intercom, { IntercomAPI } from 'react-intercom';
+import Intercom, { IntercomAPI } from "react-intercom";
 
-
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
-    login: state.login,
+    login: state.login
   };
 };
 
 class CustomerSupport extends React.Component {
-
   openChat() {
-    IntercomAPI('show')
+    IntercomAPI("show");
   }
 
-  render () {
+  render() {
     const { login } = this.props;
 
     const user = {
@@ -26,18 +24,24 @@ class CustomerSupport extends React.Component {
       name: login.email,
       company: {
         id: login.organisationId,
-        name: login.organisationName,
+        name: login.organisationName
       }
     };
 
     return (
-      <div style={{margin: '1em'}}>
-          <StyledAccountWrapper>
-            <StyledHeader>Support:</StyledHeader>
-            <StyledContent onClick={this.openChat}><IconSVG src="/static/media/question-speech-bubble.svg"/>Chat</StyledContent>
-            <StyledContent href="http://help.withsempo.com/en/" target="_blank"><IconSVG src="/static/media/open-book.svg"/>Help Center</StyledContent>
-          </StyledAccountWrapper>
-        <Intercom appID="kowgw7cm" { ...user } />
+      <div style={{ margin: "1em" }}>
+        <StyledAccountWrapper>
+          <StyledHeader>Support:</StyledHeader>
+          <StyledContent onClick={this.openChat}>
+            <IconSVG src="/static/media/question-speech-bubble.svg" />
+            Chat
+          </StyledContent>
+          <StyledContent href="http://help.withsempo.com/en/" target="_blank">
+            <IconSVG src="/static/media/open-book.svg" />
+            Help Center
+          </StyledContent>
+        </StyledAccountWrapper>
+        <Intercom appID="kowgw7cm" {...user} />
       </div>
     );
   }
@@ -52,7 +56,7 @@ const IconSVG = styled.img`
 
 const StyledHeader = styled.p`
   font-weight: 600;
-  margin: 0 0 .6em;
+  margin: 0 0 0.6em;
 `;
 
 const StyledContent = styled.a`

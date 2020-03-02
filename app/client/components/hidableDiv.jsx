@@ -1,12 +1,12 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import styled from 'styled-components';
+import React from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
 
 class hideableDiv extends React.Component {
   constructor() {
     super();
     this.state = {
-       isHidden: false,
+      isHidden: false
     };
   }
 
@@ -17,43 +17,45 @@ class hideableDiv extends React.Component {
   }
 
   render() {
-      return (
-          <WrapperDiv>
-            <Title onClick={this.toggleHidden.bind(this)} >
-                <div style={{display: 'flex'}}>
-                    <h2>{this.props.title}</h2>
-                    {/*<IconSVG src={this.state.isHidden ? '/static/media/cross.svg' : '/static/media/angle-down.svg'} />*/}
-                </div>
-            </Title>
-              {this.state.isHidden && <ExpandableText>{this.props.children}</ExpandableText>}
-          </WrapperDiv>
-      )
+    return (
+      <WrapperDiv>
+        <Title onClick={this.toggleHidden.bind(this)}>
+          <div style={{ display: "flex" }}>
+            <h2>{this.props.title}</h2>
+            {/*<IconSVG src={this.state.isHidden ? '/static/media/cross.svg' : '/static/media/angle-down.svg'} />*/}
+          </div>
+        </Title>
+        {this.state.isHidden && (
+          <ExpandableText>{this.props.children}</ExpandableText>
+        )}
+      </WrapperDiv>
+    );
   }
-};
+}
 
-export default hideableDiv
+export default hideableDiv;
 
 const WrapperDiv = styled.div`
   width: 100%;
 `;
 
 const Title = styled.button`
-    //background: #6a7680;
-    background: #ebf0f5;
-    border-radius: .2rem;
-    text-transform: uppercase;
-    transition: all .15s ease;
-    text-align: left;
-    color: #4A4A4A;
-    width: calc(100% - 2em);
-    margin: 1em;
-    overflow: hidden;
-    position: relative;
-    border: none;
-    padding: 0 1em;
-    &:focus {
-    outline: none
-    }
+  //background: #6a7680;
+  background: #ebf0f5;
+  border-radius: 0.2rem;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  text-align: left;
+  color: #4a4a4a;
+  width: calc(100% - 2em);
+  margin: 1em;
+  overflow: hidden;
+  position: relative;
+  border: none;
+  padding: 0 1em;
+  &:focus {
+    outline: none;
+  }
 `;
 
 const ExpandableText = styled.div`
@@ -61,6 +63,6 @@ const ExpandableText = styled.div`
 `;
 
 const IconSVG = styled.img`
-    height: 2em;
-    margin: auto 1em;
+  height: 2em;
+  margin: auto 1em;
 `;
