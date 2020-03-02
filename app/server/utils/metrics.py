@@ -164,6 +164,9 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
 def apply_filters(query, filters, query_table):
 
+    if filters is None:
+        return query
+
     user_join_attribute, account_join_attribute = determine_join_conditions(query_table)
 
     for filter_table_name, _filts in filters.items():

@@ -27,7 +27,8 @@ class DashboardFilter extends React.Component {
     super(props);
     this.state = {
       startDate: null,
-      endDate: null
+      endDate: null,
+      encoded_filters: null
     };
   }
 
@@ -48,25 +49,30 @@ class DashboardFilter extends React.Component {
     }
   };
 
-  submitFilter = () => {
-    let { startDate, endDate } = this.state;
-    if (startDate && endDate) {
-      this.props.loadMetrics({
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString()
-      });
-    }
-  };
-
   onFiltersChanged = filters => {
     let encoded_filters = processFiltersForQuery(filters);
-    this.props.loadMetrics({
-      params: encoded_filters
-    });
-
+    this.setState(
+      {
+        encoded_filters
+      },
+      () => this.loadMetricsWithParams()
+    );
     browserHistory.push({
       search: "?params=" + encoded_filters
     });
+  };
+
+  loadMetricsWithParams = () => {
+    let { startDate, endDate, encoded_filters } = this.state;
+    let params = {};
+    if (encoded_filters) {
+      params.params = encoded_filters;
+    }
+    if (startDate && endDate) {
+      params.start_date = startDate.toISOString();
+      params.end_date = endDate.toISOString();
+    }
+    this.props.loadMetrics(params);
   };
 
   render() {
@@ -105,7 +111,7 @@ class DashboardFilter extends React.Component {
             <StyledButton
               onClick={
                 this.state.startDate && this.state.endDate
-                  ? this.submitFilter
+                  ? this.loadMetricsWithParams
                   : () => {}
               }
               style={{
