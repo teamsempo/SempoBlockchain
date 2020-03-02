@@ -176,8 +176,6 @@ class SearchBoxWithFilter extends React.Component {
           }
         } else if (filter.type === "<") {
           if (value < filter.threshold) {
-            console.log(value);
-            console.log(filter.threshold);
             add_account();
           }
         } else if (filter.type === ">") {
