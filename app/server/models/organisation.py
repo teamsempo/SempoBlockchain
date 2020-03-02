@@ -10,6 +10,8 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
 from server.utils.misc import encrypt_string
+from server.constants import ISO_COUNTRIES
+
 
 class Organisation(ModelBase):
     """
@@ -25,7 +27,10 @@ class Organisation(ModelBase):
     
     _external_auth_password = db.Column(db.String)
 
-    _timezone           = db.Column(db.String)
+    _timezone = db.Column(db.String)
+    _country_code = db.Column(db.String)
+    _default_disbursement_wei = db.Column(db.Numeric(27), default=0)
+    require_transfer_card = db.Column(db.Boolean, default=False)
 
     # TODO: Create a mixin so that both user and organisation can use the same definition here
     # This is the blockchain address used for transfer accounts, unless overridden
@@ -62,6 +67,24 @@ class Organisation(ModelBase):
         if val is not None and val not in pendulum.timezones:
             raise Exception(f"{val} is not a valid timezone")
         self._timezone = val
+
+    @hybrid_property
+    def country_code(self):
+        return self._country_code
+
+    @country_code.setter
+    def country_code(self, val):
+        if val is not None and val not in ISO_COUNTRIES:
+            raise Exception(f"{val} is not a valid country code")
+        self._country_code = val
+
+    @property
+    def default_disbursement(self):
+        return float((self._default_disbursement_wei or 0) / int(1e16))
+
+    @default_disbursement.setter
+    def default_disbursement(self, val):
+        self._default_disbursement_wei = val * int(1e16)
 
     # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
     @property
