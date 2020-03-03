@@ -184,8 +184,7 @@ class Setup(object):
             symbol,
             issue_amount_wei,
             reserve_deposit_wei,
-            reserve_ratio_ppm,
-            initial_disbursement_amount
+            reserve_ratio_ppm
     ):
 
         r = requests.post(url=self.api_host + 'organisation/',
@@ -201,7 +200,6 @@ class Setup(object):
                               'issue_amount_wei': issue_amount_wei,
                               'reserve_deposit_wei': reserve_deposit_wei,
                               'reserve_ratio_ppm': reserve_ratio_ppm,
-                              'initial_disbursement_amount': initial_disbursement_amount
                           })
 
         json = r.json()
@@ -285,8 +283,7 @@ def _base_setup(s, reserve_token_id):
         symbol='SARAFU',
         issue_amount_wei=int(10000000e18),
         reserve_deposit_wei=int(10000e18),
-        reserve_ratio_ppm=250000,
-        initial_disbursement_amount=50.00
+        reserve_ratio_ppm=250000
     )
     bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
 

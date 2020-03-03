@@ -62,7 +62,6 @@ class OrganisationAPI(MethodView):
         token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
 
-        initial_disbursement_amount = post_data.get('initial_disbursement_amount')
 
         if organisation_name is None:
             return make_response(jsonify({'message': 'Must provide name to create organisation.'})), 400
@@ -78,8 +77,7 @@ class OrganisationAPI(MethodView):
         new_organisation = Organisation(
             name=organisation_name,
             custom_welcome_message_key=custom_welcome_message_key,
-            timezone=timezone,
-            initial_disbursement_amount=initial_disbursement_amount)
+            timezone=timezone)
 
         db.session.add(new_organisation)
         db.session.flush()
