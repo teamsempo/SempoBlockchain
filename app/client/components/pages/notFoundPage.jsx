@@ -1,28 +1,39 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import styled from 'styled-components';
-import { NavLink } from 'react-router-dom';
+import React from "react";
+import { connect } from "react-redux";
+import styled from "styled-components";
+import { NavLink } from "react-router-dom";
 
-import { ModuleBox } from '../styledElements'
+import { ModuleBox } from "../styledElements";
 
 export default class notFoundPage extends React.Component {
-
   render() {
     return (
-          <WrapperDiv>
-              <ModuleBox style={{width: "50%", maxWidth: '350px', padding: '40px', textAlign: 'center'}}>
-                  <div>
-                      <h1>404</h1>
-                      <p>Oh no, we can't find your page!</p>
-                  </div>
-                  <Footer className="link-container">
-                      <Text className="more-link">Go back to <StyledLink to='/' exact>Home</StyledLink></Text>
-                  </Footer>
-              </ModuleBox>
-          </WrapperDiv>
-      )
+      <WrapperDiv>
+        <ModuleBox
+          style={{
+            width: "50%",
+            maxWidth: "350px",
+            padding: "40px",
+            textAlign: "center"
+          }}
+        >
+          <div>
+            <h1>404</h1>
+            <p>Oh no, we can't find your page!</p>
+          </div>
+          <Footer className="link-container">
+            <Text className="more-link">
+              Go back to{" "}
+              <StyledLink to="/" exact>
+                Home
+              </StyledLink>
+            </Text>
+          </Footer>
+        </ModuleBox>
+      </WrapperDiv>
+    );
   }
-};
+}
 
 const WrapperDiv = styled.div`
   width: 100vw;
@@ -49,6 +60,6 @@ const StyledLink = styled(NavLink)`
   font-weight: bolder;
   text-decoration: none;
   &:hover {
-  text-decoration: underline;
+    text-decoration: underline;
   }
 `;

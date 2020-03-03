@@ -1,20 +1,24 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import momentPropTypes from 'react-moment-proptypes';
-import moment from 'moment';
-import omit from 'lodash/omit';
+import React from "react";
+import PropTypes from "prop-types";
+import momentPropTypes from "react-moment-proptypes";
+import moment from "moment";
+import omit from "lodash/omit";
 
-import { DateRangePicker, SingleDatePicker, DayPickerRangeController } from 'react-dates';
+import {
+  DateRangePicker,
+  SingleDatePicker,
+  DayPickerRangeController
+} from "react-dates";
 
-import { SingleDatePickerPhrases } from 'react-dates/src/defaultPhrases';
+import { SingleDatePickerPhrases } from "react-dates/src/defaultPhrases";
 // import SingleDatePickerShape from 'react-dates/src/shapes/SingleDatePickerShape';
-import { HORIZONTAL_ORIENTATION, ANCHOR_LEFT } from 'react-dates/src/constants';
-import isInclusivelyAfterDay from 'react-dates/src/utils/isInclusivelyAfterDay';
+import { HORIZONTAL_ORIENTATION, ANCHOR_LEFT } from "react-dates/src/constants";
+import isInclusivelyAfterDay from "react-dates/src/utils/isInclusivelyAfterDay";
 
 const propTypes = {
   // example props for the demo
   autoFocus: PropTypes.bool,
-  initialDate: momentPropTypes.momentObj,
+  initialDate: momentPropTypes.momentObj
 
   // ...omit(SingleDatePickerShape, [
   //   'date',
@@ -30,11 +34,11 @@ const defaultProps = {
   initialDate: null,
 
   // input related props
-  id: 'date',
-  placeholder: 'Date',
+  id: "date",
+  placeholder: "Date",
   disabled: false,
   required: false,
-  screenReaderInputMessage: '',
+  screenReaderInputMessage: "",
   showClearDate: false,
   showDefaultInputIcon: false,
   customInputIcon: null,
@@ -73,9 +77,9 @@ const defaultProps = {
   isDayHighlighted: () => {},
 
   // internationalization props
-  displayFormat: () => moment.localeData().longDateFormat('L'),
-  monthFormat: 'MMMM YYYY',
-  phrases: SingleDatePickerPhrases,
+  displayFormat: () => moment.localeData().longDateFormat("L"),
+  monthFormat: "MMMM YYYY",
+  phrases: SingleDatePickerPhrases
 };
 
 class SingleDatePickerWrapper extends React.Component {
@@ -83,7 +87,7 @@ class SingleDatePickerWrapper extends React.Component {
     super(props);
     this.state = {
       focused: props.autoFocus,
-      date: props.initialDate,
+      date: props.initialDate
     };
 
     this.onDateChange = this.onDateChange.bind(this);
@@ -122,10 +126,7 @@ class SingleDatePickerWrapper extends React.Component {
 
     // autoFocus and initialDate are helper props for the example wrapper but are not
     // props on the SingleDatePicker itself and thus, have to be omitted.
-    const props = omit(this.props, [
-      'autoFocus',
-      'initialDate',
-    ]);
+    const props = omit(this.props, ["autoFocus", "initialDate"]);
 
     return (
       <SingleDatePicker
@@ -135,7 +136,7 @@ class SingleDatePickerWrapper extends React.Component {
         focused={focused}
         onDateChange={this.onDateChange}
         onFocusChange={this.onFocusChange}
-        isOutsideRange = {() => false}
+        isOutsideRange={() => false}
         noBorder={true}
         // initialDate={() => moment()}
       />
