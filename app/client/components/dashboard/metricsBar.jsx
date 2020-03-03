@@ -10,7 +10,8 @@ import { formatMoney } from "../../utils";
 const mapStateToProps = state => {
   return {
     creditTransferStats: state.creditTransfers.transferStats,
-    login: state.login
+    login: state.login,
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
 
@@ -20,7 +21,7 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-const MetricsBar = ({ creditTransferStats, login }) => {
+const MetricsBar = ({ creditTransferStats, login, activeOrganisation }) => {
   if (Object.keys(creditTransferStats).length === 0) {
     return <p>No Transfer Data</p>;
   }
@@ -35,7 +36,7 @@ const MetricsBar = ({ creditTransferStats, login }) => {
             0,
             undefined,
             undefined,
-            login.organisationToken
+            activeOrganisation.token.symbol
           )}
         </Metric>
       </MetricWrap>
@@ -51,7 +52,7 @@ const MetricsBar = ({ creditTransferStats, login }) => {
             0,
             undefined,
             undefined,
-            login.organisationToken
+            activeOrganisation.token.symbol
           )}
         </Metric>
       </MetricWrap>
@@ -67,7 +68,7 @@ const MetricsBar = ({ creditTransferStats, login }) => {
             0,
             undefined,
             undefined,
-            login.organisationToken
+            activeOrganisation.token.symbol
           )}
         </Metric>
       </MetricWrap>
@@ -83,7 +84,7 @@ const MetricsBar = ({ creditTransferStats, login }) => {
             0,
             undefined,
             undefined,
-            login.organisationToken
+            activeOrganisation.token.symbol
           )}
         </Metric>
       </MetricWrap>

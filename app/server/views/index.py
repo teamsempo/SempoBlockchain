@@ -20,7 +20,16 @@ def get_js_bundle_filename():
 
 @index_view.route('/')
 def index():
+    return render_template('index.html', js_bundle_main=get_js_bundle_filename())
 
+
+@index_view.route('/create')
+def create():
+    return render_template('index.html', js_bundle_main=get_js_bundle_filename())
+
+
+@index_view.route('/transfers')
+def transfers():
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/accounts')
@@ -52,8 +61,13 @@ def upload():
 def deprecatedVendor():
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
+
+@index_view.route('/settings')
+def settings():
+    return render_template('index.html', js_bundle_main=get_js_bundle_filename())
+
 @index_view.route('/settings/<subroute>')
-def settings(subroute):
+def settings_subroute(subroute):
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/activate-account/')
@@ -64,8 +78,13 @@ def activate_account():
 def reset_password():
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
+
+@index_view.route('/login')
+def login():
+    return render_template('index.html', js_bundle_main=get_js_bundle_filename())
+
 @index_view.route('/login/<subroute>')
-def login(subroute):
+def login_subroute(subroute):
     return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/whatsapp-sync/')

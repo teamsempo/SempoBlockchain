@@ -8,7 +8,8 @@ import { ModuleHeader } from "../styledElements.js";
 const mapStateToProps = state => {
   return {
     creditTransferStats: state.creditTransfers.transferStats,
-    login: state.login
+    login: state.login,
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
 
@@ -136,7 +137,7 @@ class AnalyticsChart extends React.Component {
               },
               scaleLabel: {
                 display: true,
-                labelString: `${this.props.login.organisationToken} Transacted`,
+                labelString: `${this.props.activeOrganisation.token.symbol} Transacted`,
                 fontColor: "rgba(75,192,192,0.7)",
                 fontSize: "15"
               },
@@ -154,7 +155,7 @@ class AnalyticsChart extends React.Component {
               },
               scaleLabel: {
                 display: true,
-                labelString: `${this.props.login.organisationToken} Disbursed`,
+                labelString: `${this.props.activeOrganisation.token.symbol} Disbursed`,
                 fontColor: "rgba(204,142,233,0.7)",
                 fontSize: "15"
               }

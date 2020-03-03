@@ -4,29 +4,34 @@ export interface Organisation {
     symbol: string;
   };
 }
-export const UPDATE_ORGANISATION = "UPDATE_ORGANISATION";
-interface UpdateOrganisation {
-  type: typeof UPDATE_ORGANISATION;
-  organisation: Organisation;
+
+export const UPDATE_ORGANISATION_LIST = "UPDATE_ORGANISATION_LIST";
+
+interface UpdateOrganisationList {
+  type: typeof UPDATE_ORGANISATION_LIST;
+  organisations: Organisation;
 }
 
-export type OrganisationAction = UpdateOrganisation;
+export type OrganisationAction = UpdateOrganisationList;
 
 export const LOAD_ORGANISATION_REQUEST = "LOAD_ORGANISATIONS_REQUEST";
-interface LoadOrganisationRequest {
+
+interface LoadOrganisationsRequest {
   type: typeof LOAD_ORGANISATION_REQUEST;
 }
 export const LOAD_ORGANISATION_SUCCESS = "LOAD_ORGANISATIONS_SUCCESS";
-interface LoadOrganisationSuccess {
+
+interface LoadOrganisationsSuccess {
   type: typeof LOAD_ORGANISATION_SUCCESS;
 }
 export const LOAD_ORGANISATION_FAILURE = "LOAD_ORGANISATIONS_FAILURE";
-interface LoadOrganisationFailure {
+
+interface LoadOrganisationsFailure {
   type: typeof LOAD_ORGANISATION_FAILURE;
   error: string;
 }
 
-export type LoadOrganisationAction =
-  | LoadOrganisationRequest
-  | LoadOrganisationSuccess
-  | LoadOrganisationFailure;
+export type LoadOrganisationsAction =
+  | LoadOrganisationsRequest
+  | LoadOrganisationsSuccess
+  | LoadOrganisationsFailure;

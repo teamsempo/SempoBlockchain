@@ -108,9 +108,6 @@ PROGRAM_NAME        = specific_parser['APP']['PROGRAM_NAME']
 CURRENCY_NAME       = specific_parser['APP']['CURRENCY_NAME']
 CURRENCY_DECIMALS   = int(specific_parser['APP']['CURRENCY_DECIMALS'])
 
-DEFAULT_COUNTRY     = specific_parser['APP']['DEFAULT_COUNTRY']
-DEFAULT_LAT         = float(specific_parser['APP']['DEFAULT_LAT'])
-DEFAULT_LNG         = float(specific_parser['APP']['DEFAULT_LNG'])
 BENEFICIARY_TERM    = specific_parser['APP']['BENEFICIARY_TERM']
 BENEFICIARY_TERM_PLURAL = specific_parser['APP']['BENEFICIARY_TERM_PLURAL']
 CHATBOT_REQUIRE_PIN = specific_parser['APP'].getboolean('CHATBOT_REQUIRE_PIN')

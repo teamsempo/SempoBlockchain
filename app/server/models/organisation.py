@@ -27,6 +27,9 @@ class Organisation(ModelBase):
     
     _external_auth_password = db.Column(db.String)
 
+    default_lat = db.Column(db.Float())
+    default_lng = db.Column(db.Float())
+
     _timezone = db.Column(db.String)
     _country_code = db.Column(db.String)
     _default_disbursement_wei = db.Column(db.Numeric(27), default=0)

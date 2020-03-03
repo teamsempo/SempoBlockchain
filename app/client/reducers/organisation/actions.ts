@@ -1,5 +1,5 @@
-import { LOAD_ORGANISATION_REQUEST, LoadOrganisationAction } from "./types";
+import { LOAD_ORGANISATION_REQUEST, LoadOrganisationsAction } from "./types";
 
-export const loadOrganisation = (): LoadOrganisationAction => ({
+export const loadOrganisation = (): LoadOrganisationsAction => ({
   type: LOAD_ORGANISATION_REQUEST
 });

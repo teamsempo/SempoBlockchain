@@ -4,9 +4,7 @@ export interface ReauthRequest {
 }
 export const UPDATE_ACTIVE_ORG = "UPDATE_ACTIVE_ORG";
 export interface UpdateActiveOrgPayload {
-  organisationName: string;
   organisationId: number;
-  organisationToken: string;
 }
 interface UpdateActiveOrg {
   type: typeof UPDATE_ACTIVE_ORG;

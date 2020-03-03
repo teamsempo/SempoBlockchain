@@ -1,22 +1,35 @@
 import { combineReducers } from "redux";
 import {
   LOAD_ORGANISATION_REQUEST,
-  UPDATE_ORGANISATION,
+  UPDATE_ORGANISATION_LIST,
   LOAD_ORGANISATION_SUCCESS,
   LOAD_ORGANISATION_FAILURE,
-  LoadOrganisationAction,
+  LoadOrganisationsAction,
   OrganisationAction,
   Organisation
 } from "./types";
+import { DEEEEEEP } from "../../utils";
 
-const data = (
-  state: Organisation | null = null,
+// const data = (
+//   state: Organisation | null = null,
+//   action: OrganisationAction
+// ): Organisation | null => {
+//   switch (action.type) {
+//     case UPDATE_ORGANISATION_LIST:
+//       return action.organisations;
+//
+//     default:
+//       return state;
+//   }
+// };
+
+const byId = (
+  state: Organisation[] = [] || {},
   action: OrganisationAction
-): Organisation | null => {
+): Organisation[] => {
   switch (action.type) {
-    case UPDATE_ORGANISATION:
-      return action.organisation;
-
+    case UPDATE_ORGANISATION_LIST:
+      return DEEEEEEP(state, action.organisations);
     default:
       return state;
   }
@@ -33,7 +46,7 @@ const initialLoadStatusState: LoadOrganisationState = {
 };
 const loadStatus = (
   state = initialLoadStatusState,
-  action: LoadOrganisationAction
+  action: LoadOrganisationsAction
 ): LoadOrganisationState => {
   switch (action.type) {
     case LOAD_ORGANISATION_REQUEST:
@@ -51,6 +64,6 @@ const loadStatus = (
 };
 
 export const OrganisationReducer = combineReducers({
-  data,
+  byId,
   loadStatus
 });
