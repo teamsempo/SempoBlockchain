@@ -75,21 +75,25 @@ sw:
         10. Onyesha chaguzi zilizopita
     account_management: |
       CON Akaunti yangu
-      1. Biashara Yangu
+      1. Wasifu wangu
       2. Chagua lugha utakayotumia
       3. Angalia salio
       4. Badilisha nambari ya siri
       5. Ondoka Sokoni
-      6. Wasifu
       0. Nyuma
     my_business: |
       CON Biashara Yangu
       1. Angalia biashara
       2. Badilisha biashara
       0. Nyuma
-    about_my_business:
-      bio: END Unauza %{user_bio}
-      none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza
+    about_me:
+      profile: |
+        END Wasifu wako una maelezo yafuatayo:
+            Jina %{full_name}
+            Jinsia %{gender}
+            Eneo %{location}
+            Unauza %{user_bio}
+      none: END Tafadhali enda kwa wasifu wako ili ukaweze kuweka %{empty_attrs}.
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
@@ -123,10 +127,11 @@ sw:
       0. Nyuma
     user_profile: |
       CON Wasifu wangu
-      1. Jina
-      2. Jinsia
-      3. Eneo
-      4. Matumizi ya data yako
+      1. Weka jina.
+      2. Weka Jinsia.
+      3. Weka eneo.
+      4. Badilish biashara.
+      5. Angalia wasifu wako.
       0. Nyuma
     first_name_entry: |
       CON Weka jina lako la kwanza

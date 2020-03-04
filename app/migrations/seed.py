@@ -124,21 +124,7 @@ def create_ussd_menus():
         description='Manage account menu',
         parent_id=start_menu.id
     )
-    update_or_create_menu(
-        name='my_business',
-        description='Manage business directory info',
-        parent_id=account_management_menu.id
-    )
-    update_or_create_menu(
-        name='about_my_business',
-        description='About business directory info',
-        parent_id=account_management_menu.id
-    )
-    update_or_create_menu(
-        name='change_my_business_prompt',
-        description='Change business directory info',
-        parent_id=account_management_menu.id
-    )
+
     update_or_create_menu(
         name='balance_inquiry_pin_authorization',
         description='PIN authorization before Balance enquiry',
@@ -200,6 +186,18 @@ def create_ussd_menus():
     update_or_create_menu(
         name='location_entry',
         description='Location entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='change_my_business_prompt',
+        description='Change business directory info',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='about_me',
+        description='About user profile info',
         parent_id=user_profile_menu.id
     )
 

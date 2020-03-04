@@ -78,21 +78,25 @@ en:
         10. Show previous
     account_management: |
       CON My account
-      1. My Business
+      1. My Profile
       2. Change language
       3. Check Balances
       4. Change PIN
       5. Opt Out of Market Place
-      6. My Profile
       0. Back
     my_business: |
       CON My Business
       1. See my business
       2. Change my business
       0. Back
-    about_my_business:
-      bio: END You sell %{user_bio}
-      none: END No business set, please go to Change My Business to set it to something
+    about_me:
+      profile: |
+        END You details are:
+            Name %{full_name}
+            Gender %{gender}
+            Location %{location}
+            You sell %{user_bio}
+      none: END Some profile information is not set, please go to My profile to set %{empty_attrs}.
     change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back
@@ -126,9 +130,11 @@ en:
       0. Back
     user_profile: |
       CON My profile
-      1. Name
-      2. Gender
-      3. Location
+      1. Edit mame.
+      2. Edit gender.
+      3. Edit location.
+      4. Change business.
+      5. See my profile
       0. Back
     first_name_entry: |
       CON Enter first name

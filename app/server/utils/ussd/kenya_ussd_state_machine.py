@@ -55,8 +55,7 @@ class KenyaUssdStateMachine(Machine):
         'current_pin',
         'new_pin',
         'new_pin_confirmation',
-        'my_business',
-        'about_my_business',
+        'about_me',
         'change_my_business_prompt',
         'opt_out_of_market_place_pin_authorization',
         'user_profile',
@@ -615,7 +614,7 @@ class KenyaUssdStateMachine(Machine):
         account_management_transitions = [
             {'trigger': 'feed_char',
              'source': 'account_management',
-             'dest': 'my_business',
+             'dest': 'user_profile',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'account_management',
@@ -635,29 +634,34 @@ class KenyaUssdStateMachine(Machine):
              'conditions': 'menu_five_selected'},
             {'trigger': 'feed_char',
              'source': 'account_management',
-             'dest': 'user_profile',
-             'conditions': 'menu_six_selected'},
-            {'trigger': 'feed_char',
-             'source': 'account_management',
              'dest': 'exit_invalid_menu_option'}
         ]
         self.add_transitions(account_management_transitions)
 
-        # event: my_business transitions
-        my_business_transitions = [
+        # event: user_profile transitions
+        user_profile_transitions = [
             {'trigger': 'feed_char',
-             'source': 'my_business',
-             'dest': 'about_my_business',
+             'source': 'user_profile',
+             'dest': 'first_name_entry',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
-             'source': 'my_business',
-             'dest': 'change_my_business_prompt',
+             'source': 'user_profile',
+             'dest': 'gender_entry',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
-             'source': 'my_business',
-             'dest': 'exit_invalid_menu_option'}
+             'source': 'user_profile',
+             'dest': 'location_entry',
+             'conditions': 'menu_three_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'change_my_business_prompt',
+             'conditions': 'menu_four_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'about_me',
+             'conditions': 'menu_five_selected'}
         ]
-        self.add_transitions(my_business_transitions)
+        self.add_transitions(user_profile_transitions)
 
         # event change_my_business_prompt transition
         self.add_transition(trigger='feed_char',
@@ -750,23 +754,6 @@ class KenyaUssdStateMachine(Machine):
              'conditions': 'is_blocked_pin'}
         ]
         self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
-
-        # event: user_profile transitions
-        user_profile_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'user_profile',
-             'dest': 'first_name_entry',
-             'conditions': 'menu_one_selected'},
-            {'trigger': 'feed_char',
-             'source': 'user_profile',
-             'dest': 'gender_entry',
-             'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_char',
-             'source': 'user_profile',
-             'dest': 'location_entry',
-             'conditions': 'menu_three_selected'}
-        ]
-        self.add_transitions(user_profile_transitions)
 
         # first_name_entry transitions
         first_name_entry_transitions = [
