@@ -659,7 +659,10 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'user_profile',
              'dest': 'about_me',
-             'conditions': 'menu_five_selected'}
+             'conditions': 'menu_five_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'exit_invalid_menu_option'}
         ]
         self.add_transitions(user_profile_transitions)
 

@@ -79,3 +79,16 @@ def test_location_change(test_client, init_database, session_factory, user_facto
     assert user.location == 'Kibera'
     assert state_machine.state == expected
 
+
+def test_save_directory_info(mocker, test_client, init_database):
+    session = UssdSessionFactory(state="change_my_business_prompt")
+    user = standard_user()
+    user.phone = phone()
+    assert next(filter(lambda x: x.name == 'bio', user.custom_attributes), None) is None
+    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine.send_sms = mocker.MagicMock()
+
+    state_machine.feed_char("My Bio")
+    assert state_machine.state == "exit"
+    bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
+    assert bio.value == "My Bio"

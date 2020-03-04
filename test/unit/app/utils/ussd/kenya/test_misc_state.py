@@ -20,7 +20,7 @@ standard_user = partial(UserFactory, pin_hash=User.salt_hash_secret('0000'), fai
 initial_language_selection_state = partial(UssdSessionFactory, state="initial_language_selection")
 start_state = partial(UssdSessionFactory, state="start")
 account_management_state = partial(UssdSessionFactory, state="account_management")
-my_business_state = partial(UssdSessionFactory, state="my_business")
+user_profile_state = partial(UssdSessionFactory, state="user_profile")
 choose_language_state = partial(UssdSessionFactory, state="choose_language")
 directory_listing_state = partial(UssdSessionFactory, state="directory_listing")
 directory_listing_other_state = partial(UssdSessionFactory, state="directory_listing_other")
@@ -41,19 +41,21 @@ directory_listing_other_state = partial(UssdSessionFactory, state="directory_lis
      (start_state, standard_user, "6", "exit_invalid_menu_option"),
      (start_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # account_management state tests
-     (account_management_state, standard_user, "1", "my_business"),
+     (account_management_state, standard_user, "1", "user_profile"),
      (account_management_state, standard_user, "2", "choose_language"),
      (account_management_state, standard_user, "3", "balance_inquiry_pin_authorization"),
      (account_management_state, standard_user, "4", "current_pin"),
      (account_management_state, standard_user, "5", "opt_out_of_market_place_pin_authorization"),
-     (account_management_state, standard_user, "6", "user_profile"),
      (account_management_state, standard_user, "7", "exit_invalid_menu_option"),
      (account_management_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # my_business state tests
-     (my_business_state, standard_user, "1", "about_my_business"),
-     (my_business_state, standard_user, "2", "change_my_business_prompt"),
-     (my_business_state, standard_user, "3", "exit_invalid_menu_option"),
-     (my_business_state, standard_user, "asdf", "exit_invalid_menu_option"),
+     (user_profile_state, standard_user, "1", "first_name_entry"),
+     (user_profile_state, standard_user, "2", "gender_entry"),
+     (user_profile_state, standard_user, "3", "location_entry"),
+     (user_profile_state, standard_user, "4", "change_my_business_prompt"),
+     (user_profile_state, standard_user, "5", "about_me"),
+     (user_profile_state, standard_user, "6", "exit_invalid_menu_option"),
+     (user_profile_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # directory listing state tests
      (directory_listing_state, standard_user, "9", "directory_listing_other"),
      (directory_listing_state, standard_user, "1", "complete"),
@@ -116,20 +118,6 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
     assert state_machine.state == "complete"
     assert user.is_market_enabled == False
     state_machine.send_sms.assert_called_with(user.phone, "opt_out_of_market_place_sms")
-
-
-def test_save_directory_info(mocker, test_client, init_database):
-    session = UssdSessionFactory(state="change_my_business_prompt")
-    user = standard_user()
-    user.phone = phone()
-    assert next(filter(lambda x: x.name == 'bio', user.custom_attributes), None) is None
-    state_machine = KenyaUssdStateMachine(session, user)
-    state_machine.send_sms = mocker.MagicMock()
-
-    state_machine.feed_char("My Bio")
-    assert state_machine.state == "exit"
-    bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
-    assert bio.value == "My Bio"
 
 
 def test_balance_inquiry(mocker, test_client, init_database):
