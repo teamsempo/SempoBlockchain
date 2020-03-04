@@ -42,7 +42,7 @@
       "name": "proxy",
       "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:proxy",
       "essential": true,
-      "memory": 64,
+      "memory": 32,
       "cpu": 1,
       "portMappings": [
         {
@@ -53,28 +53,6 @@
       ],
       "links": [
         "app:app"
-      ]
-    },
-    {
-      "name": "eth_worker",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
-      "essential": false,
-      "memory": 256,
-      "links": ["pgbouncer:pgbouncer"],
-      "mountPoints": [],
-      "environment": [
-        {
-          "name": "CONTAINER_TYPE",
-          "value": "PRIMARY"
-        },
-        {
-          "name": "SERVER_HAS_S3_AUTH",
-          "value": true
-        },
-        {
-          "name": "PYTHONUNBUFFERED",
-          "value": 0
-        }
       ]
     },
     {

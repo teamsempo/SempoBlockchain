@@ -10,7 +10,7 @@ elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
   celery -A eth_manager worker --loglevel=INFO --concurrency=4 --pool=eventlet -Q=processor
 elif [ "$CONTAINER_TYPE" == 'LOW_PRIORITY_WORKER' ]; then
-  celery -A eth_manager worker --loglevel=INFO --concurrency=4 --pool=eventlet -Q=low-priority,celery,high-priority
+  celery -A eth_manager worker --loglevel=INFO --concurrency=4 --pool=eventlet -Q=low-priority,celery
 elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
   celery -A eth_manager worker --loglevel=INFO --concurrency=4 --pool=eventlet -Q=high-priority
 
