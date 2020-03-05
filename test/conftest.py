@@ -35,7 +35,7 @@ def create_master_organisation(test_client, init_database, external_reserve_toke
     if master_organisation is None:
         print('Creating master organisation')
         master_organisation = Organisation(name='FrancineCorp', is_master=True, token=external_reserve_token,
-                                           country_code='US')
+                                           country_code='AU')
         db.session.add(master_organisation)
         db.session.commit()
 
@@ -44,7 +44,7 @@ def create_master_organisation(test_client, init_database, external_reserve_toke
 @pytest.fixture(scope='module')
 def create_organisation(test_client, init_database, external_reserve_token, create_master_organisation):
     from server.models.organisation import Organisation
-    organisation = Organisation(name='Sempo', token=external_reserve_token, default_disbursement=400, country_code='AU')
+    organisation = Organisation(name='Sempo', token=external_reserve_token, default_disbursement=400, country_code='US')
     db.session.add(organisation)
     db.session.commit()
 

@@ -13,9 +13,9 @@ from server.utils.auth import get_complete_auth_token
     (0, None, lambda t: None, lambda u: None, lambda u: None, lambda u: None, None, 'admin', None, 400),
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, None, 'admin', None, 400),
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'PAYMENT', 'admin', None, 400),
-    # todo: get p2p payments working
-    # (10, None, lambda t: None, lambda u: None, lambda u: u.id, lambda u: u.id, 'PAYMENT', 'admin', 'PENDING', 201),
-    # (10, None, lambda t: None, lambda u: None, lambda u: u.id, lambda u: u.id, 'PAYMENT', 'superadmin', 'COMPLETE', 201),
+    (10, None, lambda t: None, lambda u: None, lambda u: u.id, lambda u: u.id, 'PAYMENT', 'admin', 'PENDING', 201),
+    (
+    10, None, lambda t: None, lambda u: None, lambda u: u.id, lambda u: u.id, 'PAYMENT', 'superadmin', 'COMPLETE', 201),
     (None, 10, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'BALANCE', 'admin', 'PENDING', 201),
     (None, 10, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'BALANCE', 'superadmin', 'COMPLETE', 201),
     (10, None, lambda t: None, lambda u: u.id, lambda u: None, lambda u: None, 'BALANCE', 'admin', None, 201),  # returns 400 in bulk
