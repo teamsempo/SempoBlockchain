@@ -62,13 +62,18 @@ if load_from_s3:
     SECRET_BUCKET = "ctp-prod-secrets"
     FORCE_SSL = True
 
+    common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
+    common_read_result = common_obj['Body'].read().decode('utf-8')
+    common_secrets_parser.read_string(common_read_result)
+
     config_obj = client.get_object(Bucket=SECRET_BUCKET, Key=CONFIG_FILENAME)
     config_read_result = config_obj['Body'].read().decode('utf-8')
     config_parser.read_string(config_read_result)
 
-    common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
-    common_read_result = common_obj['Body'].read().decode('utf-8')
-    common_secrets_parser.read_string(common_read_result)
+    secrets_obj = client.get_object(Bucket=SECRET_BUCKET, Key=SECRETS_FILENAME)
+    secrets_read_result = secrets_obj['Body'].read().decode('utf-8')
+    secrets_parser.read(secrets_read_result)
+
 
 else:
     # Load config from local
