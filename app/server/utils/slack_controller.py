@@ -69,7 +69,7 @@ def generate_blocks(phone=None,first_name=None,last_name=None,dob=None,address=N
 
     documents_mrkdwn = [{
         "type": "mrkdwn",
-        "text": "*{}:*\n<{}|View>".format(document.reference.title() + '_' + str(ix), document.file_url)
+        "text": "*{}:*\n<{}|View>".format((document.reference.title() + '_' + str(ix)), document.file_url)
     } for ix, document in enumerate(documents)]
 
     mrkdwn_fields = [{
@@ -453,7 +453,7 @@ def slack_controller(payload):
         new_message_blocks = message_blocks[:len(message_blocks) - 1]
 
         documents = user.kyc_applications[0].uploaded_documents
-        doc_outcomes = [str(payload['submission']['{}_doc_validity'.format(document.reference) + '_' + str(ix)]) for
+        doc_outcomes = [str(payload['submission']['{}_doc_validity'.format(document.reference + '_' + str(ix))]) for
                         ix, document in enumerate(documents)]
 
         if payload['submission']['id_validity'] == 'valid' or all([doc == 'valid' for doc in doc_outcomes]):
@@ -537,7 +537,7 @@ def slack_controller(payload):
                 "{}_doc_blurry".format(doc_type): ":x: {} document or selfie is too blurry".format(doc_type)}) for doc_type in doc_types]
 
             # list of all doc outcomes (keys -> failure_options)
-            doc_outcomes = [str(payload['submission']['{}_doc_validity'.format(document.reference) + '_' + str(ix)]) for
+            doc_outcomes = [str(payload['submission']['{}_doc_validity'.format(document.reference + '_' + str(ix))]) for
                             ix, document in enumerate(documents)]
             doc_outcomes.extend([str(payload['submission']['id_validity'])])
 
