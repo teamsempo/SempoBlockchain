@@ -1,7 +1,8 @@
-import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 const FormValidation = {
-  required: (value: string | number) => (value !== undefined && value !== "") ? undefined : "This field is required",
+  required: (value: string | number) =>
+    value !== undefined && value !== "" ? undefined : "This field is required",
   phone: (value: string) => {
     if (value) {
       //TODO(org): set default country here, currently requires to be full number with +country code
@@ -13,7 +14,8 @@ const FormValidation = {
       }
     }
   },
-  notOther:  (value: string) => (value.toLowerCase() === 'other') ? "'Other' is not a valid input" : undefined
+  notOther: (value: string) =>
+    value.toLowerCase() === "other" ? "'Other' is not a valid input" : undefined
 };
 
 export default FormValidation;

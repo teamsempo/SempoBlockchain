@@ -55,8 +55,6 @@ class Nav extends React.Component {
 
               {/* AUTH PROTECTED PAGES */}
               <PrivateRoute exact path="/" component={dashboardPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing} />
-              <PrivateRoute exact path={beneficiaryURL} component={transferAccountListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute exact path="/vendors" component={transferAccountListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/accounts" component={transferAccountListPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/accounts/:transferAccountId" component={singleTransferAccountPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/users/:userId" component={singleUserPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>

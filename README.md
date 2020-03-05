@@ -5,6 +5,7 @@
 Sempo Admin Dashboard, SMS/WhatsApp API and crypto payments infrastructure
 
 Includes:
+
 - Generic spreadsheet upload
 - SMS API via Twilio
 - ERC20 (Dai) token mirroring
@@ -13,7 +14,9 @@ Includes:
 ## To run locally machine:
 
 ### Install _All_ Python Requirements
+
 Download and install python 3.6 and its respective pip and virtualenv (python 3.7 will break things). Then:
+
 ```
 python3 -m venv venv
 source venv/bin/activate
@@ -21,14 +24,22 @@ source venv/bin/activate
 ```
 
 ### Install Front-End Requirements
+
 ```
 cd app
 ```
+
 ```
 npm install
 ```
 
+### Enable the Simulator (Optional)
+
+If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth*worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. Be warned, this \_will* make your database fall out of sync with any ganache instance you have set up so use this with care, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `quick_setup_script.py` without additional dependencies.  
+To enable simulator mode, open `/config_files/local_config.ini` and add the line `enable_simulator_mode = true` under the `[APP]` heading.
+
 ### Run the web app in a Virtual Env
+
 ```
 cd app
 python ./run.py
@@ -39,26 +50,33 @@ npm run dev
 ```
 
 ### To use SMS API
+
 - Go to root dir
+
 ```
 cd ..
 ```
+
 - Run ngrok
+
 ```
 ./ngrok http 9000
 ```
 
 - Login to Twilio:
-https://www.twilio.com/login
+  https://www.twilio.com/login
 
 - Navigate to the phone number section of Twilio and find the below number
+
 ```
 +61 428 639 172
 ```
+
 - Click to edit, scroll to `Messaging` and find `A MESSAGE COMES IN` box
 - Add your ngrok server (e.g. `https://a833f3af.ngrok.io/api/sms/`) and save
 
 ### Blockchain
+
 Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue.
 This means that a lot of development can be done without actually connecting to a blockchain. Likewise, tests have
 blockchain endpoints mocked by default.
@@ -75,6 +93,7 @@ ganache-cli -l 80000000 -i 42 --db './ganacheDB' \
 ```
 
 Here:
+
 - the -l 80000000 argument increases the gas-limit, which is required for token-exchange deployments.
 - the --db argument persists your data to a local folder
 - the --account argument creates an account with LOTS of test ether, to stop you running out too quickly
@@ -82,22 +101,24 @@ Here:
 gacnache_cli.sh can be used to run this quickly.
 
 You will also need to set your local config to match:
+
 ```
 [ETHEREUM]
 http_provider           = http://127.0.0.1:8545
 ```
-
 
 Next you'll need to launch redis and celery. The following settings will work 90% of the time, but can be a _little_
 bit flaky because they force all tasks into one worker queue. This is a little annoying to address without running
 everything inside docker.
 
 In terminal run:
+
 ```
 redis-server
 ```
 
 Start celery:
+
 ```
 cd eth_worker
 celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
@@ -136,7 +157,6 @@ python manage.py db migrate
 
 Remember to commit the file!
 
-
 Sometimes, branches split and you will have multiple heads:
 
 ```
@@ -161,8 +181,9 @@ alembic revision --autogenerate
 ```
 
 ### Vendor App
+
 - Pull the below repo and follow steps
-https://github.com/enjeyw/SempoVendorMobile
+  https://github.com/enjeyw/SempoVendorMobile
 
 (if you have installed the prod vendor app, ensure you clear data and uninstall before installing from dev)
 
@@ -171,6 +192,7 @@ https://github.com/enjeyw/SempoVendorMobile
 Ensure your test_config.ini is up to date.
 
 Create the test databases:
+
 ```
 create database eth_worker_test;
 create database sempo_blockchain_test;
@@ -180,14 +202,14 @@ Ensure redis-server is running (this is not ideal but necessary atm).
 
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
 
-
 ## Seed Data
+
 You can quickly create seed data for a local machine, including exchanges and blockchain transactions:
+
 1. Clear all data out of ur databases by running /app/migrations/clear_seed_dev.py
 2. Launch Redis, ganache & Celery as per above.
 3. Create new data by running seed_dev.py No guarantees for anything if you try and run this more than once
-without clearing your databases!
-
+   without clearing your databases!
 
 ## Sempo Specific Setup
 
@@ -203,4 +225,3 @@ This will extract all keys into the config_files folder. To encrypt them again f
 Not that SOPS doesn't handle merge conflicts currently - if you try and merge an encrypted file, it will break in a bad way!
 
 Instead, if you need to merge in two config files, you need to save the old config, load the new one and merge them by hand.
-

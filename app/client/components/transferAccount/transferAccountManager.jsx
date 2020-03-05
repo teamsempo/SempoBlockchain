@@ -1,17 +1,19 @@
-import React, {lazy, Suspense} from 'react';
-import styled from 'styled-components';
-import { connect } from 'react-redux';
+import React, { lazy, Suspense } from "react";
+import styled from "styled-components";
+import { connect } from "react-redux";
 
-import { StyledButton, ModuleBox, ModuleHeader } from '../styledElements'
-import AsyncButton from '../AsyncButton.jsx'
-const SingleDatePickerWrapper = lazy(() => import('./SingleDatePickerWrapper.jsx'));
-import NewTransferManager from '../management/newTransferManager.jsx'
-import DateTime from '../dateTime.jsx';
+import { StyledButton, ModuleBox, ModuleHeader } from "../styledElements";
+import AsyncButton from "../AsyncButton.jsx";
+const SingleDatePickerWrapper = lazy(() =>
+  import("./SingleDatePickerWrapper.jsx")
+);
+import NewTransferManager from "../management/newTransferManager.jsx";
+import DateTime from "../dateTime.jsx";
 
-import { editTransferAccount } from '../../reducers/transferAccountReducer'
-import { createTransferRequest } from '../../reducers/creditTransferReducer'
+import { editTransferAccount } from "../../reducers/transferAccountReducer";
+import { createTransferRequest } from "../../reducers/creditTransferReducer";
 import { formatMoney } from "../../utils";
-import {TransferAccountTypes} from "./types";
+import { TransferAccountTypes } from "./types";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -19,14 +21,16 @@ const mapStateToProps = (state, ownProps) => {
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
     users: state.users,
-    transferAccount: state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)]
+    transferAccount:
+      state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)]
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    createTransferRequest: (payload) => dispatch(createTransferRequest(payload)),
-    editTransferAccountRequest: (body, path) => dispatch(editTransferAccount({body, path})),
+    createTransferRequest: payload => dispatch(createTransferRequest(payload)),
+    editTransferAccountRequest: (body, path) =>
+      dispatch(editTransferAccount({ body, path }))
   };
 };
 
@@ -34,20 +38,20 @@ class TransferAccountManager extends React.Component {
   constructor() {
     super();
     this.state = {
-        action: 'select',
-        transfer_type: 'ALL',
-        create_transfer_type: 'RECLAMATION',
-        newTransfer: false,
-        transfer_amount: '',
-        showSpreadsheetData: true,
-        balance: '',
-        is_approved: 'n/a',
-        one_time_code: '',
-        focused: false,
-        payable_epoch: null,
-        payable_period_type: 'n/a',
-        payable_period_length: 1,
-        is_vendor: null,
+      action: "select",
+      transfer_type: "ALL",
+      create_transfer_type: "RECLAMATION",
+      newTransfer: false,
+      transfer_amount: "",
+      showSpreadsheetData: true,
+      balance: "",
+      is_approved: "n/a",
+      one_time_code: "",
+      focused: false,
+      payable_epoch: null,
+      payable_period_type: "n/a",
+      payable_period_length: 1,
+      is_vendor: null
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -57,81 +61,89 @@ class TransferAccountManager extends React.Component {
   }
 
   componentDidMount() {
-      this.updateTransferAccountState()
+    this.updateTransferAccountState();
   }
 
-  componentDidUpdate(newProps){
-     if (this.props.creditTransfers !== newProps.creditTransfers && !this.props.creditTransfers.createStatus.isRequesting) {
-         this.setState({newTransfer: false});
-         this.updateTransferAccountState()
-     }
+  componentDidUpdate(newProps) {
+    if (
+      this.props.creditTransfers !== newProps.creditTransfers &&
+      !this.props.creditTransfers.createStatus.isRequesting
+    ) {
+      this.setState({ newTransfer: false });
+      this.updateTransferAccountState();
+    }
   }
 
   updateTransferAccountState() {
-      const transferAccountId = parseInt(this.props.transfer_account_id);
-      const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-      const primaryUser = transferAccount.primary_user_id && this.props.users.byId[transferAccount.primary_user_id];
+    const transferAccountId = parseInt(this.props.transfer_account_id);
+    const transferAccount = this.props.transferAccounts.byId[transferAccountId];
+    const primaryUser =
+      transferAccount.primary_user_id &&
+      this.props.users.byId[transferAccount.primary_user_id];
 
-      if (transferAccount !== null) {
-          this.setState({
-              balance: transferAccount.balance,
-              created: transferAccount.created,
-              is_approved: transferAccount.is_approved,
-              payable_epoch: transferAccount.payable_epoch,
-              payable_period_type: transferAccount.payable_period_type,
-              payable_period_length: transferAccount.payable_period_length,
-              is_vendor: transferAccount.is_vendor,
-              is_beneficiary: transferAccount.is_beneficiary,
-              is_tokenagent: transferAccount.is_tokenagent,
-              is_groupaccount: transferAccount.is_groupaccount
-          });
-      }
+    if (transferAccount !== null) {
+      this.setState({
+        balance: transferAccount.balance,
+        created: transferAccount.created,
+        is_approved: transferAccount.is_approved,
+        payable_epoch: transferAccount.payable_epoch,
+        payable_period_type: transferAccount.payable_period_type,
+        payable_period_length: transferAccount.payable_period_length,
+        is_vendor: transferAccount.is_vendor,
+        is_beneficiary: transferAccount.is_beneficiary,
+        is_tokenagent: transferAccount.is_tokenagent,
+        is_groupaccount: transferAccount.is_groupaccount
+      });
+    }
 
-      if (primaryUser) {
-        this.setState({
-          is_vendor: primaryUser.is_vendor,
-          is_beneficiary: primaryUser.is_beneficiary,
-          is_tokenagent: primaryUser.is_tokenagent,
-          is_groupaccount: primaryUser.is_groupaccount
-        });
-      }
+    if (primaryUser) {
+      this.setState({
+        is_vendor: primaryUser.is_vendor,
+        is_beneficiary: primaryUser.is_beneficiary,
+        is_tokenagent: primaryUser.is_tokenagent,
+        is_groupaccount: primaryUser.is_groupaccount
+      });
+    }
   }
 
   editTransferAccount() {
     const balance = this.state.balance * 100;
-    const approve = (this.state.is_approved == 'n/a' ? null : this.state.is_approved);
+    const approve =
+      this.state.is_approved == "n/a" ? null : this.state.is_approved;
     const nfc_card_id = this.state.nfc_card_id;
     const qr_code = this.state.qr_code;
     const phone = this.state.phone;
 
     if (this.state.payable_epoch) {
-        var payable_epoch = this.state.payable_epoch._d;
+      var payable_epoch = this.state.payable_epoch._d;
     }
 
     const payable_period_length = this.state.payable_period_length;
-    const payable_period_type = (this.state.payable_period_type === 'n/a' ? null : this.state.payable_period_type);
+    const payable_period_type =
+      this.state.payable_period_type === "n/a"
+        ? null
+        : this.state.payable_period_type;
 
     const single_transfer_account_id = this.props.transfer_account_id.toString();
 
     this.props.editTransferAccountRequest(
-        {
-            balance,
-            approve,
-            phone,
-            nfc_card_id,
-            qr_code,
-            payable_epoch,
-            payable_period_length,
-            payable_period_type,
-        },
-        single_transfer_account_id
+      {
+        balance,
+        approve,
+        phone,
+        nfc_card_id,
+        qr_code,
+        payable_epoch,
+        payable_period_length,
+        payable_period_type
+      },
+      single_transfer_account_id
     );
   }
 
-  handleChange (evt) {
+  handleChange(evt) {
     this.setState({ [evt.target.name]: evt.target.value });
   }
-
 
   handleClick() {
     this.setState(prevState => ({
@@ -140,150 +152,263 @@ class TransferAccountManager extends React.Component {
   }
 
   onSave() {
-      this.editTransferAccount();
+    this.editTransferAccount();
   }
 
   onNewTransfer() {
-      this.handleClick();
+    this.handleClick();
   }
 
   createNewTransfer() {
-      if (this.state.transfer_amount > 0) {
-          var transfer_account_ids = this.props.transfer_account_id;
-          var transfer_amount = this.state.transfer_amount * 100;
-          var transfer_type = this.state.create_transfer_type;
-          var credit_transfer_type_filter = this.state.transfer_type;
-          const transfer_account_filter = this.props.vendors ? '?account_type=vendor' : '?account_type=beneficiary';
-          const credit_transfer_filter = `?transfer_account_ids=${transfer_account_ids}&transfer_type=${credit_transfer_type_filter}`;
-          var id = null;
+    if (this.state.transfer_amount > 0) {
+      var transfer_account_ids = this.props.transfer_account_id;
+      var transfer_amount = this.state.transfer_amount * 100;
+      var transfer_type = this.state.create_transfer_type;
+      var credit_transfer_type_filter = this.state.transfer_type;
+      const transfer_account_filter = this.props.vendors
+        ? "?account_type=vendor"
+        : "?account_type=beneficiary";
+      const credit_transfer_filter = `?transfer_account_ids=${transfer_account_ids}&transfer_type=${credit_transfer_type_filter}`;
+      var id = null;
 
-          this.props.createTransferRequest({transfer_account_ids, transfer_amount, transfer_type, credit_transfer_filter, transfer_account_filter, id})
-      }
+      this.props.createTransferRequest({
+        transfer_account_ids,
+        transfer_amount,
+        transfer_type,
+        credit_transfer_filter,
+        transfer_account_filter,
+        id
+      });
+    }
   }
 
   render() {
-    const {is_beneficiary,is_vendor, is_groupaccount, is_tokenagent} = this.state;
+    const {
+      is_beneficiary,
+      is_vendor,
+      is_groupaccount,
+      is_tokenagent
+    } = this.state;
     let accountTypeName;
     let icon;
 
     if (this.state.newTransfer) {
-        var newTransfer = <NewTransferManager transfer_account_ids={[this.props.transfer_account_id]} cancelNewTransfer={() => this.onNewTransfer()} />
+      var newTransfer = (
+        <NewTransferManager
+          transfer_account_ids={[this.props.transfer_account_id]}
+          cancelNewTransfer={() => this.onNewTransfer()}
+        />
+      );
     } else {
-        newTransfer = null;
+      newTransfer = null;
     }
 
-    const currency = this.props.transferAccount && this.props.transferAccount.token && this.props.transferAccount.token.symbol
-    const displayAmount = <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{formatMoney(this.state.balance / 100,  undefined, undefined, undefined, currency)}</p>;
+    const currency =
+      this.props.transferAccount &&
+      this.props.transferAccount.token &&
+      this.props.transferAccount.token.symbol;
+    const displayAmount = (
+      <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+        {formatMoney(
+          this.state.balance / 100,
+          undefined,
+          undefined,
+          undefined,
+          currency
+        )}
+      </p>
+    );
 
-    let tracker_link = window.ETH_EXPLORER_URL + '/address/' + this.props.transferAccount.blockchain_address;
+    let tracker_link =
+      window.ETH_EXPLORER_URL +
+      "/address/" +
+      this.props.transferAccount.blockchain_address;
 
     if (is_beneficiary) {
       accountTypeName = TransferAccountTypes.USER || window.BENEFICIARY_TERM;
-      icon = "/static/media/user.svg"
+      icon = "/static/media/user.svg";
     } else if (is_vendor) {
       accountTypeName = TransferAccountTypes.VENDOR;
-      icon = "/static/media/store.svg"
+      icon = "/static/media/store.svg";
     } else if (is_groupaccount) {
       accountTypeName = TransferAccountTypes.GROUPACCOUNT;
-      icon = "/static/media/groupaccount.svg"
+      icon = "/static/media/groupaccount.svg";
     } else if (is_tokenagent) {
       accountTypeName = TransferAccountTypes.TOKENAGENT;
-      icon = "/static/media/tokenagent.svg"
+      icon = "/static/media/tokenagent.svg";
     }
 
-    var summaryBox =
-        <ModuleBox>
-            <SummaryBox>
-                <TopContent>
-                    <UserSVG src={icon}/>
-                    <p style={{margin: '0 1em', fontWeight: '500'}}>{accountTypeName}</p>
-                </TopContent>
-                <BottomContent>
-                    <FontStyling>Balance: <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>{displayAmount}</span></FontStyling>
-                    <FontStyling>Created: <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}><DateTime created={this.state.created}/></span></FontStyling>
-                    <FontStyling>Address:
-                      <span style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>
-                        <p style={{margin: 0, fontWeight: 100, fontSize: '16px'}}>
-                          <a  href={tracker_link}
-                                   target="_blank">
-                          {this.props.transferAccount.blockchain_address.substring(2,7) + '...'}
-                          </a>
-                        </p>
-                      </span>
-                    </FontStyling>
+    var summaryBox = (
+      <ModuleBox>
+        <SummaryBox>
+          <TopContent>
+            <UserSVG src={icon} />
+            <p style={{ margin: "0 1em", fontWeight: "500" }}>
+              {accountTypeName}
+            </p>
+          </TopContent>
+          <BottomContent>
+            <FontStyling>
+              Balance:{" "}
+              <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+                {displayAmount}
+              </span>
+            </FontStyling>
+            <FontStyling>
+              Created:{" "}
+              <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+                <DateTime created={this.state.created} />
+              </span>
+            </FontStyling>
+            <FontStyling>
+              Address:
+              <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+                <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+                  <a href={tracker_link} target="_blank">
+                    {this.props.transferAccount.blockchain_address.substring(
+                      2,
+                      7
+                    ) + "..."}
+                  </a>
+                </p>
+              </span>
+            </FontStyling>
+          </BottomContent>
+        </SummaryBox>
+      </ModuleBox>
+    );
 
-                </BottomContent>
-            </SummaryBox>
-        </ModuleBox>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {summaryBox}
 
-      return (
-          <div style={{display: 'flex', flexDirection: 'column'}}>
+        {newTransfer}
 
-              {summaryBox}
-
-              {newTransfer}
-
-              {this.props.login.adminTier !== 'view' ?
-              <ModuleBox>
-                  <Wrapper>
-                      <TopRow>
-                          <ModuleHeader>DETAILS</ModuleHeader>
-                          <ButtonWrapper>
-                            <StyledButton onClick={this.onNewTransfer} style={{fontWeight: '400', margin: '0em 1em', lineHeight: '25px', height: '25px'}}>NEW TRANSFER</StyledButton>
-                            <AsyncButton onClick={this.onSave} miniSpinnerStyle={{height: '10px', width: '10px'}} buttonStyle={{display: 'inline-flex', fontWeight: '400', margin: '0em', lineHeight: '25px', height: '25px'}} isLoading={this.props.transferAccounts.editStatus.isRequesting} buttonText="SAVE"/>
-                          </ButtonWrapper>
-                      </TopRow>
-                      <Row style={{margin: '0em 1em'}}>
-                          <SubRow>
-                              <InputLabel>Status: </InputLabel>
-                              <StatusSelect name="is_approved" value={this.state.is_approved} onChange={this.handleChange}>
-                                  <option name="is_approved" disabled value="n/a">n/a</option>
-                                  <option name="is_approved" value="true">Approved</option>
-                                  <option name="is_approved" value="false">Unapproved</option>
-                              </StatusSelect>
-                          </SubRow>
-                          <SubRow>
-                              <InputLabel>{(this.state.one_time_code !== '') ? 'One Time Code:' : '' }</InputLabel><ManagerText>{this.state.one_time_code}</ManagerText>
-                          </SubRow>
-                      </Row>
-                      <Row style={{margin: '0em 1em'}}>
-                          <SubRow style={{width: '50%'}}>
-                              <InputLabel>Payment Cycle Start Date: </InputLabel>
-                            <Suspense fallback={<div>Loading...</div>}>
-                              <SingleDatePickerWrapper
-                                  numberOfMonths={1}
-                                  date={this.state.date} // momentPropTypes.momentObj or null
-                                  onDateChange={date => this.setState({ payable_epoch: date })}
-                                  focused={this.state.focused} // PropTypes.bool
-                                  onFocusChange={() => this.setState({ focused: !this.state.focused })} // PropTypes.func.isRequired
-                                  id="your_unique_id" // PropTypes.string.isRequired,
-                                  withPortal
-                                  hideKeyboardShortcutsPanel
-                                  // showDefaultInputIcon
-                                  // inputIconPosition="after"
-                                  isOutsideRange
-                              />
-                            </Suspense>
-                          </SubRow>
-                          <SubRow>
-                              <InputLabel>Payment Cycle: </InputLabel>
-                              <StatusSelect name="payable_period_type" value={this.state.payable_period_type === null ? 'n/a' : this.state.payable_period_type} onChange={this.handleChange}>
-                                  <option name="payable_period_type" disabled value="n/a">n/a</option>
-                                  <option name="payable_period_type" value="day">Daily</option>
-                                  <option name="payable_period_type" value="week">Weekly</option>
-                                  <option name="payable_period_type" value="month">Monthly</option>
-                              </StatusSelect>
-                          </SubRow>
-                      </Row>
-                  </Wrapper>
-              </ModuleBox> : <ModuleBox><p>You don't have access to user details</p></ModuleBox> }
-
-          </div>
-      );
+        {this.props.login.adminTier !== "view" ? (
+          <ModuleBox>
+            <Wrapper>
+              <TopRow>
+                <ModuleHeader>DETAILS</ModuleHeader>
+                <ButtonWrapper>
+                  <StyledButton
+                    onClick={this.onNewTransfer}
+                    style={{
+                      fontWeight: "400",
+                      margin: "0em 1em",
+                      lineHeight: "25px",
+                      height: "25px"
+                    }}
+                  >
+                    NEW TRANSFER
+                  </StyledButton>
+                  <AsyncButton
+                    onClick={this.onSave}
+                    miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                    buttonStyle={{
+                      display: "inline-flex",
+                      fontWeight: "400",
+                      margin: "0em",
+                      lineHeight: "25px",
+                      height: "25px"
+                    }}
+                    isLoading={
+                      this.props.transferAccounts.editStatus.isRequesting
+                    }
+                    buttonText="SAVE"
+                  />
+                </ButtonWrapper>
+              </TopRow>
+              <Row style={{ margin: "0em 1em" }}>
+                <SubRow>
+                  <InputLabel>Status: </InputLabel>
+                  <StatusSelect
+                    name="is_approved"
+                    value={this.state.is_approved}
+                    onChange={this.handleChange}
+                  >
+                    <option name="is_approved" disabled value="n/a">
+                      n/a
+                    </option>
+                    <option name="is_approved" value="true">
+                      Approved
+                    </option>
+                    <option name="is_approved" value="false">
+                      Unapproved
+                    </option>
+                  </StatusSelect>
+                </SubRow>
+                <SubRow>
+                  <InputLabel>
+                    {this.state.one_time_code !== "" ? "One Time Code:" : ""}
+                  </InputLabel>
+                  <ManagerText>{this.state.one_time_code}</ManagerText>
+                </SubRow>
+              </Row>
+              <Row style={{ margin: "0em 1em" }}>
+                <SubRow style={{ width: "50%" }}>
+                  <InputLabel>Payment Cycle Start Date: </InputLabel>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <SingleDatePickerWrapper
+                      numberOfMonths={1}
+                      date={this.state.date} // momentPropTypes.momentObj or null
+                      onDateChange={date =>
+                        this.setState({ payable_epoch: date })
+                      }
+                      focused={this.state.focused} // PropTypes.bool
+                      onFocusChange={() =>
+                        this.setState({ focused: !this.state.focused })
+                      } // PropTypes.func.isRequired
+                      id="your_unique_id" // PropTypes.string.isRequired,
+                      withPortal
+                      hideKeyboardShortcutsPanel
+                      // showDefaultInputIcon
+                      // inputIconPosition="after"
+                      isOutsideRange
+                    />
+                  </Suspense>
+                </SubRow>
+                <SubRow>
+                  <InputLabel>Payment Cycle: </InputLabel>
+                  <StatusSelect
+                    name="payable_period_type"
+                    value={
+                      this.state.payable_period_type === null
+                        ? "n/a"
+                        : this.state.payable_period_type
+                    }
+                    onChange={this.handleChange}
+                  >
+                    <option name="payable_period_type" disabled value="n/a">
+                      n/a
+                    </option>
+                    <option name="payable_period_type" value="day">
+                      Daily
+                    </option>
+                    <option name="payable_period_type" value="week">
+                      Weekly
+                    </option>
+                    <option name="payable_period_type" value="month">
+                      Monthly
+                    </option>
+                  </StatusSelect>
+                </SubRow>
+              </Row>
+            </Wrapper>
+          </ModuleBox>
+        ) : (
+          <ModuleBox>
+            <p>You don't have access to user details</p>
+          </ModuleBox>
+        )}
+      </div>
+    );
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TransferAccountManager);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TransferAccountManager);
 
 const Wrapper = styled.div`
   display: flex;
@@ -299,9 +424,9 @@ const TopRow = styled.div`
 const ButtonWrapper = styled.div`
   margin: auto 1em;
   @media (max-width: 767px) {
-  margin: auto 1em;
-  display: flex;
-  flex-direction: column;
+    margin: auto 1em;
+    display: flex;
+    flex-direction: column;
   }
 `;
 
@@ -309,10 +434,10 @@ const Row = styled.div`
   display: flex;
   align-items: center;
   @media (max-width: 767px) {
-  width: calc(100% - 2em);
-  margin: 0 1em;
-  flex-direction: column;
-  align-items: end;
+    width: calc(100% - 2em);
+    margin: 0 1em;
+    flex-direction: column;
+    align-items: end;
   }
 `;
 
@@ -321,8 +446,8 @@ const SubRow = styled.div`
   align-items: center;
   width: 33%;
   @media (max-width: 767px) {
-  width: 100%;
-  justify-content: space-between;
+    width: 100%;
+    justify-content: space-between;
   }
 `;
 
@@ -335,7 +460,7 @@ const ManagerInput = styled.input`
   width: 50%;
   font-size: 15px;
   &:focus {
-  border-color: #2D9EA0;
+    border-color: #2d9ea0;
   }
 `;
 
@@ -345,11 +470,11 @@ const InputLabel = styled.p`
 
 const StatusSelect = styled.select`
   border: none;
-  background-color: #FFF;
+  background-color: #fff;
   margin-left: 0.5em;
   font-size: 15px;
   @media (max-width: 767px) {
-  width: 50%;
+    width: 50%;
   }
 `;
 
@@ -371,7 +496,7 @@ const SummaryBox = styled.div`
   align-items: center;
   justify-content: space-between;
   @media (max-width: 767px) {
-  flex-direction: column;
+    flex-direction: column;
   }
 `;
 
@@ -380,7 +505,7 @@ const TopContent = styled.div`
   align-items: center;
   display: flex;
   @media (max-width: 767px) {
-  padding: 0 0 1em;
+    padding: 0 0 1em;
   }
 `;
 
@@ -393,6 +518,6 @@ const BottomContent = styled.div`
 `;
 
 const FontStyling = styled.span`
-    font-weight: 500;
-    font-size: 12px;
+  font-weight: 500;
+  font-size: 12px;
 `;

@@ -441,6 +441,11 @@ def init_database():
     yield db  # this is where the testing happens!
 
     with current_app.app_context():
+        try:
+            db.session.execute('DROP MATERIALIZED VIEW IF EXISTS search_view;')
+            db.session.commit()
+        except:
+            pass
         db.session.remove()  # DO NOT DELETE THIS LINE. We need to close sessions before dropping tables.
         db.drop_all()
 

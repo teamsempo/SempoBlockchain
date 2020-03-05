@@ -81,7 +81,7 @@ def register_extensions(app):
         # This is required to validate a signature on webhooks
         # This MUST go before Sentry integration as sentry triggers form parsing
         if not config.IS_TEST and (
-                request.path.startswith('/api/slack/') or request.path.startswith('/api/poli_payments_webhook/')):
+                request.path.startswith('/api/v1/slack/') or request.path.startswith('/api/v1/poli_payments_webhook/')):
             if request.content_length > 1024 * 1024:  # 1mb
                 # Payload too large
                 return make_response(jsonify({'message': 'Payload too large'})), 413
@@ -154,6 +154,7 @@ def register_blueprints(app):
     from server.api.transfer_card_api import transfer_cards_blueprint
     from server.api.organisation_api import organisation_blueprint
     from server.api.token_api import token_blueprint
+    from server.api.search_api import search_blueprint
     from server.api.slack_api import slack_blueprint
     from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
@@ -184,6 +185,7 @@ def register_blueprints(app):
     app.register_blueprint(transfer_cards_blueprint, url_prefix=versioned_url)
     app.register_blueprint(organisation_blueprint, url_prefix=versioned_url)
     app.register_blueprint(token_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(search_blueprint, url_prefix=versioned_url)
     app.register_blueprint(slack_blueprint, url_prefix=versioned_url)
     app.register_blueprint(poli_payments_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ussd_blueprint, url_prefix=versioned_url)
