@@ -7,7 +7,7 @@ COPY ./eth_worker/requirements.txt /
 RUN pip install -r requirements.txt
 
 COPY ./eth_worker /
-COPY ./config.py config_files* /
+COPY ./config.py config_files/* /
 
 WORKDIR /
 
