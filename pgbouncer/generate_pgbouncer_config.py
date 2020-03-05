@@ -19,10 +19,10 @@ auth_file = /etc/pgbouncer/userlist.txt
 auth_type = md5
 ignore_startup_parameters = extra_float_digits
 pool_mode = transaction
-max_client_conn = 10000
-default_pool_size = 100
-max_db_connections = 100
-max_user_connections = 100
+max_client_conn = {config.BOUNCER_MAX_CLIENT_CONN}
+default_pool_size = {config.BOUNCER_DEFAULT_POOL_SIZE}
+max_db_connections = {config.BOUNCER_MAX_DB_CONNECTIONS}
+max_user_connections = {config.BOUNCER_MAX_USER_CONNECTIONS}
 # Log settings
 admin_users = {config.DATABASE_USER}
 """.format(vars))

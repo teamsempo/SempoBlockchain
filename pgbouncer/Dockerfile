@@ -25,7 +25,7 @@ RUN \
 
 # Prepare and use config.py
 COPY ./pgbouncer/requirements.txt ./pgbouncer/generate_pgbouncer_config.py /
-COPY ./config.py config_files* /
+COPY ./config.py config_files/* /
 RUN pip3 install -r requirements.txt
 
 RUN \
