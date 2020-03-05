@@ -54,7 +54,7 @@ interface OuterProps {
 interface StateProps {
   accountType: any[TransferAccountTypes];
   businessUsageValue?: string;
-  activeOrganisation: Organisation | null;
+  activeOrganisation: Organisation;
   defaultDisbursement: any;
 }
 
@@ -264,11 +264,11 @@ export default connect(
       businessUsageValue: selector(state, "businessUsage"),
       // @ts-ignore
       activeOrganisation: state.organisations.byId[state.login.organisationId],
-      // @ts-ignore
       defaultDisbursement:
+        // @ts-ignore
         state.organisations.byId[state.login.organisationId]
           .default_disbursement / 100
     };
-    // @ts-ignore
   }
+  // @ts-ignore
 )(CreateUserFormReduxForm);

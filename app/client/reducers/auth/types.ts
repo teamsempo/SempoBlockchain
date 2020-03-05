@@ -38,7 +38,7 @@ export interface LoginSuccess {
   intercomHash: null | string;
   webApiVersion: null | string;
   organisationName: null | string;
-  organisationId: null | number;
+  organisationId: number;
   organisationToken: null | string;
   usdToSatoshiRate: null | number;
   organisations?: string[];
