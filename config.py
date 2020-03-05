@@ -1,10 +1,12 @@
-import os, configparser, boto3, hashlib
+import os, configparser, boto3, hashlib, datetime
 from eth_keys import keys
 from eth_utils import keccak
 
 from web3 import Web3
 
 VERSION = '1.1.2'  # Remember to bump this in every PR
+
+print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -72,7 +74,7 @@ if load_from_s3:
 
     secrets_obj = client.get_object(Bucket=SECRET_BUCKET, Key=SECRETS_FILENAME)
     secrets_read_result = secrets_obj['Body'].read().decode('utf-8')
-    secrets_parser.read(secrets_read_result)
+    secrets_parser.read_string(secrets_read_result)
 
 
 else:
