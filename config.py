@@ -172,7 +172,7 @@ DATABASE_NAME = config_parser['DATABASE'].get('database') \
 
 ETH_DATABASE_NAME = config_parser['DATABASE'].get('eth_database') \
                     or common_secrets_parser['DATABASE']['eth_database']
-BOUNCER_ENABLED = True
+
 if BOUNCER_ENABLED:
     DATABASE_HOST = config_parser['BOUNCER']['host']
     DATABASE_PORT = config_parser['BOUNCER']['port']
