@@ -4,7 +4,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.1.2'  # Remember to bump this in every PR
+VERSION = '1.1.3'  # Remember to bump this in every PR
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
