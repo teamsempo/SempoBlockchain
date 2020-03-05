@@ -22,6 +22,7 @@ def proccess_phone_number(phone_number, region=None, ignore_region=False):
         return phone_number
 
     if region is None:
+        # todo: will g.active_organisation.country_code always be defined?
         try:
             region = g.active_organisation.country_code
         except AttributeError:

@@ -167,8 +167,7 @@ function createLoginSuccessObject(token) {
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
     webApiVersion: token.web_api_version,
-    organisationId: token.active_organisation_id,
-    requireTransferCardExists: token.require_transfer_card_exists
+    organisationId: token.active_organisation_id
   };
 }
 

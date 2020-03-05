@@ -3,6 +3,8 @@ export interface Organisation {
   token: {
     symbol: string;
   };
+  require_transfer_card: boolean;
+  default_disbursement: number;
 }
 
 export const UPDATE_ORGANISATION_LIST = "UPDATE_ORGANISATION_LIST";

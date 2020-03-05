@@ -55,6 +55,7 @@ interface StateProps {
   accountType: any[TransferAccountTypes];
   businessUsageValue?: string;
   activeOrganisation: Organisation | null;
+  defaultDisbursement: any;
 }
 
 type Props = OuterProps & StateProps;
@@ -73,11 +74,11 @@ class CreateUserForm extends React.Component<
   InjectedFormProps<ICreateUser, Props> & Props
 > {
   componentDidMount() {
+    const { defaultDisbursement } = this.props;
     this.props.initialize({
       accountType: TransferAccountTypes.USER.toLowerCase(),
       gender: "female",
-      initialDisbursement:
-        window.DEFAULT_INITIAL_DISBURSEMENT / 100 || undefined
+      initialDisbursement: defaultDisbursement
     });
   }
 
@@ -105,7 +106,8 @@ class CreateUserForm extends React.Component<
       activeOrganisation,
       businessUsageValue,
       transferUsages,
-      accountType
+      accountType,
+      defaultDisbursement
     } = this.props;
 
     let accountTypes = Object.keys(TransferAccountTypes);
@@ -113,7 +115,7 @@ class CreateUserForm extends React.Component<
     let initialDisbursementAmount;
     let businessUsage;
 
-    if (window.DEFAULT_INITIAL_DISBURSEMENT > 0) {
+    if (defaultDisbursement > 0) {
       initialDisbursementAmount = (
         <InputField
           name="initialDisbursement"
@@ -261,7 +263,11 @@ export default connect(
       accountType: selector(state, "accountType"),
       businessUsageValue: selector(state, "businessUsage"),
       // @ts-ignore
-      activeOrganisation: state.organisations.byId[state.login.organisationId]
+      activeOrganisation: state.organisations.byId[state.login.organisationId],
+      // @ts-ignore
+      defaultDisbursement:
+        state.organisations.byId[state.login.organisationId]
+          .default_disbursement / 100
     };
     // @ts-ignore
   }

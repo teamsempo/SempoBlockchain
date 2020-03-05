@@ -388,6 +388,12 @@ class OrganisationSchema(SchemaBase):
     name                = fields.Str()
     primary_blockchain_address = fields.Str()
 
+    default_lat = fields.Float()
+    default_lng = fields.Float()
+
+    require_transfer_card = fields.Boolean(default=False)
+    default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
+
     token               = fields.Nested('server.schemas.TokenSchema')
 
     users               = fields.Nested('server.schemas.UserSchema', many=True)
