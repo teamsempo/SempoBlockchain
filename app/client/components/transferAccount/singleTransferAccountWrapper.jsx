@@ -43,7 +43,10 @@ class SingleTransferAccountWrapper extends React.Component {
     );
   }
 }
-export default connect(mapStateToProps, null)(SingleTransferAccountWrapper);
+export default connect(
+  mapStateToProps,
+  null
+)(SingleTransferAccountWrapper);
 
 const Wrapper = styled.div`
   display: flex;

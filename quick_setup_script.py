@@ -274,7 +274,7 @@ def _base_setup(s, reserve_token_id):
     exchange_contract_id = s.create_exchange_contract(reserve_token_id)
     # exchange_contract_id = 1
 
-    ge_org_id = s.create_cic_organisation(
+    org_id = s.create_cic_organisation(
         organisation_name='Grassroots Economics',
         custom_welcome_message_key='grassroots',
         timezone='Africa/Nairobi',
@@ -285,7 +285,7 @@ def _base_setup(s, reserve_token_id):
         reserve_deposit_wei=int(10000e18),
         reserve_ratio_ppm=250000
     )
-    bind_1 = s.bind_me_to_organisation_as_admin(ge_org_id)
+    bind_1 = s.bind_me_to_organisation_as_admin(org_id)
 
     tt = 4
 
@@ -303,22 +303,11 @@ def _base_setup(s, reserve_token_id):
     # bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
 
 
-def ge_setup():
-    s = Setup(
-        api_host='https://dev.withsempo.com/api/v1/',
-        email=os.environ.get('dev_email'),
-        password=os.environ.get('dev_password')
-    )
-
-    reserve_token_id = 1
-
-    _base_setup(s, reserve_token_id)
-
 def local_setup():
     s = Setup(
         api_host='http://0.0.0.0:9000/api/v1/',
-        email=os.environ.get('local_email'),
-        password=os.environ.get('local_password')
+        email=os.environ.get('LOCAL_EMAIL'),
+        password=os.environ.get('LOCAL_PASSWORD')
     )
 
     reserve_token_id = s.create_reserve_token(

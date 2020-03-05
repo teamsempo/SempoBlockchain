@@ -24,7 +24,7 @@ except FileNotFoundError:
 
 os.environ['AWS_PROFILE'] = "sempo"
 
-for in_path in glob.glob('../config_files/*.ini'):
+for in_path in glob.glob('../config_files/secret/*.ini'):
     head, filename = os.path.split(in_path)
     print('---Found file: {}'.format(filename))
 
