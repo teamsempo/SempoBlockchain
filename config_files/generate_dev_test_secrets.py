@@ -29,9 +29,13 @@ template_path = './templates'
 specific_secrets_read_path = os.path.join(template_path, 'specific_secrets_template.ini')
 common_secrets_read_path = os.path.join(template_path, 'common_secrets_template.ini')
 
-specific_secrets_write_path = './secret/local_secrets.ini'
-test_specific_secrets_write_path = './secret/test_secrets.ini'
-common_secrets_write_path = './secret/common_secrets.ini'
+secret_dir = './secret'
+if not os.path.isdir(secret_dir):
+    os.mkdir(secret_dir)
+
+specific_secrets_write_path = os.path.join(secret_dir, 'local_secrets.ini')
+test_specific_secrets_write_path = os.path.join(secret_dir, 'test_secrets.ini')
+common_secrets_write_path = os.path.join(secret_dir, 'common_secrets.ini')
 
 def generate_specific_secrets(write_path):
 
