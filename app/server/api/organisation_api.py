@@ -9,6 +9,7 @@ from server.models.user import User
 from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
+from server.constants import ISO_COUNTRIES
 
 organisation_blueprint = Blueprint('organisation', __name__)
 
@@ -67,15 +68,15 @@ class OrganisationAPI(MethodView):
         if organisation is None:
             return make_response(jsonify({'message': f'No organisation found for ID: {organisation_id}'})), 404
 
-        if default_disbursement:
+        if default_disbursement is not None:
             organisation.default_disbursement = default_disbursement
-        if country_code:
+        if country_code is not None:
             organisation.country_code = country_code
-        if require_transfer_card:
+        if require_transfer_card is not None:
             organisation.require_transfer_card = require_transfer_card
-        if default_lat:
+        if default_lat is not None:
             organisation.default_lat = default_lat
-        if default_lng:
+        if default_lng is not None:
             organisation.default_lng = default_lng
 
         response_object = {
@@ -188,6 +189,16 @@ class OrganisationUserAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
 
+class OrganisationConstantsAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def get(self):
+        response_object = {
+            'message': 'Organisation constants',
+            'data': {'iso_countries': ISO_COUNTRIES}
+        }
+        return make_response(jsonify(response_object)), 200
+
+
 # add Rules for API Endpoints
 organisation_blueprint.add_url_rule(
     '/organisation/',
@@ -197,7 +208,7 @@ organisation_blueprint.add_url_rule(
 )
 
 organisation_blueprint.add_url_rule(
-    '/organisation/<int:organisation_id>',
+    '/organisation/<int:organisation_id>/',
     view_func=OrganisationAPI.as_view('single_organisation_view'),
     methods=['GET', 'PUT']
 )
@@ -206,4 +217,10 @@ organisation_blueprint.add_url_rule(
     '/organisation/<int:organisation_id>/users',
     view_func=OrganisationUserAPI.as_view('organisation_user_view'),
     methods=['PUT'],
+)
+
+organisation_blueprint.add_url_rule(
+    '/organisation/constants/',
+    view_func=OrganisationConstantsAPI.as_view('organisation_constants_view'),
+    methods=['GET'],
 )

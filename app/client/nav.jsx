@@ -22,6 +22,7 @@ const createUserPage = lazy(() => import("./components/pages/createUserPage.jsx"
 const exportPage = lazy(() => import("./components/pages/exportPage.jsx"));
 const authPage = lazy(() => import('./components/pages/authPage.jsx'));
 const resetPasswordPage = lazy(() => import('./components/pages/resetPasswordPage.jsx'));
+const OrganisationPage = lazy(() => import('./components/pages/settings/OrganisationPage.tsx'));
 import notFoundPage from './components/pages/notFoundPage.jsx';
 import MessageBar from './components/messageBar.jsx';
 import ErrorBoundary from './components/errorBoundary.jsx'
@@ -66,9 +67,11 @@ class Nav extends React.Component {
               <PrivateRoute exact path="/settings/verification" component={BusinessVerificationPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/fund-wallet" component={FundWalletPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute exact path="/settings/tfa" component={tfaPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
+              <PrivateRoute exact path="/settings/organisation" component={OrganisationPage} isLoggedIn={isLoggedIn}
+                            isReAuthing={isReAuthing}/>
               <PrivateRoute path="/upload" component={uploadPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
               <PrivateRoute path="/create" component={createUserPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
-              <PrivateRoute path="/export" component={exportPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}z/>
+              <PrivateRoute path="/export" component={exportPage} isLoggedIn={isLoggedIn} isReAuthing={isReAuthing}/>
 
               {/* PUBLIC PAGES */}
               <PublicRoute path="/reset-password" component={resetPasswordPage} />

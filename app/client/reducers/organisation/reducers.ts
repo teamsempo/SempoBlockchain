@@ -5,23 +5,14 @@ import {
   LOAD_ORGANISATION_SUCCESS,
   LOAD_ORGANISATION_FAILURE,
   LoadOrganisationsAction,
+  EDIT_ORGANISATION_REQUEST,
+  EDIT_ORGANISATION_SUCCESS,
+  EDIT_ORGANISATION_FAILURE,
+  EditOrganisationAction,
   OrganisationAction,
   Organisation
 } from "./types";
 import { DEEEEEEP } from "../../utils";
-
-// const data = (
-//   state: Organisation | null = null,
-//   action: OrganisationAction
-// ): Organisation | null => {
-//   switch (action.type) {
-//     case UPDATE_ORGANISATION_LIST:
-//       return action.organisations;
-//
-//     default:
-//       return state;
-//   }
-// };
 
 const byId = (
   state: Organisation[] = [] || {},
@@ -30,6 +21,35 @@ const byId = (
   switch (action.type) {
     case UPDATE_ORGANISATION_LIST:
       return DEEEEEEP(state, action.organisations);
+    default:
+      return state;
+  }
+};
+
+export interface EditOrganisationState {
+  isRequesting: boolean;
+  error?: string;
+  success: boolean;
+}
+
+const initialEditStatusState: EditOrganisationState = {
+  isRequesting: false,
+  success: false
+};
+const editStatus = (
+  state = initialEditStatusState,
+  action: EditOrganisationAction
+): EditOrganisationState => {
+  switch (action.type) {
+    case EDIT_ORGANISATION_REQUEST:
+      return {...state, isRequesting: true};
+
+    case EDIT_ORGANISATION_SUCCESS:
+      return {...state, isRequesting: false, success: true};
+
+    case EDIT_ORGANISATION_FAILURE:
+      return {...state, isRequesting: false, error: action.error};
+
     default:
       return state;
   }
@@ -65,5 +85,6 @@ const loadStatus = (
 
 export const OrganisationReducer = combineReducers({
   byId,
-  loadStatus
+  loadStatus,
+  editStatus,
 });
