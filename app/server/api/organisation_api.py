@@ -50,6 +50,35 @@ class OrganisationAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def put(self, organisation_id):
+        put_data = request.get_json()
+
+        country_code = put_data.get('country_code')
+        default_disbursement = put_data.get('default_disbursement')
+        require_transfer_card = put_data.get('require_transfer_card')
+
+        if organisation_id is None:
+            return make_response(jsonify({'message': 'No organisation ID provided'})), 400
+
+        organisation = Organisation.query.get(organisation_id)
+        if organisation is None:
+            return make_response(jsonify({'message': f'No organisation found for ID: {organisation_id}'})), 404
+
+        if default_disbursement:
+            organisation.default_disbursement = default_disbursement
+        if country_code:
+            organisation.country_code = country_code
+        if require_transfer_card:
+            organisation.require_transfer_card = require_transfer_card
+
+        response_object = {
+            'message': f'Organisation {organisation_id} successfully updated',
+            'data': {'organisation': organisation_schema.dump(organisation).data}
+        }
+
+        return make_response(jsonify(response_object)), 200
+
     @show_all
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self, organisation_id):
