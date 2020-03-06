@@ -345,10 +345,7 @@ class AdminUserList extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(AdminUserList);
+export default connect(mapStateToProps, mapDispatchToProps)(AdminUserList);
 
 const StatusWrapper = styled.div`
   display: flex;

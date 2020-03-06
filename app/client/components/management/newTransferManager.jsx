@@ -233,10 +233,7 @@ class NewTransferManager extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(NewTransferManager);
+export default connect(mapStateToProps, mapDispatchToProps)(NewTransferManager);
 
 const Wrapper = styled.div`
   display: flex;

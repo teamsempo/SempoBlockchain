@@ -4,7 +4,6 @@ import { normalize } from "normalizr";
 import {
   PUSHER_CREDIT_TRANSFER,
   UPDATE_CREDIT_TRANSFER_LIST,
-  UPDATE_CREDIT_TRANSFER_STATS,
   LOAD_CREDIT_TRANSFER_LIST_REQUEST,
   LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
   LOAD_CREDIT_TRANSFER_LIST_FAILURE,
@@ -13,10 +12,10 @@ import {
   MODIFY_TRANSFER_SUCCESS,
   CREATE_TRANSFER_REQUEST,
   CREATE_TRANSFER_SUCCESS,
-  CREATE_TRANSFER_FAILURE,
-  LOAD_CREDIT_TRANSFER_STATS_ERROR,
-  LOAD_CREDIT_TRANSFER_STATS_REQUEST
+  CREATE_TRANSFER_FAILURE
 } from "../reducers/creditTransferReducer.js";
+
+import { UPDATE_METRICS } from "../reducers/metricReducer";
 
 import {
   UPDATE_TRANSFER_ACCOUNTS,
@@ -27,8 +26,7 @@ import { UPDATE_USER_LIST } from "../reducers/userReducer";
 import {
   loadCreditTransferListAPI,
   modifyTransferAPI,
-  newTransferAPI,
-  loadCreditTransferStatsAPI
+  newTransferAPI
 } from "../api/creditTransferAPI.js";
 import { creditTransferSchema } from "../schemas";
 import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
@@ -79,9 +77,9 @@ function* updateStateFromCreditTransfer(result) {
     });
   }
 
-  const transfer_stats = result.data.transfer_stats;
-  if (transfer_stats) {
-    yield put({ type: UPDATE_CREDIT_TRANSFER_STATS, transfer_stats });
+  const metrics = result.data.transfer_stats;
+  if (metrics) {
+    yield put({ type: UPDATE_METRICS, metrics });
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
 
@@ -108,23 +106,6 @@ function* loadCreditTransferList({ payload }) {
 
 function* watchLoadCreditTransferList() {
   yield takeEvery(LOAD_CREDIT_TRANSFER_LIST_REQUEST, loadCreditTransferList);
-}
-
-function* loadCreditTransferStats({ payload }) {
-  try {
-    const credit_stat_load_result = yield call(
-      loadCreditTransferStatsAPI,
-      payload
-    );
-    const transfer_stats = credit_stat_load_result.data.transfer_stats;
-    yield put({ type: UPDATE_CREDIT_TRANSFER_STATS, transfer_stats });
-  } catch (fetch_error) {
-    yield put({ type: LOAD_CREDIT_TRANSFER_STATS_ERROR, error: fetch_error });
-  }
-}
-
-function* watchLoadCreditTransferStats() {
-  yield takeEvery(LOAD_CREDIT_TRANSFER_STATS_REQUEST, loadCreditTransferStats);
 }
 
 function* loadPusherCreditTransfer(pusher_data) {
@@ -192,7 +173,6 @@ function* watchCreateTransfer() {
 export default function* credit_transferSagas() {
   yield all([
     watchLoadCreditTransferList(),
-    watchLoadCreditTransferStats(),
     watchModifyTransfer(),
     watchCreateTransfer(),
     watchPusherCreditTransfer()

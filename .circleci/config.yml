@@ -130,7 +130,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - attach_workspace:
-          at:  ~/project
+          at: ~/project
       - run:
           name: Load Docker image layer cache
           command: |
@@ -149,7 +149,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - attach_workspace:
-          at:  ~/project
+          at: ~/project
       - run:
           name: Load Docker image layer cache
           command: |
@@ -207,7 +207,7 @@ jobs:
       - run:
           name: Deploy app to AWS Server via Docker
           command: |
-            eb deploy blockchain-app-dev
+            eb deploy blockchain-app-dev2
 
 workflows:
   version: 2
@@ -222,7 +222,6 @@ workflows:
             branches:
               only:
                 - master
-                - auto_topup
-                - locking_strat
+                - aws-env-swap
           requires:
             - test

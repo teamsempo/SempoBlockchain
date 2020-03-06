@@ -154,10 +154,7 @@ const LoginForm = function(props) {
     </div>
   );
 };
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(LoginFormContainer);
+export default connect(mapStateToProps, mapDispatchToProps)(LoginFormContainer);
 
 const ResetPasswordLink = styled(Link)`
   cursor: pointer;
