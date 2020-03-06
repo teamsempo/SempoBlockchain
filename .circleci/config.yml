@@ -99,15 +99,15 @@ jobs:
             # and here: https://stackoverflow.com/q/49965396
             # The build commands here will be completely cached, and so very quick
             #
+            docker build -t pgbouncer . -f ./pgbouncer/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/pgbouncer_layers.txt
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
             docker build -t eth_worker . -f ./eth_worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/eth_worker_layers.txt
             docker build -t proxy ./proxy | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
-            docker build -t pgbouncer . -f ./pgbouncer/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/pgbouncer_layers.txt
 
+            docker save $(cat /tmp/pgbouncer_layers.txt) | gzip > ~/project/caches/pgbouncer_layers.txt
             docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
             docker save $(cat /tmp/eth_worker_layers.txt) | gzip > ~/project/caches/eth_worker.tar.gz
             docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
-            docker save $(cat /tmp/pgbouncer_layers.txt) | gzip > ~/project/caches/pgbouncer_layers.txt
 
             sudo chmod 777 -R ~/project/caches
       - run:
