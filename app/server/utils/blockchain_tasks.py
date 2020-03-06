@@ -171,7 +171,8 @@ class BlockchainTasker(object):
 
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,
-                            prior_tasks=None):
+                            prior_tasks=None,
+                            queue='high-priority'):
         """
         Makes a "Transfer" or "Transfer From" transaction on an ERC20 token.
 
@@ -183,16 +184,14 @@ class BlockchainTasker(object):
         :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the transfer
         """
+        raw_amount = token.system_amount_to_token(amount, queue=queue)
 
-        raw_amount = token.system_amount_to_token(amount)
-
-        balance_wei = self.get_wallet_balance(from_address, token)
+        balance_wei = self.get_wallet_balance(from_address, token, queue=queue)
 
         if balance_wei < raw_amount:
             print(f'\nWarning: Balance for {from_address} is currently less than sending amount! Transfer may fail'
                   f'\nBalance: {balance_wei} wei'
                   f'\nSending: {raw_amount} wei \n')
-
 
         if signing_address == from_address:
             return self._transaction_task(
@@ -204,7 +203,8 @@ class BlockchainTasker(object):
                     to_address,
                     raw_amount
                 ],
-                prior_tasks=prior_tasks
+                prior_tasks=prior_tasks,
+                queue=queue
             )
 
         return self._transaction_task(
@@ -217,7 +217,8 @@ class BlockchainTasker(object):
                 to_address,
                 token.system_amount_to_token(amount)
             ],
-            prior_tasks=prior_tasks
+            prior_tasks=prior_tasks,
+            queue=queue
         )
 
     def make_approval(self,
@@ -384,20 +385,22 @@ class BlockchainTasker(object):
                 to_token.address
             ]
 
-    def get_token_decimals(self, token):
+    def get_token_decimals(self, token, queue='high-priority'):
         return self._synchronous_call(
             contract_address=token.address,
             contract_type='ERC20',
-            func='decimals'
+            func='decimals',
+            queue=queue
         )
 
-    def get_wallet_balance(self, address, token):
+    def get_wallet_balance(self, address, token, queue):
 
         balance_wei = self._synchronous_call(
             contract_address=token.address,
             contract_type='ERC20',
             func='balanceOf',
-            args=[address])
+            args=[address],
+            queue=queue)
 
         return balance_wei
 

@@ -367,7 +367,6 @@ def make_blockchain_transfer(transfer_amount,
                              uuid=None,
                              existing_blockchain_txn=False
                              ):
-
     send_address_obj = create_address_object_if_required(send_address)
     receive_address_obj = create_address_object_if_required(receive_address)
 
@@ -420,7 +419,6 @@ def make_blockchain_transfer(transfer_amount,
 
     return transfer
 
-
 def make_payment_transfer(transfer_amount,
                           token=None,
                           send_user=None,
@@ -435,7 +433,8 @@ def make_payment_transfer(transfer_amount,
                           automatically_resolve_complete=True,
                           uuid=None,
                           transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
-                          is_ghost_transfer=False):
+                          is_ghost_transfer=False,
+                          queue='high-priority'):
     """
     This is used for internal transfers between Sempo wallets.
     :param transfer_amount:
@@ -521,7 +520,7 @@ def make_payment_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed()
+        transfer.resolve_as_completed(queue=queue)
         pusher.push_admin_credit_transfer(transfer)
 
     if make_cashout_incentive_transaction:
@@ -625,7 +624,8 @@ def make_target_balance_transfer(target_balance,
                                  require_target_user_approved=True,
                                  require_sufficient_balance=True,
                                  automatically_resolve_complete=True,
-                                 uuid=None):
+                                 uuid=None,
+                                 queue='high-priority'):
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
 
@@ -644,7 +644,8 @@ def make_target_balance_transfer(target_balance,
                                          require_sufficient_balance=require_sufficient_balance,
                                          automatically_resolve_complete=automatically_resolve_complete,
                                          uuid=uuid,
-                                         transfer_subtype=TransferSubTypeEnum.RECLAMATION)
+                                         transfer_subtype=TransferSubTypeEnum.RECLAMATION,
+                                         queue=queue)
 
     else:
         transfer = make_payment_transfer(transfer_amount,
@@ -653,7 +654,8 @@ def make_target_balance_transfer(target_balance,
                                          transfer_mode=transfer_mode,
                                          automatically_resolve_complete=automatically_resolve_complete,
                                          uuid=uuid,
-                                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
+                                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+                                         queue=queue)
 
     return transfer
 
