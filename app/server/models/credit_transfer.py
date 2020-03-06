@@ -170,7 +170,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                         ])),
             queue=queue
         )
-    # Add queue param
+
     def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority'):
         self.check_sender_transfer_limits()
         self.resolved_date = datetime.datetime.utcnow()
