@@ -270,10 +270,7 @@ class NavBar extends React.Component {
     }
   }
 }
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(NavBar);
+export default connect(mapStateToProps, mapDispatchToProps)(NavBar);
 
 const SideBarWrapper = styled.div`
   width: 234px;

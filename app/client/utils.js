@@ -3,6 +3,7 @@ import merge from "deepmerge";
 import { LOGIN_FAILURE } from "./reducers/auth/types";
 import { put } from "redux-saga/es/effects";
 import { store } from "./app.jsx";
+import { USER_FILTER_TYPE } from "./constants";
 
 export function formatMoney(
   amount,
@@ -208,4 +209,52 @@ export const replaceSpaces = stringlike => {
   } else {
     return "";
   }
+};
+
+export const getDateArray = (start, end) => {
+  var arr = new Array(),
+    dt = new Date(start);
+
+  while (dt <= end) {
+    arr.push(new Date(dt));
+    dt.setDate(dt.getDate() + 1);
+  }
+
+  return arr;
+};
+
+export const get_zero_filled_values = (key, value_array, date_array) => {
+  let value_dict = {};
+
+  value_array.map(data => (value_dict[new Date(data.date)] = data[key]));
+
+  let transaction_volume = date_array.map(date => {
+    if (value_dict[date] !== undefined) {
+      return value_dict[date] / 100;
+    } else {
+      return 0;
+    }
+  });
+
+  return transaction_volume;
+};
+
+export const processFiltersForQuery = filters => {
+  let encoded_filters = encodeURIComponent("%$user_filters%");
+  filters.forEach(filter => {
+    if (
+      USER_FILTER_TYPE.DISCRETE == filter.type ||
+      USER_FILTER_TYPE.BOOLEAN_MAPPING == filter.type
+    ) {
+      encoded_filters += encodeURIComponent("," + filter.keyName + "%");
+      filter.allowedValues.forEach(value => {
+        encoded_filters += encodeURIComponent("=" + value + "%");
+      });
+    } else {
+      encoded_filters += encodeURIComponent("," + filter.keyName + "%");
+      let parsed_filter = filter.type + filter.threshold + "%";
+      encoded_filters += encodeURIComponent(parsed_filter);
+    }
+  });
+  return encoded_filters;
 };

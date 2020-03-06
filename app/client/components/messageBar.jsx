@@ -51,10 +51,7 @@ class MessageBar extends React.Component {
     );
   }
 }
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(MessageBar);
+export default connect(mapStateToProps, mapDispatchToProps)(MessageBar);
 
 const Message = styled.p`
   width: calc(100% - 3em);
