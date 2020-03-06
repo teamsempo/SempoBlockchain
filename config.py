@@ -1,10 +1,12 @@
-import os, configparser, boto3, hashlib
+import os, configparser, boto3, hashlib, datetime
 from eth_keys import keys
 from eth_utils import keccak
 
 from web3 import Web3
 
 VERSION = '1.1.3'  # Remember to bump this in every PR
+
+print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -62,13 +64,17 @@ if load_from_s3:
     SECRET_BUCKET = "ctp-prod-secrets"
     FORCE_SSL = True
 
+    common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
+    common_read_result = common_obj['Body'].read().decode('utf-8')
+    common_secrets_parser.read_string(common_read_result)
+
     config_obj = client.get_object(Bucket=SECRET_BUCKET, Key=CONFIG_FILENAME)
     config_read_result = config_obj['Body'].read().decode('utf-8')
     config_parser.read_string(config_read_result)
 
-    common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
-    common_read_result = common_obj['Body'].read().decode('utf-8')
-    common_secrets_parser.read_string(common_read_result)
+    secrets_obj = client.get_object(Bucket=SECRET_BUCKET, Key=SECRETS_FILENAME)
+    secrets_read_result = secrets_obj['Body'].read().decode('utf-8')
+    secrets_parser.read_string(secrets_read_result)
 
 else:
     # Load config from local

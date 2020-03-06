@@ -24,6 +24,10 @@ except FileNotFoundError:
     pass
 
 os.environ['AWS_PROFILE'] = "sempo"
+outdir = '../config_files/secret/'
+
+if not os.path.isdir(outdir):
+    os.mkdir(outdir)
 
 i = input('You are about to replace your LOCAL config files with those from git - are you sure? (y/n)')
 
@@ -33,7 +37,7 @@ if i == 'y':
         if filename != 'meta.ini':
             print('---Found file: {}---'.format(filename))
 
-            out_path = '../config_files/secret/{}'.format(filename)
+            out_path = os.path.join(outdir, filename)
             meta_path = './meta.ini'
 
             new_hash = shahash(out_path)
