@@ -57,6 +57,8 @@ class OrganisationAPI(MethodView):
         country_code = put_data.get('country_code')
         default_disbursement = put_data.get('default_disbursement')
         require_transfer_card = put_data.get('require_transfer_card')
+        default_lat = put_data.get('default_lat')
+        default_lng = put_data.get('default_lng')
 
         if organisation_id is None:
             return make_response(jsonify({'message': 'No organisation ID provided'})), 400
@@ -71,6 +73,10 @@ class OrganisationAPI(MethodView):
             organisation.country_code = country_code
         if require_transfer_card:
             organisation.require_transfer_card = require_transfer_card
+        if default_lat:
+            organisation.default_lat = default_lat
+        if default_lng:
+            organisation.default_lng = default_lng
 
         response_object = {
             'message': f'Organisation {organisation_id} successfully updated',
@@ -91,6 +97,8 @@ class OrganisationAPI(MethodView):
         country_code = post_data.get('country_code')
         default_disbursement = post_data.get('default_disbursement')
         require_transfer_card = post_data.get('require_transfer_card')
+        default_lat = post_data.get('default_lat')
+        default_lng = post_data.get('default_lng')
 
         token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
@@ -112,7 +120,9 @@ class OrganisationAPI(MethodView):
             timezone=timezone,
             country_code=country_code,
             default_disbursement=default_disbursement,
-            require_transfer_card=require_transfer_card
+            require_transfer_card=require_transfer_card,
+            default_lat=default_lat,
+            default_lng=default_lng
         )
 
         db.session.add(new_organisation)
