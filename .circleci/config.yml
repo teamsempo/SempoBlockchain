@@ -101,8 +101,8 @@ jobs:
             #
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
             docker build -t eth_worker . -f ./eth_worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/eth_worker_layers.txt
-            docker build -t proxy ./proxy| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
-            docker build -t pgbouncer ./pgbouncer| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/pgbouncer_layers.txt
+            docker build -t proxy ./proxy | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
+            docker build -t pgbouncer ./pgbouncer/Dockerfile | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/pgbouncer_layers.txt
 
             docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
             docker save $(cat /tmp/eth_worker_layers.txt) | gzip > ~/project/caches/eth_worker.tar.gz
