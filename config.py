@@ -193,8 +193,8 @@ if ENABLE_SIMULATOR_MODE:
 or anywhere you care about workers actually running you should shut down and adjust your config')
 
 def get_database_uri(name, host, censored=True):
-    return 'postgresql://{}:{}@{}:{}/{}'.format('sempodb',
-                                                '*******' if censored else 's3mp0',
+    return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
+                                                '*******' if censored else DATABASE_PASSWORD,
                                                 host,
                                                 DATABASE_PORT,
                                                 name)
@@ -209,10 +209,6 @@ CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, ce
 print('Main database URI: ' + CENSORED_URI)
 print('Eth database URI: ' + CENSORED_ETH_URI)
 
-print(SQLALCHEMY_DATABASE_URI)
-print(SQLALCHEMY_DATABASE_URI)
-print(SQLALCHEMY_DATABASE_URI)
-print(SQLALCHEMY_DATABASE_URI)
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
