@@ -59,6 +59,10 @@ class OrganisationAPI(MethodView):
         custom_welcome_message_key = post_data.get('custom_welcome_message_key')
         timezone = post_data.get('timezone')
 
+        country_code = post_data.get('country_code')
+        default_disbursement = post_data.get('default_disbursement')
+        require_transfer_card = post_data.get('require_transfer_card')
+
         token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
 
@@ -76,7 +80,11 @@ class OrganisationAPI(MethodView):
         new_organisation = Organisation(
             name=organisation_name,
             custom_welcome_message_key=custom_welcome_message_key,
-            timezone=timezone)
+            timezone=timezone,
+            country_code=country_code,
+            default_disbursement=default_disbursement,
+            require_transfer_card=require_transfer_card
+        )
 
         db.session.add(new_organisation)
         db.session.flush()
