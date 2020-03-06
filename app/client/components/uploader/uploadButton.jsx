@@ -66,10 +66,7 @@ class UploadButton extends React.Component {
   }
 }
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(UploadButton);
+export default connect(null, mapDispatchToProps)(UploadButton);
 
 const TheRealInputButton = styled.label`
   background-color: rgb(247, 250, 252);

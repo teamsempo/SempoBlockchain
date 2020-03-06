@@ -7,7 +7,7 @@ import { ModuleHeader } from "../styledElements.js";
 
 const mapStateToProps = state => {
   return {
-    creditTransferStats: state.creditTransfers.transferStats
+    creditTransferStats: state.metrics.metricsState
   };
 };
 
@@ -91,7 +91,4 @@ class userFunnelChart extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(userFunnelChart);
+export default connect(mapStateToProps, mapDispatchToProps)(userFunnelChart);

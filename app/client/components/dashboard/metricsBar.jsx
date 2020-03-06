@@ -9,7 +9,7 @@ import { formatMoney } from "../../utils";
 
 const mapStateToProps = state => {
   return {
-    creditTransferStats: state.creditTransfers.transferStats,
+    creditTransferStats: state.metrics.metricsState,
     login: state.login
   };
 };
@@ -91,10 +91,7 @@ const MetricsBar = ({ creditTransferStats, login }) => {
   );
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(MetricsBar);
+export default connect(mapStateToProps, mapDispatchToProps)(MetricsBar);
 
 const Wrapper = styled.div`
   display: flex;
