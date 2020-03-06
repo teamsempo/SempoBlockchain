@@ -75,7 +75,4 @@ class HeatMap extends Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  null
-)(HeatMap);
+export default connect(mapStateToProps, null)(HeatMap);

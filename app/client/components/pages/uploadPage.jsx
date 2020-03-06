@@ -53,10 +53,7 @@ const uploadPage = ({ loggedIn, spreadsheetData, location }) => {
   }
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(uploadPage);
+export default connect(mapStateToProps, mapDispatchToProps)(uploadPage);
 
 const WrapperDiv = styled.div`
   //width: 100vw;

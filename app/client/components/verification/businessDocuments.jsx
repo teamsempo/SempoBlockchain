@@ -249,10 +249,7 @@ class BusinessDocuments extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(BusinessDocuments);
+export default connect(mapStateToProps, mapDispatchToProps)(BusinessDocuments);
 
 const SecondaryText = styled.p`
   color: #555555;

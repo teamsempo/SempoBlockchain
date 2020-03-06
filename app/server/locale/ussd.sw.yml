@@ -43,8 +43,7 @@ sw:
         %{other_options}
         10. Onyesha chaguzi zilizopita
     send_token_pin_authorization:
-      first:
-        CON Weka nambari ya siri.
+      first: CON Weka nambari ya siri.
         0. Nyuma
       retry:
         CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
@@ -93,8 +92,7 @@ sw:
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
     balance_inquiry_pin_authorization:
-      first:
-        CON Tafadhali weka PIN yako.
+      first: CON Tafadhali weka PIN yako.
         0. Nyuma
       retry:
         CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
@@ -105,8 +103,7 @@ sw:
       2. Kiswahili
       0. Nyuma
     opt_out_of_market_place_pin_authorization:
-      first:
-        CON Tafadhali weka PIN yako.
+      first: CON Tafadhali weka PIN yako.
         0. Nyuma
       retry:
         CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
@@ -127,8 +124,7 @@ sw:
       2. Badilisha
       0. Nyuma
     exchange_rate_pin_authorization:
-      first:
-        CON Tafadhali weka PIN yako.
+      first: CON Tafadhali weka PIN yako.
         0. Nyuma
       retry:
         CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
@@ -141,8 +137,7 @@ sw:
       CON Weka kiwango (40 au zaidi)
       0. Nyuma
     exchange_token_pin_authorization:
-      first:
-        CON Weka nambari ya siri.
+      first: CON Weka nambari ya siri.
         0. Nyuma
       retry:
         CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
@@ -207,4 +202,3 @@ sw:
       Piga 0757628885 kwa usaidizi zaidi
     pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.
     pin_change_error_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0757628885 kwa usaidizi
-

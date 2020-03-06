@@ -69,10 +69,7 @@ class WyreWalletBalance extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(WyreWalletBalance);
+export default connect(mapStateToProps, mapDispatchToProps)(WyreWalletBalance);
 
 const WalletWrapper = styled.div`
   display: flex;

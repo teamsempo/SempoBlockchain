@@ -26,3 +26,11 @@ export const loadCreditTransferStatsAPI = ({ query, path }) =>
     query: query,
     path: path
   });
+
+export const loadCreditTransferFiltersAPI = ({ query, path }) =>
+  apiClient({
+    url: "/credit_transfer/filters/",
+    method: "GET",
+    query: query,
+    path: path
+  });

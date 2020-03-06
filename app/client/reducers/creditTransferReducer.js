@@ -3,14 +3,6 @@ import { DEEEEEEP } from "../utils";
 
 export const UPDATE_CREDIT_TRANSFER_LIST = "UPDATE_CREDIT_TRANSFER_LIST";
 
-export const LOAD_CREDIT_TRANSFER_STATS_REQUEST =
-  "LOAD_CREDIT_TRANSFER_STATS_REQUEST";
-export const LOAD_CREDIT_TRANSFER_STATS_SUCCESS =
-  "LOAD_CREDIT_TRANSFER_STATS_SUCCESS";
-export const LOAD_CREDIT_TRANSFER_STATS_ERROR =
-  "LOAD_CREDIT_TRANSFER_STATS_ERROR";
-export const UPDATE_CREDIT_TRANSFER_STATS = "UPDATE_CREDIT_TRANSFER_STATS";
-
 export const LOAD_CREDIT_TRANSFER_LIST_REQUEST =
   "LOAD_CREDIT_TRANSFER_LIST_REQUEST";
 export const LOAD_CREDIT_TRANSFER_LIST_SUCCESS =
@@ -44,30 +36,6 @@ const byId = (state = {}, action) => {
         }
       });
       return DEEEEEEP(state, action.credit_transfers);
-    default:
-      return state;
-  }
-};
-
-const initialLoadStatState = {
-  isRequesting: false,
-  error: null,
-  success: false
-};
-
-const transferStats = (state = initialLoadStatState, action) => {
-  switch (action.type) {
-    case LOAD_CREDIT_TRANSFER_STATS_REQUEST:
-      return { ...state, isRequesting: true };
-    case LOAD_CREDIT_TRANSFER_STATS_SUCCESS:
-      return DEEEEEEP(
-        { ...state, isRequesting: false, success: true },
-        action.transferStats
-      );
-    case LOAD_CREDIT_TRANSFER_STATS_ERROR:
-      return { ...state, isRequesting: false, error: action.error };
-    case UPDATE_CREDIT_TRANSFER_STATS:
-      return DEEEEEEP(state, action.transfer_stats);
     default:
       return state;
   }
@@ -140,15 +108,9 @@ export const createStatus = (state = initialCreateStatusState, action) => {
 
 export const creditTransfers = combineReducers({
   byId,
-  transferStats,
   loadStatus,
   createStatus,
   modifyStatus
-});
-
-export const loadCreditTransferStats = payload => ({
-  type: LOAD_CREDIT_TRANSFER_STATS_REQUEST,
-  payload
 });
 
 // ACTIONS

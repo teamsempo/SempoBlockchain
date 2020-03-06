@@ -27,7 +27,7 @@ def upgrade():
     op.add_column('organisation', sa.Column('_external_auth_password', sa.String(), nullable=True))
 
     for org in session.query(Organisation).execution_options(show_all=True).all():
-        org.external_auth_username = 'admin_'+org.name.lower().replace(' ', '_')
+        org.external_auth_username = 'admin_'+(org.name or '').lower().replace(' ', '_')
         org.external_auth_password = secrets.token_hex(16)
     session.commit()
 
