@@ -19,7 +19,7 @@ export function createAction<T extends string, P>(
   type: T,
   payload: P
 ): ActionWithPayload<T, P>;
-export function createAction<T extends string, P, V>(type: T, data?: P) {
+export function createAction<T extends string, P>(type: T, data?: P) {
   if (typeof data === "string") {
     return { type, error: data };
   } else if (typeof data != "undefined") {
