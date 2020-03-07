@@ -3,10 +3,7 @@ import {
   ActivatePayload,
   INVITE_USER_REQUEST,
   InviteUserPayload,
-  LOGIN_FAILURE,
-  LOGIN_REQUEST,
   LoginRequestPayload,
-  LOGOUT,
   REGISTER_FAILURE,
   REGISTER_INACTIVE,
   REGISTER_REQUEST,
@@ -16,7 +13,6 @@ import {
   ResetEmailPayload,
   RESET_PASSWORD_REQUEST,
   ResetPasswordPayload,
-  UPDATE_ACTIVE_ORG,
   EDIT_ADMIN_USER_REQUEST,
   UpdateActiveOrgPayload,
   UpdateUserPayload,
@@ -24,81 +20,59 @@ import {
   VALIDATE_TFA_REQUEST,
   ValidateTfaPayload,
   DELETE_INVITE_REQUEST,
-  DeleteInvitePayload
+  DeleteInvitePayload,
+  LoginSuccessPayload,
+  LoginActionTypes,
+  LoginPartialPayload
 } from "./types";
 
-export const updateActiveOrgRequest = (payload: UpdateActiveOrgPayload) => ({
-  type: UPDATE_ACTIVE_ORG,
-  payload
-});
+import { createAction, ActionsUnion } from "../../reduxUtils";
 
-export const loginRequest = (payload: LoginRequestPayload) => ({
-  type: LOGIN_REQUEST,
-  payload
-});
+export const updateActiveOrgRequest = (payload: UpdateActiveOrgPayload) =>
+  createAction(LoginActionTypes.UPDATE_ACTIVE_ORG, payload);
+export const reauthRequest = () =>
+  createAction(LoginActionTypes.REAUTH_REQUEST);
+export const loginRequest = (payload: LoginRequestPayload) =>
+  createAction(LoginActionTypes.LOGIN_REQUEST, payload);
+export const loginPartial = (payload: LoginPartialPayload) =>
+  createAction(LoginActionTypes.LOGIN_PARTIAL, payload);
+export const loginSuccess = (payload: LoginSuccessPayload) =>
+  createAction(LoginActionTypes.LOGIN_SUCCESS, payload);
+export const loginFailure = (error: string) =>
+  createAction(LoginActionTypes.LOGIN_FAILURE, error);
+export const logout = () => createAction(LoginActionTypes.LOGOUT);
 
-export const loginFailure = (error: string) => ({
-  type: LOGIN_FAILURE,
-  error
-});
+export const LoginActions = {
+  updateActiveOrgRequest,
+  reauthRequest,
+  loginRequest,
+  loginPartial,
+  loginSuccess,
+  loginFailure,
+  logout
+};
 
-export const logout = () => ({
-  type: LOGOUT
-});
+// type declaration merging with above
+export type LoginActions = ActionsUnion<typeof LoginActions>;
 
-export const registerRequest = (payload: RegisterRequestPayload) => ({
-  type: REGISTER_REQUEST,
-  payload
-});
-
-export const registerSuccess = () => ({
-  type: REGISTER_SUCCESS
-});
-
-export const registerFailure = (error: string) => ({
-  type: REGISTER_FAILURE,
-  error
-});
-
-export const deactivateRegister = () => ({
-  type: REGISTER_INACTIVE
-});
-
-export const activateAccount = (payload: ActivatePayload) => ({
-  type: ACTIVATE_REQUEST,
-  payload
-});
-
-export const requestPasswordResetEmail = (payload: ResetEmailPayload) => ({
-  type: REQUEST_RESET_REQUEST,
-  payload
-});
-
-export const resetPassword = (payload: ResetPasswordPayload) => ({
-  type: RESET_PASSWORD_REQUEST,
-  payload
-});
-
-export const loadUserList = () => ({
-  type: LOAD_ADMIN_USER_REQUEST
-});
-
-export const updateUser = (payload: UpdateUserPayload) => ({
-  type: EDIT_ADMIN_USER_REQUEST,
-  payload
-});
-
-export const inviteUser = (payload: InviteUserPayload) => ({
-  type: INVITE_USER_REQUEST,
-  payload
-});
-
-export const deleteInvite = (payload: DeleteInvitePayload) => ({
-  type: DELETE_INVITE_REQUEST,
-  payload
-});
-
-export const validateTFARequest = (payload: ValidateTfaPayload) => ({
-  type: VALIDATE_TFA_REQUEST,
-  payload
-});
+export const registerRequest = (payload: RegisterRequestPayload) =>
+  createAction(REGISTER_REQUEST, payload);
+export const registerSuccess = () => createAction(REGISTER_SUCCESS);
+export const registerFailure = (error: string) =>
+  createAction(REGISTER_FAILURE, error);
+export const deactivateRegister = () => createAction(REGISTER_INACTIVE);
+export const activateAccount = (payload: ActivatePayload) =>
+  createAction(ACTIVATE_REQUEST, payload);
+export const requestPasswordResetEmail = (payload: ResetEmailPayload) =>
+  createAction(REQUEST_RESET_REQUEST, payload);
+export const resetPassword = (payload: ResetPasswordPayload) =>
+  createAction(RESET_PASSWORD_REQUEST, payload);
+export const loadUserList = () => createAction(LOAD_ADMIN_USER_REQUEST);
+export const updateUser = (payload: UpdateUserPayload) =>
+  createAction(EDIT_ADMIN_USER_REQUEST, payload);
+export const inviteUser = (payload: InviteUserPayload) =>
+  createAction(INVITE_USER_REQUEST, payload);
+export const deleteInvite = (payload: DeleteInvitePayload) =>
+  createAction(DELETE_INVITE_REQUEST, payload);
+export const validateTFARequest = (payload: ValidateTfaPayload) =>
+  createAction(VALIDATE_TFA_REQUEST, payload);

@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
 import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
-import { logout } from "../../reducers/auth/actions";
+import { LoginActions } from "../../reducers/auth/actions";
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
 import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
@@ -38,7 +38,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    logout: () => dispatch(logout()),
+    logout: () => dispatch(LoginActions.logout()),
     loadTransferAccountList: (query, path) =>
       dispatch(loadTransferAccounts({ query, path })),
     loadCreditTransferList: (query, path) =>

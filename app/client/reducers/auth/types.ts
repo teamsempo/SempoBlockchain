@@ -1,38 +1,33 @@
-export const REAUTH_REQUEST = "REAUTH_REQUEST";
-export interface ReauthRequest {
-  type: typeof REAUTH_REQUEST;
+export enum LoginActionTypes {
+  REAUTH_REQUEST = "REAUTH_REQUEST",
+  LOGIN_REQUEST = "LOGIN_REQUEST",
+  UPDATE_ACTIVE_ORG = "UPDATE_ACTIVE_ORG",
+  LOGOUT = "LOGOUT",
+  LOGIN_PARTIAL = "LOGIN_PARTIAL",
+  LOGIN_SUCCESS = "LOGIN_SUCCESS",
+  LOGIN_FAILURE = "LOGIN_FAILURE"
 }
-export const UPDATE_ACTIVE_ORG = "UPDATE_ACTIVE_ORG";
+
 export interface UpdateActiveOrgPayload {
   organisationName: string;
   organisationId: number;
   organisationToken: string;
 }
-interface UpdateActiveOrg {
-  type: typeof UPDATE_ACTIVE_ORG;
-  payload: UpdateActiveOrgPayload;
-}
-export const LOGIN_REQUEST = "LOGIN_REQUEST";
+
 export interface LoginRequestPayload {
   body: {
     username: string;
     password: string;
   };
 }
-interface LoginRequest {
-  type: typeof LOGIN_REQUEST;
-  payload: LoginRequestPayload;
-}
-export const LOGIN_PARTIAL = "LOGIN_PARTIAL";
-export interface LoginPartial {
-  type: typeof LOGIN_PARTIAL;
+
+export interface LoginPartialPayload {
   error: null;
   tfaURL: null;
   tfaFailure: false;
 }
-export const LOGIN_SUCCESS = "LOGIN_SUCCESS";
-export interface LoginSuccess {
-  type: typeof LOGIN_SUCCESS;
+
+export interface LoginSuccessPayload {
   token: null | string;
   userId: null | number;
   email: null | string;
@@ -47,23 +42,6 @@ export interface LoginSuccess {
   requireTransferCardExists: null | boolean;
   adminTier?: string;
 }
-export const LOGIN_FAILURE = "LOGIN_FAILURE";
-export interface LoginFailure {
-  type: typeof LOGIN_FAILURE;
-  error: string;
-}
-export const LOGOUT = "LOGOUT";
-export interface LogoutRequest {
-  type: typeof LOGOUT;
-}
-export type LoginAction =
-  | ReauthRequest
-  | LoginRequest
-  | UpdateActiveOrg
-  | LogoutRequest
-  | LoginPartial
-  | LoginSuccess
-  | LoginFailure;
 
 export const REGISTER_REQUEST = "REGISTER_REQUEST";
 export interface RegisterRequestPayload {
