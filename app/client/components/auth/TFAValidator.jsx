@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import AsyncButton from "./../AsyncButton.jsx";
 
-import { validateTFARequest } from "../../reducers/auth/actions";
+import { ValidateTfaAction } from "../../reducers/auth/actions";
 
 import { Input, ErrorMessage } from "./../styledElements";
 
@@ -16,7 +16,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    validateTFARequest: payload => dispatch(validateTFARequest(payload))
+    validateTFARequest: payload =>
+      dispatch(ValidateTfaAction.validateTFARequest(payload))
   };
 };
 

@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 
 import AsyncButton from "./../AsyncButton.jsx";
-import { LoginActions } from "../../reducers/auth/actions";
+import { LoginAction } from "../../reducers/auth/actions";
 
 import { Input, StyledButton, ErrorMessage } from "./../styledElements";
 import { Footer, FooterLink, FooterText } from "../pages/authPage.jsx";
@@ -18,7 +18,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loginRequest: payload => dispatch(LoginActions.loginRequest(payload))
+    loginRequest: payload => dispatch(LoginAction.loginRequest(payload))
   };
 };
 

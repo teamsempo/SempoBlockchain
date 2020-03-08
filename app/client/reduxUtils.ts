@@ -35,5 +35,3 @@ type ActionCreatorsMapObject = { [actionCreator: string]: FunctionType };
 export type ActionsUnion<T extends ActionCreatorsMapObject> = ReturnType<
   T[keyof T]
 >;
-
-// reference: https://medium.com/@martin_hotell/improved-redux-type-safety-with-typescript-2-8-2c11a8062575

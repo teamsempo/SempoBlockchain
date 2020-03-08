@@ -1,78 +1,158 @@
 import {
-  ACTIVATE_REQUEST,
+  ActivateActionTypes,
   ActivatePayload,
-  INVITE_USER_REQUEST,
+  InviteUserActionTypes,
   InviteUserPayload,
   LoginRequestPayload,
-  REGISTER_FAILURE,
-  REGISTER_INACTIVE,
-  REGISTER_REQUEST,
-  REGISTER_SUCCESS,
+  RegisterActionTypes,
   RegisterRequestPayload,
-  REQUEST_RESET_REQUEST,
+  ResetPasswordEmailActionTypes,
   ResetEmailPayload,
-  RESET_PASSWORD_REQUEST,
+  ResetPasswordActionTypes,
   ResetPasswordPayload,
-  EDIT_ADMIN_USER_REQUEST,
+  EditAdminUserActionTypes,
   UpdateActiveOrgPayload,
   UpdateUserPayload,
-  LOAD_ADMIN_USER_REQUEST,
-  VALIDATE_TFA_REQUEST,
+  LoadAdminUserListActionTypes,
+  ValidateTfaActionTypes,
   ValidateTfaPayload,
-  DELETE_INVITE_REQUEST,
+  DeleteInviteActionTypes,
   DeleteInvitePayload,
   LoginSuccessPayload,
   LoginActionTypes,
-  LoginPartialPayload
+  LoginPartialPayload,
+  UPDATE_ADMIN_USER_LIST,
+  AdminUser,
+  InviteUserListActionTypes,
+  Invite
 } from "./types";
 
 import { createAction, ActionsUnion } from "../../reduxUtils";
 
-export const updateActiveOrgRequest = (payload: UpdateActiveOrgPayload) =>
-  createAction(LoginActionTypes.UPDATE_ACTIVE_ORG, payload);
-export const reauthRequest = () =>
-  createAction(LoginActionTypes.REAUTH_REQUEST);
-export const loginRequest = (payload: LoginRequestPayload) =>
-  createAction(LoginActionTypes.LOGIN_REQUEST, payload);
-export const loginPartial = (payload: LoginPartialPayload) =>
-  createAction(LoginActionTypes.LOGIN_PARTIAL, payload);
-export const loginSuccess = (payload: LoginSuccessPayload) =>
-  createAction(LoginActionTypes.LOGIN_SUCCESS, payload);
-export const loginFailure = (error: string) =>
-  createAction(LoginActionTypes.LOGIN_FAILURE, error);
-export const logout = () => createAction(LoginActionTypes.LOGOUT);
-
-export const LoginActions = {
-  updateActiveOrgRequest,
-  reauthRequest,
-  loginRequest,
-  loginPartial,
-  loginSuccess,
-  loginFailure,
-  logout
+export const LoginAction = {
+  updateActiveOrgRequest: (payload: UpdateActiveOrgPayload) =>
+    createAction(LoginActionTypes.UPDATE_ACTIVE_ORG, payload),
+  reauthRequest: () => createAction(LoginActionTypes.REAUTH_REQUEST),
+  loginRequest: (payload: LoginRequestPayload) =>
+    createAction(LoginActionTypes.LOGIN_REQUEST, payload),
+  loginPartial: (payload: LoginPartialPayload) =>
+    createAction(LoginActionTypes.LOGIN_PARTIAL, payload),
+  loginSuccess: (payload: LoginSuccessPayload) =>
+    createAction(LoginActionTypes.LOGIN_SUCCESS, payload),
+  loginFailure: (error: string) =>
+    createAction(LoginActionTypes.LOGIN_FAILURE, error),
+  logout: () => createAction(LoginActionTypes.LOGOUT)
 };
-
 // type declaration merging with above
-export type LoginActions = ActionsUnion<typeof LoginActions>;
+export type LoginAction = ActionsUnion<typeof LoginAction>;
 
-export const registerRequest = (payload: RegisterRequestPayload) =>
-  createAction(REGISTER_REQUEST, payload);
-export const registerSuccess = () => createAction(REGISTER_SUCCESS);
-export const registerFailure = (error: string) =>
-  createAction(REGISTER_FAILURE, error);
-export const deactivateRegister = () => createAction(REGISTER_INACTIVE);
-export const activateAccount = (payload: ActivatePayload) =>
-  createAction(ACTIVATE_REQUEST, payload);
-export const requestPasswordResetEmail = (payload: ResetEmailPayload) =>
-  createAction(REQUEST_RESET_REQUEST, payload);
-export const resetPassword = (payload: ResetPasswordPayload) =>
-  createAction(RESET_PASSWORD_REQUEST, payload);
-export const loadUserList = () => createAction(LOAD_ADMIN_USER_REQUEST);
-export const updateUser = (payload: UpdateUserPayload) =>
-  createAction(EDIT_ADMIN_USER_REQUEST, payload);
-export const inviteUser = (payload: InviteUserPayload) =>
-  createAction(INVITE_USER_REQUEST, payload);
-export const deleteInvite = (payload: DeleteInvitePayload) =>
-  createAction(DELETE_INVITE_REQUEST, payload);
-export const validateTFARequest = (payload: ValidateTfaPayload) =>
-  createAction(VALIDATE_TFA_REQUEST, payload);
+export const RegisterAction = {
+  registerRequest: (payload: RegisterRequestPayload) =>
+    createAction(RegisterActionTypes.REGISTER_REQUEST, payload),
+  registerSuccess: () => createAction(RegisterActionTypes.REGISTER_SUCCESS),
+  registerFailure: (error: string) =>
+    createAction(RegisterActionTypes.REGISTER_FAILURE, error),
+  deactivateRegister: () => createAction(RegisterActionTypes.REGISTER_INACTIVE)
+};
+export type RegisterAction = ActionsUnion<typeof RegisterAction>;
+
+export const ActivateAccountAction = {
+  activateAccountRequest: (payload: ActivatePayload) =>
+    createAction(ActivateActionTypes.ACTIVATE_REQUEST, payload),
+  activateAccountSuccess: () =>
+    createAction(ActivateActionTypes.ACTIVATE_SUCCESS),
+  activateAccountFailure: (error: string) =>
+    createAction(ActivateActionTypes.ACTIVATE_FAILURE, error)
+};
+export type ActivateAccountAction = ActionsUnion<typeof ActivateAccountAction>;
+
+export const ResetPasswordEmailAction = {
+  passwordResetEmailRequest: (payload: ResetEmailPayload) =>
+    createAction(ResetPasswordEmailActionTypes.REQUEST_RESET_REQUEST, payload),
+  passwordResetEmailSuccess: () =>
+    createAction(ResetPasswordEmailActionTypes.REQUEST_RESET_SUCCESS),
+  passwordResetEmailFailure: (error: string) =>
+    createAction(ResetPasswordEmailActionTypes.REQUEST_RESET_FAILURE, error)
+};
+export type ResetPasswordEmailAction = ActionsUnion<
+  typeof ResetPasswordEmailAction
+>;
+
+export const ResetPasswordAction = {
+  resetPasswordRequest: (payload: ResetPasswordPayload) =>
+    createAction(ResetPasswordActionTypes.RESET_PASSWORD_REQUEST, payload),
+  resetPasswordSuccess: () =>
+    createAction(ResetPasswordActionTypes.RESET_PASSWORD_SUCCESS),
+  resetPasswordFailure: (error: string) =>
+    createAction(ResetPasswordActionTypes.RESET_PASSWORD_FAILURE, error)
+};
+export type ResetPasswordAction = ActionsUnion<typeof ResetPasswordAction>;
+
+export const AdminUserListAction = {
+  updateAdminUserList: (admins: AdminUser) =>
+    createAction(UPDATE_ADMIN_USER_LIST, admins)
+};
+export type AdminUserListAction = ActionsUnion<typeof AdminUserListAction>;
+
+export const InviteUserListAction = {
+  deepUpdateInviteUsers: (invites: Invite[]) =>
+    createAction(
+      InviteUserListActionTypes.DEEP_UPDATE_INVITE_USER_LIST,
+      invites
+    ),
+  updateInviteUsers: (invites: Invite[]) =>
+    createAction(InviteUserListActionTypes.UPDATE_INVITE_USER_LIST, invites)
+};
+export type InviteUserListAction = ActionsUnion<typeof InviteUserListAction>;
+
+export const LoadAdminUserListAction = {
+  loadAdminUserListRequest: () =>
+    createAction(LoadAdminUserListActionTypes.LOAD_ADMIN_USER_REQUEST),
+  loadAdminUserListSuccess: () =>
+    createAction(LoadAdminUserListActionTypes.LOAD_ADMIN_USER_SUCCESS),
+  loadAdminUserListFailure: (error: string) =>
+    createAction(LoadAdminUserListActionTypes.LOAD_ADMIN_USER_FAILURE, error)
+};
+export type LoadAdminUserListAction = ActionsUnion<
+  typeof LoadAdminUserListAction
+>;
+
+export const EditAdminUserAction = {
+  editAdminUserRequest: (payload: UpdateUserPayload) =>
+    createAction(EditAdminUserActionTypes.EDIT_ADMIN_USER_REQUEST, payload),
+  editAdminUserSuccess: () =>
+    createAction(EditAdminUserActionTypes.EDIT_ADMIN_USER_SUCCESS),
+  editAdminUserFailure: (error: string) =>
+    createAction(EditAdminUserActionTypes.EDIT_ADMIN_USER_FAILURE, error)
+};
+export type EditAdminUserAction = ActionsUnion<typeof EditAdminUserAction>;
+
+export const InviteUserAction = {
+  inviteUserRequest: (payload: InviteUserPayload) =>
+    createAction(InviteUserActionTypes.INVITE_USER_REQUEST, payload),
+  inviteUserSuccess: () =>
+    createAction(InviteUserActionTypes.INVITE_USER_SUCCESS),
+  inviteUserFailure: (error: string) =>
+    createAction(InviteUserActionTypes.INVITE_USER_FAILURE, error)
+};
+export type InviteUserAction = ActionsUnion<typeof InviteUserAction>;
+
+export const DeleteInviteAction = {
+  deleteInviteRequest: (payload: DeleteInvitePayload) =>
+    createAction(DeleteInviteActionTypes.DELETE_INVITE_REQUEST, payload),
+  deleteInviteSuccess: () =>
+    createAction(DeleteInviteActionTypes.DELETE_INVITE_SUCCESS),
+  deleteInviteFailure: (error: string) =>
+    createAction(DeleteInviteActionTypes.DELETE_INVITE_FAILURE, error)
+};
+export type DeleteInviteAction = ActionsUnion<typeof DeleteInviteAction>;
+
+export const ValidateTfaAction = {
+  validateTFARequest: (payload: ValidateTfaPayload) =>
+    createAction(ValidateTfaActionTypes.VALIDATE_TFA_REQUEST, payload),
+  validateTFASuccess: () =>
+    createAction(ValidateTfaActionTypes.VALIDATE_TFA_SUCCESS),
+  validateTFAFailure: (error: string) =>
+    createAction(ValidateTfaActionTypes.VALIDATE_TFA_FAILURE, error)
+};
+export type ValidateTfaAction = ActionsUnion<typeof ValidateTfaAction>;

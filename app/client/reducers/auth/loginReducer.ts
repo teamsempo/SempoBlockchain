@@ -1,4 +1,4 @@
-import { LoginActions } from "./actions";
+import { LoginAction } from "./actions";
 
 import { LoginActionTypes } from "./types";
 
@@ -46,7 +46,7 @@ const initialLoginState: LoginState = {
   tfaFailure: false
 };
 
-export const login = (state = initialLoginState, action: LoginActions) => {
+export const login = (state = initialLoginState, action: LoginAction) => {
   switch (action.type) {
     case LoginActionTypes.REAUTH_REQUEST:
     case LoginActionTypes.LOGIN_REQUEST:

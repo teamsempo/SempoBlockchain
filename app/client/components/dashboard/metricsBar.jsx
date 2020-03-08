@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 
-import { LoginActions } from "../../reducers/auth/actions";
+import { LoginAction } from "../../reducers/auth/actions";
 import { ModuleHeader } from "../styledElements";
 
 import { formatMoney } from "../../utils";
@@ -16,7 +16,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    logout: () => dispatch(LoginActions.logout())
+    logout: () => dispatch(LoginAction.logout())
   };
 };
 
