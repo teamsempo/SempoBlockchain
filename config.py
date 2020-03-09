@@ -141,7 +141,7 @@ REQUIRE_TRANSFER_CARD_EXISTS = config_parser['APP'].getboolean('REQUIRE_TRANSFER
 SEMPOADMIN_EMAIL = config_parser['APP'].get('sempoadmin_email')
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
-PASSWORD_PEPPER     = secrets_parser['APP']['PASSWORD_PEPPER']
+PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')
 SECRET_KEY          = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
 
