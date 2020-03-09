@@ -86,6 +86,7 @@ jobs:
             docker save server:latest | gzip > ~/project/imagecaches/server.tar.gz
             docker save eth_worker:latest | gzip > ~/project/imagecaches/eth_worker.tar.gz
             docker save proxy:latest | gzip > ~/project/imagecaches/proxy.tar.gz
+            docker save pgbouncer:latest | gzip > ~/project/imagecaches/pgbouncer.tar.gz
 
             sudo chmod 777 -R ~/project/imagecaches
 
