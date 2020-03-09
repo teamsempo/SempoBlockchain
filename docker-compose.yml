@@ -47,8 +47,7 @@ services:
     - eth_postgres
 
   pgbouncer:
-    build:
-      dockerfile: pgbouncer/Dockerfile
+    build: pgbouncer
     image: pgbouncer
       
   proxy:
