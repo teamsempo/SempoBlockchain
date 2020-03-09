@@ -48,7 +48,6 @@ services:
 
   pgbouncer:
     build:
-      context: app/server
       dockerfile: pgbouncer/Dockerfile
     image: pgbouncer
       
