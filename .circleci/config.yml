@@ -137,6 +137,7 @@ jobs:
       - run:
           name: Load Docker image layer cache
           command: |
+            gunzip -c ~/project/imagecaches/pgbouncer.tar.gz | docker load
             gunzip -c ~/project/imagecaches/server.tar.gz | docker load
             gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
             gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
