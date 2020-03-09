@@ -39,4 +39,3 @@ USER postgres
 EXPOSE 5432
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/bin/pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
-#COPY pgbouncer.ini userlist.txt /etc/pgbouncer/

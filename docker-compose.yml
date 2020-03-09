@@ -47,7 +47,9 @@ services:
     - eth_postgres
 
   pgbouncer:
-    build: pgbouncer
+    build:
+      dockerfile: pgbouncer/Dockerfile
+    image: pgbouncer
     ports:
       - "6543:6543"  
       - "5000:5000"  
