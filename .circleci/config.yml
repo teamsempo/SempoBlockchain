@@ -210,7 +210,7 @@ jobs:
       - run:
           name: Deploy app to AWS Server via Docker
           command: |
-            eb deploy blockchain-app-dev2
+            eb deploy blockchain-app-dev3
 
 workflows:
   version: 2
