@@ -11,25 +11,10 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
       - postgres
-      - eth_worker
+      - low_priority_eth_worker
+      - high_priority_eth_worker
       - pgbouncer
    
-  eth_worker:
-    build:
-      context: app/server
-      dockerfile: eth_worker/Dockerfile
-    image: eth_worker
-    environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
-      CONTAINER_TYPE: "PRIMARY"
-      PYTHONUNBUFFERED: 0
-      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-    depends_on:
-    - redis
-    - ganache
-    - eth_postgres
-
   low_priority_eth_worker:
     build:
       context: app/server
@@ -37,7 +22,7 @@ services:
     image: eth_worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
-      CONTAINER_TYPE: "PRIMARY"
+      CONTAINER_TYPE: "LOW_PRIORITY_WORKER"
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
@@ -53,7 +38,7 @@ services:
     image: eth_worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
-      CONTAINER_TYPE: "PRIMARY"
+      CONTAINER_TYPE: "HIGH_PRIORITY_WORKER"
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}

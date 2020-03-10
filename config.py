@@ -173,13 +173,14 @@ DATABASE_NAME = config_parser['DATABASE'].get('database') \
 ETH_DATABASE_NAME = config_parser['DATABASE'].get('eth_database') \
                     or common_secrets_parser['DATABASE']['eth_database']
 
+BOUNCER_MAX_CLIENT_CONN = config_parser['BOUNCER'].get('max_client_conn') or 1000
+BOUNCER_DEFAULT_POOL_SIZE = config_parser['BOUNCER'].get('default_pool_size') or 100
+BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') or 100
+BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
+
 if BOUNCER_ENABLED:
     ACTIVE_DATABASE_HOST = config_parser['BOUNCER']['host']
     ACTIVE_DATABASE_PORT = config_parser['BOUNCER']['port']
-    BOUNCER_MAX_CLIENT_CONN = config_parser['BOUNCER'].get('max_client_conn') or 1000
-    BOUNCER_DEFAULT_POOL_SIZE = config_parser['BOUNCER'].get('default_pool_size') or 100
-    BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') or 100
-    BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
 else:
     ACTIVE_DATABASE_HOST = DATABASE_HOST
     ACTIVE_DATABASE_PORT = DATABASE_PORT
