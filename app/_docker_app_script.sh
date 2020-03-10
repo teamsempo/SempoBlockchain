@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+sleep 60
 
 cd src
 echo upgrading database
