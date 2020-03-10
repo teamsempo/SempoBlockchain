@@ -219,7 +219,7 @@ CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, ce
 print('Main database URI: ' + CENSORED_URI)
 print('Eth database URI: ' + CENSORED_ETH_URI)
 
-
+print('ABCD')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 AWS_SES_KEY_ID = common_secrets_parser['AWS']['ses_key_id']
