@@ -174,14 +174,17 @@ ETH_DATABASE_NAME = config_parser['DATABASE'].get('eth_database') \
                     or common_secrets_parser['DATABASE']['eth_database']
 
 if BOUNCER_ENABLED:
-    DATABASE_HOST = config_parser['BOUNCER']['host']
-    DATABASE_PORT = config_parser['BOUNCER']['port']
+    ACTIVE_DATABASE_HOST = config_parser['BOUNCER']['host']
+    ACTIVE_DATABASE_PORT = config_parser['BOUNCER']['port']
     BOUNCER_MAX_CLIENT_CONN = config_parser['BOUNCER'].get('max_client_conn') or 1000
     BOUNCER_DEFAULT_POOL_SIZE = config_parser['BOUNCER'].get('default_pool_size') or 100
     BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') or 100
     BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
+else:
+    ACTIVE_DATABASE_HOST = DATABASE_HOST
+    ACTIVE_DATABASE_PORT = DATABASE_PORT
 
-ETH_DATABASE_HOST = config_parser['DATABASE'].get('eth_host') or DATABASE_HOST
+ETH_DATABASE_HOST = config_parser['DATABASE'].get('eth_host') or ACTIVE_DATABASE_HOST
 ETH_WORKER_DB_POOL_SIZE = config_parser['DATABASE'].getint('eth_worker_pool_size', 40)
 ETH_WORKER_DB_POOL_OVERFLOW = config_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
 
@@ -196,12 +199,12 @@ def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
-                                                DATABASE_PORT,
+                                                ACTIVE_DATABASE_PORT,
                                                 name)
 
 
-SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=False)
-CENSORED_URI            = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=True)
+SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, ACTIVE_DATABASE_HOST, censored=False)
+CENSORED_URI            = get_database_uri(DATABASE_NAME, ACTIVE_DATABASE_HOST, censored=True)
 
 ETH_DATABASE_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=False)
 CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=True)

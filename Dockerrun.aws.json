@@ -57,7 +57,7 @@
     },
     {
       "name": "high_pri_eth_worker",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
+      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:low_priority_eth_worker",
       "essential": true,
       "memory": 128,
       "links": ["pgbouncer:pgbouncer"],
@@ -79,7 +79,7 @@
     },
     {
       "name": "low_pri_eth_worker",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:eth_worker",
+      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:high_priority_eth_worker",
       "essential": true,
       "memory": 128,
       "links": ["pgbouncer:pgbouncer"],

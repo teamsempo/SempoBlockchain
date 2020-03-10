@@ -15,5 +15,8 @@ docker push $REPOSITORY_URI:proxy
 docker tag pgbouncer:latest $REPOSITORY_URI:pgbouncer
 docker push $REPOSITORY_URI:pgbouncer
 
-docker tag eth_worker:latest $REPOSITORY_URI:eth_worker
-docker push $REPOSITORY_URI:eth_worker
+docker tag low_priority_eth_worker:latest $REPOSITORY_URI:low_priority_eth_worker
+docker push $REPOSITORY_URI:low_priority_eth_worker
+
+docker tag high_priority_eth_worker:latest $REPOSITORY_URI:high_priority_eth_worker
+docker push $REPOSITORY_URI:high_priority_eth_worker

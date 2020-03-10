@@ -30,6 +30,38 @@ services:
     - ganache
     - eth_postgres
 
+  low_priority_eth_worker:
+    build:
+      context: app/server
+      dockerfile: eth_worker/Dockerfile
+    image: eth_worker
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+      CONTAINER_TYPE: "PRIMARY"
+      PYTHONUNBUFFERED: 0
+      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+    - redis
+    - ganache
+    - eth_postgres
+  
+  high_priority_eth_worker:
+    build:
+      context: app/server
+      dockerfile: eth_worker/Dockerfile
+    image: eth_worker
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+      CONTAINER_TYPE: "PRIMARY"
+      PYTHONUNBUFFERED: 0
+      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+    - redis
+    - ganache
+    - eth_postgres
+
   eth_worker_processor:
     build:
       context: app/server
