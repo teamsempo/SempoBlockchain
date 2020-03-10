@@ -111,6 +111,7 @@ if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
     raise RuntimeError('deployment name in env ({}) does not match that in config ({}), aborting'.format(ENV_DEPLOYMENT_NAME.lower(),
                                                                                             DEPLOYMENT_NAME.lower()))
 BOUNCER_ENABLED = config_parser['APP'].getboolean('BOUNCER_ENABLED', False)
+print(BOUNCER_ENABLED)
 IS_TEST = config_parser['APP'].getboolean('IS_TEST', False)
 IS_PRODUCTION = config_parser['APP'].getboolean('IS_PRODUCTION')
 if IS_PRODUCTION is None:
@@ -178,13 +179,18 @@ BOUNCER_DEFAULT_POOL_SIZE = config_parser['BOUNCER'].get('default_pool_size') or
 BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') or 100
 BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
 
+print(BOUNCER_ENABLED)
+print('DATABASE STUFF')
 if BOUNCER_ENABLED:
+    print('PGBBOUNCER Enabled')
     ACTIVE_DATABASE_HOST = config_parser['BOUNCER']['host']
     ACTIVE_DATABASE_PORT = config_parser['BOUNCER']['port']
 else:
     ACTIVE_DATABASE_HOST = DATABASE_HOST
     ACTIVE_DATABASE_PORT = DATABASE_PORT
-
+print(DATABASE_HOST)
+print(ACTIVE_DATABASE_HOST)
+print(ACTIVE_DATABASE_PORT)
 ETH_DATABASE_HOST = config_parser['DATABASE'].get('eth_host') or ACTIVE_DATABASE_HOST
 ETH_WORKER_DB_POOL_SIZE = config_parser['DATABASE'].getint('eth_worker_pool_size', 40)
 ETH_WORKER_DB_POOL_OVERFLOW = config_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
