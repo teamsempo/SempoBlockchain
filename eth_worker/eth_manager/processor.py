@@ -612,6 +612,9 @@ class TransactionProcessor(object):
         self.persistence_interface.increment_task_invokations(task)
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
 
+    def get_duplicates(self, ):
+        self.persistence_interface.get_duplicates(task)
+
     def __init__(self,
                  ethereum_chain_id,
                  w3,

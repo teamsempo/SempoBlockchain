@@ -265,6 +265,9 @@ class SQLPersistenceInterface(object):
         else:
             return base_data
 
+    def get_duplicates(self, min_task_id, max_task_id):
+        return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+
     def increment_task_invokations(self, task):
         task.previous_invocations = (task.previous_invocations or 0) + 1
 
