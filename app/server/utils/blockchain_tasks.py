@@ -105,9 +105,9 @@ class BlockchainTasker(object):
             self._eth_endpoint('retry_failed'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
         )
 
-    def get_duplicates(self, min_task_id, max_task_id):
+    def fix_duplicates(self, min_task_id, max_task_id):
         return self._execute_synchronous_celery(
-            self._eth_endpoint('get_duplicates'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+            self._eth_endpoint('fix_duplicates'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
         )
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)

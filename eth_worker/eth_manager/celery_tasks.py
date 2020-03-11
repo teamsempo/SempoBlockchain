@@ -155,8 +155,8 @@ def retry_failed(self, min_task_id=None, max_task_id=None):
     return blockchain_processor.retry_failed(min_task_id, max_task_id)
 
 @celery_app.task(**no_retry_config)
-def get_duplicates(self, min_task_id, max_task_id):
-    return blockchain_processor.get_duplicates(min_task_id, max_task_id)
+def fix_duplicates(self, min_task_id, max_task_id):
+    return blockchain_processor.fix_duplicates(min_task_id, max_task_id)
 
 
 @celery_app.task(**base_task_config)
