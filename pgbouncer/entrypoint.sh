@@ -4,4 +4,5 @@ set -e
 PG_CONFIG_DIR=/etc/pgbouncer
 echo "Creating sempo pgbouncer config"
 python3 generate_pgbouncer_config.py
+echo "Created sempo pgboucner file"
 exec "$@"

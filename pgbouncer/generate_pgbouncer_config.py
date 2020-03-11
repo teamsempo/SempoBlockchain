@@ -1,3 +1,6 @@
+import datetime
+print('starting pgbouncer config python script')
+print(str(datetime.datetime.now()))
 import config
 from pathlib import Path
 

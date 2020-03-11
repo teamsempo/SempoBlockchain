@@ -29,7 +29,12 @@
       "essential": true,
       "memory": 32,
       "cpu": 1,
-      "environment": [],
+      "environment": [
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
+        }
+      ],
       "portMappings": [
         {
           "hostPort": 6543,
