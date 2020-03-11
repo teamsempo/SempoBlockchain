@@ -142,6 +142,12 @@ jobs:
           name: Run Docker Tests
           command: |
             docker-compose up --exit-code-from app
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
       - run:
           name: Run Frontend Tests
           command: |

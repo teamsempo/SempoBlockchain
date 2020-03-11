@@ -14,31 +14,6 @@
     "bundle-report": "webpack-bundle-analyzer --port 4200 server/static/javascript/dist/stats.json",
     "reinstall": "rm -rf node_modules && npm install"
   },
-  "jest": {
-    "roots": [
-      "<rootDir>/client"
-    ],
-    "transform": {
-      "^.+\\.[t|j]sx?$": "babel-jest"
-    },
-    "snapshotSerializers": [
-      "enzyme-to-json/serializer"
-    ],
-    "setupFilesAfterEnv": [
-      "./client/__tests__/setup/setupTests.js"
-    ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/client/__tests__/setup/setupTests.js"
-    ],
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/client/__tests__/setup/"
-    ],
-    "transformIgnorePatterns": [
-      "/node_modules/"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/teamsempo/SempoBlockchain.git"
