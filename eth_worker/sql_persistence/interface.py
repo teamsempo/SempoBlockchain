@@ -266,7 +266,38 @@ class SQLPersistenceInterface(object):
             return base_data
 
     def get_duplicates(self, min_task_id, max_task_id):
-        return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+
+        from sqlalchemy.sql import text
+
+        query = text(
+            """
+            SELECT
+                blockchain_task.id, blockchain_transaction.id
+            FROM blockchain_task
+            RIGHT JOIN blockchain_transaction
+            ON  blockchain_transaction.blockchain_task_id = blockchain_task.id
+            WHERE blockchain_task.id > {} and blockchain_task.id < {}
+            GROUP BY blockchain_task.id, blockchain_transaction.id
+            HAVING (
+                    SELECT COUNT(*)
+                    FROM blockchain_transaction
+                    WHERE blockchain_task_id = blockchain_task.id AND _status = 'SUCCESS'
+                ) > 1
+            """.format(min_task_id, max_task_id)
+        )
+
+        res = session.execute(query)
+
+        duplicated_tasks = {}
+        for row in res:
+            task_id = row[0]
+            txn_id = row[1]
+            if task_id in duplicated_tasks:
+                duplicated_tasks[task_id].append(txn_id)
+            else:
+                duplicated_tasks[task_id] = [txn_id]
+
+        return duplicated_tasks
 
     def increment_task_invokations(self, task):
         task.previous_invocations = (task.previous_invocations or 0) + 1

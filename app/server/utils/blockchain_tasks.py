@@ -103,6 +103,11 @@ class BlockchainTasker(object):
     def retry_failed(self):
         return self._execute_synchronous_celery(self._eth_endpoint('retry_failed'), args={})
 
+    def get_duplicates(self, min_task_id, max_task_id):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('get_duplicates'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+        )
+
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
     def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
         """

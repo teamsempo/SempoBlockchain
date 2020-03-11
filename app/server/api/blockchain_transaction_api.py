@@ -107,6 +107,20 @@ class BlockchainTransactionRPC(MethodView):
 
             return make_response(jsonify(response_object)), 200
 
+        if call == 'GET_DUPLICATES':
+            min_task_id = post_data.get('min_task_id')
+            max_task_id = post_data.get('max_task_id')
+
+            res = bt.get_duplicates(min_task_id, max_task_id)
+
+
+            response_object = {
+                'message': 'Getting duplicate tasks',
+                'data': res
+            }
+
+            return make_response(jsonify(response_object)), 200
+
         response_object = {
             'message': 'Call not recognised',
         }
