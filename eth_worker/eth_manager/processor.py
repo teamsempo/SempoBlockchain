@@ -631,15 +631,6 @@ class TransactionProcessor(object):
         self.persistence_interface.increment_task_invokations(task)
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
 
-    def fix_duplicates(self, min_task_id, max_task_id):
-        duplicates = self.persistence_interface.get_duplicates(min_task_id, max_task_id)
-
-        # for task in duplicates.items():
-        #     self.red
-        #
-        print('get duplicate result:')
-        print(duplicates)
-        return duplicates
 
     def __init__(self,
                  ethereum_chain_id,

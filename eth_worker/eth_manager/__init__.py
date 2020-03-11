@@ -134,10 +134,3 @@ blockchain_processor.registry.register_abi('bancor_network', bancor_network_abi.
 #     attempts += 1
 #     sleep(1)
 #
-
-# red.set('foo', 1)
-# print('foo is:')
-# print(red.get('foo'))
-#
-# print('food is:')
-# print(red.get('food'))

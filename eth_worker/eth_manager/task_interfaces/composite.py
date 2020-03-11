@@ -3,7 +3,7 @@ from functools import partial
 from toolz import pipe
 
 import config
-from eth_manager import persistence_interface, utils, w3
+from eth_manager import persistence_interface, utils, w3, red
 from eth_manager.task_interfaces.regular import (
     deploy_contract_task,
     transaction_task,
@@ -279,3 +279,41 @@ def deploy_smart_token(
     return {'smart_token_address': smart_token_address,
             'subexchange_address': subexchange_address}
 
+
+def fix_duplicates(min_task_id, max_task_id):
+
+    lock_timout = 600
+
+    duplicates = persistence_interface.get_duplicates(min_task_id, max_task_id)
+
+    for task_id, txns in duplicates.items():
+
+        task = persistence_interface.get_task_from_id(task_id)
+
+        if task.function != 'transferFrom':
+            print(f'Skipping de-duplication of {task_id} - task is not of type "transferFrom"')
+            continue
+
+        lock = red.lock(f'DupeLock-{task_id}', timeout=lock_timout)
+        have_lock = lock.acquire(blocking=False)
+
+        if not have_lock:
+            print(f'Skipping de-duplication of {task_id} - lock not acquired')
+            continue
+
+        orginal_sender, orginal_recipient, amount = task.args
+
+        new_task = transaction_task(
+            signing_address=task.signing_wallet.address,
+            contract_address=task.contract_address,
+            contract_type='ECR20',
+            func='transferFrom',
+            args=[
+                orginal_recipient,
+                orginal_sender,
+                amount
+            ],
+            gas_limit=8000000
+        )
+
+        print(f'Reversing task {task_id} - {new_task}')

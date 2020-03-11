@@ -307,6 +307,9 @@ class SQLPersistenceInterface(object):
     def get_task_from_uuid(self, task_uuid):
         return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
+    def get_task_from_id(self, task_id):
+        return session.query(BlockchainTask).get(task_id)
+
     def _filter_minmax_task_ids_maybe(self, query, min_task_id, max_task_id):
         if min_task_id:
             query = query.filter(BlockchainTask.id > min_task_id)
