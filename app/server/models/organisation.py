@@ -77,13 +77,13 @@ class Organisation(ModelBase):
 
     @country_code.setter
     def country_code(self, val):
-        val = val.upper()
-        if len(val) != 2:
-            # will try handle 'AD: Andorra'
-            val = val.split(':')[0]
-
-        if val is not None and val not in ISO_COUNTRIES:
-            raise Exception(f"{val} is not a valid country code")
+        if val is not None:
+            val = val.upper()
+            if len(val) != 2:
+                # will try handle 'AD: Andorra'
+                val = val.split(':')[0]
+            if val not in ISO_COUNTRIES:
+                raise Exception(f"{val} is not a valid country code")
         self._country_code = val
 
     @property
@@ -92,7 +92,8 @@ class Organisation(ModelBase):
 
     @default_disbursement.setter
     def default_disbursement(self, val):
-        self._default_disbursement_wei = int(val) * int(1e16)
+        if val is not None:
+            self._default_disbursement_wei = int(val) * int(1e16)
 
     # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
     @property

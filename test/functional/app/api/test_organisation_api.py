@@ -34,7 +34,7 @@ def test_create_organisation(test_client, complete_admin_auth_token, external_re
 def test_get_organisation(test_client, complete_admin_auth_token,
                           create_organisation, org_selector_func, status_code):
     response = test_client.get(
-        f"/api/v1/organisation/{org_selector_func(create_organisation)}",
+        f"/api/v1/organisation/{org_selector_func(create_organisation)}/",
         headers=dict(
             Authorization=complete_admin_auth_token,
             Accept='application/json'
