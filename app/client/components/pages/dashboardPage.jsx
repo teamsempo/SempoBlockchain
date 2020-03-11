@@ -5,14 +5,12 @@ import { subscribe, unsubscribe } from "pusher-redux";
 
 import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
 import { logout } from "../../reducers/auth/actions";
-import {
-  loadCreditTransferList,
-  loadCreditTransferStats
-} from "../../reducers/creditTransferReducer";
+import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
 
 import {
-  AnalyticsChart,
+  VolumeChart,
   BeneficiaryFunnel,
   UsagePieChart,
   MetricsBar,
@@ -45,8 +43,8 @@ const mapDispatchToProps = dispatch => {
       dispatch(loadTransferAccounts({ query, path })),
     loadCreditTransferList: (query, path) =>
       dispatch(loadCreditTransferList({ query, path })),
-    loadCreditTransferStats: (query, path) =>
-      dispatch(loadCreditTransferStats({ query, path }))
+    loadCreditTransferFilters: (query, path) =>
+      dispatch(loadCreditTransferFilters({ query, path }))
   };
 };
 
@@ -83,6 +81,8 @@ class DashboardPage extends React.Component {
       console.log("actok", parsed.actok);
       this.props.activateAccount(parsed.actok);
     }
+
+    this.props.loadCreditTransferFilters();
   }
 
   buildFilterForAPI() {
@@ -163,7 +163,7 @@ class DashboardPage extends React.Component {
               <Main>
                 <GraphMetricColumn>
                   <ModuleBox>
-                    <AnalyticsChart />
+                    <VolumeChart />
                   </ModuleBox>
 
                   <ModuleBox>

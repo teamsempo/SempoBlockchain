@@ -1,3 +1,4 @@
+from typing import Callable, Union
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
 import json
 from flask_cors import CORS
@@ -27,6 +28,7 @@ from server.utils.phone import MessageProcessor
 #     is_running_uwsgi = True
 # except ImportError:
 #     is_running_uwsgi = False
+
 
 sys.path.append('../')
 import config
@@ -196,6 +198,18 @@ def register_blueprints(app):
         return render_template('index.html'), 404
 
 
+def none_if_exception(f: Callable) -> Union[object, None]:
+    """
+    A helper function for when you're lacking configs for external packages.
+    Use a partial or lambda to delay execution of f.
+    :param f: a callable object instantiator
+    :return: an initialised package object, or None
+    """
+    try:
+        return f()
+    except:
+        return None
+
 def encrypt_string(raw_string):
     import base64
     from cryptography.fernet import Fernet
@@ -233,16 +247,30 @@ prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
-pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
-                       key=config.PUSHER_KEY,
-                       secret=config.PUSHER_SECRET,
-                       cluster=config.PUSHER_CLUSTER,
-                       ssl=True)
+try:
+    pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
+                           key=config.PUSHER_KEY,
+                           secret=config.PUSHER_SECRET,
+                           cluster=config.PUSHER_CLUSTER,
+                           ssl=True)
+except:
+    class PusherMock(object):
+        def authenticate(self, *args, **kwargs):
+            return ''
+        def trigger(self, *args, **kwargs):
+            pass
 
-twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
-messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
-africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
-africastalking_client = africastalking.SMS
+    pusher_client = PusherMock()
+
+
+def africas_talking_launcher():
+    africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
+    return africastalking.SMS
+
+
+twilio_client = none_if_exception(lambda: TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN))
+messagebird_client = none_if_exception(lambda: messagebird.Client(config.MESSAGEBIRD_KEY))
+africastalking_client = none_if_exception(africas_talking_launcher)
 
 message_processor = MessageProcessor(
     twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)

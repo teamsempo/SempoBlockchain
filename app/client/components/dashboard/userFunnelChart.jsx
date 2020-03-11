@@ -7,7 +7,7 @@ import { ModuleHeader } from "../styledElements.js";
 
 const mapStateToProps = state => {
   return {
-    creditTransferStats: state.creditTransfers.transferStats
+    creditTransferStats: state.metrics.metricsState
   };
 };
 
