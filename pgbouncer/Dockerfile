@@ -37,5 +37,6 @@ ADD ./pgbouncer/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 USER postgres
 EXPOSE 5432
+EXPOSE 6543
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/bin/pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
