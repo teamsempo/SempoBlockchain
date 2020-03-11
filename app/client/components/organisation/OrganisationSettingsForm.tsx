@@ -1,9 +1,9 @@
 import * as React from "react";
 
-import {InjectedFormProps, reduxForm} from "redux-form";
+import { InjectedFormProps, reduxForm } from "redux-form";
 
-import {ErrorMessage} from "../styledElements";
-import {Organisation} from "../../reducers/organisation/types";
+import { ErrorMessage } from "../styledElements";
+import { Organisation } from "../../reducers/organisation/types";
 
 import AsyncButton from "../AsyncButton";
 import SelectField from "../form/SelectField";
@@ -15,8 +15,7 @@ export interface IOrganisationSettings {
   countryCode: string;
 }
 
-interface StateProps {
-}
+interface StateProps {}
 
 interface OuterProps {
   isoCountries: [];
@@ -27,12 +26,19 @@ interface OuterProps {
 type Props = OuterProps & StateProps;
 type IState = IOrganisationSettings & StateProps;
 
-class OrganisationSettingForm extends React.Component<InjectedFormProps<IState, Props> & Props> {
+class OrganisationSettingForm extends React.Component<
+  InjectedFormProps<IState, Props> & Props
+> {
   componentDidMount() {
-    const {activeOrganisation, isoCountries} = this.props;
-    let countryCode = isoCountries.find(
-      country => country.slice(0, 2) == activeOrganisation.country_code
-    );
+    const { activeOrganisation, isoCountries } = this.props;
+
+    // isoCountries = ['AD: Andorra', ...]
+    let countryCode =
+      isoCountries.find(
+        (country: string) =>
+          country.slice(0, 2) == activeOrganisation.country_code
+      ) || "";
+
     this.props.initialize({
       defaultDisbursement: activeOrganisation.default_disbursement / 100,
       requireTransferCard: activeOrganisation.require_transfer_card,
@@ -41,7 +47,7 @@ class OrganisationSettingForm extends React.Component<InjectedFormProps<IState, 
   }
 
   render() {
-    const {isoCountries, activeOrganisation} = this.props;
+    const { isoCountries, activeOrganisation } = this.props;
 
     return (
       <form onSubmit={this.props.handleSubmit}>
@@ -77,7 +83,7 @@ class OrganisationSettingForm extends React.Component<InjectedFormProps<IState, 
         <AsyncButton
           type="submit"
           isLoading={this.props.organisations.editStatus.isRequesting}
-          buttonStyle={{display: "flex"}}
+          buttonStyle={{ display: "flex" }}
           buttonText="Submit"
         />
       </form>

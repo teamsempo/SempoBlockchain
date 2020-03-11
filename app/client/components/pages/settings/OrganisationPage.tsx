@@ -1,18 +1,18 @@
 import * as React from "react";
-import {connect} from "react-redux";
+import { connect } from "react-redux";
 
-import {Organisation} from "../../../reducers/organisation/types";
-import {editOrganisation} from "../../../reducers/organisation/actions";
+import { Organisation } from "../../../reducers/organisation/types";
+import { editOrganisation } from "../../../reducers/organisation/actions";
 import SideBar from "../../navBar";
 import * as styles from "../../styledElements";
 import OrganisationSettingForm, {
   IOrganisationSettings
 } from "../../organisation/OrganisationSettingsForm";
-import {generateQueryString, getToken, handleResponse} from "../../../utils";
+import { generateQueryString, getToken, handleResponse } from "../../../utils";
 import LoadingSpinnger from "../../loadingSpinner";
 
 interface DispatchProps {
-  editOrganisation: (body: any, path) => void;
+  editOrganisation: (body: any, path: number) => void;
 }
 
 interface StateProps {
@@ -43,16 +43,18 @@ class OrganisationPage extends React.Component<IProps, IState> {
     const query_string = generateQueryString();
     var URL = `/api/v1/organisation/constants/${query_string}`;
 
+    //todo: refactor this
+    //@ts-ignore
     return fetch(URL, {
       headers: {
         Authorization: getToken()
       },
       method: "GET"
     })
-      .then(response => {
+      .then((response: any) => {
         return handleResponse(response);
       })
-      .then(handled => {
+      .then((handled: any) => {
         let isoCountriesOptions;
         let isoCountries = handled.data.iso_countries;
         if (isoCountries) {
@@ -60,11 +62,12 @@ class OrganisationPage extends React.Component<IProps, IState> {
             return `${isoKey}: ${isoCountries[isoKey]}`;
           });
         }
+        //@ts-ignore
         this.setState({
           isoCountries: isoCountriesOptions
         });
       })
-      .catch(error => {
+      .catch((error: any) => {
         throw error;
       });
   }
@@ -86,7 +89,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
   render() {
     return (
       <styles.Wrapper>
-        <SideBar/>
+        <SideBar />
 
         <styles.PageWrapper>
           <styles.ModuleBox>
@@ -102,7 +105,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
               />
             ) : (
               //@ts-ignore
-              <LoadingSpinnger/>
+              <LoadingSpinnger />
             )}
           </styles.ModuleBox>
         </styles.PageWrapper>
@@ -120,8 +123,8 @@ const mapStateToProps = (state: any) => {
 
 const mapDispatchToProps = (dispatch: any) => {
   return {
-    editOrganisation: (body: any, path: any) => {
-      dispatch(editOrganisation({body, path}));
+    editOrganisation: (body: any, path: number) => {
+      dispatch(editOrganisation({ body, path }));
     }
   };
 };
