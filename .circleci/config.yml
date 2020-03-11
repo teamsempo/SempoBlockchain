@@ -141,6 +141,11 @@ jobs:
           name: Run Docker Tests
           command: |
             docker-compose up --exit-code-from app
+      - run:
+          name: Run Frontend Tests
+          command: |
+            cd app
+            npm run test
   deploy:
     working_directory: ~/project
     docker:
