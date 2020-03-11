@@ -120,6 +120,7 @@ jobs:
           root: ~/project
           paths:
             - imagecaches
+            - app/node_modules
   test:
     working_directory: ~/project
     docker:
