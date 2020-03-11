@@ -98,7 +98,10 @@ class BlockchainTransactionRPC(MethodView):
 
         if call == 'RETRY_FAILED_TASKS':
 
-            res = bt.retry_failed()
+            min_task_id = post_data.get('min_task_id', None)
+            max_task_id = post_data.get('max_task_id', None)
+
+            res = bt.retry_failed(min_task_id, max_task_id)
 
             response_object = {
                 'message': 'Retrying failed tasks',

@@ -307,11 +307,25 @@ class SQLPersistenceInterface(object):
     def get_task_from_uuid(self, task_uuid):
         return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
-    def get_failed_tasks(self):
-        return session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED').all()
+    def _filter_minmax_task_ids_maybe(self, query, min_task_id, max_task_id):
+        if min_task_id:
+            query = query.filter(BlockchainTask.id > min_task_id)
+        if max_task_id:
+            query = query.filter(BlockchainTask.id < max_task_id)
 
-    def get_pending_tasks(self):
-        return session.query(BlockchainTask).filter(BlockchainTask.status == 'PENDING').all()
+        return query
+
+    def get_failed_tasks(self, min_task_id=None, max_task_id=None):
+        query = session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED')
+        query = self._filter_minmax_task_ids_maybe(query, min_task_id, max_task_id)
+
+        return query.all()
+
+    def get_pending_tasks(self, min_task_id=None, max_task_id=None):
+        query = session.query(BlockchainTask).filter(BlockchainTask.status == 'PENDING')
+        query = self._filter_minmax_task_ids_maybe(query, min_task_id, max_task_id)
+
+        return query.all()
 
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 

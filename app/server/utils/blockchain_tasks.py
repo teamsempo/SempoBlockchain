@@ -100,8 +100,10 @@ class BlockchainTasker(object):
     def retry_task(self, task_uuid):
         task_runner.delay_task(self._eth_endpoint('retry_task'), {'task_uuid': task_uuid })
 
-    def retry_failed(self):
-        return self._execute_synchronous_celery(self._eth_endpoint('retry_failed'), args={})
+    def retry_failed(self, min_task_id, max_task_id):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('retry_failed'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+        )
 
     def get_duplicates(self, min_task_id, max_task_id):
         return self._execute_synchronous_celery(
