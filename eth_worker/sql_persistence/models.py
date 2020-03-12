@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON, Numeric
 from sqlalchemy.orm import scoped_session
@@ -142,6 +142,8 @@ class BlockchainTask(ModelBase):
 
     signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 
+    reverses_id = Column(Integer, ForeignKey('blockchain_task.id'))
+
     # Purely for convenience to show status on single db table for debugging - use status hybrid prop in code
     status_text = Column(String)
 
@@ -152,11 +154,17 @@ class BlockchainTask(ModelBase):
                                 backref='task',
                                 lazy=True)
 
+    reversed_by = relationship("BlockchainTask",
+                               backref=backref('reverses', remote_side="BlockchainTask.id"),
+                               foreign_keys='BlockchainTask.reverses_id')
+
     prior_tasks = relationship('BlockchainTask',
                              secondary=task_dependencies,
                              primaryjoin="BlockchainTask.id == task_dependencies.c.posterior_task_id",
                              secondaryjoin="BlockchainTask.id == task_dependencies.c.prior_task_id",
                              backref='posterior_tasks')
+
+
 
     @hybrid_property
     def type(self):

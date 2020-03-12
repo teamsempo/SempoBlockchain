@@ -513,7 +513,8 @@ class TransactionProcessor(object):
             args: Optional[tuple] = None, kwargs: Optional[dict] = None,
             signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
             gas_limit: Optional[int] = None,
-            prior_tasks: Optional[UUIDList] = None
+            prior_tasks: Optional[UUIDList] = None,
+            reserves_task: Optional[UUID] = None
     ):
         """
         The main transaction entrypoint for the processor.
@@ -526,7 +527,8 @@ class TransactionProcessor(object):
         :param signing_address: address of the wallet signing the txn
         :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
         :param gas_limit: limit on the amount of gas txn can use. Overrides system default
-        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted
+        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted,
+        :param reserves_task: the uuid of a task that this task reverses. can only be a transferFrom
         :return: task_id
         """
 
@@ -535,8 +537,9 @@ class TransactionProcessor(object):
         task = self.persistence_interface.create_function_task(uuid,
                                                                signing_wallet_obj,
                                                                contract_address, abi_type,
-                                                            function_name, args, kwargs,
-                                                               gas_limit, prior_tasks)
+                                                               function_name, args, kwargs,
+                                                               gas_limit, prior_tasks, reserves_task)
+
 
         # Attempt Create Async Transaction
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()

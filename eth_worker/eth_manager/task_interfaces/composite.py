@@ -280,11 +280,14 @@ def deploy_smart_token(
             'subexchange_address': subexchange_address}
 
 
-def fix_duplicates(min_task_id, max_task_id):
+def deduplicate(min_task_id, max_task_id):
 
     lock_timout = 600
 
     duplicates = persistence_interface.get_duplicates(min_task_id, max_task_id)
+
+    print('found duplicates:')
+    print('duplicates')
 
     for task_id, txns in duplicates.items():
 
@@ -293,6 +296,17 @@ def fix_duplicates(min_task_id, max_task_id):
         if task.function != 'transferFrom':
             print(f'Skipping de-duplication of {task_id} - task is not of type "transferFrom"')
             continue
+
+        excess_txns = len(txns) - 1
+
+        number_of_reversals = len(task.reversed_by)
+
+        reversals_required =  excess_txns - number_of_reversals
+
+        if reversals_required < 1:
+            print(f'Skipping de-duplication of {task_id} - no further reversals required')
+            continue
+
 
         lock = red.lock(f'DupeLock-{task_id}', timeout=lock_timout)
         have_lock = lock.acquire(blocking=False)
@@ -303,17 +317,21 @@ def fix_duplicates(min_task_id, max_task_id):
 
         orginal_sender, orginal_recipient, amount = task.args
 
-        new_task = transaction_task(
-            signing_address=task.signing_wallet.address,
-            contract_address=task.contract_address,
-            contract_type='ECR20',
-            func='transferFrom',
-            args=[
-                orginal_recipient,
-                orginal_sender,
-                amount
-            ],
-            gas_limit=8000000
-        )
+        print(f'Reversing task ({task_id}) {task.uuid} with {len(txns)} duplicates')
 
-        print(f'Reversing task {task_id} - {new_task}')
+        for tx in range(0, reversals_required):
+            new_task = transaction_task(
+                signing_address=task.signing_wallet.address,
+                contract_address=task.contract_address,
+                contract_type='ECR20',
+                func='transferFrom',
+                args=[
+                    orginal_recipient,
+                    orginal_sender,
+                    amount
+                ],
+                gas_limit=8000000,
+                reverses_task=task.uuid
+            )
+            print(f'Task {new_task} Reversing txn {tx}.')
+

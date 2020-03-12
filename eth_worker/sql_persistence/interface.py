@@ -195,7 +195,7 @@ class SQLPersistenceInterface(object):
                              signing_wallet_obj,
                              contract_address, abi_type,
                              function, args=None, kwargs=None,
-                             gas_limit=None, prior_tasks=None):
+                             gas_limit=None, prior_tasks=None, reverses_task=None):
 
         task = BlockchainTask(uuid,
                               signing_wallet=signing_wallet_obj,
@@ -210,6 +210,11 @@ class SQLPersistenceInterface(object):
         session.add(task)
 
         self.add_prior_tasks(task, prior_tasks)
+
+        if reverses_task:
+            reverses_task_obj = self.get_task_from_uuid(reverses_task)
+            if reverses_task_obj:
+                task.reverses = reverses_task_obj
 
         session.commit()
 
