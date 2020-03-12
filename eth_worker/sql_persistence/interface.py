@@ -42,6 +42,8 @@ class SQLPersistenceInterface(object):
 
         if highest_known_success:
             highest_known_nonce = highest_known_success.nonce or 0
+        else:
+            highest_known_nonce = 0
 
         nonce = max(stating_nonce, highest_known_nonce)
 
