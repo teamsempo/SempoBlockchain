@@ -287,7 +287,9 @@ def deduplicate(min_task_id, max_task_id):
     duplicates = persistence_interface.get_duplicates(min_task_id, max_task_id)
 
     print('found duplicates:')
-    print('duplicates')
+    print(duplicates)
+
+    new_deduplication_tasks = 0
 
     for task_id, txns in duplicates.items():
 
@@ -334,4 +336,10 @@ def deduplicate(min_task_id, max_task_id):
                 reverses_task=task.uuid
             )
             print(f'Task {new_task} Reversing txn {tx}.')
+            new_deduplication_tasks += 1
+
+    return {
+        'duplicates': len(duplicates),
+        'new_deduplication_tasks': new_deduplication_tasks
+    }
 
