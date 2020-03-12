@@ -1,26 +1,30 @@
-import React from 'react';
-import { connect } from 'react-redux'
-import styled, { ThemeProvider } from 'styled-components';
-import { Input } from '../styledElements';
+import React from "react";
+import { connect } from "react-redux";
+import styled, { ThemeProvider } from "styled-components";
+import { Input } from "../styledElements";
 
-import { loadExchangeRates, createWyreTransfer } from "../../reducers/wyreReducer";
+import {
+  loadExchangeRates,
+  createWyreTransfer
+} from "../../reducers/wyreReducer";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import AsyncButton from "../AsyncButton.jsx";
 import { loadBusinessProfile } from "../../reducers/businessVerificationReducer";
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     businessVerificationStatus: state.businessVerification.loadStatus,
-    bankAccounts: state.businessVerification.businessVerificationState.bank_accounts,
+    bankAccounts:
+      state.businessVerification.businessVerificationState.bank_accounts,
     wyreTransferStatus: state.wyre.createWyreTransferStatus,
-    wyreTransfer: state.wyre.wyreState.wyre_transfer,
+    wyreTransfer: state.wyre.wyreState.wyre_transfer
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
     loadBusinessProfile: () => dispatch(loadBusinessProfile()),
-    createWyreTransfer: (body) => dispatch(createWyreTransfer({body}))
+    createWyreTransfer: body => dispatch(createWyreTransfer({ body }))
   };
 };
 
@@ -30,9 +34,9 @@ class WyreBankFunding extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      starting_total: '',
-      result_total: '10',
-      isLive: false,
+      starting_total: "",
+      result_total: "10",
+      isLive: false
     };
     this.handleKeypress = this.handleKeypress.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
@@ -47,14 +51,14 @@ class WyreBankFunding extends React.Component {
     let { wyreTransfer, bankAccounts } = this.props;
 
     if (newProps.bankAccounts !== bankAccounts) {
-      this.fundAccount(false)
+      this.fundAccount(false);
     }
 
     if (newProps.wyreTransfer !== wyreTransfer) {
-      if (wyreTransfer !== null && typeof wyreTransfer !== 'undefined') {
+      if (wyreTransfer !== null && typeof wyreTransfer !== "undefined") {
         this.setState({
           starting_total: wyreTransfer.sourceAmount,
-          result_total: wyreTransfer.destAmount,
+          result_total: wyreTransfer.destAmount
         });
       }
     }
@@ -63,34 +67,34 @@ class WyreBankFunding extends React.Component {
   handleKeyUp(e) {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-      this.fundAccount(false)
+      this.fundAccount(false);
     }, 500);
   }
 
-  handleKeypress (e) {
+  handleKeypress(e) {
     const target = e.target;
     const value = target.value;
     const name = target.name;
 
     const characterCode = e.key;
-    if (characterCode === 'Backspace') {
+    if (characterCode === "Backspace") {
       return;
     }
 
-    if (characterCode === '-' || characterCode === 'e') {
+    if (characterCode === "-" || characterCode === "e") {
       e.preventDefault();
-      return
+      return;
     }
 
-    if (name === 'result_total') {
+    if (name === "result_total") {
       this.setState({
         [name]: value,
-        'starting_total': ''
+        starting_total: ""
       });
-    } else if (name === 'starting_total') {
+    } else if (name === "starting_total") {
       this.setState({
         [name]: value,
-        'result_total': '',
+        result_total: ""
       });
     }
   }
@@ -98,21 +102,25 @@ class WyreBankFunding extends React.Component {
   fundAccount(isReal) {
     let { bankAccounts } = this.props;
 
-    if (bankAccounts !== null && typeof bankAccounts !== 'undefined') {
+    if (bankAccounts !== null && typeof bankAccounts !== "undefined") {
       var bankCurrency = bankAccounts[0].currency.toUpperCase();
       this.props.createWyreTransfer({
         source_currency: bankCurrency,
         source_amount: this.state.starting_total,
         dest_amount: this.state.result_total,
         preview: !isReal,
-        include_fees: true,
+        include_fees: true
       });
     }
-
   }
 
   render() {
-    let { businessVerificationStatus, bankAccounts, wyreTransfer, wyreTransferStatus } = this.props;
+    let {
+      businessVerificationStatus,
+      bankAccounts,
+      wyreTransfer,
+      wyreTransferStatus
+    } = this.props;
     var bankCurrency = null;
     var conversionFee = null;
     var exchangeRate = null;
@@ -121,11 +129,11 @@ class WyreBankFunding extends React.Component {
 
     var isLoading = wyreTransferStatus.isRequesting && this.state.isLive;
 
-    if (bankAccounts !== null && typeof bankAccounts !== 'undefined') {
+    if (bankAccounts !== null && typeof bankAccounts !== "undefined") {
       bankCurrency = bankAccounts[0].currency.toUpperCase();
     }
 
-    if (wyreTransfer !== null && typeof wyreTransfer !== 'undefined') {
+    if (wyreTransfer !== null && typeof wyreTransfer !== "undefined") {
       conversionFee = wyreTransfer.fees[bankCurrency];
       exchangeRate = wyreTransfer.exchangeRate;
       sourceName = wyreTransfer.sourceName.slice(0, -4);
@@ -134,22 +142,20 @@ class WyreBankFunding extends React.Component {
 
     if (businessVerificationStatus.isRequesting) {
       return (
-        <div style={{margin: '1em'}}>
-          <LoadingSpinner/>
+        <div style={{ margin: "1em" }}>
+          <LoadingSpinner />
         </div>
-      )
+      );
     } else if (businessVerificationStatus.success) {
       return (
         <div>
           <StyledExchangeWrapper>
             <div>
-              <InputLabel>
-                Send {bankCurrency}
-              </InputLabel>
+              <InputLabel>Send {bankCurrency}</InputLabel>
               <ManagerInput
-                min='1'
+                min="1"
                 name="starting_total"
-                placeholder={'0.00'}
+                placeholder={"0.00"}
                 type="number"
                 value={this.state.starting_total}
                 onKeyDown={this.handleKeypress}
@@ -161,13 +167,11 @@ class WyreBankFunding extends React.Component {
             <p>FOR</p>
 
             <div>
-              <InputLabel>
-                Receive DAI
-              </InputLabel>
+              <InputLabel>Receive DAI</InputLabel>
               <ManagerInput
-                min='1'
+                min="1"
                 name="result_total"
-                placeholder={'0.00'}
+                placeholder={"0.00"}
                 type="number"
                 value={this.state.result_total}
                 onChange={this.handleKeypress}
@@ -179,32 +183,49 @@ class WyreBankFunding extends React.Component {
 
           <PreviewWrapper>
             <div>
-              <FundingText>Convert and receive {this.state.result_total}</FundingText>
+              <FundingText>
+                Convert and receive {this.state.result_total}
+              </FundingText>
               <div>
-                <SmallText>Exchange Rate: <Bold>{exchangeRate}</Bold></SmallText>
-                <SmallText>Conversion Fee: <Bold>{conversionFee}</Bold></SmallText>
-                <SmallText>{sourceName} <Bold>{bankNumber}</Bold></SmallText>
+                <SmallText>
+                  Exchange Rate: <Bold>{exchangeRate}</Bold>
+                </SmallText>
+                <SmallText>
+                  Conversion Fee: <Bold>{conversionFee}</Bold>
+                </SmallText>
+                <SmallText>
+                  {sourceName} <Bold>{bankNumber}</Bold>
+                </SmallText>
               </div>
             </div>
 
             <ButtonWrapper>
-              <AsyncButton buttonStyle={{display: 'flex'}} onClick={() => this.setState({isLive: true}, () => this.fundAccount(true))} buttonText={'FUND ACCOUNT'} isLoading={isLoading}/>
+              <AsyncButton
+                buttonStyle={{ display: "flex" }}
+                onClick={() =>
+                  this.setState({ isLive: true }, () => this.fundAccount(true))
+                }
+                buttonText={"FUND ACCOUNT"}
+                isLoading={isLoading}
+              />
             </ButtonWrapper>
           </PreviewWrapper>
-
         </div>
-      )
+      );
     } else {
       return (
         <div>
           <p>Something went wrong.</p>
         </div>
-      )
+      );
     }
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(WyreBankFunding);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(WyreBankFunding);
 
 const Bold = styled.span`
   font-weight: 600;
@@ -239,7 +260,7 @@ const StyledExchangeWrapper = styled.div`
   justify-content: space-between;
   margin: 1em;
   @media (max-width: 768px) {
-  flex-direction: column;
+    flex-direction: column;
   }
 `;
 
@@ -249,7 +270,7 @@ const ManagerInput = styled(Input)`
 `;
 
 const InputLabel = styled.div`
-  display:block;
+  display: block;
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 5px;

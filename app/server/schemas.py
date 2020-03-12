@@ -173,8 +173,8 @@ class CreditTransferSchema(Schema):
     sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
     recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
 
-    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
-    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token"))
+    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
+    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
 
     from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
@@ -460,8 +460,7 @@ kyc_application_state_schema = KycApplicationSchema(
     exclude=("trulioo_id", "wyre_id", "first_name", "last_name", "phone",
              "business_legal_name", "business_type",
              "tax_id", "website", "date_established",
-             "country", "street_address", "street_address_2"
-                                          "city", "region", "postal_code",
+             "country", "street_address", "street_address_2", "city", "region", "postal_code",
              "beneficial_owners", "bank_accounts",
              "uploaded_documents", "dob"
              ))

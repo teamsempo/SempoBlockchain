@@ -1,14 +1,18 @@
-import React from 'react'
+import React from "react";
 import styled from "styled-components";
 
 export default class BusinessVerificationPending extends React.Component {
   render() {
-    return(
+    return (
       <div>
         <h3>Pending Verification</h3>
-        <SecondaryText>We will verify your profile within the next 5 business days. We might get in contact to request further supporting information. For questions, please contact team@withsempo.com</SecondaryText>
+        <SecondaryText>
+          We will verify your profile within the next 5 business days. We might
+          get in contact to request further supporting information. For
+          questions, please contact team@withsempo.com
+        </SecondaryText>
       </div>
-    )
+    );
   }
 }
 

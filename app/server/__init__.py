@@ -1,3 +1,4 @@
+from typing import Callable, Union
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
 import json
 from flask_cors import CORS
@@ -20,7 +21,6 @@ import sys
 import os
 from web3 import Web3, HTTPProvider
 
-
 from server.utils.phone import MessageProcessor
 
 # try:
@@ -28,6 +28,7 @@ from server.utils.phone import MessageProcessor
 #     is_running_uwsgi = True
 # except ImportError:
 #     is_running_uwsgi = False
+
 
 sys.path.append('../')
 import config
@@ -80,7 +81,7 @@ def register_extensions(app):
         # This is required to validate a signature on webhooks
         # This MUST go before Sentry integration as sentry triggers form parsing
         if not config.IS_TEST and (
-                request.path.startswith('/api/slack/') or request.path.startswith('/api/poli_payments_webhook/')):
+                request.path.startswith('/api/v1/slack/') or request.path.startswith('/api/v1/poli_payments_webhook/')):
             if request.content_length > 1024 * 1024:  # 1mb
                 # Payload too large
                 return make_response(jsonify({'message': 'Payload too large'})), 413
@@ -153,6 +154,7 @@ def register_blueprints(app):
     from server.api.transfer_card_api import transfer_cards_blueprint
     from server.api.organisation_api import organisation_blueprint
     from server.api.token_api import token_blueprint
+    from server.api.search_api import search_blueprint
     from server.api.slack_api import slack_blueprint
     from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
@@ -183,6 +185,7 @@ def register_blueprints(app):
     app.register_blueprint(transfer_cards_blueprint, url_prefix=versioned_url)
     app.register_blueprint(organisation_blueprint, url_prefix=versioned_url)
     app.register_blueprint(token_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(search_blueprint, url_prefix=versioned_url)
     app.register_blueprint(slack_blueprint, url_prefix=versioned_url)
     app.register_blueprint(poli_payments_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ussd_blueprint, url_prefix=versioned_url)
@@ -194,6 +197,18 @@ def register_blueprints(app):
     def page_not_found(e):
         return render_template('index.html'), 404
 
+
+def none_if_exception(f: Callable) -> Union[object, None]:
+    """
+    A helper function for when you're lacking configs for external packages.
+    Use a partial or lambda to delay execution of f.
+    :param f: a callable object instantiator
+    :return: an initialised package object, or None
+    """
+    try:
+        return f()
+    except:
+        return None
 
 def encrypt_string(raw_string):
     import base64
@@ -232,16 +247,30 @@ prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
-pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
-                       key=config.PUSHER_KEY,
-                       secret=config.PUSHER_SECRET,
-                       cluster=config.PUSHER_CLUSTER,
-                       ssl=True)
+try:
+    pusher_client = Pusher(app_id=config.PUSHER_APP_ID,
+                           key=config.PUSHER_KEY,
+                           secret=config.PUSHER_SECRET,
+                           cluster=config.PUSHER_CLUSTER,
+                           ssl=True)
+except:
+    class PusherMock(object):
+        def authenticate(self, *args, **kwargs):
+            return ''
+        def trigger(self, *args, **kwargs):
+            pass
 
-twilio_client = TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN)
-messagebird_client = messagebird.Client(config.MESSAGEBIRD_KEY)
-africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
-africastalking_client = africastalking.SMS
+    pusher_client = PusherMock()
+
+
+def africas_talking_launcher():
+    africastalking.initialize(config.AT_USERNAME, config.AT_API_KEY)
+    return africastalking.SMS
+
+
+twilio_client = none_if_exception(lambda: TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN))
+messagebird_client = none_if_exception(lambda: messagebird.Client(config.MESSAGEBIRD_KEY))
+africastalking_client = none_if_exception(africas_talking_launcher)
 
 message_processor = MessageProcessor(
     twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)

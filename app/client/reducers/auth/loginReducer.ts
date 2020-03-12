@@ -3,34 +3,35 @@ import {
   LOGIN_PARTIAL,
   LOGIN_REQUEST,
   LOGIN_SUCCESS,
-  LoginAction, LOGOUT,
+  LoginAction,
+  LOGOUT,
   REAUTH_REQUEST,
   UPDATE_ACTIVE_ORG
 } from "./types";
 
 interface LoginState {
-  isLoggingIn: boolean,
+  isLoggingIn: boolean;
   //TODO(refactor): what is token actually? seems to only be used in checking it's not null
-  token: null | string,
+  token: null | string;
   //TODO(refactor): is it number or string?
-  userId: null | number,
-  email: null | string,
+  userId: null | number;
+  email: null | string;
   //TODO(refactor): is it number or string?
-  vendorId: null | number,
-  intercomHash: null | string,
-  webApiVersion: null | string,
-  organisationName: null | string,
+  vendorId: null | number;
+  intercomHash: null | string;
+  webApiVersion: null | string;
+  organisationName: null | string;
   //TODO(refactor): is it number or string?
-  organisationId: null | number,
-  organisationToken: null | string,
-  usdToSatoshiRate: null | number,
-  error: null | string,
-  tfaURL: null | string,
-  tfaFailure: boolean,
+  organisationId: null | number;
+  organisationToken: null | string;
+  usdToSatoshiRate: null | number;
+  error: null | string;
+  tfaURL: null | string;
+  tfaFailure: boolean;
   //TODO(refactor): what is this actually?
-  organisations?: null | string[],
-  requireTransferCardExists: null | boolean,
-  adminTier?: string
+  organisations?: null | string[];
+  requireTransferCardExists: null | boolean;
+  adminTier?: string;
 }
 
 const initialLoginState: LoginState = {
@@ -49,18 +50,23 @@ const initialLoginState: LoginState = {
   usdToSatoshiRate: null,
   error: null,
   tfaURL: null,
-  tfaFailure: false,
+  tfaFailure: false
 };
 
 export const login = (state = initialLoginState, action: LoginAction) => {
   switch (action.type) {
     case REAUTH_REQUEST:
     case LOGIN_REQUEST:
-      return {...state, isLoggingIn: true};
+      return { ...state, isLoggingIn: true };
     case UPDATE_ACTIVE_ORG:
-      return {...state, organisationName: action.payload.organisationName, organisationId: action.payload.organisationId};
+      return {
+        ...state,
+        organisationName: action.payload.organisationName,
+        organisationId: action.payload.organisationId
+      };
     case LOGIN_SUCCESS:
-      return {...state,
+      return {
+        ...state,
         isLoggingIn: false,
         token: action.token,
         userId: action.userId,
@@ -76,7 +82,8 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         adminTier: action.adminTier,
         usdToSatoshiRate: action.usdToSatoshiRate,
         tfaURL: null,
-        tfaFailure: false};
+        tfaFailure: false
+      };
     case LOGIN_PARTIAL:
       return {
         ...state,
@@ -91,9 +98,16 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         requireTransferCardExists: null,
         tfaURL: action.tfaURL,
         tfaFailure: action.tfaFailure,
-        error: action.error || 'unknown error'};
+        error: action.error || "unknown error"
+      };
     case LOGIN_FAILURE:
-      return {...state, isLoggingIn: false, token: null, userId: null, error: action.error || 'unknown error'};
+      return {
+        ...state,
+        isLoggingIn: false,
+        token: null,
+        userId: null,
+        error: action.error || "unknown error"
+      };
     case LOGOUT:
       return initialLoginState;
     default:
