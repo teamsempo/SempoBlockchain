@@ -40,12 +40,15 @@ class SQLPersistenceInterface(object):
                                  .order_by(BlockchainTransaction.id.desc()).first()
                                  )
 
-        highest_nonce = max(stating_nonce, highest_known_success.nonce)
+        if highest_known_success:
+            highest_known_nonce = highest_known_success.nonce or 0
+
+        nonce = max(stating_nonce, highest_known_nonce)
 
         (session.query(BlockchainTransaction)
          .filter(and_(BlockchainTransaction.signing_wallet_id == signing_wallet_id,
                       BlockchainTransaction.status == 'FAILED',
-                      BlockchainTransaction.nonce > highest_nonce,
+                      BlockchainTransaction.nonce > nonce,
                       BlockchainTransaction.submitted_date < expire_time))
          .update({BlockchainTransaction.nonce_consumed: False},
                  synchronize_session=False))
