@@ -46,7 +46,6 @@ else:
 
 if load_from_s3:
     # Load config from S3 Bucket
-
     if os.environ.get('AWS_ACCESS_KEY_ID'):
         # S3 Auth is set via access keys
         if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
@@ -58,7 +57,6 @@ if load_from_s3:
     else:
         # The server itself has S3 Auth
         session = boto3.Session()
-
     client = session.client('s3')
 
     SECRET_BUCKET = "ctp-prod-secrets"
@@ -166,7 +164,7 @@ DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD") or secrets_parser['DATAB
 
 DATABASE_HOST = config_parser['DATABASE']['host']
 
-DATABASE_PORT = common_secrets_parser['DATABASE']['port']
+DATABASE_PORT = common_secrets_parser['DATABASE'].get('port') or 5432
 
 DATABASE_NAME = config_parser['DATABASE'].get('database') \
                 or common_secrets_parser['DATABASE']['database']
@@ -179,8 +177,6 @@ BOUNCER_DEFAULT_POOL_SIZE = config_parser['BOUNCER'].get('default_pool_size') or
 BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') or 100
 BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
 
-print(BOUNCER_ENABLED)
-print('DATABASE STUFF')
 if BOUNCER_ENABLED:
     print('PGBBOUNCER Enabled')
     ACTIVE_DATABASE_HOST = config_parser['BOUNCER']['host']
@@ -218,8 +214,6 @@ CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, ce
 
 print('Main database URI: ' + CENSORED_URI)
 print('Eth database URI: ' + CENSORED_ETH_URI)
-
-print('ABCD')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 AWS_SES_KEY_ID = common_secrets_parser['AWS']['ses_key_id']

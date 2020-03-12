@@ -63,10 +63,6 @@ services:
     - ganache
     - eth_postgres
 
-  pgbouncer:
-    build: pgbouncer
-    image: pgbouncer
-      
   proxy:
     build: proxy
     environment:

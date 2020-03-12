@@ -1,8 +1,6 @@
 #!/bin/sh
 # Based on https://raw.githubusercontent.com/brainsam/pgbouncer/master/entrypoint.sh
-set -e
-PG_CONFIG_DIR=/etc/pgbouncer
-echo "Creating sempo pgbouncer config"
+echo "Running test file"
 python3 generate_pgbouncer_config.py
-echo "Created sempo pgboucner file"
+echo "Generated sempo pgboucner file. Starting pgbouncer"
 exec "$@"
