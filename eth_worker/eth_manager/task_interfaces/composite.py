@@ -325,7 +325,7 @@ def deduplicate(min_task_id, max_task_id):
             new_task = transaction_task(
                 signing_address=task.signing_wallet.address,
                 contract_address=task.contract_address,
-                contract_type='ECR20',
+                contract_type='ERC20',
                 func='transferFrom',
                 args=[
                     orginal_recipient,
