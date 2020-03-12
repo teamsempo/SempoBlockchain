@@ -104,8 +104,9 @@ class OrganisationAPI(MethodView):
         token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
 
-        if organisation_name is None:
-            return make_response(jsonify({'message': 'Must provide name to create organisation.'})), 400
+        if organisation_name is None or country_code is None:
+            return make_response(
+                jsonify({'message': 'Must provide name and ISO 2 country_code to create organisation.'})), 400
 
         existing_organisation = Organisation.query.filter_by(name=organisation_name).execution_options(show_all=True).first()
         if existing_organisation is not None:
