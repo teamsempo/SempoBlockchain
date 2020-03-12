@@ -121,7 +121,7 @@ jobs:
           paths:
             - imagecaches
             - app/node_modules
-  test:
+  test:backend:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -142,6 +142,17 @@ jobs:
           name: Run Docker Tests
           command: |
             docker-compose up --exit-code-from app
+  test:frontend:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+        environment:
+          CONTAINER_MODE: TEST
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/project
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
@@ -226,7 +237,10 @@ workflows:
   main_workflow:
     jobs:
       - build
-      - test:
+      - test:backend:
+          requires:
+            - build
+      - test:frontend:
           requires:
             - build
       - deploy:
@@ -236,4 +250,5 @@ workflows:
                 - master
                 - aws-env-swap
           requires:
-            - test
+            - test:backend
+            - test:frontend
