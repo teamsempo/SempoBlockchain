@@ -116,16 +116,22 @@ class OrganisationAPI(MethodView):
                     'data': {'organisation': organisation_schema.dump(existing_organisation).data}
                 })), 400
 
-        new_organisation = Organisation(
-            name=organisation_name,
-            custom_welcome_message_key=custom_welcome_message_key,
-            timezone=timezone,
-            country_code=country_code,
-            default_disbursement=default_disbursement,
-            require_transfer_card=require_transfer_card,
-            default_lat=default_lat,
-            default_lng=default_lng
-        )
+        try:
+            new_organisation = Organisation(
+                name=organisation_name,
+                custom_welcome_message_key=custom_welcome_message_key,
+                timezone=timezone,
+                country_code=country_code,
+                default_disbursement=default_disbursement,
+                require_transfer_card=require_transfer_card,
+                default_lat=default_lat,
+                default_lng=default_lng
+            )
+        except Exception as e:
+            response_object = {
+                'message': str(e),
+            }
+            return make_response(jsonify(response_object)), 400
 
         db.session.add(new_organisation)
         db.session.flush()

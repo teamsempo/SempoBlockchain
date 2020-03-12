@@ -1,14 +1,15 @@
 import pytest
 
 
-@pytest.mark.parametrize("name, token_selector_func, status_code", [
-    ("Test Org", lambda t: t.id, 201),
-    (None, lambda t: t.id, 400),
-    ("Test Org", lambda t: t.id,  400),
-    ("New Test Org", lambda t: 1932380198, 404),
+@pytest.mark.parametrize("name, country_code, token_selector_func, status_code", [
+    ("Test Org", 'AU', lambda t: t.id, 201),
+    (None, None, lambda t: t.id, 400),
+    ("Test Org", None, lambda t: t.id, 400),
+    ("Test Org 2", 'asdf', lambda t: t.id, 400),
+    ("New Test Org", 'AU', lambda t: 1932380198, 404),
 ])
 def test_create_organisation(test_client, complete_admin_auth_token, external_reserve_token,
-                             name, token_selector_func, status_code):
+                             name, country_code, token_selector_func, status_code):
 
     response = test_client.post(
         '/api/v1/organisation/',
@@ -18,7 +19,8 @@ def test_create_organisation(test_client, complete_admin_auth_token, external_re
         ),
         json={
             'organisation_name': name,
-            'token_id': token_selector_func(external_reserve_token)
+            'token_id': token_selector_func(external_reserve_token),
+            'country_code': country_code,
         })
 
     assert response.status_code == status_code
