@@ -24,13 +24,35 @@ class SQLPersistenceInterface(object):
 
         (session.query(BlockchainTransaction)
          .filter(and_(BlockchainTransaction.status == 'PENDING',
-                      BlockchainTransaction.submitted_date < expire_time))
+                      BlockchainTransaction.updated < expire_time))
          .update({BlockchainTransaction.status: 'FAILED',
                   BlockchainTransaction.error: 'Timeout Error'},
                  synchronize_session=False))
 
-    def _calculate_nonce(self, signing_wallet_obj, transaction_id, starting_nonce=0):
+    def _unconsume_high_failed_nonces(self, signing_wallet_id, stating_nonce):
+        expire_time = datetime.datetime.utcnow() - datetime.timedelta(
+            seconds=self.PENDING_TRANSACTION_EXPIRY_SECONDS
+        )
 
+        highest_known_success = (session.query(BlockchainTransaction)
+                                 .filter(and_(BlockchainTransaction.signing_wallet_id == signing_wallet_id,
+                                              BlockchainTransaction.status == 'SUCCESS'))
+                                 .order_by(BlockchainTransaction.id.desc()).first()
+                                 )
+
+        highest_nonce = max(stating_nonce, highest_known_success.nonce)
+
+        (session.query(BlockchainTransaction)
+         .filter(and_(BlockchainTransaction.signing_wallet_id == signing_wallet_id,
+                      BlockchainTransaction.status == 'FAILED',
+                      BlockchainTransaction.nonce > highest_nonce,
+                      BlockchainTransaction.submitted_date < expire_time))
+         .update({BlockchainTransaction.nonce_consumed: False},
+                 synchronize_session=False))
+
+    def _calculate_nonce(self, signing_wallet_obj, starting_nonce=0):
+
+        self._unconsume_high_failed_nonces(signing_wallet_obj.id, starting_nonce)
         self._fail_expired_transactions()
 
         # First find the highest *continuous* nonce that isn't either pending, or consumed
@@ -91,7 +113,7 @@ class SQLPersistenceInterface(object):
         if blockchain_transaction.nonce is not None:
             return blockchain_transaction.nonce, blockchain_transaction.id
 
-        calculated_nonce = self._calculate_nonce(signing_wallet_obj, transaction_id, network_nonce)
+        calculated_nonce = self._calculate_nonce(signing_wallet_obj, network_nonce)
 
         blockchain_transaction.signing_wallet = signing_wallet_obj
         blockchain_transaction.nonce = calculated_nonce
