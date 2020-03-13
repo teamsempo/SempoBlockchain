@@ -26,8 +26,8 @@ else
   if [ "$ret" -ne 0 ]; then
     exit $ret
   fi
-  echo "Starting High Priority Worker (Default)"
-  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=high-priority
+  echo "Starting Generic Worker (Default)"
+  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet	
 fi
 
 #
