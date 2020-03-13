@@ -242,6 +242,7 @@ class SQLPersistenceInterface(object):
             reverses_task_obj = self.get_task_from_uuid(reverses_task)
             if reverses_task_obj:
                 task.reverses = reverses_task_obj
+                self.red.set(f'MultithreadDupeLock-{reverses_task_obj.id}', int(0))
 
         session.commit()
 
@@ -303,32 +304,26 @@ class SQLPersistenceInterface(object):
 
         query = text(
             """
-            SELECT
-                blockchain_task.id, blockchain_transaction.id
-            FROM blockchain_task
-            RIGHT JOIN blockchain_transaction
-            ON  blockchain_transaction.blockchain_task_id = blockchain_task.id
-            WHERE blockchain_task.id > {} and blockchain_task.id < {}
-            GROUP BY blockchain_task.id, blockchain_transaction.id
-            HAVING (
-                    SELECT COUNT(*)
+                SELECT blockchain_task.id as task_id,
+                  (SELECT COUNT(*)
                     FROM blockchain_transaction
                     WHERE blockchain_task_id = blockchain_task.id AND _status = 'SUCCESS'
-                ) > 1
+                    ) as txn_count
+                FROM blockchain_task
+                RIGHT JOIN blockchain_transaction
+                ON  blockchain_transaction.blockchain_task_id = blockchain_task.id
+                WHERE blockchain_task.id > {} and blockchain_task.id < {}
+                GROUP BY blockchain_task.id
+                HAVING (
+                  SELECT COUNT(*)
+                  FROM blockchain_transaction
+                  WHERE blockchain_task_id = blockchain_task.id AND _status = 'SUCCESS'
+                  ) > 1;
             """.format(min_task_id, max_task_id)
         )
-
         res = session.execute(query)
 
-        duplicated_tasks = {}
-        for row in res:
-            task_id = row[0]
-            txn_id = row[1]
-            if task_id in duplicated_tasks:
-                duplicated_tasks[task_id].append(txn_id)
-            else:
-                duplicated_tasks[task_id] = [txn_id]
-
+        duplicated_tasks = [row for row in res]
         return duplicated_tasks
 
     def increment_task_invokations(self, task):

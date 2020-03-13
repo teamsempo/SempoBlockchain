@@ -282,16 +282,15 @@ def deploy_smart_token(
 
 def deduplicate(min_task_id, max_task_id):
 
-    lock_timout = 600
+    lock_timout = 10
 
     duplicates = persistence_interface.get_duplicates(min_task_id, max_task_id)
 
-    print('found duplicates:')
-    print(duplicates)
+    print(f'found {len(duplicates)} duplicates')
 
     new_deduplication_tasks = 0
 
-    for task_id, txns in duplicates.items():
+    for task_id, txns in duplicates:
 
         task = persistence_interface.get_task_from_id(task_id)
 
@@ -299,27 +298,43 @@ def deduplicate(min_task_id, max_task_id):
             print(f'Skipping de-duplication of {task_id} - task is not of type "transferFrom"')
             continue
 
-        excess_txns = len(txns) - 1
+        thread_lock = red.lock(f'SingleThreadDupeLock-{task_id}', timeout=lock_timout)
+        try:
+            have_thread_lock = thread_lock.acquire(blocking=False)
+
+            if not have_thread_lock:
+                print(f'Skipping de-duplication of {task_id} - single thread lock not acquired')
+                continue
+
+            import datetime
+            multi_lock = red.get(f'MultithreadDupeLock-{task_id}')
+
+            if multi_lock:
+                multi_lock_expires = int(multi_lock)
+                if int(datetime.datetime.utcnow().timestamp()) < multi_lock_expires:
+                    print(f'Skipping de-duplication of {task_id} - mult thread lock not acquired')
+                    continue
+
+            expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=10)
+            red.set(f'MultithreadDupeLock-{task_id}', int(expires_at.timestamp()))
+
+        finally:
+            thread_lock.release()
+
+        excess_txns = txns - 1
 
         number_of_reversals = len(task.reversed_by)
 
-        reversals_required =  excess_txns - number_of_reversals
+        reversals_required = excess_txns - number_of_reversals
 
         if reversals_required < 1:
             print(f'Skipping de-duplication of {task_id} - no further reversals required')
             continue
 
 
-        lock = red.lock(f'DupeLock-{task_id}', timeout=lock_timout)
-        have_lock = lock.acquire(blocking=False)
-
-        if not have_lock:
-            print(f'Skipping de-duplication of {task_id} - lock not acquired')
-            continue
-
         orginal_sender, orginal_recipient, amount = task.args
 
-        print(f'Reversing task ({task_id}) {task.uuid} with {len(txns)} duplicates')
+        print(f'Reversing task ({task_id}) {task.uuid} with {txns} duplicates')
 
         for tx in range(0, reversals_required):
             new_task = transaction_task(
