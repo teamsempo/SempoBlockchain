@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-sleep 70
+sleep 10
 echo "Running docker worker script"
 if [ "$CONTAINER_MODE" = 'TEST' ]; then
   echo pass
