@@ -13,7 +13,6 @@ services:
       - postgres
       - low_priority_eth_worker
       - high_priority_eth_worker
-      - pgbouncer
    
   low_priority_eth_worker:
     build:
