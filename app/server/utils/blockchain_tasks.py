@@ -94,6 +94,8 @@ class BlockchainTasker(object):
 
         while timeout is None or elapsed <= timeout:
             task = self.get_blockchain_task(task_uuid)
+            print('TaSk')
+            print(task)
             if task is None:
                 return None
 
