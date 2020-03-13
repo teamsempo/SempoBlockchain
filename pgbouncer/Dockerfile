@@ -1,14 +1,10 @@
 # --- Modified from https://github.com/edoburu/docker-pgbouncer ---
-# Adds Python, uses config.py
-
 FROM alpine:3.7
 ARG VERSION=1.11.0
 
-# Inspiration from https://github.com/gmr/alpine-pgbouncer/blob/master/Dockerfile
-
 RUN \
   # Download
-  apk --update add python3 python3-dev autoconf autoconf-doc automake udns udns-dev curl gcc libc-dev libevent libevent-dev libtool make man libressl-dev pkgconfig postgresql-client postgresql-dev musl-dev libffi-dev build-base && \
+  apk --update add python3 python3-dev autoconf autoconf-doc automake udns udns-dev curl gcc libc-dev libevent libevent-dev libtool make man libressl-dev pkgconfig postgresql-client && \
   curl -o  /tmp/pgbouncer-$VERSION.tar.gz -L https://pgbouncer.github.io/downloads/files/$VERSION/pgbouncer-$VERSION.tar.gz && \
   cd /tmp && \
   # Unpack, compile
@@ -23,10 +19,9 @@ RUN \
 
 # Prepare and use config.py
 ADD ./pgbouncer/requirements.txt /requirements.txt
-
 ADD ./pgbouncer/generate_pgbouncer_config.py /generate_pgbouncer_config.py
-
 COPY ./config.py config_files/* /
+
 RUN pip3 install -r requirements.txt
 
 ADD ./pgbouncer/entrypoint.sh /entrypoint.sh
