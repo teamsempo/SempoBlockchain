@@ -27,7 +27,7 @@ else
     exit $ret
   fi
   echo "Starting Generic Worker (Default)"
-  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet	
+  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet	-Q=low-priority,celery,high-priority
 fi
 
 #
