@@ -242,7 +242,11 @@ class SQLPersistenceInterface(object):
             reverses_task_obj = self.get_task_from_uuid(reverses_task)
             if reverses_task_obj:
                 task.reverses = reverses_task_obj
-                self.red.set(f'MultithreadDupeLock-{reverses_task_obj.id}', int(0))
+
+                session.commit()
+
+                # Release the multithread lock
+                self.red.delete(f'MultithreadDupeLock-{reverses_task_obj.id}')
 
         session.commit()
 

@@ -1,6 +1,7 @@
 from celery import signature
 from functools import partial
 from toolz import pipe
+import datetime
 
 import config
 from eth_manager import persistence_interface, utils, w3, red
@@ -298,28 +299,30 @@ def deduplicate(min_task_id, max_task_id):
             print(f'Skipping de-duplication of {task_id} - task is not of type "transferFrom"')
             continue
 
-        thread_lock = red.lock(f'SingleThreadDupeLock-{task_id}', timeout=lock_timout)
+        have_lock = False
+        singlethread_lock = red.lock(f'SingleThreadDupeLock-{task_id}', timeout=lock_timout)
         try:
-            have_thread_lock = thread_lock.acquire(blocking=False)
+            have_lock = singlethread_lock.acquire(blocking=False)
 
-            if not have_thread_lock:
+            if not have_lock:
                 print(f'Skipping de-duplication of {task_id} - single thread lock not acquired')
                 continue
 
-            import datetime
             multi_lock = red.get(f'MultithreadDupeLock-{task_id}')
 
             if multi_lock:
+                current_timestamp = int(datetime.datetime.utcnow().timestamp())
                 multi_lock_expires = int(multi_lock)
-                if int(datetime.datetime.utcnow().timestamp()) < multi_lock_expires:
-                    print(f'Skipping de-duplication of {task_id} - mult thread lock not acquired')
+                if current_timestamp < multi_lock_expires:
+                    print(f'Skipping de-duplication of {task_id} - multi thread lock not acquired')
                     continue
 
-            expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=10)
+            expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=600)
             red.set(f'MultithreadDupeLock-{task_id}', int(expires_at.timestamp()))
 
         finally:
-            thread_lock.release()
+            if have_lock:
+                singlethread_lock.release()
 
         excess_txns = txns - 1
 
@@ -329,6 +332,7 @@ def deduplicate(min_task_id, max_task_id):
 
         if reversals_required < 1:
             print(f'Skipping de-duplication of {task_id} - no further reversals required')
+            red.delete(f'MultithreadDupeLock-{task_id}')
             continue
 
 

@@ -348,6 +348,7 @@ class TransactionProcessor(object):
         # get us there if it's called twice in quick succession. We use a mutex over the next lines
         # to prevent two processes both passing the 'current_status' test and then creating a transaction
 
+        have_lock = False
         lock = self.red.lock(f'TaskID-{task.id}', timeout=10)
         try:
             have_lock = lock.acquire(blocking_timeout=1)
@@ -363,7 +364,8 @@ class TransactionProcessor(object):
                 return
 
         finally:
-            lock.release()
+            if have_lock:
+                lock.release()
 
         task_object = self.persistence_interface.get_task_from_uuid(task_uuid)
 
