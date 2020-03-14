@@ -287,8 +287,9 @@ def deduplicate(min_task_id, max_task_id):
 
     duplicates = persistence_interface.get_duplicates(min_task_id, max_task_id)
 
-    print(f'found {len(duplicates)} duplicates')
+    print(f'search found {len(duplicates)} duplicates')
 
+    skipped = 0
     new_deduplication_tasks = 0
 
     for task_id, txns in duplicates:
@@ -297,6 +298,7 @@ def deduplicate(min_task_id, max_task_id):
 
         if task.function != 'transferFrom':
             print(f'Skipping de-duplication of {task_id} - task is not of type "transferFrom"')
+            skipped += 1
             continue
 
         have_lock = False
@@ -306,6 +308,7 @@ def deduplicate(min_task_id, max_task_id):
 
             if not have_lock:
                 print(f'Skipping de-duplication of {task_id} - single thread lock not acquired')
+                skipped += 1
                 continue
 
             multi_lock = red.get(f'MultithreadDupeLock-{task_id}')
@@ -315,6 +318,7 @@ def deduplicate(min_task_id, max_task_id):
                 multi_lock_expires = int(multi_lock)
                 if current_timestamp < multi_lock_expires:
                     print(f'Skipping de-duplication of {task_id} - multi thread lock not acquired')
+                    skipped += 1
                     continue
 
             expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=600)
@@ -333,6 +337,7 @@ def deduplicate(min_task_id, max_task_id):
         if reversals_required < 1:
             print(f'Skipping de-duplication of {task_id} - no further reversals required')
             red.delete(f'MultithreadDupeLock-{task_id}')
+            skipped += 1
             continue
 
 
@@ -357,8 +362,13 @@ def deduplicate(min_task_id, max_task_id):
             print(f'Task {new_task} Reversing txn {tx}.')
             new_deduplication_tasks += 1
 
-    return {
+    response = {
         'duplicates': len(duplicates),
-        'new_deduplication_tasks': new_deduplication_tasks
+        'new_deduplication_tasks': new_deduplication_tasks,
+        'skipped': skipped
     }
 
+    print('deduplication init thread complete')
+    print(response)
+
+    return response

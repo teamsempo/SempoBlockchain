@@ -350,7 +350,9 @@ class SQLPersistenceInterface(object):
         return query
 
     def get_failed_tasks(self, min_task_id=None, max_task_id=None):
-        query = session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED')
+        query = session.query(BlockchainTask)\
+            .filter(BlockchainTask.status == 'FAILED')\
+            .order_by(BlockchainTask.id.asc())
         query = self._filter_minmax_task_ids_maybe(query, min_task_id, max_task_id)
 
         return query.all()
