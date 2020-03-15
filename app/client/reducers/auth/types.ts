@@ -1,12 +1,12 @@
-export enum LoginActionTypes {
-  REAUTH_REQUEST = "REAUTH_REQUEST",
-  LOGIN_REQUEST = "LOGIN_REQUEST",
-  UPDATE_ACTIVE_ORG = "UPDATE_ACTIVE_ORG",
-  LOGOUT = "LOGOUT",
-  LOGIN_PARTIAL = "LOGIN_PARTIAL",
-  LOGIN_SUCCESS = "LOGIN_SUCCESS",
-  LOGIN_FAILURE = "LOGIN_FAILURE"
-}
+export const LoginActionTypes = {
+  REAUTH_REQUEST: "REAUTH_REQUEST",
+  LOGIN_REQUEST: "LOGIN_REQUEST",
+  UPDATE_ACTIVE_ORG: "UPDATE_ACTIVE_ORG",
+  LOGOUT: "LOGOUT",
+  LOGIN_PARTIAL: "LOGIN_PARTIAL",
+  LOGIN_SUCCESS: "LOGIN_SUCCESS",
+  LOGIN_FAILURE: "LOGIN_FAILURE"
+};
 
 export interface UpdateActiveOrgPayload {
   organisationName: string;
@@ -43,12 +43,12 @@ export interface LoginSuccessPayload {
   adminTier?: string;
 }
 
-export enum RegisterActionTypes {
-  REGISTER_REQUEST = "REGISTER_REQUEST",
-  REGISTER_SUCCESS = "REGISTER_SUCCESS",
-  REGISTER_FAILURE = "REGISTER_FAILURE",
-  REGISTER_INACTIVE = "REGISTER_INACTIVE"
-}
+export const RegisterActionTypes = {
+  REGISTER_REQUEST: "REGISTER_REQUEST",
+  REGISTER_SUCCESS: "REGISTER_SUCCESS",
+  REGISTER_FAILURE: "REGISTER_FAILURE",
+  REGISTER_INACTIVE: "REGISTER_INACTIVE"
+};
 
 // export const REGISTER_REQUEST = "REGISTER_REQUEST";
 export interface RegisterRequestPayload {
@@ -59,11 +59,11 @@ export interface RegisterRequestPayload {
   };
 }
 
-export enum ActivateActionTypes {
-  ACTIVATE_REQUEST = "ACTIVATE_REQUEST",
-  ACTIVATE_SUCCESS = "ACTIVATE_SUCCESS",
-  ACTIVATE_FAILURE = "ACTIVATE_FAILURE"
-}
+export const ActivateActionTypes = {
+  ACTIVATE_REQUEST: "ACTIVATE_REQUEST",
+  ACTIVATE_SUCCESS: "ACTIVATE_SUCCESS",
+  ACTIVATE_FAILURE: "ACTIVATE_FAILURE"
+};
 
 export interface ActivatePayload {
   body: {
@@ -83,11 +83,11 @@ export interface ResetEmailPayload {
   };
 }
 
-export enum ResetPasswordActionTypes {
-  RESET_PASSWORD_REQUEST = "RESET_PASSWORD_REQUEST",
-  RESET_PASSWORD_SUCCESS = "RESET_PASSWORD_SUCCESS",
-  RESET_PASSWORD_FAILURE = "RESET_PASSWORD_FAILURE"
-}
+export const ResetPasswordActionTypes = {
+  RESET_PASSWORD_REQUEST: "RESET_PASSWORD_REQUEST",
+  RESET_PASSWORD_SUCCESS: "RESET_PASSWORD_SUCCESS",
+  RESET_PASSWORD_FAILURE: "RESET_PASSWORD_FAILURE"
+};
 
 export interface ResetPasswordPayload {
   body: {
@@ -114,22 +114,22 @@ export interface Invite {
   created: string;
 }
 
-export enum InviteUserListActionTypes {
-  DEEP_UPDATE_INVITE_USER_LIST = "DEEP_UPDATE_INVITE_USER_LIST",
-  UPDATE_INVITE_USER_LIST = "UPDATE_INVITE_USER_LIST"
-}
+export const InviteUserListActionTypes = {
+  DEEP_UPDATE_INVITE_USER_LIST: "DEEP_UPDATE_INVITE_USER_LIST",
+  UPDATE_INVITE_USER_LIST: "UPDATE_INVITE_USER_LIST"
+};
 
-export enum LoadAdminUserListActionTypes {
-  LOAD_ADMIN_USER_REQUEST = "LOAD_ADMIN_USER_REQUEST",
-  LOAD_ADMIN_USER_SUCCESS = "LOAD_ADMIN_USER_SUCCESS",
-  LOAD_ADMIN_USER_FAILURE = "LOAD_ADMIN_USER_FAILURE"
-}
+export const LoadAdminUserListActionTypes = {
+  LOAD_ADMIN_USER_REQUEST: "LOAD_ADMIN_USER_REQUEST",
+  LOAD_ADMIN_USER_SUCCESS: "LOAD_ADMIN_USER_SUCCESS",
+  LOAD_ADMIN_USER_FAILURE: "LOAD_ADMIN_USER_FAILURE"
+};
 
-export enum EditAdminUserActionTypes {
-  EDIT_ADMIN_USER_REQUEST = "EDIT_ADMIN_USER_REQUEST",
-  EDIT_ADMIN_USER_SUCCESS = "EDIT_ADMIN_USER_SUCCESS",
-  EDIT_ADMIN_USER_FAILURE = "EDIT_ADMIN_USER_FAILURE"
-}
+export const EditAdminUserActionTypes = {
+  EDIT_ADMIN_USER_REQUEST: "EDIT_ADMIN_USER_REQUEST",
+  EDIT_ADMIN_USER_SUCCESS: "EDIT_ADMIN_USER_SUCCESS",
+  EDIT_ADMIN_USER_FAILURE: "EDIT_ADMIN_USER_FAILURE"
+};
 
 export interface UpdateUserPayload {
   body: {
@@ -140,11 +140,11 @@ export interface UpdateUserPayload {
   query: {};
 }
 
-export enum InviteUserActionTypes {
-  INVITE_USER_REQUEST = "INVITE_USER_REQUEST",
-  INVITE_USER_SUCCESS = "INVITE_USER_SUCCESS",
-  INVITE_USER_FAILURE = "INVITE_USER_FAILURE"
-}
+export const InviteUserActionTypes = {
+  INVITE_USER_REQUEST: "INVITE_USER_REQUEST",
+  INVITE_USER_SUCCESS: "INVITE_USER_SUCCESS",
+  INVITE_USER_FAILURE: "INVITE_USER_FAILURE"
+};
 
 export interface InviteUserPayload {
   body: {
@@ -153,11 +153,11 @@ export interface InviteUserPayload {
   };
 }
 
-export enum DeleteInviteActionTypes {
-  DELETE_INVITE_REQUEST = "DELETE_INVITE_REQUEST",
-  DELETE_INVITE_SUCCESS = "DELETE_INVITE_SUCCESS",
-  DELETE_INVITE_FAILURE = "DELETE_INVITE_FAILURE"
-}
+export const DeleteInviteActionTypes = {
+  DELETE_INVITE_REQUEST: "DELETE_INVITE_REQUEST",
+  DELETE_INVITE_SUCCESS: "DELETE_INVITE_SUCCESS",
+  DELETE_INVITE_FAILURE: "DELETE_INVITE_FAILURE"
+};
 
 export interface DeleteInvitePayload {
   body: {
@@ -165,11 +165,11 @@ export interface DeleteInvitePayload {
   };
 }
 
-export enum ValidateTfaActionTypes {
-  VALIDATE_TFA_REQUEST = "VALIDATE_TFA_REQUEST",
-  VALIDATE_TFA_SUCCESS = "VALIDATE_TFA_SUCCESS",
-  VALIDATE_TFA_FAILURE = "VALIDATE_TFA_FAILURE"
-}
+export const ValidateTfaActionTypes = {
+  VALIDATE_TFA_REQUEST: "VALIDATE_TFA_REQUEST",
+  VALIDATE_TFA_SUCCESS: "VALIDATE_TFA_SUCCESS",
+  VALIDATE_TFA_FAILURE: "VALIDATE_TFA_FAILURE"
+};
 
 export interface ValidateTfaPayload {
   body: {
