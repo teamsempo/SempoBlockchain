@@ -91,7 +91,7 @@ function* updateStateFromAdmin(data) {
   const invites = normalizeInviteData.entities.invites;
 
   yield put(AdminUserListAction.updateAdminUserList(admins));
-  yield put(InviteUserListAction.deepUpdateInviteUsers(invites));
+  yield put(InviteUserListAction.deepUpdateInviteUsers(invites || []));
 }
 
 function* saveOrgId({ payload }) {
