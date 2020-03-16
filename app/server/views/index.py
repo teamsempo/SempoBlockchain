@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, Blueprint, current_app
-from server import basic_auth, celery_app
 from server.utils.auth import requires_auth
 import glob, os
 from pathlib import Path
-from celery import signature
 
 index_view = Blueprint('index', __name__,
                         template_folder='templates')
+
 
 def get_js_bundle_filename():
     bundle_directory = os.path.join(current_app.config['BASEDIR'], "static/javascript/dist")
@@ -18,66 +17,11 @@ def get_js_bundle_filename():
 
     return Path(latest_file).name
 
-@index_view.route('/')
-def index():
-
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-
-@index_view.route('/transfers')
-def transfers():
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-
-@index_view.route('/accounts')
-def accounts():
+@index_view.route('/', defaults={'path': ''})
+@index_view.route('/<path:path>')
+def catch_all(path):
     return render_template('index.html', js_bundle_main=get_js_bundle_filename())
 
-@index_view.route('/accounts/<account_id>')
-def single_account(account_id):
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-@index_view.route('/users/<user_id>')
-def single_user(user_id):
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-@index_view.route('/users/<user_id>/verification')
-def single_user_verification(user_id):
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-@index_view.route('/upload')
-def upload():
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-# @index_view.route('/<account_type>/upload/')
-# def upload(account_type):
-#     return render_template('index.html')
-
-
-@index_view.route('/deprecatedVendor')
-def deprecatedVendor():
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-
-@index_view.route('/settings')
-def settings():
-    return render_template('index.html', js_bundle_main=get_js_bundle_filename())
-
-@index_view.route('/settings/<subroute>')
-def settings_subroute(subroute):
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-@index_view.route('/activate-account/')
-def activate_account():
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-@index_view.route('/reset-password/')
-def reset_password():
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
-
-@index_view.route('/login/<subroute>')
-def login(subroute):
-    return render_template('index.html', js_bundle_main = get_js_bundle_filename())
 
 @index_view.route('/whatsapp-sync/')
 @requires_auth(allowed_basic_auth_types=('internal'))
