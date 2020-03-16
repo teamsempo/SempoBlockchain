@@ -11,8 +11,10 @@ from sqlalchemy.orm import aliased
 
 from server import db, bt
 from server.utils.auth import requires_auth
-from server.models.utils import paginate_query
+from server.utils.transfer_filter import process_transfer_filters
+
 from server.schemas import transfer_accounts_schema, credit_transfers_schema
+from server.models.utils import paginate_query
 from server.models.search import SearchView
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -96,6 +98,10 @@ class SearchAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
         sort_by = sort_types_to_database_types[sort_by_arg]
+
+        encoded_filters = request.args.get('params')
+        filters = process_transfer_filters(encoded_filters)
+        print(filters)
 
         # HANDLE PARAM : order
         # Valid orders types are: `ASC` and `DESC`
