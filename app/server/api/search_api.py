@@ -15,6 +15,7 @@ from server.utils.transfer_filter import process_transfer_filters
 
 from server.schemas import transfer_accounts_schema, credit_transfers_schema
 from server.models.utils import paginate_query
+from server.utils.metrics import apply_filters
 from server.models.search import SearchView
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -101,8 +102,7 @@ class SearchAPI(MethodView):
 
         encoded_filters = request.args.get('params')
         filters = process_transfer_filters(encoded_filters)
-        print(filters)
-
+        
         # HANDLE PARAM : order
         # Valid orders types are: `ASC` and `DESC`
         # Default: DESC
@@ -130,6 +130,7 @@ class SearchAPI(MethodView):
             if search_type == 'transfer_accounts':
                 final_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)\
                     .join(User, User.default_transfer_account_id == TransferAccount.id)
+                final_query = apply_filters(final_query, filters, User)
                 if sort_by_arg == 'rank':
                     # There's no search rank when there's no query string, so do chrono instead
                     final_query = final_query.order_by(order(User.created))                    
@@ -182,6 +183,8 @@ class SearchAPI(MethodView):
                     .join(User, user_search_result.c.default_transfer_account_id == User.default_transfer_account_id)\
                     .filter(user_search_result.c.rank > 0.0)\
                     .filter(TransferAccount.is_ghost != True)
+                final_query = apply_filters(final_query, filters, User)
+
                 if sort_by_arg == 'rank':
                     final_query = final_query.order_by(order(user_search_result.c.rank))
                 else:
@@ -214,7 +217,6 @@ class SearchAPI(MethodView):
                     final_query = final_query.order_by(order(recipient_search_result.c.rank + sender_search_result.c.rank))
                 else:
                     final_query = final_query.order_by(order(sort_by))
-
                 credit_transfers, total_items, total_pages = paginate_query(final_query, CreditTransfer)
                 result = credit_transfers_schema.dump(credit_transfers)
                 data = { 'credit_transfers': result.data }
