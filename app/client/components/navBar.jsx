@@ -12,22 +12,19 @@ const mapStateToProps = state => {
     loggedIn: state.login.token != null,
     login: state.login,
     email: state.login.email,
-    orgName: replaceSpaces(state.login.organisationName)
+    activeOrganisation: state.organisations.byId[state.login.organisationId],
+    organisationList: Object.keys(state.organisations.byId).map(
+      id => state.organisations.byId[id]
+    )
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    updateActiveOrgRequest: (
-      organisationName,
-      organisationId,
-      organisationToken
-    ) =>
+    updateActiveOrgRequest: organisationId =>
       dispatch(
         updateActiveOrgRequest({
-          organisationName,
-          organisationId,
-          organisationToken
+          organisationId
         })
       )
   };
@@ -43,12 +40,15 @@ class NavBar extends React.Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
+    let activeOrg = this.props.activeOrganisation;
+    let orgName =
+      (activeOrg && replaceSpaces(activeOrg.name).toLowerCase()) || null;
     let deploymentName = window.DEPLOYMENT_NAME;
 
     //TODO: Allow setting of region for this
     let s3_region = "https://sempo-logos.s3-ap-southeast-2.amazonaws.com";
-    let custom_url = `${s3_region}/${this.props.orgName.toLowerCase()}.${
+    let custom_url = `${s3_region}/${orgName}.${
       deploymentName === "dev" ? "svg" : "png"
     }`;
 
@@ -79,12 +79,12 @@ class NavBar extends React.Component {
 
   selectOrg(org) {
     this.setState({ isOrgSwitcherActive: false }, () =>
-      this.props.updateActiveOrgRequest(org.name, org.id, org.token)
+      this.props.updateActiveOrgRequest(org.id)
     );
   }
 
   toggleSwitchOrgDropdown() {
-    if (this.props.login.organisations.length <= 1) {
+    if (this.props.organisationList.length <= 1) {
       return;
     }
 
@@ -120,7 +120,7 @@ class NavBar extends React.Component {
         ? window.master_wallet_address
         : window.ETH_CONTRACT_ADDRESS);
 
-    var orgs = this.props.login.organisations;
+    var orgs = this.props.organisationList;
     if (orgs === null || typeof orgs === "undefined") {
       orgs = [];
     }
@@ -174,7 +174,7 @@ class NavBar extends React.Component {
                     >
                       <div style={{ margin: "auto 0", maxWidth: "100px" }}>
                         <BoldedNavBarHeaderText>
-                          {this.props.login.organisationName}
+                          {this.props.activeOrganisation.name}
                         </BoldedNavBarHeaderText>
                         <StandardNavBarHeaderText>
                           {this.props.email}
@@ -270,7 +270,10 @@ class NavBar extends React.Component {
     }
   }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(NavBar);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(NavBar);
 
 const SideBarWrapper = styled.div`
   width: 234px;

@@ -30,6 +30,8 @@ const admin = new schema.Entity("admins");
 
 const invite = new schema.Entity("invites");
 
+const organisation = new schema.Entity("organisations");
+
 export const transferAccountSchema = [transfer_account];
 
 export const creditTransferSchema = [credit_transfer];
@@ -41,3 +43,5 @@ export const filterSchema = [filter];
 export const adminUserSchema = [admin];
 
 export const inviteUserSchema = [invite];
+
+export const organisationSchema = [organisation];

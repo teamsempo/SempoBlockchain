@@ -21,7 +21,11 @@ import {
   removeTFAToken,
   parseQuery
 } from "../utils";
-import { adminUserSchema, inviteUserSchema } from "../schemas";
+import {
+  adminUserSchema,
+  inviteUserSchema,
+  organisationSchema
+} from "../schemas";
 
 import {
   requestApiToken,
@@ -81,6 +85,7 @@ import {
 
 import { browserHistory } from "../app.jsx";
 import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+import { UPDATE_ORGANISATION_LIST } from "../reducers/organisation/types";
 
 function* updateStateFromAdmin(data) {
   //Schema expects a list of admin user objects
@@ -107,6 +112,23 @@ function* updateStateFromAdmin(data) {
 
   yield put({ type: UPDATE_ADMIN_USER_LIST, admins });
   yield put({ type: DEEP_UPDATE_INVITE_USER_LIST, invites });
+}
+
+export function* updateOrganisationStateFromLoginData(data) {
+  //Schema expects a list of organisation objects
+  let organisation_list;
+  if (data.organisations) {
+    organisation_list = data.organisations;
+  } else {
+    organisation_list = [data.organisation];
+  }
+
+  const normalizedData = normalize(organisation_list, organisationSchema);
+  const organisations = normalizedData.entities.organisations;
+
+  if (organisations) {
+    yield put({ type: UPDATE_ORGANISATION_LIST, organisations });
+  }
 }
 
 function* saveOrgId({ payload }) {
@@ -145,11 +167,7 @@ function createLoginSuccessObject(token) {
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
     webApiVersion: token.web_api_version,
-    organisationName: token.active_organisation_name,
-    organisationId: token.active_organisation_id,
-    organisationToken: token.active_organisation_token,
-    organisations: token.organisations,
-    requireTransferCardExists: token.require_transfer_card_exists
+    organisationId: token.active_organisation_id
   };
 }
 
@@ -158,6 +176,7 @@ function* requestToken({ payload }) {
     const token_response = yield call(requestApiToken, payload);
 
     if (token_response.status === "success") {
+      yield call(updateOrganisationStateFromLoginData, token_response);
       yield put(createLoginSuccessObject(token_response));
       yield call(storeSessionToken, token_response.auth_token);
       yield call(authenticatePusher);
@@ -204,6 +223,7 @@ function* refreshToken() {
     yield put({ type: REAUTH_REQUEST });
     const token_request = yield call(refreshApiToken);
     if (token_request.auth_token) {
+      yield call(updateOrganisationStateFromLoginData, token_request);
       yield put(createLoginSuccessObject(token_request));
       yield call(storeSessionToken, token_request.auth_token);
       yield call(authenticatePusher);
@@ -242,6 +262,7 @@ function* register({ payload }) {
       });
       browserHistory.push("/login");
     } else if (registered_account.auth_token && !registered_account.tfa_url) {
+      yield call(updateOrganisationStateFromLoginData, registered_account);
       // email invite, auto login as email validated
       yield put({ type: REGISTER_SUCCESS, registered_account });
       yield put(createLoginSuccessObject(registered_account));
@@ -285,6 +306,7 @@ function* activate({ payload }) {
     const activated_account = yield call(activateAPI, payload);
 
     if (activated_account.auth_token && !activated_account.tfa_url) {
+      yield call(updateOrganisationStateFromLoginData, activated_account);
       yield put({ type: ACTIVATE_SUCCESS, activated_account });
       yield put(createLoginSuccessObject(activated_account));
       yield call(storeSessionToken, activated_account.auth_token);
@@ -443,6 +465,7 @@ function* validateTFA({ payload }) {
   try {
     const validateTFAresponse = yield call(ValidateTFAAPI, payload);
 
+    yield call(updateOrganisationStateFromLoginData, activated_account);
     yield put({ type: VALIDATE_TFA_SUCCESS, validateTFAresponse });
     yield call(storeTFAToken, validateTFAresponse.tfa_auth_token);
     yield put(createLoginSuccessObject(validateTFAresponse));

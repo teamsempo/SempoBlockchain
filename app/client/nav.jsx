@@ -44,6 +44,9 @@ const authPage = lazy(() => import("./components/pages/authPage.jsx"));
 const resetPasswordPage = lazy(() =>
   import("./components/pages/resetPasswordPage.jsx")
 );
+const OrganisationPage = lazy(() =>
+  import("./components/pages/settings/OrganisationPage.tsx")
+);
 import notFoundPage from "./components/pages/notFoundPage.jsx";
 import MessageBar from "./components/messageBar.jsx";
 import ErrorBoundary from "./components/errorBoundary.jsx";
@@ -161,6 +164,14 @@ class Nav extends React.Component {
               isReAuthing={isReAuthing}
             />
             <PrivateRoute
+              exact
+              path="/settings/organisation"
+              component={OrganisationPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+            />
+
+            <PrivateRoute
               path="/upload"
               component={uploadPage}
               isLoggedIn={isLoggedIn}
@@ -275,4 +286,7 @@ const PublicRoute = ({ component: Component, ...rest }) => (
   />
 );
 
-export default connect(mapStateToProps, null)(Nav);
+export default connect(
+  mapStateToProps,
+  null
+)(Nav);

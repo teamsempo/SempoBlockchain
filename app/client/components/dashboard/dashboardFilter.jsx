@@ -147,4 +147,7 @@ const FilterContainer = styled.div`
   justify-content: space-between;
 `;
 
-export default connect(mapStateToProps, mapDispatchToProps)(DashboardFilter);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DashboardFilter);
