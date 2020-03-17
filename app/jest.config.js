@@ -14,6 +14,5 @@ module.exports = {
     "/client/__tests__/setup/setupTests.js"
   ],
   testPathIgnorePatterns: ["/node_modules/", "/client/__tests__/setup/"],
-  transformIgnorePatterns: ["/node_modules/"],
-  testEnvironment: "jsdom"
+  transformIgnorePatterns: ["/node_modules/"]
 };
