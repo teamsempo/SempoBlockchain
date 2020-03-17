@@ -4,7 +4,7 @@ This file tests search_api.py.
 import json, pytest
 from time import sleep
 from server.utils.auth import get_complete_auth_token
-from server.utils.user import create_transfer_account_user
+from server.utils.user import create_transfer_account_user, set_custom_attributes
 from server import db
 
 def test_search_api(test_client, complete_admin_auth_token, create_organisation):
@@ -40,30 +40,70 @@ def test_search_api(test_client, complete_admin_auth_token, create_organisation)
         );
     ''')
 
+    male_attribute = {
+        "custom_attributes": {
+            "gender": "male"
+        }
+    }
+
+    female_attribute = {
+        "custom_attributes": {
+            "gender": "male"
+        }
+    }
+
     # Adds users we're searching for
-    create_transfer_account_user(first_name='Michiel',
+    michiel = create_transfer_account_user(first_name='Michiel',
                                     last_name='deRoos',
                                     phone="+19025551234",
                                     organisation=create_organisation)
-    create_transfer_account_user(first_name='Francine',
+    set_custom_attributes(male_attribute, michiel)
+
+
+    francine = create_transfer_account_user(first_name='Francine',
                                     last_name='deRoos',
                                     phone="+19025552345",
                                     organisation=create_organisation)
-    create_transfer_account_user(first_name='Roy',
+    set_custom_attributes(female_attribute, francine)
+
+    roy = create_transfer_account_user(first_name='Roy',
                                     last_name='Donk',
                                     phone="+19025553456",
                                     organisation=create_organisation)
+    set_custom_attributes(male_attribute, roy)
+
     db.session.commit()
     # Manually refresh tsvectors because the test DB has no triggers either
     db.session.execute("REFRESH MATERIALIZED VIEW search_view;")
 
+    # --Tests for standard search--
     expected_results = {
         '': ['Roy', 'Francine', 'Michiel'], # Empty string should return everyone
         'fra': ['Francine'], # Only user starting with 'fra' substring is Francine
         'fra der': ['Francine', "Michiel"], # 'fra der' should return Francine first. Michiel 2nd, because it still matches _something_
         'mic der': ['Michiel', "Francine"] # 'fra der' should return Michiel first. Francine 2nd, because it still matches _something_
     }
+    for search_term in expected_results:
+        response = test_client.get('/api/v1/search/?search_string={}&search_type=transfer_accounts'.format(search_term),
+                                headers=dict(
+                                Authorization=complete_admin_auth_token, Accept='application/json'),
+                                follow_redirects=True)
+        transfer_accounts = response.json['data']['transfer_accounts']
+        assert response.status_code == 200
+        user_names = []
+        for transfer_account in transfer_accounts:
+            if transfer_account['users']:
+                user_names.append(transfer_account['users'][0]['first_name'])
+        assert expected_results[search_term] == user_names
 
+    # --Tests for filters and sorting--
+
+    expected_results = {
+        ('', '%$user_filters%,rounded_account_balance%>1%'): ['Roy', 'Francine', 'Michiel'], # Empty string should return everyone
+        'fra': ['Francine'], # Only user starting with 'fra' substring is Francine
+        'fra der': ['Francine', "Michiel"], # 'fra der' should return Francine first. Michiel 2nd, because it still matches _something_
+        'mic der': ['Michiel', "Francine"] # 'fra der' should return Michiel first. Francine 2nd, because it still matches _something_
+    }
     for e in expected_results:
         response = test_client.get('/api/v1/search/?search_string={}&search_type=transfer_accounts'.format(e),
                                 headers=dict(
@@ -76,5 +116,8 @@ def test_search_api(test_client, complete_admin_auth_token, create_organisation)
             if transfer_account['users']:
                 user_names.append(transfer_account['users'][0]['first_name'])
         assert expected_results[e] == user_names
+
+
     db.session.execute('DROP MATERIALIZED VIEW search_view CASCADE;')
     db.session.commit()
+
