@@ -45,4 +45,7 @@ class userCell extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(userCell);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(userCell);

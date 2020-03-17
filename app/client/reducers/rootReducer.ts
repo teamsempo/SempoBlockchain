@@ -52,7 +52,7 @@ const appReducer = combineReducers({
   businessVerification,
   wyre,
   transferUsages: TransferUsageReducer,
-  organisation: OrganisationReducer,
+  organisations: OrganisationReducer,
   form,
   creditTransferFilters
 });

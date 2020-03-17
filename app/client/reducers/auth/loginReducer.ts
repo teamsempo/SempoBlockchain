@@ -20,16 +20,11 @@ interface LoginState {
   vendorId: null | number;
   intercomHash: null | string;
   webApiVersion: null | string;
-  organisationName: null | string;
-  //TODO(refactor): is it number or string?
   organisationId: null | number;
-  organisationToken: null | string;
   usdToSatoshiRate: null | number;
   error: null | string;
   tfaURL: null | string;
   tfaFailure: boolean;
-  //TODO(refactor): what is this actually?
-  organisations?: null | string[];
   requireTransferCardExists: null | boolean;
   adminTier?: string;
 }
@@ -42,10 +37,7 @@ const initialLoginState: LoginState = {
   vendorId: null,
   intercomHash: null,
   webApiVersion: null,
-  organisationName: null,
   organisationId: null,
-  organisationToken: null,
-  organisations: null,
   requireTransferCardExists: null,
   usdToSatoshiRate: null,
   error: null,
@@ -61,7 +53,6 @@ export const login = (state = initialLoginState, action: LoginAction) => {
     case UPDATE_ACTIVE_ORG:
       return {
         ...state,
-        organisationName: action.payload.organisationName,
         organisationId: action.payload.organisationId
       };
     case LOGIN_SUCCESS:
@@ -73,10 +64,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         vendorId: action.vendorId,
         intercomHash: action.intercomHash,
         webApiVersion: action.webApiVersion,
-        organisationName: action.organisationName,
         organisationId: action.organisationId,
-        organisationToken: action.organisationToken,
-        organisations: action.organisations,
         requireTransferCardExists: action.requireTransferCardExists,
         email: action.email,
         adminTier: action.adminTier,
@@ -92,9 +80,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         userId: null,
         intercomHash: null,
         webApiVersion: null,
-        organisationName: null,
         organisationId: null,
-        organisations: null,
         requireTransferCardExists: null,
         tfaURL: action.tfaURL,
         tfaFailure: action.tfaFailure,
