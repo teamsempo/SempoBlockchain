@@ -40,33 +40,21 @@ def test_search_api(test_client, complete_admin_auth_token, create_organisation)
         );
     ''')
 
-    male_attribute = {
-        "custom_attributes": {
-            "gender": "male"
-        }
-    }
-
-    female_attribute = {
-        "custom_attributes": {
-            "gender": "male"
-        }
-    }
-
     # Adds users we're searching for
-    michiel = create_transfer_account_user(first_name='Michiel',
+    create_transfer_account_user(first_name='Michiel',
                                     last_name='deRoos',
                                     phone="+19025551234",
                                     organisation=create_organisation,
                                     initial_disbursement = 100)
 
 
-    francine = create_transfer_account_user(first_name='Francine',
+    create_transfer_account_user(first_name='Francine',
                                     last_name='deRoos',
                                     phone="+19025552345",
                                     organisation=create_organisation,
                                     initial_disbursement = 200)
 
-    roy = create_transfer_account_user(first_name='Roy',
+    create_transfer_account_user(first_name='Roy',
                                     last_name='Donk',
                                     phone="+19025553456",
                                     organisation=create_organisation,
