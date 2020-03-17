@@ -3,7 +3,7 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 
-from helpers.factories import UserFactory, UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from helpers.ussd_utils import fake_transfer_mapping
 from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
@@ -70,6 +70,9 @@ directory_listing_other_state = partial(UssdSessionFactory, state="directory_lis
      (choose_language_state, standard_user, "asdf", "exit_invalid_menu_option"),
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
+    from flask import g
+    g.active_organisation = OrganisationFactory(country_code='AU')
+
     session = session_factory()
     session.session_data = {
         'transfer_usage_mapping': fake_transfer_mapping(10),

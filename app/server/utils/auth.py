@@ -17,6 +17,7 @@ from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
 from server.utils.feedback import request_feedback_questions
 from server.utils.intercom import create_intercom_secret
 from server.utils.misc import decrypt_string
+from server.schemas import organisation_schema, organisations_schema
 
 def get_complete_auth_token(user):
     auth_token = user.encode_auth_token().decode()
@@ -300,10 +301,8 @@ def get_user_organisations(user):
     active_organisation = getattr(g, "active_organisation", None) or user.fallback_active_organisation()
 
     organisations = dict(
-        active_organisation_name=active_organisation.name,
         active_organisation_id=active_organisation.id,
-        active_organisation_token= getattr(active_organisation.token, 'symbol', None),
-        organisations=[dict(id=org.id, name=org.name, token=getattr(org.token, 'symbol', None)) for org in user.organisations]
+        organisations=organisations_schema.dump(user.organisations).data
     )
 
     return organisations
@@ -372,8 +371,7 @@ def create_user_response_object(user, auth_token, message):
         'kyc_active': True,  # todo; kyc active function
         'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
         'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
-        'web_api_version': '1',
-        'require_transfer_card_exists': current_app.config['REQUIRE_TRANSFER_CARD_EXISTS']
+        'web_api_version': '1'
     }
 
     # merge the user and organisation object nicely (handles non-orgs well)

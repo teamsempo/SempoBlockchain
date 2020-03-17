@@ -5,8 +5,7 @@ from faker import Faker
 import json
 from server import db
 
-
-from helpers.factories import UserFactory, UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from helpers.ussd_utils import make_kenyan_phone
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
@@ -49,6 +48,9 @@ exchange_token_confirmation_state = partial(UssdSessionFactory, state="exchange_
      (exchange_token_confirmation_state, standard_user, "asdf", "exit_invalid_menu_option"),
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
+    from flask import g
+    g.active_organisation = OrganisationFactory(country_code='AU')
+
     session = session_factory()
     user = user_factory()
     user.phone = phone()
