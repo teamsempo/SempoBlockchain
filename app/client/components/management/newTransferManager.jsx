@@ -76,10 +76,10 @@ class NewTransferManager extends React.Component {
           `Are you sure you wish to make a ${transfer_type}` +
           (transfer_amount
             ? ` of ${transfer_amount / 100} ${
-                this.props.login.activeOrganisation.token.symbol
+                this.props.activeOrganisation.token.symbol
               }`
             : ` set of ${target_balance / 100} ${
-                this.props.login.activeOrganisation.token.symbol
+                this.props.activeOrganisation.token.symbol
               }`) +
           ` to ${recipient_transfer_accounts_ids.length} users?`;
 
@@ -112,10 +112,10 @@ class NewTransferManager extends React.Component {
           `Are you sure you wish to make a ${transfer_type}` +
           (transfer_amount
             ? ` of ${transfer_amount / 100} ${
-                this.props.login.activeOrganisation.token.symbol
+                this.props.activeOrganisation.token.symbol
               }`
             : ` set of ${target_balance / 100} ${
-                this.props.login.activeOrganisation.token.symbol
+                this.props.activeOrganisation.token.symbol
               }`) +
           ` to 1 user?`;
 
@@ -202,7 +202,7 @@ class NewTransferManager extends React.Component {
                   onChange={this.handleChange}
                   style={{ width: "7em", margin: "0" }}
                 />
-                {this.props.login.activeOrganisation.token.symbol}
+                {this.props.activeOrganisation.token.symbol}
                 {convertedBitcoin}
               </SubRow>
               <SubRow style={{ margin: "0 0 0 2em", width: "inherit" }}>
