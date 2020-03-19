@@ -47,10 +47,7 @@ class CustomerSupport extends React.Component {
     );
   }
 }
-export default connect(
-  mapStateToProps,
-  null
-)(CustomerSupport);
+export default connect(mapStateToProps, null)(CustomerSupport);
 
 const IconSVG = styled.img`
   width: 21px;

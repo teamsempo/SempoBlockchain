@@ -117,7 +117,7 @@ class NewTransferManager extends React.Component {
             : ` set of ${target_balance / 100} ${
                 this.props.activeOrganisation.token.symbol
               }`) +
-          ` to 1 user?`;
+          " to 1 user?";
 
         window.confirm(confirmTransferString) &&
           this.props.createTransferRequest({
@@ -234,10 +234,7 @@ class NewTransferManager extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(NewTransferManager);
+export default connect(mapStateToProps, mapDispatchToProps)(NewTransferManager);
 
 const Wrapper = styled.div`
   display: flex;

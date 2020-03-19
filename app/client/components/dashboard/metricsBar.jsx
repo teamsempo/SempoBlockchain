@@ -92,10 +92,7 @@ const MetricsBar = ({ creditTransferStats, login, activeOrganisation }) => {
   );
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(MetricsBar);
+export default connect(mapStateToProps, mapDispatchToProps)(MetricsBar);
 
 const Wrapper = styled.div`
   display: flex;

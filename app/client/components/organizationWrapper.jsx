@@ -53,10 +53,7 @@ const mapDispatchToProps = dispatch => {
 };
 
 const composedOrganizationWrapper = compose(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  ),
+  connect(mapStateToProps, mapDispatchToProps),
   withRouter,
   OrganizationWrapper
 );

@@ -101,10 +101,7 @@ export class authPage extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(authPage);
+export default connect(mapStateToProps, mapDispatchToProps)(authPage);
 
 const forgotPassword = () => (
   <div>

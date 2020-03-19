@@ -563,10 +563,7 @@ class BusinessDetails extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(BusinessDetails);
+export default connect(mapStateToProps, mapDispatchToProps)(BusinessDetails);
 
 const ManagerInput = styled(Input)`
   margin: 0;

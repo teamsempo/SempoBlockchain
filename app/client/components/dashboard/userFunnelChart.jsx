@@ -67,7 +67,7 @@ class userFunnelChart extends React.Component {
         ],
         datasets: [
           {
-            label: `Count`,
+            label: "Count",
             backgroundColor: ["#96DADC", "#CC8EE9", "#F9F295", "#F9A395"],
 
             data: [
@@ -91,7 +91,4 @@ class userFunnelChart extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(userFunnelChart);
+export default connect(mapStateToProps, mapDispatchToProps)(userFunnelChart);

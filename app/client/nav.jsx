@@ -286,7 +286,4 @@ const PublicRoute = ({ component: Component, ...rest }) => (
   />
 );
 
-export default connect(
-  mapStateToProps,
-  null
-)(Nav);
+export default connect(mapStateToProps, null)(Nav);
