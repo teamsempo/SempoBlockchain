@@ -6,7 +6,8 @@ import Intercom, { IntercomAPI } from "react-intercom";
 
 const mapStateToProps = state => {
   return {
-    login: state.login
+    login: state.login,
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
 
@@ -16,7 +17,7 @@ class CustomerSupport extends React.Component {
   }
 
   render() {
-    const { login } = this.props;
+    const { login, activeOrganisation } = this.props;
 
     const user = {
       user_id: login.userId,
@@ -24,7 +25,7 @@ class CustomerSupport extends React.Component {
       name: login.email,
       company: {
         id: login.organisationId,
-        name: login.organisationName
+        name: activeOrganisation.name
       }
     };
 
@@ -46,7 +47,10 @@ class CustomerSupport extends React.Component {
     );
   }
 }
-export default connect(mapStateToProps, null)(CustomerSupport);
+export default connect(
+  mapStateToProps,
+  null
+)(CustomerSupport);
 
 const IconSVG = styled.img`
   width: 21px;

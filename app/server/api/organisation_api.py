@@ -9,6 +9,7 @@ from server.models.user import User
 from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
+from server.constants import ISO_COUNTRIES
 
 organisation_blueprint = Blueprint('organisation', __name__)
 
@@ -50,6 +51,41 @@ class OrganisationAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def put(self, organisation_id):
+        put_data = request.get_json()
+
+        country_code = put_data.get('country_code')
+        default_disbursement = put_data.get('default_disbursement')
+        require_transfer_card = put_data.get('require_transfer_card')
+        default_lat = put_data.get('default_lat')
+        default_lng = put_data.get('default_lng')
+
+        if organisation_id is None:
+            return make_response(jsonify({'message': 'No organisation ID provided'})), 400
+
+        organisation = Organisation.query.get(organisation_id)
+        if organisation is None:
+            return make_response(jsonify({'message': f'No organisation found for ID: {organisation_id}'})), 404
+
+        if default_disbursement is not None:
+            organisation.default_disbursement = default_disbursement
+        if country_code is not None:
+            organisation.country_code = country_code
+        if require_transfer_card is not None:
+            organisation.require_transfer_card = require_transfer_card
+        if default_lat is not None:
+            organisation.default_lat = default_lat
+        if default_lng is not None:
+            organisation.default_lng = default_lng
+
+        response_object = {
+            'message': f'Organisation {organisation_id} successfully updated',
+            'data': {'organisation': organisation_schema.dump(organisation).data}
+        }
+
+        return make_response(jsonify(response_object)), 200
+
     @show_all
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self, organisation_id):
@@ -59,11 +95,18 @@ class OrganisationAPI(MethodView):
         custom_welcome_message_key = post_data.get('custom_welcome_message_key')
         timezone = post_data.get('timezone')
 
+        country_code = post_data.get('country_code')
+        default_disbursement = post_data.get('default_disbursement')
+        require_transfer_card = post_data.get('require_transfer_card')
+        default_lat = post_data.get('default_lat')
+        default_lng = post_data.get('default_lng')
+
         token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
 
-        if organisation_name is None:
-            return make_response(jsonify({'message': 'Must provide name to create organisation.'})), 400
+        if organisation_name is None or country_code is None:
+            return make_response(
+                jsonify({'message': 'Must provide name and ISO 2 country_code to create organisation.'})), 400
 
         existing_organisation = Organisation.query.filter_by(name=organisation_name).execution_options(show_all=True).first()
         if existing_organisation is not None:
@@ -73,10 +116,22 @@ class OrganisationAPI(MethodView):
                     'data': {'organisation': organisation_schema.dump(existing_organisation).data}
                 })), 400
 
-        new_organisation = Organisation(
-            name=organisation_name,
-            custom_welcome_message_key=custom_welcome_message_key,
-            timezone=timezone)
+        try:
+            new_organisation = Organisation(
+                name=organisation_name,
+                custom_welcome_message_key=custom_welcome_message_key,
+                timezone=timezone,
+                country_code=country_code,
+                default_disbursement=default_disbursement,
+                require_transfer_card=require_transfer_card,
+                default_lat=default_lat,
+                default_lng=default_lng
+            )
+        except Exception as e:
+            response_object = {
+                'message': str(e),
+            }
+            return make_response(jsonify(response_object)), 400
 
         db.session.add(new_organisation)
         db.session.flush()
@@ -141,6 +196,16 @@ class OrganisationUserAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
 
+class OrganisationConstantsAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def get(self):
+        response_object = {
+            'message': 'Organisation constants',
+            'data': {'iso_countries': ISO_COUNTRIES}
+        }
+        return make_response(jsonify(response_object)), 200
+
+
 # add Rules for API Endpoints
 organisation_blueprint.add_url_rule(
     '/organisation/',
@@ -150,7 +215,7 @@ organisation_blueprint.add_url_rule(
 )
 
 organisation_blueprint.add_url_rule(
-    '/organisation/<int:organisation_id>',
+    '/organisation/<int:organisation_id>/',
     view_func=OrganisationAPI.as_view('single_organisation_view'),
     methods=['GET', 'PUT']
 )
@@ -159,4 +224,10 @@ organisation_blueprint.add_url_rule(
     '/organisation/<int:organisation_id>/users',
     view_func=OrganisationUserAPI.as_view('organisation_user_view'),
     methods=['PUT'],
+)
+
+organisation_blueprint.add_url_rule(
+    '/organisation/constants/',
+    view_func=OrganisationConstantsAPI.as_view('organisation_constants_view'),
+    methods=['GET'],
 )

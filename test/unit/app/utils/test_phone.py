@@ -7,7 +7,7 @@ from server.utils.phone import ChannelType
 
 
 @pytest.fixture(scope='function')
-def proccess_phone_number(test_client):
+def proccess_phone_number(test_client, init_database, create_master_organisation):
     from server.utils.phone import proccess_phone_number
     return proccess_phone_number
 
@@ -38,8 +38,7 @@ def test_channel_for_number(channel_for_number, phone, expected):
     assert channel_for_number(phone) == expected
 
 
-
-def test_send_message(test_client, mock_sms_apis):
+def test_send_message(test_client, init_database, mock_sms_apis):
     from server import message_processor
 
     message_processor.send_message("+1401391419", 'bonjour')

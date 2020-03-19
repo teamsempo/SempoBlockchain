@@ -13,16 +13,11 @@ interface LoginState {
   vendorId: null | number;
   intercomHash: null | string;
   webApiVersion: null | string;
-  organisationName: null | string;
-  //TODO(refactor): is it number or string?
   organisationId: null | number;
-  organisationToken: null | string;
   usdToSatoshiRate: null | number;
   error: null | string;
   tfaURL: null | string;
   tfaFailure: boolean;
-  //TODO(refactor): what is this actually?
-  organisations?: null | string[];
   requireTransferCardExists: null | boolean;
   adminTier?: string;
 }
@@ -35,10 +30,7 @@ const initialLoginState: LoginState = {
   vendorId: null,
   intercomHash: null,
   webApiVersion: null,
-  organisationName: null,
   organisationId: null,
-  organisationToken: null,
-  organisations: null,
   requireTransferCardExists: null,
   usdToSatoshiRate: null,
   error: null,
@@ -54,7 +46,6 @@ export const login = (state = initialLoginState, action: LoginAction) => {
     case LoginActionTypes.UPDATE_ACTIVE_ORG:
       return {
         ...state,
-        organisationName: action.payload.organisationName,
         organisationId: action.payload.organisationId
       };
     case LoginActionTypes.LOGIN_SUCCESS:
@@ -66,10 +57,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         vendorId: action.payload.vendorId,
         intercomHash: action.payload.intercomHash,
         webApiVersion: action.payload.webApiVersion,
-        organisationName: action.payload.organisationName,
         organisationId: action.payload.organisationId,
-        organisationToken: action.payload.organisationToken,
-        organisations: action.payload.organisations,
         requireTransferCardExists: action.payload.requireTransferCardExists,
         email: action.payload.email,
         adminTier: action.payload.adminTier,
@@ -85,9 +73,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         userId: null,
         intercomHash: null,
         webApiVersion: null,
-        organisationName: null,
         organisationId: null,
-        organisations: null,
         requireTransferCardExists: null,
         tfaURL: action.payload.tfaURL,
         tfaFailure: action.payload.tfaFailure,

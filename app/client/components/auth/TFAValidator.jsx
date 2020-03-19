@@ -120,4 +120,7 @@ export class TFAValidator extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TFAValidator);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TFAValidator);

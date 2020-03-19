@@ -1,8 +1,9 @@
 import phonenumbers
 import enum
-from flask import current_app
-import server
 import sentry_sdk
+
+from flask import current_app, g
+
 
 def proccess_phone_number(phone_number, region=None, ignore_region=False):
     """
@@ -12,6 +13,8 @@ def proccess_phone_number(phone_number, region=None, ignore_region=False):
     :param ignore_region: Boolean. True returns original phone
     :return:
     """
+    from server.models.organisation import Organisation
+
     if phone_number is None:
         return None
 
@@ -19,8 +22,10 @@ def proccess_phone_number(phone_number, region=None, ignore_region=False):
         return phone_number
 
     if region is None:
-        # TODO(org): add an org level default
-        region = current_app.config['DEFAULT_COUNTRY']
+        try:
+            region = g.active_organisation.country_code
+        except AttributeError:
+            region = Organisation.master_organisation().country_code
 
     if not isinstance(phone_number, str):
         try:

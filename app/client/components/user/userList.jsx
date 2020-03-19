@@ -129,7 +129,10 @@ class UserList extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(UserList);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(UserList);
 
 const StatusWrapper = styled.div`
   display: flex;

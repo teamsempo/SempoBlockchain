@@ -70,7 +70,10 @@ class CompareListsView extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(CompareListsView);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(CompareListsView);
 
 const FeedContainer = styled.div`
   margin: 2em;

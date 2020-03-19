@@ -118,7 +118,7 @@ class Setup(object):
 
         print(f'Reserve Token id: {token_id}')
 
-        self._wait_for_get_result(f'contract/token/{token_id}', ('data', 'token', 'address'))
+        self._wait_for_get_result(f'contract/token/{token_id}/', ('data', 'token', 'address'))
 
         return token_id
 
@@ -179,6 +179,7 @@ class Setup(object):
             organisation_name,
             custom_welcome_message_key,
             timezone,
+            country_code,
             exchange_contract_id,
             name,
             symbol,
@@ -194,6 +195,7 @@ class Setup(object):
                               'organisation_name': organisation_name,
                               'custom_welcome_message_key': custom_welcome_message_key,
                               'timezone': timezone,
+                              'country_code': country_code,
                               'exchange_contract_id': exchange_contract_id,
                               'name': name,
                               'symbol': symbol,
@@ -221,7 +223,8 @@ class Setup(object):
                           headers=dict(Authorization=self.api_token, Accept='application/json'),
                           json={
                               'token_id': token_id,
-                              'organisation_name': organisation_name
+                              'organisation_name': organisation_name,
+                              'country_code': 'AU'
                           })
 
         return r.json()['data']['organisation']['id']
@@ -278,6 +281,7 @@ def _base_setup(s, reserve_token_id):
         organisation_name='Grassroots Economics',
         custom_welcome_message_key='grassroots',
         timezone='Africa/Nairobi',
+        country_code='AU',
         exchange_contract_id=exchange_contract_id,
         name='Sarafu',
         symbol='SARAFU',

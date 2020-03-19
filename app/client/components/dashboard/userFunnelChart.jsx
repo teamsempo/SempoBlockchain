@@ -91,4 +91,7 @@ class userFunnelChart extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(userFunnelChart);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(userFunnelChart);
