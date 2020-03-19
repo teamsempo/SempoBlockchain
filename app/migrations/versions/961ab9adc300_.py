@@ -8,7 +8,6 @@ Create Date: 2020-01-25 17:29:33.195793
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
-from server.models.organisation import Organisation
 from server.utils.misc import encrypt_string
 import secrets
 
@@ -26,9 +25,15 @@ def upgrade():
     op.add_column('organisation', sa.Column('external_auth_username', sa.String(), nullable=True))
     op.add_column('organisation', sa.Column('_external_auth_password', sa.String(), nullable=True))
 
-    for org in session.query(Organisation).execution_options(show_all=True).all():
+    tcr = sa.sql.table('organisation',
+                       sa.Column('id', sa.Integer, primary_key=True),
+                       sa.Column('external_auth_username', sa.String(), nullable=True),
+                       sa.Column('_external_auth_password', sa.String(), nullable=True),
+                       sa.Column('name', sa.String(), nullable=True))
+
+    for org in session.query(tcr).execution_options(show_all=True).all():
         org.external_auth_username = 'admin_'+(org.name or '').lower().replace(' ', '_')
-        org.external_auth_password = secrets.token_hex(16)
+        org._external_auth_password = encrypt_string(secrets.token_hex(16))
     session.commit()
 
 

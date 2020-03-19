@@ -12,15 +12,15 @@ const OrganizationWrapper = Component =>
       let query_params = parseQuery(location.search);
       if (
         query_params["org"] &&
-        this.props.login.organisationId != query_params["org"]
+        this.props.login.organisationId !== query_params["org"]
       ) {
         let org_id = query_params["org"];
         // retrieve org of "org_id" from state
-        let org = this.props.login.organisations.find(e => e.id == org_id);
+        let org = this.props.organisationList.find(e => e.id === org_id);
 
         // if valid org, update active org otherwise redirect to root path
         if (org) {
-          this.props.updateActiveOrgRequest(org.name, org_id);
+          this.props.updateActiveOrgRequest(org_id);
         } else {
           window.location.assign("/");
         }
@@ -38,14 +38,17 @@ const OrganizationWrapper = Component =>
 
 const mapStateToProps = state => {
   return {
-    login: state.login
+    login: state.login,
+    organisationList: Object.keys(state.organisations.byId).map(
+      id => state.organisations.byId[id]
+    )
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    updateActiveOrgRequest: (organisationName, organisationId) =>
-      dispatch(updateActiveOrgRequest({ organisationName, organisationId }))
+    updateActiveOrgRequest: organisationId =>
+      dispatch(updateActiveOrgRequest({ organisationId }))
   };
 };
 

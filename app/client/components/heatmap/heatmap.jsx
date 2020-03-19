@@ -20,7 +20,8 @@ const mapStateToProps = state => {
       // .filter(d => d.transfer_type === "PAYMENT")
       .filter(d => !isNaN(d.lng))
       .filter(d => !isNaN(d.lat))
-      .map(d => [Number(d.lng), Number(d.lat)])
+      .map(d => [Number(d.lng), Number(d.lat)]),
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
 
@@ -31,7 +32,9 @@ class HeatMap extends Component {
       viewport: {
         ...DeckGLOverlay.defaultViewport,
         width: 500,
-        height: 500
+        height: 500,
+        longitude: this.props.activeOrganisation.default_lng || 144,
+        latitude: this.props.activeOrganisation.default_lat || -1
       },
       data: null
     };
