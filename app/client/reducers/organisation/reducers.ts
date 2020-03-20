@@ -42,13 +42,13 @@ const editStatus = (
 ): EditOrganisationState => {
   switch (action.type) {
     case EDIT_ORGANISATION_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case EDIT_ORGANISATION_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case EDIT_ORGANISATION_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -86,5 +86,5 @@ const loadStatus = (
 export const OrganisationReducer = combineReducers({
   byId,
   loadStatus,
-  editStatus,
+  editStatus
 });
