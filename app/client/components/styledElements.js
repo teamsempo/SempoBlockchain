@@ -89,6 +89,7 @@ export const StyledButton = styled.button`
   text-decoration: none;
   -webkit-transition: all 0.15s ease;
   transition: all 0.15s ease;
+  cursor: pointer;
   &:hover {
     background-color: ${props => props.theme.backgroundColor};
   }

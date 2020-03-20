@@ -592,7 +592,10 @@ const Prompt = function(props) {
   );
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(uploadedTable);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(uploadedTable);
 
 const PromptText = styled.div`
   font-size: 1.2em;

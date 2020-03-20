@@ -253,7 +253,10 @@ class BeneficiaryLiveFeed extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, null)(BeneficiaryLiveFeed);
+export default connect(
+  mapStateToProps,
+  null
+)(BeneficiaryLiveFeed);
 
 const Wrapper = styled.div`
   margin: 0 1em;

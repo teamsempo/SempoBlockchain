@@ -2,7 +2,7 @@ import pytest
 from functools import partial
 
 from server import db
-from helpers.factories import UserFactory
+from helpers.factories import UserFactory, OrganisationFactory
 from server.models.ussd import UssdMenu, UssdSession
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
@@ -23,6 +23,9 @@ def test_menu_display_text_in_lang(test_client, init_database, user_factory, exp
 
 
 def test_create_or_update_session(test_client, init_database):
+    from flask import g
+    g.active_organisation = OrganisationFactory(country_code='AU')
+
     user = UserFactory(phone="123")
 
     # create a session in db
