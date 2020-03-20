@@ -47,6 +47,7 @@ interface OuterProps {
   users: any;
   selectedUser: any;
   transferUsages: TransferUsage[];
+  onResetPin: () => void;
 }
 
 interface StateProps {
@@ -365,6 +366,6 @@ export default connect(
       accountType: selector(state, "accountType"),
       businessUsageValue: selector(state, "businessUsage")
     };
-    // @ts-ignore
   }
+  // @ts-ignore
 )(EditUserFormReduxForm);
