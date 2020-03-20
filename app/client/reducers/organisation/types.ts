@@ -54,7 +54,6 @@ export type EditOrganisationAction =
   | EditOrganisationSuccess
   | EditOrganisationFailure;
 
-
 export const LOAD_ORGANISATION_REQUEST = "LOAD_ORGANISATIONS_REQUEST";
 
 interface LoadOrganisationsRequest {

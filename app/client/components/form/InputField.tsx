@@ -1,8 +1,8 @@
 import * as React from "react";
-import {Field} from "redux-form";
+import { Field } from "redux-form";
 
 import FormValidation from "./FormValidation";
-import {AdaptedInput} from "./WrappedInput";
+import { AdaptedInput } from "./WrappedInput";
 
 //should move checkbox into its own kind? would have diff styling
 interface InputFieldJson {
