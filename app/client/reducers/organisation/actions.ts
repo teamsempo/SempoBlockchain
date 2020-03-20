@@ -10,7 +10,9 @@ export const loadOrganisation = (): LoadOrganisationsAction => ({
   type: LOAD_ORGANISATION_REQUEST
 });
 
-export const editOrganisation = (payload: EditOrganisationPayload): EditOrganisationAction => ({
+export const editOrganisation = (
+  payload: EditOrganisationPayload
+): EditOrganisationAction => ({
   type: EDIT_ORGANISATION_REQUEST,
   payload
 });
