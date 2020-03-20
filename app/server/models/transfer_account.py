@@ -200,11 +200,12 @@ class TransferAccount(OneOrgBase, ModelBase):
                 return approval
         return None
 
-    def approve_and_disburse(self, initial_disbursement=None, auto_resolve=False):
+    def approve_and_disburse(self, initial_disbursement=None):
         from server.utils.access_control import AccessControl
 
+        active_org = getattr(g, 'active_organisation', self.primary_user.default_organisation)
         admin = getattr(g, 'user', None)
-        auto_resolve = initial_disbursement == current_app.config['DEFAULT_INITIAL_DISBURSEMENT']
+        auto_resolve = initial_disbursement == active_org.default_disbursement
 
         if not self.is_approved and admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
             self.is_approved = True
@@ -229,7 +230,8 @@ class TransferAccount(OneOrgBase, ModelBase):
     def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
         from server.utils.credit_transfer import make_payment_transfer
 
-        initial_disbursement = initial_disbursement or current_app.config.get('DEFAULT_INITIAL_DISBURSEMENT', None)
+        active_org = getattr(g, 'active_organisation', Organisation.master_organisation())
+        initial_disbursement = initial_disbursement or active_org.default_disbursement
         if not initial_disbursement:
             return None
 

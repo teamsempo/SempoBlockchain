@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   app:
     build: app/server
@@ -10,8 +10,8 @@ services:
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
-    - postgres
-    - eth_worker
+      - postgres
+      - eth_worker
 
   eth_worker:
     build:
@@ -25,9 +25,9 @@ services:
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
-    - redis
-    - ganache
-    - eth_postgres
+      - redis
+      - ganache
+      - eth_postgres
 
   eth_worker_processor:
     build:
@@ -41,19 +41,18 @@ services:
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
-    - redis
-    - ganache
-    - eth_postgres
-
+      - redis
+      - ganache
+      - eth_postgres
 
   proxy:
     build: proxy
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
     ports:
-     - "80:80"
+      - "80:80"
     depends_on:
-     - app
+      - app
 
   postgres:
     image: "postgres"
@@ -81,7 +80,6 @@ services:
   ganache:
     image: "trufflesuite/ganache-cli:v6.7.0"
     command: "-l 80000000 -i 42"
-
 #  beat:
 #    build:
 #      context: app/server
@@ -137,6 +135,4 @@ services:
 #     - /tmp:/tmp
 #    depends_on:
 #    - redis
-
-
 

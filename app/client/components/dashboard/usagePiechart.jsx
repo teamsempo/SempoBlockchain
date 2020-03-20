@@ -67,4 +67,7 @@ class useagePieChart extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, null)(useagePieChart);
+export default connect(
+  mapStateToProps,
+  null
+)(useagePieChart);

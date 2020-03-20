@@ -4,7 +4,7 @@ from faker.providers import phone_number
 from faker import Faker
 import json
 
-from helpers.factories import UserFactory, UssdSessionFactory
+from helpers.factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
 from server.utils import user as user_utils
@@ -53,6 +53,9 @@ balance_inquiry_pin_authorization_state = partial(UssdSessionFactory, state="bal
       "exit_pin_blocked")
  ])
 def test_kenya_state_machine(test_client, init_database, user_factory, session_factory, user_input, expected):
+    from flask import g
+    g.active_organisation = OrganisationFactory(country_code='AU')
+
     session = session_factory()
     user = user_factory()
     user.phone = phone()

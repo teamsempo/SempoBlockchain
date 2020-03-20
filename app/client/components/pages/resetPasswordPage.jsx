@@ -34,7 +34,10 @@ class resetPasswordPage extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(resetPasswordPage);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(resetPasswordPage);
 
 const WrapperDiv = styled.div`
   width: 100vw;

@@ -208,7 +208,10 @@ class ExportManager extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ExportManager);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ExportManager);
 
 const SubRow = styled.div`
   display: flex;

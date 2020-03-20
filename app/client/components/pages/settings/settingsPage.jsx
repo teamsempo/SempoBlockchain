@@ -28,6 +28,12 @@ export default class settingsPage extends React.Component {
               <KoboCredentials />
               <GetVerified />
               <CustomerSupport />
+              <PageLink
+                to="/settings/organisation"
+                headerText="Organisation Settings"
+              >
+                Update your organisation settings
+              </PageLink>
             </RestrictedModuleBox>
 
             <RestrictedModuleBox>

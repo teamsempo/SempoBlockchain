@@ -29,6 +29,8 @@ from server.utils.user import transfer_usages_for_user, send_onboarding_sms_mess
 def test_create_transfer_account_user(
         test_client, init_database, create_master_organisation,
         last_name, location, lat, lng, initial_disbursement):
+    from flask import g
+    g.active_organisation = create_master_organisation
 
     assert proccess_create_or_modify_user_request(
         attribute_dict=dict(
@@ -124,9 +126,11 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
 ])
 def test_send_welcome_sms(mocker, test_client, init_database,
                           preferred_language, org_key, expected_welcome, expected_terms):
+    from flask import g
 
     token = TokenFactory(name='Sarafu', symbol='SARAFU')
-    organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token)
+    organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token, country_code='AU')
+    g.active_organisation = organisation
     transfer_account = TransferAccountFactory(balance=10000, token=token, organisation=organisation)
     user = UserFactory(first_name='Magoo',
                        phone='123456789',
