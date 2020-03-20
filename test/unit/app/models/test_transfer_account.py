@@ -11,29 +11,33 @@ def test_create_transfer_account(create_transfer_account):
     assert create_transfer_account.blockchain_address is not None
 
 
-def test_approve_beneficiary_transfer_account(create_transfer_account_user):
+def test_approve_beneficiary_transfer_account(create_transfer_account_user, create_organisation):
     """
     GIVEN a Transfer Account model
     WHEN a new transfer account is created AND approved
     THEN check a BENEFICIARY is disbursed initial balance
     """
-    import config
     create_transfer_account_user.transfer_account.is_beneficiary = True
-    create_transfer_account_user.transfer_account.approve_and_disburse(initial_disbursement=config.DEFAULT_INITIAL_DISBURSEMENT)
+    create_transfer_account_user.transfer_account.approve_and_disburse(
+        initial_disbursement=create_organisation.default_disbursement
+    )
 
-    assert create_transfer_account_user.transfer_account.balance == config.DEFAULT_INITIAL_DISBURSEMENT
+    assert create_transfer_account_user.transfer_account.balance == create_organisation.default_disbursement
 
 
-def test_approve_vendor_transfer_account(new_transfer_account):
+def test_approve_vendor_transfer_account(create_transfer_account_user):
     """
     GIVEN a Transfer Account model
     WHEN a new transfer account is created and approved
     THEN check a VENDOR is NOT disbursed initial balance
     """
-    new_transfer_account.is_vendor = True
-    new_transfer_account.approve_and_disburse()
+    create_transfer_account_user.transfer_account.is_beneficiary = False
+    create_transfer_account_user.transfer_account.balance = 0
 
-    assert new_transfer_account.balance == 0
+    create_transfer_account_user.transfer_account.is_vendor = True
+    create_transfer_account_user.transfer_account.approve_and_disburse()
+
+    assert create_transfer_account_user.transfer_account.balance == 0
 
 
 @pytest.mark.parametrize("initial_bal, increment_amount, expected_final_bal", [

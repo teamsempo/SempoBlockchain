@@ -6,6 +6,7 @@ Create Date: 2020-01-22 11:40:46.181534
 
 """
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.declarative import declarative_base
 from alembic import op
 import sqlalchemy as sa
 import sys
@@ -14,14 +15,23 @@ from cryptography.fernet import Fernet
 from flask import current_app
 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
-from server.models.user import User
-from server.models.token import Token
 
 # revision identifiers, used by Alembic.
 revision = '87b723e167d3'
 down_revision = '5f4b4c9f586d'
 branch_labels = None
 depends_on = None
+
+Base = declarative_base()
+
+
+class User(Base):
+    __tablename__ = 'user'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+
+    password_hash = sa.Column(sa.String(200))
+    pin_hash = sa.Column(sa.String())
 
 
 def upgrade():

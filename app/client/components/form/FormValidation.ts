@@ -15,7 +15,10 @@ const FormValidation = {
     }
   },
   notOther: (value: string) =>
-    value.toLowerCase() === "other" ? "'Other' is not a valid input" : undefined
+    value.toLowerCase() === "other"
+      ? "'Other' is not a valid input"
+      : undefined,
+  isNumber: (value: number) => (isNaN(value) ? "Must be a number" : undefined)
 };
 
 export default FormValidation;

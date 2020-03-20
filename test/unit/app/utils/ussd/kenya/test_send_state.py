@@ -17,8 +17,11 @@ phone = partial(fake.msisdn)
 
 @pytest.fixture(scope='function')
 def standard_user(test_client, init_database):
+    from flask import g
+
     token = TokenFactory(name='Sarafu', symbol='SARAFU')
-    organisation = OrganisationFactory(token=token)
+    organisation = OrganisationFactory(token=token, country_code='AU')
+    g.active_organisation = organisation
 
     return UserFactory(
         first_name="Foo",

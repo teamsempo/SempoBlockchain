@@ -222,7 +222,10 @@ class WyreBankFunding extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(WyreBankFunding);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(WyreBankFunding);
 
 const Bold = styled.span`
   font-weight: 600;
