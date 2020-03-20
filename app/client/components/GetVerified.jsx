@@ -1,33 +1,29 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
+import { Link } from 'react-router-dom';
 import {
   loadBusinessProfile,
   RESET_ACTIVE_STEP_STATE,
   RESET_BUSINESS_VERIFICATION_STATE,
-  UPDATE_ACTIVE_STEP
-} from "../reducers/businessVerificationReducer";
+  UPDATE_ACTIVE_STEP,
+} from '../reducers/businessVerificationReducer';
 
-import LoadingSpinner from "./loadingSpinner.jsx";
-import { Link } from "react-router-dom";
+import LoadingSpinner from './loadingSpinner.jsx';
 
-const mapStateToProps = state => {
-  return {
-    adminTier: state.login.adminTier,
-    loadStatus: state.businessVerification.loadStatus,
-    businessProfile: state.businessVerification.businessVerificationState
-  };
-};
+const mapStateToProps = state => ({
+  adminTier: state.login.adminTier,
+  loadStatus: state.businessVerification.loadStatus,
+  businessProfile: state.businessVerification.businessVerificationState,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadBusinessProfile: query => dispatch(loadBusinessProfile({ query })),
-    clearUserId: () => dispatch({ type: RESET_ACTIVE_STEP_STATE }),
-    clearBusienssState: () =>
-      dispatch({ type: RESET_BUSINESS_VERIFICATION_STATE })
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadBusinessProfile: query => dispatch(loadBusinessProfile({ query })),
+  clearUserId: () => dispatch({ type: RESET_ACTIVE_STEP_STATE }),
+  clearBusienssState: () =>
+    dispatch({ type: RESET_BUSINESS_VERIFICATION_STATE }),
+});
 
 class GetVerified extends React.Component {
   constructor(props) {
@@ -37,7 +33,7 @@ class GetVerified extends React.Component {
 
   componentWillMount() {
     const { userId } = this.props;
-    this.props.clearUserId({ userId: userId });
+    this.props.clearUserId({ userId });
     this.props.clearBusienssState();
   }
 
@@ -51,10 +47,10 @@ class GetVerified extends React.Component {
   }
 
   render() {
-    let { loadStatus, businessProfile, adminTier, userId } = this.props;
-    var iconColor = "#ff1705";
-    var text = "Please contact support.";
-    var addFunds = null;
+    const { loadStatus, businessProfile, adminTier, userId } = this.props;
+    let iconColor = '#ff1705';
+    let text = 'Please contact support.';
+    let addFunds = null;
 
     if (loadStatus.isRequesting) {
       return (
@@ -65,10 +61,10 @@ class GetVerified extends React.Component {
     }
 
     if (
-      businessProfile.kyc_status === "INCOMPLETE" ||
+      businessProfile.kyc_status === 'INCOMPLETE' ||
       !Object.values(businessProfile).length > 0
     ) {
-      if (adminTier === "superadmin") {
+      if (adminTier === 'superadmin') {
         text = <Link to="settings/verification">Get Verified</Link>;
       }
 
@@ -77,18 +73,18 @@ class GetVerified extends React.Component {
       }
     }
 
-    if (businessProfile.kyc_status === "PENDING") {
-      iconColor = "#FF9800";
-      text = "Pending.";
+    if (businessProfile.kyc_status === 'PENDING') {
+      iconColor = '#FF9800';
+      text = 'Pending.';
       addFunds = null;
     }
 
-    if (businessProfile.kyc_status === "VERIFIED") {
-      iconColor = "#00C759";
-      text = "Verified.";
+    if (businessProfile.kyc_status === 'VERIFIED') {
+      iconColor = '#00C759';
+      text = 'Verified.';
       addFunds = null;
 
-      if ((!userId && adminTier === "superadmin") || adminTier === "admin") {
+      if ((!userId && adminTier === 'superadmin') || adminTier === 'admin') {
         addFunds = (
           <div>
             <br />
@@ -99,7 +95,7 @@ class GetVerified extends React.Component {
     }
 
     return (
-      <div style={{ margin: "1em" }}>
+      <div style={{ margin: '1em' }}>
         <StyledAccountWrapper>
           <StyledHeader>Account Status:</StyledHeader>
           <StyledContent backgroundColor={iconColor}>{text}</StyledContent>
@@ -128,7 +124,7 @@ const StyledContent = styled.p`
   font-weight: 400;
   margin: 0;
   &:before {
-    content: "\\2713";
+    content: '\\2713';
     color: white;
     background-color: ${props => props.backgroundColor};
     width: 60px;

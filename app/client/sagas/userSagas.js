@@ -8,12 +8,12 @@ import {
   cancelled,
   cancel,
   race,
-  delay
-} from "redux-saga/effects";
-import { schema, arrayOf, normalize } from "normalizr";
-import { handleError } from "../utils";
+  delay,
+} from 'redux-saga/effects';
+import { schema, arrayOf, normalize } from 'normalizr';
+import { handleError } from '../utils';
 
-import { userSchema } from "../schemas";
+import { userSchema } from '../schemas';
 
 import {
   UPDATE_USER_LIST,
@@ -25,25 +25,24 @@ import {
   EDIT_USER_FAILURE,
   CREATE_USER_REQUEST,
   CREATE_USER_SUCCESS,
-  CREATE_USER_FAILURE
-} from "../reducers/userReducer.js";
+  CREATE_USER_FAILURE,
+  RESET_PIN_FAILURE,
+  RESET_PIN_REQUEST,
+  RESET_PIN_SUCCESS,
+} from '../reducers/userReducer.js';
 
 import {
   loadUserAPI,
   editUserAPI,
   createUserAPI,
-  resetPinAPI
-} from "../api/userAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
-import {
-  RESET_PIN_FAILURE,
-  RESET_PIN_REQUEST,
-  RESET_PIN_SUCCESS
-} from "../reducers/userReducer";
-import { LOAD_TRANSFER_USAGES_REQUEST } from "../reducers/transferUsage/types";
+  resetPinAPI,
+} from '../api/userAPI';
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
+
+import { LOAD_TRANSFER_USAGES_REQUEST } from '../reducers/transferUsage/types';
 
 function* updateStateFromUser(data) {
-  //Schema expects a list of credit transfer objects
+  // Schema expects a list of credit transfer objects
   if (data.users) {
     var user_list = data.users;
   } else {
@@ -52,7 +51,7 @@ function* updateStateFromUser(data) {
 
   const normalizedData = normalize(user_list, userSchema);
 
-  const users = normalizedData.entities.users;
+  const { users } = normalizedData.entities;
 
   yield put({ type: UPDATE_USER_LIST, users });
 }
@@ -64,12 +63,12 @@ function* loadUser({ payload }) {
 
     yield call(updateStateFromUser, load_result.data);
 
-    const users = normalize(load_result.data, userSchema).entities.users;
+    const { users } = normalize(load_result.data, userSchema).entities;
     yield put({ type: LOAD_USER_SUCCESS, users });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_USER_FAILURE, error: error });
+    yield put({ type: LOAD_USER_FAILURE, error });
   }
 }
 
@@ -89,12 +88,12 @@ function* editUser({ payload }) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: edit_response.message
+      message: edit_response.message,
     });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: EDIT_USER_FAILURE, error: error });
+    yield put({ type: EDIT_USER_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -115,12 +114,12 @@ function* resetPin({ payload }) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: reset_response.message
+      message: reset_response.message,
     });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: RESET_PIN_FAILURE, error: error });
+    yield put({ type: RESET_PIN_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -155,6 +154,6 @@ export default function* userSagas() {
     watchLoadUser(),
     watchEditUser(),
     watchCreateUser(),
-    watchResetPin()
+    watchResetPin(),
   ]);
 }

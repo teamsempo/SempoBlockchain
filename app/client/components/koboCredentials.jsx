@@ -1,33 +1,31 @@
-import React from "react";
-import styled from "styled-components";
-import { generateQueryString, getToken, handleResponse } from "../utils";
+import React from 'react';
+import styled from 'styled-components';
+import { generateQueryString, getToken, handleResponse } from '../utils';
 
 class koboCredentials extends React.Component {
   constructor() {
     super();
     this.state = {
       username: null,
-      password: null
+      password: null,
     };
   }
 
   getKoboCredentials() {
     const query_string = generateQueryString();
-    var URL = `/api/v1/auth/external/${query_string}`;
+    const URL = `/api/v1/auth/external/${query_string}`;
 
     return fetch(URL, {
       headers: {
-        Authorization: getToken()
+        Authorization: getToken(),
       },
-      method: "GET"
+      method: 'GET',
     })
-      .then(response => {
-        return handleResponse(response);
-      })
+      .then(response => handleResponse(response))
       .then(handled => {
         this.setState({
           password: handled.password,
-          username: handled.username
+          username: handled.username,
         });
       })
       .catch(error => {
@@ -42,7 +40,7 @@ class koboCredentials extends React.Component {
   render() {
     if (this.state.username) {
       return (
-        <div style={{ margin: "1em" }}>
+        <div style={{ margin: '1em' }}>
           <StyledAccountWrapper>
             <StyledHeader>Kobo Toolbox Credentials</StyledHeader>
             <StyledContent>
@@ -56,9 +54,8 @@ class koboCredentials extends React.Component {
           </StyledAccountWrapper>
         </div>
       );
-    } else {
-      return <div></div>;
     }
+    return <div />;
   }
 }
 

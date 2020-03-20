@@ -1,34 +1,30 @@
-import React from "react";
-import { connect } from "react-redux";
-import ReactPasswordStrength from "react-password-strength";
+import React from 'react';
+import { connect } from 'react-redux';
+import ReactPasswordStrength from 'react-password-strength';
 
-import { registerRequest } from "../../reducers/auth/actions";
+import { registerRequest } from '../../reducers/auth/actions';
 
-import AsyncButton from "./../AsyncButton.jsx";
-import TFAForm from "./TFAForm.jsx";
+import AsyncButton from '../AsyncButton.jsx';
+import TFAForm from './TFAForm.jsx';
 
-import { Input, ErrorMessage } from "./../styledElements";
+import { Input, ErrorMessage } from '../styledElements';
 
-const mapStateToProps = state => {
-  return {
-    register_status: state.register,
-    login_status: state.login
-  };
-};
+const mapStateToProps = state => ({
+  register_status: state.register,
+  login_status: state.login,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    registerRequest: payload => dispatch(registerRequest(payload))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  registerRequest: payload => dispatch(registerRequest(payload)),
+});
 
 class RegisterFormContainer extends React.Component {
   constructor() {
     super();
     this.state = {
-      username: "",
-      password: "",
-      reenter_password: "",
+      username: '',
+      password: '',
+      reenter_password: '',
       passwordIsValid: false,
       user_missing: false,
       invalid_username: false,
@@ -36,7 +32,7 @@ class RegisterFormContainer extends React.Component {
       password_missmatch: false,
       invalid_register: false,
       password_invalid: false,
-      invite: false
+      invite: false,
     };
   }
 
@@ -54,12 +50,12 @@ class RegisterFormContainer extends React.Component {
   }
 
   attemptregister() {
-    var invalid_email =
+    const invalid_email =
       this.state.username.match(
-        /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
+        /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
       ) == null;
 
-    if (this.state.username === "") {
+    if (this.state.username === '') {
       this.setState({ user_missing: true });
       return;
     }
@@ -68,7 +64,7 @@ class RegisterFormContainer extends React.Component {
       return;
     }
 
-    if (this.state.password === "") {
+    if (this.state.password === '') {
       this.setState({ password_missing: true });
       return;
     }
@@ -87,33 +83,33 @@ class RegisterFormContainer extends React.Component {
       body: {
         username: this.state.username,
         password: this.state.password,
-        referral_code: this.props.referralCode
-      }
+        referral_code: this.props.referralCode,
+      },
     });
   }
 
   onUserFieldKeyPress(e) {
-    var username = e.target.value;
-    this.setState({ username: username, user_missing: false });
+    const username = e.target.value;
+    this.setState({ username, user_missing: false });
     if (e.nativeEvent.keyCode != 13) return;
     this.attemptregister();
   }
 
   onPasswordFieldKeyPress(e) {
-    var password = e.password;
-    var isValid = e.isValid;
+    const { password } = e;
+    const { isValid } = e;
     this.setState({
-      password: password,
+      password,
       password_missing: false,
-      passwordIsValid: isValid
+      passwordIsValid: isValid,
     });
   }
 
   onReenterPasswordFieldKeyPress(e) {
-    var reenter_password = e.target.value;
+    const reenter_password = e.target.value;
     this.setState({
-      reenter_password: reenter_password,
-      password_missmatch: false
+      reenter_password,
+      password_missmatch: false,
     });
     if (e.nativeEvent.keyCode != 13) return;
     this.attemptregister();
@@ -126,8 +122,8 @@ class RegisterFormContainer extends React.Component {
   render() {
     if (this.props.login_status.tfaURL || this.props.login_status.tfaFailure) {
       return (
-        <div style={{ margin: "1em" }}>
-          <div style={{ textAlign: "center" }}>
+        <div style={{ margin: '1em' }}>
+          <div style={{ textAlign: 'center' }}>
             Two-Step Authentication Required
           </div>
           <TFAForm tfaURL={this.props.login_status.tfaURL} />
@@ -167,41 +163,39 @@ class RegisterFormContainer extends React.Component {
 
 const RegisterForm = function(props) {
   if (props.user_missing) {
-    var error_message = "Email Missing";
+    var error_message = 'Email Missing';
   } else if (props.invalid_username) {
-    error_message = "Invalid Email";
+    error_message = 'Invalid Email';
   } else if (props.password_missing) {
-    error_message = "Password Missing";
+    error_message = 'Password Missing';
   } else if (props.password_missmatch) {
-    error_message = "Passwords do not match";
+    error_message = 'Passwords do not match';
   } else if (props.invalid_register) {
     error_message = props.invalid_register;
   } else if (props.password_invalid) {
-    error_message = "Password too weak";
+    error_message = 'Password too weak';
   } else {
-    error_message = "";
+    error_message = '';
   }
 
   return (
     <div>
-      <div style={{ display: "block" }}>
+      <div style={{ display: 'block' }}>
         <p
           style={
             props.state.invite
-              ? { margin: "1em 0.5em", textAlign: "center" }
-              : { display: "none" }
-          }
-        >
+              ? { margin: '1em 0.5em', textAlign: 'center' }
+              : { display: 'none' }
+          }>
           {props.state.username}
         </p>
 
         <p
           style={
             props.state.invite
-              ? { margin: "1em 0.5em", textAlign: "center", fontWeight: 600 }
-              : { display: "none" }
-          }
-        >
+              ? { margin: '1em 0.5em', textAlign: 'center', fontWeight: 600 }
+              : { display: 'none' }
+          }>
           Please choose a password
         </p>
 
@@ -209,15 +203,15 @@ const RegisterForm = function(props) {
           type="email"
           onKeyUp={props.onUserFieldKeyPress}
           placeholder="Email"
-          style={props.state.invite ? { display: "none" } : null}
+          style={props.state.invite ? { display: 'none' } : null}
         />
 
         <ReactPasswordStrength
           minLength={6}
           type="password"
           changeCallback={data => props.onPasswordFieldKeyPress(data)}
-          inputProps={{ placeholder: "Password" }}
-          className={"default-input"}
+          inputProps={{ placeholder: 'Password' }}
+          className="default-input"
         />
 
         <Input
@@ -232,7 +226,7 @@ const RegisterForm = function(props) {
       <AsyncButton
         onClick={props.onClick}
         isLoading={props.isRegistering}
-        buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+        buttonStyle={{ width: 'calc(100% - 1em)', display: 'flex' }}
         buttonText="REGISTER"
       />
     </div>
@@ -240,5 +234,5 @@ const RegisterForm = function(props) {
 };
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(RegisterFormContainer);

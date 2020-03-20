@@ -1,11 +1,12 @@
-import { delay } from "redux-saga";
-import { call, put, select, take, takeEvery } from "redux-saga/effects";
+import { delay } from 'redux-saga';
+import { call, put, select, take, takeEvery } from 'redux-saga/effects';
 
 import {
   ADD_FLASH_MESSAGE,
   SHOW_FLASH,
-  CLEAR_FLASH
-} from "../reducers/messageReducer";
+  CLEAR_FLASH,
+} from '../reducers/messageReducer';
+
 const getMessages = state => state.message.messageList;
 
 const FIVE_SECONDS = 5000;

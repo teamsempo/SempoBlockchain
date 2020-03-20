@@ -1,19 +1,17 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import Intercom, { IntercomAPI } from "react-intercom";
+import Intercom, { IntercomAPI } from 'react-intercom';
 
-const mapStateToProps = state => {
-  return {
-    login: state.login,
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
-  };
-};
+const mapStateToProps = state => ({
+  login: state.login,
+  activeOrganisation: state.organisations.byId[state.login.organisationId],
+});
 
 class CustomerSupport extends React.Component {
   openChat() {
-    IntercomAPI("show");
+    IntercomAPI('show');
   }
 
   render() {
@@ -25,12 +23,12 @@ class CustomerSupport extends React.Component {
       name: login.email,
       company: {
         id: login.organisationId,
-        name: activeOrganisation.name
-      }
+        name: activeOrganisation.name,
+      },
     };
 
     return (
-      <div style={{ margin: "1em" }}>
+      <div style={{ margin: '1em' }}>
         <StyledAccountWrapper>
           <StyledHeader>Support:</StyledHeader>
           <StyledContent onClick={this.openChat}>

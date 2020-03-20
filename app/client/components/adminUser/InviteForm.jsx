@@ -1,32 +1,28 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import AsyncButton from "../AsyncButton.jsx";
+import AsyncButton from '../AsyncButton.jsx';
 
-import { Input, ErrorMessage } from "../styledElements";
-import { inviteUser } from "../../reducers/auth/actions";
+import { Input, ErrorMessage } from '../styledElements';
+import { inviteUser } from '../../reducers/auth/actions';
 
-const mapStateToProps = state => {
-  return {
-    createAdminStatus: state.adminUsers.createStatus
-  };
-};
+const mapStateToProps = state => ({
+  createAdminStatus: state.adminUsers.createStatus,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    inviteUser: body => dispatch(inviteUser({ body }))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  inviteUser: body => dispatch(inviteUser({ body })),
+});
 
 export class InviteFormContainer extends React.Component {
   constructor() {
     super();
     this.state = {
-      email: "",
+      email: '',
       email_missing: false,
       invalid_request: false,
-      tier: "view"
+      tier: 'view',
     };
   }
 
@@ -35,7 +31,7 @@ export class InviteFormContainer extends React.Component {
   }
 
   attemptlogin() {
-    if (this.state.email == "") {
+    if (this.state.email == '') {
       this.setState({ email_missing: true });
       return;
     }
@@ -43,11 +39,11 @@ export class InviteFormContainer extends React.Component {
   }
 
   onEmailFieldKeyPress(e) {
-    let email = e.target.value;
+    const email = e.target.value;
     this.setState({
-      email: email,
+      email,
       email_missing: false,
-      invalid_request: false
+      invalid_request: false,
     });
     if (e.nativeEvent.keyCode != 13) return;
     this.attemptlogin();
@@ -78,18 +74,18 @@ export class InviteFormContainer extends React.Component {
 
 const InviteForm = function(props) {
   if (props.email_missing) {
-    var error_message = "Email Missing";
+    var error_message = 'Email Missing';
   } else if (props.invalid_request !== false) {
     error_message = props.invalid_request;
   } else {
-    error_message = "";
+    error_message = '';
   }
 
-  const tiers = ["superadmin", "admin", "subadmin", "view"];
+  const tiers = ['superadmin', 'admin', 'subadmin', 'view'];
 
   return (
     <div>
-      <div style={{ display: "block" }}>
+      <div style={{ display: 'block' }}>
         <Input
           type="email"
           id="EmailField"
@@ -98,20 +94,18 @@ const InviteForm = function(props) {
         />
 
         <RoleTypeWrapper>
-          {tiers.map((tier, i) => {
-            return (
-              <LabelContainer key={i}>
-                {tier}
-                <LabelInput
-                  type="radio"
-                  value={tier}
-                  checked={props.tier === tier}
-                  onChange={props.handleToggle}
-                />
-                <LabelCheckmark checked={props.tier === tier} />
-              </LabelContainer>
-            );
-          })}
+          {tiers.map((tier, i) => (
+            <LabelContainer key={i}>
+              {tier}
+              <LabelInput
+                type="radio"
+                value={tier}
+                checked={props.tier === tier}
+                onChange={props.handleToggle}
+              />
+              <LabelCheckmark checked={props.tier === tier} />
+            </LabelContainer>
+          ))}
         </RoleTypeWrapper>
       </div>
 
@@ -120,7 +114,7 @@ const InviteForm = function(props) {
       <AsyncButton
         onClick={props.onClick}
         isLoading={props.isLoggingIn}
-        buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+        buttonStyle={{ width: 'calc(100% - 1em)', display: 'flex' }}
         buttonText="Invite"
       />
     </div>
@@ -128,7 +122,7 @@ const InviteForm = function(props) {
 };
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(InviteFormContainer);
 
 const RoleTypeWrapper = styled.div`
@@ -163,12 +157,12 @@ const LabelCheckmark = styled.span`
   left: 0;
   height: 14px;
   width: 14px;
-  background-color: ${props => (props.checked ? "#2d9ea0" : "#eee")};
+  background-color: ${props => (props.checked ? '#2d9ea0' : '#eee')};
   border-radius: 50%;
   :after {
-    content: "";
+    content: '';
     position: absolute;
-    display: ${props => (props.checked ? "block" : "none")};
+    display: ${props => (props.checked ? 'block' : 'none')};
     top: 4px;
     left: 4px;
     width: 6px;

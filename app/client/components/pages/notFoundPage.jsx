@@ -1,9 +1,9 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import { NavLink } from "react-router-dom";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import { NavLink } from 'react-router-dom';
 
-import { ModuleBox } from "../styledElements";
+import { ModuleBox } from '../styledElements';
 
 export default class notFoundPage extends React.Component {
   render() {
@@ -11,19 +11,18 @@ export default class notFoundPage extends React.Component {
       <WrapperDiv>
         <ModuleBox
           style={{
-            width: "50%",
-            maxWidth: "350px",
-            padding: "40px",
-            textAlign: "center"
-          }}
-        >
+            width: '50%',
+            maxWidth: '350px',
+            padding: '40px',
+            textAlign: 'center',
+          }}>
           <div>
             <h1>404</h1>
             <p>Oh no, we can't find your page!</p>
           </div>
           <Footer className="link-container">
             <Text className="more-link">
-              Go back to{" "}
+              Go back to{' '}
               <StyledLink to="/" exact>
                 Home
               </StyledLink>

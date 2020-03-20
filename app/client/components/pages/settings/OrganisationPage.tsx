@@ -1,15 +1,15 @@
-import * as React from "react";
-import { connect } from "react-redux";
+import * as React from 'react';
+import { connect } from 'react-redux';
 
-import { Organisation } from "../../../reducers/organisation/types";
-import { editOrganisation } from "../../../reducers/organisation/actions";
-import SideBar from "../../navBar";
-import * as styles from "../../styledElements";
+import { Organisation } from '../../../reducers/organisation/types';
+import { editOrganisation } from '../../../reducers/organisation/actions';
+import SideBar from '../../navBar';
+import * as styles from '../../styledElements';
 import OrganisationSettingForm, {
-  IOrganisationSettings
-} from "../../organisation/OrganisationSettingsForm";
-import { generateQueryString, getToken, handleResponse } from "../../../utils";
-import LoadingSpinnger from "../../loadingSpinner";
+  IOrganisationSettings,
+} from '../../organisation/OrganisationSettingsForm';
+import { generateQueryString, getToken, handleResponse } from '../../../utils';
+import LoadingSpinnger from '../../loadingSpinner';
 
 interface DispatchProps {
   editOrganisation: (body: any, path: number) => void;
@@ -30,7 +30,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
   constructor(props: IProps) {
     super(props);
     this.state = {
-      isoCountries: null
+      isoCountries: null,
     };
   }
 
@@ -47,9 +47,9 @@ class OrganisationPage extends React.Component<IProps, IState> {
     //@ts-ignore
     return fetch(URL, {
       headers: {
-        Authorization: getToken()
+        Authorization: getToken(),
       },
-      method: "GET"
+      method: 'GET',
     })
       .then((response: any) => {
         return handleResponse(response);
@@ -64,7 +64,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
         }
         //@ts-ignore
         this.setState({
-          isoCountries: isoCountriesOptions
+          isoCountries: isoCountriesOptions,
         });
       })
       .catch((error: any) => {
@@ -78,11 +78,11 @@ class OrganisationPage extends React.Component<IProps, IState> {
       {
         country_code: form.countryCode,
         default_disbursement: form.defaultDisbursement * 100,
-        require_transfer_card: form.requireTransferCard
+        require_transfer_card: form.requireTransferCard,
         // default_lat: null,
         // default_lng: null
       },
-      orgId
+      orgId,
     );
   }
 
@@ -117,7 +117,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
 const mapStateToProps = (state: any) => {
   return {
     organisations: state.organisations,
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeOrganisation: state.organisations.byId[state.login.organisationId],
   };
 };
 
@@ -125,10 +125,7 @@ const mapDispatchToProps = (dispatch: any) => {
   return {
     editOrganisation: (body: any, path: number) => {
       dispatch(editOrganisation({ body, path }));
-    }
+    },
   };
 };
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(OrganisationPage);
+export default connect(mapStateToProps, mapDispatchToProps)(OrganisationPage);

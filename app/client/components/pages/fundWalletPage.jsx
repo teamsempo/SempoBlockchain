@@ -1,10 +1,10 @@
-import React from "react";
-import styled, { ThemeProvider } from "styled-components";
+import React from 'react';
+import styled, { ThemeProvider } from 'styled-components';
 
-import { PageWrapper, ModuleHeader, ModuleBox } from "../styledElements";
+import { PageWrapper, ModuleHeader, ModuleBox } from '../styledElements';
 
-import WalletFundingOptions from "../funding/walletFundingOptions.jsx";
-import WyreWalletBalance from "../funding/wyreWalletBalance.jsx";
+import WalletFundingOptions from '../funding/walletFundingOptions.jsx';
+import WyreWalletBalance from '../funding/wyreWalletBalance.jsx';
 
 export default class FundWalletPage extends React.Component {
   constructor(props) {
@@ -15,7 +15,7 @@ export default class FundWalletPage extends React.Component {
   render() {
     return (
       <WrapperDiv>
-        <PageWrapper style={{ display: "flex", flexDirection: "column" }}>
+        <PageWrapper style={{ display: 'flex', flexDirection: 'column' }}>
           <div>
             <WyreWalletBalance />
 

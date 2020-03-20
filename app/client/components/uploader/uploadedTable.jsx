@@ -1,27 +1,23 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import ReactTable from "react-table";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import ReactTable from 'react-table';
 
-import { StyledButton, Input, ErrorMessage } from "../styledElements";
+import { StyledButton, Input, ErrorMessage } from '../styledElements';
 
 import {
   saveDataset,
-  resetUploadState
-} from "../../reducers/spreadsheetReducer";
+  resetUploadState,
+} from '../../reducers/spreadsheetReducer';
 
-const mapStateToProps = state => {
-  return {
-    saveState: state.datasetSave
-  };
-};
+const mapStateToProps = state => ({
+  saveState: state.datasetSave,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    saveDataset: body => dispatch(saveDataset({ body })),
-    resetUploadState: () => dispatch(resetUploadState())
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  saveDataset: body => dispatch(saveDataset({ body })),
+  resetUploadState: () => dispatch(resetUploadState()),
+});
 
 class uploadedTable extends React.Component {
   constructor() {
@@ -34,29 +30,31 @@ class uploadedTable extends React.Component {
       headerPositions: {},
       customAttributeList: [],
       customAttribute: null,
-      country: "",
-      saveName: "",
-      saveError: null
+      country: '',
+      saveName: '',
+      saveError: null,
     };
     this.keyFunction = this.keyFunction.bind(this);
   }
 
   componentWillMount() {
     this.dataList = Object.keys(this.props.data.table_data).map(
-      id => this.props.data.table_data[id]
+      id => this.props.data.table_data[id],
     );
   }
+
   componentDidMount() {
-    document.addEventListener("keydown", this.keyFunction, false);
+    document.addEventListener('keydown', this.keyFunction, false);
 
     this.guessColumn(this.props.data.requested_attributes[0][0]);
 
     if (this.props.data.requested_attributes.length > 0) {
     }
   }
+
   componentWillUnmount() {
     this.props.resetUploadState();
-    document.removeEventListener("keydown", this.keyFunction, false);
+    document.removeEventListener('keydown', this.keyFunction, false);
   }
 
   keyFunction(event) {
@@ -74,46 +72,46 @@ class uploadedTable extends React.Component {
   }
 
   setHeader(headerName) {
-    var headerPositions = this.state.headerPositions;
+    const { headerPositions } = this.state;
 
     headerPositions[this.state.selectedColumn] = headerName;
     this.setState({
-      headerPositions: headerPositions
+      headerPositions,
     });
   }
 
   unsetHeader(headerName) {
-    var headerPositions = this.state.headerPositions;
+    const { headerPositions } = this.state;
 
     Object.keys(headerPositions).forEach(key => {
       if (headerPositions[key] === headerName) {
         delete headerPositions[key];
 
         this.setState({
-          selectedColumn: key
+          selectedColumn: key,
         });
       }
     });
 
     this.setState({
-      headerPositions: headerPositions
+      headerPositions,
     });
   }
 
   clearSelected() {
     this.setState({
       selectedRow: null,
-      selectedColumn: null
+      selectedColumn: null,
     });
   }
 
   processAndSaveDataset() {
-    var dataset = {
+    const dataset = {
       data: this.dataList.slice(this.state.firstDataRow),
       headerPositions: this.state.headerPositions,
       country: this.state.country,
       saveName: this.state.saveName,
-      isVendor: this.props.is_vendor
+      isVendor: this.props.is_vendor,
     };
 
     this.props.saveDataset(dataset);
@@ -121,8 +119,8 @@ class uploadedTable extends React.Component {
 
   onCustomAttributeKeyPress(e) {
     console.log(e);
-    var customAttribute = e.target.value;
-    this.setState({ customAttribute: customAttribute });
+    const customAttribute = e.target.value;
+    this.setState({ customAttribute });
     if (e.nativeEvent.keyCode != 13) return;
     this.handleAddClick();
   }
@@ -131,9 +129,9 @@ class uploadedTable extends React.Component {
     console.log(attribute);
     this.unsetHeader(attribute);
 
-    var newCustomAttributeList = this.state.customAttributeList;
+    const newCustomAttributeList = this.state.customAttributeList;
 
-    var index = newCustomAttributeList.indexOf(attribute);
+    const index = newCustomAttributeList.indexOf(attribute);
     if (index > -1) {
       newCustomAttributeList.splice(index, 1);
     }
@@ -144,12 +142,12 @@ class uploadedTable extends React.Component {
   handleAddClick() {
     this.setHeader(this.state.customAttribute);
 
-    var newcustomAttributeList = this.state.customAttributeList;
+    const newcustomAttributeList = this.state.customAttributeList;
     newcustomAttributeList.push(this.state.customAttribute);
 
     this.setState({
       customAttribute: null,
-      customAttributeList: newcustomAttributeList
+      customAttributeList: newcustomAttributeList,
     });
 
     this.clearSelected();
@@ -158,72 +156,72 @@ class uploadedTable extends React.Component {
   handleTableClick(e, column, rowInfo, instance) {
     console.log(this.currentStepNormalisedIndex());
 
-    let normalised_index = this.currentStepNormalisedIndex();
+    const normalised_index = this.currentStepNormalisedIndex();
     if (normalised_index < 0) {
       this.setState({
         selectedColumn:
-          this.state.selectedColumn === column.id ? null : column.id
+          this.state.selectedColumn === column.id ? null : column.id,
       });
     } else if (normalised_index === 0) {
       this.setState(
         {
           selectedColumn:
-            this.state.selectedColumn === column.id ? null : column.id
+            this.state.selectedColumn === column.id ? null : column.id,
         },
         () => {
-          let first_row_item = this.props.data.table_data[0][
+          const first_row_item = this.props.data.table_data[0][
             this.state.selectedColumn
           ];
           if (first_row_item) {
             this.setState({ customAttribute: first_row_item });
           }
-        }
+        },
       );
     } else if (normalised_index === 1) {
       this.setState({
         selectedRow:
-          this.state.selectedRow === rowInfo.index ? null : rowInfo.index
+          this.state.selectedRow === rowInfo.index ? null : rowInfo.index,
       });
     }
   }
 
   onCountryInputKeyPress(e) {
-    var country = e.target.value;
-    this.setState({ country: country, saveError: null });
+    const country = e.target.value;
+    this.setState({ country, saveError: null });
   }
 
   onSaveNameKeyPress(e) {
-    var saveName = e.target.value;
-    this.setState({ saveName: saveName, saveError: null });
+    const saveName = e.target.value;
+    this.setState({ saveName, saveError: null });
     if (e.nativeEvent.keyCode != 13) return;
     this.handleNextClick();
   }
 
   guessColumn(requested_attribute_name) {
-    let column_index_guess = this.props.data.column_firstrows[
+    const column_index_guess = this.props.data.column_firstrows[
       requested_attribute_name
     ];
 
-    console.log("guess", column_index_guess);
+    console.log('guess', column_index_guess);
 
     if (isFinite(column_index_guess)) {
       this.setState({
-        selectedColumn: column_index_guess
+        selectedColumn: column_index_guess,
       });
     }
   }
 
   handleStepIncrement(increment) {
-    var current_step_index = this.state.step;
-    var current_normalised_step_index =
+    const current_step_index = this.state.step;
+    const current_normalised_step_index =
       this.state.step - this.props.data.requested_attributes.length;
 
-    var new_step_index = current_step_index + increment;
-    var new_normalised_step_index = current_normalised_step_index + increment;
+    const new_step_index = current_step_index + increment;
+    const new_normalised_step_index = current_normalised_step_index + increment;
 
-    //First handle the current step:
+    // First handle the current step:
     if (current_normalised_step_index < 0) {
-      var requested_attribute = this.props.data.requested_attributes[
+      const requested_attribute = this.props.data.requested_attributes[
         current_step_index
       ];
       this.setHeader(requested_attribute[0]);
@@ -234,7 +232,7 @@ class uploadedTable extends React.Component {
         case 1:
           this.setState({
             selectedRow: null,
-            firstDataRow: this.state.selectedRow || 0
+            firstDataRow: this.state.selectedRow || 0,
           });
           break;
 
@@ -244,12 +242,12 @@ class uploadedTable extends React.Component {
       }
     }
 
-    //Now handle the next step:
+    // Now handle the next step:
 
     this.clearSelected();
 
     if (new_normalised_step_index < 0) {
-      let new_requested_attribute = this.props.data.requested_attributes[
+      const new_requested_attribute = this.props.data.requested_attributes[
         new_step_index
       ];
       this.unsetHeader(new_requested_attribute[0]);
@@ -272,8 +270,8 @@ class uploadedTable extends React.Component {
     this.setState({
       step: Math.min(
         this.state.step + increment,
-        this.props.data.requested_attributes.length + 2
-      )
+        this.props.data.requested_attributes.length + 2,
+      ),
     });
   }
 
@@ -286,17 +284,13 @@ class uploadedTable extends React.Component {
   }
 
   render() {
-    var columnList = Object.keys(this.dataList[0]).map(id => {
-      return {
-        Header:
-          id in this.state.headerPositions
-            ? this.state.headerPositions[id]
-            : "",
-        accessor: id.toString()
-      };
-    });
+    const columnList = Object.keys(this.dataList[0]).map(id => ({
+      Header:
+        id in this.state.headerPositions ? this.state.headerPositions[id] : '',
+      accessor: id.toString(),
+    }));
 
-    var data = this.dataList.slice(this.state.firstDataRow);
+    const data = this.dataList.slice(this.state.firstDataRow);
 
     if (this.currentStepNormalisedIndex() === 0) {
       var stepSpecificFields = (
@@ -312,35 +306,34 @@ class uploadedTable extends React.Component {
         />
       );
     } else {
-      stepSpecificFields = (
-        <StepSpecificFieldsContainer></StepSpecificFieldsContainer>
-      );
+      stepSpecificFields = <StepSpecificFieldsContainer />;
     }
 
     if (
       this.props.saveState.saved &&
       this.props.saveState.diagnostics.length > 0
     ) {
-      var added = 0;
-      var updated = 0;
-      var errors = 0;
+      let added = 0;
+      let updated = 0;
+      let errors = 0;
 
-      var diagnostic_list = this.props.saveState.diagnostics.map(
+      const diagnostic_list = this.props.saveState.diagnostics.map(
         (diagnostic, index) => {
           if (diagnostic[1] !== 200) {
             errors += 1;
             return (
-              <p style={{ size: "0.8em" }} key={index}>
+              <p style={{ size: '0.8em' }} key={index}>
                 {diagnostic[0]}
               </p>
             );
-          } else if (diagnostic[0] === "User Updated") {
+          }
+          if (diagnostic[0] === 'User Updated') {
             updated += 1;
           } else {
             added += 1;
             return null;
           }
-        }
+        },
       );
 
       var main_body = (
@@ -348,8 +341,8 @@ class uploadedTable extends React.Component {
           <PromptText>Save Complete</PromptText>
           <p>
             <b>
-              {" "}
-              Added: {added}, Updated: {updated}, Errors: {errors}{" "}
+              {' '}
+              Added: {added}, Updated: {updated}, Errors: {errors}{' '}
             </b>
           </p>
           {diagnostic_list}
@@ -361,49 +354,45 @@ class uploadedTable extends React.Component {
           data={data}
           columns={columnList}
           defaultPageSize={10}
-          style={{ margin: "1em" }}
+          style={{ margin: '1em' }}
           sortable={false}
-          getTheadThProps={(state, rowInfo, column, instance) => {
-            return {
-              onClick: e => this.handleTableClick(e, column, rowInfo, rowInfo),
-              style: {
-                height: "35px",
-                fontWeight: 600,
-                background: "#eee"
-              }
-            };
-          }}
-          getPaginationProps={() => {
-            return {
-              style: {
-                display: "None"
-              }
-            };
-          }}
+          getTheadThProps={(state, rowInfo, column, instance) => ({
+            onClick: e => this.handleTableClick(e, column, rowInfo, rowInfo),
+            style: {
+              height: '35px',
+              fontWeight: 600,
+              background: '#eee',
+            },
+          })}
+          getPaginationProps={() => ({
+            style: {
+              display: 'None',
+            },
+          })}
           getTdProps={(state, rowInfo, column, instance) => {
             if (rowInfo) {
               var background =
                 column.id == this.state.selectedColumn ||
                 rowInfo.index == this.state.selectedRow
-                  ? "#dff5f3"
-                  : "white";
+                  ? '#dff5f3'
+                  : 'white';
             } else {
               background =
-                column.id == this.state.selectedColumn ? "#dff5f3" : "white";
+                column.id == this.state.selectedColumn ? '#dff5f3' : 'white';
             }
 
-            var color =
+            const color =
               column.id in this.state.headerPositions ||
               this.state.firstDataRow == null
-                ? "#666"
-                : "#ccc";
+                ? '#666'
+                : '#ccc';
 
             return {
               onClick: e => this.handleTableClick(e, column, rowInfo, instance),
               style: {
-                background: background,
-                color: color
-              }
+                background,
+                color,
+              },
             };
           }}
         />
@@ -422,20 +411,18 @@ class uploadedTable extends React.Component {
 
         <div
           style={{
-            display: this.props.saveState.saved ? "none" : "flex",
-            justifyContent: "space-between"
-          }}
-        >
+            display: this.props.saveState.saved ? 'none' : 'flex',
+            justifyContent: 'space-between',
+          }}>
           <StyledButton
             onClick={() => this.handlePrevClick()}
             style={
               this.state.step === 0 ||
               this.props.saveState.isRequesting ||
               this.props.saveState.saved
-                ? { opacity: 0, pointerEvents: "None" }
+                ? { opacity: 0, pointerEvents: 'None' }
                 : {}
-            }
-          >
+            }>
             Prev
           </StyledButton>
 
@@ -443,11 +430,10 @@ class uploadedTable extends React.Component {
             onClick={() => this.handleNextClick()}
             style={
               this.props.saveState.isRequesting || this.props.saveState.saved
-                ? { opacity: 0, pointerEvents: "None" }
+                ? { opacity: 0, pointerEvents: 'None' }
                 : {}
-            }
-          >
-            {this.currentStepNormalisedIndex() === 2 ? "Save" : "Next"}
+            }>
+            {this.currentStepNormalisedIndex() === 2 ? 'Save' : 'Next'}
           </StyledButton>
         </div>
 
@@ -470,8 +456,7 @@ const SaveSheetFields = function(props) {
         <svg
           className="checkmark"
           xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 52 52"
-        >
+          viewBox="0 0 52 52">
           <circle
             className="checkmark__circle"
             cx="26"
@@ -485,12 +470,12 @@ const SaveSheetFields = function(props) {
             d="M14.1 27.2l7.1 7.2 16.7-16.8"
           />
         </svg>
-        <p style={{ fontSize: "2em" }}>Save success!</p>
+        <p style={{ fontSize: '2em' }}>Save success!</p>
       </StepSpecificFieldsContainer>
     );
   }
 
-  return <StepSpecificFieldsContainer></StepSpecificFieldsContainer>;
+  return <StepSpecificFieldsContainer />;
 };
 
 const CustomColumnFields = function(props) {
@@ -507,21 +492,20 @@ const CustomColumnFields = function(props) {
           onCustomAttributeKeyPress={e => props.onCustomAttributeKeyPress(e)}
         />
         <StyledButton onClick={() => props.handleAddClick()}>
-          {" "}
-          Add{" "}
+          {' '}
+          Add{' '}
         </StyledButton>
       </StepSpecificFieldsContainer>
     );
-  } else {
-    return (
-      <StepSpecificFieldsContainer>
-        <CustomList
-          customAttributes={props.customAttributes}
-          handleClick={item => props.handleCustomAttributeClick(item)}
-        />
-      </StepSpecificFieldsContainer>
-    );
   }
+  return (
+    <StepSpecificFieldsContainer>
+      <CustomList
+        customAttributes={props.customAttributes}
+        handleClick={item => props.handleCustomAttributeClick(item)}
+      />
+    </StepSpecificFieldsContainer>
+  );
 };
 
 class CustomInput extends React.Component {
@@ -529,6 +513,7 @@ class CustomInput extends React.Component {
     console.log(this.nameInput);
     this.nameInput.focus();
   }
+
   render() {
     return (
       <Input
@@ -559,32 +544,33 @@ const CustomList = function(props) {
 };
 
 const Prompt = function(props) {
-  let beneficiaryTermPlural = window.BENEFICIARY_TERM_PLURAL;
+  const beneficiaryTermPlural = window.BENEFICIARY_TERM_PLURAL;
 
-  var account_type = props.is_vendor ? "vendors" : `${beneficiaryTermPlural}`;
+  const account_type = props.is_vendor ? 'vendors' : `${beneficiaryTermPlural}`;
 
   if (props.step < props.requested_attributes.length) {
-    var requested_key_display_name = props.requested_attributes[props.step][1];
+    const requested_key_display_name =
+      props.requested_attributes[props.step][1];
     var text = `Which column contains the ${requested_key_display_name} of ${account_type}?`;
   } else {
-    var later_step_index = props.step - props.requested_attributes.length;
+    const later_step_index = props.step - props.requested_attributes.length;
 
     switch (later_step_index) {
       case 0:
-        text = "Would you like to add any other custom columns?";
+        text = 'Would you like to add any other custom columns?';
         break;
       case 1:
-        text = "Which row is the first that contains data?";
+        text = 'Which row is the first that contains data?';
         break;
       default:
-        text = "Review and save your upload.";
+        text = 'Review and save your upload.';
         break;
     }
   }
 
   return (
-    <PromptText style={{ display: props.saveState ? "none" : "block" }}>
-      <div style={{ fontWeight: 700, display: "inline", marginRight: "0.5em" }}>
+    <PromptText style={{ display: props.saveState ? 'none' : 'block' }}>
+      <div style={{ fontWeight: 700, display: 'inline', marginRight: '0.5em' }}>
         Step {props.step + 1} of {props.requested_attributes.length + 3} :
       </div>
       {text}

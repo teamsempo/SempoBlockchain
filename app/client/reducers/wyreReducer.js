@@ -1,27 +1,27 @@
-import { DEEEEEEP } from "../utils";
-import { combineReducers } from "redux";
+import { combineReducers } from 'redux';
+import { DEEEEEEP } from '../utils';
 
-export const UPDATE_WYRE_STATE = "UPDATE_WYRE_STATE";
+export const UPDATE_WYRE_STATE = 'UPDATE_WYRE_STATE';
 
 export const LOAD_WYRE_EXCHANGE_RATES_REQUEST =
-  "LOAD_WYRE_EXCHANGE_RATES_REQUEST";
+  'LOAD_WYRE_EXCHANGE_RATES_REQUEST';
 export const LOAD_WYRE_EXCHANGE_RATES_SUCCESS =
-  "LOAD_WYRE_EXCHANGE_RATES_SUCCESS";
+  'LOAD_WYRE_EXCHANGE_RATES_SUCCESS';
 export const LOAD_WYRE_EXCHANGE_RATES_FAILURE =
-  "LOAD_WYRE_EXCHANGE_RATES_FAILURE";
+  'LOAD_WYRE_EXCHANGE_RATES_FAILURE';
 
-export const LOAD_WYRE_ACCOUNT_REQUEST = "LOAD_WYRE_ACCOUNT_REQUEST";
-export const LOAD_WYRE_ACCOUNT_SUCCESS = "LOAD_WYRE_ACCOUNT_SUCCESS";
-export const LOAD_WYRE_ACCOUNT_FAILURE = "LOAD_WYRE_ACCOUNT_FAILURE";
+export const LOAD_WYRE_ACCOUNT_REQUEST = 'LOAD_WYRE_ACCOUNT_REQUEST';
+export const LOAD_WYRE_ACCOUNT_SUCCESS = 'LOAD_WYRE_ACCOUNT_SUCCESS';
+export const LOAD_WYRE_ACCOUNT_FAILURE = 'LOAD_WYRE_ACCOUNT_FAILURE';
 
-export const CREATE_WYRE_TRANSFER_REQUEST = "CREATE_WYRE_TRANSFER_REQUEST";
-export const CREATE_WYRE_TRANSFER_SUCCESS = "CREATE_WYRE_TRANSFER_SUCCESS";
-export const CREATE_WYRE_TRANSFER_FAILURE = "CREATE_WYRE_TRANSFER_FAILURE";
+export const CREATE_WYRE_TRANSFER_REQUEST = 'CREATE_WYRE_TRANSFER_REQUEST';
+export const CREATE_WYRE_TRANSFER_SUCCESS = 'CREATE_WYRE_TRANSFER_SUCCESS';
+export const CREATE_WYRE_TRANSFER_FAILURE = 'CREATE_WYRE_TRANSFER_FAILURE';
 
 const initalWyreState = {
   wyre_rates: null,
   wyre_account: null,
-  wyre_transfer: null
+  wyre_transfer: null,
 };
 
 const wyreState = (state = initalWyreState, action) => {
@@ -36,12 +36,12 @@ const wyreState = (state = initalWyreState, action) => {
 const initialLoadWyreExchangeStatus = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
 };
 
 const loadWyreExchangeStatus = (
   state = initialLoadWyreExchangeStatus,
-  action
+  action,
 ) => {
   switch (action.type) {
     case LOAD_WYRE_EXCHANGE_RATES_REQUEST:
@@ -58,16 +58,21 @@ const loadWyreExchangeStatus = (
 export const initialLoadWyreAccountStatus = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
 };
 
 export const loadWyreAccountStatus = (
   state = initialLoadWyreAccountStatus,
-  action
+  action,
 ) => {
   switch (action.type) {
     case LOAD_WYRE_ACCOUNT_REQUEST:
-      return { ...state, isRequesting: true, error: null, success: false };
+      return {
+        ...state,
+        isRequesting: true,
+        error: null,
+        success: false,
+      };
     case LOAD_WYRE_ACCOUNT_SUCCESS:
       return { ...state, isRequesting: false, success: true };
     case LOAD_WYRE_ACCOUNT_FAILURE:
@@ -80,16 +85,21 @@ export const loadWyreAccountStatus = (
 export const initialCreateWyreTransferStatus = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
 };
 
 export const createWyreTransferStatus = (
   state = initialCreateWyreTransferStatus,
-  action
+  action,
 ) => {
   switch (action.type) {
     case CREATE_WYRE_TRANSFER_REQUEST:
-      return { ...state, isRequesting: true, error: null, success: false };
+      return {
+        ...state,
+        isRequesting: true,
+        error: null,
+        success: false,
+      };
     case CREATE_WYRE_TRANSFER_SUCCESS:
       return { ...state, isRequesting: false, success: true };
     case CREATE_WYRE_TRANSFER_FAILURE:
@@ -103,21 +113,21 @@ export const wyre = combineReducers({
   wyreState,
   loadWyreExchangeStatus,
   loadWyreAccountStatus,
-  createWyreTransferStatus
+  createWyreTransferStatus,
 });
 
 // Actions
 export const loadExchangeRates = payload => ({
   type: LOAD_WYRE_EXCHANGE_RATES_REQUEST,
-  payload
+  payload,
 });
 
 export const loadWyreAccountBalance = payload => ({
   type: LOAD_WYRE_ACCOUNT_REQUEST,
-  payload
+  payload,
 });
 
 export const createWyreTransfer = payload => ({
   type: CREATE_WYRE_TRANSFER_REQUEST,
-  payload
+  payload,
 });

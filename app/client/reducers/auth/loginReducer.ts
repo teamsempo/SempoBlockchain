@@ -6,8 +6,8 @@ import {
   LoginAction,
   LOGOUT,
   REAUTH_REQUEST,
-  UPDATE_ACTIVE_ORG
-} from "./types";
+  UPDATE_ACTIVE_ORG,
+} from './types';
 
 interface LoginState {
   isLoggingIn: boolean;
@@ -42,7 +42,7 @@ const initialLoginState: LoginState = {
   usdToSatoshiRate: null,
   error: null,
   tfaURL: null,
-  tfaFailure: false
+  tfaFailure: false,
 };
 
 export const login = (state = initialLoginState, action: LoginAction) => {
@@ -53,7 +53,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
     case UPDATE_ACTIVE_ORG:
       return {
         ...state,
-        organisationId: action.payload.organisationId
+        organisationId: action.payload.organisationId,
       };
     case LOGIN_SUCCESS:
       return {
@@ -70,7 +70,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         adminTier: action.adminTier,
         usdToSatoshiRate: action.usdToSatoshiRate,
         tfaURL: null,
-        tfaFailure: false
+        tfaFailure: false,
       };
     case LOGIN_PARTIAL:
       return {
@@ -84,7 +84,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         requireTransferCardExists: null,
         tfaURL: action.tfaURL,
         tfaFailure: action.tfaFailure,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
     case LOGIN_FAILURE:
       return {
@@ -92,7 +92,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         isLoggingIn: false,
         token: null,
         userId: null,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
     case LOGOUT:
       return initialLoginState;

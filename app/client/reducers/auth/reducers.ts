@@ -1,5 +1,5 @@
-import { combineReducers } from "redux";
-import { DEEEEEEP } from "../../utils";
+import { combineReducers } from 'redux';
+import { DEEEEEEP } from '../../utils';
 
 import {
   ACTIVATE_FAILURE,
@@ -45,8 +45,8 @@ import {
   VALIDATE_TFA_FAILURE,
   VALIDATE_TFA_REQUEST,
   VALIDATE_TFA_SUCCESS,
-  ValidateTfaAction
-} from "./types";
+  ValidateTfaAction,
+} from './types';
 
 interface RequestingState {
   isRequesting: boolean;
@@ -57,7 +57,7 @@ interface RequestingState {
 const initialState: RequestingState = {
   isRequesting: false,
   success: false,
-  error: null
+  error: null,
 };
 
 export const register = (state = initialState, action: RegisterAction) => {
@@ -71,7 +71,7 @@ export const register = (state = initialState, action: RegisterAction) => {
         ...state,
         isRequesting: false,
         registerSuccess: false,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
     case REGISTER_INACTIVE:
       return initialState;
@@ -91,7 +91,7 @@ export const activate = (state = initialState, action: ActivateAction) => {
         ...state,
         isRequesting: false,
         activateSuccess: false,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
     default:
       return state;
@@ -100,7 +100,7 @@ export const activate = (state = initialState, action: ActivateAction) => {
 
 export const requestResetEmailState = (
   state = initialState,
-  action: ResetEmailAction
+  action: ResetEmailAction,
 ) => {
   switch (action.type) {
     case REQUEST_RESET_REQUEST:
@@ -112,7 +112,7 @@ export const requestResetEmailState = (
         ...state,
         isRequesting: false,
         success: false,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
     default:
       return state;
@@ -121,7 +121,7 @@ export const requestResetEmailState = (
 
 export const resetPasswordState = (
   state = initialState,
-  action: ResetPasswordAction
+  action: ResetPasswordAction,
 ) => {
   switch (action.type) {
     case RESET_PASSWORD_REQUEST:
@@ -133,7 +133,7 @@ export const resetPasswordState = (
         ...state,
         isRequesting: false,
         success: false,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
     default:
       return state;
@@ -142,7 +142,7 @@ export const resetPasswordState = (
 
 const adminsById = (
   state: AdminUser[] = [] || {},
-  action: AdminUserListAction
+  action: AdminUserListAction,
 ): AdminUser[] => {
   switch (action.type) {
     case UPDATE_ADMIN_USER_LIST:
@@ -154,7 +154,7 @@ const adminsById = (
 
 const invitesById = (
   state: Invite[] = [] || {},
-  action: InviteUserListAction
+  action: InviteUserListAction,
 ): Invite[] => {
   switch (action.type) {
     case DEEP_UPDATE_INVITE_USER_LIST:
@@ -175,12 +175,12 @@ interface UserListState {
 const initialLoadStatusState: UserListState = {
   isRequesting: false,
   success: false,
-  error: null
+  error: null,
 };
 
 export const loadStatus = (
   state = initialLoadStatusState,
-  action: UserListAction
+  action: UserListAction,
 ) => {
   switch (action.type) {
     case LOAD_ADMIN_USER_REQUEST:
@@ -192,7 +192,7 @@ export const loadStatus = (
         ...state,
         isRequesting: false,
         success: false,
-        error: action.error
+        error: action.error,
       };
     default:
       return state;
@@ -214,7 +214,7 @@ export const editStatus = (state = initialState, action: UpdateUserAction) => {
 
 export const createStatus = (
   state = initialState,
-  action: InviteUserAction
+  action: InviteUserAction,
 ) => {
   switch (action.type) {
     case INVITE_USER_REQUEST:
@@ -230,7 +230,7 @@ export const createStatus = (
 
 export const deleteStatus = (
   state = initialState,
-  action: DeleteInviteAction
+  action: DeleteInviteAction,
 ) => {
   switch (action.type) {
     case DELETE_INVITE_REQUEST:
@@ -250,12 +250,12 @@ export const adminUsers = combineReducers({
   loadStatus,
   editStatus,
   createStatus,
-  deleteStatus
+  deleteStatus,
 });
 
 export const validateTFA = (
   state = initialState,
-  action: ValidateTfaAction
+  action: ValidateTfaAction,
 ) => {
   switch (action.type) {
     case VALIDATE_TFA_REQUEST:
@@ -266,7 +266,7 @@ export const validateTFA = (
       return {
         ...state,
         isRequesting: false,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
     default:
       return state;

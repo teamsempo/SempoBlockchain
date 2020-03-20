@@ -1,26 +1,25 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled, { ThemeProvider } from 'styled-components';
 
-import { Row, Input, StyledSelect } from "../styledElements";
+import { Row, Input, StyledSelect } from '../styledElements';
 
-import { CountryDropdown, RegionDropdown } from "react-country-region-selector";
+import { CountryDropdown, RegionDropdown } from 'react-country-region-selector';
 import {
   editBusinessProfile,
   createBusinessProfile,
-  UPDATE_ACTIVE_STEP
-} from "../../reducers/businessVerificationReducer";
-import AsyncButton from "../AsyncButton.jsx";
-import { DefaultTheme } from "../theme.js";
+  UPDATE_ACTIVE_STEP,
+} from '../../reducers/businessVerificationReducer';
+import AsyncButton from '../AsyncButton.jsx';
+import { DefaultTheme } from '../theme.js';
 
 const ErrorMessage = function(props) {
-  var error = props.input + "_val";
-  var error_message = props.input + "_val_msg";
+  var error = props.input + '_val';
+  var error_message = props.input + '_val_msg';
 
   return (
     <div
-      style={{ display: props.state[error] ? "none" : "flex", color: "red" }}
-    >
+      style={{ display: props.state[error] ? 'none' : 'flex', color: 'red' }}>
       {props.state[error_message]}
     </div>
   );
@@ -30,7 +29,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     userId: ownProps.userId,
     editStatus: state.businessVerification.editStatus,
-    businessProfile: state.businessVerification.businessVerificationState
+    businessProfile: state.businessVerification.businessVerificationState,
   };
 };
 
@@ -39,7 +38,7 @@ const mapDispatchToProps = dispatch => {
     editBusinessProfile: (body, path) =>
       dispatch(editBusinessProfile({ body, path })),
     createBusinessProfile: body => dispatch(createBusinessProfile({ body })),
-    nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 1 })
+    nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 1 }),
   };
 };
 
@@ -47,22 +46,22 @@ class BusinessDetails extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      account_type: "BUSINESS",
-      first_name: "",
-      last_name: "",
-      phone: "",
-      business_legal_name: "",
-      business_type: "select",
-      tax_id: "",
-      website: "",
-      date_established: "",
-      country: "",
-      street_address: "",
-      street_address_2: "",
-      city: "",
-      region: "",
-      postal_code: "",
-      beneficial_owners: [{ full_name: "" }]
+      account_type: 'BUSINESS',
+      first_name: '',
+      last_name: '',
+      phone: '',
+      business_legal_name: '',
+      business_type: 'select',
+      tax_id: '',
+      website: '',
+      date_established: '',
+      country: '',
+      street_address: '',
+      street_address_2: '',
+      city: '',
+      region: '',
+      postal_code: '',
+      beneficial_owners: [{ full_name: '' }],
     };
     this._validateOnDemand = false; // this flag enables onBlur validation as user fills forms
 
@@ -79,11 +78,11 @@ class BusinessDetails extends React.Component {
     let { businessProfile } = this.props;
 
     // set initial form state
-    if (businessProfile !== null && typeof businessProfile !== "undefined") {
+    if (businessProfile !== null && typeof businessProfile !== 'undefined') {
       Object.keys(this.state).map(key => {
         if (
           businessProfile[key] !== null &&
-          typeof businessProfile[key] !== "undefined"
+          typeof businessProfile[key] !== 'undefined'
         ) {
           this.setState({ [key]: businessProfile[key] });
         }
@@ -93,11 +92,11 @@ class BusinessDetails extends React.Component {
 
   handleInputChange(event) {
     const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
     this.setState({
-      [name]: value
+      [name]: value,
     });
   }
 
@@ -111,7 +110,7 @@ class BusinessDetails extends React.Component {
 
   addOwner = e => {
     this.setState(prevState => ({
-      beneficial_owners: [...prevState.beneficial_owners, { full_name: "" }]
+      beneficial_owners: [...prevState.beneficial_owners, { full_name: '' }],
     }));
   };
 
@@ -126,7 +125,7 @@ class BusinessDetails extends React.Component {
     const validateNewInput = this._validateData(userInput); // run the new input against the validator
     const createBusinessProfile = {
       ...userInput,
-      ...{ user_id: this.props.userId }
+      ...{ user_id: this.props.userId },
     };
 
     if (
@@ -142,7 +141,7 @@ class BusinessDetails extends React.Component {
         this.props.nextStep();
         this.props.editBusinessProfile(
           userInput,
-          this.props.businessProfile.id
+          this.props.businessProfile.id,
         );
       } else {
         // creating a new business profile in db
@@ -155,8 +154,8 @@ class BusinessDetails extends React.Component {
         Object.assign(
           userInput,
           validateNewInput,
-          this._validationErrors(validateNewInput)
-        )
+          this._validationErrors(validateNewInput),
+        ),
       );
     }
   }
@@ -176,7 +175,7 @@ class BusinessDetails extends React.Component {
       city,
       region,
       postal_code,
-      beneficial_owners
+      beneficial_owners,
     } = this.state;
     return {
       account_type: account_type,
@@ -192,7 +191,7 @@ class BusinessDetails extends React.Component {
       city: city,
       region: region,
       postal_code: postal_code,
-      beneficial_owners: beneficial_owners
+      beneficial_owners: beneficial_owners,
     };
   }
 
@@ -209,30 +208,30 @@ class BusinessDetails extends React.Component {
       Object.assign(
         userInput,
         validateNewInput,
-        this._validationErrors(validateNewInput)
-      )
+        this._validationErrors(validateNewInput),
+      ),
     );
   }
 
   _validateData(data) {
     let businessValidation;
-    if (this.state.account_type === "BUSINESS") {
+    if (this.state.account_type === 'BUSINESS') {
       businessValidation = {
         phone_val: /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(
-          data.phone
+          data.phone,
         ), // phone
         business_legal_name_val: /.*\S.*/.test(data.business_legal_name), // is not empty
-        business_type_val: data.business_type !== "select", // not default
+        business_type_val: data.business_type !== 'select', // not default
         tax_id_val: /.*\S.*/.test(data.tax_id), // not empty
         website_val: /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/g.test(
-          data.website
+          data.website,
         ), // domain name
         date_established_val: /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/i.test(
-          data.date_established
+          data.date_established,
         ), // dd/mm/yyyy
         beneficial_owners_val:
-          data.beneficial_owners.filter(owner => owner.full_name !== "")
-            .length > 0
+          data.beneficial_owners.filter(owner => owner.full_name !== '')
+            .length > 0,
       };
     }
 
@@ -244,48 +243,48 @@ class BusinessDetails extends React.Component {
       // street_address_2: no validation
       city_val: /.*\S.*/.test(data.city), // not empty
       region_val: /.*\S.*/.test(data.region), // not empty
-      postal_code_val: /^[0-9]*\S.*$/.test(data.postal_code) // numbers only and not empty
+      postal_code_val: /^[0-9]*\S.*$/.test(data.postal_code), // numbers only and not empty
     };
   }
 
   _validationErrors(val) {
     const errMsgs = {
       // account_type_val_msg: val.account_type ? '' : 'Account type must be selected',
-      phone_val_msg: val.phone ? "" : "Please provide a valid phone number",
+      phone_val_msg: val.phone ? '' : 'Please provide a valid phone number',
       business_legal_name_val_msg: val.business_legal_name
-        ? ""
-        : "Please provide a business name",
+        ? ''
+        : 'Please provide a business name',
       business_type_val_msg: val.business_type
-        ? ""
-        : "Please select a business type",
-      tax_id_val_msg: val.tax_id ? "" : "Please provide your tax ID",
-      website_val_msg: val.website ? "" : "Please provide a valid website",
+        ? ''
+        : 'Please select a business type',
+      tax_id_val_msg: val.tax_id ? '' : 'Please provide your tax ID',
+      website_val_msg: val.website ? '' : 'Please provide a valid website',
       date_established_val_msg: val.date_established
-        ? ""
-        : "Please provide establishment date as dd/mm/yyyy",
-      country_val_msg: val.country ? "" : "Please select a country",
+        ? ''
+        : 'Please provide establishment date as dd/mm/yyyy',
+      country_val_msg: val.country ? '' : 'Please select a country',
       street_address_val_msg: val.street_address
-        ? ""
-        : "Please provide your street address",
-      city_val_msg: val.city ? "" : "Please provide a city",
-      region_val_msg: val.region ? "" : "Please select a region",
+        ? ''
+        : 'Please provide your street address',
+      city_val_msg: val.city ? '' : 'Please provide a city',
+      region_val_msg: val.region ? '' : 'Please select a region',
       postal_code_val_msg: val.postal_code
-        ? ""
-        : "Please provide a postal code",
+        ? ''
+        : 'Please provide a postal code',
       beneficial_owners_val_msg: val.beneficial_owners
-        ? ""
-        : "Please add at least one beneficial owner"
+        ? ''
+        : 'Please add at least one beneficial owner',
     };
     return errMsgs;
   }
 
   render() {
     const { userId } = this.props;
-    let indvidualAccount = this.state.account_type === "INDIVIDUAL";
+    let indvidualAccount = this.state.account_type === 'INDIVIDUAL';
 
     return (
       <div>
-        {userId === null || typeof userId === "undefined" ? null : (
+        {userId === null || typeof userId === 'undefined' ? null : (
           <Row>
             <InputObject>
               <InputLabel>Account Type</InputLabel>
@@ -293,8 +292,7 @@ class BusinessDetails extends React.Component {
                 name="account_type"
                 value={this.state.account_type}
                 onBlur={this.validationCheck}
-                onChange={this.handleInputChange}
-              >
+                onChange={this.handleInputChange}>
                 <option name="INDIVIDUAL" value="INDIVIDUAL">
                   INDIVIDUAL
                 </option>
@@ -302,7 +300,7 @@ class BusinessDetails extends React.Component {
                   BUSINESS
                 </option>
               </StyledSelectKey>
-              <ErrorMessage state={this.state} input={"account_type"} />
+              <ErrorMessage state={this.state} input={'account_type'} />
             </InputObject>
           </Row>
         )}
@@ -320,7 +318,7 @@ class BusinessDetails extends React.Component {
                   onBlur={this.validationCheck}
                   onChange={this.handleInputChange}
                 />
-                <ErrorMessage state={this.state} input={"phone"} />
+                <ErrorMessage state={this.state} input={'phone'} />
               </InputObject>
             </Row>
 
@@ -337,7 +335,7 @@ class BusinessDetails extends React.Component {
                 />
                 <ErrorMessage
                   state={this.state}
-                  input={"business_legal_name"}
+                  input={'business_legal_name'}
                 />
               </InputObject>
             </Row>
@@ -349,8 +347,7 @@ class BusinessDetails extends React.Component {
                   name="business_type"
                   value={this.state.business_type}
                   onBlur={this.validationCheck}
-                  onChange={this.handleInputChange}
-                >
+                  onChange={this.handleInputChange}>
                   <option name="select" value="select" disabled>
                     select attribute
                   </option>
@@ -379,7 +376,7 @@ class BusinessDetails extends React.Component {
                     Other
                   </option>
                 </StyledSelectKey>
-                <ErrorMessage state={this.state} input={"business_type"} />
+                <ErrorMessage state={this.state} input={'business_type'} />
               </InputObject>
             </Row>
 
@@ -394,7 +391,7 @@ class BusinessDetails extends React.Component {
                   onBlur={this.validationCheck}
                   onChange={this.handleInputChange}
                 />
-                <ErrorMessage state={this.state} input={"tax_id"} />
+                <ErrorMessage state={this.state} input={'tax_id'} />
               </InputObject>
             </Row>
 
@@ -409,7 +406,7 @@ class BusinessDetails extends React.Component {
                   onBlur={this.validationCheck}
                   onChange={this.handleInputChange}
                 />
-                <ErrorMessage state={this.state} input={"website"} />
+                <ErrorMessage state={this.state} input={'website'} />
               </InputObject>
             </Row>
 
@@ -424,7 +421,7 @@ class BusinessDetails extends React.Component {
                   onBlur={this.validationCheck}
                   onChange={this.handleInputChange}
                 />
-                <ErrorMessage state={this.state} input={"date_established"} />
+                <ErrorMessage state={this.state} input={'date_established'} />
               </InputObject>
             </Row>
           </div>
@@ -440,7 +437,7 @@ class BusinessDetails extends React.Component {
               onBlur={this.validationCheck}
               onChange={val => this.selectCountry(val)}
             />
-            <ErrorMessage state={this.state} input={"country"} />
+            <ErrorMessage state={this.state} input={'country'} />
           </InputObject>
         </Row>
 
@@ -455,7 +452,7 @@ class BusinessDetails extends React.Component {
               onBlur={this.validationCheck}
               onChange={this.handleInputChange}
             />
-            <ErrorMessage state={this.state} input={"street_address"} />
+            <ErrorMessage state={this.state} input={'street_address'} />
           </InputObject>
         </Row>
 
@@ -470,7 +467,7 @@ class BusinessDetails extends React.Component {
               onBlur={this.validationCheck}
               onChange={this.handleInputChange}
             />
-            <ErrorMessage state={this.state} input={"street_address_2"} />
+            <ErrorMessage state={this.state} input={'street_address_2'} />
           </InputObject>
         </Row>
 
@@ -485,7 +482,7 @@ class BusinessDetails extends React.Component {
               onBlur={this.validationCheck}
               onChange={this.handleInputChange}
             />
-            <ErrorMessage state={this.state} input={"city"} />
+            <ErrorMessage state={this.state} input={'city'} />
           </InputObject>
         </Row>
 
@@ -500,7 +497,7 @@ class BusinessDetails extends React.Component {
               onBlur={this.validationCheck}
               onChange={this.selectRegion}
             />
-            <ErrorMessage state={this.state} input={"region"} />
+            <ErrorMessage state={this.state} input={'region'} />
           </InputObject>
         </Row>
 
@@ -515,7 +512,7 @@ class BusinessDetails extends React.Component {
               onBlur={this.validationCheck}
               onChange={this.handleInputChange}
             />
-            <ErrorMessage state={this.state} input={"postal_code"} />
+            <ErrorMessage state={this.state} input={'postal_code'} />
           </InputObject>
         </Row>
 
@@ -531,7 +528,7 @@ class BusinessDetails extends React.Component {
                 return (
                   <div key={index}>
                     <ManagerInput
-                      style={{ margin: "0.5em 0" }}
+                      style={{ margin: '0.5em 0' }}
                       name={ownerId}
                       data-id={index}
                       placeholder="John Smith"
@@ -542,7 +539,7 @@ class BusinessDetails extends React.Component {
                   </div>
                 );
               })}
-              <ErrorMessage state={this.state} input={"beneficial_owners"} />
+              <ErrorMessage state={this.state} input={'beneficial_owners'} />
               <TheRealInputButton onClick={this.addOwner}>
                 Add new owner
               </TheRealInputButton>
@@ -552,10 +549,10 @@ class BusinessDetails extends React.Component {
 
         <ThemeProvider theme={DefaultTheme}>
           <AsyncButton
-            buttonText={"Next"}
+            buttonText={'Next'}
             onClick={this.isValidated}
             isLoading={this.props.editStatus.isRequesting}
-            buttonStyle={{ display: "flex" }}
+            buttonStyle={{ display: 'flex' }}
           />
         </ThemeProvider>
       </div>

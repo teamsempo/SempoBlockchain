@@ -1,13 +1,13 @@
-import * as React from "react";
-import {Field} from "redux-form";
+import * as React from 'react';
+import { Field } from 'redux-form';
 
-import FormValidation from "./FormValidation";
-import {AdaptedInput} from "./WrappedInput";
+import FormValidation from './FormValidation';
+import { AdaptedInput } from './WrappedInput';
 
 //should move checkbox into its own kind? would have diff styling
 interface InputFieldJson {
   name: string;
-  type?: "text" | "checkbox" | "email" | "password";
+  type?: 'text' | 'checkbox' | 'email' | 'password';
   label?: string;
   placeholder?: string;
   isRequired?: boolean;
@@ -27,7 +27,7 @@ export default function InputField(props: InputFieldJson) {
     isNumber,
     placeholder,
     type,
-    children
+    children,
   } = props;
 
   let validate = [];
@@ -48,7 +48,7 @@ export default function InputField(props: InputFieldJson) {
     <Field
       name={name}
       component={AdaptedInput}
-      type={type || "text"}
+      type={type || 'text'}
       placeholder={placeholder}
       validate={validate}
       isRequired={isRequired}

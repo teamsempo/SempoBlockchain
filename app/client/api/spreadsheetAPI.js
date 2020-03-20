@@ -1,15 +1,15 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from './apiClient';
 
 export const uploadSpreadsheetAPI = ({ body }) =>
   apiClient({
-    url: "/spreadsheet/upload/",
-    method: "POST",
+    url: '/spreadsheet/upload/',
+    method: 'POST',
     isForm: true,
-    body: body
+    body,
   });
 
 export const saveDatasetAPI = ({ body }) =>
-  apiClient({ url: "/dataset/", method: "POST", body: body });
+  apiClient({ url: '/dataset/', method: 'POST', body });
 
 export const loadDatasetListAPI = () =>
-  apiClient({ url: "/dataset/", method: "GET" });
+  apiClient({ url: '/dataset/', method: 'GET' });

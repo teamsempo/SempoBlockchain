@@ -1,10 +1,10 @@
-import React from "react";
+import React from 'react';
 
-import { WrapperDiv } from "../styledElements";
+import { WrapperDiv, PageWrapper, ModuleBox } from '../styledElements';
 
-import SideBar from "../navBar.jsx";
-import { PageWrapper, ModuleBox } from "../styledElements.js";
-import CreateUserUpdated from "../user/CreateUser.tsx";
+import SideBar from '../navBar.jsx';
+
+import CreateUserUpdated from '../user/CreateUser.tsx';
 
 export default class createUserPage extends React.Component {
   render() {

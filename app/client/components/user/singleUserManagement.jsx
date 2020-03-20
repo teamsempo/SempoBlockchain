@@ -1,49 +1,45 @@
-import React from "react";
-import styled from "styled-components";
-import { connect } from "react-redux";
-import { Link } from "react-router-dom";
+import React from 'react';
+import styled from 'styled-components';
+import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
 
-import { replaceUnderscores } from "../../utils";
+import { replaceUnderscores } from '../../utils';
 
-import { ModuleBox, ModuleHeader, StyledSelect } from "../styledElements";
-import AsyncButton from "./../AsyncButton.jsx";
-import ProfilePicture from "../profilePicture.jsx";
-import GetVerified from "../GetVerified.jsx";
+import { ModuleBox, ModuleHeader, StyledSelect } from '../styledElements';
+import AsyncButton from '../AsyncButton.jsx';
+import ProfilePicture from '../profilePicture.jsx';
+import GetVerified from '../GetVerified.jsx';
 
-import { editUser, resetPin } from "../../reducers/userReducer";
-import QrReadingModal from "../qrReadingModal.jsx";
+import { editUser, resetPin } from '../../reducers/userReducer';
+import QrReadingModal from '../qrReadingModal.jsx';
 
-import { TransferAccountTypes } from "../transferAccount/types";
+import { TransferAccountTypes } from '../transferAccount/types';
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    users: state.users,
-    user: state.users.byId[parseInt(ownProps.userId)],
-    transferUsages: state.transferUsages.transferUsages
-  };
-};
+const mapStateToProps = (state, ownProps) => ({
+  users: state.users,
+  user: state.users.byId[parseInt(ownProps.userId)],
+  transferUsages: state.transferUsages.transferUsages,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    editUser: (body, path) => dispatch(editUser({ body, path })),
-    resetPin: body => dispatch(resetPin({ body }))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  editUser: (body, path) => dispatch(editUser({ body, path })),
+  resetPin: body => dispatch(resetPin({ body })),
+});
 
 class SingleUserManagement extends React.Component {
   constructor() {
     super();
     this.state = {
-      first_name: "",
-      last_name: "",
-      nfc_serial_number: "",
-      public_serial_number: "",
-      phone: "",
-      location: "",
-      account_type: "",
-      referred_by: "",
+      first_name: '',
+      last_name: '',
+      nfc_serial_number: '',
+      public_serial_number: '',
+      phone: '',
+      location: '',
+      account_type: '',
+      referred_by: '',
       custom_attr_keys: [],
-      businessUsageName: null
+      businessUsageName: null,
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -75,8 +71,8 @@ class SingleUserManagement extends React.Component {
         }
       });
 
-      let transferUsage = this.props.transferUsages.filter(
-        t => t.id === user.business_usage_id
+      const transferUsage = this.props.transferUsages.filter(
+        t => t.id === user.business_usage_id,
       )[0];
 
       this.setState({
@@ -86,10 +82,10 @@ class SingleUserManagement extends React.Component {
         public_serial_number: user.public_serial_number,
         phone: user.phone,
         location: user.location,
-        account_type: account_type,
+        account_type,
         referred_by: user.referred_by,
-        custom_attr_keys: custom_attr_keys,
-        businessUsageName: transferUsage && transferUsage.name
+        custom_attr_keys,
+        businessUsageName: transferUsage && transferUsage.name,
       });
     }
   }
@@ -105,12 +101,12 @@ class SingleUserManagement extends React.Component {
       account_type,
       referred_by,
       custom_attr_keys,
-      businessUsageName
+      businessUsageName,
     } = this.state;
 
     const single_transfer_account_id = this.props.userId.toString();
 
-    let attr_dict = {};
+    const attr_dict = {};
     custom_attr_keys.map(key => {
       attr_dict[key] = this.state[key];
       return attr_dict;
@@ -124,14 +120,14 @@ class SingleUserManagement extends React.Component {
         public_serial_number,
         phone,
         location,
-        is_vendor: account_type === "VENDOR" || account_type === "CASHIER",
-        is_tokenagent: account_type === "TOKENAGENT",
-        is_groupaccount: account_type === "GROUPACCOUNT",
-        referred_by: referred_by,
+        is_vendor: account_type === 'VENDOR' || account_type === 'CASHIER',
+        is_tokenagent: account_type === 'TOKENAGENT',
+        is_groupaccount: account_type === 'GROUPACCOUNT',
+        referred_by,
         custom_attributes: attr_dict,
-        business_usage_name: businessUsageName
+        business_usage_name: businessUsageName,
       },
-      single_transfer_account_id
+      single_transfer_account_id,
     );
   }
 
@@ -141,31 +137,30 @@ class SingleUserManagement extends React.Component {
 
   resetPin() {
     window.confirm(
-      `Are you sure you wish to reset ${this.state.first_name} ${this.state.last_name}'s PIN?`
+      `Are you sure you wish to reset ${this.state.first_name} ${this.state.last_name}'s PIN?`,
     ) && this.props.resetPin({ user_id: this.props.user.id });
   }
 
   render() {
     const { transferUsages } = this.props;
-    let accountTypes = Object.keys(TransferAccountTypes);
+    const accountTypes = Object.keys(TransferAccountTypes);
     let businessUsage;
-    let blockchain_address = "";
+    let blockchain_address = '';
     if (this.props.user.transfer_account) {
       blockchain_address = this.props.user.transfer_account.blockchain_address;
-      var tracker_link =
-        window.ETH_EXPLORER_URL + "/address/" + blockchain_address;
+      var tracker_link = `${window.ETH_EXPLORER_URL}/address/${blockchain_address}`;
     }
 
-    var profilePicture = null;
-    var custom_attribute_list = null;
+    let profilePicture = null;
+    let custom_attribute_list = null;
     if (
       this.props.user.custom_attributes !== null &&
-      typeof this.props.user.custom_attributes !== "undefined"
+      typeof this.props.user.custom_attributes !== 'undefined'
     ) {
       if (this.props.user.custom_attributes.profile_picture) {
         profilePicture = (
           <ProfilePicture
-            label={"Profile Picture:"}
+            label="Profile Picture:"
             roll={this.props.user.custom_attributes.profile_picture.roll}
             url={this.props.user.custom_attributes.profile_picture.url}
           />
@@ -175,7 +170,7 @@ class SingleUserManagement extends React.Component {
       }
 
       custom_attribute_list = Object.keys(
-        this.props.user.custom_attributes
+        this.props.user.custom_attributes,
       ).map(key => {
         if (!this.props.user.custom_attributes[key].uploaded_image_id) {
           return (
@@ -183,7 +178,7 @@ class SingleUserManagement extends React.Component {
               <InputLabel>{replaceUnderscores(key)}: </InputLabel>
               <ManagerInput
                 name={key}
-                value={this.state[key] || ""}
+                value={this.state[key] || ''}
                 onChange={this.handleChange}
               />
             </SubRow>
@@ -198,37 +193,33 @@ class SingleUserManagement extends React.Component {
           <InputLabel>Business Category</InputLabel>
           <StyledSelect
             style={{
-              fontWeight: "400",
-              margin: "1em",
-              lineHeight: "25px",
-              height: "25px"
+              fontWeight: '400',
+              margin: '1em',
+              lineHeight: '25px',
+              height: '25px',
             }}
             name="businessUsageName"
             label="Business Category"
             value={this.state.businessUsageName}
-            onChange={this.handleChange}
-          >
+            onChange={this.handleChange}>
             <option name="select" value="select" disabled>
               Select
             </option>
-            {this.props.transferUsages.map((transferUsage, index) => {
-              return (
-                <option
-                  key={index}
-                  name={transferUsage.name}
-                  value={transferUsage.value}
-                >
-                  {transferUsage.name}
-                </option>
-              );
-            })}
+            {this.props.transferUsages.map((transferUsage, index) => (
+              <option
+                key={index}
+                name={transferUsage.name}
+                value={transferUsage.value}>
+                {transferUsage.name}
+              </option>
+            ))}
           </StyledSelect>
         </SubRow>
       );
     }
 
     return (
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         <ModuleBox>
           <Wrapper>
             <TopRow>
@@ -236,26 +227,26 @@ class SingleUserManagement extends React.Component {
               <ButtonWrapper>
                 <AsyncButton
                   onClick={this.editUser.bind(this)}
-                  miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                  miniSpinnerStyle={{ height: '10px', width: '10px' }}
                   buttonStyle={{
-                    display: "inline-flex",
-                    fontWeight: "400",
-                    margin: "0em",
-                    lineHeight: "25px",
-                    height: "25px"
+                    display: 'inline-flex',
+                    fontWeight: '400',
+                    margin: '0em',
+                    lineHeight: '25px',
+                    height: '25px',
                   }}
                   isLoading={this.props.users.editStatus.isRequesting}
                   buttonText="SAVE"
                 />
               </ButtonWrapper>
             </TopRow>
-            <Row style={{ margin: "0em 1em" }}>
+            <Row style={{ margin: '0em 1em' }}>
               <SubRow>
                 <InputLabel>First Name: </InputLabel>
                 <ManagerInput
                   name="first_name"
                   placeholder="n/a"
-                  value={this.state.first_name || ""}
+                  value={this.state.first_name || ''}
                   onChange={this.handleChange}
                 />
               </SubRow>
@@ -264,7 +255,7 @@ class SingleUserManagement extends React.Component {
                 <ManagerInput
                   name="last_name"
                   placeholder="n/a"
-                  value={this.state.last_name || ""}
+                  value={this.state.last_name || ''}
                   onChange={this.handleChange}
                 />
               </SubRow>
@@ -273,24 +264,27 @@ class SingleUserManagement extends React.Component {
                 <ManagerInput
                   name="phone"
                   placeholder="n/a"
-                  value={this.state.phone || ""}
+                  value={this.state.phone || ''}
                   onChange={this.handleChange}
                 />
               </SubRow>
             </Row>
-            <Row style={{ margin: "0em 1em" }}>
+            <Row style={{ margin: '0em 1em' }}>
               <SubRow>
                 <InputLabel>Public serial number: </InputLabel>
-                <div style={{ display: "flex" }}>
+                <div style={{ display: 'flex' }}>
                   <ManagerInput
                     name="public_serial_number"
                     placeholder="n/a"
-                    value={this.state.public_serial_number || ""}
+                    value={this.state.public_serial_number || ''}
                     onChange={this.handleChange}
                   />
                   <QrReadingModal
                     updateData={data => {
-                      let public_serial_number = data.replace(/^\s+|\s+$/g, "");
+                      const public_serial_number = data.replace(
+                        /^\s+|\s+$/g,
+                        '',
+                      );
                       this.setState({ public_serial_number });
                     }}
                   />
@@ -301,7 +295,7 @@ class SingleUserManagement extends React.Component {
                 <ManagerInput
                   name="location"
                   placeholder="n/a"
-                  value={this.state.location || ""}
+                  value={this.state.location || ''}
                   onChange={this.handleChange}
                 />
               </SubRow>
@@ -309,31 +303,24 @@ class SingleUserManagement extends React.Component {
                 <InputLabel>User Type: </InputLabel>
                 <StyledSelect
                   style={{
-                    fontWeight: "400",
-                    margin: "1em",
-                    lineHeight: "25px",
-                    height: "25px"
+                    fontWeight: '400',
+                    margin: '1em',
+                    lineHeight: '25px',
+                    height: '25px',
                   }}
                   name="account_type"
                   value={this.state.account_type}
-                  onChange={this.handleChange}
-                >
-                  {accountTypes.map((accountType, index) => {
-                    return (
-                      <option
-                        key={index}
-                        name="account_type"
-                        value={accountType}
-                      >
-                        {accountType}
-                      </option>
-                    );
-                  })}
+                  onChange={this.handleChange}>
+                  {accountTypes.map((accountType, index) => (
+                    <option key={index} name="account_type" value={accountType}>
+                      {accountType}
+                    </option>
+                  ))}
                 </StyledSelect>
               </SubRow>
             </Row>
-            <Row style={{ margin: "0em 1em" }}>
-              {this.props.user.one_time_code !== "" ? (
+            <Row style={{ margin: '0em 1em' }}>
+              {this.props.user.one_time_code !== '' ? (
                 <SubRow>
                   <InputLabel>One Time Code:</InputLabel>
                   <ManagerText>{this.props.user.one_time_code}</ManagerText>
@@ -349,28 +336,28 @@ class SingleUserManagement extends React.Component {
                 </ManagerText>
               </SubRow>
 
-              <SubRow style={{ margin: "-1em -1em 0" }}>
+              <SubRow style={{ margin: '-1em -1em 0' }}>
                 <GetVerified userId={this.props.userId} />
               </SubRow>
             </Row>
-            <Row style={{ margin: "0em 1em" }}>
+            <Row style={{ margin: '0em 1em' }}>
               <SubRow>
                 <InputLabel>Failed Pin Attempts:</InputLabel>
                 <ManagerText>
                   {this.props.user.failed_pin_attempts}
                   {this.props.user.failed_pin_attempts === 3
-                    ? " (BLOCKED)"
-                    : ""}
+                    ? ' (BLOCKED)'
+                    : ''}
                 </ManagerText>
                 <AsyncButton
                   onClick={this.resetPin.bind(this)}
-                  miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                  miniSpinnerStyle={{ height: '10px', width: '10px' }}
                   buttonStyle={{
-                    display: "inline-flex",
-                    fontWeight: "400",
-                    margin: "0em",
-                    lineHeight: "25px",
-                    height: "25px"
+                    display: 'inline-flex',
+                    fontWeight: '400',
+                    margin: '0em',
+                    lineHeight: '25px',
+                    height: '25px',
                   }}
                   isLoading={this.props.users.pinStatus.isRequesting}
                   buttonText="Reset Pin"
@@ -380,7 +367,7 @@ class SingleUserManagement extends React.Component {
                 <InputLabel>Referred By</InputLabel>
                 <ManagerInput
                   name="referred_by"
-                  value={this.state.referred_by || ""}
+                  value={this.state.referred_by || ''}
                   onChange={this.handleChange}
                 />
               </SubRow>
@@ -395,15 +382,15 @@ class SingleUserManagement extends React.Component {
               <TopRow>
                 <ModuleHeader>OTHER ATTRIBUTES</ModuleHeader>
               </TopRow>
-              <Row style={{ margin: "0em 1em" }}>
+              <Row style={{ margin: '0em 1em' }}>
                 {custom_attribute_list || null}
               </Row>
-              <Row style={{ margin: "0em 1em" }}>
+              <Row style={{ margin: '0em 1em' }}>
                 <SubRow>{businessUsage || null}</SubRow>
               </Row>
-              <Row style={{ margin: "0em 1em" }}>
+              <Row style={{ margin: '0em 1em' }}>
                 <SubRow>{profilePicture || null}</SubRow>
-                <SubRow></SubRow>
+                <SubRow />
               </Row>
             </Wrapper>
           </ModuleBox>
@@ -415,7 +402,7 @@ class SingleUserManagement extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(SingleUserManagement);
 
 const Wrapper = styled.div`

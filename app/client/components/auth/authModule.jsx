@@ -1,34 +1,30 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import { logout } from "../../reducers/auth/actions";
+import { logout } from '../../reducers/auth/actions';
 
-import { StyledButton, PlainTextButton } from "./../styledElements";
+import { StyledButton, PlainTextButton } from '../styledElements';
 
-import LoginForm from "./loginForm.jsx";
-import RegisterForm from "./registerForm.jsx";
-import RequestResetEmailForm from "./requestResetEmailForm.jsx";
+import LoginForm from './loginForm.jsx';
+import RegisterForm from './registerForm.jsx';
+import RequestResetEmailForm from './requestResetEmailForm.jsx';
 
-const mapStateToProps = state => {
-  return {
-    loggedIn: state.login.token != null,
-    loginData: state.login
-  };
-};
+const mapStateToProps = state => ({
+  loggedIn: state.login.token != null,
+  loginData: state.login,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    logout: () => dispatch(logout())
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  logout: () => dispatch(logout()),
+});
 
 class authModuleContainer extends React.Component {
   constructor() {
     super();
     this.state = {
       moduleActive: false,
-      activeForm: "LOGIN"
+      activeForm: 'LOGIN',
     };
   }
 
@@ -43,19 +39,20 @@ class authModuleContainer extends React.Component {
   render() {
     if (this.props.loggedIn) {
       var button = (
-        <div style={{ margin: "auto 1em" }}>
+        <div style={{ margin: 'auto 1em' }}>
           <StyledButton onClick={this.props.logout}>
-            Logout{this.props.loginData.vendorId ? " Vendor" : " Admin"}
+            Logout
+            {this.props.loginData.vendorId ? ' Vendor' : ' Admin'}
           </StyledButton>
         </div>
       );
     } else {
       var button = (
-        <div style={{ margin: "auto 1em" }}>
-          <StyledButton onClick={() => this.setActiveForm("LOGIN")}>
+        <div style={{ margin: 'auto 1em' }}>
+          <StyledButton onClick={() => this.setActiveForm('LOGIN')}>
             Login
           </StyledButton>
-          <StyledButton onClick={() => this.setActiveForm("REGISTER")}>
+          <StyledButton onClick={() => this.setActiveForm('REGISTER')}>
             Register
           </StyledButton>
         </div>
@@ -71,7 +68,7 @@ class authModuleContainer extends React.Component {
             activeForm: this.state.activeForm,
             setActiveForm: form => this.setActiveForm(form),
             deactivateAuthModule: () => this.deactivateAuthModule(),
-            loggedIn: this.props.loggedIn
+            loggedIn: this.props.loggedIn,
           }}
         />
       </div>
@@ -91,12 +88,12 @@ const AuthModule = function({ props }) {
         </BottomRow>
       </ModalContent>
     );
-  } else if (props.activeForm === "REGISTER") {
+  } else if (props.activeForm === 'REGISTER') {
     var formcontents = (
       <ModalContent>
         <RegisterForm />
         <BottomRow>
-          <PlainTextButton onClick={() => props.setActiveForm("LOGIN")}>
+          <PlainTextButton onClick={() => props.setActiveForm('LOGIN')}>
             Already Registered? Login
           </PlainTextButton>
           <PlainTextButton onClick={props.deactivateAuthModule}>
@@ -105,15 +102,15 @@ const AuthModule = function({ props }) {
         </BottomRow>
       </ModalContent>
     );
-  } else if (props.activeForm === "LOGIN") {
+  } else if (props.activeForm === 'LOGIN') {
     formcontents = (
       <ModalContent>
         <LoginForm />
         <BottomRow>
-          <PlainTextButton onClick={() => props.setActiveForm("REGISTER")}>
+          <PlainTextButton onClick={() => props.setActiveForm('REGISTER')}>
             No account? Register
           </PlainTextButton>
-          <PlainTextButton onClick={() => props.setActiveForm("RESET")}>
+          <PlainTextButton onClick={() => props.setActiveForm('RESET')}>
             Forgotten Password?
           </PlainTextButton>
           <PlainTextButton onClick={props.deactivateAuthModule}>
@@ -122,12 +119,12 @@ const AuthModule = function({ props }) {
         </BottomRow>
       </ModalContent>
     );
-  } else if (props.activeForm === "RESET") {
+  } else if (props.activeForm === 'RESET') {
     formcontents = (
       <ModalContent>
         <RequestResetEmailForm />
         <BottomRow>
-          <PlainTextButton onClick={() => props.setActiveForm("LOGIN")}>
+          <PlainTextButton onClick={() => props.setActiveForm('LOGIN')}>
             Login
           </PlainTextButton>
           <PlainTextButton onClick={props.deactivateAuthModule}>
@@ -143,19 +140,18 @@ const AuthModule = function({ props }) {
       <Modal>
         {formcontents}
         <div
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: '100%', height: '100%' }}
           onClick={props.deactivateAuthModule}
-        ></div>
+        />
       </Modal>
     );
-  } else {
-    return <div></div>;
   }
+  return <div />;
 };
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(authModuleContainer);
 
 const Modal = styled.div`

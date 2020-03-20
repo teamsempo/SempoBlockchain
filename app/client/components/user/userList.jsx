@@ -1,25 +1,21 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import ReactTable from "react-table";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import ReactTable from 'react-table';
 
-import { TopRow, ModuleBox, ModuleHeader } from "../styledElements.js";
+import { TopRow, ModuleBox, ModuleHeader } from '../styledElements.js';
 
-import { loadUserList } from "../../reducers/auth/actions";
-import { browserHistory } from "../../app.jsx";
+import { loadUserList } from '../../reducers/auth/actions';
+import { browserHistory } from '../../app.jsx';
 
-const mapStateToProps = (state, props) => {
-  return {
-    userList: props.user_ids.map(userId => state.users.byId[userId]),
-    transferAccounts: state.transferAccounts
-  };
-};
+const mapStateToProps = (state, props) => ({
+  userList: props.user_ids.map(userId => state.users.byId[userId]),
+  transferAccounts: state.transferAccounts,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadUserList: () => dispatch(loadUserList())
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadUserList: () => dispatch(loadUserList()),
+});
 
 class UserList extends React.Component {
   constructor() {
@@ -29,7 +25,7 @@ class UserList extends React.Component {
       pages: null,
       loading: true,
       action: false,
-      user_id: null
+      user_id: null,
     };
   }
 
@@ -37,7 +33,7 @@ class UserList extends React.Component {
     if (this.props.userList.find(x => x.id === id).is_disabled) {
       var StatusComponent = (
         <StatusWrapper>
-          <DisabledIcon style={{ backgroundColor: "rgba(255, 0, 0, 0.8)" }}>
+          <DisabledIcon style={{ backgroundColor: 'rgba(255, 0, 0, 0.8)' }}>
             Disabled
           </DisabledIcon>
         </StatusWrapper>
@@ -45,7 +41,7 @@ class UserList extends React.Component {
     } else if (!this.props.userList.find(x => x.id === id).is_activated) {
       StatusComponent = (
         <StatusWrapper>
-          <DisabledIcon style={{ backgroundColor: "rgba(39, 164, 167, 0.8)" }}>
+          <DisabledIcon style={{ backgroundColor: 'rgba(39, 164, 167, 0.8)' }}>
             Unactivated
           </DisabledIcon>
         </StatusWrapper>
@@ -71,31 +67,31 @@ class UserList extends React.Component {
             <ReactTable
               columns={[
                 {
-                  Header: "Name",
-                  id: "userName",
+                  Header: 'Name',
+                  id: 'userName',
                   accessor: user =>
-                    (user.first_name === null ? "" : user.first_name) +
-                    " " +
-                    (user.last_name === null ? "" : user.last_name),
-                  headerClassName: "react-table-header",
-                  className: "react-table-first-cell"
+                    `${user.first_name === null ? '' : user.first_name} ${
+                      user.last_name === null ? '' : user.last_name
+                    }`,
+                  headerClassName: 'react-table-header',
+                  className: 'react-table-first-cell',
                 },
                 {
-                  Header: "Account Type",
-                  accessor: "admin_tier",
-                  headerClassName: "react-table-header"
+                  Header: 'Account Type',
+                  accessor: 'admin_tier',
+                  headerClassName: 'react-table-header',
                 },
                 {
-                  Header: "Created",
-                  accessor: "created",
-                  headerClassName: "react-table-header"
+                  Header: 'Created',
+                  accessor: 'created',
+                  headerClassName: 'react-table-header',
                 },
                 {
-                  Header: "Status",
-                  accessor: "id",
-                  headerClassName: "react-table-header",
-                  Cell: cellInfo => this.displayCorrectStatus(cellInfo.value)
-                }
+                  Header: 'Status',
+                  accessor: 'id',
+                  headerClassName: 'react-table-header',
+                  Cell: cellInfo => this.displayCorrectStatus(cellInfo.value),
+                },
               ]}
               data={this.props.userList}
               loading={loadingStatus} // Display the loading overlay when we need it
@@ -105,16 +101,14 @@ class UserList extends React.Component {
               showPageSizeOptions={false}
               className="react-table"
               resizable={false}
-              getTdProps={(state, rowInfo) => {
-                return {
-                  onClick: (e, handleOriginal) => {
-                    browserHistory.push("/users/" + rowInfo.row.id);
-                    if (handleOriginal) {
-                      handleOriginal();
-                    }
+              getTdProps={(state, rowInfo) => ({
+                onClick: (e, handleOriginal) => {
+                  browserHistory.push(`/users/${rowInfo.row.id}`);
+                  if (handleOriginal) {
+                    handleOriginal();
                   }
-                };
-              }}
+                },
+              })}
             />
             <FooterBar>
               <p style={{ margin: 0 }}>{tableLength} users</p>

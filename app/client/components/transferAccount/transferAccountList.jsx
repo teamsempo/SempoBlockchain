@@ -1,8 +1,8 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import ReactTable from "react-table";
-import { browserHistory } from "../../app.jsx";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import ReactTable from 'react-table';
+import { browserHistory } from '../../app.jsx';
 
 import {
   ModuleBox,
@@ -10,38 +10,34 @@ import {
   StyledButton,
   StyledSelect,
   Wrapper,
-  FooterBar
-} from "../styledElements.js";
+  FooterBar,
+} from '../styledElements.js';
 
-import LoadingSpinner from "../loadingSpinner.jsx";
-import DateTime from "../dateTime.jsx";
-import NewTransferManager from "../management/newTransferManager.jsx";
+import LoadingSpinner from '../loadingSpinner.jsx';
+import DateTime from '../dateTime.jsx';
+import NewTransferManager from '../management/newTransferManager.jsx';
 
-import { formatMoney } from "../../utils";
+import { formatMoney } from '../../utils';
 import {
   editTransferAccount,
   setSelected,
-  loadTransferAccounts
-} from "../../reducers/transferAccountReducer";
-import { TransferAccountTypes } from "../transferAccount/types";
-import organizationWrapper from "../organizationWrapper";
+  loadTransferAccounts,
+} from '../../reducers/transferAccountReducer';
+import { TransferAccountTypes } from '../transferAccount/types';
+import organizationWrapper from '../organizationWrapper';
 
-const mapStateToProps = state => {
-  return {
-    login: state.login,
-    transferAccounts: state.transferAccounts,
-    creditTransfers: state.creditTransfers
-  };
-};
+const mapStateToProps = state => ({
+  login: state.login,
+  transferAccounts: state.transferAccounts,
+  creditTransfers: state.creditTransfers,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    editTransferAccountRequest: body => dispatch(editTransferAccount({ body })),
-    setSelected: selected => dispatch(setSelected(selected)),
-    loadTransferAccounts: (query, path) =>
-      dispatch(loadTransferAccounts({ query, path }))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  editTransferAccountRequest: body => dispatch(editTransferAccount({ body })),
+  setSelected: selected => dispatch(setSelected(selected)),
+  loadTransferAccounts: (query, path) =>
+    dispatch(loadTransferAccounts({ query, path })),
+});
 
 class TransferAccountList extends React.Component {
   // ---- INFO ----
@@ -58,12 +54,12 @@ class TransferAccountList extends React.Component {
       idSelectedStatus: {},
       allCheckedTransferAccounts: false,
       newTransfer: false,
-      account_type: "ALL"
+      account_type: 'ALL',
     };
     this.handleChange = this.handleChange.bind(this);
     this.checkAllTransferAccounts = this.checkAllTransferAccounts.bind(this);
     this.toggleSelectedTransferAccount = this.toggleSelectedTransferAccount.bind(
-      this
+      this,
     );
     this.onNewTransfer = this.onNewTransfer.bind(this);
     this.approveSelected = this.approveSelected.bind(this);
@@ -84,7 +80,7 @@ class TransferAccountList extends React.Component {
 
   componentWillUnmount() {
     this.props.setSelected(
-      this.get_selected_ids_array(this.state.idSelectedStatus)
+      this.get_selected_ids_array(this.state.idSelectedStatus),
     );
   }
 
@@ -107,14 +103,14 @@ class TransferAccountList extends React.Component {
     this.setState(prevState => ({
       idSelectedStatus: {
         ...prevState.idSelectedStatus,
-        [id]: value
+        [id]: value,
       },
-      allCheckedTransferAccounts: false
+      allCheckedTransferAccounts: false,
     }));
   }
 
   displaySelect(id) {
-    let checked = this.state.idSelectedStatus[id] || false;
+    const checked = this.state.idSelectedStatus[id] || false;
 
     return (
       <input
@@ -131,36 +127,36 @@ class TransferAccountList extends React.Component {
       // UNCHECK ALL
       this.setState({
         idSelectedStatus: {},
-        allCheckedTransferAccounts: false
+        allCheckedTransferAccounts: false,
       });
     } else {
       // CHECK ALL FILTERED
-      let checked = {};
+      const checked = {};
       filteredData.map(ta => {
         checked[ta.id] = true;
       });
       this.setState({
         allCheckedTransferAccounts: true,
-        idSelectedStatus: checked
+        idSelectedStatus: checked,
       });
     }
   }
 
   onNewTransfer() {
     this.setState(prevState => ({
-      newTransfer: !prevState.newTransfer
+      newTransfer: !prevState.newTransfer,
     }));
   }
 
   approveSelected() {
-    let approve = true;
-    let transfer_account_id_list = this.get_selected_ids_array(
-      this.state.idSelectedStatus
+    const approve = true;
+    const transfer_account_id_list = this.get_selected_ids_array(
+      this.state.idSelectedStatus,
     );
 
     this.props.editTransferAccountRequest({
       transfer_account_id_list,
-      approve
+      approve,
     });
   }
 
@@ -170,28 +166,26 @@ class TransferAccountList extends React.Component {
 
   _customName(transferAccount) {
     if (
-      this.props.login.adminTier === "view" &&
-      typeof transferAccount.blockchain_address !== "undefined"
+      this.props.login.adminTier === 'view' &&
+      typeof transferAccount.blockchain_address !== 'undefined'
     ) {
       return transferAccount.blockchain_address;
     }
-    return (
-      (transferAccount.first_name === null ? "" : transferAccount.first_name) +
-      " " +
-      (transferAccount.last_name === null ? "" : transferAccount.last_name)
-    );
+    return `${
+      transferAccount.first_name === null ? '' : transferAccount.first_name
+    } ${transferAccount.last_name === null ? '' : transferAccount.last_name}`;
   }
 
   _customIcon(transferAccount) {
-    let url = "/static/media/user.svg";
+    let url = '/static/media/user.svg';
     if (transferAccount.is_beneficiary) {
-      url = "/static/media/user.svg";
+      url = '/static/media/user.svg';
     } else if (transferAccount.is_vendor) {
-      url = "/static/media/store.svg";
+      url = '/static/media/store.svg';
     } else if (transferAccount.is_groupaccount) {
-      url = "/static/media/groupaccount.svg";
+      url = '/static/media/groupaccount.svg';
     } else if (transferAccount.is_tokenagent) {
-      url = "/static/media/tokenagent.svg";
+      url = '/static/media/tokenagent.svg';
     }
     return <UserSVG src={url} />;
   }
@@ -199,10 +193,10 @@ class TransferAccountList extends React.Component {
   render() {
     const { account_type } = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
-    let accountTypes = Object.keys(TransferAccountTypes);
-    accountTypes.push("ALL"); // filter should have all option
+    const accountTypes = Object.keys(TransferAccountTypes);
+    accountTypes.push('ALL'); // filter should have all option
 
-    var filteredData =
+    let filteredData =
       this.props.item_list !== undefined ? this.props.item_list : null;
 
     if (account_type === TransferAccountTypes.USER) {
@@ -218,57 +212,53 @@ class TransferAccountList extends React.Component {
       filteredData = filteredData.filter(account => account.is_groupaccount);
     }
 
-    let rowValues = Object.values(this.state.idSelectedStatus);
-    let numberSelected = rowValues.filter(Boolean).length;
-    let isSelected = numberSelected > 0;
+    const rowValues = Object.values(this.state.idSelectedStatus);
+    const numberSelected = rowValues.filter(Boolean).length;
+    const isSelected = numberSelected > 0;
 
     if (isSelected) {
       var topBarContent = (
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            width: "100%"
-          }}
-        >
-          <p style={{ margin: "1em" }}>{numberSelected} selected</p>
+            display: 'flex',
+            justifyContent: 'space-between',
+            width: '100%',
+          }}>
+          <p style={{ margin: '1em' }}>{numberSelected} selected</p>
 
-          {this.props.login.adminTier !== "view" ? (
-            <div style={{ margin: "1em 0", display: "flex" }}>
+          {this.props.login.adminTier !== 'view' ? (
+            <div style={{ margin: '1em 0', display: 'flex' }}>
               <StyledButton
                 onClick={this.onNewTransfer}
                 style={{
-                  display: this.state.newTransfer ? "none" : "flex",
-                  fontWeight: "400",
-                  margin: "0em 1em",
-                  lineHeight: "25px",
-                  height: "25px"
-                }}
-              >
+                  display: this.state.newTransfer ? 'none' : 'flex',
+                  fontWeight: '400',
+                  margin: '0em 1em',
+                  lineHeight: '25px',
+                  height: '25px',
+                }}>
                 NEW TRANSFER
               </StyledButton>
               <StyledButton
                 onClick={this.approveSelected}
                 style={{
-                  display: this.state.newTransfer ? "none" : "flex",
-                  fontWeight: "400",
-                  margin: "0em 1em 0 0",
-                  lineHeight: "25px",
-                  height: "25px"
-                }}
-              >
+                  display: this.state.newTransfer ? 'none' : 'flex',
+                  fontWeight: '400',
+                  margin: '0em 1em 0 0',
+                  lineHeight: '25px',
+                  height: '25px',
+                }}>
                 APPROVE
               </StyledButton>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
-                  onClick={() => browserHistory.push("/export")}
+                  onClick={() => browserHistory.push('/export')}
                   style={{
-                    fontWeight: "400",
-                    margin: "0em 1em 0 0",
-                    lineHeight: "25px",
-                    height: "25px"
-                  }}
-                >
+                    fontWeight: '400',
+                    margin: '0em 1em 0 0',
+                    lineHeight: '25px',
+                    height: '25px',
+                  }}>
                   Export
                 </StyledButton>
               </UploadButtonWrapper>
@@ -280,56 +270,50 @@ class TransferAccountList extends React.Component {
       topBarContent = (
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            width: "100%"
-          }}
-        >
+            display: 'flex',
+            justifyContent: 'space-between',
+            width: '100%',
+          }}>
           <StyledSelect
             style={{
-              fontWeight: "400",
-              margin: "1em",
-              lineHeight: "25px",
-              height: "25px"
+              fontWeight: '400',
+              margin: '1em',
+              lineHeight: '25px',
+              height: '25px',
             }}
             name="account_type"
             value={this.state.account_type}
-            onChange={this.handleChange}
-          >
-            {accountTypes.map((accountType, index) => {
-              return (
-                <option key={index} name="account_type" value={accountType}>
-                  {accountType}
-                </option>
-              );
-            })}
+            onChange={this.handleChange}>
+            {accountTypes.map((accountType, index) => (
+              <option key={index} name="account_type" value={accountType}>
+                {accountType}
+              </option>
+            ))}
           </StyledSelect>
 
-          {this.props.login.adminTier !== "view" ? (
-            <div style={{ display: "flex", flexDirection: "row" }}>
+          {this.props.login.adminTier !== 'view' ? (
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
-                  onClick={() => browserHistory.push("/create")}
+                  onClick={() => browserHistory.push('/create')}
                   style={{
-                    fontWeight: "400",
-                    margin: "0em 1em",
-                    lineHeight: "25px",
-                    height: "25px"
-                  }}
-                >
+                    fontWeight: '400',
+                    margin: '0em 1em',
+                    lineHeight: '25px',
+                    height: '25px',
+                  }}>
                   + Add New
                 </StyledButton>
               </UploadButtonWrapper>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
-                  onClick={() => browserHistory.push("/export")}
+                  onClick={() => browserHistory.push('/export')}
                   style={{
-                    fontWeight: "400",
-                    margin: "0em 1em 0 0",
-                    lineHeight: "25px",
-                    height: "25px"
-                  }}
-                >
+                    fontWeight: '400',
+                    margin: '0em 1em 0 0',
+                    lineHeight: '25px',
+                    height: '25px',
+                  }}>
                   Export
                 </StyledButton>
               </UploadButtonWrapper>
@@ -343,7 +327,7 @@ class TransferAccountList extends React.Component {
       var newTransfer = (
         <NewTransferManager
           transfer_account_ids={this.get_selected_ids_array(
-            this.state.idSelectedStatus
+            this.state.idSelectedStatus,
           )}
           cancelNewTransfer={() => this.onNewTransfer()}
         />
@@ -355,8 +339,7 @@ class TransferAccountList extends React.Component {
     if (this.props.transferAccounts.loadStatus.isRequesting) {
       return (
         <div
-          style={{ display: "flex", justifyContent: "center", margin: "1em" }}
-        >
+          style={{ display: 'flex', justifyContent: 'center', margin: '1em' }}>
           <LoadingSpinner />
         </div>
       );
@@ -368,41 +351,41 @@ class TransferAccountList extends React.Component {
       filteredData !== undefined
     ) {
       return (
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {newTransfer}
 
-          <ModuleBox style={{ width: "calc(100% - 2em)" }}>
+          <ModuleBox style={{ width: 'calc(100% - 2em)' }}>
             <Wrapper>
               <TopRow>{topBarContent}</TopRow>
               <ReactTable
                 columns={[
                   {
-                    Header: "",
-                    id: "transferAccountIcon",
+                    Header: '',
+                    id: 'transferAccountIcon',
                     accessor: transferAccount =>
                       this._customIcon(transferAccount),
-                    headerClassName: "react-table-header",
+                    headerClassName: 'react-table-header',
                     width: 40,
-                    sortable: false
+                    sortable: false,
                   },
                   {
-                    Header: "Name",
-                    id: "transferAccountName",
+                    Header: 'Name',
+                    id: 'transferAccountName',
                     accessor: transferAccount =>
                       this._customName(transferAccount),
-                    headerClassName: "react-table-header",
-                    className: "react-table-first-cell"
+                    headerClassName: 'react-table-header',
+                    className: 'react-table-first-cell',
                   },
                   {
-                    Header: "Created",
-                    accessor: "created",
-                    headerClassName: "react-table-header",
-                    Cell: cellInfo => <DateTime created={cellInfo.value} />
+                    Header: 'Created',
+                    accessor: 'created',
+                    headerClassName: 'react-table-header',
+                    Cell: cellInfo => <DateTime created={cellInfo.value} />,
                   },
                   {
-                    Header: "Balance",
-                    accessor: "balance",
-                    headerClassName: "react-table-header",
+                    Header: 'Balance',
+                    accessor: 'balance',
+                    headerClassName: 'react-table-header',
                     Cell: cellInfo => {
                       const token =
                         cellInfo.original.token &&
@@ -412,20 +395,20 @@ class TransferAccountList extends React.Component {
                         undefined,
                         undefined,
                         undefined,
-                        token
+                        token,
                       );
                       return <p style={{ margin: 0 }}>{money}</p>;
-                    }
+                    },
                   },
                   {
-                    Header: "Status",
-                    accessor: "is_approved",
-                    headerClassName: "react-table-header",
+                    Header: 'Status',
+                    accessor: 'is_approved',
+                    headerClassName: 'react-table-header',
                     Cell: cellInfo => (
                       <p style={{ margin: 0 }}>
-                        {cellInfo.value === true ? "Approved" : "Unapproved"}
+                        {cellInfo.value === true ? 'Approved' : 'Unapproved'}
                       </p>
-                    )
+                    ),
                   },
                   {
                     Header: () => (
@@ -437,38 +420,36 @@ class TransferAccountList extends React.Component {
                         }
                       />
                     ),
-                    accessor: "id",
-                    headerClassName: "react-table-header",
+                    accessor: 'id',
+                    headerClassName: 'react-table-header',
                     width: 60,
                     sortable: false,
-                    Cell: cellInfo => this.displaySelect(cellInfo.value)
-                  }
+                    Cell: cellInfo => this.displaySelect(cellInfo.value),
+                  },
                 ]}
                 loading={loadingStatus} // Display the loading overlay when we need it
                 data={filteredData}
                 pageSize={20}
-                sortable={true}
-                showPagination={true}
+                sortable
+                showPagination
                 showPageSizeOptions={false}
                 className="react-table"
                 resizable={false}
-                getTdProps={(state, rowInfo, column) => {
-                  return {
-                    onClick: (e, handleOriginal) => {
-                      // handle click on checkbox
-                      if (column.id === "id") {
-                        this.toggleSelectedTransferAccount(rowInfo.original.id);
-                        return;
-                      }
-
-                      browserHistory.push("/accounts/" + rowInfo.row.id);
-
-                      if (handleOriginal) {
-                        handleOriginal();
-                      }
+                getTdProps={(state, rowInfo, column) => ({
+                  onClick: (e, handleOriginal) => {
+                    // handle click on checkbox
+                    if (column.id === 'id') {
+                      this.toggleSelectedTransferAccount(rowInfo.original.id);
+                      return;
                     }
-                  };
-                }}
+
+                    browserHistory.push(`/accounts/${rowInfo.row.id}`);
+
+                    if (handleOriginal) {
+                      handleOriginal();
+                    }
+                  },
+                })}
               />
             </Wrapper>
           </ModuleBox>
@@ -478,7 +459,7 @@ class TransferAccountList extends React.Component {
 
     return (
       <ModuleBox>
-        <p style={{ padding: "1em", textAlign: "center" }}>
+        <p style={{ padding: '1em', textAlign: 'center' }}>
           No transfer accounts found
         </p>
       </ModuleBox>
@@ -488,7 +469,7 @@ class TransferAccountList extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(organizationWrapper(TransferAccountList));
 
 const UserSVG = styled.img`

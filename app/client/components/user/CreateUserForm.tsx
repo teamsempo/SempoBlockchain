@@ -1,21 +1,21 @@
-import * as React from "react";
-import { connect } from "react-redux";
+import * as React from 'react';
+import { connect } from 'react-redux';
 
 import {
   reduxForm,
   InjectedFormProps,
   formValueSelector,
-  FormSection
-} from "redux-form";
-import QrReadingModal from "../qrReadingModal";
-import { ErrorMessage, ModuleHeader } from "../styledElements";
-import AsyncButton from "../AsyncButton";
-import InputField from "../form/InputField";
-import SelectField from "../form/SelectField";
-import { TransferUsage } from "../../reducers/transferUsage/types";
-import { Organisation } from "../../reducers/organisation/types";
-import { ReduxState } from "../../reducers/rootReducer";
-import { TransferAccountTypes } from "../transferAccount/types";
+  FormSection,
+} from 'redux-form';
+import QrReadingModal from '../qrReadingModal';
+import { ErrorMessage, ModuleHeader } from '../styledElements';
+import AsyncButton from '../AsyncButton';
+import InputField from '../form/InputField';
+import SelectField from '../form/SelectField';
+import { TransferUsage } from '../../reducers/transferUsage/types';
+import { Organisation } from '../../reducers/organisation/types';
+import { ReduxState } from '../../reducers/rootReducer';
+import { TransferAccountTypes } from '../transferAccount/types';
 
 export interface ICreateUser {
   firstName?: string;
@@ -64,7 +64,7 @@ const validate = (values: ICreateUser) => {
   const errors: any = {};
 
   if (!values.phone && !values.publicSerialNumber) {
-    errors.phone = "Must provide either phone number or ID number";
+    errors.phone = 'Must provide either phone number or ID number';
   }
 
   return errors;
@@ -77,14 +77,14 @@ class CreateUserForm extends React.Component<
     const { defaultDisbursement } = this.props;
     this.props.initialize({
       accountType: TransferAccountTypes.USER.toLowerCase(),
-      gender: "female",
-      initialDisbursement: defaultDisbursement
+      gender: 'female',
+      initialDisbursement: defaultDisbursement,
     });
   }
 
   setSerialNumber(data: string) {
-    const cleanedData = data.replace(/^\s+|\s+$/g, "");
-    this.props.change("publicSerialNumber", cleanedData);
+    const cleanedData = data.replace(/^\s+|\s+$/g, '');
+    this.props.change('publicSerialNumber', cleanedData);
   }
 
   optionizeUsages() {
@@ -92,12 +92,12 @@ class CreateUserForm extends React.Component<
       .map(transferUsage => {
         return {
           name: transferUsage.name,
-          value: transferUsage.name
+          value: transferUsage.name,
         };
       })
       .concat({
-        name: "Other",
-        value: "other"
+        name: 'Other',
+        value: 'other',
       });
   }
 
@@ -107,7 +107,7 @@ class CreateUserForm extends React.Component<
       businessUsageValue,
       transferUsages,
       accountType,
-      defaultDisbursement
+      defaultDisbursement,
     } = this.props;
 
     let accountTypes = Object.keys(TransferAccountTypes);
@@ -119,17 +119,16 @@ class CreateUserForm extends React.Component<
       initialDisbursementAmount = (
         <InputField
           name="initialDisbursement"
-          label={"Initial Disbursement Amount"}
-        >
+          label={'Initial Disbursement Amount'}>
           {activeOrganisation !== null &&
-          typeof activeOrganisation !== "undefined"
+          typeof activeOrganisation !== 'undefined'
             ? activeOrganisation.token.symbol
             : null}
         </InputField>
       );
     }
     if (transferUsages.length > 0) {
-      if (businessUsageValue && businessUsageValue.toLowerCase() === "other") {
+      if (businessUsageValue && businessUsageValue.toLowerCase() === 'other') {
         businessUsage = (
           <>
             <SelectField
@@ -169,17 +168,17 @@ class CreateUserForm extends React.Component<
       selectedAccountTypeForm = (
         <div>
           <div>
-            To create a cashier account, enter the <strong>vendor's</strong>{" "}
+            To create a cashier account, enter the <strong>vendor's</strong>{' '}
             phone and pin.
           </div>
           <InputField
             name="existingVendorPhone"
-            label={"Vendor Phone Number"}
+            label={'Vendor Phone Number'}
           />
           <InputField
             name="existingVendorPin"
             type="password"
-            label={"Vendor PIN"}
+            label={'Vendor PIN'}
           />
         </div>
       );
@@ -187,8 +186,8 @@ class CreateUserForm extends React.Component<
       //  VENDOR
       selectedAccountTypeForm = (
         <div>
-          <InputField name="transferAccountName" label={"Store Name"} />
-          <InputField name="location" label={"Address"} />
+          <InputField name="transferAccountName" label={'Store Name'} />
+          <InputField name="location" label={'Address'} />
         </div>
       );
     } else if (accountType === TransferAccountTypes.TOKENAGENT.toLowerCase()) {
@@ -200,23 +199,23 @@ class CreateUserForm extends React.Component<
       <div>
         <ModuleHeader>Create a {accountType} account</ModuleHeader>
 
-        <div style={{ padding: "1em" }}>
+        <div style={{ padding: '1em' }}>
           <form onSubmit={this.props.handleSubmit}>
             <SelectField
               name="accountType"
-              label={"Account Type"}
+              label={'Account Type'}
               options={accountTypes}
               hideNoneOption={true}
             />
-            <InputField name="publicSerialNumber" label={"ID Number"}>
+            <InputField name="publicSerialNumber" label={'ID Number'}>
               {/*
                 // @ts-ignore */}
               <QrReadingModal
                 updateData={(data: string) => this.setSerialNumber(data)}
               />
-            </InputField>{" "}
+            </InputField>{' '}
             <span>or</span>
-            <InputField name="phone" label={"Phone Number"} isPhoneNumber />
+            <InputField name="phone" label={'Phone Number'} isPhoneNumber />
             <InputField name="firstName" label="Given Name(s)" isRequired />
             <InputField name="lastName" label="Family/Surname" />
             <InputField name="bio" label="Directory Entry" />
@@ -224,12 +223,12 @@ class CreateUserForm extends React.Component<
             <SelectField
               name="gender"
               label="Gender"
-              options={["Female", "Male", "Other"]}
+              options={['Female', 'Male', 'Other']}
               hideNoneOption={true}
             />
             <InputField
               name="referredBy"
-              label={"Referred by user phone number"}
+              label={'Referred by user phone number'}
               isPhoneNumber
             />
             {selectedAccountTypeForm}
@@ -239,7 +238,7 @@ class CreateUserForm extends React.Component<
             <AsyncButton
               type="submit"
               isLoading={this.props.users.createStatus.isRequesting}
-              buttonStyle={{ display: "flex" }}
+              buttonStyle={{ display: 'flex' }}
               buttonText="Submit"
             />
           </form>
@@ -251,24 +250,24 @@ class CreateUserForm extends React.Component<
 
 // TODO: can't figure out the typing here...
 const CreateUserFormReduxForm = reduxForm({
-  form: "createUser",
-  validate
+  form: 'createUser',
+  validate,
   // @ts-ignore
 })(CreateUserForm);
 
 export default connect(
   (state: ReduxState): StateProps => {
-    const selector = formValueSelector("createUser");
+    const selector = formValueSelector('createUser');
     return {
-      accountType: selector(state, "accountType"),
-      businessUsageValue: selector(state, "businessUsage"),
+      accountType: selector(state, 'accountType'),
+      businessUsageValue: selector(state, 'businessUsage'),
       // @ts-ignore
       activeOrganisation: state.organisations.byId[state.login.organisationId],
       defaultDisbursement:
         // @ts-ignore
         state.organisations.byId[state.login.organisationId]
-          .default_disbursement / 100
+          .default_disbursement / 100,
     };
-  }
+  },
   // @ts-ignore
 )(CreateUserFormReduxForm);

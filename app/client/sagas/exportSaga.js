@@ -7,21 +7,21 @@ import {
   all,
   cancelled,
   cancel,
-  race
-} from "redux-saga/effects";
+  race,
+} from 'redux-saga/effects';
 
 import {
   NEW_EXPORT_REQUEST,
   NEW_EXPORT_SUCCESS,
-  NEW_EXPORT_FAILURE
-} from "../reducers/exportReducer.js";
+  NEW_EXPORT_FAILURE,
+} from '../reducers/exportReducer.js';
 
-import { exportAPI } from "../api/exportAPI";
+import { exportAPI } from '../api/exportAPI';
 
 function* newExport({ payload }) {
   try {
     const result = yield call(exportAPI, payload);
-    if (result.status === "success") {
+    if (result.status === 'success') {
       yield put({ type: NEW_EXPORT_SUCCESS, result });
     } else {
       yield put({ type: NEW_EXPORT_FAILURE, error: result.message });

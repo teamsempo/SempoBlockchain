@@ -1,13 +1,13 @@
-import React, { Suspense, lazy } from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import { subscribe, unsubscribe } from "pusher-redux";
+import React, { Suspense, lazy } from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import { subscribe, unsubscribe } from 'pusher-redux';
 
-import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
-import { logout } from "../../reducers/auth/actions";
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
-import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
+import { PUSHER_CREDIT_TRANSFER } from '../../reducers/creditTransferReducer';
+import { logout } from '../../reducers/auth/actions';
+import { loadCreditTransferList } from '../../reducers/creditTransferReducer';
+import { loadTransferAccounts } from '../../reducers/transferAccountReducer';
+import { loadCreditTransferFilters } from '../../reducers/creditTransferFilterReducer';
 
 import {
   VolumeChart,
@@ -15,24 +15,24 @@ import {
   UsagePieChart,
   MetricsBar,
   BeneficiaryLiveFeed,
-  DashboardFilter
-} from "../dashboard";
-import LoadingSpinner from "../loadingSpinner.jsx";
+  DashboardFilter,
+} from '../dashboard';
+import LoadingSpinner from '../loadingSpinner.jsx';
 
 import {
   ModuleBox,
   PageWrapper,
-  CenterLoadingSideBarActive
-} from "../styledElements";
-import { parseQuery } from "../../utils";
+  CenterLoadingSideBarActive,
+} from '../styledElements';
+import { parseQuery } from '../../utils';
 
-const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
+const HeatMap = lazy(() => import('../heatmap/heatmap.jsx'));
 
 const mapStateToProps = state => {
   return {
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
-    login: state.login
+    login: state.login,
   };
 };
 
@@ -44,7 +44,7 @@ const mapDispatchToProps = dispatch => {
     loadCreditTransferList: (query, path) =>
       dispatch(loadCreditTransferList({ query, path })),
     loadCreditTransferFilters: (query, path) =>
-      dispatch(loadCreditTransferFilters({ query, path }))
+      dispatch(loadCreditTransferFilters({ query, path })),
   };
 };
 
@@ -54,7 +54,7 @@ class DashboardPage extends React.Component {
     this.state = {
       subscribe,
       unsubscribe,
-      loading: true
+      loading: true,
     };
   }
 
@@ -64,21 +64,21 @@ class DashboardPage extends React.Component {
   }
 
   componentDidMount() {
-    let transfer_type = "ALL";
+    let transfer_type = 'ALL';
     let per_page = 50;
     let page = 1;
     this.props.loadCreditTransferList({
       get_stats: true,
       transfer_type: transfer_type,
       per_page: per_page,
-      page: page
+      page: page,
     });
     this.buildFilterForAPI();
 
     const parsed = parseQuery(location.search);
 
     if (parsed.actok) {
-      console.log("actok", parsed.actok);
+      console.log('actok', parsed.actok);
       this.props.activateAccount(parsed.actok);
     }
 
@@ -105,13 +105,13 @@ class DashboardPage extends React.Component {
     const additionalParams = () => {};
 
     let login = this.props.login;
-    let pusher_channel = window.PUSHER_ENV_CHANNEL + "-" + login.organisationId;
+    let pusher_channel = window.PUSHER_ENV_CHANNEL + '-' + login.organisationId;
 
     subscribe(
       pusher_channel,
-      "credit_transfer",
+      'credit_transfer',
       PUSHER_CREDIT_TRANSFER,
-      additionalParams
+      additionalParams,
     );
 
     // access it within the data object = {
@@ -124,7 +124,7 @@ class DashboardPage extends React.Component {
   }
 
   unsubscribe() {
-    unsubscribe("MainChannel", "credit_transfer", PUSHER_CREDIT_TRANSFER);
+    unsubscribe('MainChannel', 'credit_transfer', PUSHER_CREDIT_TRANSFER);
   }
 
   render() {
@@ -186,7 +186,7 @@ class DashboardPage extends React.Component {
                 </LiveFeedColumn>
               </Main>
 
-              <Main style={{ marginTop: 0, maxHeight: "80vh" }}>
+              <Main style={{ marginTop: 0, maxHeight: '80vh' }}>
                 <ModuleBox>
                   <Suspense fallback={<div>Loading Map...</div>}>
                     <HeatMap />

@@ -1,7 +1,7 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
-import { browserHistory } from "../app.jsx";
+import { put, takeEvery, call, all } from 'redux-saga/effects';
+import { browserHistory } from '../app.jsx';
 
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
 
 import {
   SPREADSHEET_UPLOAD_REQUEST,
@@ -12,27 +12,27 @@ import {
   SAVE_DATASET_FAILURE,
   LOAD_DATASET_LIST_REQUEST,
   LOAD_DATASET_LIST_SUCCESS,
-  LOAD_DATASET_LIST_FAILURE
-} from "../reducers/spreadsheetReducer.js";
+  LOAD_DATASET_LIST_FAILURE,
+} from '../reducers/spreadsheetReducer.js';
 
 import {
   uploadSpreadsheetAPI,
   saveDatasetAPI,
-  loadDatasetListAPI
-} from "../api/spreadsheetAPI.js";
-import { handleError } from "../utils";
+  loadDatasetListAPI,
+} from '../api/spreadsheetAPI.js';
+import { handleError } from '../utils';
 
 function* spreadsheetUpload({ payload }) {
   try {
     const upload_result = yield call(uploadSpreadsheetAPI, payload);
     yield put({ type: SPREADSHEET_UPLOAD_SUCCESS, upload_result });
-    //todo: this needs to be updated as account type no longer handled via URL
+    // todo: this needs to be updated as account type no longer handled via URL
     // browserHistory.push('/upload?type=' + transfer_account_type)
-    browserHistory.push("/upload");
+    browserHistory.push('/upload');
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: SPREADSHEET_UPLOAD_FAILURE, error: error, preview_id });
+    yield put({ type: SPREADSHEET_UPLOAD_FAILURE, error, preview_id });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -72,6 +72,6 @@ export default function* spreadsheetSagas() {
   yield all([
     watchSaveDataset(),
     watchSpreadsheetUpload(),
-    watchLoadDatasetList()
+    watchLoadDatasetList(),
   ]);
 }

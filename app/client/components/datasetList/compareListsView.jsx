@@ -1,27 +1,23 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import { loadDatasetList } from "../../reducers/spreadsheetReducer";
+import { loadDatasetList } from '../../reducers/spreadsheetReducer';
 
-import { Input, StyledButton, ErrorMessage } from "./../styledElements";
+import { Input, StyledButton, ErrorMessage } from '../styledElements';
 
-import DatasetFeed from "./datasetFeed.jsx";
-import LoadingSpinner from "../loadingSpinner.jsx";
+import DatasetFeed from './datasetFeed.jsx';
+import LoadingSpinner from '../loadingSpinner.jsx';
 
-const mapStateToProps = state => {
-  return {
-    datasetList: state.datasetList,
-    login: state.login,
-    loggedIn: state.login.token != null
-  };
-};
+const mapStateToProps = state => ({
+  datasetList: state.datasetList,
+  login: state.login,
+  loggedIn: state.login.token != null,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadDatasetList: payload => dispatch(loadDatasetList())
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadDatasetList: payload => dispatch(loadDatasetList()),
+});
 
 class CompareListsView extends React.Component {
   constructor() {
@@ -45,7 +41,7 @@ class CompareListsView extends React.Component {
     }
 
     return (
-      <div style={{ display: "flex", marginTop: "1em" }}>
+      <div style={{ display: 'flex', marginTop: '1em' }}>
         <FeedContainer>
           <div style={{ fontWeight: 600 }}>Merge:</div>
           <FeedTitle>Your Datasets</FeedTitle>

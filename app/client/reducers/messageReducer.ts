@@ -1,14 +1,14 @@
-export const ADD_FLASH_MESSAGE = "ADD_FLASH_MESSAGE";
+export const ADD_FLASH_MESSAGE = 'ADD_FLASH_MESSAGE';
 interface AddFlashMessage {
   type: typeof ADD_FLASH_MESSAGE;
   error: boolean;
   message: string;
 }
-export const SHOW_FLASH = "SHOW_FLASH";
+export const SHOW_FLASH = 'SHOW_FLASH';
 interface ShowFlash {
   type: typeof SHOW_FLASH;
 }
-export const CLEAR_FLASH = "CLEAR_FLASH";
+export const CLEAR_FLASH = 'CLEAR_FLASH';
 interface ClearFlash {
   type: typeof CLEAR_FLASH;
 }
@@ -23,7 +23,7 @@ interface MessageState {
 const initialMessageState: MessageState = {
   showMessage: false,
   messageList: [],
-  error: false
+  error: false,
 };
 
 export const message = (state = initialMessageState, action: MessageAction) => {
@@ -32,7 +32,7 @@ export const message = (state = initialMessageState, action: MessageAction) => {
       return {
         ...state,
         error: action.error,
-        messageList: [...state.messageList, action.message]
+        messageList: [...state.messageList, action.message],
       };
     case SHOW_FLASH:
       return { ...state, showMessage: true };
@@ -41,7 +41,7 @@ export const message = (state = initialMessageState, action: MessageAction) => {
         ...state,
         showMessage: false,
         messageList: state.messageList.slice(1),
-        error: false
+        error: false,
       };
     default:
       return state;

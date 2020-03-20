@@ -1,33 +1,29 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled, { ThemeProvider } from 'styled-components';
 
-import SideBar from "../navBar.jsx";
+import SideBar from '../navBar.jsx';
 import {
   PageWrapper,
   ModuleBox,
-  CenterLoadingSideBarActive
-} from "../styledElements.js";
-import LoadingSpinner from "../loadingSpinner.jsx";
-import { LightTheme } from "../theme.js";
-import SingleUserManagement from "../user/singleUserManagement.jsx";
+  CenterLoadingSideBarActive,
+} from '../styledElements.js';
+import LoadingSpinner from '../loadingSpinner.jsx';
+import { LightTheme } from '../theme.js';
+import SingleUserManagement from '../user/singleUserManagement.jsx';
 
-import { loadUser } from "../../reducers/userReducer";
-import { loadTransferUsages } from "../../reducers/transferUsage/actions";
-import organizationWrapper from "../organizationWrapper";
+import { loadUser } from '../../reducers/userReducer';
+import { loadTransferUsages } from '../../reducers/transferUsage/actions';
+import organizationWrapper from '../organizationWrapper';
 
-const mapStateToProps = state => {
-  return {
-    users: state.users
-  };
-};
+const mapStateToProps = state => ({
+  users: state.users,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadUser: path => dispatch(loadUser({ path })),
-    loadTransferUsages: () => dispatch(loadTransferUsages())
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadUser: path => dispatch(loadUser({ path })),
+  loadTransferUsages: () => dispatch(loadTransferUsages()),
+});
 
 class SingleUserPage extends React.Component {
   constructor(props) {
@@ -36,8 +32,8 @@ class SingleUserPage extends React.Component {
   }
 
   componentDidMount() {
-    let pathname_array = location.pathname.split("/").slice(1);
-    let userId = parseInt(pathname_array[1]);
+    const pathname_array = location.pathname.split('/').slice(1);
+    const userId = parseInt(pathname_array[1]);
 
     if (userId) {
       this.props.loadUser(userId);
@@ -47,8 +43,8 @@ class SingleUserPage extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.key !== this.props.location.key) {
-      let pathname_array = location.pathname.split("/").slice(1);
-      let userId = parseInt(pathname_array[1]);
+      const pathname_array = location.pathname.split('/').slice(1);
+      const userId = parseInt(pathname_array[1]);
 
       if (userId) {
         this.props.loadUser(userId);
@@ -57,9 +53,9 @@ class SingleUserPage extends React.Component {
   }
 
   render() {
-    let pathname_array = location.pathname.split("/").slice(1);
-    let url_provided = pathname_array[1];
-    let userId = parseInt(url_provided);
+    const pathname_array = location.pathname.split('/').slice(1);
+    const url_provided = pathname_array[1];
+    const userId = parseInt(url_provided);
 
     // check if transferAccount exists else show fallback
     if (this.props.users.byId[userId]) {
@@ -67,7 +63,7 @@ class SingleUserPage extends React.Component {
     } else {
       userComponent = (
         <ModuleBox>
-          <p style={{ padding: "1em", textAlign: "center" }}>
+          <p style={{ padding: '1em', textAlign: 'center' }}>
             No Such User: {url_provided}
           </p>
         </ModuleBox>
@@ -84,23 +80,22 @@ class SingleUserPage extends React.Component {
           </CenterLoadingSideBarActive>
         </WrapperDiv>
       );
-    } else {
-      return (
-        <WrapperDiv>
-          <SideBar />
-
-          <PageWrapper>
-            <ThemeProvider theme={LightTheme}>{userComponent}</ThemeProvider>
-          </PageWrapper>
-        </WrapperDiv>
-      );
     }
+    return (
+      <WrapperDiv>
+        <SideBar />
+
+        <PageWrapper>
+          <ThemeProvider theme={LightTheme}>{userComponent}</ThemeProvider>
+        </PageWrapper>
+      </WrapperDiv>
+    );
   }
 }
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(organizationWrapper(SingleUserPage));
 
 const WrapperDiv = styled.div`

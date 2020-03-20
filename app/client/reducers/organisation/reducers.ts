@@ -1,4 +1,4 @@
-import { combineReducers } from "redux";
+import { combineReducers } from 'redux';
 import {
   LOAD_ORGANISATION_REQUEST,
   UPDATE_ORGANISATION_LIST,
@@ -10,13 +10,13 @@ import {
   EDIT_ORGANISATION_FAILURE,
   EditOrganisationAction,
   OrganisationAction,
-  Organisation
-} from "./types";
-import { DEEEEEEP } from "../../utils";
+  Organisation,
+} from './types';
+import { DEEEEEEP } from '../../utils';
 
 const byId = (
   state: Organisation[] = [] || {},
-  action: OrganisationAction
+  action: OrganisationAction,
 ): Organisation[] => {
   switch (action.type) {
     case UPDATE_ORGANISATION_LIST:
@@ -34,21 +34,21 @@ export interface EditOrganisationState {
 
 const initialEditStatusState: EditOrganisationState = {
   isRequesting: false,
-  success: false
+  success: false,
 };
 const editStatus = (
   state = initialEditStatusState,
-  action: EditOrganisationAction
+  action: EditOrganisationAction,
 ): EditOrganisationState => {
   switch (action.type) {
     case EDIT_ORGANISATION_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case EDIT_ORGANISATION_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case EDIT_ORGANISATION_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -62,11 +62,11 @@ export interface LoadOrganisationState {
 }
 const initialLoadStatusState: LoadOrganisationState = {
   isRequesting: false,
-  success: false
+  success: false,
 };
 const loadStatus = (
   state = initialLoadStatusState,
-  action: LoadOrganisationsAction
+  action: LoadOrganisationsAction,
 ): LoadOrganisationState => {
   switch (action.type) {
     case LOAD_ORGANISATION_REQUEST:

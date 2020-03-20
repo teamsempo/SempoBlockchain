@@ -1,49 +1,49 @@
-import React from "react";
-import { StyledSelect, Input, StyledButton } from "./styledElements";
-import styled from "styled-components";
-import PropTypes from "prop-types";
-import { replaceUnderscores } from "../utils";
-import { SingleDatePicker } from "react-dates";
+import React from 'react';
+import { StyledSelect, Input, StyledButton } from './styledElements';
+import styled from 'styled-components';
+import PropTypes from 'prop-types';
+import { replaceUnderscores } from '../utils';
+import { SingleDatePicker } from 'react-dates';
 
-import moment from "moment";
+import moment from 'moment';
 
-import { USER_FILTER_TYPE, USER_FILTER_ATTRIBUTE } from "../constants";
+import { USER_FILTER_TYPE, USER_FILTER_ATTRIBUTE } from '../constants';
 
 const propTypes = {
   possibleFilters: PropTypes.object,
   onFiltersChanged: PropTypes.func,
   visible: PropTypes.bool,
-  label: PropTypes.string
+  label: PropTypes.string,
 };
 
 const defaultProps = {
   possibleFilters: [],
   onFiltersChanged: () => {
-    console.log("Filters changed");
+    console.log('Filters changed');
   },
   visible: true,
-  label: "Filter:"
+  label: 'Filter:',
 };
 
 class Filter extends React.Component {
   constructor() {
     super();
     this.state = {
-      phrase: "",
+      phrase: '',
       date: moment(),
       focused: false,
       filters: [],
-      keyName: "select",
-      value: "select",
-      filterType: "of",
-      comparator: "<",
+      keyName: 'select',
+      value: 'select',
+      filterType: 'of',
+      comparator: '<',
       keyNameValues: {},
       possibleFilters: null,
       filterActive: false,
       dropdownActive: false,
       saveFilterDropdown: false,
       loadFiltersDropdown: false,
-      filterName: null
+      filterName: null,
     };
   }
 
@@ -59,7 +59,7 @@ class Filter extends React.Component {
         keyNameValues: {},
         filterType: USER_FILTER_TYPE.DATE_RANGE,
         GtLtThreshold: 0,
-        dropdownActive: false
+        dropdownActive: false,
       });
     } else if (keyNameProperties.type === USER_FILTER_TYPE.INT_RANGE) {
       this.setState({
@@ -67,7 +67,7 @@ class Filter extends React.Component {
         keyNameValues: {},
         filterType: USER_FILTER_TYPE.INT_RANGE,
         GtLtThreshold: 0,
-        dropdownActive: false
+        dropdownActive: false,
       });
     } else {
       this.setState(
@@ -76,18 +76,18 @@ class Filter extends React.Component {
           keyNameValues: {},
           filterType: USER_FILTER_TYPE.DISCRETE,
           GtLtThreshold: 0,
-          dropdownActive: false
+          dropdownActive: false,
         },
         () => {
           [...keyNameValues].map(i => {
             this.setState(prevState => ({
               keyNameValues: {
                 ...prevState.keyNameValues,
-                [i]: false
-              }
+                [i]: false,
+              },
             }));
           });
-        }
+        },
       );
     }
   };
@@ -98,8 +98,8 @@ class Filter extends React.Component {
     this.setState(prevState => ({
       keyNameValues: {
         ...prevState.keyNameValues,
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
   };
 
@@ -115,14 +115,14 @@ class Filter extends React.Component {
         id: id,
         type: USER_FILTER_TYPE.DISCRETE,
         keyName: this.state.keyName,
-        allowedValues: values
+        allowedValues: values,
       };
     } else if (this.state.filterType === USER_FILTER_TYPE.DATE_RANGE) {
       newFilter = {
         id: id,
         type: this.state.comparator,
         keyName: this.state.keyName,
-        threshold: this.state.date.format("YYYY-MM-DD")
+        threshold: this.state.date.format('YYYY-MM-DD'),
       };
     } else {
       let value = parseFloat(this.state.GtLtThreshold);
@@ -130,18 +130,18 @@ class Filter extends React.Component {
         id: id,
         type: this.state.comparator,
         keyName: this.state.keyName,
-        threshold: value
+        threshold: value,
       };
     }
 
     this.setState({ filters: [...this.state.filters, newFilter] }, () => {
       this.setState({
-        keyName: "select",
-        value: "select",
+        keyName: 'select',
+        value: 'select',
         keyNameValues: {},
-        filterType: "of",
+        filterType: 'of',
         GtLtThreshold: 0,
-        dropdownActive: false
+        dropdownActive: false,
       });
       this.props.onFiltersChanged(this.state.filters);
     });
@@ -149,10 +149,10 @@ class Filter extends React.Component {
 
   removeFilter = evt => {
     let newFilters = [...this.state.filters].filter(
-      filter => filter.id !== parseInt(evt.target.name)
+      filter => filter.id !== parseInt(evt.target.name),
     );
     this.setState({ filters: newFilters }, () =>
-      this.props.onFiltersChanged(this.state.filters)
+      this.props.onFiltersChanged(this.state.filters),
     );
   };
 
@@ -161,28 +161,26 @@ class Filter extends React.Component {
     let { keyName } = this.state;
     const keys =
       possibleFilters !== undefined && possibleFilters !== null
-        ? Object.keys(possibleFilters).filter(key => key !== "profile_picture")
+        ? Object.keys(possibleFilters).filter(key => key !== 'profile_picture')
         : [];
 
     return (
       <div
         style={{
-          margin: "1em",
-          marginRight: "0em",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          flexFlow: "row wrap"
-        }}
-      >
+          margin: '1em',
+          marginRight: '0em',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          flexFlow: 'row wrap',
+        }}>
         <div
           style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center"
-          }}
-        >
-          <FilterText style={{ padding: "0 10px 0 0" }}>
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+          <FilterText style={{ padding: '0 10px 0 0' }}>
             {this.props.label}
           </FilterText>
           <StyledSelectKey
@@ -190,15 +188,14 @@ class Filter extends React.Component {
             value={keyName}
             onChange={evt =>
               this.keyNameChange(evt.target.name, evt.target.value)
-            }
-          >
+            }>
             <option name="key" value="select" disabled>
               select attribute
             </option>
-            {typeof keys !== "undefined"
+            {typeof keys !== 'undefined'
               ? keys.map((key, index) => (
                   <option name="value" value={key} key={index}>
-                    {replaceUnderscores(possibleFilters[key]["name"] || key)}
+                    {replaceUnderscores(possibleFilters[key]['name'] || key)}
                   </option>
                 ))
               : null}
@@ -225,30 +222,29 @@ class Filter extends React.Component {
     let { filterType, keyName, comparator } = this.state;
     var filter_type_picker = <div />;
 
-    if (keyName !== "select") {
+    if (keyName !== 'select') {
       if (
         filterType === USER_FILTER_TYPE.DISCRETE ||
         USER_FILTER_TYPE.BOOLEAN_MAPPING === filterType
       ) {
         filter_type_picker = (
-          <FilterText style={{ padding: "0 10px" }}>is one of</FilterText>
+          <FilterText style={{ padding: '0 10px' }}>is one of</FilterText>
         );
       } else {
         filter_type_picker = (
           <StyledSelectKey
             name="keyName"
             value={comparator}
-            onChange={evt => this.comparatorChange(evt.target.value)}
-          >
-            <option name="value" value={"<"}>
+            onChange={evt => this.comparatorChange(evt.target.value)}>
+            <option name="value" value={'<'}>
               {filterType === USER_FILTER_TYPE.DATE_RANGE
-                ? "before"
-                : "is less than"}
+                ? 'before'
+                : 'is less than'}
             </option>
-            <option name="value" value={">"}>
+            <option name="value" value={'>'}>
               {filterType === USER_FILTER_TYPE.DATE_RANGE
-                ? "after"
-                : "is greater than"}
+                ? 'after'
+                : 'is greater than'}
             </option>
           </StyledSelectKey>
         );
@@ -264,59 +260,55 @@ class Filter extends React.Component {
       filterType,
       dropdownActive,
       value,
-      keyNameValues
+      keyNameValues,
     } = this.state;
     var valuePicker = <div />;
     if (
-      keyName !== "select" &&
+      keyName !== 'select' &&
       (filterType === USER_FILTER_TYPE.DISCRETE ||
         filterType === USER_FILTER_TYPE.BOOLEAN_MAPPING)
     ) {
       let valueArray =
-        typeof possibleFilters[keyName].values !== "undefined"
+        typeof possibleFilters[keyName].values !== 'undefined'
           ? [...possibleFilters[keyName].values]
           : [];
 
       valuePicker = (
         <div
           style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center"
-          }}
-        >
-          <div style={{ width: "200px" }}>
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+          <div style={{ width: '200px' }}>
             <div
-              style={{ width: "inherit", position: "relative" }}
-              onClick={this.dropdownActive}
-            >
+              style={{ width: 'inherit', position: 'relative' }}
+              onClick={this.dropdownActive}>
               <StyledSelectKey
-                style={{ width: "inherit" }}
+                style={{ width: 'inherit' }}
                 name="value"
                 value={value}
                 onClick={this.dropdownActive}
-                onChange={this.handleChange}
-              >
+                onChange={this.handleChange}>
                 <option name="value" value="select" disabled>
                   select value
                 </option>
               </StyledSelectKey>
               <div
                 style={{
-                  position: "absolute",
+                  position: 'absolute',
                   top: 0,
                   right: 0,
                   bottom: 0,
-                  left: 0
+                  left: 0,
                 }}
               />
             </div>
             <Checkboxes
-              style={{ display: dropdownActive ? "block" : "none" }}
+              style={{ display: dropdownActive ? 'block' : 'none' }}
               onMouseLeave={() =>
                 this.setState({ dropdownActive: !this.state.dropdownActive })
-              }
-            >
+              }>
               {valueArray.length !== 0
                 ? valueArray.map((key, index) => (
                     <CheckboxLabel key={index}>
@@ -335,22 +327,21 @@ class Filter extends React.Component {
               onClick={() =>
                 this.setState({ dropdownActive: !this.state.dropdownActive })
               }
-              style={{ display: this.state.dropdownActive ? "" : "none" }}
+              style={{ display: this.state.dropdownActive ? '' : 'none' }}
             />
           </div>
 
           {this.addFilterBtn()}
         </div>
       );
-    } else if (keyName !== "select") {
+    } else if (keyName !== 'select') {
       valuePicker = (
         <div
           style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center"
-          }}
-        >
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
           {/* <ThresholdInput type="number" name="GtLtThreshold" value={this.state.GtLtThreshold} onChange={this.handleChange}/> */}
           {filterType === USER_FILTER_TYPE.DATE_RANGE ? (
             <StyledWrapper>
@@ -393,20 +384,19 @@ class Filter extends React.Component {
     let { keyNameValues, filterType } = this.state;
     let rowValues = Object.values(keyNameValues);
     let numberSelected = rowValues.filter(Boolean).length;
-    let isSelected = numberSelected > 0 || filterType !== "of";
+    let isSelected = numberSelected > 0 || filterType !== 'of';
     var addFilterBtn = <div />;
     if (isSelected) {
       addFilterBtn = (
         <div>
           <StyledButton
             style={{
-              fontWeight: "400",
-              margin: "0em 1em",
-              lineHeight: "25px",
-              height: "25px"
+              fontWeight: '400',
+              margin: '0em 1em',
+              lineHeight: '25px',
+              height: '25px',
             }}
-            onClick={this.addFilter}
-          >
+            onClick={this.addFilter}>
             Add
           </StyledButton>
         </div>
@@ -422,13 +412,12 @@ class Filter extends React.Component {
       addedFilters = (
         <div
           style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            margin: "0 1em",
-            flexFlow: "row wrap"
-          }}
-        >
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            margin: '0 1em',
+            flexFlow: 'row wrap',
+          }}>
           {filters.map((filter, index) => {
             if (
               filter.type === USER_FILTER_TYPE.DISCRETE ||
@@ -436,13 +425,13 @@ class Filter extends React.Component {
             ) {
               return (
                 <FilterBubble key={index}>
-                  <FilterText style={{ color: "#FFF" }}>
-                    {filter.keyName}:{" "}
+                  <FilterText style={{ color: '#FFF' }}>
+                    {filter.keyName}:{' '}
                     {filter.allowedValues.map((value, index) => {
                       if (filter.allowedValues.length === index + 1) {
                         return value;
                       } else {
-                        return value + " or ";
+                        return value + ' or ';
                       }
                     })}
                   </FilterText>
@@ -456,7 +445,7 @@ class Filter extends React.Component {
             } else {
               return (
                 <FilterBubble key={index}>
-                  <FilterText style={{ color: "#FFF" }}>
+                  <FilterText style={{ color: '#FFF' }}>
                     {filter.keyName} {filter.type} {filter.threshold}
                   </FilterText>
                   <SVG
@@ -476,16 +465,15 @@ class Filter extends React.Component {
 
   render() {
     return (
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         {this.activeFilterBubbles()}
         <div
           style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            flexFlow: "row wrap"
-          }}
-        >
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            flexFlow: 'row wrap',
+          }}>
           {this.attributePicker()}
           {this.filterTypePicker()}
           {this.valuePicker()}

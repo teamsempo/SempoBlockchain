@@ -1,7 +1,12 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from './apiClient';
 
 export const loadFiltersAPI = ({ query, path }) =>
-  apiClient({ url: "/filters/", method: "GET", query: query, path: path });
+  apiClient({
+    url: '/filters/',
+    method: 'GET',
+    query,
+    path,
+  });
 
 export const createFilterAPI = ({ body }) =>
-  apiClient({ url: "/filters/", method: "POST", body: body });
+  apiClient({ url: '/filters/', method: 'POST', body });

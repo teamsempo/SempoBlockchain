@@ -1,13 +1,13 @@
-import * as React from "react";
+import * as React from 'react';
 
-import { InjectedFormProps, reduxForm } from "redux-form";
+import { InjectedFormProps, reduxForm } from 'redux-form';
 
-import { ErrorMessage } from "../styledElements";
-import { Organisation } from "../../reducers/organisation/types";
+import { ErrorMessage } from '../styledElements';
+import { Organisation } from '../../reducers/organisation/types';
 
-import AsyncButton from "../AsyncButton";
-import SelectField from "../form/SelectField";
-import InputField from "../form/InputField";
+import AsyncButton from '../AsyncButton';
+import SelectField from '../form/SelectField';
+import InputField from '../form/InputField';
 
 export interface IOrganisationSettings {
   defaultDisbursement: number;
@@ -36,13 +36,13 @@ class OrganisationSettingForm extends React.Component<
     let countryCode =
       isoCountries.find(
         (country: string) =>
-          country.slice(0, 2) == activeOrganisation.country_code
-      ) || "";
+          country.slice(0, 2) == activeOrganisation.country_code,
+      ) || '';
 
     this.props.initialize({
       defaultDisbursement: activeOrganisation.default_disbursement / 100,
       requireTransferCard: activeOrganisation.require_transfer_card,
-      countryCode: countryCode.toLowerCase()
+      countryCode: countryCode.toLowerCase(),
     });
   }
 
@@ -55,10 +55,9 @@ class OrganisationSettingForm extends React.Component<
           name="defaultDisbursement"
           label="Default Disbursement"
           isRequired
-          isNumber
-        >
+          isNumber>
           {activeOrganisation !== null &&
-          typeof activeOrganisation !== "undefined"
+          typeof activeOrganisation !== 'undefined'
             ? activeOrganisation.token.symbol
             : null}
         </InputField>
@@ -83,7 +82,7 @@ class OrganisationSettingForm extends React.Component<
         <AsyncButton
           type="submit"
           isLoading={this.props.organisations.editStatus.isRequesting}
-          buttonStyle={{ display: "flex" }}
+          buttonStyle={{ display: 'flex' }}
           buttonText="Submit"
         />
       </form>
@@ -92,6 +91,6 @@ class OrganisationSettingForm extends React.Component<
 }
 
 export default reduxForm({
-  form: "organisationSettings"
+  form: 'organisationSettings',
   //@ts-ignore
 })(OrganisationSettingForm);

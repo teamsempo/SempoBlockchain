@@ -1,10 +1,10 @@
-import { combineReducers } from "redux";
-import { DEEEEEEP } from "../utils";
+import { combineReducers } from 'redux';
+import { DEEEEEEP } from '../utils';
 
-export const LOAD_METRICS_REQUEST = "LOAD_METRICS_REQUEST";
-export const LOAD_METRICS_SUCCESS = "LOAD_METRICS_SUCCESS";
-export const LOAD_METRICS_ERROR = "LOAD_METRICS_ERROR";
-export const UPDATE_METRICS = "UPDATE_METRICS";
+export const LOAD_METRICS_REQUEST = 'LOAD_METRICS_REQUEST';
+export const LOAD_METRICS_SUCCESS = 'LOAD_METRICS_SUCCESS';
+export const LOAD_METRICS_ERROR = 'LOAD_METRICS_ERROR';
+export const UPDATE_METRICS = 'UPDATE_METRICS';
 
 const metricsState = (state = {}, action) => {
   switch (action.type) {
@@ -18,7 +18,7 @@ const metricsState = (state = {}, action) => {
 const initialLoadMetricsState = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
 };
 
 const loadStatus = (state = initialLoadMetricsState, action) => {
@@ -36,10 +36,10 @@ const loadStatus = (state = initialLoadMetricsState, action) => {
 
 export const metrics = combineReducers({
   metricsState,
-  loadStatus
+  loadStatus,
 });
 
 export const loadMetrics = payload => ({
   type: LOAD_METRICS_REQUEST,
-  payload
+  payload,
 });

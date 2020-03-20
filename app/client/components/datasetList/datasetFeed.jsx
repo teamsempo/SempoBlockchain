@@ -1,18 +1,14 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import { loadDatasetList } from "../../reducers/spreadsheetReducer";
+import { loadDatasetList } from '../../reducers/spreadsheetReducer';
 
-import { Input, StyledButton, ErrorMessage } from "./../styledElements";
+import { Input, StyledButton, ErrorMessage } from '../styledElements';
 
-const mapStateToProps = state => {
-  return {};
-};
+const mapStateToProps = state => ({});
 
-const mapDispatchToProps = dispatch => {
-  return {};
-};
+const mapDispatchToProps = dispatch => ({});
 
 class DatasetFeedContainer extends React.Component {
   constructor() {
@@ -23,17 +19,15 @@ class DatasetFeedContainer extends React.Component {
   render() {
     return (
       <FeedContainer>
-        {this.props.datasetList.map(item => {
-          return (
-            <FeedItem key={item.id}>
-              <FeedName>{item.name}</FeedName>
-              <MetaRow>
-                <Country>{item.country}</Country>
-                <Uploader>{item.uploader_email}</Uploader>
-              </MetaRow>
-            </FeedItem>
-          );
-        })}
+        {this.props.datasetList.map(item => (
+          <FeedItem key={item.id}>
+            <FeedName>{item.name}</FeedName>
+            <MetaRow>
+              <Country>{item.country}</Country>
+              <Uploader>{item.uploader_email}</Uploader>
+            </MetaRow>
+          </FeedItem>
+        ))}
       </FeedContainer>
     );
   }
@@ -41,7 +35,7 @@ class DatasetFeedContainer extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(DatasetFeedContainer);
 
 const FeedContainer = styled.div``;

@@ -7,9 +7,9 @@ import {
   cancelled,
   cancel,
   takeEvery,
-  select
-} from "redux-saga/effects";
-import { normalize } from "normalizr";
+  select,
+} from 'redux-saga/effects';
+import { normalize } from 'normalizr';
 
 import {
   handleError,
@@ -19,13 +19,13 @@ import {
   storeOrgid,
   removeOrgId,
   removeTFAToken,
-  parseQuery
-} from "../utils";
+  parseQuery,
+} from '../utils';
 import {
   adminUserSchema,
   inviteUserSchema,
-  organisationSchema
-} from "../schemas";
+  organisationSchema,
+} from '../schemas';
 
 import {
   requestApiToken,
@@ -38,10 +38,10 @@ import {
   updateUserAPI,
   inviteUserAPI,
   deleteInviteAPI,
-  ValidateTFAAPI
-} from "../api/authAPI";
+  ValidateTFAAPI,
+} from '../api/authAPI';
 
-import { authenticatePusher } from "../api/pusherAPI";
+import { authenticatePusher } from '../api/pusherAPI';
 
 import {
   REAUTH_REQUEST,
@@ -80,15 +80,15 @@ import {
   DELETE_INVITE_FAILURE,
   VALIDATE_TFA_REQUEST,
   VALIDATE_TFA_SUCCESS,
-  VALIDATE_TFA_FAILURE
-} from "../reducers/auth/types";
+  VALIDATE_TFA_FAILURE,
+} from '../reducers/auth/types';
 
-import { browserHistory } from "../app.jsx";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
-import { UPDATE_ORGANISATION_LIST } from "../reducers/organisation/types";
+import { browserHistory } from '../app.jsx';
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
+import { UPDATE_ORGANISATION_LIST } from '../reducers/organisation/types';
 
 function* updateStateFromAdmin(data) {
-  //Schema expects a list of admin user objects
+  // Schema expects a list of admin user objects
   let admin_list;
   let invite_list;
 
@@ -107,15 +107,15 @@ function* updateStateFromAdmin(data) {
   const normalizeAdminData = normalize(admin_list, adminUserSchema);
   const normalizeInviteData = normalize(invite_list, inviteUserSchema);
 
-  const admins = normalizeAdminData.entities.admins;
-  const invites = normalizeInviteData.entities.invites;
+  const { admins } = normalizeAdminData.entities;
+  const { invites } = normalizeInviteData.entities;
 
   yield put({ type: UPDATE_ADMIN_USER_LIST, admins });
   yield put({ type: DEEP_UPDATE_INVITE_USER_LIST, invites });
 }
 
 export function* updateOrganisationStateFromLoginData(data) {
-  //Schema expects a list of organisation objects
+  // Schema expects a list of organisation objects
   let organisation_list;
   if (data.organisations) {
     organisation_list = data.organisations;
@@ -124,7 +124,7 @@ export function* updateOrganisationStateFromLoginData(data) {
   }
 
   const normalizedData = normalize(organisation_list, organisationSchema);
-  const organisations = normalizedData.entities.organisations;
+  const { organisations } = normalizedData.entities;
 
   if (organisations) {
     yield put({ type: UPDATE_ORGANISATION_LIST, organisations });
@@ -135,13 +135,13 @@ function* saveOrgId({ payload }) {
   try {
     yield call(storeOrgid, payload.organisationId.toString());
 
-    let query_params = parseQuery(window.location.search);
+    const query_params = parseQuery(window.location.search);
 
     // if query param and payload are matching then just reload to update navbar
-    if (query_params["org"] && payload.organisationId == query_params["org"]) {
+    if (query_params.org && payload.organisationId == query_params.org) {
       window.location.reload();
     } else {
-      window.location.assign("/");
+      window.location.assign('/');
     }
   } catch (e) {
     removeOrgId();
@@ -167,7 +167,7 @@ function createLoginSuccessObject(token) {
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
     webApiVersion: token.web_api_version,
-    organisationId: token.active_organisation_id
+    organisationId: token.active_organisation_id,
   };
 }
 
@@ -175,35 +175,36 @@ function* requestToken({ payload }) {
   try {
     const token_response = yield call(requestApiToken, payload);
 
-    if (token_response.status === "success") {
+    if (token_response.status === 'success') {
       yield call(updateOrganisationStateFromLoginData, token_response);
       yield put(createLoginSuccessObject(token_response));
       yield call(storeSessionToken, token_response.auth_token);
       yield call(authenticatePusher);
       return token_response;
-    } else if (token_response.tfa_url) {
+    }
+    if (token_response.tfa_url) {
       yield call(storeSessionToken, token_response.auth_token);
       yield put({
         type: LOGIN_PARTIAL,
         error: token_response.message,
         tfaURL: token_response.tfa_url,
-        tfaFailure: true
+        tfaFailure: true,
       });
 
       return token_response;
-    } else if (token_response.tfa_failure) {
+    }
+    if (token_response.tfa_failure) {
       yield call(removeTFAToken); // something failed on the TFA logic
       yield call(storeSessionToken, token_response.auth_token);
       yield put({
         type: LOGIN_PARTIAL,
         error: token_response.message,
         tfaURL: null,
-        tfaFailure: true
+        tfaFailure: true,
       });
       return token_response;
-    } else {
-      yield put({ type: LOGIN_FAILURE, error: token_response.message });
     }
+    yield put({ type: LOGIN_FAILURE, error: token_response.message });
   } catch (error) {
     yield put({ type: LOGIN_FAILURE, error: error.statusText });
   } finally {
@@ -214,7 +215,7 @@ function* requestToken({ payload }) {
 }
 
 function* watchLoginRequest() {
-  var reauth = yield call(refreshToken);
+  const reauth = yield call(refreshToken);
   yield takeEvery(LOGIN_REQUEST, requestToken);
 }
 
@@ -250,7 +251,7 @@ function* register({ payload }) {
     const registered_account = yield call(registerAPI, payload);
 
     if (
-      registered_account.status === "success" &&
+      registered_account.status === 'success' &&
       !registered_account.auth_token
     ) {
       // manual sign up, need to activate email
@@ -258,9 +259,9 @@ function* register({ payload }) {
       yield put({
         type: ADD_FLASH_MESSAGE,
         error: false,
-        message: registered_account.message
+        message: registered_account.message,
       });
-      browserHistory.push("/login");
+      browserHistory.push('/login');
     } else if (registered_account.auth_token && !registered_account.tfa_url) {
       yield call(updateOrganisationStateFromLoginData, registered_account);
       // email invite, auto login as email validated
@@ -274,7 +275,7 @@ function* register({ payload }) {
         type: LOGIN_PARTIAL,
         error: registered_account.message,
         tfaURL: registered_account.tfa_url,
-        tfaFailure: true
+        tfaFailure: true,
       });
     } else if (registered_account.tfa_failure) {
       yield call(removeTFAToken); // something failed on the TFA logic
@@ -283,7 +284,7 @@ function* register({ payload }) {
         type: LOGIN_PARTIAL,
         error: registered_account.message,
         tfaURL: null,
-        tfaFailure: true
+        tfaFailure: true,
       });
       return registered_account;
     } else {
@@ -317,7 +318,7 @@ function* activate({ payload }) {
         type: LOGIN_PARTIAL,
         error: activated_account.message,
         tfaURL: activated_account.tfa_url,
-        tfaFailure: true
+        tfaFailure: true,
       });
     } else if (activated_account.tfa_failure) {
       yield call(removeTFAToken); // something failed on the TFA logic
@@ -326,13 +327,13 @@ function* activate({ payload }) {
         type: LOGIN_PARTIAL,
         error: activated_account.message,
         tfaURL: null,
-        tfaFailure: true
+        tfaFailure: true,
       });
       return activated_account;
     } else {
       yield put({
         type: ACTIVATE_FAILURE,
-        error: activated_account.statusText
+        error: activated_account.statusText,
       });
     }
   } catch (fetch_error) {
@@ -401,10 +402,10 @@ function* updateUserRequest({ payload }) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: result.message
+      message: result.message,
     });
   } catch (error) {
-    yield put({ type: EDIT_ADMIN_USER_FAILURE, error: error });
+    yield put({ type: EDIT_ADMIN_USER_FAILURE, error });
     yield put({ type: ADD_FLASH_MESSAGE, error: false, message: error });
   }
 }
@@ -421,15 +422,15 @@ function* deleteInvite({ payload }) {
     yield put({ type: DELETE_INVITE_SUCCESS, result });
 
     // delete item from local state
-    let inviteState = yield select(getInviteState);
-    let invites = { ...inviteState };
+    const inviteState = yield select(getInviteState);
+    const invites = { ...inviteState };
     delete invites[payload.body.invite_id];
 
     yield put({ type: UPDATE_INVITE_USER_LIST, invites });
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: result.message
+      message: result.message,
     });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
@@ -448,9 +449,9 @@ function* inviteUserRequest({ payload }) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: result.message
+      message: result.message,
     });
-    browserHistory.push("/settings");
+    browserHistory.push('/settings');
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     yield put({ type: INVITE_USER_FAILURE, error: error.message });
@@ -496,6 +497,6 @@ export default function* authSagas() {
     watchUpdateUserRequest(),
     watchInviteUserRequest(),
     watchDeleteInviteRequest(),
-    watchValidateTFA()
+    watchValidateTFA(),
   ]);
 }

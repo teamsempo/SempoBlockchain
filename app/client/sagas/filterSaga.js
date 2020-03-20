@@ -1,8 +1,8 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
-import { normalize } from "normalizr";
-import { handleError } from "../utils";
+import { put, takeEvery, call, all } from 'redux-saga/effects';
+import { normalize } from 'normalizr';
+import { handleError } from '../utils';
 
-import { filterSchema } from "../schemas";
+import { filterSchema } from '../schemas';
 
 import {
   UPDATE_FILTER_LIST,
@@ -11,14 +11,14 @@ import {
   LOAD_FILTERS_FAILURE,
   CREATE_FILTER_REQUEST,
   CREATE_FILTER_SUCCESS,
-  CREATE_FILTER_FAILURE
-} from "../reducers/filterReducer.js";
+  CREATE_FILTER_FAILURE,
+} from '../reducers/filterReducer.js';
 
-import { loadFiltersAPI, createFilterAPI } from "../api/filterAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+import { loadFiltersAPI, createFilterAPI } from '../api/filterAPI';
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
 
 function* updateStateFromFilter(data) {
-  //Schema expects a list of filter objects
+  // Schema expects a list of filter objects
   if (data.filters) {
     var filter_list = data.filters;
   } else {
@@ -27,7 +27,7 @@ function* updateStateFromFilter(data) {
 
   const normalizedData = normalize(filter_list, filterSchema);
 
-  const filters = normalizedData.entities.filters;
+  const { filters } = normalizedData.entities;
 
   yield put({ type: UPDATE_FILTER_LIST, filters });
 }
@@ -39,7 +39,7 @@ function* loadFilters({ payload }) {
 
     yield call(updateStateFromFilter, load_result.data);
 
-    const filters = normalize(load_result.data, filterSchema).entities.filters;
+    const { filters } = normalize(load_result.data, filterSchema).entities;
     yield put({ type: LOAD_FILTERS_SUCCESS, filters });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
@@ -64,7 +64,7 @@ function* createFilter({ payload }) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: result.message
+      message: result.message,
     });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);

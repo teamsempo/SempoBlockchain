@@ -1,5 +1,5 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
-import { normalize } from "normalizr";
+import { put, takeEvery, call, all } from 'redux-saga/effects';
+import { normalize } from 'normalizr';
 
 import {
   PUSHER_CREDIT_TRANSFER,
@@ -12,28 +12,28 @@ import {
   MODIFY_TRANSFER_SUCCESS,
   CREATE_TRANSFER_REQUEST,
   CREATE_TRANSFER_SUCCESS,
-  CREATE_TRANSFER_FAILURE
-} from "../reducers/creditTransferReducer.js";
+  CREATE_TRANSFER_FAILURE,
+} from '../reducers/creditTransferReducer.js';
 
-import { UPDATE_METRICS } from "../reducers/metricReducer";
+import { UPDATE_METRICS } from '../reducers/metricReducer';
 
 import {
   UPDATE_TRANSFER_ACCOUNTS,
-  UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
-} from "../reducers/transferAccountReducer.js";
-import { UPDATE_USER_LIST } from "../reducers/userReducer";
+  UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS,
+} from '../reducers/transferAccountReducer.js';
+import { UPDATE_USER_LIST } from '../reducers/userReducer';
 
 import {
   loadCreditTransferListAPI,
   modifyTransferAPI,
-  newTransferAPI
-} from "../api/creditTransferAPI.js";
-import { creditTransferSchema } from "../schemas";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
-import { handleError } from "../utils";
+  newTransferAPI,
+} from '../api/creditTransferAPI.js';
+import { creditTransferSchema } from '../schemas';
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
+import { handleError } from '../utils';
 
 function* updateStateFromCreditTransfer(result) {
-  //Schema expects a list of credit transfer objects
+  // Schema expects a list of credit transfer objects
   let credit_transfer_list = [];
   if (result.data.credit_transfers) {
     credit_transfer_list = result.data.credit_transfers;
@@ -43,12 +43,12 @@ function* updateStateFromCreditTransfer(result) {
 
   const normalizedData = normalize(credit_transfer_list, creditTransferSchema);
 
-  const transfer_accounts = normalizedData.entities.transfer_accounts;
+  const { transfer_accounts } = normalizedData.entities;
   if (transfer_accounts) {
     yield put({ type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
   }
 
-  const users = normalizedData.entities.users;
+  const { users } = normalizedData.entities;
   if (users) {
     yield put({ type: UPDATE_USER_LIST, users });
   }
@@ -59,12 +59,12 @@ function* updateStateFromCreditTransfer(result) {
     // to the associated transfer_account object credit_transfer array
     yield put({
       type: UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS,
-      credit_transfer_list
+      credit_transfer_list,
     });
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: result.message
+      message: result.message,
     });
   }
 
@@ -73,7 +73,7 @@ function* updateStateFromCreditTransfer(result) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: result.bulk_responses[0].status !== 201,
-      message: result.bulk_responses[0].message
+      message: result.bulk_responses[0].message,
     });
   }
 
@@ -81,7 +81,7 @@ function* updateStateFromCreditTransfer(result) {
   if (metrics) {
     yield put({ type: UPDATE_METRICS, metrics });
   }
-  const credit_transfers = normalizedData.entities.credit_transfers;
+  const { credit_transfers } = normalizedData.entities;
 
   if (credit_transfers) {
     yield put({ type: UPDATE_CREDIT_TRANSFER_LIST, credit_transfers });
@@ -98,7 +98,7 @@ function* loadCreditTransferList({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error: error });
+    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -116,7 +116,7 @@ function* loadPusherCreditTransfer(pusher_data) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error: error });
+    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error });
   }
 }
 
@@ -135,12 +135,12 @@ function* modifyTransfer({ payload }) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: result.message
+      message: result.message,
     });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: MODIFY_TRANSFER_FAILURE, error: error });
+    yield put({ type: MODIFY_TRANSFER_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -160,7 +160,7 @@ function* createTransfer({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_TRANSFER_FAILURE, error: error });
+    yield put({ type: CREATE_TRANSFER_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -175,6 +175,6 @@ export default function* credit_transferSagas() {
     watchLoadCreditTransferList(),
     watchModifyTransfer(),
     watchCreateTransfer(),
-    watchPusherCreditTransfer()
+    watchPusherCreditTransfer(),
   ]);
 }

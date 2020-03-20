@@ -9,7 +9,7 @@ export interface Organisation {
   country_code: string;
 }
 
-export const UPDATE_ORGANISATION_LIST = "UPDATE_ORGANISATION_LIST";
+export const UPDATE_ORGANISATION_LIST = 'UPDATE_ORGANISATION_LIST';
 
 interface UpdateOrganisationList {
   type: typeof UPDATE_ORGANISATION_LIST;
@@ -18,7 +18,7 @@ interface UpdateOrganisationList {
 
 export type OrganisationAction = UpdateOrganisationList;
 
-export const EDIT_ORGANISATION_REQUEST = "EDIT_ORGANISATION_REQUEST";
+export const EDIT_ORGANISATION_REQUEST = 'EDIT_ORGANISATION_REQUEST';
 
 export interface EditOrganisationPayload {
   body: {
@@ -36,13 +36,13 @@ interface EditOrganisationRequest {
   payload: EditOrganisationPayload;
 }
 
-export const EDIT_ORGANISATION_SUCCESS = "EDIT_ORGANISATION_SUCCESS";
+export const EDIT_ORGANISATION_SUCCESS = 'EDIT_ORGANISATION_SUCCESS';
 
 interface EditOrganisationSuccess {
   type: typeof EDIT_ORGANISATION_SUCCESS;
 }
 
-export const EDIT_ORGANISATION_FAILURE = "EDIT_ORGANISATION_FAILURE";
+export const EDIT_ORGANISATION_FAILURE = 'EDIT_ORGANISATION_FAILURE';
 
 interface EditOrganisationFailure {
   type: typeof EDIT_ORGANISATION_FAILURE;
@@ -54,18 +54,17 @@ export type EditOrganisationAction =
   | EditOrganisationSuccess
   | EditOrganisationFailure;
 
-
-export const LOAD_ORGANISATION_REQUEST = "LOAD_ORGANISATIONS_REQUEST";
+export const LOAD_ORGANISATION_REQUEST = 'LOAD_ORGANISATIONS_REQUEST';
 
 interface LoadOrganisationsRequest {
   type: typeof LOAD_ORGANISATION_REQUEST;
 }
-export const LOAD_ORGANISATION_SUCCESS = "LOAD_ORGANISATIONS_SUCCESS";
+export const LOAD_ORGANISATION_SUCCESS = 'LOAD_ORGANISATIONS_SUCCESS';
 
 interface LoadOrganisationsSuccess {
   type: typeof LOAD_ORGANISATION_SUCCESS;
 }
-export const LOAD_ORGANISATION_FAILURE = "LOAD_ORGANISATIONS_FAILURE";
+export const LOAD_ORGANISATION_FAILURE = 'LOAD_ORGANISATIONS_FAILURE';
 
 interface LoadOrganisationsFailure {
   type: typeof LOAD_ORGANISATION_FAILURE;

@@ -1,36 +1,32 @@
-import React from "react";
-import { connect } from "react-redux";
+import React from 'react';
+import { connect } from 'react-redux';
 
-import AsyncButton from "./../AsyncButton.jsx";
+import AsyncButton from '../AsyncButton.jsx';
 
-import { requestPasswordResetEmail } from "../../reducers/auth/actions";
+import { requestPasswordResetEmail } from '../../reducers/auth/actions';
 
-import { Input, ErrorMessage } from "./../styledElements";
+import { Input, ErrorMessage } from '../styledElements';
 
-const mapStateToProps = state => {
-  return {
-    email_state: state.requestResetEmailState
-  };
-};
+const mapStateToProps = state => ({
+  email_state: state.requestResetEmailState,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    requestPasswordResetEmail: payload =>
-      dispatch(requestPasswordResetEmail(payload))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  requestPasswordResetEmail: payload =>
+    dispatch(requestPasswordResetEmail(payload)),
+});
 
 class RequestResetEmailFormContainer extends React.Component {
   constructor() {
     super();
     this.state = {
-      email: "",
-      email_missing: false
+      email: '',
+      email_missing: false,
     };
   }
 
   attemptRequestPasswordResetEmail() {
-    if (this.state.email === "") {
+    if (this.state.email === '') {
       this.setState({ email_missing: false });
       return;
     }
@@ -38,8 +34,8 @@ class RequestResetEmailFormContainer extends React.Component {
   }
 
   onEmailFieldKeyPress(e) {
-    let email = e.target.value;
-    this.setState({ error: false, email: email });
+    const email = e.target.value;
+    this.setState({ error: false, email });
     if (e.nativeEvent.keyCode !== 13) return;
     this.attemptRequestPasswordResetEmail(email);
   }
@@ -64,11 +60,11 @@ class RequestResetEmailFormContainer extends React.Component {
 
 const RequestResetEmailForm = function(props) {
   if (props.email_missing) {
-    var error_message = "Email Missing";
+    var error_message = 'Email Missing';
   } else if (props.requestError) {
     error_message = props.requestError;
   } else {
-    error_message = "";
+    error_message = '';
   }
 
   if (props.requestSuccess) {
@@ -88,7 +84,7 @@ const RequestResetEmailForm = function(props) {
         <AsyncButton
           onClick={props.onClick}
           isLoading={props.isLoading}
-          buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+          buttonStyle={{ width: 'calc(100% - 1em)', display: 'flex' }}
           buttonText="Reset Password"
         />
         <ErrorMessage>{error_message}</ErrorMessage>
@@ -97,7 +93,7 @@ const RequestResetEmailForm = function(props) {
   }
 
   return (
-    <div style={{ textAlign: "center" }}>
+    <div style={{ textAlign: 'center' }}>
       <h3> Reset Password </h3>
 
       {innercontent}
@@ -106,5 +102,5 @@ const RequestResetEmailForm = function(props) {
 };
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(RequestResetEmailFormContainer);

@@ -1,23 +1,23 @@
-import React from "react";
-import styled from "styled-components";
-import QRCode from "qrcode.react";
+import React from 'react';
+import styled from 'styled-components';
+import QRCode from 'qrcode.react';
 
-import AsyncButton from "./../AsyncButton.jsx";
-import TFAValidator from "./TFAValidator.jsx";
+import AsyncButton from '../AsyncButton.jsx';
+import TFAValidator from './TFAValidator.jsx';
 
-import { FooterLink } from "../pages/authPage.jsx";
+import { FooterLink } from '../pages/authPage.jsx';
 
 export default class TFAForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      showQR: props.tfaURL ? true : false
+      showQR: !!props.tfaURL,
     };
   }
 
   handleNextBack() {
     this.setState({
-      showQR: !this.state.showQR
+      showQR: !this.state.showQR,
     });
   }
 
@@ -28,25 +28,24 @@ export default class TFAForm extends React.Component {
           <TFAQr data={this.props.tfaURL} />
           <AsyncButton
             onClick={() => this.handleNextBack()}
-            buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+            buttonStyle={{ width: 'calc(100% - 1em)', display: 'flex' }}
             buttonText="Next"
           />
         </div>
       );
-    } else {
-      return (
-        <div>
-          <TFAValidator />
-          {this.props.tfaURL ? (
-            <div onClick={() => this.handleNextBack()}>
-              <FooterLink to={"#"}>Back</FooterLink>
-            </div>
-          ) : (
-            <div></div>
-          )}
-        </div>
-      );
     }
+    return (
+      <div>
+        <TFAValidator />
+        {this.props.tfaURL ? (
+          <div onClick={() => this.handleNextBack()}>
+            <FooterLink to="#">Back</FooterLink>
+          </div>
+        ) : (
+          <div />
+        )}
+      </div>
+    );
   }
 }
 
@@ -56,22 +55,20 @@ const TFAQr = props => (
       <QRCode value={props.data} />
     </div>
     <div>
-      <div style={{ margin: "0.5em" }}>
+      <div style={{ margin: '0.5em' }}>
         Scan the code above using an app like Google Authenticator.
       </div>
       <div>
         (
         <ExternalLink
           href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
-          target="_blank"
-        >
+          target="_blank">
           Android
         </ExternalLink>
         /
         <ExternalLink
           href="https://apps.apple.com/au/app/google-authenticator/id388497605"
-          target="_blank"
-        >
+          target="_blank">
           iPhone
         </ExternalLink>
         )

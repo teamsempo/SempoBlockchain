@@ -1,28 +1,24 @@
-import React from "react";
-import styled from "styled-components";
-import { Redirect, Route, Switch, Link } from "react-router-dom";
-import { connect } from "react-redux";
+import React from 'react';
+import styled from 'styled-components';
+import { Redirect, Route, Switch, Link } from 'react-router-dom';
+import { connect } from 'react-redux';
 
-import { activateAccount } from "../../reducers/auth/actions";
+import { activateAccount } from '../../reducers/auth/actions';
 
-import LoginForm from "../auth/loginForm.jsx";
-import RegisterForm from "../auth/registerForm.jsx";
-import RequestResetEmailForm from "../auth/requestResetEmailForm.jsx";
+import LoginForm from '../auth/loginForm.jsx';
+import RegisterForm from '../auth/registerForm.jsx';
+import RequestResetEmailForm from '../auth/requestResetEmailForm.jsx';
 
-import { parseQuery } from "../../utils";
+import { parseQuery } from '../../utils';
 
-const mapStateToProps = state => {
-  return {
-    loggedIn: state.login.userId !== null,
-    loginState: state.login
-  };
-};
+const mapStateToProps = state => ({
+  loggedIn: state.login.userId !== null,
+  loginState: state.login,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    activateAccount: payload => dispatch(activateAccount(payload))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  activateAccount: payload => dispatch(activateAccount(payload)),
+});
 
 export class authPage extends React.Component {
   constructor() {
@@ -30,7 +26,7 @@ export class authPage extends React.Component {
     this.state = {
       redirectToReferrer: false,
       email: null,
-      referralCode: null
+      referralCode: null,
     };
   }
 
@@ -43,9 +39,9 @@ export class authPage extends React.Component {
 
     if (parsed.r && parsed.u) {
       this.setState({
-        login: !parsed.r === "true",
+        login: !parsed.r === 'true',
         email: parsed.u,
-        referralCode: parsed.c
+        referralCode: parsed.c,
       });
     }
   }
@@ -57,8 +53,8 @@ export class authPage extends React.Component {
   }
 
   render() {
-    let deploymentName = window.DEPLOYMENT_NAME;
-    const { from } = this.props.location.state || { from: { pathname: "/" } };
+    const deploymentName = window.DEPLOYMENT_NAME;
+    const { from } = this.props.location.state || { from: { pathname: '/' } };
 
     if (this.state.redirectToReferrer) {
       return <Redirect to={from} />;
@@ -72,11 +68,11 @@ export class authPage extends React.Component {
           </div>
           <Switch>
             <Route
-              path={this.props.match.url + "/forgot/"}
+              path={`${this.props.match.url}/forgot/`}
               component={forgotPassword}
             />
             <Route
-              path={this.props.match.url + "/sign-up/"}
+              path={`${this.props.match.url}/sign-up/`}
               render={() => (
                 <Signup
                   email={this.state.email}
@@ -87,7 +83,7 @@ export class authPage extends React.Component {
             <Route component={LoginForm} />
           </Switch>
         </LoginModuleBox>
-        <DeploymentNameText>sempo | {deploymentName}</DeploymentNameText>
+        <DeploymentNameText>sempo |{deploymentName}</DeploymentNameText>
         <TermsWrapper>
           <TermsText href="https://withsempo.com/legal/privacy-policy/">
             Privacy Policy
@@ -105,7 +101,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(authPage);
 
 const forgotPassword = () => (
   <div>
-    <div style={{ position: "relative" }}>
+    <div style={{ position: 'relative' }}>
       <RequestResetEmailForm />
     </div>
     <Footer>
@@ -118,7 +114,7 @@ const forgotPassword = () => (
 
 const Signup = ({ email, referralCode }) => (
   <div>
-    <div className="form" style={{ position: "relative" }}>
+    <div className="form" style={{ position: 'relative' }}>
       <RegisterForm email={email} referralCode={referralCode} />
     </div>
     <Footer>

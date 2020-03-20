@@ -1,9 +1,9 @@
-import React, { Suspense, lazy } from "react";
-const QrReader = lazy(() => import("react-qr-reader"));
+import React, { Suspense, lazy } from 'react';
+const QrReader = lazy(() => import('react-qr-reader'));
 
 // import QrReader from 'react-qr-reader'
 
-import { Modal, ModalContent, ModalClose } from "./styledElements";
+import { Modal, ModalContent, ModalClose } from './styledElements';
 
 export default class QrReadingModal extends React.Component {
   constructor() {
@@ -11,7 +11,7 @@ export default class QrReadingModal extends React.Component {
 
     this.state = {
       existingQrData: null,
-      readerActive: false
+      readerActive: false,
     };
   }
 
@@ -20,9 +20,9 @@ export default class QrReadingModal extends React.Component {
       this.setState(
         {
           // existingQrData: data
-          readerActive: false
+          readerActive: false,
         },
-        this.props.updateData(data)
+        this.props.updateData(data),
       );
     }
   };
@@ -33,7 +33,7 @@ export default class QrReadingModal extends React.Component {
 
   toggleModal = () => {
     this.setState({
-      readerActive: !this.state.readerActive
+      readerActive: !this.state.readerActive,
     });
   };
 
@@ -41,9 +41,9 @@ export default class QrReadingModal extends React.Component {
     if (this.state.readerActive) {
       var qrReader = (
         <Modal onClick={() => this.toggleModal()}>
-          <ModalContent style={{ maxWidth: "300px" }}>
-            <ModalClose src={"/static/media/cross.svg"} />
-            <h4 style={{ marginTop: "0em", marginLeft: "0em" }}>
+          <ModalContent style={{ maxWidth: '300px' }}>
+            <ModalClose src={'/static/media/cross.svg'} />
+            <h4 style={{ marginTop: '0em', marginLeft: '0em' }}>
               Scan an ID card's QR code.
             </h4>
             <Suspense fallback={<div>Loading QR Reader...</div>}>
@@ -51,7 +51,7 @@ export default class QrReadingModal extends React.Component {
                 delay={300}
                 onError={this.handleError}
                 onScan={this.handleScan}
-                style={{ width: "100%" }}
+                style={{ width: '100%' }}
               />
             </Suspense>
           </ModalContent>
@@ -65,13 +65,12 @@ export default class QrReadingModal extends React.Component {
       <div>
         <div
           style={{
-            margin: "0.2em",
-            width: "1.4em",
-            height: "1.4em"
+            margin: '0.2em',
+            width: '1.4em',
+            height: '1.4em',
           }}
-          onClick={() => this.toggleModal()}
-        >
-          <img style={{ width: "100%" }} src={"/static/media/qrCodeIcon.svg"} />
+          onClick={() => this.toggleModal()}>
+          <img style={{ width: '100%' }} src={'/static/media/qrCodeIcon.svg'} />
         </div>
         {qrReader}
       </div>

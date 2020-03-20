@@ -1,14 +1,12 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import { uploadSpreadsheet } from "../../reducers/spreadsheetReducer";
+import { uploadSpreadsheet } from '../../reducers/spreadsheetReducer';
 
-const mapDispatchToProps = dispatch => {
-  return {
-    uploadSpreadsheet: payload => dispatch(uploadSpreadsheet(payload))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  uploadSpreadsheet: payload => dispatch(uploadSpreadsheet(payload)),
+});
 
 class UploadButton extends React.Component {
   constructor(props) {
@@ -16,23 +14,23 @@ class UploadButton extends React.Component {
   }
 
   handleFileChange(event) {
-    //todo: this needs to be updated as account type no longer handled via URL
+    // todo: this needs to be updated as account type no longer handled via URL
     // if (this.props.is_vendor === true) {
     //   var transfer_account_type = 'vendor'
     // } else {
     //   transfer_account_type = window.BENEFICIARY_TERM_PLURAL.toLowerCase()
     // }
 
-    let spreadsheet = event.target.files[0];
+    const spreadsheet = event.target.files[0];
 
     if (spreadsheet) {
-      var preview_id = Math.floor(Math.random() * 100000);
+      const preview_id = Math.floor(Math.random() * 100000);
 
-      let reader = new FileReader();
+      const reader = new FileReader();
 
       reader.onloadend = () => {
         this.props.uploadSpreadsheet({
-          body: { spreadsheet: spreadsheet, preview_id: preview_id }
+          body: { spreadsheet, preview_id },
         });
       };
 
@@ -51,7 +49,7 @@ class UploadButton extends React.Component {
     }
 
     return (
-      <div style={{ display: "flex" }}>
+      <div style={{ display: 'flex' }}>
         <InputButtonWrapper>
           <InputButton>
             {this.props.uploadButtonText}

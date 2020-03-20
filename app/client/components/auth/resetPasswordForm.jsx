@@ -1,41 +1,37 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import { NavLink } from "react-router-dom";
-import ReactPasswordStrength from "react-password-strength";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import { NavLink } from 'react-router-dom';
+import ReactPasswordStrength from 'react-password-strength';
 
-import { resetPassword } from "../../reducers/auth/actions";
+import { resetPassword } from '../../reducers/auth/actions';
 
-import AsyncButton from "./../AsyncButton.jsx";
+import AsyncButton from '../AsyncButton.jsx';
 
-import { Input, ErrorMessage, StyledButton } from "./../styledElements";
+import { Input, ErrorMessage, StyledButton } from '../styledElements';
 
-import { parseQuery } from "../../utils";
+import { parseQuery } from '../../utils';
 
-const mapStateToProps = state => {
-  return {
-    resetPasswordState: state.resetPasswordState
-  };
-};
+const mapStateToProps = state => ({
+  resetPasswordState: state.resetPasswordState,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    resetPassword: payload => dispatch(resetPassword(payload))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  resetPassword: payload => dispatch(resetPassword(payload)),
+});
 
 class ResetPasswordFormContainer extends React.Component {
   constructor() {
     super();
     this.state = {
-      new_password: "",
-      reenter_password: "",
+      new_password: '',
+      reenter_password: '',
       old_password: null,
       passwordIsValid: false,
       password_missing: false,
       password_missmatch: false,
       password_invalid: false,
-      reset_password_token: null
+      reset_password_token: null,
     };
   }
 
@@ -48,7 +44,7 @@ class ResetPasswordFormContainer extends React.Component {
   }
 
   attemptReset() {
-    if (this.state.new_password == "") {
+    if (this.state.new_password == '') {
       this.setState({ password_missing: true });
       return;
     }
@@ -67,32 +63,32 @@ class ResetPasswordFormContainer extends React.Component {
       body: {
         new_password: this.state.new_password,
         reset_password_token: this.state.reset_password_token,
-        old_password: this.state.old_password
-      }
+        old_password: this.state.old_password,
+      },
     });
   }
 
   onOldPasswordFieldKeyPress(e) {
-    let old_password = e.target.value;
-    this.setState({ old_password: old_password });
+    const old_password = e.target.value;
+    this.setState({ old_password });
     if (e.nativeEvent.keyCode !== 13) return;
   }
 
   onNewPasswordFieldKeyPress(e) {
-    var password = e.password;
-    var isValid = e.isValid;
+    const { password } = e;
+    const { isValid } = e;
     this.setState({
       new_password: password,
       password_missing: false,
-      passwordIsValid: isValid
+      passwordIsValid: isValid,
     });
   }
 
   onReenterPasswordFieldKeyPress(e) {
-    let reenter_password = e.target.value;
+    const reenter_password = e.target.value;
     this.setState({
-      reenter_password: reenter_password,
-      password_missmatch: false
+      reenter_password,
+      password_missmatch: false,
     });
     if (e.nativeEvent.keyCode !== 13) return;
     this.attemptReset();
@@ -105,10 +101,10 @@ class ResetPasswordFormContainer extends React.Component {
   render() {
     if (this.props.resetPasswordState.success) {
       return (
-        <div style={{ textAlign: "center" }}>
+        <div style={{ textAlign: 'center' }}>
           <h3> Password Successfuly Changed </h3>
           <Text>
-            You can now{" "}
+            You can now{' '}
             <StyledLink to="/" exact>
               Login
             </StyledLink>
@@ -138,20 +134,20 @@ class ResetPasswordFormContainer extends React.Component {
 
 const ResetPasswordForm = function(props) {
   if (props.password_missing) {
-    var error_message = "Password Missing";
+    var error_message = 'Password Missing';
   } else if (props.password_missmatch) {
-    error_message = "Passwords do not match";
+    error_message = 'Passwords do not match';
   } else if (props.password_invalid) {
-    error_message = "Password too weak";
+    error_message = 'Password too weak';
   } else if (props.invalid_reset) {
     error_message = props.invalid_reset;
   } else {
-    error_message = "";
+    error_message = '';
   }
 
   if (props.requireOldPassword) {
     var oldPasswordSection = (
-      <div style={{ textAlign: "center" }}>
+      <div style={{ textAlign: 'center' }}>
         Your current password:
         <Input
           type="password"
@@ -161,19 +157,19 @@ const ResetPasswordForm = function(props) {
       </div>
     );
   } else {
-    oldPasswordSection = <div></div>;
+    oldPasswordSection = <div />;
   }
 
   return (
-    <div style={{ textAlign: "center" }}>
+    <div style={{ textAlign: 'center' }}>
       {oldPasswordSection}
       Enter a new password:
       <ReactPasswordStrength
         minLength={6}
         type="password"
         changeCallback={data => props.onNewPasswordFieldKeyPress(data)}
-        inputProps={{ placeholder: "Password" }}
-        className={"default-input"}
+        inputProps={{ placeholder: 'Password' }}
+        className="default-input"
       />
       <Input
         type="password"
@@ -184,7 +180,7 @@ const ResetPasswordForm = function(props) {
       <AsyncButton
         onClick={props.onClick}
         isLoading={props.isRegistering}
-        buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+        buttonStyle={{ width: 'calc(100% - 1em)', display: 'flex' }}
         buttonText="Change Password"
       />
     </div>
@@ -193,7 +189,7 @@ const ResetPasswordForm = function(props) {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(ResetPasswordFormContainer);
 
 const Text = styled.p`

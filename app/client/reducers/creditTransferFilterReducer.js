@@ -1,18 +1,18 @@
-import { combineReducers } from "redux";
-import { DEEEEEEP } from "../utils";
+import { combineReducers } from 'redux';
+import { DEEEEEEP } from '../utils';
 
 export const LOAD_CREDIT_TRANSFER_FILTERS_REQUEST =
-  "LOAD_CREDIT_TRANSFER_FILTERS_REQUEST";
+  'LOAD_CREDIT_TRANSFER_FILTERS_REQUEST';
 export const LOAD_CREDIT_TRANSFER_FILTERS_SUCCESS =
-  "LOAD_CREDIT_TRANSFER_FILTERS_SUCCESS";
+  'LOAD_CREDIT_TRANSFER_FILTERS_SUCCESS';
 export const LOAD_CREDIT_TRANSFER_FILTERS_FAILURE =
-  "LOAD_CREDIT_TRANSFER_FILTERS_FAILURE";
-export const UPDATE_CREDIT_TRANSFER_FILTERS = "UPDATE_CREDIT_TRANSFER_FILTERS";
+  'LOAD_CREDIT_TRANSFER_FILTERS_FAILURE';
+export const UPDATE_CREDIT_TRANSFER_FILTERS = 'UPDATE_CREDIT_TRANSFER_FILTERS';
 
 const initialLoadStatusState = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
 };
 
 const creditTransferFilterState = (state = {}, action) => {
@@ -42,10 +42,10 @@ const loadStatus = (state = initialLoadStatusState, action) => {
 
 export const creditTransferFilters = combineReducers({
   creditTransferFilterState,
-  loadStatus
+  loadStatus,
 });
 
 export const loadCreditTransferFilters = payload => ({
   type: LOAD_CREDIT_TRANSFER_FILTERS_REQUEST,
-  payload
+  payload,
 });

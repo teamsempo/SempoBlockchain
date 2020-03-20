@@ -1,18 +1,18 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
-import { PageWrapper, ModuleHeader } from "../styledElements";
-import InviteForm from "../adminUser/InviteForm.jsx";
+import { PageWrapper, ModuleHeader } from '../styledElements';
+import InviteForm from '../adminUser/InviteForm.jsx';
 
 export default class InvitePage extends React.Component {
   render() {
     return (
       <WrapperDiv>
-        <PageWrapper style={{ display: "flex", flexDirection: "column" }}>
+        <PageWrapper style={{ display: 'flex', flexDirection: 'column' }}>
           <Row>
             <ModuleBox>
               <ModuleHeader>INVITE NEW USERS</ModuleHeader>
-              <p style={{ margin: "1em" }}>
+              <p style={{ margin: '1em' }}>
                 Enter the email addresses of the users you'd like to invite, and
                 choose the role they should have.
               </p>

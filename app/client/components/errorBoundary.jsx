@@ -1,5 +1,5 @@
-import React from "react";
-import * as Sentry from "@sentry/browser";
+import React from 'react';
+import * as Sentry from '@sentry/browser';
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -23,8 +23,8 @@ export default class ErrorBoundary extends React.Component {
   render() {
     if (this.state.error) {
       // You can render any custom fallback UI
-      let style = this.props.noNav
-        ? { width: "calc(100% - 234px)", marginLeft: "234px" }
+      const style = this.props.noNav
+        ? { width: 'calc(100% - 234px)', marginLeft: '234px' }
         : null;
       return (
         <div style={style}>

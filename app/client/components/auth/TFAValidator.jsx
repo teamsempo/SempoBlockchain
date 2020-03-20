@@ -1,32 +1,28 @@
-import React from "react";
-import { connect } from "react-redux";
+import React from 'react';
+import { connect } from 'react-redux';
 
-import AsyncButton from "./../AsyncButton.jsx";
+import AsyncButton from '../AsyncButton.jsx';
 
-import { validateTFARequest } from "../../reducers/auth/actions";
+import { validateTFARequest } from '../../reducers/auth/actions';
 
-import { Input, ErrorMessage } from "./../styledElements";
+import { Input, ErrorMessage } from '../styledElements';
 
-const mapStateToProps = state => {
-  return {
-    loginState: state.login,
-    validateState: state.validateTFA
-  };
-};
+const mapStateToProps = state => ({
+  loginState: state.login,
+  validateState: state.validateTFA,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    validateTFARequest: payload => dispatch(validateTFARequest(payload))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  validateTFARequest: payload => dispatch(validateTFARequest(payload)),
+});
 
 export class TFAValidator extends React.Component {
   constructor() {
     super();
     this.state = {
-      otp: "",
+      otp: '',
       rememberComputer: false,
-      errorMessage: ""
+      errorMessage: '',
     };
   }
 
@@ -35,27 +31,27 @@ export class TFAValidator extends React.Component {
   }
 
   attemptValidate() {
-    if (this.state.otp === "") {
-      this.setState({ errorMessage: "Please Enter a Validation Code" });
+    if (this.state.otp === '') {
+      this.setState({ errorMessage: 'Please Enter a Validation Code' });
       return;
     }
     if (this.state.otp.length < 6) {
-      this.setState({ errorMessage: "Validation Code is 6 digits long" });
+      this.setState({ errorMessage: 'Validation Code is 6 digits long' });
       return;
     }
 
     this.props.validateTFARequest({
       body: {
         otp: this.state.otp,
-        otp_expiry_interval: this.state.rememberComputer ? 9999 : 1
-      }
+        otp_expiry_interval: this.state.rememberComputer ? 9999 : 1,
+      },
     });
   }
 
   onCodeKeyPress(e) {
-    var otp = e.target.value;
+    const otp = e.target.value;
     if (otp.length < 7) {
-      this.setState({ otp: otp, errorMessage: "" });
+      this.setState({ otp, errorMessage: '' });
     }
   }
 
@@ -75,24 +71,24 @@ export class TFAValidator extends React.Component {
   render() {
     if (this.props.validateState.success) {
       return (
-        <div style={{ display: "block", margin: "2em" }}>
+        <div style={{ display: 'block', margin: '2em' }}>
           Two-step authentication successfully set up!
         </div>
       );
     }
 
     return (
-      <div style={{ display: "block" }}>
+      <div style={{ display: 'block' }}>
         <Input
           type="text"
           value={this.state.otp}
           onChange={e => this.onCodeKeyPress(e)}
           onKeyUp={e => this.onKeyup(e)}
-          style={{ letterSpacing: "0.2em" }}
+          style={{ letterSpacing: '0.2em' }}
           placeholder="Your Code"
         />
 
-        <label style={{ marginLeft: "0.5em" }}>
+        <label style={{ marginLeft: '0.5em' }}>
           <input
             name="remember"
             type="checkbox"
@@ -105,11 +101,11 @@ export class TFAValidator extends React.Component {
         <AsyncButton
           onClick={() => this.onClick()}
           isLoading={this.props.validateState.isRequesting}
-          buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+          buttonStyle={{ width: 'calc(100% - 1em)', display: 'flex' }}
           buttonText="Verify"
         />
 
-        <div style={{ textAlign: "center" }}>
+        <div style={{ textAlign: 'center' }}>
           Enter the 6-digit code you see in the app.
         </div>
 

@@ -1,36 +1,27 @@
-import React from "react";
+import React from 'react';
 
 export default class StepWizard extends React.Component {
   render() {
-    let { steps, activeStep } = this.props;
+    const { steps, activeStep } = this.props;
 
     // generate header
-    let header = (
+    const header = (
       <ol className="progtrckr">
-        {steps.map((step, idx) => {
-          return (
-            <li
-              className={
-                "progtrckr-" +
-                (idx === activeStep
-                  ? "doing"
-                  : idx > activeStep
-                  ? "todo"
-                  : "done") +
-                " no-hl"
-              }
-              key={idx}
-            >
-              <em>{idx}</em>
-              <span>{step.name}</span>
-            </li>
-          );
-        })}
+        {steps.map((step, idx) => (
+          <li
+            className={`progtrckr-${
+              idx === activeStep ? 'doing' : idx > activeStep ? 'todo' : 'done'
+            } no-hl`}
+            key={idx}>
+            <em>{idx}</em>
+            <span>{step.name}</span>
+          </li>
+        ))}
       </ol>
     );
 
     // return active component
-    let activeComponent = steps[activeStep].component;
+    const activeComponent = steps[activeStep].component;
 
     // return footer
 

@@ -1,17 +1,17 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from './apiClient';
 
 export const loadTransferAccountListAPI = ({ query, path }) =>
   apiClient({
-    url: "/transfer_account/",
-    method: "GET",
-    query: query,
-    path: path
+    url: '/transfer_account/',
+    method: 'GET',
+    query,
+    path,
   });
 
 export const editTransferAccountAPI = ({ body, path }) =>
   apiClient({
-    url: "/transfer_account/",
-    method: "PUT",
-    body: body,
-    path: path
+    url: '/transfer_account/',
+    method: 'PUT',
+    body,
+    path,
   });

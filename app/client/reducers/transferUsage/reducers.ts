@@ -1,4 +1,4 @@
-import { combineReducers } from "redux";
+import { combineReducers } from 'redux';
 import {
   LOAD_TRANSFER_USAGES_FAILURE,
   LOAD_TRANSFER_USAGES_REQUEST,
@@ -6,12 +6,12 @@ import {
   LoadTransferUsagesAction,
   UPDATE_TRANSFER_USAGES,
   TransferUsagesAction,
-  TransferUsage
-} from "./types";
+  TransferUsage,
+} from './types';
 
 const transferUsages = (
   state: TransferUsage[] = [],
-  action: TransferUsagesAction
+  action: TransferUsagesAction,
 ): TransferUsage[] => {
   switch (action.type) {
     case UPDATE_TRANSFER_USAGES:
@@ -29,11 +29,11 @@ interface LoadTransferUsageState {
 }
 const initialLoadStatusState = {
   isRequesting: false,
-  success: false
+  success: false,
 };
 const loadStatus = (
   state = initialLoadStatusState,
-  action: LoadTransferUsagesAction
+  action: LoadTransferUsagesAction,
 ): LoadTransferUsageState => {
   switch (action.type) {
     case LOAD_TRANSFER_USAGES_REQUEST:
@@ -52,5 +52,5 @@ const loadStatus = (
 
 export const TransferUsageReducer = combineReducers({
   transferUsages,
-  loadStatus
+  loadStatus,
 });

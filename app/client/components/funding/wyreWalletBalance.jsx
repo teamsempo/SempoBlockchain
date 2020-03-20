@@ -1,22 +1,18 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled, { ThemeProvider } from 'styled-components';
 
-import { loadWyreAccountBalance } from "../../reducers/wyreReducer";
-import LoadingSpinner from "../loadingSpinner.jsx";
+import { loadWyreAccountBalance } from '../../reducers/wyreReducer';
+import LoadingSpinner from '../loadingSpinner.jsx';
 
-const mapStateToProps = state => {
-  return {
-    wyreAccountStatus: state.wyre.loadWyreAccountStatus,
-    wyreAccount: state.wyre.wyreState.wyre_account
-  };
-};
+const mapStateToProps = state => ({
+  wyreAccountStatus: state.wyre.loadWyreAccountStatus,
+  wyreAccount: state.wyre.wyreState.wyre_account,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadWyreAccount: () => dispatch(loadWyreAccountBalance())
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadWyreAccount: () => dispatch(loadWyreAccountBalance()),
+});
 
 class WyreWalletBalance extends React.Component {
   constructor(props) {
@@ -30,35 +26,30 @@ class WyreWalletBalance extends React.Component {
   }
 
   render() {
-    let { wyreAccountStatus, wyreAccount } = this.props;
+    const { wyreAccountStatus, wyreAccount } = this.props;
 
     if (wyreAccount !== null && typeof wyreAccount !== undefined) {
-      var balance = "$" + wyreAccount.availableBalances["USD"] + " USD";
+      var balance = `$${wyreAccount.availableBalances.USD} USD`;
     } else {
-      balance = "You currently have no balance";
+      balance = 'You currently have no balance';
     }
 
     if (wyreAccountStatus.isRequesting) {
       return (
-        <div style={{ margin: "1em" }}>
+        <div style={{ margin: '1em' }}>
           <LoadingSpinner />
         </div>
       );
-    } else if (wyreAccountStatus.success) {
+    }
+    if (wyreAccountStatus.success) {
       return (
         <WalletWrapper>
           <StyledHeader>Your balance</StyledHeader>
           <StyledBalance>{balance}</StyledBalance>
         </WalletWrapper>
       );
-    } else if (wyreAccountStatus.error !== null) {
-      return (
-        <WalletWrapper>
-          <StyledHeader>Your balance</StyledHeader>
-          <StyledBalance>$0.00</StyledBalance>
-        </WalletWrapper>
-      );
-    } else {
+    }
+    if (wyreAccountStatus.error !== null) {
       return (
         <WalletWrapper>
           <StyledHeader>Your balance</StyledHeader>
@@ -66,6 +57,12 @@ class WyreWalletBalance extends React.Component {
         </WalletWrapper>
       );
     }
+    return (
+      <WalletWrapper>
+        <StyledHeader>Your balance</StyledHeader>
+        <StyledBalance>$0.00</StyledBalance>
+      </WalletWrapper>
+    );
   }
 }
 

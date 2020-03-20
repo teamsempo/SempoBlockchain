@@ -1,8 +1,8 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
-import CreditTransferList from "./creditTransferList.jsx";
-import SearchBoxWithFilter from "../SearchBoxWithFilter.jsx";
+import CreditTransferList from './creditTransferList.jsx';
+import SearchBoxWithFilter from '../SearchBoxWithFilter.jsx';
 
 export default class CreditTransferListWithFilterWrapper extends React.Component {
   constructor() {
@@ -10,14 +10,14 @@ export default class CreditTransferListWithFilterWrapper extends React.Component
     this.state = {};
 
     this.searchKeys = [
-      "transfer_amount",
-      "created",
-      "transfer_status",
-      "transfer_type",
-      "id",
-      "transfer_use",
-      "recipient",
-      "sender"
+      'transfer_amount',
+      'created',
+      'transfer_status',
+      'transfer_type',
+      'id',
+      'transfer_use',
+      'recipient',
+      'sender',
     ];
 
     this.filterKeys = {
@@ -25,20 +25,19 @@ export default class CreditTransferListWithFilterWrapper extends React.Component
       created: null,
       transfer_status: null,
       transfer_type: null,
-      transfer_use: null
+      transfer_use: null,
     };
   }
 
   render() {
-    var item_list = this.props.creditTransferList.sort((a, b) => b.id - a.id);
+    const item_list = this.props.creditTransferList.sort((a, b) => b.id - a.id);
 
     return (
       <Wrapper>
         <SearchBoxWithFilter
           item_list={item_list}
           searchKeys={this.searchKeys}
-          filterKeys={this.filterKeys}
-        >
+          filterKeys={this.filterKeys}>
           <CreditTransferList />
         </SearchBoxWithFilter>
       </Wrapper>

@@ -1,5 +1,5 @@
-import configureMockStore from "redux-mock-store";
-import { connect } from "react-redux";
+import configureMockStore from 'redux-mock-store';
+import { connect } from 'react-redux';
 import {
   take,
   fork,
@@ -9,25 +9,24 @@ import {
   all,
   cancelled,
   cancel,
-  race
-} from "redux-saga/effects";
-import createSagaMiddleware from "redux-saga";
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-
+  race,
+} from 'redux-saga/effects';
+import createSagaMiddleware from 'redux-saga';
+import fetchMock from 'fetch-mock';
+import enzyme from 'enzyme';
 import {
+  loadCreditTransferList,
   LOAD_CREDIT_TRANSFER_LIST_REQUEST,
-  LOAD_CREDIT_TRANSFER_LIST_SUCCESS
-} from "../../reducers/creditTransferReducer.js";
-import fetchMock from "fetch-mock";
-import enzyme from "enzyme";
+  LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
+} from '../../reducers/creditTransferReducer';
 
 const sagaMiddleware = createSagaMiddleware();
 
 const middlewares = [sagaMiddleware];
 const mockStore = configureMockStore(middlewares);
 
-describe("async actions", () => {
-  it("creates a loadCreditTransferList request", () => {
+describe('async actions', () => {
+  it('creates a loadCreditTransferList request', () => {
     const filter = null;
     const id = null;
 
@@ -35,17 +34,15 @@ describe("async actions", () => {
       { type: LOAD_CREDIT_TRANSFER_LIST_REQUEST },
       {
         type: LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
-        body: { transferList: [], transferStats: {} }
-      }
+        body: { transferList: [], transferStats: {} },
+      },
     ];
     const store = mockStore({ transferList: [], transferStats: {} });
 
-    const mapDispatchToProps = dispatch => {
-      return {
-        loadCreditTransferList: (filter, id) =>
-          dispatch(loadCreditTransferList(filter, id))
-      };
-    };
+    const mapDispatchToProps = dispatch => ({
+      loadCreditTransferList: (filter, id) =>
+        dispatch(loadCreditTransferList(filter, id)),
+    });
     connect(mapDispatchToProps);
 
     return loadCreditTransferList(filter, id).then(() => {
@@ -59,15 +56,15 @@ describe("async actions", () => {
   });
 });
 
-describe("actions", () => {
-  it("should create an action to add a todo", () => {
+describe('actions', () => {
+  it('should create an action to add a todo', () => {
     const filter = null;
     const id = null;
 
-    const text = "Finish docs";
+    const text = 'Finish docs';
     const expectedAction = {
       type: LOAD_CREDIT_TRANSFER_LIST_REQUEST,
-      text
+      text,
     };
     expect(loadCreditTransferList(filter, id)).toEqual(expectedAction);
   });

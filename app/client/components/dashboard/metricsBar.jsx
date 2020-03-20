@@ -1,25 +1,21 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import { logout } from "../../reducers/auth/actions";
-import { ModuleHeader } from "../styledElements";
+import { logout } from '../../reducers/auth/actions';
+import { ModuleHeader } from '../styledElements';
 
-import { formatMoney } from "../../utils";
+import { formatMoney } from '../../utils';
 
-const mapStateToProps = state => {
-  return {
-    creditTransferStats: state.metrics.metricsState,
-    login: state.login,
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
-  };
-};
+const mapStateToProps = state => ({
+  creditTransferStats: state.metrics.metricsState,
+  login: state.login,
+  activeOrganisation: state.organisations.byId[state.login.organisationId],
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    logout: () => dispatch(logout())
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  logout: () => dispatch(logout()),
+});
 
 const MetricsBar = ({ creditTransferStats, login, activeOrganisation }) => {
   if (Object.keys(creditTransferStats).length === 0) {
@@ -36,15 +32,16 @@ const MetricsBar = ({ creditTransferStats, login, activeOrganisation }) => {
             0,
             undefined,
             undefined,
-            activeOrganisation.token.symbol
+            activeOrganisation.token.symbol,
           )}
         </Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
-          {"TOTAL DISTRIBUTED" +
-            (creditTransferStats.filter_active ? " IN PERIOD" : "")}
+          {`TOTAL DISTRIBUTED${
+            creditTransferStats.filter_active ? ' IN PERIOD' : ''
+          }`}
         </ModuleHeader>
         <Metric>
           {formatMoney(
@@ -52,15 +49,16 @@ const MetricsBar = ({ creditTransferStats, login, activeOrganisation }) => {
             0,
             undefined,
             undefined,
-            activeOrganisation.token.symbol
+            activeOrganisation.token.symbol,
           )}
         </Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
-          {"TOTAL SPENT" +
-            (creditTransferStats.filter_active ? " IN PERIOD" : "")}
+          {`TOTAL SPENT${
+            creditTransferStats.filter_active ? ' IN PERIOD' : ''
+          }`}
         </ModuleHeader>
         <Metric>
           {formatMoney(
@@ -68,15 +66,16 @@ const MetricsBar = ({ creditTransferStats, login, activeOrganisation }) => {
             0,
             undefined,
             undefined,
-            activeOrganisation.token.symbol
+            activeOrganisation.token.symbol,
           )}
         </Metric>
       </MetricWrap>
 
       <MetricWrap>
         <ModuleHeader>
-          {"TOTAL EXCHANGED" +
-            (creditTransferStats.filter_active ? " IN PERIOD" : "")}
+          {`TOTAL EXCHANGED${
+            creditTransferStats.filter_active ? ' IN PERIOD' : ''
+          }`}
         </ModuleHeader>
         <Metric>
           {formatMoney(
@@ -84,7 +83,7 @@ const MetricsBar = ({ creditTransferStats, login, activeOrganisation }) => {
             0,
             undefined,
             undefined,
-            activeOrganisation.token.symbol
+            activeOrganisation.token.symbol,
           )}
         </Metric>
       </MetricWrap>

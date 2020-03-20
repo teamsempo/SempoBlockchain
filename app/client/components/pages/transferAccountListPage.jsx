@@ -1,46 +1,40 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled, { ThemeProvider } from 'styled-components';
 
-import { browserHistory } from "../../app.jsx";
+import { browserHistory } from '../../app.jsx';
 import {
   PageWrapper,
   WrapperDiv,
   ModuleBox,
-  StyledButton
-} from "../styledElements.js";
-import { LightTheme } from "../theme.js";
+  StyledButton,
+} from '../styledElements.js';
+import { LightTheme } from '../theme.js';
 
-import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
-import UploadButton from "../uploader/uploadButton.jsx";
+import TransferAccountListWithFilterWrapper from '../transferAccount/transferAccountListWithFilterWrapper.jsx';
+import UploadButton from '../uploader/uploadButton.jsx';
 
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import { loadTransferAccounts } from '../../reducers/transferAccountReducer';
 
-const mapStateToProps = state => {
-  return {
-    login: state.login,
-    transferAccounts: state.transferAccounts,
-    mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
-      .map(id => {
-        return {
-          ...{
-            id,
-            ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]
-          },
-          ...state.transferAccounts.byId[id]
-        };
-      })
-      .filter(mergedObj => mergedObj.users && mergedObj.users.length >= 1), // only show mergedObjects with users
-    users: state.users
-  };
-};
+const mapStateToProps = state => ({
+  login: state.login,
+  transferAccounts: state.transferAccounts,
+  mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
+    .map(id => ({
+      ...{
+        id,
+        ...state.users.byId[state.transferAccounts.byId[id].primary_user_id],
+      },
+      ...state.transferAccounts.byId[id],
+    }))
+    .filter(mergedObj => mergedObj.users && mergedObj.users.length >= 1), // only show mergedObjects with users
+  users: state.users,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadTransferAccountList: (query, path) =>
-      dispatch(loadTransferAccounts({ query, path }))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadTransferAccountList: (query, path) =>
+    dispatch(loadTransferAccounts({ query, path })),
+});
 
 class TransferAccountListPage extends React.Component {
   componentDidMount() {
@@ -54,7 +48,7 @@ class TransferAccountListPage extends React.Component {
   }
 
   buildFilterForAPI() {
-    let query = {};
+    const query = {};
 
     if (this.props.transferAccounts.loadStatus.lastQueried) {
       query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
@@ -67,15 +61,15 @@ class TransferAccountListPage extends React.Component {
   render() {
     let transferAccountList = this.props.mergedTransferAccountUserList;
 
-    if (this.props.login.adminTier === "view") {
+    if (this.props.login.adminTier === 'view') {
       transferAccountList = Object.keys(this.props.transferAccounts.byId).map(
-        id => this.props.transferAccounts.byId[id]
+        id => this.props.transferAccounts.byId[id],
       );
     }
 
-    let isNoData = Object.keys(transferAccountList).length === 0;
+    const isNoData = Object.keys(transferAccountList).length === 0;
 
-    let uploadButtonText = (
+    const uploadButtonText = (
       <NoDataMessageWrapper>
         <IconSVG src="/static/media/no_data_icon.svg" />
         <p>There is no data available. Please upload a spreadsheet.</p>
@@ -94,16 +88,15 @@ class TransferAccountListPage extends React.Component {
             </NoDataMessageWrapper>
           </ModuleBox>
 
-          <p style={{ textAlign: "center" }}>or</p>
+          <p style={{ textAlign: 'center' }}>or</p>
 
-          <div style={{ justifyContent: "center", display: "flex" }}>
+          <div style={{ justifyContent: 'center', display: 'flex' }}>
             <StyledButton
               onClick={() =>
                 browserHistory.push(
-                  "/create?type=" + browserHistory.location.pathname.slice(1)
+                  `/create?type=${browserHistory.location.pathname.slice(1)}`,
                 )
-              }
-            >
+              }>
               Add Single User
             </StyledButton>
           </div>
@@ -127,7 +120,7 @@ class TransferAccountListPage extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(TransferAccountListPage);
 
 const IconSVG = styled.img`

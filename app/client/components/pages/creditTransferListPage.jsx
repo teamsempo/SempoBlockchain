@@ -1,31 +1,27 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled, { ThemeProvider } from 'styled-components';
 
-import { PageWrapper, WrapperDiv, ModuleBox } from "../styledElements.js";
-import { LightTheme } from "../theme.js";
+import { PageWrapper, WrapperDiv, ModuleBox } from '../styledElements.js';
+import { LightTheme } from '../theme.js';
 
-import CreditTransferListWithFilterWrapper from "../creditTransfer/creditTransferListWithFilterWrapper.jsx";
-import UploadButton from "../uploader/uploadButton.jsx";
+import CreditTransferListWithFilterWrapper from '../creditTransfer/creditTransferListWithFilterWrapper.jsx';
+import UploadButton from '../uploader/uploadButton.jsx';
 
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-import organizationWrapper from "../organizationWrapper";
+import { loadCreditTransferList } from '../../reducers/creditTransferReducer';
+import organizationWrapper from '../organizationWrapper';
 
-const mapStateToProps = state => {
-  return {
-    creditTransfers: state.creditTransfers,
-    creditTransferList: Object.keys(state.creditTransfers.byId)
-      .filter(id => typeof state.creditTransfers.byId[id] !== "undefined")
-      .map(id => state.creditTransfers.byId[id])
-  };
-};
+const mapStateToProps = state => ({
+  creditTransfers: state.creditTransfers,
+  creditTransferList: Object.keys(state.creditTransfers.byId)
+    .filter(id => typeof state.creditTransfers.byId[id] !== 'undefined')
+    .map(id => state.creditTransfers.byId[id]),
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadCreditTransferList: (query, path) =>
-      dispatch(loadCreditTransferList({ query, path }))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadCreditTransferList: (query, path) =>
+    dispatch(loadCreditTransferList({ query, path })),
+});
 
 class CreditTransferListPage extends React.Component {
   componentDidMount() {
@@ -34,9 +30,9 @@ class CreditTransferListPage extends React.Component {
 
   render() {
     const { creditTransferList } = this.props;
-    let isNoData = Object.keys(creditTransferList).length === 0;
+    const isNoData = Object.keys(creditTransferList).length === 0;
 
-    let uploadButtonText = (
+    const uploadButtonText = (
       <NoDataMessageWrapper>
         <IconSVG src="/static/media/no_data_icon.svg" />
         <p>There is no data available. Please upload a spreadsheet.</p>
@@ -74,7 +70,7 @@ class CreditTransferListPage extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(organizationWrapper(CreditTransferListPage));
 
 const IconSVG = styled.img`

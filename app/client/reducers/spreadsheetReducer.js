@@ -1,21 +1,21 @@
-export const RESET_UPLOAD_STATE = "RESET_UPLOAD_STATE";
+export const RESET_UPLOAD_STATE = 'RESET_UPLOAD_STATE';
 
-export const SPREADSHEET_UPLOAD_REQUEST = "SPREADSHEET_UPLOAD_REQUEST";
-export const SPREADSHEET_UPLOAD_SUCCESS = "SPREADSHEET_UPLOAD_SUCCESS";
-export const SPREADSHEET_UPLOAD_FAILURE = "SPREADSHEET_UPLOAD_FAILURE";
+export const SPREADSHEET_UPLOAD_REQUEST = 'SPREADSHEET_UPLOAD_REQUEST';
+export const SPREADSHEET_UPLOAD_SUCCESS = 'SPREADSHEET_UPLOAD_SUCCESS';
+export const SPREADSHEET_UPLOAD_FAILURE = 'SPREADSHEET_UPLOAD_FAILURE';
 
-export const SAVE_DATASET_REQUEST = "SAVE_DATASET_REQUEST";
-export const SAVE_DATASET_SUCCESS = "SAVE_DATASET_SUCCESS";
-export const SAVE_DATASET_FAILURE = "SAVE_DATASET_FAILURE";
+export const SAVE_DATASET_REQUEST = 'SAVE_DATASET_REQUEST';
+export const SAVE_DATASET_SUCCESS = 'SAVE_DATASET_SUCCESS';
+export const SAVE_DATASET_FAILURE = 'SAVE_DATASET_FAILURE';
 
-export const LOAD_DATASET_LIST_REQUEST = "LOAD_DATASET_LIST_REQUEST";
-export const LOAD_DATASET_LIST_SUCCESS = "LOAD_DATASET_LIST_SUCCESS";
-export const LOAD_DATASET_LIST_FAILURE = "LOAD_DATASET_LIST_FAILURE";
+export const LOAD_DATASET_LIST_REQUEST = 'LOAD_DATASET_LIST_REQUEST';
+export const LOAD_DATASET_LIST_SUCCESS = 'LOAD_DATASET_LIST_SUCCESS';
+export const LOAD_DATASET_LIST_FAILURE = 'LOAD_DATASET_LIST_FAILURE';
 
 const initialuploadState = {
   isRequesting: false,
   error: null,
-  data: null
+  data: null,
 };
 
 export const spreadsheetUpload = (state = initialuploadState, action) => {
@@ -31,7 +31,7 @@ export const spreadsheetUpload = (state = initialuploadState, action) => {
         ...state,
         isRequesting: false,
         data: action.upload_result,
-        error: null
+        error: null,
       };
 
     case SPREADSHEET_UPLOAD_FAILURE:
@@ -39,7 +39,7 @@ export const spreadsheetUpload = (state = initialuploadState, action) => {
         ...state,
         isRequesting: false,
         data: null,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
 
     default:
@@ -51,8 +51,8 @@ const intialSaveDatasetState = {
   isRequesting: false,
   error: null,
   saved: false,
-  message: "",
-  diagnostics: []
+  message: '',
+  diagnostics: [],
 };
 
 export const datasetSave = (state = intialSaveDatasetState, action) => {
@@ -70,7 +70,7 @@ export const datasetSave = (state = intialSaveDatasetState, action) => {
         saved: true,
         error: null,
         message: action.save_result.message,
-        diagnostics: action.save_result.diagnostics
+        diagnostics: action.save_result.diagnostics,
       };
 
     case SAVE_DATASET_FAILURE:
@@ -78,7 +78,7 @@ export const datasetSave = (state = intialSaveDatasetState, action) => {
         ...state,
         isRequesting: false,
         saved: false,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
 
     default:
@@ -89,7 +89,7 @@ export const datasetSave = (state = intialSaveDatasetState, action) => {
 const intialDatasetListState = {
   isRequesting: false,
   error: null,
-  data: {}
+  data: {},
 };
 
 export const datasetList = (state = intialDatasetListState, action) => {
@@ -102,14 +102,14 @@ export const datasetList = (state = intialDatasetListState, action) => {
         ...state,
         isRequesting: false,
         error: null,
-        data: { ...state.data, ...action.load_result.data }
+        data: { ...state.data, ...action.load_result.data },
       };
 
     case LOAD_DATASET_LIST_FAILURE:
       return {
         ...state,
         isRequesting: false,
-        error: action.error || "unknown error"
+        error: action.error || 'unknown error',
       };
 
     default:
@@ -117,23 +117,23 @@ export const datasetList = (state = intialDatasetListState, action) => {
   }
 };
 
-/// Actions
+// / Actions
 
 export const uploadSpreadsheet = payload => ({
   type: SPREADSHEET_UPLOAD_REQUEST,
-  payload
+  payload,
 });
 
 export const saveDataset = payload => ({
   type: SAVE_DATASET_REQUEST,
-  payload
+  payload,
 });
 
 export const resetUploadState = () => ({
-  type: RESET_UPLOAD_STATE
+  type: RESET_UPLOAD_STATE,
 });
 
 export const loadDatasetList = () => ({
   type: LOAD_DATASET_LIST_REQUEST,
-  datasetList
+  datasetList,
 });

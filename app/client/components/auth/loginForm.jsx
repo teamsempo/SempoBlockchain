@@ -1,36 +1,32 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
-import AsyncButton from "./../AsyncButton.jsx";
-import { loginRequest } from "../../reducers/auth/actions";
+import AsyncButton from '../AsyncButton.jsx';
+import { loginRequest } from '../../reducers/auth/actions';
 
-import { Input, StyledButton, ErrorMessage } from "./../styledElements";
-import { Footer, FooterLink, FooterText } from "../pages/authPage.jsx";
-import TFAForm from "./TFAForm.jsx";
+import { Input, StyledButton, ErrorMessage } from '../styledElements';
+import { Footer, FooterLink, FooterText } from '../pages/authPage.jsx';
+import TFAForm from './TFAForm.jsx';
 
-const mapStateToProps = state => {
-  return {
-    login_status: state.login
-  };
-};
+const mapStateToProps = state => ({
+  login_status: state.login,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loginRequest: payload => dispatch(loginRequest(payload))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loginRequest: payload => dispatch(loginRequest(payload)),
+});
 
 export class LoginFormContainer extends React.Component {
   constructor() {
     super();
     this.state = {
-      username: "",
-      password: "",
+      username: '',
+      password: '',
       user_missing: false,
       password_missing: false,
-      invalid_login: false
+      invalid_login: false,
     };
   }
 
@@ -39,36 +35,36 @@ export class LoginFormContainer extends React.Component {
   }
 
   attemptlogin() {
-    if (this.state.username == "") {
+    if (this.state.username == '') {
       this.setState({ user_missing: true });
       return;
     }
-    if (this.state.password == "") {
+    if (this.state.password == '') {
       this.setState({ password_missing: true });
       return;
     }
     this.props.loginRequest({
-      body: { username: this.state.username, password: this.state.password }
+      body: { username: this.state.username, password: this.state.password },
     });
   }
 
   onUserFieldKeyPress(e) {
-    var username = e.target.value;
+    const username = e.target.value;
     this.setState({
-      username: username,
+      username,
       user_missing: false,
-      invalid_login: false
+      invalid_login: false,
     });
     if (e.nativeEvent.keyCode != 13) return;
     this.attemptlogin();
   }
 
   onPasswordFieldKeyPress(e) {
-    var password = e.target.value;
+    const password = e.target.value;
     this.setState({
-      password: password,
+      password,
       password_missing: false,
-      invalid_login: false
+      invalid_login: false,
     });
     if (e.nativeEvent.keyCode != 13) return;
     this.attemptlogin();
@@ -81,8 +77,8 @@ export class LoginFormContainer extends React.Component {
   render() {
     if (this.props.login_status.tfaURL || this.props.login_status.tfaFailure) {
       return (
-        <div style={{ margin: "1em" }}>
-          <div style={{ textAlign: "center" }}>
+        <div style={{ margin: '1em' }}>
+          <div style={{ textAlign: 'center' }}>
             Two-Step Authentication Required
           </div>
           <TFAForm tfaURL={this.props.login_status.tfaURL} />
@@ -105,18 +101,18 @@ export class LoginFormContainer extends React.Component {
 
 const LoginForm = function(props) {
   if (props.user_missing) {
-    var error_message = "Email Missing";
+    var error_message = 'Email Missing';
   } else if (props.password_missing) {
-    error_message = "Password Missing";
+    error_message = 'Password Missing';
   } else if (props.invalid_login) {
     error_message = props.invalid_login;
   } else {
-    error_message = "";
+    error_message = '';
   }
 
   return (
     <div>
-      <div style={{ display: "block", position: "relative" }}>
+      <div style={{ display: 'block', position: 'relative' }}>
         <ErrorMessage>{error_message}</ErrorMessage>
 
         <Input
@@ -141,7 +137,7 @@ const LoginForm = function(props) {
       <AsyncButton
         onClick={props.onClick}
         isLoading={props.isLoggingIn}
-        buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
+        buttonStyle={{ width: 'calc(100% - 1em)', display: 'flex' }}
         buttonText="LOGIN"
       />
 

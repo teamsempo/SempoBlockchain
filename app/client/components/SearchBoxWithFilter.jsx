@@ -1,37 +1,38 @@
-import React from "react";
-import { connect } from "react-redux";
-import { ModuleBox, Input } from "./styledElements";
-import styled from "styled-components";
-import matchSorter from "match-sorter";
-import PropTypes from "prop-types";
+import React from 'react';
+import { connect } from 'react-redux';
+import { ModuleBox, Input } from './styledElements';
+import styled from 'styled-components';
+import matchSorter from 'match-sorter';
+import PropTypes from 'prop-types';
 
-import { loadFilters, createFilter } from "../reducers/filterReducer";
-import LoadingSpinner from "./loadingSpinner.jsx";
-import { USER_FILTER_TYPE } from "../constants";
+import { loadFilters, createFilter } from '../reducers/filterReducer';
+import LoadingSpinner from './loadingSpinner.jsx';
+import { USER_FILTER_TYPE } from '../constants';
 
-import Filter from "./filter";
+import Filter from './filter';
 
 const propTypes = {
   withSearch: PropTypes.bool,
-  toggleTitle: PropTypes.string
+  toggleTitle: PropTypes.string,
 };
 
 const defaultProps = {
   withSearch: true,
-  toggleTitle: "Filters"
+  toggleTitle: 'Filters',
 };
 
 const mapStateToProps = state => {
   return {
     filters: state.filters,
-    creditTransferFilters: state.creditTransferFilters.creditTransferFilterState
+    creditTransferFilters:
+      state.creditTransferFilters.creditTransferFilterState,
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
     loadFilters: () => dispatch(loadFilters()),
-    createFilter: body => dispatch(createFilter({ body }))
+    createFilter: body => dispatch(createFilter({ body })),
   };
 };
 
@@ -39,13 +40,13 @@ class SearchBoxWithFilter extends React.Component {
   constructor() {
     super();
     this.state = {
-      phrase: "",
+      phrase: '',
       filters: [],
       possibleFilters: null,
       filterActive: false,
       dropdownActive: false,
       saveFilterDropdown: false,
-      loadFiltersDropdown: false
+      loadFiltersDropdown: false,
     };
   }
 
@@ -64,7 +65,7 @@ class SearchBoxWithFilter extends React.Component {
   saveFilter = () => {
     this.props.createFilter({
       filter_name: this.state.filterName,
-      filter_attributes: this.state.filters
+      filter_attributes: this.state.filters,
     });
   };
 
@@ -81,7 +82,7 @@ class SearchBoxWithFilter extends React.Component {
     const savedFilter = this.props.filters.byId[filterId];
     this.setState({
       filters: savedFilter.filter,
-      filterName: savedFilter.name
+      filterName: savedFilter.name,
     });
   };
 
@@ -96,9 +97,9 @@ class SearchBoxWithFilter extends React.Component {
           attribute_dict[name] = {
             values: new Set([value]),
             type:
-              typeof value == "number"
+              typeof value == 'number'
                 ? USER_FILTER_TYPE.INT_RANGE
-                : USER_FILTER_TYPE.DISCRETE
+                : USER_FILTER_TYPE.DISCRETE,
           };
         } else {
           // Attribute name has been seen, check if attribute VALUE has been seen
@@ -118,7 +119,7 @@ class SearchBoxWithFilter extends React.Component {
           Object.keys(item.custom_attributes).map(attribute_name => {
             let attribute_value = item.custom_attributes[attribute_name];
             proccess_attribute(attribute_name, attribute_value);
-          })
+          }),
         );
 
       item_list.map(item => {
@@ -127,7 +128,7 @@ class SearchBoxWithFilter extends React.Component {
           if (this.props.filterKeys[key] !== null) {
             proccess_attribute(
               key,
-              this.props.filterKeys[key](attribute_value)
+              this.props.filterKeys[key](attribute_value),
             );
           } else {
             proccess_attribute(key, attribute_value);
@@ -140,7 +141,7 @@ class SearchBoxWithFilter extends React.Component {
 
   onFiltersChanged = filters => {
     this.setState({
-      filters
+      filters,
     });
   };
 
@@ -170,15 +171,15 @@ class SearchBoxWithFilter extends React.Component {
           filter.type === USER_FILTER_TYPE.DISCRETE ||
           filter.type === USER_FILTER_TYPE.BOOLEAN_MAPPING
         ) {
-          if (filter.allowedValues.includes((value || "").toString())) {
+          if (filter.allowedValues.includes((value || '').toString())) {
             // attribute value is in allowed value, add account to filtered
             add_account();
           }
-        } else if (filter.type === "<") {
+        } else if (filter.type === '<') {
           if (value < filter.threshold) {
             add_account();
           }
-        } else if (filter.type === ">") {
+        } else if (filter.type === '>') {
           if (value > filter.threshold) {
             add_account();
           }
@@ -219,9 +220,9 @@ class SearchBoxWithFilter extends React.Component {
     var item_list = this.props.item_list;
 
     // Phrase Search
-    if (phrase !== "") {
+    if (phrase !== '') {
       item_list = matchSorter(item_list, this.state.phrase, {
-        keys: this.props.searchKeys
+        keys: this.props.searchKeys,
       });
     }
 
@@ -233,21 +234,20 @@ class SearchBoxWithFilter extends React.Component {
 
     if (this.props.filters.loadStatus.isRequesting) {
       var filterList = (
-        <div style={{ padding: "1em" }}>
+        <div style={{ padding: '1em' }}>
           <LoadingSpinner />
         </div>
       );
     } else if (this.props.filters.loadStatus.success) {
       let filterListKeys = Object.keys(this.props.filters.byId)
-        .filter(id => typeof this.props.filters.byId[id] !== "undefined")
+        .filter(id => typeof this.props.filters.byId[id] !== 'undefined')
         .map(id => this.props.filters.byId[id]);
       filterList = filterListKeys.map((filter, index) => {
         return (
           <CheckboxLabel
             name={filter.id}
             key={index}
-            onClick={() => this.loadSavedFilter(filter.id)}
-          >
+            onClick={() => this.loadSavedFilter(filter.id)}>
             {filter.name}
           </CheckboxLabel>
         );
@@ -258,31 +258,29 @@ class SearchBoxWithFilter extends React.Component {
 
     if (filterActive && filters.length !== 0) {
       var savedFilters = (
-        <div style={{ margin: "0 1em", position: "relative" }}>
+        <div style={{ margin: '0 1em', position: 'relative' }}>
           <ModuleBox
             style={{
               margin: 0,
               padding: 0,
-              fontSize: "0.8em",
-              width: "fit-content"
+              fontSize: '0.8em',
+              width: 'fit-content',
             }}
-            onClick={this.saveFilterDropdown}
-          >
+            onClick={this.saveFilterDropdown}>
             <SavedFilterButton>
               {saveFilterDropdown ? null : (
                 <SVG
-                  style={{ padding: "0 5px 0 0" }}
+                  style={{ padding: '0 5px 0 0' }}
                   src="/static/media/save.svg"
                 />
               )}
-              {saveFilterDropdown ? "Cancel" : "Save Filter"}
+              {saveFilterDropdown ? 'Cancel' : 'Save Filter'}
             </SavedFilterButton>
           </ModuleBox>
           <SavedFilters
             style={{
-              display: this.state.saveFilterDropdown ? "block" : "none"
-            }}
-          >
+              display: this.state.saveFilterDropdown ? 'block' : 'none',
+            }}>
             <ThresholdInput
               name="filterName"
               value={this.state.filterName}
@@ -291,8 +289,7 @@ class SearchBoxWithFilter extends React.Component {
             />
             <FilterText
               onClick={this.saveFilter}
-              style={{ padding: "0 0 5px 10px" }}
-            >
+              style={{ padding: '0 0 5px 10px' }}>
               Save Filter
             </FilterText>
           </SavedFilters>
@@ -300,14 +297,13 @@ class SearchBoxWithFilter extends React.Component {
       );
     } else if (filterActive) {
       savedFilters = (
-        <div style={{ margin: "0 1em", display: "flex", position: "relative" }}>
+        <div style={{ margin: '0 1em', display: 'flex', position: 'relative' }}>
           <ModuleBox
-            style={{ margin: 0, padding: 0, fontSize: "0.8em" }}
-            onClick={this.loadFilters}
-          >
+            style={{ margin: 0, padding: 0, fontSize: '0.8em' }}
+            onClick={this.loadFilters}>
             <SavedFilterButton>
               <SVG
-                style={{ padding: "0 5px 0 0" }}
+                style={{ padding: '0 5px 0 0' }}
                 src="/static/media/save.svg"
               />
               View Saved Filters
@@ -315,18 +311,17 @@ class SearchBoxWithFilter extends React.Component {
           </ModuleBox>
           <SavedFilters
             style={{
-              display: this.state.loadFiltersDropdown ? "block" : "none"
-            }}
-          >
+              display: this.state.loadFiltersDropdown ? 'block' : 'none',
+            }}>
             {filterList}
           </SavedFilters>
           <CloseWrapper
             onClick={() =>
               this.setState({
-                loadFiltersDropdown: !this.state.loadFiltersDropdown
+                loadFiltersDropdown: !this.state.loadFiltersDropdown,
               })
             }
-            style={{ display: this.state.loadFiltersDropdown ? "" : "none" }}
+            style={{ display: this.state.loadFiltersDropdown ? '' : 'none' }}
           />
         </div>
       );
@@ -344,13 +339,12 @@ class SearchBoxWithFilter extends React.Component {
                   paddingTop: 10,
                   paddingRight: 10,
                   paddingBottom: 10,
-                  paddingLeft: 10
+                  paddingLeft: 10,
                 }}
                 height="16"
                 viewBox="0 0 16 16"
                 width="16"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+                xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M12.6 11.2c.037.028.073.059.107.093l3 3a1 1 0 1 1-1.414 1.414l-3-3a1.009 1.009 0 0 1-.093-.107 7 7 0 1 1 1.4-1.4zM7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10z"
                   fillRule="evenodd"
@@ -366,21 +360,20 @@ class SearchBoxWithFilter extends React.Component {
 
               <FilterWrapper onClick={this.toggleFilter}>
                 <FilterText>
-                  {filterActive ? "Cancel" : this.props.toggleTitle}
+                  {filterActive ? 'Cancel' : this.props.toggleTitle}
                 </FilterText>
                 <svg
                   style={{
                     width: 12,
                     height: 12,
-                    padding: "0 10px",
-                    transform: filterActive ? "rotate(45deg)" : null,
-                    transition: "all .15s ease"
+                    padding: '0 10px',
+                    transform: filterActive ? 'rotate(45deg)' : null,
+                    transition: 'all .15s ease',
                   }}
                   height="16"
                   viewBox="0 0 16 16"
                   width="16"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
+                  xmlns="http://www.w3.org/2000/svg">
                   <path
                     d="M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z"
                     fillRule="evenodd"
@@ -394,21 +387,20 @@ class SearchBoxWithFilter extends React.Component {
           <ModuleBox>
             <FilterWrapper onClick={this.toggleFilter}>
               <FilterText>
-                {filterActive ? "Cancel" : this.props.toggleTitle}
+                {filterActive ? 'Cancel' : this.props.toggleTitle}
               </FilterText>
               <svg
                 style={{
                   width: 12,
                   height: 12,
-                  padding: "0 10px",
-                  transform: filterActive ? "rotate(45deg)" : null,
-                  transition: "all .15s ease"
+                  padding: '0 10px',
+                  transform: filterActive ? 'rotate(45deg)' : null,
+                  transition: 'all .15s ease',
                 }}
                 height="16"
                 viewBox="0 0 16 16"
                 width="16"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+                xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M9 7h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 1 1 2 0z"
                   fillRule="evenodd"
@@ -440,7 +432,7 @@ class SearchBoxWithFilter extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(SearchBoxWithFilter);
 
 const SearchWrapper = styled.div`

@@ -1,29 +1,29 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
-import { formatMoney, generateQueryString } from "../../utils.js";
+import { formatMoney, generateQueryString } from '../../utils.js';
 
-import DateTime from "../dateTime.jsx";
-import { ModuleHeader } from "../styledElements.js";
+import DateTime from '../dateTime.jsx';
+import { ModuleHeader } from '../styledElements.js';
 
-import LoadingSpinner from "../loadingSpinner.jsx";
+import LoadingSpinner from '../loadingSpinner.jsx';
 
 const mapStateToProps = state => {
   return {
     creditTransferList: Object.keys(state.creditTransfers.byId)
-      .filter(id => typeof state.creditTransfers.byId[id] !== "undefined")
+      .filter(id => typeof state.creditTransfers.byId[id] !== 'undefined')
       .map(id => state.creditTransfers.byId[id]),
     users: state.users,
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
-    login: state.login
+    login: state.login,
   };
 };
 
 class BeneficiaryLiveFeed extends React.Component {
   navigateToAccount = accountId => {
-    window.location.assign("/accounts/" + accountId);
+    window.location.assign('/accounts/' + accountId);
   };
 
   render() {
@@ -31,7 +31,7 @@ class BeneficiaryLiveFeed extends React.Component {
       users,
       transferAccounts,
       creditTransfers,
-      creditTransferList
+      creditTransferList,
     } = this.props;
     let beneficiaryTerm = window.BENEFICIARY_TERM;
 
@@ -58,30 +58,30 @@ class BeneficiaryLiveFeed extends React.Component {
 
                 if (
                   transfer.recipient_user !== null &&
-                  typeof transfer.recipient_user !== "undefined"
+                  typeof transfer.recipient_user !== 'undefined'
                 ) {
                   var recipient_user = users.byId[transfer.recipient_user];
                   var recipient_user_name =
-                    recipient_user.first_name + " " + recipient_user.last_name;
+                    recipient_user.first_name + ' ' + recipient_user.last_name;
                 } else if (recipient_blockchain_address !== null) {
                   recipient_user_name =
-                    "Address " +
+                    'Address ' +
                     recipient_blockchain_address.slice(0, 8) +
-                    "...";
+                    '...';
                 } else {
                   recipient_user_name = null;
                 }
 
                 if (
                   transfer.sender_user !== null &&
-                  typeof transfer.sender_user !== "undefined"
+                  typeof transfer.sender_user !== 'undefined'
                 ) {
                   var sender_user = users.byId[transfer.sender_user];
                   var sender_user_name =
-                    sender_user.first_name + " " + sender_user.last_name;
+                    sender_user.first_name + ' ' + sender_user.last_name;
                 } else if (sender_blockchain_address !== null) {
                   sender_user_name =
-                    "Address " + sender_blockchain_address.slice(0, 8) + "...";
+                    'Address ' + sender_blockchain_address.slice(0, 8) + '...';
                 } else {
                   sender_user_name = null;
                 }
@@ -99,12 +99,12 @@ class BeneficiaryLiveFeed extends React.Component {
                   undefined,
                   undefined,
                   undefined,
-                  currency
+                  currency,
                 );
 
                 if (
                   transfer.from_exchange_to_transfer_id !== null &&
-                  typeof transfer.from_exchange_to_transfer_id !== "undefined"
+                  typeof transfer.from_exchange_to_transfer_id !== 'undefined'
                 ) {
                   exchangeToTransfer =
                     creditTransfers.byId[transfer.from_exchange_to_transfer_id];
@@ -123,15 +123,15 @@ class BeneficiaryLiveFeed extends React.Component {
                     undefined,
                     undefined,
                     undefined,
-                    recipientCurrency
+                    recipientCurrency,
                   );
                   showExchange = true;
                 }
 
                 var statuscolors = {
-                  PENDING: "#cc8ee9",
-                  COMPLETE: "#2d9ea0",
-                  REJECTED: "#ff715b"
+                  PENDING: '#cc8ee9',
+                  COMPLETE: '#2d9ea0',
+                  REJECTED: '#ff715b',
                 };
                 var timeStatusBlock = (
                   <UserTime>
@@ -139,14 +139,13 @@ class BeneficiaryLiveFeed extends React.Component {
                       <DateTime created={transfer.created} />
                     </Status>
                     <Status
-                      style={{ color: statuscolors[transfer.transfer_status] }}
-                    >
+                      style={{ color: statuscolors[transfer.transfer_status] }}>
                       {transfer.transfer_status}
                     </Status>
                   </UserTime>
                 );
 
-                if (transfer.transfer_type === "EXCHANGE" && showExchange) {
+                if (transfer.transfer_type === 'EXCHANGE' && showExchange) {
                   return (
                     <UserWrapper key={transfer.id}>
                       <UserSVG src="/static/media/exchange.svg" />
@@ -154,8 +153,7 @@ class BeneficiaryLiveFeed extends React.Component {
                         <ClickableTopText
                           onClick={() =>
                             this.navigateToAccount(transferAccountId)
-                          }
-                        >
+                          }>
                           {sender_user_name} exchanged
                         </ClickableTopText>
                         <BottomText>
@@ -166,7 +164,7 @@ class BeneficiaryLiveFeed extends React.Component {
                       {timeStatusBlock}
                     </UserWrapper>
                   );
-                } else if (transfer.transfer_type === "PAYMENT") {
+                } else if (transfer.transfer_type === 'PAYMENT') {
                   return (
                     <UserWrapper key={transfer.id}>
                       <UserSVG src="/static/media/transfer.svg" />
@@ -174,8 +172,7 @@ class BeneficiaryLiveFeed extends React.Component {
                         <ClickableTopText
                           onClick={() =>
                             this.navigateToAccount(transferAccountId)
-                          }
-                        >
+                          }>
                           {sender_user_name} transferred
                         </ClickableTopText>
                         <BottomText>
@@ -183,11 +180,10 @@ class BeneficiaryLiveFeed extends React.Component {
                           <ClickableHighlight
                             onClick={() =>
                               this.navigateToAccount(
-                                transfer.recipient_transfer_account
+                                transfer.recipient_transfer_account,
                               )
-                            }
-                          >
-                            {" "}
+                            }>
+                            {' '}
                             {recipient_user_name}
                           </ClickableHighlight>
                         </BottomText>
@@ -195,7 +191,7 @@ class BeneficiaryLiveFeed extends React.Component {
                       {timeStatusBlock}
                     </UserWrapper>
                   );
-                } else if (transfer.transfer_type === "DISBURSEMENT") {
+                } else if (transfer.transfer_type === 'DISBURSEMENT') {
                   return (
                     <UserWrapper key={transfer.id}>
                       <UserSVG src="/static/media/disbursement.svg" />
@@ -206,11 +202,10 @@ class BeneficiaryLiveFeed extends React.Component {
                           <ClickableHighlight
                             onClick={() =>
                               this.navigateToAccount(
-                                transfer.recipient_transfer_account
+                                transfer.recipient_transfer_account,
                               )
-                            }
-                          >
-                            {" "}
+                            }>
+                            {' '}
                             {recipient_user_name}
                           </ClickableHighlight>
                         </BottomText>
@@ -218,11 +213,11 @@ class BeneficiaryLiveFeed extends React.Component {
                       {timeStatusBlock}
                     </UserWrapper>
                   );
-                } else if (transfer.transfer_type === "RECLAMATION") {
+                } else if (transfer.transfer_type === 'RECLAMATION') {
                   return (
                     <UserWrapper key={transfer.id}>
                       <UserSVG
-                        style={{ transform: "rotate(180deg)" }}
+                        style={{ transform: 'rotate(180deg)' }}
                         src="/static/media/disbursement.svg"
                       />
                       <UserGroup>
@@ -232,9 +227,8 @@ class BeneficiaryLiveFeed extends React.Component {
                           <ClickableHighlight
                             onClick={() =>
                               this.navigateToAccount(transferAccountId)
-                            }
-                          >
-                            {" "}
+                            }>
+                            {' '}
                             {sender_user_name}
                           </ClickableHighlight>
                         </BottomText>

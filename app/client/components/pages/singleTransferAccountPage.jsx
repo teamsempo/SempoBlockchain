@@ -1,32 +1,28 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled, { ThemeProvider } from 'styled-components';
 
 import {
   PageWrapper,
   ModuleBox,
-  CenterLoadingSideBarActive
-} from "../styledElements.js";
-import LoadingSpinner from "../loadingSpinner.jsx";
-import { LightTheme } from "../theme.js";
-import SingleTransferAccountManagement from "../transferAccount/singleTransferAccountWrapper.jsx";
+  CenterLoadingSideBarActive,
+} from '../styledElements.js';
+import LoadingSpinner from '../loadingSpinner.jsx';
+import { LightTheme } from '../theme.js';
+import SingleTransferAccountManagement from '../transferAccount/singleTransferAccountWrapper.jsx';
 
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
-import organizationWrapper from "../organizationWrapper";
+import { loadTransferAccounts } from '../../reducers/transferAccountReducer';
+import organizationWrapper from '../organizationWrapper';
 
-const mapStateToProps = state => {
-  return {
-    login: state.login,
-    loggedIn: state.login.userId != null,
-    transferAccounts: state.transferAccounts
-  };
-};
+const mapStateToProps = state => ({
+  login: state.login,
+  loggedIn: state.login.userId != null,
+  transferAccounts: state.transferAccounts,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadTransferAccountList: path => dispatch(loadTransferAccounts({ path }))
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  loadTransferAccountList: path => dispatch(loadTransferAccounts({ path })),
+});
 
 class SingleTransferAccountPage extends React.Component {
   constructor(props) {
@@ -35,17 +31,17 @@ class SingleTransferAccountPage extends React.Component {
   }
 
   componentDidMount() {
-    let pathname_array = location.pathname.split("/").slice(1);
-    let transferAccountID = parseInt(pathname_array[1]);
+    const pathname_array = location.pathname.split('/').slice(1);
+    const transferAccountID = parseInt(pathname_array[1]);
     if (transferAccountID) {
       this.props.loadTransferAccountList(transferAccountID); //  load single account
     }
   }
 
   render() {
-    let pathname_array = location.pathname.split("/").slice(1);
-    let url_provided = pathname_array[1];
-    let transferAccountId = parseInt(url_provided);
+    const pathname_array = location.pathname.split('/').slice(1);
+    const url_provided = pathname_array[1];
+    const transferAccountId = parseInt(url_provided);
 
     // check if transferAccount exists else show fallback
     if (this.props.transferAccounts.byId[transferAccountId]) {
@@ -57,7 +53,7 @@ class SingleTransferAccountPage extends React.Component {
     } else {
       componentFallback = (
         <ModuleBox>
-          <p style={{ padding: "1em", textAlign: "center" }}>
+          <p style={{ padding: '1em', textAlign: 'center' }}>
             No Such Account: {url_provided}
           </p>
         </ModuleBox>
@@ -75,7 +71,8 @@ class SingleTransferAccountPage extends React.Component {
           </CenterLoadingSideBarActive>
         </WrapperDiv>
       );
-    } else if (this.props.loggedIn) {
+    }
+    if (this.props.loggedIn) {
       return (
         <WrapperDiv>
           <PageWrapper>
@@ -85,19 +82,18 @@ class SingleTransferAccountPage extends React.Component {
           </PageWrapper>
         </WrapperDiv>
       );
-    } else {
-      return (
-        <WrapperDiv>
-          <p>Something went wrong.</p>
-        </WrapperDiv>
-      );
     }
+    return (
+      <WrapperDiv>
+        <p>Something went wrong.</p>
+      </WrapperDiv>
+    );
   }
 }
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(organizationWrapper(SingleTransferAccountPage));
 
 const WrapperDiv = styled.div`

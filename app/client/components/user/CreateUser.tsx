@@ -1,15 +1,15 @@
-import * as React from "react";
-import { connect } from "react-redux";
+import * as React from 'react';
+import { connect } from 'react-redux';
 
-import { createUser, RESET_CREATE_USER } from "../../reducers/userReducer";
-import { StyledButton, ModuleHeader } from "../styledElements";
-import * as styles from "./styles.module.css";
-import { loadTransferUsages } from "../../reducers/transferUsage/actions";
-import { TransferUsage } from "../../reducers/transferUsage/types";
-import { Organisation } from "../../reducers/organisation/types";
-import { ReduxState } from "../../reducers/rootReducer";
-import { loadOrganisation } from "../../reducers/organisation/actions";
-import CreateUserForm, { ICreateUserUpdate } from "./CreateUserForm";
+import { createUser, RESET_CREATE_USER } from '../../reducers/userReducer';
+import { StyledButton, ModuleHeader } from '../styledElements';
+import * as styles from './styles.module.css';
+import { loadTransferUsages } from '../../reducers/transferUsage/actions';
+import { TransferUsage } from '../../reducers/transferUsage/types';
+import { Organisation } from '../../reducers/organisation/types';
+import { ReduxState } from '../../reducers/rootReducer';
+import { loadOrganisation } from '../../reducers/organisation/actions';
+import CreateUserForm, { ICreateUserUpdate } from './CreateUserForm';
 
 interface DispatchProps {
   createUser: (body: any) => void;
@@ -55,7 +55,7 @@ class CreateUserUpdated extends React.Component<Props> {
   onCreateUser(form: Form) {
     const { activeOrganisation } = this.props;
     let businessUsage = form.businessUsage;
-    if (businessUsage && businessUsage.toLowerCase() === "other") {
+    if (businessUsage && businessUsage.toLowerCase() === 'other') {
       businessUsage = form.usageOtherSpecific;
     }
 
@@ -67,9 +67,9 @@ class CreateUserUpdated extends React.Component<Props> {
       public_serial_number: form.publicSerialNumber,
       phone: form.phone,
       is_vendor:
-        form.accountType === "vendor" || form.accountType === "cashier",
-      is_tokenagent: form.accountType === "tokenagent",
-      is_groupaccount: form.accountType === "groupaccount",
+        form.accountType === 'vendor' || form.accountType === 'cashier',
+      is_tokenagent: form.accountType === 'tokenagent',
+      is_groupaccount: form.accountType === 'groupaccount',
       initial_disbursement: (form.initialDisbursement || 0) * 100,
       require_transfer_card_exists:
         activeOrganisation && activeOrganisation.require_transfer_card,
@@ -78,13 +78,13 @@ class CreateUserUpdated extends React.Component<Props> {
       transfer_account_name: form.transferAccountName,
       location: form.location,
       business_usage_name: businessUsage,
-      referred_by: form.referredBy
+      referred_by: form.referredBy,
     });
   }
 
   render() {
     const transferAccountType = this.props.isVendor
-      ? "vendor"
+      ? 'vendor'
       : window.BENEFICIARY_TERM.toLowerCase();
     const { one_time_code, is_external_wallet } = this.props.users.createStatus;
 
@@ -95,7 +95,7 @@ class CreateUserUpdated extends React.Component<Props> {
             <ModuleHeader>
               Successfully Created External Wallet User
             </ModuleHeader>
-            <div style={{ padding: "0 1em 1em" }}>
+            <div style={{ padding: '0 1em 1em' }}>
               <p>
                 You can now send funds to the {transferAccountType}'s wallet.
               </p>
@@ -110,7 +110,7 @@ class CreateUserUpdated extends React.Component<Props> {
         return (
           <div>
             <ModuleHeader>One Time Code</ModuleHeader>
-            <div style={{ padding: "0 1em 1em" }}>
+            <div style={{ padding: '0 1em 1em' }}>
               <p className={styles.code}>
                 {this.props.users.createStatus.one_time_code}
               </p>
@@ -147,7 +147,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
     users: state.users,
     transferUsages: state.transferUsages.transferUsages,
     //@ts-ignore
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeOrganisation: state.organisations.byId[state.login.organisationId],
   };
 };
 
@@ -162,11 +162,8 @@ const mapDispatchToProps = (dispatch: any) => {
     },
     loadOrganisation: () => {
       dispatch(loadOrganisation());
-    }
+    },
   };
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(CreateUserUpdated);
+export default connect(mapStateToProps, mapDispatchToProps)(CreateUserUpdated);

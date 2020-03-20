@@ -1,19 +1,19 @@
-import React, { lazy, Suspense } from "react";
-import styled from "styled-components";
-import { connect } from "react-redux";
+import React, { lazy, Suspense } from 'react';
+import styled from 'styled-components';
+import { connect } from 'react-redux';
 
-import { StyledButton, ModuleBox, ModuleHeader } from "../styledElements";
-import AsyncButton from "../AsyncButton.jsx";
+import { StyledButton, ModuleBox, ModuleHeader } from '../styledElements';
+import AsyncButton from '../AsyncButton.jsx';
 const SingleDatePickerWrapper = lazy(() =>
-  import("./SingleDatePickerWrapper.jsx")
+  import('./SingleDatePickerWrapper.jsx'),
 );
-import NewTransferManager from "../management/newTransferManager.jsx";
-import DateTime from "../dateTime.jsx";
+import NewTransferManager from '../management/newTransferManager.jsx';
+import DateTime from '../dateTime.jsx';
 
-import { editTransferAccount } from "../../reducers/transferAccountReducer";
-import { createTransferRequest } from "../../reducers/creditTransferReducer";
-import { formatMoney } from "../../utils";
-import { TransferAccountTypes } from "./types";
+import { editTransferAccount } from '../../reducers/transferAccountReducer';
+import { createTransferRequest } from '../../reducers/creditTransferReducer';
+import { formatMoney } from '../../utils';
+import { TransferAccountTypes } from './types';
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -22,7 +22,7 @@ const mapStateToProps = (state, ownProps) => {
     transferAccounts: state.transferAccounts,
     users: state.users,
     transferAccount:
-      state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)]
+      state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)],
   };
 };
 
@@ -30,7 +30,7 @@ const mapDispatchToProps = dispatch => {
   return {
     createTransferRequest: payload => dispatch(createTransferRequest(payload)),
     editTransferAccountRequest: (body, path) =>
-      dispatch(editTransferAccount({ body, path }))
+      dispatch(editTransferAccount({ body, path })),
   };
 };
 
@@ -38,20 +38,20 @@ class TransferAccountManager extends React.Component {
   constructor() {
     super();
     this.state = {
-      action: "select",
-      transfer_type: "ALL",
-      create_transfer_type: "RECLAMATION",
+      action: 'select',
+      transfer_type: 'ALL',
+      create_transfer_type: 'RECLAMATION',
       newTransfer: false,
-      transfer_amount: "",
+      transfer_amount: '',
       showSpreadsheetData: true,
-      balance: "",
-      is_approved: "n/a",
-      one_time_code: "",
+      balance: '',
+      is_approved: 'n/a',
+      one_time_code: '',
       focused: false,
       payable_epoch: null,
-      payable_period_type: "n/a",
+      payable_period_type: 'n/a',
       payable_period_length: 1,
-      is_vendor: null
+      is_vendor: null,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -92,7 +92,7 @@ class TransferAccountManager extends React.Component {
         is_vendor: transferAccount.is_vendor,
         is_beneficiary: transferAccount.is_beneficiary,
         is_tokenagent: transferAccount.is_tokenagent,
-        is_groupaccount: transferAccount.is_groupaccount
+        is_groupaccount: transferAccount.is_groupaccount,
       });
     }
 
@@ -101,7 +101,7 @@ class TransferAccountManager extends React.Component {
         is_vendor: primaryUser.is_vendor,
         is_beneficiary: primaryUser.is_beneficiary,
         is_tokenagent: primaryUser.is_tokenagent,
-        is_groupaccount: primaryUser.is_groupaccount
+        is_groupaccount: primaryUser.is_groupaccount,
       });
     }
   }
@@ -109,7 +109,7 @@ class TransferAccountManager extends React.Component {
   editTransferAccount() {
     const balance = this.state.balance * 100;
     const approve =
-      this.state.is_approved == "n/a" ? null : this.state.is_approved;
+      this.state.is_approved == 'n/a' ? null : this.state.is_approved;
     const nfc_card_id = this.state.nfc_card_id;
     const qr_code = this.state.qr_code;
     const phone = this.state.phone;
@@ -120,7 +120,7 @@ class TransferAccountManager extends React.Component {
 
     const payable_period_length = this.state.payable_period_length;
     const payable_period_type =
-      this.state.payable_period_type === "n/a"
+      this.state.payable_period_type === 'n/a'
         ? null
         : this.state.payable_period_type;
 
@@ -135,9 +135,9 @@ class TransferAccountManager extends React.Component {
         qr_code,
         payable_epoch,
         payable_period_length,
-        payable_period_type
+        payable_period_type,
       },
-      single_transfer_account_id
+      single_transfer_account_id,
     );
   }
 
@@ -147,7 +147,7 @@ class TransferAccountManager extends React.Component {
 
   handleClick() {
     this.setState(prevState => ({
-      newTransfer: !prevState.newTransfer
+      newTransfer: !prevState.newTransfer,
     }));
   }
 
@@ -166,8 +166,8 @@ class TransferAccountManager extends React.Component {
       var transfer_type = this.state.create_transfer_type;
       var credit_transfer_type_filter = this.state.transfer_type;
       const transfer_account_filter = this.props.vendors
-        ? "?account_type=vendor"
-        : "?account_type=beneficiary";
+        ? '?account_type=vendor'
+        : '?account_type=beneficiary';
       const credit_transfer_filter = `?transfer_account_ids=${transfer_account_ids}&transfer_type=${credit_transfer_type_filter}`;
       var id = null;
 
@@ -177,7 +177,7 @@ class TransferAccountManager extends React.Component {
         transfer_type,
         credit_transfer_filter,
         transfer_account_filter,
-        id
+        id,
       });
     }
   }
@@ -187,7 +187,7 @@ class TransferAccountManager extends React.Component {
       is_beneficiary,
       is_vendor,
       is_groupaccount,
-      is_tokenagent
+      is_tokenagent,
     } = this.state;
     let accountTypeName;
     let icon;
@@ -208,34 +208,34 @@ class TransferAccountManager extends React.Component {
       this.props.transferAccount.token &&
       this.props.transferAccount.token.symbol;
     const displayAmount = (
-      <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+      <p style={{ margin: 0, fontWeight: 100, fontSize: '16px' }}>
         {formatMoney(
           this.state.balance / 100,
           undefined,
           undefined,
           undefined,
-          currency
+          currency,
         )}
       </p>
     );
 
     let tracker_link =
       window.ETH_EXPLORER_URL +
-      "/address/" +
+      '/address/' +
       this.props.transferAccount.blockchain_address;
 
     if (is_beneficiary) {
       accountTypeName = TransferAccountTypes.USER || window.BENEFICIARY_TERM;
-      icon = "/static/media/user.svg";
+      icon = '/static/media/user.svg';
     } else if (is_vendor) {
       accountTypeName = TransferAccountTypes.VENDOR;
-      icon = "/static/media/store.svg";
+      icon = '/static/media/store.svg';
     } else if (is_groupaccount) {
       accountTypeName = TransferAccountTypes.GROUPACCOUNT;
-      icon = "/static/media/groupaccount.svg";
+      icon = '/static/media/groupaccount.svg';
     } else if (is_tokenagent) {
       accountTypeName = TransferAccountTypes.TOKENAGENT;
-      icon = "/static/media/tokenagent.svg";
+      icon = '/static/media/tokenagent.svg';
     }
 
     var summaryBox = (
@@ -243,32 +243,32 @@ class TransferAccountManager extends React.Component {
         <SummaryBox>
           <TopContent>
             <UserSVG src={icon} />
-            <p style={{ margin: "0 1em", fontWeight: "500" }}>
+            <p style={{ margin: '0 1em', fontWeight: '500' }}>
               {accountTypeName}
             </p>
           </TopContent>
           <BottomContent>
             <FontStyling>
-              Balance:{" "}
-              <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+              Balance:{' '}
+              <span style={{ margin: 0, fontWeight: 100, fontSize: '16px' }}>
                 {displayAmount}
               </span>
             </FontStyling>
             <FontStyling>
-              Created:{" "}
-              <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+              Created:{' '}
+              <span style={{ margin: 0, fontWeight: 100, fontSize: '16px' }}>
                 <DateTime created={this.state.created} />
               </span>
             </FontStyling>
             <FontStyling>
               Address:
-              <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
-                <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+              <span style={{ margin: 0, fontWeight: 100, fontSize: '16px' }}>
+                <p style={{ margin: 0, fontWeight: 100, fontSize: '16px' }}>
                   <a href={tracker_link} target="_blank">
                     {this.props.transferAccount.blockchain_address.substring(
                       2,
-                      7
-                    ) + "..."}
+                      7,
+                    ) + '...'}
                   </a>
                 </p>
               </span>
@@ -279,12 +279,12 @@ class TransferAccountManager extends React.Component {
     );
 
     return (
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         {summaryBox}
 
         {newTransfer}
 
-        {this.props.login.adminTier !== "view" ? (
+        {this.props.login.adminTier !== 'view' ? (
           <ModuleBox>
             <Wrapper>
               <TopRow>
@@ -293,23 +293,22 @@ class TransferAccountManager extends React.Component {
                   <StyledButton
                     onClick={this.onNewTransfer}
                     style={{
-                      fontWeight: "400",
-                      margin: "0em 1em",
-                      lineHeight: "25px",
-                      height: "25px"
-                    }}
-                  >
+                      fontWeight: '400',
+                      margin: '0em 1em',
+                      lineHeight: '25px',
+                      height: '25px',
+                    }}>
                     NEW TRANSFER
                   </StyledButton>
                   <AsyncButton
                     onClick={this.onSave}
-                    miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                    miniSpinnerStyle={{ height: '10px', width: '10px' }}
                     buttonStyle={{
-                      display: "inline-flex",
-                      fontWeight: "400",
-                      margin: "0em",
-                      lineHeight: "25px",
-                      height: "25px"
+                      display: 'inline-flex',
+                      fontWeight: '400',
+                      margin: '0em',
+                      lineHeight: '25px',
+                      height: '25px',
                     }}
                     isLoading={
                       this.props.transferAccounts.editStatus.isRequesting
@@ -318,14 +317,13 @@ class TransferAccountManager extends React.Component {
                   />
                 </ButtonWrapper>
               </TopRow>
-              <Row style={{ margin: "0em 1em" }}>
+              <Row style={{ margin: '0em 1em' }}>
                 <SubRow>
                   <InputLabel>Status: </InputLabel>
                   <StatusSelect
                     name="is_approved"
                     value={this.state.is_approved}
-                    onChange={this.handleChange}
-                  >
+                    onChange={this.handleChange}>
                     <option name="is_approved" disabled value="n/a">
                       n/a
                     </option>
@@ -339,13 +337,13 @@ class TransferAccountManager extends React.Component {
                 </SubRow>
                 <SubRow>
                   <InputLabel>
-                    {this.state.one_time_code !== "" ? "One Time Code:" : ""}
+                    {this.state.one_time_code !== '' ? 'One Time Code:' : ''}
                   </InputLabel>
                   <ManagerText>{this.state.one_time_code}</ManagerText>
                 </SubRow>
               </Row>
-              <Row style={{ margin: "0em 1em" }}>
-                <SubRow style={{ width: "50%" }}>
+              <Row style={{ margin: '0em 1em' }}>
+                <SubRow style={{ width: '50%' }}>
                   <InputLabel>Payment Cycle Start Date: </InputLabel>
                   <Suspense fallback={<div>Loading...</div>}>
                     <SingleDatePickerWrapper
@@ -373,11 +371,10 @@ class TransferAccountManager extends React.Component {
                     name="payable_period_type"
                     value={
                       this.state.payable_period_type === null
-                        ? "n/a"
+                        ? 'n/a'
                         : this.state.payable_period_type
                     }
-                    onChange={this.handleChange}
-                  >
+                    onChange={this.handleChange}>
                     <option name="payable_period_type" disabled value="n/a">
                       n/a
                     </option>
@@ -407,7 +404,7 @@ class TransferAccountManager extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(TransferAccountManager);
 
 const Wrapper = styled.div`

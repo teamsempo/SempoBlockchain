@@ -1,12 +1,12 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
 
 class hideableDiv extends React.Component {
   constructor() {
     super();
     this.state = {
-      isHidden: false
+      isHidden: false,
     };
   }
 
@@ -20,9 +20,9 @@ class hideableDiv extends React.Component {
     return (
       <WrapperDiv>
         <Title onClick={this.toggleHidden.bind(this)}>
-          <div style={{ display: "flex" }}>
+          <div style={{ display: 'flex' }}>
             <h2>{this.props.title}</h2>
-            {/*<IconSVG src={this.state.isHidden ? '/static/media/cross.svg' : '/static/media/angle-down.svg'} />*/}
+            {/* <IconSVG src={this.state.isHidden ? '/static/media/cross.svg' : '/static/media/angle-down.svg'} /> */}
           </div>
         </Title>
         {this.state.isHidden && (

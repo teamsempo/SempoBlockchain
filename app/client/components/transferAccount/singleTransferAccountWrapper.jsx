@@ -1,16 +1,14 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
-import CreditTransferList from "../creditTransfer/creditTransferList.jsx";
-import TransferAccountManager from "./transferAccountManager.jsx";
-import UserList from "../user/userList.jsx";
-import connect from "react-redux/es/connect/connect";
+import connect from 'react-redux/es/connect/connect';
+import CreditTransferList from '../creditTransfer/creditTransferList.jsx';
+import TransferAccountManager from './transferAccountManager.jsx';
+import UserList from '../user/userList.jsx';
 
-const mapStateToProps = state => {
-  return {
-    transferAccounts: state.transferAccounts
-  };
-};
+const mapStateToProps = state => ({
+  transferAccounts: state.transferAccounts,
+});
 
 class SingleTransferAccountWrapper extends React.Component {
   constructor() {
@@ -25,7 +23,7 @@ class SingleTransferAccountWrapper extends React.Component {
 
     if (transferAccount.credit_receives || transferAccount.credit_sends) {
       creditTransferIds = transferAccount.credit_receives.concat(
-        transferAccount.credit_sends
+        transferAccount.credit_sends,
       );
     }
 
@@ -34,7 +32,7 @@ class SingleTransferAccountWrapper extends React.Component {
         <TransferAccountManager transfer_account_id={transferAccountId} />
 
         {transferAccount.users !== null &&
-        typeof transferAccount.users !== "undefined" ? (
+        typeof transferAccount.users !== 'undefined' ? (
           <UserList user_ids={transferAccount.users} />
         ) : null}
 

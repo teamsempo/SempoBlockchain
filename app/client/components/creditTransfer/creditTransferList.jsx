@@ -1,31 +1,31 @@
-import React from "react";
-import { connect } from "react-redux";
-import styled from "styled-components";
-import ReactTable from "react-table";
+import React from 'react';
+import { connect } from 'react-redux';
+import styled from 'styled-components';
+import ReactTable from 'react-table';
 
-import { TopRow, StyledSelect } from "../styledElements.js";
+import { TopRow, StyledSelect } from '../styledElements.js';
 
-import { modifyTransferRequest } from "../../reducers/creditTransferReducer";
+import { modifyTransferRequest } from '../../reducers/creditTransferReducer';
 
-import LoadingSpinner from "../loadingSpinner.jsx";
-import DateTime from "../dateTime.jsx";
-import AsyncButton from "../AsyncButton.jsx";
-import { formatMoney } from "../../utils";
-import { ModuleBox } from "../styledElements";
+import LoadingSpinner from '../loadingSpinner.jsx';
+import DateTime from '../dateTime.jsx';
+import AsyncButton from '../AsyncButton.jsx';
+import { formatMoney } from '../../utils';
+import { ModuleBox } from '../styledElements';
 
 const mapStateToProps = state => {
   return {
     login: state.login,
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
-    users: state.users
+    users: state.users,
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
     modifyTransferRequest: (body, path) =>
-      dispatch(modifyTransferRequest({ body, path }))
+      dispatch(modifyTransferRequest({ body, path })),
   };
 };
 
@@ -42,15 +42,15 @@ class CreditTransferList extends React.Component {
     this.state = {
       action: false,
       user_id: null,
-      transfer_type: "ALL",
+      transfer_type: 'ALL',
       credit_transfer_ids: {},
       allCheckedCreditTransfers: false,
-      isLoading: true
+      isLoading: true,
     };
     this.checkAllCreditTransfers = this.checkAllCreditTransfers.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.toggleSelectedCreditTransfer = this.toggleSelectedCreditTransfer.bind(
-      this
+      this,
     );
     this.onNext = this.onNext.bind(this);
   }
@@ -71,8 +71,8 @@ class CreditTransferList extends React.Component {
         this.setState(prevState => ({
           credit_transfer_ids: {
             ...prevState.credit_transfer_ids,
-            [i.id]: false
-          }
+            [i.id]: false,
+          },
         }));
       });
     }
@@ -97,9 +97,9 @@ class CreditTransferList extends React.Component {
         this.setState(prevState => ({
           credit_transfer_ids: {
             ...prevState.credit_transfer_ids,
-            [i.id]: false
+            [i.id]: false,
           },
-          isLoading: false
+          isLoading: false,
         }));
       });
     }
@@ -111,8 +111,8 @@ class CreditTransferList extends React.Component {
       this.setState(prevState => ({
         credit_transfer_ids: {
           ...prevState.credit_transfer_ids,
-          [i]: false
-        }
+          [i]: false,
+        },
       }));
       this.setState({ isLoading: false });
     });
@@ -137,15 +137,15 @@ class CreditTransferList extends React.Component {
     this.setState(prevState => ({
       credit_transfer_ids: {
         ...prevState.credit_transfer_ids,
-        [id]: value
+        [id]: value,
       },
-      allChecked: false
+      allChecked: false,
     }));
   }
 
   onNext() {
     this.get_selected_ids_array(this.state.credit_transfer_ids).map(id =>
-      this.props.modifyTransferRequest({ action: this.state.action }, id)
+      this.props.modifyTransferRequest({ action: this.state.action }, id),
     );
   }
 
@@ -175,15 +175,15 @@ class CreditTransferList extends React.Component {
       this.setState(prevState => ({
         credit_transfer_ids: {
           ...prevState.credit_transfer_ids,
-          [i.id]: value
+          [i.id]: value,
         },
-        allCheckedCreditTransfers: value
+        allCheckedCreditTransfers: value,
       }));
     });
   }
 
   navigateToAccount = accountId => {
-    window.location.assign("/accounts/" + accountId);
+    window.location.assign('/accounts/' + accountId);
   };
 
   _customSender(creditTransfer) {
@@ -200,23 +200,22 @@ class CreditTransferList extends React.Component {
     let blockchainAddress =
       senderTransferAccount && senderTransferAccount.blockchain_address;
 
-    if (this.props.login.adminTier === "view") {
+    if (this.props.login.adminTier === 'view') {
       return blockchainAddress;
     } else if (sender && firstName) {
       return (
         <a
-          style={{ cursor: "pointer" }}
+          style={{ cursor: 'pointer' }}
           onClick={() =>
             this.navigateToAccount(creditTransfer.sender_transfer_account_id)
-          }
-        >
-          {firstName + " " + lastName}
+          }>
+          {firstName + ' ' + lastName}
         </a>
       );
-    } else if (creditTransfer.transfer_type === "DISBURSEMENT" && email) {
-      return <div style={{ color: "#96DADC" }}> {email} </div>;
+    } else if (creditTransfer.transfer_type === 'DISBURSEMENT' && email) {
+      return <div style={{ color: '#96DADC' }}> {email} </div>;
     } else {
-      return "-";
+      return '-';
     }
   }
 
@@ -234,23 +233,22 @@ class CreditTransferList extends React.Component {
     let blockchainAddress =
       recipientTransferAccount && recipientTransferAccount.blockchain_address;
 
-    if (this.props.login.adminTier === "view") {
+    if (this.props.login.adminTier === 'view') {
       return blockchainAddress;
     } else if (recipient && firstName) {
       return (
         <a
-          style={{ cursor: "pointer" }}
+          style={{ cursor: 'pointer' }}
           onClick={() =>
             this.navigateToAccount(creditTransfer.recipient_transfer_account_id)
-          }
-        >
-          {firstName + " " + lastName}
+          }>
+          {firstName + ' ' + lastName}
         </a>
       );
-    } else if (creditTransfer.transfer_type === "RECLAMATION" && email) {
-      return <div style={{ color: "#96DADC" }}> {email} </div>;
+    } else if (creditTransfer.transfer_type === 'RECLAMATION' && email) {
+      return <div style={{ color: '#96DADC' }}> {email} </div>;
     } else {
-      return "-";
+      return '-';
     }
   }
 
@@ -259,23 +257,23 @@ class CreditTransferList extends React.Component {
     const loadingStatus = creditTransfers.loadStatus.isRequesting;
 
     let creditTransferList = Object.keys(this.state.credit_transfer_ids)
-      .filter(id => typeof this.props.creditTransfers.byId[id] !== "undefined")
+      .filter(id => typeof this.props.creditTransfers.byId[id] !== 'undefined')
       .map(id => this.props.creditTransfers.byId[id])
       .sort((a, b) => b.id - a.id);
 
     let rowValues = Object.values(this.state.credit_transfer_ids);
     let numberSelected =
-      typeof rowValues !== "undefined"
+      typeof rowValues !== 'undefined'
         ? rowValues.filter(Boolean).length
         : null;
     let isSelected = numberSelected > 0;
 
-    let showNext = numberSelected === 0 || this.props.action === "select";
+    let showNext = numberSelected === 0 || this.props.action === 'select';
 
-    if (this.state.transfer_type !== "ALL") {
+    if (this.state.transfer_type !== 'ALL') {
       var filteredData = creditTransferList.filter(
         creditTransfer =>
-          creditTransfer.transfer_type === this.state.transfer_type
+          creditTransfer.transfer_type === this.state.transfer_type,
       );
     } else {
       filteredData = creditTransferList;
@@ -285,38 +283,36 @@ class CreditTransferList extends React.Component {
       var topBarContent = (
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            width: "100%"
-          }}
-        >
-          <p style={{ margin: "1em" }}>{numberSelected} selected</p>
-          {this.props.login.adminTier !== "view" ? (
-            <div style={{ margin: "1em" }}>
+            display: 'flex',
+            justifyContent: 'space-between',
+            width: '100%',
+          }}>
+          <p style={{ margin: '1em' }}>{numberSelected} selected</p>
+          {this.props.login.adminTier !== 'view' ? (
+            <div style={{ margin: '1em' }}>
               <AsyncButton
                 onClick={this.onNext}
-                miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                miniSpinnerStyle={{ height: '10px', width: '10px' }}
                 buttonStyle={{
-                  display: showNext ? "none" : "inline-flex",
-                  fontWeight: "400",
-                  margin: "0em 1em",
-                  lineHeight: "25px",
-                  height: "25px"
+                  display: showNext ? 'none' : 'inline-flex',
+                  fontWeight: '400',
+                  margin: '0em 1em',
+                  lineHeight: '25px',
+                  height: '25px',
                 }}
                 isLoading={this.props.isApproving}
                 buttonText="NEXT"
               />
               <StyledSelect
                 style={{
-                  fontWeight: "400",
-                  margin: "0",
-                  lineHeight: "25px",
-                  height: "25px"
+                  fontWeight: '400',
+                  margin: '0',
+                  lineHeight: '25px',
+                  height: '25px',
                 }}
                 name="action"
                 defaultValue="select"
-                onChange={this.handleChange}
-              >
+                onChange={this.handleChange}>
                 <option name="action" disabled value="select">
                   -- SELECT --
                 </option>
@@ -335,15 +331,14 @@ class CreditTransferList extends React.Component {
       topBarContent = (
         <StyledSelect
           style={{
-            fontWeight: "400",
-            margin: "1em",
-            lineHeight: "25px",
-            height: "25px"
+            fontWeight: '400',
+            margin: '1em',
+            lineHeight: '25px',
+            height: '25px',
           }}
           name="transfer_type"
           value={this.props.transfer_type}
-          onChange={this.handleChange}
-        >
+          onChange={this.handleChange}>
           <option name="transfer_type" value="ALL">
             ALL TRANSFERS
           </option>
@@ -369,8 +364,7 @@ class CreditTransferList extends React.Component {
     ) {
       return (
         <div
-          style={{ display: "flex", justifyContent: "center", margin: "1em" }}
-        >
+          style={{ display: 'flex', justifyContent: 'center', margin: '1em' }}>
           <LoadingSpinner />
         </div>
       );
@@ -382,32 +376,32 @@ class CreditTransferList extends React.Component {
     ) {
       return (
         <Wrapper>
-          <ModuleBox style={{ width: "calc(100% - 2em)" }}>
+          <ModuleBox style={{ width: 'calc(100% - 2em)' }}>
             <TopRow>{topBarContent}</TopRow>
             <ReactTable
               columns={[
                 {
-                  Header: "Id",
-                  accessor: "id",
-                  headerClassName: "react-table-header",
-                  width: 60
+                  Header: 'Id',
+                  accessor: 'id',
+                  headerClassName: 'react-table-header',
+                  width: 60,
                 },
                 {
-                  Header: "Type",
-                  accessor: "transfer_type",
-                  headerClassName: "react-table-header",
-                  className: "react-table-first-cell"
+                  Header: 'Type',
+                  accessor: 'transfer_type',
+                  headerClassName: 'react-table-header',
+                  className: 'react-table-first-cell',
                 },
                 {
-                  Header: "Created",
-                  accessor: "created",
-                  headerClassName: "react-table-header",
-                  Cell: cellInfo => <DateTime created={cellInfo.value} />
+                  Header: 'Created',
+                  accessor: 'created',
+                  headerClassName: 'react-table-header',
+                  Cell: cellInfo => <DateTime created={cellInfo.value} />,
                 },
                 {
-                  Header: "Amount",
-                  accessor: "transfer_amount",
-                  headerClassName: "react-table-header",
+                  Header: 'Amount',
+                  accessor: 'transfer_amount',
+                  headerClassName: 'react-table-header',
                   Cell: cellInfo => {
                     let currency =
                       cellInfo.original.token && cellInfo.original.token.symbol;
@@ -416,57 +410,56 @@ class CreditTransferList extends React.Component {
                       undefined,
                       undefined,
                       undefined,
-                      currency
+                      currency,
                     );
                     return <p style={{ margin: 0 }}>{money}</p>;
-                  }
+                  },
                 },
                 {
-                  Header: "Sender",
-                  id: "senderUser",
+                  Header: 'Sender',
+                  id: 'senderUser',
                   accessor: creditTransfer =>
                     this._customSender(creditTransfer),
-                  headerClassName: "react-table-header"
+                  headerClassName: 'react-table-header',
                 },
                 {
-                  Header: "Recipient",
-                  id: "recipientUser",
+                  Header: 'Recipient',
+                  id: 'recipientUser',
                   accessor: creditTransfer =>
                     this._customRecipient(creditTransfer),
-                  headerClassName: "react-table-header"
+                  headerClassName: 'react-table-header',
                 },
                 {
-                  Header: "Approval",
-                  accessor: "transfer_status",
-                  headerClassName: "react-table-header",
+                  Header: 'Approval',
+                  accessor: 'transfer_status',
+                  headerClassName: 'react-table-header',
                   Cell: cellInfo => {
-                    if (cellInfo.value === "COMPLETE") {
-                      var colour = "#9BDF56";
-                    } else if (cellInfo.value === "PENDING") {
-                      colour = "#F5A623";
-                    } else if (cellInfo.value === "REJECTED") {
-                      colour = "#F16853";
+                    if (cellInfo.value === 'COMPLETE') {
+                      var colour = '#9BDF56';
+                    } else if (cellInfo.value === 'PENDING') {
+                      colour = '#F5A623';
+                    } else if (cellInfo.value === 'REJECTED') {
+                      colour = '#F16853';
                     } else {
-                      colour = "#c6c6c6";
+                      colour = '#c6c6c6';
                     }
                     return (
                       <div
                         style={{
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center"
-                        }}
-                      >
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}>
                         <Status style={{ backgroundColor: colour }}>
                           {cellInfo.value}
                         </Status>
                       </div>
                     );
-                  }
+                  },
                 },
                 {
-                  Header: "Blockchain",
-                  id: "blockchain_status",
+                  Header: 'Blockchain',
+                  id: 'blockchain_status',
                   accessor: creditTransfer => {
                     try {
                       var task =
@@ -477,47 +470,45 @@ class CreditTransferList extends React.Component {
                     }
                     return {
                       status: creditTransfer.blockchain_status,
-                      hash: task.hash
+                      hash: task.hash,
                     };
                   },
-                  headerClassName: "react-table-header",
+                  headerClassName: 'react-table-header',
                   Cell: cellInfo => {
                     let { status, hash } = cellInfo.value;
 
-                    if (status === "COMPLETE") {
-                      var colour = "#9BDF56";
-                    } else if (status === "PENDING") {
-                      colour = "#F5A623";
-                    } else if (status === "ERROR") {
-                      colour = "#F16853";
+                    if (status === 'COMPLETE') {
+                      var colour = '#9BDF56';
+                    } else if (status === 'PENDING') {
+                      colour = '#F5A623';
+                    } else if (status === 'ERROR') {
+                      colour = '#F16853';
                     } else {
-                      colour = "#c6c6c6";
+                      colour = '#c6c6c6';
                     }
 
                     if (hash) {
                       var tracker_link =
-                        window.ETH_EXPLORER_URL + "/tx/" + hash;
+                        window.ETH_EXPLORER_URL + '/tx/' + hash;
                     } else {
                       tracker_link = null;
                     }
                     return (
                       <div
                         style={{
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center"
-                        }}
-                      >
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}>
                         <Status
                           style={{ backgroundColor: colour }}
                           href={tracker_link}
-                          target="_blank"
-                        >
+                          target="_blank">
                           {status}
                         </Status>
                       </div>
                     );
-                  }
+                  },
                 },
                 {
                   Header: () => (
@@ -529,12 +520,12 @@ class CreditTransferList extends React.Component {
                       }
                     />
                   ),
-                  accessor: "id",
-                  headerClassName: "react-table-header",
+                  accessor: 'id',
+                  headerClassName: 'react-table-header',
                   width: 60,
                   sortable: false,
-                  Cell: cellInfo => this.displaySelect(cellInfo.value)
-                }
+                  Cell: cellInfo => this.displaySelect(cellInfo.value),
+                },
               ]}
               data={filteredData}
               loading={loadingStatus} // Display the loading overlay when we need it
@@ -553,7 +544,7 @@ class CreditTransferList extends React.Component {
                     if (handleOriginal) {
                       handleOriginal();
                     }
-                  }
+                  },
                 };
               }}
             />
@@ -564,7 +555,7 @@ class CreditTransferList extends React.Component {
       return <p>{this.props.transferAccounts.loadStatus.error.message}</p>;
     } else {
       return (
-        <p style={{ padding: "1em", textAlign: "center" }}>
+        <p style={{ padding: '1em', textAlign: 'center' }}>
           No credit transfers found
         </p>
       );

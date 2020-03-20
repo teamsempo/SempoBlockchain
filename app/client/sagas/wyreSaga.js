@@ -1,4 +1,4 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
+import { put, takeEvery, call, all } from 'redux-saga/effects';
 
 import {
   UPDATE_WYRE_STATE,
@@ -10,19 +10,19 @@ import {
   LOAD_WYRE_ACCOUNT_FAILURE,
   CREATE_WYRE_TRANSFER_REQUEST,
   CREATE_WYRE_TRANSFER_SUCCESS,
-  CREATE_WYRE_TRANSFER_FAILURE
-} from "../reducers/wyreReducer";
+  CREATE_WYRE_TRANSFER_FAILURE,
+} from '../reducers/wyreReducer';
 
 import {
   loadExchangeRates,
   loadWyreAccountBalance,
-  createWyreTransferRequest
-} from "../api/wyreAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
-import { handleError } from "../utils";
+  createWyreTransferRequest,
+} from '../api/wyreAPI';
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
+import { handleError } from '../utils';
 
 function* updateStateFromWyreDetails(data) {
-  let payload = data;
+  const payload = data;
   if (payload) {
     yield put({ type: UPDATE_WYRE_STATE, payload });
   }
@@ -38,7 +38,7 @@ function* loadWyreExchangeRates({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_WYRE_EXCHANGE_RATES_FAILURE, error: error });
+    yield put({ type: LOAD_WYRE_EXCHANGE_RATES_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -58,7 +58,7 @@ function* loadWyreAccount({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_WYRE_ACCOUNT_FAILURE, error: error });
+    yield put({ type: LOAD_WYRE_ACCOUNT_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -74,10 +74,10 @@ function* createWyreTransfer({ payload }) {
 
     yield call(updateStateFromWyreDetails, create_result.data);
 
-    if (create_result.data.wyre_transfer.id !== "PREVIEW") {
+    if (create_result.data.wyre_transfer.id !== 'PREVIEW') {
       yield put({
         type: ADD_FLASH_MESSAGE,
-        message: "Transfer Initiated! Check emails."
+        message: 'Transfer Initiated! Check emails.',
       });
     }
 
@@ -85,7 +85,7 @@ function* createWyreTransfer({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_WYRE_TRANSFER_FAILURE, error: error });
+    yield put({ type: CREATE_WYRE_TRANSFER_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -99,6 +99,6 @@ export default function* wyreSaga() {
   yield all([
     watchLoadWyreExchangeRates(),
     watchLoadWyreAccount(),
-    watchCreateWyreTransfer()
+    watchCreateWyreTransfer(),
   ]);
 }

@@ -1,37 +1,36 @@
-import React from "react";
-import styled from "styled-components";
-import { Link } from "react-router-dom";
+import React from 'react';
+import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
-import AuthModule from "../../auth/authModule.jsx";
-import UserList from "../../adminUser/adminUserList.jsx";
-import KoboCredentials from "../../koboCredentials.jsx";
-import GetVerified from "../../GetVerified.jsx";
-import CustomerSupport from "../../customerSupport.jsx";
+import AuthModule from '../../auth/authModule.jsx';
+import UserList from '../../adminUser/adminUserList.jsx';
+import KoboCredentials from '../../koboCredentials.jsx';
+import GetVerified from '../../GetVerified.jsx';
+import CustomerSupport from '../../customerSupport.jsx';
 
 import {
   WrapperDiv,
   Row,
   PageWrapper,
   ModuleHeader,
-  RestrictedModuleBox
-} from "../../styledElements";
+  RestrictedModuleBox,
+} from '../../styledElements';
 
 export default class settingsPage extends React.Component {
   render() {
     return (
       <WrapperDiv>
-        <PageWrapper style={{ display: "flex", flexDirection: "column" }}>
+        <PageWrapper style={{ display: 'flex', flexDirection: 'column' }}>
           <Row>
             <RestrictedModuleBox>
               <ModuleHeader>SETTINGS</ModuleHeader>
-              <p style={{ margin: "1em" }}></p>
+              <p style={{ margin: '1em' }} />
               <KoboCredentials />
               <GetVerified />
               <CustomerSupport />
               <PageLink
                 to="/settings/organisation"
-                headerText="Organisation Settings"
-              >
+                headerText="Organisation Settings">
                 Update your organisation settings
               </PageLink>
             </RestrictedModuleBox>
@@ -40,14 +39,12 @@ export default class settingsPage extends React.Component {
               <ModuleHeader>Account Management</ModuleHeader>
               <PageLink
                 to="/settings/change-password"
-                headerText="Change Password"
-              >
+                headerText="Change Password">
                 Change your account password
               </PageLink>
               <PageLink
                 to="/settings/tfa"
-                headerText="Two-step authentication "
-              >
+                headerText="Two-step authentication ">
                 Secure your account with two step authentication
               </PageLink>
               <AuthModule />
@@ -55,7 +52,7 @@ export default class settingsPage extends React.Component {
           </Row>
 
           <Row>
-            <RestrictedModuleBox style={{ width: "100%", overflow: "visible" }}>
+            <RestrictedModuleBox style={{ width: '100%', overflow: 'visible' }}>
               <UserList />
             </RestrictedModuleBox>
           </Row>
@@ -63,7 +60,10 @@ export default class settingsPage extends React.Component {
           <br />
           <br />
 
-          <BuildHash>Build ID: {window.BUILD_HASH}</BuildHash>
+          <BuildHash>
+            Build ID:
+            {window.BUILD_HASH}
+          </BuildHash>
         </PageWrapper>
       </WrapperDiv>
     );

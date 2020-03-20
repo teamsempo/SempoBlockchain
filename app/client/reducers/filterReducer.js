@@ -1,17 +1,17 @@
-import { combineReducers } from "redux";
-import { DEEEEEEP } from "../utils";
+import { combineReducers } from 'redux';
+import { DEEEEEEP } from '../utils';
 
-export const UPDATE_FILTER_LIST = "UPDATE_FILTER_LIST";
+export const UPDATE_FILTER_LIST = 'UPDATE_FILTER_LIST';
 
-export const LOAD_FILTERS_REQUEST = "LOAD_FILTERS_REQUEST";
-export const LOAD_FILTERS_SUCCESS = "LOAD_FILTERS_SUCCESS";
-export const LOAD_FILTERS_FAILURE = "LOAD_FILTERS_FAILURE";
+export const LOAD_FILTERS_REQUEST = 'LOAD_FILTERS_REQUEST';
+export const LOAD_FILTERS_SUCCESS = 'LOAD_FILTERS_SUCCESS';
+export const LOAD_FILTERS_FAILURE = 'LOAD_FILTERS_FAILURE';
 
-export const CREATE_FILTER_REQUEST = "CREATE_FILTER_REQUEST";
-export const CREATE_FILTER_SUCCESS = "CREATE_FILTER_SUCCESS";
-export const CREATE_FILTER_FAILURE = "CREATE_FILTER_FAILURE";
+export const CREATE_FILTER_REQUEST = 'CREATE_FILTER_REQUEST';
+export const CREATE_FILTER_SUCCESS = 'CREATE_FILTER_SUCCESS';
+export const CREATE_FILTER_FAILURE = 'CREATE_FILTER_FAILURE';
 
-export const RESET_CREATE_FILTER = "RESET_CREATE_FILTER";
+export const RESET_CREATE_FILTER = 'RESET_CREATE_FILTER';
 
 const byId = (state = {}, action) => {
   switch (action.type) {
@@ -26,7 +26,7 @@ const byId = (state = {}, action) => {
 const initialLoadStatusState = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
 };
 
 const loadStatus = (state = initialLoadStatusState, action) => {
@@ -48,7 +48,7 @@ const loadStatus = (state = initialLoadStatusState, action) => {
 const initialCreateStatusState = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
 };
 
 const createStatus = (state = initialCreateStatusState, action) => {
@@ -67,7 +67,7 @@ const createStatus = (state = initialCreateStatusState, action) => {
         ...state,
         isRequesting: false,
         success: false,
-        error: action.error
+        error: action.error,
       };
 
     default:
@@ -78,16 +78,16 @@ const createStatus = (state = initialCreateStatusState, action) => {
 export const filters = combineReducers({
   byId,
   loadStatus,
-  createStatus
+  createStatus,
 });
 
 // ACTIONS
 export const loadFilters = payload => ({
   type: LOAD_FILTERS_REQUEST,
-  payload
+  payload,
 });
 
 export const createFilter = payload => ({
   type: CREATE_FILTER_REQUEST,
-  payload
+  payload,
 });

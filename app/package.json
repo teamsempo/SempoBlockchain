@@ -68,14 +68,19 @@
     "enzyme-adapter-react-16": "^1.1.1",
     "enzyme-to-json": "^3.3.4",
     "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.1.0",
     "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^2.5.1",
     "husky": "^4.2.3",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^23.4.1",
     "jest-cli": "^23.4.1",
     "jest-enzyme": "^6.0.2",
+    "lint-staged": "^10.0.8",
     "moment-locales-webpack-plugin": "^1.0.7",
     "prettier": "^1.19.1",
     "react-test-renderer": "^16.4.1",
@@ -131,7 +136,12 @@
   },
   "husky": {
     "hooks": {
-
+      "pre-commit": "lint-staged"
     }
+  },
+  "lint-staged": {
+    "./client/**/*.{js,jsx,ts,tsx}": [
+      "npx prettier --write"
+    ]
   }
 }

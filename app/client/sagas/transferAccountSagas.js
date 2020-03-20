@@ -1,8 +1,8 @@
-import { put, takeEvery, call, all, delay } from "redux-saga/effects";
-import { arrayOf, normalize } from "normalizr";
-import { handleError } from "../utils";
+import { put, takeEvery, call, all, delay } from 'redux-saga/effects';
+import { arrayOf, normalize } from 'normalizr';
+import { handleError } from '../utils';
 
-import { transferAccountSchema } from "../schemas";
+import { transferAccountSchema } from '../schemas';
 
 import {
   LOAD_TRANSFER_ACCOUNTS_REQUEST,
@@ -11,20 +11,20 @@ import {
   UPDATE_TRANSFER_ACCOUNTS,
   EDIT_TRANSFER_ACCOUNT_REQUEST,
   EDIT_TRANSFER_ACCOUNT_SUCCESS,
-  EDIT_TRANSFER_ACCOUNT_FAILURE
-} from "../reducers/transferAccountReducer.js";
+  EDIT_TRANSFER_ACCOUNT_FAILURE,
+} from '../reducers/transferAccountReducer.js';
 
-import { UPDATE_USER_LIST } from "../reducers/userReducer";
-import { UPDATE_CREDIT_TRANSFER_LIST } from "../reducers/creditTransferReducer";
+import { UPDATE_USER_LIST } from '../reducers/userReducer';
+import { UPDATE_CREDIT_TRANSFER_LIST } from '../reducers/creditTransferReducer';
 
 import {
   loadTransferAccountListAPI,
-  editTransferAccountAPI
-} from "../api/transferAccountAPI.js";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+  editTransferAccountAPI,
+} from '../api/transferAccountAPI.js';
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
 
 function* updateStateFromTransferAccount(data) {
-  //Schema expects a list of transfer account objects
+  // Schema expects a list of transfer account objects
   if (data.transfer_accounts) {
     var transfer_account_list = data.transfer_accounts;
   } else {
@@ -32,31 +32,31 @@ function* updateStateFromTransferAccount(data) {
   }
   const normalizedData = normalize(
     transfer_account_list,
-    transferAccountSchema
+    transferAccountSchema,
   );
 
-  const users = normalizedData.entities.users;
+  const { users } = normalizedData.entities;
   if (users) {
     yield put({ type: UPDATE_USER_LIST, users });
   }
 
-  const credit_sends = normalizedData.entities.credit_sends;
+  const { credit_sends } = normalizedData.entities;
   if (credit_sends) {
     yield put({
       type: UPDATE_CREDIT_TRANSFER_LIST,
-      credit_transfers: credit_sends
+      credit_transfers: credit_sends,
     });
   }
 
-  const credit_receives = normalizedData.entities.credit_receives;
+  const { credit_receives } = normalizedData.entities;
   if (credit_receives) {
     yield put({
       type: UPDATE_CREDIT_TRANSFER_LIST,
-      credit_transfers: credit_receives
+      credit_transfers: credit_receives,
     });
   }
 
-  const transfer_accounts = normalizedData.entities.transfer_accounts;
+  const { transfer_accounts } = normalizedData.entities;
   if (transfer_accounts) {
     yield put({ type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
   }
@@ -71,12 +71,12 @@ function* loadTransferAccounts({ payload }) {
 
     yield put({
       type: LOAD_TRANSFER_ACCOUNTS_SUCCESS,
-      lastQueried: load_result.query_time
+      lastQueried: load_result.query_time,
     });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_TRANSFER_ACCOUNTS_FAILURE, error: error });
+    yield put({ type: LOAD_TRANSFER_ACCOUNTS_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -98,12 +98,12 @@ function* editTransferAccount({ payload }) {
     yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: edit_response.message
+      message: edit_response.message,
     });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: EDIT_TRANSFER_ACCOUNT_FAILURE, error: error });
+    yield put({ type: EDIT_TRANSFER_ACCOUNT_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }

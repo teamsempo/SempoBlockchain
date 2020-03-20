@@ -1,17 +1,17 @@
-import React from "react";
-import { connect } from "react-redux";
+import React from 'react';
+import { connect } from 'react-redux';
 
-import styled, { ThemeProvider } from "styled-components";
+import styled, { ThemeProvider } from 'styled-components';
 import {
   editBusinessProfile,
   UPDATE_ACTIVE_STEP,
-  uploadDocument
-} from "../../reducers/businessVerificationReducer";
-import DateTime from "../dateTime.jsx";
+  uploadDocument,
+} from '../../reducers/businessVerificationReducer';
+import DateTime from '../dateTime.jsx';
 
-import { DefaultTheme } from "../theme";
-import AsyncButton from "../AsyncButton.jsx";
-import LoadingSpinner from "../loadingSpinner.jsx";
+import { DefaultTheme } from '../theme';
+import AsyncButton from '../AsyncButton.jsx';
+import LoadingSpinner from '../loadingSpinner.jsx';
 
 const UploadButton = function(props) {
   return (
@@ -23,41 +23,36 @@ const UploadButton = function(props) {
 };
 
 const ErrorMessage = function(props) {
-  var error = props.input + "_val";
-  var error_message = props.input + "_val_msg";
+  const error = `${props.input}_val`;
+  const error_message = `${props.input}_val_msg`;
 
   return (
     <div
-      style={{ display: props.state[error] ? "none" : "flex", color: "red" }}
-    >
+      style={{ display: props.state[error] ? 'none' : 'flex', color: 'red' }}>
       {props.state[error_message]}
     </div>
   );
 };
 
-const mapStateToProps = state => {
-  return {
-    editStatus: state.businessVerification.editStatus,
-    business: state.businessVerification.businessVerificationState,
-    uploadState: state.businessVerification.uploadDocumentStatus
-  };
-};
+const mapStateToProps = state => ({
+  editStatus: state.businessVerification.editStatus,
+  business: state.businessVerification.businessVerificationState,
+  uploadState: state.businessVerification.uploadDocumentStatus,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {
-    editBusinessProfile: (body, path) =>
-      dispatch(editBusinessProfile({ body, path })),
-    uploadDocument: body => dispatch(uploadDocument({ body })),
-    nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 2 }),
-    backStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 0 })
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  editBusinessProfile: (body, path) =>
+    dispatch(editBusinessProfile({ body, path })),
+  uploadDocument: body => dispatch(uploadDocument({ body })),
+  nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 2 }),
+  backStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 0 }),
+});
 
 class BusinessDocuments extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      reference: null
+      reference: null,
     };
     this.isValidated = this.isValidated.bind(this);
   }
@@ -68,17 +63,17 @@ class BusinessDocuments extends React.Component {
       return;
     }
 
-    let document = event.target.files[0];
+    const document = event.target.files[0];
 
     if (document) {
-      let reader = new FileReader();
+      const reader = new FileReader();
 
       reader.onloadend = () => {
         this.setState({ reference: ref });
         this.props.uploadDocument({
-          document: document,
+          document,
           reference: ref,
-          kyc_application_id: this.props.business.id
+          kyc_application_id: this.props.business.id,
         });
       };
 
@@ -89,31 +84,27 @@ class BusinessDocuments extends React.Component {
   _generateDocumentList(documents, reference) {
     return documents
       .filter(document => document.reference === reference)
-      .map((document, idx) => {
-        return (
-          <DocumentWrapper key={idx}>
-            <SVG src="/static/media/document.svg" />
-            <div>
-              <DocumentTitle>{document.user_filename}</DocumentTitle>
-              <DateTime created={document.created} />
-            </div>
-          </DocumentWrapper>
-        );
-      });
+      .map((document, idx) => (
+        <DocumentWrapper key={idx}>
+          <SVG src="/static/media/document.svg" />
+          <div>
+            <DocumentTitle>{document.user_filename}</DocumentTitle>
+            <DateTime created={document.created} />
+          </div>
+        </DocumentWrapper>
+      ));
   }
 
   isValidated() {
     const validateNewInput = this._validateData(this.props.business); // run the new input against the validator
 
     if (
-      Object.keys(validateNewInput).every(k => {
-        return validateNewInput[k] === true;
-      })
+      Object.keys(validateNewInput).every(k => validateNewInput[k] === true)
     ) {
       if (this.props.isFinal) {
-        let business = this.props.business;
+        const { business } = this.props;
         this.props.nextStep();
-        this.props.editBusinessProfile({ kyc_status: "PENDING" }, business.id);
+        this.props.editBusinessProfile({ kyc_status: 'PENDING' }, business.id);
       } else {
         this.props.nextStep();
       }
@@ -122,20 +113,20 @@ class BusinessDocuments extends React.Component {
       this.setState(
         Object.assign(
           validateNewInput,
-          this._validationErrors(validateNewInput)
-        )
+          this._validationErrors(validateNewInput),
+        ),
       );
     }
   }
 
   _validateData(data) {
     let businessValidation;
-    if (this.props.business.account_type === "BUSINESS") {
+    if (this.props.business.account_type === 'BUSINESS') {
       businessValidation = {
         company_documents_val:
           data.uploaded_documents.filter(
-            document => document.reference === "company"
-          ).length > 0
+            document => document.reference === 'company',
+          ).length > 0,
       };
     }
 
@@ -143,51 +134,51 @@ class BusinessDocuments extends React.Component {
       ...businessValidation,
       owner_documents_val:
         data.uploaded_documents.filter(
-          document => document.reference === "owners"
-        ).length > 0
+          document => document.reference === 'owners',
+        ).length > 0,
     };
   }
 
   _validationErrors(val) {
     const errMsgs = {
       company_documents_val_msg: val.company_documents_val
-        ? ""
-        : "You must upload at least one company document",
+        ? ''
+        : 'You must upload at least one company document',
       owner_documents_val_msg: val.owner_documents_val
-        ? ""
-        : "You must upload at least one owner document"
+        ? ''
+        : 'You must upload at least one owner document',
     };
     return errMsgs;
   }
 
   render() {
-    let { business, uploadState } = this.props;
+    const { business, uploadState } = this.props;
 
     if (business.uploaded_documents && business.uploaded_documents.length > 0) {
       var companyDocuments = this._generateDocumentList(
         business.uploaded_documents,
-        "company"
+        'company',
       );
       var ownerDocuments = this._generateDocumentList(
         business.uploaded_documents,
-        "owners"
+        'owners',
       );
     } else {
       companyDocuments = null;
       ownerDocuments = null;
     }
 
-    let documentLoading = uploadState.isUploading ? (
-      <DocumentWrapper style={{ justifyContent: "center" }}>
+    const documentLoading = uploadState.isUploading ? (
+      <DocumentWrapper style={{ justifyContent: 'center' }}>
         <LoadingSpinner />
       </DocumentWrapper>
     ) : null;
-    let companyDocumentLoading =
-      this.state.reference === "company" ? documentLoading : null;
-    let ownerDocumentLoading =
-      this.state.reference === "owners" ? documentLoading : null;
+    const companyDocumentLoading =
+      this.state.reference === 'company' ? documentLoading : null;
+    const ownerDocumentLoading =
+      this.state.reference === 'owners' ? documentLoading : null;
 
-    let isIndividual = business.account_type === "INDIVIDUAL";
+    const isIndividual = business.account_type === 'INDIVIDUAL';
 
     return (
       <div>
@@ -202,9 +193,9 @@ class BusinessDocuments extends React.Component {
             {companyDocumentLoading}
             {companyDocuments}
             <UploadButton
-              handleFileChange={e => this.handleFileChange(e, "company")}
+              handleFileChange={e => this.handleFileChange(e, 'company')}
             />
-            <ErrorMessage state={this.state} input={"company_documents"} />
+            <ErrorMessage state={this.state} input="company_documents" />
           </div>
         )}
 
@@ -230,15 +221,15 @@ class BusinessDocuments extends React.Component {
         {ownerDocumentLoading}
         {ownerDocuments}
         <UploadButton
-          handleFileChange={e => this.handleFileChange(e, "owners")}
+          handleFileChange={e => this.handleFileChange(e, 'owners')}
         />
-        <ErrorMessage state={this.state} input={"owner_documents"} />
+        <ErrorMessage state={this.state} input="owner_documents" />
 
         <ThemeProvider theme={DefaultTheme}>
           <div>
-            <AsyncButton buttonText={"Back"} onClick={this.props.backStep} />
+            <AsyncButton buttonText="Back" onClick={this.props.backStep} />
             <AsyncButton
-              buttonText={this.props.isFinal ? "COMPLETE" : "Next"}
+              buttonText={this.props.isFinal ? 'COMPLETE' : 'Next'}
               onClick={this.isValidated}
               isLoading={this.props.editStatus.isRequesting}
             />

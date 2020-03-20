@@ -1,4 +1,4 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
+import { put, takeEvery, call, all } from 'redux-saga/effects';
 
 import {
   EDIT_BUSINESS_VERIFICATION_REQUEST,
@@ -20,8 +20,8 @@ import {
   CREATE_BANK_ACCOUNT_FAILURE,
   EDIT_BANK_ACCOUNT_REQUEST,
   EDIT_BANK_ACCOUNT_SUCCESS,
-  EDIT_BANK_ACCOUNT_FAILURE
-} from "../reducers/businessVerificationReducer";
+  EDIT_BANK_ACCOUNT_FAILURE,
+} from '../reducers/businessVerificationReducer';
 
 import {
   editBusinessVerificationAPI,
@@ -29,13 +29,13 @@ import {
   loadBusinessVerificationAPI,
   uploadDocumentAPI,
   createBankAccountAPI,
-  editBankAccountAPI
-} from "../api/businessVerificationAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
-import { handleError } from "../utils";
+  editBankAccountAPI,
+} from '../api/businessVerificationAPI';
+import { ADD_FLASH_MESSAGE } from '../reducers/messageReducer';
+import { handleError } from '../utils';
 
 function* updateStateFromBusinessVerificationStep(data) {
-  let kyc_application = data.kyc_application;
+  const { kyc_application } = data;
   if (kyc_application) {
     yield put({ type: UPDATE_BUSINESS_VERIFICATION_STATE, kyc_application });
   }
@@ -52,7 +52,7 @@ function* editBusinessVerification({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: EDIT_BUSINESS_VERIFICATION_FAILURE, error: error });
+    yield put({ type: EDIT_BUSINESS_VERIFICATION_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -69,11 +69,11 @@ function* loadBusinessVerification({ payload }) {
 
     yield call(updateStateFromBusinessVerificationStep, load_result.data);
 
-    if (load_result.data.kyc_application.kyc_status === "PENDING") {
+    if (load_result.data.kyc_application.kyc_status === 'PENDING') {
       yield put({ type: UPDATE_ACTIVE_STEP, activeStep: 5 });
     }
 
-    if (load_result.data.kyc_application.kyc_status === "INCOMPLETE") {
+    if (load_result.data.kyc_application.kyc_status === 'INCOMPLETE') {
       yield put({ type: UPDATE_ACTIVE_STEP, activeStep: 0 });
     }
 
@@ -81,7 +81,7 @@ function* loadBusinessVerification({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_BUSINESS_VERIFICATION_FAILURE, error: error });
+    yield put({ type: LOAD_BUSINESS_VERIFICATION_FAILURE, error });
   }
 }
 
@@ -102,7 +102,7 @@ function* createBusinessVerification({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_BUSINESS_VERIFICATION_FAILURE, error: error });
+    yield put({ type: CREATE_BUSINESS_VERIFICATION_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -111,7 +111,7 @@ function* createBusinessVerification({ payload }) {
 function* watchCreateBusinessVerification() {
   yield takeEvery(
     CREATE_BUSINESS_VERIFICATION_REQUEST,
-    createBusinessVerification
+    createBusinessVerification,
   );
 }
 
@@ -126,7 +126,7 @@ function* uploadDocument({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: UPLOAD_DOCUMENT_FAILURE, error: error });
+    yield put({ type: UPLOAD_DOCUMENT_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -149,7 +149,7 @@ function* createBankAccount({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_BANK_ACCOUNT_FAILURE, error: error });
+    yield put({ type: CREATE_BANK_ACCOUNT_FAILURE, error });
 
     yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
@@ -189,6 +189,6 @@ export default function* businessVerificationSaga() {
     watchCreateBusinessVerification(),
     watchUploadDocument(),
     watchCreateBankAccount(),
-    watchEditBankAccount()
+    watchEditBankAccount(),
   ]);
 }
