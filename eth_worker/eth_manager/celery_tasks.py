@@ -96,8 +96,7 @@ def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold
 
 @celery_app.task(**low_priority_config)
 def topup_wallets(self):
-    eth_manager.task_interfaces.composite.topup_wallets()
-
+    return eth_manager.task_interfaces.composite.topup_wallets()
 
 # Set retry attempts to zero since beat will retry shortly anyway
 @celery_app.task(**no_retry_config)
@@ -186,16 +185,15 @@ def _process_function_transaction(self, transaction_id, contract_address, abi_ty
 @celery_app.task(**processor_task_config)
 def _process_deploy_contract_transaction(self, transaction_id, contract_name,
                                          args=None, kwargs=None,  gas_limit=None, task_id=None):
-
     return blockchain_processor.process_deploy_contract_transaction(transaction_id, contract_name,
                                                                     args, kwargs, gas_limit, task_id)
 
 
 @celery_app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
 def _check_transaction_response(self, transaction_id):
-    blockchain_processor.check_transaction_response(self, transaction_id)
+    return blockchain_processor.check_transaction_response(self, transaction_id)
 
 
 @celery_app.task(base=SqlAlchemyTask)
 def _log_error(request, exc, traceback, transaction_id):
-    blockchain_processor.log_error(request, exc, traceback, transaction_id)
+    return blockchain_processor.log_error(request, exc, traceback, transaction_id)

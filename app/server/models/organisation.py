@@ -152,15 +152,18 @@ class Organisation(ModelBase):
         self._setup_org_transfer_account()
 
     def __init__(self, token=None, is_master=False, **kwargs):
-
+        print('a')
         super(Organisation, self).__init__(**kwargs)
+        print('a')
     
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
         self.external_auth_password = secrets.token_hex(16)
+        print('a')
 
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():
                 raise Exception("A master organisation already exists")
+            print('a')
 
             self.is_master = True
             self.system_blockchain_address = bt.create_blockchain_wallet(

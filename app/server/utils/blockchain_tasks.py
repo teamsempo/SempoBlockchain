@@ -393,7 +393,7 @@ class BlockchainTasker(object):
             queue=queue
         )
 
-    def get_wallet_balance(self, address, token, queue):
+    def get_wallet_balance(self, address, token, queue='high-priority'):
 
         balance_wei = self._synchronous_call(
             contract_address=token.address,

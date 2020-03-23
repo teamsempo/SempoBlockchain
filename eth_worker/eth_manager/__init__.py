@@ -16,6 +16,12 @@ from web3 import (
 
 from web3.exceptions import BadFunctionCallOutput
 
+from sqlalchemy.pool import NullPool
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import scoped_session
+
 import os
 import sys
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
@@ -65,7 +71,16 @@ w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
-persistence_interface = SQLPersistenceInterface(w3=w3, red=red)
+engine = create_engine(
+    config.ETH_DATABASE_URI,
+    poolclass=NullPool,
+    connect_args={'connect_timeout': 5},
+    pool_pre_ping=True # Setting checks DB livelelyness, will give a new connection if dead
+)
+
+session_factory = sessionmaker(autocommit=False, autoflush=True, bind=engine)
+
+persistence_interface = SQLPersistenceInterface(w3=w3, red=red, session=session_factory)
 
 blockchain_processor = TransactionProcessor(
     **eth_config,

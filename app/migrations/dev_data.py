@@ -272,7 +272,7 @@ def run_setup():
 
     master_organisation = Organisation.master_organisation()
     if master_organisation is None:
-        print('Creating master organisation')
+        print('Creating master organisation!')
         master_organisation = Organisation(is_master=True)
         db.session.add(master_organisation)
 

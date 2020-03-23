@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-sleep 10
+sleep 30
 
 WORKER_CONCURRENCY=4
 
@@ -14,13 +14,15 @@ elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
   python ethereum_filter_test.py
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
   echo "Starting Processor Worker"
-  celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor -E
 elif [ "$CONTAINER_TYPE" == 'LOW_PRIORITY_WORKER' ]; then
   echo "Starting Low Priority Worker"
-  celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery -E
 elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
   echo "Starting High Priority Worker"
-  celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority -E
+elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
+  flower -A worker --port=5555
 
 else
   echo "Running alembic upgrade (Default)"
@@ -31,7 +33,7 @@ else
     exit $ret
   fi
   echo "Starting Generic Worker (Default)"
-  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet	-Q=low-priority,celery,high-priority
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority -E
 fi
 
 #

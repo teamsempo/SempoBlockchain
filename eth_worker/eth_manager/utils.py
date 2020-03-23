@@ -23,5 +23,9 @@ def execute_synchronous_celery(signature, queue='celery'):
 
 
 def execute_task(signature, queue='celery'):
+    print('STARTING SYNCHRO!')
+    print(signature)
     async_result = signature.apply_async(queue=queue)
+    print('FINISHING SYNCHRO!')
+    print(signature)
     return async_result.id

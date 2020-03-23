@@ -14,6 +14,7 @@ from eth_manager.exceptions import (
     WalletExistsError,
     LockedNotAcquired
 )
+from sqlalchemy.orm import scoped_session
 
 class SQLPersistenceInterface(object):
 
@@ -73,8 +74,10 @@ class SQLPersistenceInterface(object):
         try:
             have_lock = lock.acquire(blocking_timeout=1)
             if have_lock:
+                print('ABCD')
                 return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
             else:
+                print('ABCD!!')
                 print(f'Lock not acquired for txn: {transaction_id} \n'
                       f'addr:{signing_wallet_obj.address}')
                 raise LockedNotAcquired
@@ -346,12 +349,13 @@ class SQLPersistenceInterface(object):
 
         session.commit()
 
-    def __init__(self, w3, red, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
+    def __init__(self, w3, red, session, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 
         self.w3 = w3
 
         self.red = red
 
+        self.session = scoped_session(session)
         self.first_block_hash = w3.eth.getBlock(0).hash.hex()
 
         self.PENDING_TRANSACTION_EXPIRY_SECONDS = PENDING_TRANSACTION_EXPIRY_SECONDS

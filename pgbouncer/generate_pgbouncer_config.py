@@ -50,11 +50,11 @@ user = postgres
 auth_file = /etc/pgbouncer/userlist.txt
 auth_type = md5
 ignore_startup_parameters = extra_float_digits
-pool_mode = transaction
 max_client_conn = {BOUNCER_MAX_CLIENT_CONN}
 default_pool_size = {BOUNCER_DEFAULT_POOL_SIZE}
 max_db_connections = {BOUNCER_MAX_DB_CONNECTIONS}
 max_user_connections = {BOUNCER_MAX_USER_CONNECTIONS}
+server_idle_timeout = 0
 """.format(vars))
 ini_file.close()
 
