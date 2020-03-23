@@ -207,7 +207,10 @@ class DashboardPage extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DashboardPage);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DashboardPage);
 
 const WrapperDiv = styled.div`
   //width: 100vw;

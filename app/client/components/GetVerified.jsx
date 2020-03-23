@@ -109,7 +109,10 @@ class GetVerified extends React.Component {
     );
   }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(GetVerified);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(GetVerified);
 
 const WrapperDiv = styled.div`
   display: flex;

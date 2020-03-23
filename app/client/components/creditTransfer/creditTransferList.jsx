@@ -572,7 +572,10 @@ class CreditTransferList extends React.Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(CreditTransferList);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(CreditTransferList);
 
 const Wrapper = styled.div`
   display: flex;

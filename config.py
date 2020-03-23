@@ -4,7 +4,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.1.3'  # Remember to bump this in every PR
+VERSION = '1.1.4'  # Remember to bump this in every PR
 
 print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -121,9 +121,6 @@ PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
 # todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
 CURRENCY_NAME       = config_parser['APP']['CURRENCY_NAME']
 CURRENCY_DECIMALS   = int(config_parser['APP']['CURRENCY_DECIMALS'])
-DEFAULT_COUNTRY     = config_parser['APP']['DEFAULT_COUNTRY']
-DEFAULT_LAT         = float(config_parser['APP']['DEFAULT_LAT'])
-DEFAULT_LNG         = float(config_parser['APP']['DEFAULT_LNG'])
 APP_HOST            = config_parser['APP']['APP_HOST']
 BENEFICIARY_TERM    = config_parser['APP']['BENEFICIARY_TERM']
 BENEFICIARY_TERM_PLURAL = config_parser['APP']['BENEFICIARY_TERM_PLURAL']
@@ -133,11 +130,9 @@ FEEDBACK_TRIGGERED_WHEN_BALANCE_BELOW = int(config_parser['APP']['FEEDBACK_TRIGG
 FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE = int(config_parser['APP']['FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE'])
 LIMIT_EXCHANGE_RATE = float(config_parser['APP'].get('LIMIT_EXCHANGE_RATE', 1))
 CASHOUT_INCENTIVE_PERCENT = float(config_parser['APP'].get('CASHOUT_INCENTIVE_PERCENT', 0))
-DEFAULT_INITIAL_DISBURSEMENT = int(config_parser['APP'].get('DEFAULT_INITIAL_DISBURSEMENT', 0))
 ONBOARDING_SMS = config_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
-REQUIRE_TRANSFER_CARD_EXISTS = config_parser['APP'].getboolean('REQUIRE_TRANSFER_CARD_EXISTS', False)
 SEMPOADMIN_EMAIL = config_parser['APP'].get('sempoadmin_email')
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
