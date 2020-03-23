@@ -316,16 +316,16 @@ class SQLPersistenceInterface(object):
                 FROM blockchain_task
                 RIGHT JOIN blockchain_transaction
                 ON  blockchain_transaction.blockchain_task_id = blockchain_task.id
-                WHERE blockchain_task.id > {} and blockchain_task.id < {}
+                WHERE blockchain_task.id > :min_task_id and blockchain_task.id < :max_task_id
                 GROUP BY blockchain_task.id
                 HAVING (
                   SELECT COUNT(*)
                   FROM blockchain_transaction
                   WHERE blockchain_task_id = blockchain_task.id AND _status = 'SUCCESS'
                   ) > 1;
-            """.format(min_task_id, max_task_id)
+            """
         )
-        res = session.execute(query)
+        res = session.execute(query, {'min_task_id': min_task_id, 'max_task_id': max_task_id})
 
         duplicated_tasks = [row for row in res]
         return duplicated_tasks
