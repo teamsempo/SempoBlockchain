@@ -16,9 +16,9 @@ class SqlAlchemyTask(celery.Task):
     abstract = True
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        print(f"Closing Session ID: {id(session)}, overflow: {session.bind.pool._overflow}")
+        print(f"Closing Session ID: {id(session)}")
         session.remove()
-        print(f"Closed Session ID: {id(session)}, overflow: {session.bind.pool._overflow}")
+        print(f"Closed Session ID: {id(session)}")
 
 
 

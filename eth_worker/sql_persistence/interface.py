@@ -4,7 +4,6 @@ from sqlalchemy import and_, or_
 from sempo_types import UUID, UUIDList
 
 from sql_persistence.models import (
-    session,
     BlockchainTransaction,
     BlockchainTask,
     BlockchainWallet
@@ -23,7 +22,7 @@ class SQLPersistenceInterface(object):
             seconds=self.PENDING_TRANSACTION_EXPIRY_SECONDS
         )
 
-        (session.query(BlockchainTransaction)
+        (self.session.query(BlockchainTransaction)
          .filter(and_(BlockchainTransaction.status == 'PENDING',
                       BlockchainTransaction.submitted_date < expire_time))
          .update({BlockchainTransaction.status: 'FAILED',
@@ -38,7 +37,7 @@ class SQLPersistenceInterface(object):
         # (failed or succeeded on blockchain)
 
         likely_consumed_nonces = (
-            session.query(BlockchainTransaction)
+            self.session.query(BlockchainTransaction)
                 .filter(BlockchainTransaction.signing_wallet == signing_wallet_obj)
                 .filter(BlockchainTransaction.ignore == False)
                 .filter(BlockchainTransaction.first_block_hash == self.first_block_hash)
@@ -89,7 +88,7 @@ class SQLPersistenceInterface(object):
 
         network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
 
-        blockchain_transaction = session.query(BlockchainTransaction).get(transaction_id)
+        blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
 
         if blockchain_transaction.nonce is not None:
             return blockchain_transaction.nonce, blockchain_transaction.id
@@ -100,43 +99,43 @@ class SQLPersistenceInterface(object):
         blockchain_transaction.nonce = calculated_nonce
         blockchain_transaction.status = 'PENDING'
 
-        session.commit()
+        self.session.commit()
 
         return calculated_nonce, blockchain_transaction.id
 
     def update_transaction_data(self, transaction_id, transaction_data):
 
-        transaction = session.query(BlockchainTransaction).get(transaction_id)
+        transaction = self.session.query(BlockchainTransaction).get(transaction_id)
 
         for attribute in transaction_data:
             setattr(transaction, attribute, transaction_data[attribute])
 
-        session.commit()
+        self.session.commit()
 
     def create_blockchain_transaction(self, task_uuid):
 
-        task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+        task = self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
         blockchain_transaction = BlockchainTransaction(
             signing_wallet=task.signing_wallet,
             first_block_hash=self.first_block_hash
         )
 
-        session.add(blockchain_transaction)
+        self.session.add(blockchain_transaction)
 
         if task:
             blockchain_transaction.task = task
 
-        session.commit()
+        self.session.commit()
 
         return blockchain_transaction
 
     def get_transaction(self, transaction_id):
-        return session.query(BlockchainTransaction).get(transaction_id)
+        return self.session.query(BlockchainTransaction).get(transaction_id)
 
     def get_transaction_signing_wallet(self, transaction_id):
 
-        transaction = session.query(BlockchainTransaction).get(transaction_id)
+        transaction = self.session.query(BlockchainTransaction).get(transaction_id)
 
         return transaction.signing_wallet
 
@@ -149,7 +148,7 @@ class SQLPersistenceInterface(object):
 
         for task_uuid in prior_tasks:
             # TODO: Make sure this can't be failed due to a race condition on tasks being added
-            prior_task = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+            prior_task = self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
             if prior_task:
                 task.prior_tasks.append(prior_task)
 
@@ -162,13 +161,13 @@ class SQLPersistenceInterface(object):
 
         for task_uuid in posterior_tasks:
             # TODO: Make sure this can't be failed due to a race condition on tasks being added
-            posterior = session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+            posterior = self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
             if posterior:
                 task.posterior_tasks.append(posterior)
 
     def set_task_status_text(self, task, text):
         task.status_text = text
-        session.commit()
+        self.session.commit()
 
     def create_send_eth_task(self,
                              uuid: UUID,
@@ -184,12 +183,12 @@ class SQLPersistenceInterface(object):
                               recipient_address=recipient_address,
                               amount=amount)
 
-        session.add(task)
+        self.session.add(task)
 
         self.add_prior_tasks(task, prior_tasks)
         self.add_posterior_tasks(task, posterior_tasks)
 
-        session.commit()
+        self.session.commit()
 
         return task
 
@@ -210,11 +209,11 @@ class SQLPersistenceInterface(object):
                               kwargs=kwargs,
                               gas_limit=gas_limit)
 
-        session.add(task)
+        self.session.add(task)
 
         self.add_prior_tasks(task, prior_tasks)
 
-        session.commit()
+        self.session.commit()
 
         return task
 
@@ -233,11 +232,11 @@ class SQLPersistenceInterface(object):
                               kwargs=kwargs,
                               gas_limit=gas_limit)
 
-        session.add(task)
+        self.session.add(task)
 
         self.add_prior_tasks(task, prior_tasks)
 
-        session.commit()
+        self.session.commit()
 
         return task
 
@@ -271,16 +270,16 @@ class SQLPersistenceInterface(object):
     def increment_task_invokations(self, task):
         task.previous_invocations = (task.previous_invocations or 0) + 1
 
-        session.commit()
+        self.session.commit()
 
     def get_task_from_uuid(self, task_uuid):
-        return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+        return self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
     def get_failed_tasks(self):
-        return session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED').all()
+        return self.session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED').all()
 
     def get_pending_tasks(self):
-        return session.query(BlockchainTask).filter(BlockchainTask.status == 'PENDING').all()
+        return self.session.query(BlockchainTask).filter(BlockchainTask.status == 'PENDING').all()
 
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 
@@ -295,7 +294,7 @@ class SQLPersistenceInterface(object):
 
         address = BlockchainWallet.address_from_private_key(private_key)
 
-        existing_wallet = session.query(BlockchainWallet).filter_by(address=address).first()
+        existing_wallet = self.session.query(BlockchainWallet).filter_by(address=address).first()
         if existing_wallet:
             if allow_existing:
                 return existing_wallet
@@ -307,9 +306,9 @@ class SQLPersistenceInterface(object):
             wei_target_balance=wei_target_balance,
             wei_topup_threshold=wei_topup_threshold)
 
-        session.add(wallet)
+        self.session.add(wallet)
 
-        session.commit()
+        self.session.commit()
 
         return wallet
 
@@ -326,28 +325,28 @@ class SQLPersistenceInterface(object):
         wallet = BlockchainWallet(wei_target_balance=wei_target_balance,
                                   wei_topup_threshold=wei_topup_threshold)
 
-        session.add(wallet)
+        self.session.add(wallet)
 
-        session.commit()
+        self.session.commit()
 
         return wallet
 
 
     def get_all_wallets(self):
-        return session.query(BlockchainWallet).all()
+        return self.session.query(BlockchainWallet).all()
 
     def get_wallet_by_address(self, address):
-        return session.query(BlockchainWallet).filter(BlockchainWallet.address == address).first()
+        return self.session.query(BlockchainWallet).filter(BlockchainWallet.address == address).first()
 
     def get_wallet_by_encrypted_private_key(self, encrypted_private_key):
-         return session.query(BlockchainWallet).filter(
+         return self.session.query(BlockchainWallet).filter(
              BlockchainWallet.encrypted_private_key == encrypted_private_key).first()
 
     def set_wallet_last_topup_task_uuid(self, wallet_address, task_uuid):
         wallet = self.get_wallet_by_address(wallet_address)
         wallet.last_topup_task_uuid = task_uuid
 
-        session.commit()
+        self.session.commit()
 
     def __init__(self, w3, red, session, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 
@@ -356,6 +355,7 @@ class SQLPersistenceInterface(object):
         self.red = red
 
         self.session = scoped_session(session)
+        
         self.first_block_hash = w3.eth.getBlock(0).hash.hex()
 
         self.PENDING_TRANSACTION_EXPIRY_SECONDS = PENDING_TRANSACTION_EXPIRY_SECONDS

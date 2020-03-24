@@ -75,7 +75,7 @@ engine = create_engine(
     config.ETH_DATABASE_URI,
     poolclass=NullPool,
     connect_args={'connect_timeout': 5},
-    pool_pre_ping=True # Setting checks DB livelelyness, will give a new connection if dead
+    pool_pre_ping=True
 )
 
 session_factory = sessionmaker(autocommit=False, autoflush=True, bind=engine)
