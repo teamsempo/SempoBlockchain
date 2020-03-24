@@ -17,8 +17,17 @@ class SqlAlchemyTask(celery.Task):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         print(f"Closing Session ID: {id(session)}")
-        session.remove()
+        print(f"Closing Session ID: {id(persistence_interface.session)}")
+        #try:
+        #    session.remove()
+        #except:
+        #    pass
+        try:
+            persistence_interface.session.remove()
+        except:
+            pass
         print(f"Closed Session ID: {id(session)}")
+        print(f"Closed Session ID: {id(persistence_interface.session)}")
 
 
 
