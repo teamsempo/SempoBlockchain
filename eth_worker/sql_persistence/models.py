@@ -24,7 +24,9 @@ engine = create_engine(
     config.ETH_DATABASE_URI,
     poolclass=NullPool,
     connect_args={'connect_timeout': 5},
-    pool_pre_ping=True
+    pool_pre_ping=True,
+    echo=True,
+    echo_pool=True,
 )
 
 session_factory = sessionmaker(autocommit=False, autoflush=True, bind=engine)
