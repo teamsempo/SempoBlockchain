@@ -5,7 +5,6 @@ from celery import signals
 
 import config
 import eth_manager.task_interfaces.composite
-from sql_persistence.models import session
 from eth_manager import celery_app, blockchain_processor, persistence_interface
 from eth_manager.exceptions import (
     LockedNotAcquired
@@ -15,21 +14,17 @@ class SqlAlchemyTask(celery.Task):
     database is closed on task completion"""
     abstract = True
 
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        print(f"Closing Session ID: {id(session)}")
-        print(f"Closing Session ID: {id(persistence_interface.session)}")
-        #try:
-        #    session.remove()
-        #except:
-        #    pass
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
         try:
             persistence_interface.session.remove()
         except:
             pass
-        print(f"Closed Session ID: {id(session)}")
-        print(f"Closed Session ID: {id(persistence_interface.session)}")
 
-
+    def on_success(self, retval, task_id, args, kwargs):
+        try:
+            persistence_interface.session.remove()
+        except:
+            pass
 
 base_task_config = {
     'base': SqlAlchemyTask,

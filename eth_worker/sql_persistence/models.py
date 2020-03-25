@@ -20,18 +20,6 @@ ALLOWED_TASK_TYPES = ['SEND_ETH', 'FUNCTION', 'DEPLOY_CONTRACT']
 STATUS_STRING_TO_INT = {'SUCCESS': 1, 'PENDING': 2, 'UNSTARTED': 3, 'FAILED': 4, 'UNKNOWN': 99}
 STATUS_INT_TO_STRING = {v: k for k, v in STATUS_STRING_TO_INT.items()}
 
-engine = create_engine(
-    config.ETH_DATABASE_URI,
-    poolclass=NullPool,
-    connect_args={'connect_timeout': 5},
-    pool_pre_ping=True,
-    echo=True,
-    echo_pool=True,
-)
-
-session_factory = sessionmaker(autocommit=False, autoflush=True, bind=engine)
-session = scoped_session(session_factory)
-
 Base = declarative_base()
 
 
