@@ -28,7 +28,6 @@ def total_unique_outward_transactions_per_user_sets():
     """
     sql_query = '''SELECT
     credit_transfer.sender_user_id,
-    transfer_account.blockchain_address,
     COUNT (DISTINCT (credit_transfer.recipient_user_id))
     FROM credit_transfer
     LEFT JOIN transfer_account 
@@ -38,8 +37,7 @@ def total_unique_outward_transactions_per_user_sets():
     AND credit_transfer.transfer_status = 'COMPLETE'
     AND credit_transfer.transfer_subtype = 'STANDARD'
     GROUP BY 
-    credit_transfer.sender_user_id,
-    transfer_account.blockchain_address;'''.format((datetime.now() - timedelta(hours=24)))
+    credit_transfer.sender_user_id;'''.format((datetime.now() - timedelta(hours=24)))
 
     result = db.session.execute(sql_query)
     unique_transaction_sets = result.fetchall()
@@ -55,7 +53,6 @@ def total_user_unique_outward_transactions():
     # compute total unique outward transactions for each user
     total_unique_outward_transactions = 0
     for counter, (user_id,
-                  blockchain_address,
                   unique_outward_transactions_per_user) in enumerate(UNIQUE_TRANSACTION_SETS):
         total_unique_outward_transactions += unique_outward_transactions_per_user
 
@@ -75,7 +72,6 @@ class BonusProcessor:
         total_outward_transactions = total_user_unique_outward_transactions()
 
         for counter, (user_id,
-                      blockchain_address,
                       unique_outward_transactions_per_user) in enumerate(UNIQUE_TRANSACTION_SETS):
 
             # compute percentage as per user
