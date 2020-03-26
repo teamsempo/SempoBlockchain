@@ -8,10 +8,28 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query
 from sqlalchemy import or_
+from flask_sqlalchemy import BaseQuery
 
 import server
 from server import db, bt
 from server.exceptions import OrganisationNotProvidedException
+
+
+class QueryWithSoftDelete(BaseQuery):
+    def __new__(cls, *args, **kwargs):
+        obj = super(QueryWithSoftDelete, cls).__new__(cls)
+        with_deleted = kwargs.pop('_with_deleted', False)
+        if len(args) > 0:
+            super(QueryWithSoftDelete, obj).__init__(*args, **kwargs)
+            return obj.filter_by(deleted=None) if not with_deleted else obj
+        return obj
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def with_deleted(self):
+        return self.__class__(db.class_mapper(self._mapper_zero().class_),
+                              session=db.session(), _with_deleted=True)
 
 
 @contextmanager

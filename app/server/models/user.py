@@ -31,7 +31,7 @@ import server.models.transfer_account
 import server.models.credit_transfer
 import server.utils.transfer_enums
 
-from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
+from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table, QueryWithSoftDelete
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
@@ -39,7 +39,8 @@ from server.models.transfer_usage import TransferUsage
 from server.exceptions import (
     RoleNotFoundException,
     TierNotFoundException,
-    NoTransferCardError
+    NoTransferCardError,
+    UserAlreadyDeletedError
 )
 from server.constants import (
     ACCESS_ROLES
@@ -65,6 +66,8 @@ class User(ManyOrgBase, ModelBase):
         created using the POST user API or the bulk upload function
     """
     __tablename__ = 'user'
+
+    query_class = QueryWithSoftDelete
 
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
@@ -107,6 +110,8 @@ class User(ManyOrgBase, ModelBase):
     pin_reset_tokens = db.Column(JSONB, default=[])
 
     terms_accepted = db.Column(db.Boolean, default=True)
+
+    _deleted = db.Column(db.DateTime)
 
     matched_profile_pictures = db.Column(JSON)
 
@@ -169,6 +174,24 @@ class User(ManyOrgBase, ModelBase):
                                         lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
+
+    @hybrid_property
+    def deleted(self):
+        return self._deleted
+
+    @deleted.setter
+    def deleted(self, deleted):
+        if self._deleted is not None:
+            raise UserAlreadyDeletedError('User Already Deleted')
+
+        # Mark User object as deleted and remove PII
+        self._deleted = deleted
+        self.first_name = None
+        self.last_name = None
+        self.phone = None
+
+    def delete_user(self):
+        self.deleted = datetime.datetime.utcnow()
 
     @hybrid_property
     def cashout_authorised(self):

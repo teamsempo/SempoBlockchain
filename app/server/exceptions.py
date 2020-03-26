@@ -1,3 +1,7 @@
+class UserAlreadyDeletedError(Exception):
+    pass
+
+
 class TransferLimitCreationError(Exception):
     """
     Raise if a TransferLimit is initialized with incorrect variables
