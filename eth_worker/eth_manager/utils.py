@@ -6,7 +6,7 @@ eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoin
 import config
 
 
-def execute_synchronous_celery(signature, queue='celery'):
+def execute_synchronous_celery(signature, queue='high-priority'):
     async_result = signature.apply_async(queue=queue)
     try:
         response = async_result.get(
@@ -22,7 +22,7 @@ def execute_synchronous_celery(signature, queue='celery'):
     return response
 
 
-def execute_task(signature, queue='celery'):
+def execute_task(signature, queue='high-priority'):
     print('STARTING SYNCHRO!')
     print(signature)
     async_result = signature.apply_async(queue=queue)
