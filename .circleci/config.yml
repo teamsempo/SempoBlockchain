@@ -226,6 +226,10 @@ jobs:
             docker push $REPOSITORY_URI:proxy${CIRCLE_SHA1}
             docker tag eth_worker:latest $REPOSITORY_URI:eth_worker${CIRCLE_SHA1}
             docker push $REPOSITORY_URI:eth_worker${CIRCLE_SHA1}
+      - run:
+          name: Create Dockerrun config file
+          command: |
+            sed "s|REPOSITORY_URI|$REPOSITORY_URI${CIRCLE_SHA1}|g" awsDockerrunTemplate.json > Dockerrun.aws.json
 
       - run:
           name: Deploy app to AWS Server via Docker
