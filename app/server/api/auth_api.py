@@ -86,7 +86,7 @@ class RegisterAPI(MethodView):
         tier = None
         sempoadmin_emails = current_app.config['SEMPOADMIN_EMAILS']
 
-        if sempoadmin_emails and email in sempoadmin_emails:
+        if sempoadmin_emails != [''] and email in sempoadmin_emails:
             email_ok = True
             tier = 'sempoadmin'
 

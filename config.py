@@ -133,7 +133,7 @@ CASHOUT_INCENTIVE_PERCENT = float(config_parser['APP'].get('CASHOUT_INCENTIVE_PE
 ONBOARDING_SMS = config_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
-SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails').split(',')
+SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 PASSWORD_PEPPER     = secrets_parser['APP']['PASSWORD_PEPPER']
