@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-bash build_docker.sh
+#bash build_docker.sh
 
-sed "s|REPOSITORY_URI|$REPOSITORY_URI|g" awsDockerrunTemplate.json > Dockerrun.aws.json
+sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX||g" awsDockerrunTemplate.json > Dockerrun.aws.json
 
 eval $(aws ecr get-login --no-include-email --region $ECR_REGION --profile ECR_BUILDER);
 
