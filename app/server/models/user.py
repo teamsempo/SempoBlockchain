@@ -41,7 +41,7 @@ from server.exceptions import (
     TierNotFoundException,
     NoTransferCardError,
     ResourceAlreadyDeletedError,
-    UserTransferAccountDeletionError
+    TransferAccountDeletionError
 )
 from server.constants import (
     ACCESS_ROLES
@@ -188,7 +188,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.last_name = None
             self.phone = None
 
-        except (ResourceAlreadyDeletedError, UserTransferAccountDeletionError) as e:
+        except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
 
     @hybrid_property

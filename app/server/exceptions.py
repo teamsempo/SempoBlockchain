@@ -1,6 +1,7 @@
-class UserTransferAccountDeletionError(Exception):
+class TransferAccountDeletionError(Exception):
     """
     Raise if User default doesn't match Transfer Account primary user OR more than 1 user is listed on Transfer Account
+    OR balance isn't zero
     """
     pass
 

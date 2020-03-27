@@ -13,7 +13,7 @@ from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
-from server.exceptions import UserTransferAccountDeletionError, ResourceAlreadyDeletedError
+from server.exceptions import TransferAccountDeletionError, ResourceAlreadyDeletedError
 
 from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum
 
@@ -77,13 +77,15 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         Soft deletes a Transfer Account if no other users associated to it.
         """
         try:
+            if self.balance != 0:
+                raise TransferAccountDeletionError('Balance must be zero to delete')
             if len(self.users) == 1 and self.primary_user == user:
                 timenow = datetime.datetime.utcnow()
                 self.deleted = timenow
             else:
-                raise UserTransferAccountDeletionError('More than one user attached to transfer account')
+                raise TransferAccountDeletionError('More than one user attached to transfer account')
 
-        except (ResourceAlreadyDeletedError, UserTransferAccountDeletionError) as e:
+        except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
 
     def get_float_transfer_account(self):
