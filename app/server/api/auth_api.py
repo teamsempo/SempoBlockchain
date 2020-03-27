@@ -74,7 +74,6 @@ class RegisterAPI(MethodView):
 
             return make_response(jsonify(response_object)), response_code
 
-        # email_tail = email.split('@')[-1]
         email_ok = False
 
         whitelisted_emails = EmailWhitelist.query\
@@ -85,9 +84,9 @@ class RegisterAPI(MethodView):
         exact_match = False
 
         tier = None
-        sempoadmin_email = current_app.config['SEMPOADMIN_EMAIL']
+        sempoadmin_emails = current_app.config['SEMPOADMIN_EMAILS']
 
-        if sempoadmin_email and sempoadmin_email in email:
+        if sempoadmin_emails and email in sempoadmin_emails:
             email_ok = True
             tier = 'sempoadmin'
 
