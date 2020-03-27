@@ -72,8 +72,11 @@ class MockBlockchainTasker(object):
         return int(10e18)
 
     @staticmethod
-    def get_allowance(*args, **kwargs):
-        return 100
+    def deduplicate(*args, **kwargs):
+        return {
+            'duplicates': 0,
+            'new_deduplication_tasks': 0
+        }
 
     @staticmethod
     def deploy_exchange_network(*args, **kwargs):
