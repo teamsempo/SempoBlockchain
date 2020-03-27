@@ -217,19 +217,18 @@ jobs:
       - run:
           name: Push Docker Image
           command: |
-            REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
 
             eval $(aws ecr get-login --no-include-email --region ap-southeast-2);
-            docker tag server:latest $REPOSITORY_URI:server${CIRCLE_SHA1}
-            docker push $REPOSITORY_URI:server${CIRCLE_SHA1}
-            docker tag proxy:latest $REPOSITORY_URI:proxy${CIRCLE_SHA1}
-            docker push $REPOSITORY_URI:proxy${CIRCLE_SHA1}
-            docker tag eth_worker:latest $REPOSITORY_URI:eth_worker${CIRCLE_SHA1}
-            docker push $REPOSITORY_URI:eth_worker${CIRCLE_SHA1}
+            docker tag server:latest {REPOSITORY_URI}:server${CIRCLE_SHA1}
+            docker push {REPOSITORY_URI}:server${CIRCLE_SHA1}
+            docker tag proxy:latest {REPOSITORY_URI}:proxy${CIRCLE_SHA1}
+            docker push {REPOSITORY_URI}:proxy${CIRCLE_SHA1}
+            docker tag eth_worker:latest {REPOSITORY_URI}:eth_worker${CIRCLE_SHA1}
+            docker push {REPOSITORY_URI}:eth_worker${CIRCLE_SHA1}
       - run:
           name: Create Dockerrun config file
           command: |
-            sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX|${CIRCLE_SHA1}|g" awsDockerrunTemplate.json > Dockerrun.aws.json
+            sed "s|REPOSITORY_URI|${REPOSITORY_URI}|g; s|TAG_SUFFIX|${CIRCLE_SHA1}|g" awsDockerrunTemplate.json > Dockerrun.aws.json
 
       - run:
           name: Deploy app to AWS Server via Docker
