@@ -11,54 +11,7 @@ from sqlalchemy import or_
 
 import server
 from server import db, bt
-from server.exceptions import OrganisationNotProvidedException
-
-
-class QueryWithSoftDelete(Query):
-    """
-    Adapted from https://github.com/miguelgrinberg/sqlalchemy-soft-delete/blob/master/app.py
-    """
-    _with_deleted = False
-
-    def __new__(cls, *args, **kwargs):
-        obj = super(QueryWithSoftDelete, cls).__new__(cls)
-        with_deleted = kwargs.pop('_with_deleted', False)
-        if len(args) > 0:
-            super(QueryWithSoftDelete, obj).__init__(*args, **kwargs)
-            for ent in obj.column_descriptions:
-                entity = ent['entity']
-                if entity is None:
-                    continue
-                insp = inspect(ent['entity'])
-                mapper = getattr(insp, 'mapper', None)
-                if mapper:
-                    if issubclass(mapper.class_, server.models.user.User):
-                        # Filter deleted Users
-                        return obj.filter(server.models.user.User.deleted == None) if not with_deleted else obj
-
-                    if issubclass(mapper.class_, server.models.transfer_account.TransferAccount):
-                        # Filter deleted Transfer Accounts
-                        return obj.filter(server.models.transfer_account.TransferAccount.deleted == None) \
-                            if not with_deleted else obj
-
-        return obj
-
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def with_deleted(self):
-        return self.__class__(db.class_mapper(self._mapper_zero().class_),
-                              session=db.session(), _with_deleted=True)
-
-    def _get(self, *args, **kwargs):
-        # this calls the original query.get function from the base class
-        return super(QueryWithSoftDelete, self).get(*args, **kwargs)
-
-    def get(self, *args, **kwargs):
-        # the query.get method does not like it if there is a filter clause
-        # pre-loaded, so we need to implement it using a workaround
-        obj = self.with_deleted()._get(*args, **kwargs)
-        return obj if obj is None or self._with_deleted or not obj.deleted else None
+from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
 
 
 @contextmanager
@@ -145,7 +98,7 @@ def no_expire():
 def before_compile(query):
     """A query compilation rule that will add limiting criteria for every
     subclass of OrgBase"""
-
+    show_deleted = query._execution_options.get("show_deleted", False)
     show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
     if show_all:
         return query
@@ -157,8 +110,12 @@ def before_compile(query):
         insp = inspect(ent['entity'])
         mapper = getattr(insp, 'mapper', None)
 
-        # if the subclass OrgBase exists, then filter by organisations - else, return default query
         if mapper:
+            # if subclass SoftDelete exists and not show_deleted, return non-deleted items, else show deleted
+            if issubclass(mapper.class_, SoftDelete) and not show_deleted:
+                query = query.enable_assertions(False).filter(ent['entity'].deleted == None)
+
+            # if the subclass OrgBase exists, then filter by organisations - else, return default query
             if issubclass(mapper.class_, ManyOrgBase) or issubclass(mapper.class_, OneOrgBase):
 
                 try:
@@ -253,6 +210,23 @@ class BlockchainTaskableBase(ModelBase):
         else:
             return 'UNKNOWN'
 
+
+class SoftDelete(object):
+    """
+    Mixing that adds standard soft deletion functionality to object
+    """
+
+    _deleted = db.Column(db.DateTime)
+
+    @hybrid_property
+    def deleted(self):
+        return self._deleted
+
+    @deleted.setter
+    def deleted(self, deleted):
+        if self._deleted:
+            raise ResourceAlreadyDeletedError('Resource Already Deleted')
+        self._deleted = deleted
 
 
 class OneOrgBase(object):

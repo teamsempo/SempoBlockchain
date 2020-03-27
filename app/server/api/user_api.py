@@ -8,7 +8,7 @@ from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
-from server.exceptions import ResourceAlreadyDeletedError
+from server.exceptions import ResourceAlreadyDeletedError, UserTransferAccountDeletionError
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -155,7 +155,7 @@ class UserAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def delete(self, user_id):
-        user = User.query.get(user_id)
+        user = User.query.execution_options(show_deleted=True).get(user_id)
 
         if user is None:
             return make_response(jsonify({'message': 'No User Found for ID {}'.format(user_id)})), 404
@@ -165,7 +165,7 @@ class UserAPI(MethodView):
             response_object, status_code = {'message': 'User {} deleted'.format(user_id)}, 200
             db.session.commit()
 
-        except ResourceAlreadyDeletedError as e:
+        except (ResourceAlreadyDeletedError, UserTransferAccountDeletionError) as e:
             response_object, status_code = {'message': str(e)}, 400
 
         return make_response(jsonify(response_object)), status_code

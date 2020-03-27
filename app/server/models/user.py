@@ -31,7 +31,7 @@ import server.models.transfer_account
 import server.models.credit_transfer
 import server.utils.transfer_enums
 
-from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table, QueryWithSoftDelete
+from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table, SoftDelete
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
@@ -55,7 +55,7 @@ referrals = Table(
 )
 
 
-class User(ManyOrgBase, ModelBase):
+class User(ManyOrgBase, ModelBase, SoftDelete):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
         Admin users are created through the auth api by registering
@@ -67,8 +67,6 @@ class User(ManyOrgBase, ModelBase):
         created using the POST user API or the bulk upload function
     """
     __tablename__ = 'user'
-
-    query_class = QueryWithSoftDelete
 
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
@@ -111,8 +109,6 @@ class User(ManyOrgBase, ModelBase):
     pin_reset_tokens = db.Column(JSONB, default=[])
 
     terms_accepted = db.Column(db.Boolean, default=True)
-
-    _deleted = db.Column(db.DateTime)
 
     matched_profile_pictures = db.Column(JSON)
 
@@ -176,16 +172,6 @@ class User(ManyOrgBase, ModelBase):
 
     exchanges = db.relationship("Exchange", backref="user")
 
-    @hybrid_property
-    def deleted(self):
-        return self._deleted
-
-    @deleted.setter
-    def deleted(self, deleted):
-        if self._deleted is not None:
-            raise ResourceAlreadyDeletedError('User Already Deleted')
-        self._deleted = deleted
-
     def delete_user_and_transfer_account(self):
         """
         Soft deletes a User and default Transfer account if no other users associated to it.
@@ -203,7 +189,7 @@ class User(ManyOrgBase, ModelBase):
             self.phone = None
 
         except (ResourceAlreadyDeletedError, UserTransferAccountDeletionError) as e:
-            return e
+            raise e
 
     @hybrid_property
     def cashout_authorised(self):
