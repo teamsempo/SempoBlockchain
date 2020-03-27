@@ -219,12 +219,12 @@ jobs:
           command: |
 
             eval $(aws ecr get-login --no-include-email --region ap-southeast-2);
-            docker tag server:latest ${REPOSITORY_URI}:server${CIRCLE_SHA1}
-            docker push ${REPOSITORY_URI}:server${CIRCLE_SHA1}
-            docker tag proxy:latest ${REPOSITORY_URI}:proxy${CIRCLE_SHA1}
-            docker push ${REPOSITORY_URI}:proxy${CIRCLE_SHA1}
-            docker tag eth_worker:latest ${REPOSITORY_URI}:eth_worker${CIRCLE_SHA1}
-            docker push ${REPOSITORY_URI}:eth_worker${CIRCLE_SHA1}
+            docker tag server:latest ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker push ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker tag proxy:latest ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
+            docker push ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
+            docker tag eth_worker:latest ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+            docker push ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
       - run:
           name: Create Dockerrun config file
           command: |
