@@ -5,13 +5,15 @@ from sqlalchemy.sql import func
 from flask import current_app, g
 from sqlalchemy.ext.hybrid import hybrid_property
 from server import db, bt
-from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, get_authorising_user_id
+from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, \
+    get_authorising_user_id, QueryWithSoftDelete
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
+from server.exceptions import UserTransferAccountDeletionError, ResourceAlreadyDeletedError
 
 from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum
 
@@ -25,6 +27,8 @@ class TransferAccountType(enum.Enum):
 
 class TransferAccount(OneOrgBase, ModelBase):
     __tablename__ = 'transfer_account'
+
+    query_class = QueryWithSoftDelete
 
     name            = db.Column(db.String())
     _balance_wei    = db.Column(db.Numeric(27), default=0)
@@ -40,6 +44,7 @@ class TransferAccount(OneOrgBase, ModelBase):
     is_beneficiary = db.Column(db.Boolean, default=False)
 
     is_ghost = db.Column(db.Boolean, default=False)
+    _deleted = db.Column(db.DateTime)
 
     account_type    = db.Column(db.Enum(TransferAccountType))
 
@@ -69,6 +74,30 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             foreign_keys='SpendApproval.giving_transfer_account_id')
+
+    @hybrid_property
+    def deleted(self):
+        return self._deleted
+
+    @deleted.setter
+    def deleted(self, deleted):
+        if self._deleted is not None:
+            raise ResourceAlreadyDeletedError('Transfer Account Already Deleted')
+        self._deleted = deleted
+
+    def delete_transfer_account_from_user(self, user: User):
+        """
+        Soft deletes a Transfer Account if no other users associated to it.
+        """
+        try:
+            if len(self.users) == 1 and self.primary_user == user:
+                timenow = datetime.datetime.utcnow()
+                self.deleted = timenow
+            else:
+                raise UserTransferAccountDeletionError('More than one user attached to transfer account')
+
+        except (ResourceAlreadyDeletedError, UserTransferAccountDeletionError) as e:
+            return e
 
     def get_float_transfer_account(self):
         for transfer_account in self.organisation.transfer_accounts:

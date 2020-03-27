@@ -4,13 +4,11 @@ from flask.views import MethodView
 from server import db
 from server.models.utils import paginate_query
 from server.models.user import User
-from server.models.transfer_account import TransferAccount
-from server.models.organisation import Organisation
 from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
-
+from server.exceptions import ResourceAlreadyDeletedError
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -155,6 +153,23 @@ class UserAPI(MethodView):
 
         return make_response(jsonify(response_object)), response_code
 
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def delete(self, user_id):
+        user = User.query.get(user_id)
+
+        if user is None:
+            return make_response(jsonify({'message': 'No User Found for ID {}'.format(user_id)})), 404
+
+        try:
+            user.delete_user_and_transfer_account()
+            response_object, status_code = {'message': 'User {} deleted'.format(user_id)}, 200
+            db.session.commit()
+
+        except ResourceAlreadyDeletedError as e:
+            response_object, status_code = {'message': str(e)}, 400
+
+        return make_response(jsonify(response_object)), status_code
+
 
 class ResetPinAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'}, allowed_basic_auth_types=('external'))
@@ -197,7 +212,7 @@ user_blueprint.add_url_rule(
 user_blueprint.add_url_rule(
     '/user/<int:user_id>/',
     view_func=UserAPI.as_view('single_user_view'),
-    methods=['GET', 'PUT']
+    methods=['GET', 'PUT', 'DELETE']
 )
 
 user_blueprint.add_url_rule(

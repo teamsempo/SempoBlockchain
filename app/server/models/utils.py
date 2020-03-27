@@ -8,20 +8,39 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query
 from sqlalchemy import or_
-from flask_sqlalchemy import BaseQuery
 
 import server
 from server import db, bt
 from server.exceptions import OrganisationNotProvidedException
 
 
-class QueryWithSoftDelete(BaseQuery):
+class QueryWithSoftDelete(Query):
+    """
+    Adapted from https://github.com/miguelgrinberg/sqlalchemy-soft-delete/blob/master/app.py
+    """
+    _with_deleted = False
+
     def __new__(cls, *args, **kwargs):
         obj = super(QueryWithSoftDelete, cls).__new__(cls)
         with_deleted = kwargs.pop('_with_deleted', False)
         if len(args) > 0:
             super(QueryWithSoftDelete, obj).__init__(*args, **kwargs)
-            return obj.filter_by(deleted=None) if not with_deleted else obj
+            for ent in obj.column_descriptions:
+                entity = ent['entity']
+                if entity is None:
+                    continue
+                insp = inspect(ent['entity'])
+                mapper = getattr(insp, 'mapper', None)
+                if mapper:
+                    if issubclass(mapper.class_, server.models.user.User):
+                        # Filter deleted Users
+                        return obj.filter(server.models.user.User.deleted == None) if not with_deleted else obj
+
+                    if issubclass(mapper.class_, server.models.transfer_account.TransferAccount):
+                        # Filter deleted Transfer Accounts
+                        return obj.filter(server.models.transfer_account.TransferAccount.deleted == None) \
+                            if not with_deleted else obj
+
         return obj
 
     def __init__(self, *args, **kwargs):
@@ -30,6 +49,16 @@ class QueryWithSoftDelete(BaseQuery):
     def with_deleted(self):
         return self.__class__(db.class_mapper(self._mapper_zero().class_),
                               session=db.session(), _with_deleted=True)
+
+    def _get(self, *args, **kwargs):
+        # this calls the original query.get function from the base class
+        return super(QueryWithSoftDelete, self).get(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        # the query.get method does not like it if there is a filter clause
+        # pre-loaded, so we need to implement it using a workaround
+        obj = self.with_deleted()._get(*args, **kwargs)
+        return obj if obj is None or self._with_deleted or not obj.deleted else None
 
 
 @contextmanager

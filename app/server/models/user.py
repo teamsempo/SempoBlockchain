@@ -40,7 +40,8 @@ from server.exceptions import (
     RoleNotFoundException,
     TierNotFoundException,
     NoTransferCardError,
-    UserAlreadyDeletedError
+    ResourceAlreadyDeletedError,
+    UserTransferAccountDeletionError
 )
 from server.constants import (
     ACCESS_ROLES
@@ -182,16 +183,27 @@ class User(ManyOrgBase, ModelBase):
     @deleted.setter
     def deleted(self, deleted):
         if self._deleted is not None:
-            raise UserAlreadyDeletedError('User Already Deleted')
-
-        # Mark User object as deleted and remove PII
+            raise ResourceAlreadyDeletedError('User Already Deleted')
         self._deleted = deleted
-        self.first_name = None
-        self.last_name = None
-        self.phone = None
 
-    def delete_user(self):
-        self.deleted = datetime.datetime.utcnow()
+    def delete_user_and_transfer_account(self):
+        """
+        Soft deletes a User and default Transfer account if no other users associated to it.
+        Removes User PII
+        """
+        try:
+            timenow = datetime.datetime.utcnow()
+            self.deleted = timenow
+
+            ta = self.default_transfer_account
+            ta.delete_transfer_account_from_user(user=self)
+
+            self.first_name = None
+            self.last_name = None
+            self.phone = None
+
+        except (ResourceAlreadyDeletedError, UserTransferAccountDeletionError) as e:
+            return e
 
     @hybrid_property
     def cashout_authorised(self):

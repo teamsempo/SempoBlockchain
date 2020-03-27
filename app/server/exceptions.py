@@ -1,4 +1,14 @@
-class UserAlreadyDeletedError(Exception):
+class UserTransferAccountDeletionError(Exception):
+    """
+    Raise if User default doesn't match Transfer Account primary user OR more than 1 user is listed on Transfer Account
+    """
+    pass
+
+
+class ResourceAlreadyDeletedError(Exception):
+    """
+    Raise if User or Transfer Account is already deleted
+    """
     pass
 
 
