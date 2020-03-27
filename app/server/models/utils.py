@@ -100,7 +100,8 @@ def before_compile(query):
     subclass of OrgBase"""
     show_deleted = query._execution_options.get("show_deleted", False)
     show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
-    if show_all:
+
+    if show_all and show_deleted:
         return query
 
     for ent in query.column_descriptions:
@@ -114,6 +115,9 @@ def before_compile(query):
             # if subclass SoftDelete exists and not show_deleted, return non-deleted items, else show deleted
             if issubclass(mapper.class_, SoftDelete) and not show_deleted:
                 query = query.enable_assertions(False).filter(ent['entity'].deleted == None)
+
+            if show_all and not show_deleted:
+                return query
 
             # if the subclass OrgBase exists, then filter by organisations - else, return default query
             if issubclass(mapper.class_, ManyOrgBase) or issubclass(mapper.class_, OneOrgBase):
