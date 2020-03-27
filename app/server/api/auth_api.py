@@ -86,9 +86,11 @@ class RegisterAPI(MethodView):
         tier = None
         sempoadmin_emails = current_app.config['SEMPOADMIN_EMAILS']
 
-        if sempoadmin_emails != [''] and email in sempoadmin_emails:
-            email_ok = True
-            tier = 'sempoadmin'
+        for allowed_domain in sempoadmin_emails:
+            if sempoadmin_emails != [''] and allowed_domain in email:
+                email_ok = True
+                tier = 'sempoadmin'
+                continue
 
         for whitelisted in whitelisted_emails:
             if whitelisted.allow_partial_match and whitelisted.email in email:
