@@ -61,8 +61,12 @@ class BeneficiaryLiveFeed extends React.Component {
                   typeof transfer.recipient_user !== "undefined"
                 ) {
                   var recipient_user = users.byId[transfer.recipient_user];
-                  var recipient_user_name =
-                    recipient_user.first_name + " " + recipient_user.last_name;
+                  if (typeof sender_user !== "undefined") {
+                    var recipient_user_name =
+                      recipient_user.first_name +
+                      " " +
+                      recipient_user.last_name;
+                  }
                 } else if (
                   typeof recipient_blockchain_address !== "undefined"
                 ) {
@@ -79,8 +83,10 @@ class BeneficiaryLiveFeed extends React.Component {
                   typeof transfer.sender_user !== "undefined"
                 ) {
                   var sender_user = users.byId[transfer.sender_user];
-                  var sender_user_name =
-                    sender_user.first_name + " " + sender_user.last_name;
+                  if (typeof sender_user !== "undefined") {
+                    var sender_user_name =
+                      sender_user.first_name + " " + sender_user.last_name;
+                  }
                 } else if (typeof sender_blockchain_address !== "undefined") {
                   sender_user_name =
                     "Address " + sender_blockchain_address.slice(0, 8) + "...";
