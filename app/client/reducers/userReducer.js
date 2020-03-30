@@ -1,6 +1,7 @@
 import { combineReducers } from "redux";
 import { DEEEEEEP } from "../utils";
 
+export const DEEP_UPDATE_USER_LIST = "DEEP_UPDATE_USER_LIST";
 export const UPDATE_USER_LIST = "UPDATE_USER_LIST";
 
 export const LOAD_USER_REQUEST = "LOAD_USER_REQUEST";
@@ -19,12 +20,19 @@ export const CREATE_USER_REQUEST = "CREATE_USER_REQUEST";
 export const CREATE_USER_SUCCESS = "CREATE_USER_SUCCESS";
 export const CREATE_USER_FAILURE = "CREATE_USER_FAILURE";
 
+export const DELETE_USER_REQUEST = "DELETE_USER_REQUEST";
+export const DELETE_USER_SUCCESS = "DELETE_USER_SUCCESS";
+export const DELETE_USER_FAILURE = "DELETE_USER_FAILURE";
+
 export const RESET_CREATE_USER = "RESET_CREATE_USER";
 
 const byId = (state = {}, action) => {
   switch (action.type) {
-    case UPDATE_USER_LIST:
+    case DEEP_UPDATE_USER_LIST:
       return DEEEEEEP(state, action.users);
+
+    case UPDATE_USER_LIST:
+      return action.users;
 
     default:
       return state;
@@ -72,6 +80,23 @@ const editStatus = (state = initialEditStatusState, action) => {
 
     default:
       return state;
+  }
+};
+
+const initialDeleteStatusState = {
+  isRequesting: false,
+  error: null,
+  success: false
+};
+
+const deleteStatus = (state = initialDeleteStatusState, action) => {
+  switch (action.type) {
+    case DELETE_USER_REQUEST:
+      return { ...state, isRequesting: true };
+    case DELETE_USER_SUCCESS:
+      return { ...state, isRequesting: false, success: true };
+    case DELETE_USER_FAILURE:
+      return { ...state, isRequesting: false, error: action.error };
   }
 };
 
@@ -138,6 +163,7 @@ export const users = combineReducers({
   byId,
   loadStatus,
   editStatus,
+  deleteStatus,
   createStatus,
   pinStatus
 });
@@ -150,6 +176,11 @@ export const loadUser = payload => ({
 
 export const editUser = payload => ({
   type: EDIT_USER_REQUEST,
+  payload
+});
+
+export const deleteUser = payload => ({
+  type: DELETE_USER_REQUEST,
   payload
 });
 

@@ -1,28 +1,21 @@
-import {
-  take,
-  fork,
-  put,
-  takeEvery,
-  call,
-  all,
-  cancelled,
-  cancel,
-  race,
-  delay
-} from "redux-saga/effects";
-import { schema, arrayOf, normalize } from "normalizr";
+import { put, takeEvery, call, all } from "redux-saga/effects";
+import { normalize } from "normalizr";
 import { handleError } from "../utils";
 
 import { userSchema } from "../schemas";
 
 import {
   UPDATE_USER_LIST,
+  DEEP_UPDATE_USER_LIST,
   LOAD_USER_REQUEST,
   LOAD_USER_SUCCESS,
   LOAD_USER_FAILURE,
   EDIT_USER_REQUEST,
   EDIT_USER_SUCCESS,
   EDIT_USER_FAILURE,
+  DELETE_USER_REQUEST,
+  DELETE_USER_SUCCESS,
+  DELETE_USER_FAILURE,
   CREATE_USER_REQUEST,
   CREATE_USER_SUCCESS,
   CREATE_USER_FAILURE
@@ -31,6 +24,7 @@ import {
 import {
   loadUserAPI,
   editUserAPI,
+  deleteUserAPI,
   createUserAPI,
   resetPinAPI
 } from "../api/userAPI";
@@ -54,7 +48,7 @@ function* updateStateFromUser(data) {
 
   const users = normalizedData.entities.users;
 
-  yield put({ type: UPDATE_USER_LIST, users });
+  yield put({ type: DEEP_UPDATE_USER_LIST, users });
 }
 
 // Load User Saga
@@ -102,6 +96,37 @@ function* editUser({ payload }) {
 
 function* watchEditUser() {
   yield takeEvery(EDIT_USER_REQUEST, editUser);
+}
+
+const getUserState = state => state.users.byId;
+
+function* deleteUser({ payload }) {
+  try {
+    const delete_response = yield call(deleteUserAPI, payload);
+    yield put({ type: DELETE_USER_SUCCESS, delete_response });
+
+    // delete item from local state
+    let userState = yield select(getUserState);
+    let users = { ...userState };
+    delete users[payload.path];
+
+    yield put({ type: UPDATE_USER_LIST, users });
+    yield put({
+      type: ADD_FLASH_MESSAGE,
+      error: false,
+      message: result.message
+    });
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put({ type: DELETE_USER_FAILURE, error: error });
+
+    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+  }
+}
+
+function* watchDeleteUser() {
+  yield takeEvery(DELETE_USER_REQUEST, deleteUser);
 }
 
 function* resetPin({ payload }) {
@@ -154,6 +179,7 @@ export default function* userSagas() {
   yield all([
     watchLoadUser(),
     watchEditUser(),
+    watchDeleteUser(),
     watchCreateUser(),
     watchResetPin()
   ]);

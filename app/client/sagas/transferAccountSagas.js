@@ -14,7 +14,7 @@ import {
   EDIT_TRANSFER_ACCOUNT_FAILURE
 } from "../reducers/transferAccountReducer.js";
 
-import { UPDATE_USER_LIST } from "../reducers/userReducer";
+import { DEEP_UPDATE_USER_LIST } from "../reducers/userReducer";
 import { UPDATE_CREDIT_TRANSFER_LIST } from "../reducers/creditTransferReducer";
 
 import {
@@ -37,7 +37,7 @@ function* updateStateFromTransferAccount(data) {
 
   const users = normalizedData.entities.users;
   if (users) {
-    yield put({ type: UPDATE_USER_LIST, users });
+    yield put({ type: DEEP_UPDATE_USER_LIST, users });
   }
 
   const credit_sends = normalizedData.entities.credit_sends;
