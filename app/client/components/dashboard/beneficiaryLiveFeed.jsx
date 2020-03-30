@@ -61,7 +61,7 @@ class BeneficiaryLiveFeed extends React.Component {
                   typeof transfer.recipient_user !== "undefined"
                 ) {
                   var recipient_user = users.byId[transfer.recipient_user];
-                  if (typeof sender_user !== "undefined") {
+                  if (typeof recipient_user !== "undefined") {
                     var recipient_user_name =
                       recipient_user.first_name +
                       " " +
