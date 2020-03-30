@@ -178,11 +178,11 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         Removes User PII
         """
         try:
-            timenow = datetime.datetime.utcnow()
-            self.deleted = timenow
-
             ta = self.default_transfer_account
             ta.delete_transfer_account_from_user(user=self)
+
+            timenow = datetime.datetime.utcnow()
+            self.deleted = timenow
 
             self.first_name = None
             self.last_name = None
