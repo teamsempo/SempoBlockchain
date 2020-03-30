@@ -357,7 +357,6 @@ def create_master_organisation(reserve_token):
         if reserve_token:
             print('Binding to reserve token')
         master_organisation = Organisation(name='Reserve', is_master=True, token=reserve_token)
-        print('a')
         db.session.add(master_organisation)
 
         db.session.commit()

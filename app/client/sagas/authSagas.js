@@ -464,8 +464,7 @@ function* watchInviteUserRequest() {
 function* validateTFA({ payload }) {
   try {
     const validateTFAresponse = yield call(ValidateTFAAPI, payload);
-
-    yield call(updateOrganisationStateFromLoginData, activated_account);
+    yield call(updateOrganisationStateFromLoginData, validateTFAresponse);
     yield put({ type: VALIDATE_TFA_SUCCESS, validateTFAresponse });
     yield call(storeTFAToken, validateTFAresponse.tfa_auth_token);
     yield put(createLoginSuccessObject(validateTFAresponse));

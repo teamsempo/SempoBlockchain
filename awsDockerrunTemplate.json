@@ -3,7 +3,7 @@
   "containerDefinitions": [
     {
       "name": "app",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:server",
+      "image": "REPOSITORY_URI:serverTAG_SUFFIX",
       "essential": true,
       "memoryReservation": 256,
       "cpu": 1,
@@ -25,7 +25,7 @@
     },
     {
       "name": "pgbouncer",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:pgbouncer",
+      "image": "REPOSITORY_URI:pgbouncerTAG_SUFFIX",
       "essential": true,
       "memory": 32,
       "cpu": 1,
@@ -45,7 +45,7 @@
     },
     {
       "name": "proxy",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:proxy",
+      "image": "REPOSITORY_URI:proxyTAG_SUFFIX",
       "essential": true,
       "memory": 32,
       "cpu": 1,
@@ -56,16 +56,14 @@
           "protocol": "tcp"
         }
       ],
-      "links": [
-        "app:app"
-      ]
+      "links": ["app:app"]
     },
     {
       "name": "high_pri_eth_worker",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:low_priority_eth_worker",
-      "essential": true,
-      "memory": 128,
-      "links": ["pgbouncer:pgbouncer"],
+      "image": "REPOSITORY_URI:high_priority_eth_workerTAG_SUFFIX",
+      "essential": false,
+      "memory": 256,
+      "links": [],
       "mountPoints": [],
       "environment": [
         {
@@ -84,7 +82,7 @@
     },
     {
       "name": "low_pri_eth_worker",
-      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo:high_priority_eth_worker",
+      "image": "REPOSITORY_URI:low_priority_eth_workerTAG_SUFFIX",
       "essential": true,
       "memory": 128,
       "links": ["pgbouncer:pgbouncer"],

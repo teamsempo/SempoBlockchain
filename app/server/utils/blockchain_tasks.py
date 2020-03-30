@@ -108,8 +108,15 @@ class BlockchainTasker(object):
     def retry_task(self, task_uuid):
         task_runner.delay_task(self._eth_endpoint('retry_task'), {'task_uuid': task_uuid })
 
-    def retry_failed(self):
-        return self._execute_synchronous_celery(self._eth_endpoint('retry_failed'), args={})
+    def retry_failed(self, min_task_id, max_task_id):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('retry_failed'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+        )
+
+    def deduplicate(self, min_task_id, max_task_id):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deduplicate'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+        )
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
     def create_blockchain_wallet(

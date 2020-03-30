@@ -1,9 +1,10 @@
 from celery import signature
 from functools import partial
 from toolz import pipe
+import datetime
 
 import config
-from eth_manager import persistence_interface, utils, w3
+from eth_manager import persistence_interface, utils, w3, red
 from eth_manager.task_interfaces.regular import (
     deploy_contract_task,
     transaction_task,
@@ -279,3 +280,95 @@ def deploy_smart_token(
     return {'smart_token_address': smart_token_address,
             'subexchange_address': subexchange_address}
 
+
+def deduplicate(min_task_id, max_task_id):
+
+    lock_timout = 10
+
+    duplicates = persistence_interface.get_duplicates(min_task_id, max_task_id)
+
+    print(f'search found {len(duplicates)} duplicates')
+
+    skipped = 0
+    new_deduplication_tasks = 0
+
+    for task_id, txns in duplicates:
+
+        task = persistence_interface.get_task_from_id(task_id)
+
+        if task.function != 'transferFrom':
+            print(f'Skipping de-duplication of {task_id} - task is not of type "transferFrom"')
+            skipped += 1
+            continue
+
+        have_lock = False
+        singlethread_lock = red.lock(f'SingleThreadDupeLock-{task_id}', timeout=lock_timout)
+        try:
+            have_lock = singlethread_lock.acquire(blocking=False)
+
+            if not have_lock:
+                print(f'Skipping de-duplication of {task_id} - single thread lock not acquired')
+                skipped += 1
+                continue
+
+            multi_lock = red.get(f'MultithreadDupeLock-{task_id}')
+
+            if multi_lock:
+                current_timestamp = int(datetime.datetime.utcnow().timestamp())
+                multi_lock_expires = int(multi_lock)
+                if current_timestamp < multi_lock_expires:
+                    print(f'Skipping de-duplication of {task_id} - multi thread lock not acquired')
+                    skipped += 1
+                    continue
+
+            expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=600)
+            red.set(f'MultithreadDupeLock-{task_id}', int(expires_at.timestamp()))
+
+        finally:
+            if have_lock:
+                singlethread_lock.release()
+
+        excess_txns = txns - 1
+
+        number_of_reversals = len(task.reversed_by)
+
+        reversals_required = excess_txns - number_of_reversals
+
+        if reversals_required < 1:
+            print(f'Skipping de-duplication of {task_id} - no further reversals required')
+            red.delete(f'MultithreadDupeLock-{task_id}')
+            skipped += 1
+            continue
+
+
+        orginal_sender, orginal_recipient, amount = task.args
+
+        print(f'Reversing task ({task_id}) {task.uuid} with {txns} duplicates')
+
+        for tx in range(0, reversals_required):
+            new_task = transaction_task(
+                signing_address=task.signing_wallet.address,
+                contract_address=task.contract_address,
+                contract_type='ERC20',
+                func='transferFrom',
+                args=[
+                    orginal_recipient,
+                    orginal_sender,
+                    amount
+                ],
+                gas_limit=8000000,
+                reverses_task=task.uuid
+            )
+            print(f'Task {new_task} Reversing txn {tx}.')
+            new_deduplication_tasks += 1
+
+    response = {
+        'duplicates': len(duplicates),
+        'new_deduplication_tasks': new_deduplication_tasks,
+        'skipped': skipped
+    }
+
+    print('deduplication init thread complete')
+    print(response)
+
+    return response

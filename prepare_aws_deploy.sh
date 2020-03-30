@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-bash build_docker.sh
+#bash build_docker.sh
 
-REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
+sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX||g" awsDockerrunTemplate.json > Dockerrun.aws.json
 
-eval $(aws ecr get-login --no-include-email --region ap-southeast-2 --profile ECS);
+eval $(aws ecr get-login --no-include-email --region $ECR_REGION --profile ECR_BUILDER);
 
 docker tag server:latest $REPOSITORY_URI:server
 docker push $REPOSITORY_URI:server
