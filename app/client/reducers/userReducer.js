@@ -97,6 +97,8 @@ const deleteStatus = (state = initialDeleteStatusState, action) => {
       return { ...state, isRequesting: false, success: true };
     case DELETE_USER_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
+    default:
+      return state;
   }
 };
 

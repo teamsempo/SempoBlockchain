@@ -8,7 +8,7 @@ import {
   LOAD_TRANSFER_ACCOUNTS_REQUEST,
   LOAD_TRANSFER_ACCOUNTS_SUCCESS,
   LOAD_TRANSFER_ACCOUNTS_FAILURE,
-  UPDATE_TRANSFER_ACCOUNTS,
+  DEEP_UPDATE_TRANSFER_ACCOUNTS,
   EDIT_TRANSFER_ACCOUNT_REQUEST,
   EDIT_TRANSFER_ACCOUNT_SUCCESS,
   EDIT_TRANSFER_ACCOUNT_FAILURE
@@ -58,7 +58,7 @@ function* updateStateFromTransferAccount(data) {
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
-    yield put({ type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
+    yield put({ type: DEEP_UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
   }
 }
 

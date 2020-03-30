@@ -1,4 +1,4 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
+import { put, takeEvery, call, all, select } from "redux-saga/effects";
 import { normalize } from "normalizr";
 import { handleError } from "../utils";
 
@@ -35,6 +35,8 @@ import {
   RESET_PIN_SUCCESS
 } from "../reducers/userReducer";
 import { LOAD_TRANSFER_USAGES_REQUEST } from "../reducers/transferUsage/types";
+import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
+import { browserHistory } from "../app";
 
 function* updateStateFromUser(data) {
   //Schema expects a list of credit transfer objects
@@ -99,23 +101,38 @@ function* watchEditUser() {
 }
 
 const getUserState = state => state.users.byId;
+const getTransferAccountState = state => state.transferAccounts.byId;
 
 function* deleteUser({ payload }) {
   try {
     const delete_response = yield call(deleteUserAPI, payload);
     yield put({ type: DELETE_USER_SUCCESS, delete_response });
 
-    // delete item from local state
     let userState = yield select(getUserState);
+
+    // delete transfer account from local state
+    let transferAccountState = yield select(getTransferAccountState);
+    let transferAccounts = { ...transferAccountState };
+    delete transferAccounts[
+      userState[payload.path].default_transfer_account_id
+    ];
+
+    // delete user from local state
     let users = { ...userState };
     delete users[payload.path];
 
     yield put({ type: UPDATE_USER_LIST, users });
     yield put({
+      type: UPDATE_TRANSFER_ACCOUNTS,
+      transfer_accounts: transferAccounts
+    });
+
+    yield put({
       type: ADD_FLASH_MESSAGE,
       error: false,
-      message: result.message
+      message: delete_response.message
     });
+    browserHistory.push("/accounts");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
