@@ -14,13 +14,13 @@ elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
   python ethereum_filter_test.py
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
   echo "Starting Processor Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor -E
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor --without-gossip --without-mingle
 elif [ "$CONTAINER_TYPE" == 'LOW_PRIORITY_WORKER' ]; then
   echo "Starting Low Priority Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery -E
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery --without-gossip --without-mingle
 elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
   echo "Starting High Priority Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority -E
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority --without-gossip --without-mingle
 elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
   flower -A worker --port=5555
 
@@ -33,7 +33,7 @@ else
     exit $ret
   fi
   echo "Starting Generic Worker (Default)"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority -E
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority --without-gossip --without-mingle
 fi
 
 #

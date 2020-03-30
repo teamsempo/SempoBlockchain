@@ -457,7 +457,7 @@ class BlockchainTasker(object):
             timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15
         )
 
-    def topup_wallet_if_required(self, wallet_address, queue='low-priority'):
+    def topup_wallet_if_required(self, wallet_address, queue='high-priority'):
         return self._execute_synchronous_celery(
             self._eth_endpoint('topup_wallet_if_required'),
             args=[wallet_address],

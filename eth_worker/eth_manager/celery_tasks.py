@@ -14,7 +14,19 @@ class SqlAlchemyTask(celery.Task):
     database is closed on task completion"""
     abstract = True
 
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        try:
+            persistence_interface.session.remove()
+        except:
+            pass
+
     def on_failure(self, exc, task_id, args, kwargs, einfo):
+        try:
+            persistence_interface.session.remove()
+        except:
+            pass
+
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
         try:
             persistence_interface.session.remove()
         except:
