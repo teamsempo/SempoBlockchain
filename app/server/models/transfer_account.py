@@ -79,12 +79,14 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         try:
             if self.balance != 0:
                 raise TransferAccountDeletionError('Balance must be zero to delete')
-            # todo: need to think through how TA with multiple transfer accounts should be handled
-            if len(self.users) == 1 and self.primary_user == user:
+            if len(self.users) > 1:
+                # todo(user): deletion of user from account with multiple users - NOT CURRENTLY SUPPORTED
+                raise TransferAccountDeletionError('More than one user attached to transfer account')
+            if self.primary_user == user:
                 timenow = datetime.datetime.utcnow()
                 self.deleted = timenow
             else:
-                raise TransferAccountDeletionError('More than one user attached to transfer account')
+                raise TransferAccountDeletionError('Primary user does not match provided user')
 
         except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
