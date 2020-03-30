@@ -115,12 +115,12 @@ def call_contract_function(self, contract_address, function, abi_type=None, args
 @celery_app.task(**base_task_config)
 def transact_with_contract_function(self, contract_address, function,  abi_type=None, args=None, kwargs=None,
                                     signing_address=None, encrypted_private_key=None,
-                                    gas_limit=None, prior_tasks=None):
+                                    gas_limit=None, prior_tasks=None, reverses_task=None):
 
     return blockchain_processor.transact_with_contract_function(self.request.id,
                                                                 contract_address, abi_type, function, args, kwargs,
                                                                 signing_address, encrypted_private_key,
-                                                                gas_limit, prior_tasks)
+                                                                gas_limit, prior_tasks, reverses_task)
 
 
 @celery_app.task(**base_task_config)
@@ -153,6 +153,10 @@ def retry_task(self, task_uuid):
 @celery_app.task(**no_retry_config)
 def retry_failed(self, min_task_id=None, max_task_id=None):
     return blockchain_processor.retry_failed(min_task_id, max_task_id)
+
+@celery_app.task(**no_retry_config)
+def deduplicate(self, min_task_id, max_task_id):
+    return eth_manager.task_interfaces.composite.deduplicate(min_task_id, max_task_id)
 
 
 @celery_app.task(**base_task_config)
