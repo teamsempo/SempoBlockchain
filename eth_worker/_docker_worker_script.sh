@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-sleep 30
+sleep 5
 
 WORKER_CONCURRENCY=4
 
