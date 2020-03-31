@@ -12,7 +12,6 @@ services:
     depends_on:
       - postgres
       - eth_worker
-      - eth_worker_processor
 
   eth_worker:
     build:
@@ -21,7 +20,7 @@ services:
     image: eth_worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
-      CONTAINER_TYPE: "ANY_PRIORITY_WORKER"
+      CONTAINER_TYPE: "PRIMARY"
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
