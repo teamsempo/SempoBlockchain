@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 #bash build_docker.sh
+#REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
+#TAG_SUFFIX=test
 
 sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX||g" awsDockerrunTemplate.json > Dockerrun.aws.json
 
