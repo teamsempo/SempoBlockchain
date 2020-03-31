@@ -12,7 +12,6 @@ services:
     depends_on:
       - postgres
       - eth_worker
-      - eth_worker
       - eth_worker_processor
 
   eth_worker:
