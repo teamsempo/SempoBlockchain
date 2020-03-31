@@ -38,7 +38,7 @@ def topup_wallets(queue='low-priority'):
             signature(utils.eth_endpoint('topup_wallet_if_required'),
                       kwargs={
                           'address': wallet.address
-                      }).apply_async(queue=queue)
+                      }).apply(queue=queue)
 
 
 def topup_if_required(address, queue='low-priority'):

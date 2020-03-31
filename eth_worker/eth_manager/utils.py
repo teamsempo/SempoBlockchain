@@ -7,7 +7,7 @@ import config
 
 
 def execute_synchronous_celery(signature, queue='high-priority'):
-    async_result = signature.apply_async(queue=queue)
+    async_result = signature.apply(queue=queue)
     try:
         response = async_result.get(
             timeout=config.SYNCRONOUS_TASK_TIMEOUT,
@@ -23,9 +23,5 @@ def execute_synchronous_celery(signature, queue='high-priority'):
 
 
 def execute_task(signature, queue='high-priority'):
-    print('STARTING SYNCHRO!')
-    print(signature)
-    async_result = signature.apply_async(queue=queue)
-    print('FINISHING SYNCHRO!')
-    print(signature)
+    async_result = signature.apply(queue=queue)
     return async_result.id
