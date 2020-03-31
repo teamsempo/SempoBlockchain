@@ -74,7 +74,7 @@ jobs:
           name: Build application Docker images
           command: |
             docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1
-            docker build -t eth_worker . -f ./eth_worker/Dockerfile
+            docker build -t eth_worker . -f ./eth_worker/Dockerfile --build-arg CONTAINER_TYPE=ANY_PRIORITY_WORKER
             docker build -t proxy ./proxy
       - run:
           name: Save Docker total image caches
