@@ -8,8 +8,9 @@ import EditUserForm, { IEditUser } from "./EditUserForm";
 import { TransferAccountTypes } from "../transferAccount/types";
 
 interface DispatchProps {
-  editUser: (body: any, path: any) => void;
-  resetPin: (body: any) => void;
+  //todo(typescript): editUser body should be written in EditUserPayload from reducers/user/types.ts
+  editUser: (body: any, path: string) => void;
+  resetPin: (body: { user_id: number }) => void;
 }
 
 interface StateProps {
@@ -30,7 +31,7 @@ interface attr_dict {
 
 class SingleUserManagement extends React.Component<Props> {
   onEditUser(form: IEditUser) {
-    const single_transfer_account_id = this.props.userId.toString();
+    const user_id = this.props.userId.toString();
     const { selectedUser } = this.props;
 
     let businessUsage = form.businessUsage;
@@ -62,7 +63,7 @@ class SingleUserManagement extends React.Component<Props> {
         custom_attributes: attr_dict,
         business_usage_name: businessUsage
       },
-      single_transfer_account_id
+      user_id
     );
   }
 

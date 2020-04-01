@@ -351,11 +351,9 @@ class EditUserForm extends React.Component<
   }
 }
 
-// TODO: can't figure out the typing here...
-const EditUserFormReduxForm = reduxForm({
+const EditUserFormReduxForm = reduxForm<IEditUser, Props>({
   form: "editUser",
   validate
-  // @ts-ignore
 })(EditUserForm);
 
 export default connect(
@@ -366,5 +364,4 @@ export default connect(
       businessUsageValue: selector(state, "businessUsage")
     };
   }
-  // @ts-ignore
 )(EditUserFormReduxForm);
