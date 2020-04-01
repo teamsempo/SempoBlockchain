@@ -41,7 +41,7 @@ def topup_wallets(queue='low-priority'):
                       }).apply(queue=queue)
 
 
-def topup_if_required(address, queue='low-priority'):
+def topup_if_required(address):
     balance = w3.eth.getBalance(address)
 
     wallet = persistence_interface.get_wallet_by_address(address)
@@ -57,7 +57,7 @@ def topup_if_required(address, queue='low-priority'):
                             'prior_tasks': []
                         })
 
-        task_uuid = utils.execute_task(sig, queue=queue)
+        task_uuid = utils.execute_task(sig)
 
         persistence_interface.set_wallet_last_topup_task_uuid(address, task_uuid)
 

@@ -61,6 +61,7 @@ processor_task_config = {
     **base_task_config,
     'max_retries': 10,
     'autoretry_for': (LockedNotAcquired,),
+    'queue': 'processor',
     'default_retry_delay': 3,
     'retry_backoff': False
 }

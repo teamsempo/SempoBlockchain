@@ -6,10 +6,10 @@ eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoin
 import config
 
 
-def execute_synchronous_celery(signature, queue='high-priority'):
-    async_result = signature.apply(queue=queue)
+def execute_synchronous_celery(signature):
+    result = signature.apply()
     try:
-        response = async_result.get(
+        response = result.get(
             timeout=config.SYNCRONOUS_TASK_TIMEOUT,
             propagate=True,
             interval=0.3)
@@ -17,11 +17,11 @@ def execute_synchronous_celery(signature, queue='high-priority'):
     except Exception as e:
         raise e
     finally:
-        async_result.forget()
+        result.forget()
 
     return response
 
 
-def execute_task(signature, queue='high-priority'):
-    async_result = signature.apply(queue=queue)
-    return async_result.id
+def execute_task(signature):
+    result = signature.apply()
+    return result.id

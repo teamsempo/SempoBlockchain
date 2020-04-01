@@ -101,6 +101,28 @@
           "value": 0
         }
       ]
+    },
+    {
+      "name": "eth_processor",
+      "image": "REPOSITORY_URI:eth_processorTAG_SUFFIX",
+      "essential": true,
+      "memory": 128,
+      "links": ["pgbouncer:pgbouncer"],
+      "mountPoints": [],
+      "environment": [
+        {
+          "name": "CONTAINER_TYPE",
+          "value": "PROCESSOR"
+        },
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
+        },
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": 0
+        }
+      ]
     }
   ]
 }
