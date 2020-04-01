@@ -353,7 +353,7 @@ def create_master_organisation(reserve_token):
 
     master_organisation = Organisation.master_organisation()
     if master_organisation is None:
-        print('Creating master organisation!!')
+        print('Creating master organisation')
         if reserve_token:
             print('Binding to reserve token')
         master_organisation = Organisation(name='Reserve', is_master=True, token=reserve_token)

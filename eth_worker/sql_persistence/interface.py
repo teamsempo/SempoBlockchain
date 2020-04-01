@@ -100,10 +100,8 @@ class SQLPersistenceInterface(object):
         try:
             have_lock = lock.acquire(blocking_timeout=1)
             if have_lock:
-                print('ABCD')
                 return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
             else:
-                print('ABCD!!')
                 print(f'Lock not acquired for txn: {transaction_id} \n'
                       f'addr:{signing_wallet_obj.address}')
                 raise LockedNotAcquired

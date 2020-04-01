@@ -443,7 +443,7 @@ class TransactionProcessor(object):
             'status': 'FAILED'
         }
 
-        if not getattr(exc, 'is_logged', True):
+        if not getattr(exc, 'is_logged', False):
             print("LOGGING")
             self.persistence_interface.update_transaction_data(transaction_id, data)
         else:

@@ -63,7 +63,7 @@
       "image": "REPOSITORY_URI:high_priority_eth_workerTAG_SUFFIX",
       "essential": false,
       "memory": 256,
-      "links": [],
+      "links": ["pgbouncer:pgbouncer"],
       "mountPoints": [],
       "environment": [
         {

@@ -47,7 +47,6 @@ class ExchangeContractAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self, exchange_contract_id):
         post_data = request.get_json()
-        print('AAAAA')
         reserve_token_id = post_data['reserve_token_id']
 
         deploying_address = g.user.transfer_account.blockchain_address
@@ -96,8 +95,6 @@ class TokenAPI(MethodView):
 
     @requires_auth
     def get(self, token_id):
-        print('ABC')
-        print(token_id)
         if token_id:
             token = Token.query.get(token_id)
 
@@ -118,7 +115,6 @@ class TokenAPI(MethodView):
                 'tokens': tokens_schema.dump(tokens).data
             }
         }
-        print('ABCD')
 
         return make_response(jsonify(response_object)), 201
 
@@ -151,7 +147,6 @@ class ReserveTokenAPI(MethodView):
         fund_amount_wei = post_data['fund_amount_wei']
 
         deploying_address = g.user.primary_blockchain_address
-        print(deploying_address)
         if not Organisation.query.filter_by(is_master=True).first():
             response_object = {
                     'message': 'Master organisation not found'
