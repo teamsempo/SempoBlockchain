@@ -484,7 +484,7 @@ function* validateTFA({ payload }) {
     const validateTFAresponse = yield call(ValidateTFAAPI, payload);
 
     yield put(ValidateTfaAction.validateTFASuccess());
-    yield call(updateOrganisationStateFromLoginData, activated_account);
+    yield call(updateOrganisationStateFromLoginData, validateTFAresponse);
     yield call(storeTFAToken, validateTFAresponse.tfa_auth_token);
     yield put(
       LoginAction.loginSuccess(createLoginSuccessObject(validateTFAresponse))

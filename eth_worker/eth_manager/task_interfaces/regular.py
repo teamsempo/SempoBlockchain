@@ -22,7 +22,8 @@ def transaction_task(signing_address,
                      contract_address, contract_type,
                      func, args=None,
                      gas_limit=None,
-                     prior_tasks=None):
+                     prior_tasks=None,
+                     reverses_task=None):
 
     kwargs = {
         'signing_address': signing_address,
@@ -30,7 +31,8 @@ def transaction_task(signing_address,
         'abi_type': contract_type,
         'function': func,
         'args': args,
-        'prior_tasks': prior_tasks
+        'prior_tasks': prior_tasks,
+        'reverses_task': reverses_task
     }
 
     if gas_limit:

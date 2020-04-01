@@ -35,6 +35,7 @@ ngrok
 .ideabackup
 /whatsApp/chromedriver
 /ganacheDB/*
+Dockerrun.aws.json
 
 /venv/*
 app/server/static/javascript/dist/*

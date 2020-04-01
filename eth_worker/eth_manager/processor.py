@@ -343,8 +343,29 @@ class TransactionProcessor(object):
             print(f'Skipping {task.id}: Topup required')
             return
 
+        # This next section is designed to ensure that we don't have two transactions running for the same task
+        # at the same time. Under normal conditions this doesn't happen, but the 'retry failed transactions' can
+        # get us there if it's called twice in quick succession. We use a mutex over the next lines
+        # to prevent two processes both passing the 'current_status' test and then creating a transaction
 
-        transaction_obj = self.persistence_interface.create_blockchain_transaction(task_uuid)
+        have_lock = False
+        lock = self.red.lock(f'TaskID-{task.id}', timeout=10)
+        try:
+            have_lock = lock.acquire(blocking_timeout=1)
+            if have_lock:
+
+                current_status = task.status
+                if current_status in ['SUCCESS', 'PENDING']:
+                    print(f'Skipping {task.id}: task status is currently {current_status}')
+                    return
+                transaction_obj = self.persistence_interface.create_blockchain_transaction(task_uuid)
+            else:
+                print(f'Skipping {task.id}: Failed to aquire lock')
+                return
+
+        finally:
+            if have_lock:
+                lock.release()
 
         task_object = self.persistence_interface.get_task_from_uuid(task_uuid)
 
@@ -494,7 +515,8 @@ class TransactionProcessor(object):
             args: Optional[tuple] = None, kwargs: Optional[dict] = None,
             signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
             gas_limit: Optional[int] = None,
-            prior_tasks: Optional[UUIDList] = None
+            prior_tasks: Optional[UUIDList] = None,
+            reserves_task: Optional[UUID] = None
     ):
         """
         The main transaction entrypoint for the processor.
@@ -507,7 +529,8 @@ class TransactionProcessor(object):
         :param signing_address: address of the wallet signing the txn
         :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
         :param gas_limit: limit on the amount of gas txn can use. Overrides system default
-        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted
+        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted,
+        :param reserves_task: the uuid of a task that this task reverses. can only be a transferFrom
         :return: task_id
         """
 
@@ -516,8 +539,9 @@ class TransactionProcessor(object):
         task = self.persistence_interface.create_function_task(uuid,
                                                                signing_wallet_obj,
                                                                contract_address, abi_type,
-                                                            function_name, args, kwargs,
-                                                               gas_limit, prior_tasks)
+                                                               function_name, args, kwargs,
+                                                               gas_limit, prior_tasks, reserves_task)
+
 
         # Attempt Create Async Transaction
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
@@ -592,10 +616,10 @@ class TransactionProcessor(object):
 
         self._retry_task(task)
 
-    def retry_failed(self):
+    def retry_failed(self, min_task_id, max_task_id):
 
-        failed_tasks = self.persistence_interface.get_failed_tasks()
-        pending_tasks = self.persistence_interface.get_pending_tasks()
+        failed_tasks = self.persistence_interface.get_failed_tasks(min_task_id, max_task_id)
+        pending_tasks = self.persistence_interface.get_pending_tasks(min_task_id, max_task_id)
 
         print(f"{len(failed_tasks)} tasks currently with failed state")
         print(f"{len(pending_tasks)} tasks currently pending")
@@ -612,9 +636,11 @@ class TransactionProcessor(object):
         self.persistence_interface.increment_task_invokations(task)
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
 
+
     def __init__(self,
                  ethereum_chain_id,
                  w3,
+                 red,
                  gas_price_gwei,
                  gas_limit,
                  persistence_interface,
@@ -624,6 +650,7 @@ class TransactionProcessor(object):
 
             self.ethereum_chain_id = int(ethereum_chain_id) if ethereum_chain_id else None
             self.w3 = w3
+            self.red = red
 
             self.gas_price = self.w3.toWei(gas_price_gwei, 'gwei')
             self.gas_limit = gas_limit
