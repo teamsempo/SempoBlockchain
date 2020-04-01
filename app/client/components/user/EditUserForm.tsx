@@ -41,8 +41,6 @@ export interface IEditUser {
   [key: string]: any;
 }
 
-export type ICreateUserUpdate = IEditUser;
-
 interface OuterProps {
   users: any;
   selectedUser: any;
@@ -72,7 +70,7 @@ const validate = (values: IEditUser) => {
 };
 
 class EditUserForm extends React.Component<
-  InjectedFormProps<ICreateUserUpdate, Props> & Props
+  InjectedFormProps<IEditUser, Props> & Props
 > {
   componentDidMount() {
     let account_type;

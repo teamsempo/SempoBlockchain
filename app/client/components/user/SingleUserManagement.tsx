@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { editUser, resetPin } from "../../reducers/userReducer";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
-import EditUserForm, { ICreateUserUpdate } from "./EditUserForm";
+import EditUserForm, { IEditUser } from "./EditUserForm";
 
 interface DispatchProps {
   editUser: (body: any, path: any) => void;
@@ -21,7 +21,6 @@ interface OuterProps {
   userId: number;
 }
 
-type Form = ICreateUserUpdate;
 type Props = DispatchProps & StateProps & OuterProps;
 
 interface attr_dict {
@@ -29,7 +28,7 @@ interface attr_dict {
 }
 
 class SingleUserManagement extends React.Component<Props> {
-  onEditUser(form: Form) {
+  onEditUser(form: IEditUser) {
     const single_transfer_account_id = this.props.userId.toString();
     const { selectedUser } = this.props;
 
@@ -78,7 +77,7 @@ class SingleUserManagement extends React.Component<Props> {
         users={this.props.users}
         selectedUser={this.props.selectedUser}
         transferUsages={this.props.transferUsages}
-        onSubmit={(form: Form) => this.onEditUser(form)}
+        onSubmit={(form: IEditUser) => this.onEditUser(form)}
         onResetPin={() => this.onResetPin()}
       />
     );
