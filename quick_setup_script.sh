@@ -3,19 +3,14 @@ set -m
 
 source $1
 
-echo "This will wipe ALL local Sempo data. Continue? (y/N)"
-read continueInput
-
-if [ $continueInput != y ]
-then
-echo aborting
-exit 0
-fi
+echo "This will wipe ALL local Sempo data."
+echo "Persist Ganache? (y/N)"
+read ganachePersistInput
 
 set +e
 
 echo ~~~~Resetting readis
-redis-server
+redis-server &
 redis-cli FLUSHALL
 
 echo ~~~~Resetting postgres
@@ -37,9 +32,18 @@ cd ../eth_worker/
 alembic upgrade heads
 
 echo ~~~~Resetting Ganache
+cd ../
 kill $(ps aux | grep '[g]anache-cli' | awk '{print $2}')
+rm -R ./ganacheDB
 
-ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
+if [ $ganachePersistInput != y ]
+then
+  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
+else
+  mkdir ganacheDB
+  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" --db './ganacheDB' &
+fi
+
 sleep 5
 
 set -e
@@ -49,7 +53,7 @@ celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q 
 sleep 5
 
 echo ~~~Seeding Data
-cd ../app/migrations/
+cd ./app/migrations/
 python -u seed.py
 
 echo ~~~Starting App
