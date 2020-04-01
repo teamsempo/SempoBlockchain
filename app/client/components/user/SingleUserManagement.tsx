@@ -5,6 +5,7 @@ import { editUser, resetPin } from "../../reducers/userReducer";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import EditUserForm, { IEditUser } from "./EditUserForm";
+import { TransferAccountTypes } from "../transferAccount/types";
 
 interface DispatchProps {
   editUser: (body: any, path: any) => void;
@@ -53,9 +54,10 @@ class SingleUserManagement extends React.Component<Props> {
         phone: form.phone,
         location: form.location,
         is_vendor:
-          form.accountType === "vendor" || form.accountType === "cashier",
-        is_tokenagent: form.accountType === "tokenagent",
-        is_groupaccount: form.accountType === "groupaccount",
+          form.accountType === TransferAccountTypes.VENDOR ||
+          form.accountType === TransferAccountTypes.CASHIER,
+        is_tokenagent: form.accountType === TransferAccountTypes.TOKENAGENT,
+        is_groupaccount: form.accountType === TransferAccountTypes.GROUPACCOUNT,
         referred_by: form.referredBy,
         custom_attributes: attr_dict,
         business_usage_name: businessUsage

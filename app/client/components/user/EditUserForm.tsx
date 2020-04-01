@@ -37,7 +37,7 @@ export interface IEditUser {
   usageOtherSpecific?: string;
   oneTimeCode: number;
   failedPinAttempts: number;
-  accountType: any[TransferAccountTypes];
+  accountType: TransferAccountTypes;
   [key: string]: any;
 }
 
@@ -49,7 +49,7 @@ interface OuterProps {
 }
 
 interface StateProps {
-  accountType: any[TransferAccountTypes];
+  accountType: TransferAccountTypes;
   businessUsageValue?: string;
 }
 
@@ -276,6 +276,7 @@ class EditUserForm extends React.Component<
                     label="Account Type"
                     options={accountTypes}
                     hideNoneOption={true}
+                    isLowercase={false}
                   />
                 </SubRow>
               </Row>
