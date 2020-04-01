@@ -56,7 +56,7 @@ interface StateProps {
 type Props = OuterProps & StateProps;
 
 interface attr_dict {
-  [key: string]: any;
+  [key: string]: string;
 }
 
 const validate = (values: IEditUser) => {

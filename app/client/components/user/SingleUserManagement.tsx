@@ -26,7 +26,7 @@ interface OuterProps {
 type Props = DispatchProps & StateProps & OuterProps;
 
 interface attr_dict {
-  [key: string]: any;
+  [key: string]: string;
 }
 
 class SingleUserManagement extends React.Component<Props> {
