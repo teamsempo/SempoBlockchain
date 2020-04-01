@@ -7,7 +7,7 @@ from web3 import Web3
 VERSION = '1.1.9'  # Remember to bump this in every PR
 
 print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
-print('ABCDEFG')
+
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc

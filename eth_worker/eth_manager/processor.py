@@ -338,8 +338,6 @@ class TransactionProcessor(object):
             return
 
         topup_uuid = self.topup_if_required(task.signing_wallet, task_uuid)
-        print('signing wallet')
-        print(task.signing_wallet)
         if topup_uuid:
             print(f'Skipping {task.id}: Topup required')
             return

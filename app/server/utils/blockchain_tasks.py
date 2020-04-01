@@ -22,9 +22,7 @@ class BlockchainTasker(object):
         celery_tasks_name = 'celery_tasks'
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
 
-    def _execute_synchronous_celery(
-            self, task, kwargs=None, args=None, timeout=None, queue='high-priority'
-    ):
+    def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
         try:
             response = async_result.get(
@@ -37,9 +35,7 @@ class BlockchainTasker(object):
             async_result.forget()
         return response
 
-    def _synchronous_call(
-            self, contract_address, contract_type, func, args=None, signing_address=None, queue='high-priority'
-    ):
+    def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None, queue='high-priority'):
         kwargs = {
             'contract_address': contract_address,
             'abi_type': contract_type,

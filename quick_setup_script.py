@@ -119,7 +119,6 @@ class Setup(object):
         print(f'Reserve Token id: {token_id}')
 
         self._wait_for_get_result(f'contract/token/{token_id}/', ('data', 'token', 'address'))
-        print('abc')
         return token_id
 
     def create_exchange_contract(self, reserve_token_id):
@@ -311,8 +310,7 @@ def local_setup():
     s = Setup(
         api_host='http://0.0.0.0:9000/api/v1/',
         email=os.environ.get('LOCAL_EMAIL'),
-        password=os.environ.get('LOCAL_PASSWORD'),
-        api_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1ODU1NzM2MjAsImlhdCI6MTU4NDk2ODgyMCwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.h6NsNs6ALPXO6u8XUyZ9_GvqMIh15RdHEl01N6akxcw'
+        password=os.environ.get('LOCAL_PASSWORD')
     )
 
     reserve_token_id = s.create_reserve_token(
