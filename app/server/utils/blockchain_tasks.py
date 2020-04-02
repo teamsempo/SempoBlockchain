@@ -218,7 +218,7 @@ class BlockchainTasker(object):
             args=[
                 from_address,
                 to_address,
-                token.system_amount_to_token(amount)
+                token.system_amount_to_token(amount, queue)
             ],
             prior_tasks=prior_tasks,
             queue=queue

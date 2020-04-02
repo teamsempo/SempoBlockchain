@@ -24,7 +24,7 @@ elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
   flower -A worker --port=5555
 elif [ "$CONTAINER_TYPE" == 'ANY_PRIORITY_WORKER' ]; then
   echo "Starting Any Priority Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority --without-gossip --without-mingle
+  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery,high-priority,processor --without-gossip --without-mingle
 
 else
   echo "Running alembic upgrade (Default)"
