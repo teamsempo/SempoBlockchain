@@ -12,6 +12,14 @@ echo aborting
 exit 0
 fi
 
+if [ -z ${MASTER_WALLET_PK+x} ]
+then
+echo "\$MASTER_WALLET_PK is empty"
+exit 0
+else
+echo "\$MASTER_WALLET_PK is NOT empty"
+fi
+
 set +e
 
 echo ~~~~Resetting readis
