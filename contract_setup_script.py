@@ -277,52 +277,34 @@ def _base_setup(s, reserve_token_id):
     # exchange_contract_id = 1
 
     org_id = s.create_cic_organisation(
-        organisation_name='Grassroots Economics',
+        organisation_name='ACME Org',
         custom_welcome_message_key='grassroots',
-        timezone='Africa/Nairobi',
+        timezone='Australia/Melbourne',
         country_code='AU',
         exchange_contract_id=exchange_contract_id,
-        name='Sarafu',
-        symbol='SARAFU',
+        name='ACME',
+        symbol='ACME',
         issue_amount_wei=int(10000000e18),
         reserve_deposit_wei=int(10000e18),
         reserve_ratio_ppm=250000
     )
+
     bind_1 = s.bind_me_to_organisation_as_admin(org_id)
-
-    tt = 4
-
-    # foobar_org_id = s.create_cic_organisation(
-    #     organisation_name='Foo Org',
-    #     exchange_contract_id=exchange_contract_id,
-    #     custom_welcome_me ssage_key=None,
-    #     timezone='Africa/Nairobi',
-    #     name='FooBar',
-    #     symbol='FOO',
-    #     issue_amount_wei=int(100000e18),
-    #     reserve_deposit_wei=int(10e18),
-    #     reserve_ratio_ppm=250000
-    # )
-    # bind_2 = s.bind_me_to_organisation_as_admin(foobar_org_id)
-
 
 def local_setup():
     s = Setup(
         api_host='http://0.0.0.0:9000/api/v1/',
-        email=os.environ.get('LOCAL_EMAIL'),
-        password=os.environ.get('LOCAL_PASSWORD')
+        email=os.environ.get('LOCAL_EMAIL', 'admin@acme.org'),
+        password=os.environ.get('LOCAL_PASSWORD', 'C0rrectH0rse')
     )
 
     reserve_token_id = s.create_reserve_token(
-        name='Kenyan Shilling',
-        symbol='Ksh',
+        name='Reserve Currency',
+        symbol='RCU',
         fund_amount_wei=int(10000e18)
     )
 
     _base_setup(s, reserve_token_id)
-
-    tt = 4
-
 
 if __name__ == '__main__':
 
