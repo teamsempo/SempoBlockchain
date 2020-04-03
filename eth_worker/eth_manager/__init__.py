@@ -76,8 +76,8 @@ engine = create_engine(
     poolclass=NullPool,
     connect_args={'connect_timeout': 5},
     pool_pre_ping=True,
-    echo=True,
-    echo_pool=True,
+    echo=False,
+    echo_pool=False,
 )
 
 session_factory = sessionmaker(autocommit=False, autoflush=True, bind=engine)
