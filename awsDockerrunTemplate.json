@@ -60,7 +60,7 @@
     },
     {
       "name": "high_pri_eth_worker",
-      "image": "REPOSITORY_URI:high_priority_eth_workerTAG_SUFFIX",
+      "image": "REPOSITORY_URI:eth_workerTAG_SUFFIX",
       "essential": false,
       "memory": 256,
       "links": ["pgbouncer:pgbouncer"],
@@ -82,7 +82,7 @@
     },
     {
       "name": "low_pri_eth_worker",
-      "image": "REPOSITORY_URI:low_priority_eth_workerTAG_SUFFIX",
+      "image": "REPOSITORY_URI:eth_workerTAG_SUFFIX",
       "essential": true,
       "memory": 128,
       "links": ["pgbouncer:pgbouncer"],
@@ -104,7 +104,7 @@
     },
     {
       "name": "eth_processor",
-      "image": "REPOSITORY_URI:eth_processorTAG_SUFFIX",
+      "image": "REPOSITORY_URI:eth_workerTAG_SUFFIX",
       "essential": true,
       "memory": 128,
       "links": ["pgbouncer:pgbouncer"],

@@ -13,18 +13,18 @@ elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
   python ethereum_filter_test.py
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
   echo "Starting Processor Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor --without-gossip --without-mingle
+  celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor --without-gossip --without-mingle
 elif [ "$CONTAINER_TYPE" == 'LOW_PRIORITY_WORKER' ]; then
   echo "Starting Low Priority Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery --without-gossip --without-mingle
+  celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery --without-gossip --without-mingle
 elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
   echo "Starting High Priority Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority --without-gossip --without-mingle
+  celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority --without-gossip --without-mingle
 elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
   flower -A worker --port=5555
 elif [ "$CONTAINER_TYPE" == 'ANY_PRIORITY_WORKER' ]; then
   echo "Starting Any Priority Worker"
-  celery -A eth_manager worker --loglevel=DEBUG --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery,high-priority,processor --without-gossip --without-mingle
+  celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery,high-priority,processor --without-gossip --without-mingle
 
 else
   echo "Running alembic upgrade (Default)"
