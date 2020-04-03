@@ -46,6 +46,7 @@ interface OuterProps {
   selectedUser: any;
   transferUsages: TransferUsage[];
   onResetPin: () => void;
+  onDeleteUser: () => void;
 }
 
 interface StateProps {
@@ -322,6 +323,23 @@ class EditUserForm extends React.Component<
                   {/*
                     // @ts-ignore */}
                   <GetVerified userId={selectedUser.id} />
+                </SubRow>
+                <SubRow>
+                  {/*
+                  // @ts-ignore */}
+                  <AsyncButton
+                    onClick={this.props.onDeleteUser}
+                    miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                    buttonStyle={{
+                      display: "inline-flex",
+                      fontWeight: "400",
+                      margin: "0em",
+                      lineHeight: "25px",
+                      height: "25px"
+                    }}
+                    isLoading={users.deleteStatus.isRequesting}
+                    buttonText="Delete User"
+                  />
                 </SubRow>
               </Row>
             </Wrapper>

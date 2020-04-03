@@ -1,16 +1,19 @@
 import * as React from "react";
 import { connect } from "react-redux";
 
-import { editUser, resetPin } from "../../reducers/userReducer";
+import { editUser, resetPin, deleteUser } from "../../reducers/userReducer";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import EditUserForm, { IEditUser } from "./EditUserForm";
 import { TransferAccountTypes } from "../transferAccount/types";
+import { ADD_FLASH_MESSAGE } from "../../reducers/messageReducer";
 
 interface DispatchProps {
   //todo(typescript): editUser body should be written in EditUserPayload from reducers/user/types.ts
   editUser: (body: any, path: string) => void;
   resetPin: (body: { user_id: number }) => void;
+  deleteUser: (path: string) => void;
+  addMsg: (msg: string) => void;
 }
 
 interface StateProps {
@@ -74,6 +77,18 @@ class SingleUserManagement extends React.Component<Props> {
     ) && this.props.resetPin({ user_id: this.props.selectedUser.id });
   }
 
+  onDeleteUser() {
+    const { selectedUser } = this.props;
+    let del = window.prompt(
+      `Are you sure you wish to delete user "${selectedUser.first_name} ${selectedUser.last_name}"? This action cannot be undone. Type DELETE to confirm`
+    );
+    if (del === "DELETE") {
+      this.props.deleteUser(selectedUser.id);
+    } else {
+      this.props.addMsg("Action Canceled");
+    }
+  }
+
   render() {
     return (
       <EditUserForm
@@ -82,6 +97,7 @@ class SingleUserManagement extends React.Component<Props> {
         transferUsages={this.props.transferUsages}
         onSubmit={(form: IEditUser) => this.onEditUser(form)}
         onResetPin={() => this.onResetPin()}
+        onDeleteUser={() => this.onDeleteUser()}
       />
     );
   }
@@ -98,7 +114,10 @@ const mapStateToProps = (state: ReduxState, ownProps: any): StateProps => {
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
     editUser: (body, path) => dispatch(editUser({ body, path })),
-    resetPin: body => dispatch(resetPin({ body }))
+    resetPin: body => dispatch(resetPin({ body })),
+    deleteUser: path => dispatch(deleteUser({ path })),
+    addMsg: msg =>
+      dispatch({ type: ADD_FLASH_MESSAGE, error: true, message: msg })
   };
 };
 
