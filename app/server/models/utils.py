@@ -11,7 +11,7 @@ from sqlalchemy import or_
 
 import server
 from server import db, bt
-from server.exceptions import OrganisationNotProvidedException
+from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
 
 
 @contextmanager
@@ -98,9 +98,10 @@ def no_expire():
 def before_compile(query):
     """A query compilation rule that will add limiting criteria for every
     subclass of OrgBase"""
-
+    show_deleted = query._execution_options.get("show_deleted", False)
     show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
-    if show_all:
+
+    if show_all and show_deleted:
         return query
 
     for ent in query.column_descriptions:
@@ -110,8 +111,15 @@ def before_compile(query):
         insp = inspect(ent['entity'])
         mapper = getattr(insp, 'mapper', None)
 
-        # if the subclass OrgBase exists, then filter by organisations - else, return default query
         if mapper:
+            # if subclass SoftDelete exists and not show_deleted, return non-deleted items, else show deleted
+            if issubclass(mapper.class_, SoftDelete) and not show_deleted:
+                query = query.enable_assertions(False).filter(ent['entity'].deleted == None)
+
+            if show_all and not show_deleted:
+                return query
+
+            # if the subclass OrgBase exists, then filter by organisations - else, return default query
             if issubclass(mapper.class_, ManyOrgBase) or issubclass(mapper.class_, OneOrgBase):
 
                 try:
@@ -206,6 +214,23 @@ class BlockchainTaskableBase(ModelBase):
         else:
             return 'UNKNOWN'
 
+
+class SoftDelete(object):
+    """
+    Mixing that adds standard soft deletion functionality to object
+    """
+
+    _deleted = db.Column(db.DateTime)
+
+    @hybrid_property
+    def deleted(self):
+        return self._deleted
+
+    @deleted.setter
+    def deleted(self, deleted):
+        if self._deleted:
+            raise ResourceAlreadyDeletedError('Resource Already Deleted')
+        self._deleted = deleted
 
 
 class OneOrgBase(object):

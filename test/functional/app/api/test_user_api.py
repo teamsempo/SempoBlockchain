@@ -117,3 +117,29 @@ def test_admin_reset_user_pin(
                                 data=json.dumps(dict(user_id=user_id)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
+
+
+@pytest.mark.parametrize("user_id_accessor, tier, status_code", [
+    (lambda o: o.id, 'admin', 403),
+    (lambda o: o.id, 'superadmin', 200),
+    (lambda o: o.id, 'superadmin', 400),
+    (lambda o: 1222103, 'superadmin', 404),
+])
+def test_delete_user(test_client, authed_sempo_admin_user, create_transfer_account_user, user_id_accessor, tier,
+                     status_code):
+    if tier:
+        authed_sempo_admin_user.set_held_role('ADMIN', tier)
+        auth = get_complete_auth_token(authed_sempo_admin_user)
+    else:
+        auth = None
+
+    response = test_client.delete(
+        f"/api/v1/user/{user_id_accessor(create_transfer_account_user)}/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ))
+
+    assert response.status_code == status_code
+    if response.status_code == 200:
+        assert response.json['message'] is not None
