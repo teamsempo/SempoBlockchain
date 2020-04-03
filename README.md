@@ -33,9 +33,18 @@ cd app
 npm install
 ```
 
-### Enable the Simulator (Optional)
+### Setup Script
 
-If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth*worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. Be warned, this \_will* make your database fall out of sync with any ganache instance you have set up so use this with care, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `quick_setup_script.py` without additional dependencies.  
+For quick setup, run `quick_setup_script.sh` with `MASTER_WALLET_PK` set as an environment variable to the master private key found in `/config_files/secret/local_secrets.ini/`.
+
+```
+quick_setup_script.sh [activation path for your python env]
+```
+
+#### Enable the Simulator (Optional)
+
+If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth*worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. \_Be warned, this will make your database fall out of sync with any ganache instance you have set up so use this with care*, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `contract_setup_script.py` without additional dependencies.
+
 To enable simulator mode, open `/config_files/local_config.ini` and add the line `enable_simulator_mode = true` under the `[APP]` heading.
 
 ### Run the web app in a Virtual Env
