@@ -18,10 +18,10 @@ import {
 import { UPDATE_METRICS } from "../reducers/metricReducer";
 
 import {
-  UPDATE_TRANSFER_ACCOUNTS,
+  DEEP_UPDATE_TRANSFER_ACCOUNTS,
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
 } from "../reducers/transferAccountReducer.js";
-import { UPDATE_USER_LIST } from "../reducers/userReducer";
+import { DEEP_UPDATE_USER_LIST } from "../reducers/userReducer";
 
 import {
   loadCreditTransferListAPI,
@@ -45,12 +45,12 @@ function* updateStateFromCreditTransfer(result) {
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
-    yield put({ type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
+    yield put({ type: DEEP_UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
   }
 
   const users = normalizedData.entities.users;
   if (users) {
-    yield put({ type: UPDATE_USER_LIST, users });
+    yield put({ type: DEEP_UPDATE_USER_LIST, users });
   }
 
   if (result.is_create === true) {

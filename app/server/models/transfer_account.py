@@ -5,13 +5,15 @@ from sqlalchemy.sql import func
 from flask import current_app, g
 from sqlalchemy.ext.hybrid import hybrid_property
 from server import db, bt
-from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, get_authorising_user_id
+from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, \
+    get_authorising_user_id, SoftDelete
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
 import server.models.credit_transfer
 from server.models.blockchain_transaction import BlockchainTransaction
+from server.exceptions import TransferAccountDeletionError, ResourceAlreadyDeletedError
 
 from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum
 
@@ -23,7 +25,7 @@ class TransferAccountType(enum.Enum):
     CONTRACT        = 'CONTRACT'
 
 
-class TransferAccount(OneOrgBase, ModelBase):
+class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
@@ -69,6 +71,25 @@ class TransferAccount(OneOrgBase, ModelBase):
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             foreign_keys='SpendApproval.giving_transfer_account_id')
+
+    def delete_transfer_account_from_user(self, user: User):
+        """
+        Soft deletes a Transfer Account if no other users associated to it.
+        """
+        try:
+            if self.balance != 0:
+                raise TransferAccountDeletionError('Balance must be zero to delete')
+            if len(self.users) > 1:
+                # todo(user): deletion of user from account with multiple users - NOT CURRENTLY SUPPORTED
+                raise TransferAccountDeletionError('More than one user attached to transfer account')
+            if self.primary_user == user:
+                timenow = datetime.datetime.utcnow()
+                self.deleted = timenow
+            else:
+                raise TransferAccountDeletionError('Primary user does not match provided user')
+
+        except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
+            raise e
 
     def get_float_transfer_account(self):
         for transfer_account in self.organisation.transfer_accounts:

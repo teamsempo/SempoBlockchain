@@ -1,9 +1,10 @@
 import { combineReducers } from "redux";
 import { DEEEEEEP, addCreditTransferIdsToTransferAccount } from "../utils";
 
-export const UPDATE_TRANSFER_ACCOUNTS = "UPDATE_TRANSFER_ACCOUNTS";
+export const DEEP_UPDATE_TRANSFER_ACCOUNTS = "DEEP_UPDATE_TRANSFER_ACCOUNTS";
 export const UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS =
   "UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS";
+export const UPDATE_TRANSFER_ACCOUNTS = "UPDATE_TRANSFER_ACCOUNTS";
 
 export const LOAD_TRANSFER_ACCOUNTS_REQUEST = "LOAD_TRANSFER_ACCOUNTS_REQUEST";
 export const LOAD_TRANSFER_ACCOUNTS_SUCCESS = "LOAD_TRANSFER_ACCOUNTS_SUCCESS";
@@ -18,7 +19,7 @@ export const RESET_SELECTED = "RESET_SELECTED";
 
 const byId = (state = {}, action) => {
   switch (action.type) {
-    case UPDATE_TRANSFER_ACCOUNTS:
+    case DEEP_UPDATE_TRANSFER_ACCOUNTS:
       return DEEEEEEP(state, action.transfer_accounts);
 
     case UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS:
@@ -43,6 +44,9 @@ const byId = (state = {}, action) => {
       });
 
       return addCreditTransferIdsToTransferAccount(state, newState);
+
+    case UPDATE_TRANSFER_ACCOUNTS:
+      return action.transfer_accounts;
 
     default:
       return state;
