@@ -31,7 +31,7 @@ import server.models.transfer_account
 import server.models.credit_transfer
 import server.utils.transfer_enums
 
-from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table
+from server.models.utils import ModelBase, ManyOrgBase, user_transfer_account_association_table, SoftDelete
 from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
@@ -39,7 +39,9 @@ from server.models.transfer_usage import TransferUsage
 from server.exceptions import (
     RoleNotFoundException,
     TierNotFoundException,
-    NoTransferCardError
+    NoTransferCardError,
+    ResourceAlreadyDeletedError,
+    TransferAccountDeletionError
 )
 from server.constants import (
     ACCESS_ROLES
@@ -53,7 +55,7 @@ referrals = Table(
 )
 
 
-class User(ManyOrgBase, ModelBase):
+class User(ManyOrgBase, ModelBase, SoftDelete):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
         Admin users are created through the auth api by registering
@@ -169,6 +171,25 @@ class User(ManyOrgBase, ModelBase):
                                         lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
+
+    def delete_user_and_transfer_account(self):
+        """
+        Soft deletes a User and default Transfer account if no other users associated to it.
+        Removes User PII
+        """
+        try:
+            ta = self.default_transfer_account
+            ta.delete_transfer_account_from_user(user=self)
+
+            timenow = datetime.datetime.utcnow()
+            self.deleted = timenow
+
+            self.first_name = None
+            self.last_name = None
+            self.phone = None
+
+        except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
+            raise e
 
     @hybrid_property
     def cashout_authorised(self):

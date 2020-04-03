@@ -10,10 +10,11 @@ import AsyncButton from "./../AsyncButton.jsx";
 import ProfilePicture from "../profilePicture.jsx";
 import GetVerified from "../GetVerified.jsx";
 
-import { editUser, resetPin } from "../../reducers/userReducer";
+import { editUser, resetPin, deleteUser } from "../../reducers/userReducer";
 import QrReadingModal from "../qrReadingModal.jsx";
 
 import { TransferAccountTypes } from "../transferAccount/types";
+import { ADD_FLASH_MESSAGE } from "../../reducers/messageReducer";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -26,7 +27,10 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => {
   return {
     editUser: (body, path) => dispatch(editUser({ body, path })),
-    resetPin: body => dispatch(resetPin({ body }))
+    resetPin: body => dispatch(resetPin({ body })),
+    deleteUser: path => dispatch(deleteUser({ path })),
+    addMsg: msg =>
+      dispatch({ type: ADD_FLASH_MESSAGE, error: true, message: msg })
   };
 };
 
@@ -143,6 +147,18 @@ class SingleUserManagement extends React.Component {
     window.confirm(
       `Are you sure you wish to reset ${this.state.first_name} ${this.state.last_name}'s PIN?`
     ) && this.props.resetPin({ user_id: this.props.user.id });
+  }
+
+  deleteUser() {
+    const user_id = this.props.userId.toString();
+    let del = window.prompt(
+      `Are you sure you wish to delete user "${this.state.first_name} ${this.state.last_name}"? This action cannot be undone. Type DELETE to confirm`
+    );
+    if (del === "DELETE") {
+      this.props.deleteUser(user_id);
+    } else {
+      this.props.addMsg("Action Canceled");
+    }
   }
 
   render() {
@@ -382,6 +398,21 @@ class SingleUserManagement extends React.Component {
                   name="referred_by"
                   value={this.state.referred_by || ""}
                   onChange={this.handleChange}
+                />
+              </SubRow>
+              <SubRow>
+                <AsyncButton
+                  onClick={this.deleteUser.bind(this)}
+                  miniSpinnerStyle={{ height: "10px", width: "10px" }}
+                  buttonStyle={{
+                    display: "inline-flex",
+                    fontWeight: "400",
+                    margin: "0em",
+                    lineHeight: "25px",
+                    height: "25px"
+                  }}
+                  isLoading={this.props.users.deleteStatus.isRequesting}
+                  buttonText="Delete User"
                 />
               </SubRow>
             </Row>

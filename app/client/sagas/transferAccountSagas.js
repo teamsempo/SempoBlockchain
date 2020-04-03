@@ -8,13 +8,13 @@ import {
   LOAD_TRANSFER_ACCOUNTS_REQUEST,
   LOAD_TRANSFER_ACCOUNTS_SUCCESS,
   LOAD_TRANSFER_ACCOUNTS_FAILURE,
-  UPDATE_TRANSFER_ACCOUNTS,
+  DEEP_UPDATE_TRANSFER_ACCOUNTS,
   EDIT_TRANSFER_ACCOUNT_REQUEST,
   EDIT_TRANSFER_ACCOUNT_SUCCESS,
   EDIT_TRANSFER_ACCOUNT_FAILURE
 } from "../reducers/transferAccountReducer.js";
 
-import { UPDATE_USER_LIST } from "../reducers/userReducer";
+import { DEEP_UPDATE_USER_LIST } from "../reducers/userReducer";
 import { UPDATE_CREDIT_TRANSFER_LIST } from "../reducers/creditTransferReducer";
 
 import {
@@ -37,7 +37,7 @@ function* updateStateFromTransferAccount(data) {
 
   const users = normalizedData.entities.users;
   if (users) {
-    yield put({ type: UPDATE_USER_LIST, users });
+    yield put({ type: DEEP_UPDATE_USER_LIST, users });
   }
 
   const credit_sends = normalizedData.entities.credit_sends;
@@ -58,7 +58,7 @@ function* updateStateFromTransferAccount(data) {
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
-    yield put({ type: UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
+    yield put({ type: DEEP_UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
   }
 }
 
