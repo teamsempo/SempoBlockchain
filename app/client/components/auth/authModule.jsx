@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 
-import { logout } from "../../reducers/auth/actions";
+import { LoginAction } from "../../reducers/auth/actions";
 
 import { StyledButton, PlainTextButton } from "./../styledElements";
 
@@ -19,7 +19,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    logout: () => dispatch(logout())
+    logout: () => dispatch(LoginAction.logout())
   };
 };
 

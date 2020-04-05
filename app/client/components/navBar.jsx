@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { Link, NavLink } from "react-router-dom";
 
-import { updateActiveOrgRequest } from "../reducers/auth/actions";
+import { LoginAction } from "../reducers/auth/actions";
 import { replaceSpaces } from "../utils";
 
 const mapStateToProps = state => {
@@ -23,7 +23,7 @@ const mapDispatchToProps = dispatch => {
   return {
     updateActiveOrgRequest: organisationId =>
       dispatch(
-        updateActiveOrgRequest({
+        LoginAction.updateActiveOrgRequest({
           organisationId
         })
       )
