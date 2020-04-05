@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import { connect } from "react-redux";
 
-import { activateAccount } from "../../reducers/auth/actions";
+import { ActivateAccountAction } from "../../reducers/auth/actions";
 
 import LoginForm from "../auth/loginForm.jsx";
 import RegisterForm from "../auth/registerForm.jsx";
@@ -20,7 +20,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    activateAccount: payload => dispatch(activateAccount(payload))
+    activateAccount: payload =>
+      dispatch(ActivateAccountAction.activateAccountRequest(payload))
   };
 };
 

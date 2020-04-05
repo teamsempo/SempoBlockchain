@@ -1,4 +1,6 @@
+import pytest, datetime
 from server.utils.access_control import AccessControl
+from server.exceptions import ResourceAlreadyDeletedError, TransferAccountDeletionError
 
 def test_new_sempo_admin_user(new_sempo_admin_user):
     """
@@ -126,3 +128,31 @@ def test_valid_tfa_token(authed_sempo_admin_user):
     assert (authed_sempo_admin_user.query.execution_options(show_all=True)
             .filter_by(id=resp['id']).first()
             is not None)
+
+
+def test_delete_user_and_transfer_account(create_transfer_account_user):
+    """
+    GIVEN a User Model
+    WHEN delete_user_and_transfer_account is called
+    THEN check that raises an error when balance > 0, check PII is deleted, check duplication deletion fails
+    """
+    create_transfer_account_user.transfer_account.balance = 10
+
+    with pytest.raises(TransferAccountDeletionError):
+        create_transfer_account_user.delete_user_and_transfer_account()
+
+    create_transfer_account_user.transfer_account.balance = 0
+
+    create_transfer_account_user.delete_user_and_transfer_account()
+    assert create_transfer_account_user.first_name is None
+    assert create_transfer_account_user.last_name is None
+    assert create_transfer_account_user.phone is None
+
+    assert create_transfer_account_user.deleted is not None
+    assert isinstance(create_transfer_account_user.deleted, datetime.datetime)
+
+    assert create_transfer_account_user.transfer_account.deleted is not None
+    assert isinstance(create_transfer_account_user.transfer_account.deleted, datetime.datetime)
+
+    with pytest.raises(ResourceAlreadyDeletedError):
+        create_transfer_account_user.delete_user_and_transfer_account()

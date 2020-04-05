@@ -2,7 +2,6 @@ import sys
 import os
 from sqlalchemy import func
 
-
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "..")))
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 
