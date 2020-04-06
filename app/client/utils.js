@@ -1,7 +1,6 @@
-import { call } from "redux-saga/effects";
+import { call, put } from "redux-saga/effects";
 import merge from "deepmerge";
-import { LOGIN_FAILURE } from "./reducers/auth/types";
-import { put } from "redux-saga/es/effects";
+import { LoginAction } from "./reducers/auth/actions";
 import { store } from "./app.jsx";
 import { USER_FILTER_TYPE } from "./constants";
 
@@ -127,7 +126,7 @@ export function* handleError(error) {
   }
 
   if (error.status === 401) {
-    yield put({ type: LOGIN_FAILURE, error: message });
+    yield put(LoginAction.loginFailure(message));
   }
 
   return { message, status };
