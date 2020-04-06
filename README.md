@@ -7,7 +7,7 @@
 [![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=shield)](https://circleci.com/gh/teamsempo/SempoBlockchain)
 [![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
 
-Sempo Admin Dashboard, SMS/WhatsApp API and crypto payments infrastructure
+Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments
 
 ## To run locally:
 
