@@ -349,19 +349,22 @@ class SQLPersistenceInterface(object):
 
         return query
 
-    def get_failed_tasks(self, min_task_id=None, max_task_id=None):
-        query = session.query(BlockchainTask)\
-            .filter(BlockchainTask.status == 'FAILED')\
+    def _get_tasks_by_status(self, status, min_task_id, max_task_id):
+        query = session.query(BlockchainTask) \
+            .filter(BlockchainTask.status == status) \
             .order_by(BlockchainTask.id.asc())
         query = self._filter_minmax_task_ids_maybe(query, min_task_id, max_task_id)
 
         return query.all()
 
-    def get_pending_tasks(self, min_task_id=None, max_task_id=None):
-        query = session.query(BlockchainTask).filter(BlockchainTask.status == 'PENDING')
-        query = self._filter_minmax_task_ids_maybe(query, min_task_id, max_task_id)
+    def get_failed_tasks(self, min_task_id=None, max_task_id=None):
+        return self._get_tasks_by_status('FAILED', min_task_id, max_task_id)
 
-        return query.all()
+    def get_pending_tasks(self, min_task_id=None, max_task_id=None):
+        return self._get_tasks_by_status('PENDING', min_task_id, max_task_id)
+
+    def get_unstarted_tasks(self, min_task_id=None, max_task_id=None):
+        return self._get_tasks_by_status('UNSTARTED', min_task_id, max_task_id)
 
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 
