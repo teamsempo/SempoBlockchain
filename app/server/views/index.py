@@ -17,7 +17,6 @@ def get_js_bundle_filename():
 
     return Path(latest_file).name
 
-
 @index_view.route('/', defaults={'path': ''})
 @index_view.route('/<path:path>')
 def catch_all(path):
