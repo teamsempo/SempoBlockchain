@@ -16,7 +16,11 @@ transfer_usage_blueprint = Blueprint('transfer_usage', __name__)
 class TransferUsageAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'subadmin'})
     def get(self):
-        usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).all()
+        show_all = request.args.get('show_all')
+        if show_all:
+            usage_objects = TransferUsage.query.order_by(TransferUsage.priority).all()
+        else:
+            usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).all()
 
         response_object = {
             'message': 'success',

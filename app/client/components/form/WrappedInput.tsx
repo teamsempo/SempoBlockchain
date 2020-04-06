@@ -1,6 +1,6 @@
-import React from 'react'
+import * as React from 'react'
 
-import styles from './styles.module.css'
+import * as styles from './styles.module.css'
 
 export const WrappedInput = (field: React.ReactNode, props: any) => {
   const {label, isRequired, meta, children} = props;
@@ -21,8 +21,8 @@ export const WrappedInput = (field: React.ReactNode, props: any) => {
 };
 
 export const AdaptedInput = (props: any) => {
-  const {name, type, input, placeholder} = props;
-  const field = <input className={styles.input} placeholder={placeholder} name={name} type={type} {...input} />;
+  const {name, type, input, placeholder, disabled} = props;
+  const field = <input className={styles.input} placeholder={placeholder} name={name} disabled={disabled} type={type} {...input} />;
 
   return WrappedInput(field, props)
 };

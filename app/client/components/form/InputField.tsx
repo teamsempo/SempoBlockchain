@@ -8,6 +8,7 @@ import { AdaptedInput } from "./WrappedInput";
 interface InputFieldJson {
   name: string;
   type?: "text" | "checkbox" | "email" | "password";
+  disabled?: boolean;
   label?: string;
   placeholder?: string;
   isRequired?: boolean;
@@ -27,6 +28,7 @@ export default function InputField(props: InputFieldJson) {
     isNumber,
     placeholder,
     type,
+    disabled,
     children
   } = props;
 
@@ -53,6 +55,7 @@ export default function InputField(props: InputFieldJson) {
       validate={validate}
       isRequired={isRequired}
       label={label}
+      disabled={disabled}
       children={children}
     />
   );
