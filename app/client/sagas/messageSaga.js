@@ -1,5 +1,5 @@
 import { delay } from "redux-saga";
-import { call, put, select, take, takeEvery } from "redux-saga/effects";
+import { call, put, select, take, takeEvery, all } from "redux-saga/effects";
 
 import {
   ADD_FLASH_MESSAGE,
@@ -38,6 +38,10 @@ export function* onAddFlashMessage() {
   }
 }
 
-export default function* watchOnAddFlashMessage() {
+function* watchOnAddFlashMessage() {
   yield takeEvery(ADD_FLASH_MESSAGE, onAddFlashMessage);
+}
+
+export default function* messageSagas() {
+  yield all([watchOnAddFlashMessage()]);
 }
