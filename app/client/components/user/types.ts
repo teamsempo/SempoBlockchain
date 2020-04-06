@@ -1,0 +1,1 @@
+export enum GenderTypes {FEMALE='FEMALE', MALE='MALE', OTHER='OTHER'}
