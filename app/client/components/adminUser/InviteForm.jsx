@@ -5,7 +5,7 @@ import styled from "styled-components";
 import AsyncButton from "../AsyncButton.jsx";
 
 import { Input, ErrorMessage } from "../styledElements";
-import { inviteUser } from "../../reducers/auth/actions";
+import { InviteUserAction } from "../../reducers/auth/actions";
 
 const mapStateToProps = state => {
   return {
@@ -15,7 +15,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    inviteUser: body => dispatch(inviteUser({ body }))
+    inviteUser: body => dispatch(InviteUserAction.inviteUserRequest({ body }))
   };
 };
 
