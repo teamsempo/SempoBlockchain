@@ -1,15 +1,13 @@
-[![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=svg)](https://circleci.com/gh/teamsempo/SempoBlockchain)
+<a href="https://withsempo.com">
+    <img width="200" src="app/server/static/media/sempo_logo_teal.png" alt="Sempo Logo" />
+</a>
 
-# Sempo
+---
+
+[![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=shield)](https://circleci.com/gh/teamsempo/SempoBlockchain)
+[![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
 
 Sempo Admin Dashboard, SMS/WhatsApp API and crypto payments infrastructure
-
-Includes:
-
-- Generic spreadsheet upload
-- SMS API via Twilio
-- ERC20 (Dai) token mirroring
-- Vendor android app API
 
 ## To run locally:
 
