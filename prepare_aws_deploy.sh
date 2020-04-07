@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#bash build_docker.sh
+bash build_docker.sh
 
 sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX||g" awsDockerrunTemplate.json > Dockerrun.aws.json
 

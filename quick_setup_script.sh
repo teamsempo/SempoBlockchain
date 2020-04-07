@@ -21,7 +21,12 @@ echo ~~~~Resetting readis
 redis-server &
 redis-cli FLUSHALL
 
+sleep 1
+
 echo ~~~~Resetting postgres
+echo If this section hangs, you might have a bunch of idle postgres connections. Kill them using
+echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
+
 db_server=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@localhost:5432
 app_db=$db_server/${APP_DB:-sempo_blockchain_local}
 eth_worker_db=$db_server/${APP_DB:-eth_worker}
@@ -68,7 +73,7 @@ python -u seed.py
 echo ~~~Starting App
 
 cd ../
-python run.py &
+python -u run.py &
 sleep 5
 
 echo ~~~Creating Default Account
@@ -80,10 +85,11 @@ cd ../
 python contract_setup_script.py
 
 echo ~~~Killing Python Processes
+sleep 5
 set +e
 kill $(ps aux | grep '[r]un.py' | awk '{print $2}')
 kill $(ps aux | grep '[c]elery' | awk '{print $2}')
 
-echo ~~~Bringing Ganache to foreground
+echo ~~~Done Setup! Bringing Ganache to foreground
 fg 1
 
