@@ -146,7 +146,7 @@ jobs:
       - run:
           name: Upload Code Coverage
           command: |
-            bash <(curl -s https://codecov.io/bash) -f shared/.coverage -cF python
+            bash <(curl -s https://codecov.io/bash) -cF python
   test:frontend:
     working_directory: ~/project
     docker:
