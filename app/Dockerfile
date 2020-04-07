@@ -27,6 +27,8 @@ ADD ./invoke_tests.py /src
 
 WORKDIR /
 
+RUN apt -y install curl
+
 RUN chmod +x /_docker_app_script.sh
 
 ARG GIT_HASH
