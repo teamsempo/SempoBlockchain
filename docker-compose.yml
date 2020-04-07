@@ -9,6 +9,7 @@ services:
       CONTAINER_MODE: ${CONTAINER_MODE}
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      CODECOV_TOKEN: ${CODECOV_TOKEN}
     depends_on:
       - postgres
       - eth_worker
@@ -24,6 +25,7 @@ services:
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      CODECOV_TOKEN: ${CODECOV_TOKEN}
     depends_on:
       - redis
       - ganache
@@ -40,6 +42,7 @@ services:
       PYTHONUNBUFFERED: 0
       AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      CODECOV_TOKEN: ${CODECOV_TOKEN}
     depends_on:
       - redis
       - ganache
