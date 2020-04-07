@@ -141,11 +141,13 @@ jobs:
       - run:
           name: Run Docker Tests
           command: |
+            mkdir -p shared
             docker-compose up --exit-code-from app
       - run:
           name: Upload Code Coverage
           command: |
-            bash <(curl -s https://codecov.io/bash) -cF python
+            ls
+            bash <(curl -s https://codecov.io/bash) -f .shared/.coverage -cF python
   test:frontend:
     working_directory: ~/project
     docker:
