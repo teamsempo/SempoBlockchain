@@ -10,11 +10,6 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Setup Environment Variables
-          command: |
-            echo "export PATH=$GOPATH/bin:$PATH" >> $BASH_ENV
-            echo "export GIT_SHA1=$CIRCLE_SHA1" >> $BASH_ENV
-      - run:
           name: download SOPS
           command: |
             wget https://github.com/mozilla/sops/releases/download/3.4.0/sops-3.4.0.linux -O ./sops
@@ -79,11 +74,11 @@ jobs:
           name: Get Ci Env for CodeCov
           command: |
             ci_env=`bash <(curl -s https://codecov.io/env)`
+            echo $ci_env
             echo 'export ci_env=$ci_env' >> $BASH_ENV
       - run:
           name: Build application Docker images
           command: |
-            echo $ci_env
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 --build-arg ci_env=$ci_env
             docker build -t eth_worker . -f ./eth_worker/Dockerfile
             docker build -t proxy ./proxy
