@@ -141,7 +141,8 @@ jobs:
       - run:
           name: Run Docker Tests
           command: |
-            docker-compose up --exit-code-from app
+            ci_env=`bash <(curl -s https://codecov.io/env)`
+            docker-compose up --exit-code-from app $ci_env
   test:frontend:
     working_directory: ~/project
     docker:

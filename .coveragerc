@@ -1,0 +1,6 @@
+[run]
+source=.
+omit=
+    # omit everything in /worker and /test
+    */worker/*
+    */test/*
