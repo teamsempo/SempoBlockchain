@@ -71,14 +71,9 @@ jobs:
             npm run build
             cd ../
       - run:
-          name: Get Ci Env for CodeCov
-          command: |
-            ci_env=`bash <(curl -s https://codecov.io/env)`
-            echo $ci_env
-            echo 'export ci_env=$ci_env' >> $BASH_ENV
-      - run:
           name: Build application Docker images
           command: |
+            ci_env=`bash <(curl -s https://codecov.io/env)`
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 --build-arg ci_env=$ci_env
             docker build -t eth_worker . -f ./eth_worker/Dockerfile
             docker build -t proxy ./proxy
@@ -97,6 +92,7 @@ jobs:
       - run:
           name: Save Docker image layer cache
           command: |
+            ci_env=`bash <(curl -s https://codecov.io/env)`
             GIT_HASH=$(git rev-parse HEAD)
             sudo mkdir -p ~/project/caches
             sudo chmod 777 -R ~/project/caches
