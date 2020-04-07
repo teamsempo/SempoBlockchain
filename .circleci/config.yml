@@ -9,6 +9,11 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+    - run:
+        name: Setup Environment Variables
+        command: |
+            echo "export PATH=$GOPATH/bin:$PATH" >> $BASH_ENV
+            echo "export GIT_SHA1=$CIRCLE_SHA1" >> $BASH_ENV
       - run:
           name: download SOPS
           command: |
@@ -71,12 +76,14 @@ jobs:
             npm run build
             cd ../
       - run:
+          name: Get Ci Env for CodeCov
+          command: |
+            ci_env=`bash <(curl -s https://codecov.io/env)`
+            echo 'export ci_env=$ci_env' >> $BASH_ENV
+      - run:
           name: Build application Docker images
           command: |
-            # Get Ci Env for CodeCov
-            ci_env=`bash <(curl -s https://codecov.io/env)`
-
-            docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1 --build-arg $ci_env=ci_env
+            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 --build-arg ci_env=$ci_env
             docker build -t eth_worker . -f ./eth_worker/Dockerfile
             docker build -t proxy ./proxy
       - run:
@@ -101,7 +108,7 @@ jobs:
             # and here: https://stackoverflow.com/q/49965396
             # The build commands here will be completely cached, and so very quick
             #
-            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
+            docker build -t server . -f ./app/Dockerfile --build-arg ci_env=$ci_env --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
             docker build -t eth_worker . -f ./eth_worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/eth_worker_layers.txt
             docker build -t proxy ./proxy| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
 
