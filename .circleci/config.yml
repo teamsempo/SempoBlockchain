@@ -9,9 +9,9 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-    - run:
-        name: Setup Environment Variables
-        command: |
+      - run:
+          name: Setup Environment Variables
+          command: |
             echo "export PATH=$GOPATH/bin:$PATH" >> $BASH_ENV
             echo "export GIT_SHA1=$CIRCLE_SHA1" >> $BASH_ENV
       - run:
