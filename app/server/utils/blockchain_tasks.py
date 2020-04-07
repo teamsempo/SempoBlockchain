@@ -293,13 +293,13 @@ class BlockchainTasker(object):
 
             token_supply = self._synchronous_call(
                 contract_address=token.address,
-                contract_type='ERC20Token',
+                contract_type='ERC20',
                 func='totalSupply'
             )
 
             subexchange_reserve = self._synchronous_call(
                 contract_address=reserve_token.address,
-                contract_type='ERC20Token',
+                contract_type='ERC20',
                 func='balanceOf',
                 args=[subexchange_address]
             )
