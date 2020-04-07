@@ -120,7 +120,8 @@ jobs:
           root: ~/project
           paths:
             - imagecaches
-  test:
+            - app/node_modules
+  test:backend:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -141,6 +142,28 @@ jobs:
           name: Run Docker Tests
           command: |
             docker-compose up --exit-code-from app
+  test:frontend:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+        environment:
+          CONTAINER_MODE: TEST
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/project
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
+      - run:
+          name: Run Frontend Tests
+          command: |
+            cd app
+            npm run test
   deploy:
     working_directory: ~/project
     docker:
@@ -194,15 +217,18 @@ jobs:
       - run:
           name: Push Docker Image
           command: |
-            REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
 
             eval $(aws ecr get-login --no-include-email --region ap-southeast-2);
-            docker tag server:latest $REPOSITORY_URI:server
-            docker push $REPOSITORY_URI:server
-            docker tag proxy:latest $REPOSITORY_URI:proxy
-            docker push $REPOSITORY_URI:proxy
-            docker tag eth_worker:latest $REPOSITORY_URI:eth_worker
-            docker push $REPOSITORY_URI:eth_worker
+            docker tag server:latest ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker push ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker tag proxy:latest ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
+            docker push ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
+            docker tag eth_worker:latest ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+            docker push ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+      - run:
+          name: Create Dockerrun config file
+          command: |
+            sed "s|REPOSITORY_URI|${REPOSITORY_URI}|g; s|TAG_SUFFIX|${CIRCLE_SHA1}|g" awsDockerrunTemplate.json > Dockerrun.aws.json
 
       - run:
           name: Deploy app to AWS Server via Docker
@@ -214,7 +240,10 @@ workflows:
   main_workflow:
     jobs:
       - build
-      - test:
+      - test:backend:
+          requires:
+            - build
+      - test:frontend:
           requires:
             - build
       - deploy:
@@ -222,6 +251,7 @@ workflows:
             branches:
               only:
                 - master
-                - aws-env-swap
+                - generalised_deployment
           requires:
-            - test
+            - test:backend
+            - test:frontend

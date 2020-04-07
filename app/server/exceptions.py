@@ -1,3 +1,18 @@
+class TransferAccountDeletionError(Exception):
+    """
+    Raise if User default doesn't match Transfer Account primary user OR more than 1 user is listed on Transfer Account
+    OR balance isn't zero
+    """
+    pass
+
+
+class ResourceAlreadyDeletedError(Exception):
+    """
+    Raise if User or Transfer Account is already deleted
+    """
+    pass
+
+
 class TransferLimitCreationError(Exception):
     """
     Raise if a TransferLimit is initialized with incorrect variables

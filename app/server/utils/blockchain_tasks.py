@@ -100,8 +100,16 @@ class BlockchainTasker(object):
     def retry_task(self, task_uuid):
         task_runner.delay_task(self._eth_endpoint('retry_task'), {'task_uuid': task_uuid })
 
-    def retry_failed(self):
-        return self._execute_synchronous_celery(self._eth_endpoint('retry_failed'), args={})
+    def retry_failed(self, min_task_id, max_task_id, retry_unstarted):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('retry_failed'),
+            {'min_task_id': min_task_id, 'max_task_id': max_task_id, 'retry_unstarted': retry_unstarted}
+        )
+
+    def deduplicate(self, min_task_id, max_task_id):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deduplicate'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+        )
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
     def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
@@ -285,13 +293,13 @@ class BlockchainTasker(object):
 
             token_supply = self._synchronous_call(
                 contract_address=token.address,
-                contract_type='ERC20Token',
+                contract_type='ERC20',
                 func='totalSupply'
             )
 
             subexchange_reserve = self._synchronous_call(
                 contract_address=reserve_token.address,
-                contract_type='ERC20Token',
+                contract_type='ERC20',
                 func='balanceOf',
                 args=[subexchange_address]
             )

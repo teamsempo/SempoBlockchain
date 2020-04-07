@@ -70,6 +70,7 @@ persistence_interface = SQLPersistenceInterface(w3=w3, red=red)
 blockchain_processor = TransactionProcessor(
     **eth_config,
     w3=w3,
+    red=red,
     persistence_interface=persistence_interface
 )
 

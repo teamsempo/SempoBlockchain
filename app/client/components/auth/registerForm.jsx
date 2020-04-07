@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import ReactPasswordStrength from "react-password-strength";
 
-import { registerRequest } from "../../reducers/auth/actions";
+import { RegisterAction } from "../../reducers/auth/actions";
 
 import AsyncButton from "./../AsyncButton.jsx";
 import TFAForm from "./TFAForm.jsx";
@@ -18,7 +18,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    registerRequest: payload => dispatch(registerRequest(payload))
+    registerRequest: payload =>
+      dispatch(RegisterAction.registerRequest(payload))
   };
 };
 

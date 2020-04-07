@@ -4,7 +4,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.1.3'  # Remember to bump this in every PR
+VERSION = '1.1.12'  # Remember to bump this in every PR
 
 print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -61,7 +61,7 @@ if load_from_s3:
 
     client = session.client('s3')
 
-    SECRET_BUCKET = "ctp-prod-secrets"
+    SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
     FORCE_SSL = True
 
     common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
@@ -133,7 +133,7 @@ CASHOUT_INCENTIVE_PERCENT = float(config_parser['APP'].get('CASHOUT_INCENTIVE_PE
 ONBOARDING_SMS = config_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
-SEMPOADMIN_EMAIL = config_parser['APP'].get('sempoadmin_email')
+SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 PASSWORD_PEPPER     = secrets_parser['APP']['PASSWORD_PEPPER']

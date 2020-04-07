@@ -12,10 +12,13 @@ import {
   EDIT_ORGANISATION_FAILURE
 } from "../reducers/organisation/types";
 
-import {loadOrganisationAPI, editOrganisationAPI} from "../api/organisationApi.js";
+import {
+  loadOrganisationAPI,
+  editOrganisationAPI
+} from "../api/organisationApi.js";
 import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
 import { organisationSchema } from "../schemas";
-import {browserHistory} from "../app";
+import { browserHistory } from "../app";
 
 function* updateStateFromOrganisation(data) {
   //Schema expects a list of organisation objects
@@ -54,22 +57,25 @@ function* watchLoadOrganisation() {
   yield takeEvery(LOAD_ORGANISATION_REQUEST, loadOrganisation);
 }
 
-function* editOrganisation({payload}) {
+function* editOrganisation({ payload }) {
   try {
     const load_result = yield call(editOrganisationAPI, payload);
 
     yield call(updateStateFromOrganisation, load_result.data);
 
-    yield put({type: EDIT_ORGANISATION_SUCCESS});
+    yield put({ type: EDIT_ORGANISATION_SUCCESS });
 
-    yield put({type: ADD_FLASH_MESSAGE, error: false, message: load_result.message});
-
+    yield put({
+      type: ADD_FLASH_MESSAGE,
+      error: false,
+      message: load_result.message
+    });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({type: EDIT_ORGANISATION_FAILURE, error: error});
+    yield put({ type: EDIT_ORGANISATION_FAILURE, error: error });
 
-    yield put({type: ADD_FLASH_MESSAGE, error: true, message: error.message});
+    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
   }
 }
 
@@ -78,8 +84,5 @@ function* watchEditOrganisation() {
 }
 
 export default function* organisationSagas() {
-  yield all([
-    watchLoadOrganisation(),
-    watchEditOrganisation()
-  ]);
+  yield all([watchLoadOrganisation(), watchEditOrganisation()]);
 }

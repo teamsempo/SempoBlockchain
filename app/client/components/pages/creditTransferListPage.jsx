@@ -9,7 +9,7 @@ import CreditTransferListWithFilterWrapper from "../creditTransfer/creditTransfe
 import UploadButton from "../uploader/uploadButton.jsx";
 
 import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-import organizationWrapper from "../organizationWrapper";
+import organizationWrapper from "../organizationWrapper.jsx";
 
 const mapStateToProps = state => {
   return {

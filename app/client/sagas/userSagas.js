@@ -1,28 +1,21 @@
-import {
-  take,
-  fork,
-  put,
-  takeEvery,
-  call,
-  all,
-  cancelled,
-  cancel,
-  race,
-  delay
-} from "redux-saga/effects";
-import { schema, arrayOf, normalize } from "normalizr";
+import { put, takeEvery, call, all, select } from "redux-saga/effects";
+import { normalize } from "normalizr";
 import { handleError } from "../utils";
 
 import { userSchema } from "../schemas";
 
 import {
   UPDATE_USER_LIST,
+  DEEP_UPDATE_USER_LIST,
   LOAD_USER_REQUEST,
   LOAD_USER_SUCCESS,
   LOAD_USER_FAILURE,
   EDIT_USER_REQUEST,
   EDIT_USER_SUCCESS,
   EDIT_USER_FAILURE,
+  DELETE_USER_REQUEST,
+  DELETE_USER_SUCCESS,
+  DELETE_USER_FAILURE,
   CREATE_USER_REQUEST,
   CREATE_USER_SUCCESS,
   CREATE_USER_FAILURE
@@ -31,6 +24,7 @@ import {
 import {
   loadUserAPI,
   editUserAPI,
+  deleteUserAPI,
   createUserAPI,
   resetPinAPI
 } from "../api/userAPI";
@@ -41,6 +35,8 @@ import {
   RESET_PIN_SUCCESS
 } from "../reducers/userReducer";
 import { LOAD_TRANSFER_USAGES_REQUEST } from "../reducers/transferUsage/types";
+import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
+import { browserHistory } from "../app";
 
 function* updateStateFromUser(data) {
   //Schema expects a list of credit transfer objects
@@ -54,7 +50,7 @@ function* updateStateFromUser(data) {
 
   const users = normalizedData.entities.users;
 
-  yield put({ type: UPDATE_USER_LIST, users });
+  yield put({ type: DEEP_UPDATE_USER_LIST, users });
 }
 
 // Load User Saga
@@ -102,6 +98,52 @@ function* editUser({ payload }) {
 
 function* watchEditUser() {
   yield takeEvery(EDIT_USER_REQUEST, editUser);
+}
+
+const getUserState = state => state.users.byId;
+const getTransferAccountState = state => state.transferAccounts.byId;
+
+function* deleteUser({ payload }) {
+  try {
+    const delete_response = yield call(deleteUserAPI, payload);
+    yield put({ type: DELETE_USER_SUCCESS, delete_response });
+
+    let userState = yield select(getUserState);
+
+    // delete transfer account from local state
+    let transferAccountState = yield select(getTransferAccountState);
+    let transferAccounts = { ...transferAccountState };
+    delete transferAccounts[
+      userState[payload.path].default_transfer_account_id
+    ];
+
+    // delete user from local state
+    let users = { ...userState };
+    delete users[payload.path];
+
+    yield put({ type: UPDATE_USER_LIST, users });
+    yield put({
+      type: UPDATE_TRANSFER_ACCOUNTS,
+      transfer_accounts: transferAccounts
+    });
+
+    yield put({
+      type: ADD_FLASH_MESSAGE,
+      error: false,
+      message: delete_response.message
+    });
+    browserHistory.push("/accounts");
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put({ type: DELETE_USER_FAILURE, error: error });
+
+    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+  }
+}
+
+function* watchDeleteUser() {
+  yield takeEvery(DELETE_USER_REQUEST, deleteUser);
 }
 
 function* resetPin({ payload }) {
@@ -154,6 +196,7 @@ export default function* userSagas() {
   yield all([
     watchLoadUser(),
     watchEditUser(),
+    watchDeleteUser(),
     watchCreateUser(),
     watchResetPin()
   ]);

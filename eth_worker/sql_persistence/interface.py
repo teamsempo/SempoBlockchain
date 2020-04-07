@@ -24,13 +24,40 @@ class SQLPersistenceInterface(object):
 
         (session.query(BlockchainTransaction)
          .filter(and_(BlockchainTransaction.status == 'PENDING',
-                      BlockchainTransaction.submitted_date < expire_time))
+                      BlockchainTransaction.updated < expire_time))
          .update({BlockchainTransaction.status: 'FAILED',
                   BlockchainTransaction.error: 'Timeout Error'},
                  synchronize_session=False))
 
-    def _calculate_nonce(self, signing_wallet_obj, transaction_id, starting_nonce=0):
+    def _unconsume_high_failed_nonces(self, signing_wallet_id, stating_nonce):
+        expire_time = datetime.datetime.utcnow() - datetime.timedelta(
+            seconds=self.PENDING_TRANSACTION_EXPIRY_SECONDS
+        )
 
+        highest_known_success = (session.query(BlockchainTransaction)
+                                 .filter(and_(BlockchainTransaction.signing_wallet_id == signing_wallet_id,
+                                              BlockchainTransaction.status == 'SUCCESS'))
+                                 .order_by(BlockchainTransaction.id.desc()).first()
+                                 )
+
+        if highest_known_success:
+            highest_known_nonce = highest_known_success.nonce or 0
+        else:
+            highest_known_nonce = 0
+
+        nonce = max(stating_nonce, highest_known_nonce)
+
+        (session.query(BlockchainTransaction)
+         .filter(and_(BlockchainTransaction.signing_wallet_id == signing_wallet_id,
+                      BlockchainTransaction.status == 'FAILED',
+                      BlockchainTransaction.nonce > nonce,
+                      BlockchainTransaction.submitted_date < expire_time))
+         .update({BlockchainTransaction.nonce_consumed: False},
+                 synchronize_session=False))
+
+    def _calculate_nonce(self, signing_wallet_obj, starting_nonce=0):
+
+        self._unconsume_high_failed_nonces(signing_wallet_obj.id, starting_nonce)
         self._fail_expired_transactions()
 
         # First find the highest *continuous* nonce that isn't either pending, or consumed
@@ -91,7 +118,7 @@ class SQLPersistenceInterface(object):
         if blockchain_transaction.nonce is not None:
             return blockchain_transaction.nonce, blockchain_transaction.id
 
-        calculated_nonce = self._calculate_nonce(signing_wallet_obj, transaction_id, network_nonce)
+        calculated_nonce = self._calculate_nonce(signing_wallet_obj, network_nonce)
 
         blockchain_transaction.signing_wallet = signing_wallet_obj
         blockchain_transaction.nonce = calculated_nonce
@@ -195,7 +222,7 @@ class SQLPersistenceInterface(object):
                              signing_wallet_obj,
                              contract_address, abi_type,
                              function, args=None, kwargs=None,
-                             gas_limit=None, prior_tasks=None):
+                             gas_limit=None, prior_tasks=None, reverses_task=None):
 
         task = BlockchainTask(uuid,
                               signing_wallet=signing_wallet_obj,
@@ -210,6 +237,16 @@ class SQLPersistenceInterface(object):
         session.add(task)
 
         self.add_prior_tasks(task, prior_tasks)
+
+        if reverses_task:
+            reverses_task_obj = self.get_task_from_uuid(reverses_task)
+            if reverses_task_obj:
+                task.reverses = reverses_task_obj
+
+                session.commit()
+
+                # Release the multithread lock
+                self.red.delete(f'MultithreadDupeLock-{reverses_task_obj.id}')
 
         session.commit()
 
@@ -265,6 +302,34 @@ class SQLPersistenceInterface(object):
         else:
             return base_data
 
+    def get_duplicates(self, min_task_id, max_task_id):
+
+        from sqlalchemy.sql import text
+
+        query = text(
+            """
+                SELECT blockchain_task.id as task_id,
+                  (SELECT COUNT(*)
+                    FROM blockchain_transaction
+                    WHERE blockchain_task_id = blockchain_task.id AND _status = 'SUCCESS'
+                    ) as txn_count
+                FROM blockchain_task
+                RIGHT JOIN blockchain_transaction
+                ON  blockchain_transaction.blockchain_task_id = blockchain_task.id
+                WHERE blockchain_task.id > :min_task_id and blockchain_task.id < :max_task_id
+                GROUP BY blockchain_task.id
+                HAVING (
+                  SELECT COUNT(*)
+                  FROM blockchain_transaction
+                  WHERE blockchain_task_id = blockchain_task.id AND _status = 'SUCCESS'
+                  ) > 1;
+            """
+        )
+        res = session.execute(query, {'min_task_id': min_task_id, 'max_task_id': max_task_id})
+
+        duplicated_tasks = [row for row in res]
+        return duplicated_tasks
+
     def increment_task_invokations(self, task):
         task.previous_invocations = (task.previous_invocations or 0) + 1
 
@@ -273,11 +338,33 @@ class SQLPersistenceInterface(object):
     def get_task_from_uuid(self, task_uuid):
         return session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
-    def get_failed_tasks(self):
-        return session.query(BlockchainTask).filter(BlockchainTask.status == 'FAILED').all()
+    def get_task_from_id(self, task_id):
+        return session.query(BlockchainTask).get(task_id)
 
-    def get_pending_tasks(self):
-        return session.query(BlockchainTask).filter(BlockchainTask.status == 'PENDING').all()
+    def _filter_minmax_task_ids_maybe(self, query, min_task_id, max_task_id):
+        if min_task_id:
+            query = query.filter(BlockchainTask.id > min_task_id)
+        if max_task_id:
+            query = query.filter(BlockchainTask.id < max_task_id)
+
+        return query
+
+    def _get_tasks_by_status(self, status, min_task_id, max_task_id):
+        query = session.query(BlockchainTask) \
+            .filter(BlockchainTask.status == status) \
+            .order_by(BlockchainTask.id.asc())
+        query = self._filter_minmax_task_ids_maybe(query, min_task_id, max_task_id)
+
+        return query.all()
+
+    def get_failed_tasks(self, min_task_id=None, max_task_id=None):
+        return self._get_tasks_by_status('FAILED', min_task_id, max_task_id)
+
+    def get_pending_tasks(self, min_task_id=None, max_task_id=None):
+        return self._get_tasks_by_status('PENDING', min_task_id, max_task_id)
+
+    def get_unstarted_tasks(self, min_task_id=None, max_task_id=None):
+        return self._get_tasks_by_status('UNSTARTED', min_task_id, max_task_id)
 
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 
