@@ -71,6 +71,10 @@ jobs:
             npm run build
             cd ../
       - run:
+          name: Get Ci Env for CodeCov
+          command: |
+            ci_env=`bash <(curl -s https://codecov.io/env)`
+      - run:
           name: Build application Docker images
           command: |
             docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1
