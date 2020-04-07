@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { compose } from "redux";
-import { updateActiveOrgRequest } from "../reducers/auth/actions";
+import { LoginAction } from "../reducers/auth/actions";
 import { parseQuery, generateQueryString } from "./../utils";
 import { withRouter } from "react-router";
 
@@ -48,7 +48,11 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     updateActiveOrgRequest: organisationId =>
-      dispatch(updateActiveOrgRequest({ organisationId }))
+      dispatch(
+        LoginAction.updateActiveOrgRequest({
+          organisationId
+        })
+      )
   };
 };
 

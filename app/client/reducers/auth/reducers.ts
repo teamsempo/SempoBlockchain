@@ -2,51 +2,34 @@ import { combineReducers } from "redux";
 import { DEEEEEEP } from "../../utils";
 
 import {
-  ACTIVATE_FAILURE,
-  ACTIVATE_REQUEST,
-  ACTIVATE_SUCCESS,
-  ActivateAction,
-  REGISTER_FAILURE,
-  REGISTER_INACTIVE,
-  REGISTER_REQUEST,
-  REGISTER_SUCCESS,
-  RegisterAction,
-  REQUEST_RESET_FAILURE,
-  REQUEST_RESET_REQUEST,
-  REQUEST_RESET_SUCCESS,
-  RESET_PASSWORD_FAILURE,
-  RESET_PASSWORD_REQUEST,
-  RESET_PASSWORD_SUCCESS,
-  ResetEmailAction,
-  ResetPasswordAction,
-  INVITE_USER_FAILURE,
-  INVITE_USER_REQUEST,
-  INVITE_USER_SUCCESS,
-  InviteUserAction,
-  UPDATE_INVITE_USER_LIST,
-  DEEP_UPDATE_INVITE_USER_LIST,
   Invite,
-  InviteUserListAction,
   UPDATE_ADMIN_USER_LIST,
-  DELETE_INVITE_REQUEST,
-  DELETE_INVITE_SUCCESS,
-  DELETE_INVITE_FAILURE,
-  DeleteInviteAction,
-  EDIT_ADMIN_USER_FAILURE,
-  EDIT_ADMIN_USER_REQUEST,
-  EDIT_ADMIN_USER_SUCCESS,
-  UpdateUserAction,
-  LOAD_ADMIN_USER_FAILURE,
-  LOAD_ADMIN_USER_REQUEST,
-  LOAD_ADMIN_USER_SUCCESS,
   AdminUser,
-  AdminUserListAction,
-  UserListAction,
-  VALIDATE_TFA_FAILURE,
-  VALIDATE_TFA_REQUEST,
-  VALIDATE_TFA_SUCCESS,
-  ValidateTfaAction
+  RegisterActionTypes,
+  ActivateActionTypes,
+  ResetPasswordEmailActionTypes,
+  ResetPasswordActionTypes,
+  InviteUserListActionTypes,
+  LoadAdminUserListActionTypes,
+  EditAdminUserActionTypes,
+  InviteUserActionTypes,
+  DeleteInviteActionTypes,
+  ValidateTfaActionTypes
 } from "./types";
+
+import {
+  RegisterAction,
+  ActivateAccountAction,
+  ResetPasswordEmailAction,
+  ResetPasswordAction,
+  AdminUserListAction,
+  InviteUserListAction,
+  LoadAdminUserListAction,
+  EditAdminUserAction,
+  InviteUserAction,
+  DeleteInviteAction,
+  ValidateTfaAction
+} from "./actions";
 
 interface RequestingState {
   isRequesting: boolean;
@@ -62,31 +45,34 @@ const initialState: RequestingState = {
 
 export const register = (state = initialState, action: RegisterAction) => {
   switch (action.type) {
-    case REGISTER_REQUEST:
+    case RegisterActionTypes.REGISTER_REQUEST:
       return { ...state, isRequesting: true };
-    case REGISTER_SUCCESS:
+    case RegisterActionTypes.REGISTER_SUCCESS:
       return { ...state, isRequesting: false, registerSuccess: true };
-    case REGISTER_FAILURE:
+    case RegisterActionTypes.REGISTER_FAILURE:
       return {
         ...state,
         isRequesting: false,
         registerSuccess: false,
         error: action.error || "unknown error"
       };
-    case REGISTER_INACTIVE:
+    case RegisterActionTypes.REGISTER_INACTIVE:
       return initialState;
     default:
       return state;
   }
 };
 
-export const activate = (state = initialState, action: ActivateAction) => {
+export const activate = (
+  state = initialState,
+  action: ActivateAccountAction
+) => {
   switch (action.type) {
-    case ACTIVATE_REQUEST:
+    case ActivateActionTypes.ACTIVATE_REQUEST:
       return { ...state, isRequesting: true };
-    case ACTIVATE_SUCCESS:
+    case ActivateActionTypes.ACTIVATE_SUCCESS:
       return { ...state, isRequesting: false, activateSuccess: true };
-    case ACTIVATE_FAILURE:
+    case ActivateActionTypes.ACTIVATE_FAILURE:
       return {
         ...state,
         isRequesting: false,
@@ -100,14 +86,14 @@ export const activate = (state = initialState, action: ActivateAction) => {
 
 export const requestResetEmailState = (
   state = initialState,
-  action: ResetEmailAction
+  action: ResetPasswordEmailAction
 ) => {
   switch (action.type) {
-    case REQUEST_RESET_REQUEST:
+    case ResetPasswordEmailActionTypes.REQUEST_RESET_REQUEST:
       return { ...state, isRequesting: true };
-    case REQUEST_RESET_SUCCESS:
+    case ResetPasswordEmailActionTypes.REQUEST_RESET_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case REQUEST_RESET_FAILURE:
+    case ResetPasswordEmailActionTypes.REQUEST_RESET_FAILURE:
       return {
         ...state,
         isRequesting: false,
@@ -124,11 +110,11 @@ export const resetPasswordState = (
   action: ResetPasswordAction
 ) => {
   switch (action.type) {
-    case RESET_PASSWORD_REQUEST:
+    case ResetPasswordActionTypes.RESET_PASSWORD_REQUEST:
       return { ...state, isRequesting: true };
-    case RESET_PASSWORD_SUCCESS:
+    case ResetPasswordActionTypes.RESET_PASSWORD_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case RESET_PASSWORD_FAILURE:
+    case ResetPasswordActionTypes.RESET_PASSWORD_FAILURE:
       return {
         ...state,
         isRequesting: false,
@@ -146,7 +132,7 @@ const adminsById = (
 ): AdminUser[] => {
   switch (action.type) {
     case UPDATE_ADMIN_USER_LIST:
-      return DEEEEEEP(state, action.admins);
+      return DEEEEEEP(state, action.payload);
     default:
       return state;
   }
@@ -157,10 +143,10 @@ const invitesById = (
   action: InviteUserListAction
 ): Invite[] => {
   switch (action.type) {
-    case DEEP_UPDATE_INVITE_USER_LIST:
-      return DEEEEEEP(state, action.invites);
-    case UPDATE_INVITE_USER_LIST:
-      return action.invites;
+    case InviteUserListActionTypes.DEEP_UPDATE_INVITE_USER_LIST:
+      return DEEEEEEP(state, action.payload);
+    case InviteUserListActionTypes.UPDATE_INVITE_USER_LIST:
+      return action.payload;
     default:
       return state;
   }
@@ -180,14 +166,14 @@ const initialLoadStatusState: UserListState = {
 
 export const loadStatus = (
   state = initialLoadStatusState,
-  action: UserListAction
+  action: LoadAdminUserListAction
 ) => {
   switch (action.type) {
-    case LOAD_ADMIN_USER_REQUEST:
+    case LoadAdminUserListActionTypes.LOAD_ADMIN_USER_REQUEST:
       return { ...state, isRequesting: true };
-    case LOAD_ADMIN_USER_SUCCESS:
+    case LoadAdminUserListActionTypes.LOAD_ADMIN_USER_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case LOAD_ADMIN_USER_FAILURE:
+    case LoadAdminUserListActionTypes.LOAD_ADMIN_USER_FAILURE:
       return {
         ...state,
         isRequesting: false,
@@ -199,13 +185,16 @@ export const loadStatus = (
   }
 };
 
-export const editStatus = (state = initialState, action: UpdateUserAction) => {
+export const editStatus = (
+  state = initialState,
+  action: EditAdminUserAction
+) => {
   switch (action.type) {
-    case EDIT_ADMIN_USER_REQUEST:
+    case EditAdminUserActionTypes.EDIT_ADMIN_USER_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case EDIT_ADMIN_USER_SUCCESS:
+    case EditAdminUserActionTypes.EDIT_ADMIN_USER_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case EDIT_ADMIN_USER_FAILURE:
+    case EditAdminUserActionTypes.EDIT_ADMIN_USER_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
     default:
       return state;
@@ -217,11 +206,11 @@ export const createStatus = (
   action: InviteUserAction
 ) => {
   switch (action.type) {
-    case INVITE_USER_REQUEST:
+    case InviteUserActionTypes.INVITE_USER_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case INVITE_USER_SUCCESS:
+    case InviteUserActionTypes.INVITE_USER_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case INVITE_USER_FAILURE:
+    case InviteUserActionTypes.INVITE_USER_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
     default:
       return state;
@@ -233,11 +222,11 @@ export const deleteStatus = (
   action: DeleteInviteAction
 ) => {
   switch (action.type) {
-    case DELETE_INVITE_REQUEST:
+    case DeleteInviteActionTypes.DELETE_INVITE_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case DELETE_INVITE_SUCCESS:
+    case DeleteInviteActionTypes.DELETE_INVITE_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case DELETE_INVITE_FAILURE:
+    case DeleteInviteActionTypes.DELETE_INVITE_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
     default:
       return state;
@@ -258,11 +247,11 @@ export const validateTFA = (
   action: ValidateTfaAction
 ) => {
   switch (action.type) {
-    case VALIDATE_TFA_REQUEST:
+    case ValidateTfaActionTypes.VALIDATE_TFA_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case VALIDATE_TFA_SUCCESS:
+    case ValidateTfaActionTypes.VALIDATE_TFA_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case VALIDATE_TFA_FAILURE:
+    case ValidateTfaActionTypes.VALIDATE_TFA_FAILURE:
       return {
         ...state,
         isRequesting: false,
