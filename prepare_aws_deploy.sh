@@ -2,16 +2,18 @@
 
 bash build_docker.sh
 
-sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX||g" awsDockerrunTemplate.json > Dockerrun.aws.json
+GIT_HASH=$(git rev-parse HEAD)
 
-eval $(aws ecr get-login --no-include-email --region $ECR_REGION --profile ECR_BUILDER);
+sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX|$GIT_HASH|g" awsDockerrunTemplate.json > Dockerrun.aws.json
 
-docker tag server:latest $REPOSITORY_URI:server
-docker push $REPOSITORY_URI:server
+eval $(aws ecr get-login --no-include-email --region $ECR_REGION --profile $ECR_BUILDER);
 
-docker tag proxy:latest $REPOSITORY_URI:proxy
-docker push $REPOSITORY_URI:proxy
+docker tag server:latest $REPOSITORY_URI:server_$GIT_HASH
+docker push $REPOSITORY_URI:server_$GIT_HASH
 
-docker tag eth_worker:latest $REPOSITORY_URI:eth_worker
-docker push $REPOSITORY_URI:eth_worker
+docker tag proxy:latest $REPOSITORY_URI:proxy_$GIT_HASH
+docker push $REPOSITORY_URI:proxy_$GIT_HASH
+
+docker tag eth_worker:latest $REPOSITORY_URI:eth_worker_$GIT_HASH
+docker push $REPOSITORY_URI:eth_worker_$GIT_HASH
 
