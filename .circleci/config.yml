@@ -83,6 +83,7 @@ jobs:
       - run:
           name: Build application Docker images
           command: |
+            echo $ci_env
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 --build-arg ci_env=$ci_env
             docker build -t eth_worker . -f ./eth_worker/Dockerfile
             docker build -t proxy ./proxy
