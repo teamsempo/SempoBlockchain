@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { NavLink } from "react-router-dom";
 import ReactPasswordStrength from "react-password-strength";
 
-import { resetPassword } from "../../reducers/auth/actions";
+import { ResetPasswordAction } from "../../reducers/auth/actions";
 
 import AsyncButton from "./../AsyncButton.jsx";
 
@@ -20,7 +20,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    resetPassword: payload => dispatch(resetPassword(payload))
+    resetPassword: payload =>
+      dispatch(ResetPasswordAction.resetPasswordRequest(payload))
   };
 };
 

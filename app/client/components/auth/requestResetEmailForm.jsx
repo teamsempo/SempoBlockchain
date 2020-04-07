@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import AsyncButton from "./../AsyncButton.jsx";
 
-import { requestPasswordResetEmail } from "../../reducers/auth/actions";
+import { ResetPasswordEmailAction } from "../../reducers/auth/actions";
 
 import { Input, ErrorMessage } from "./../styledElements";
 
@@ -16,7 +16,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     requestPasswordResetEmail: payload =>
-      dispatch(requestPasswordResetEmail(payload))
+      dispatch(ResetPasswordEmailAction.passwordResetEmailRequest(payload))
   };
 };
 
