@@ -34,7 +34,7 @@ app/server/static/javascript/bundle.*
 ngrok
 .ideabackup
 /whatsApp/chromedriver
-/ganacheDB/*
+/ganacheDB/
 Dockerrun.aws.json
 
 /venv/*
