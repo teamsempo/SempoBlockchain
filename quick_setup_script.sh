@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -m
 
+PYTHONUNBUFFERED=1
+
 source $1
 
 echo "This will wipe ALL local Sempo data."
@@ -11,11 +13,13 @@ if [ -z ${MASTER_WALLET_PK+x} ]
 then
 echo "\$MASTER_WALLET_PK is empty"
 exit 0
-else
-echo "\$MASTER_WALLET_PK is NOT empty"
 fi
 
 set +e
+
+echo ~~~~Killing any leftover workers or app
+kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
+kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
 
 echo ~~~~Resetting readis
 redis-server &
@@ -82,14 +86,14 @@ psql $app_db -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
-python contract_setup_script.py
+python -u contract_setup_script.py
 
 echo ~~~Killing Python Processes
 sleep 5
 set +e
-kill $(ps aux | grep '[r]un.py' | awk '{print $2}')
-kill $(ps aux | grep '[c]elery' | awk '{print $2}')
+kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
+kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
 
 echo ~~~Done Setup! Bringing Ganache to foreground
-fg 1
+fg 2
 
