@@ -139,10 +139,6 @@ jobs:
             gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
             gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
       - run:
-          name: Inject Codecov Variables
-          command: |
-            sed -i "s|-CODECOV_VARIABLES|$(cat .circleci/codecov_env_variables)|g" docker-compose.yml
-      - run:
           name: Run Docker Tests
           command: |
             docker-compose up --exit-code-from app
