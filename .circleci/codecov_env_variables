@@ -1,0 +1,24 @@
+- CODECOV_ENV\
+      - CODECOV_TOKEN\
+      - CODECOV_URL\
+      - CODECOV_SLUG\
+      - VCS_COMMIT_ID\
+      - VCS_BRANCH_NAME\
+      - VCS_PULL_REQUEST\
+      - VCS_SLUG\
+      - VCS_TAG\
+      - CI_BUILD_URL\
+      - CI_BUILD_ID\
+      - CI_JOB_ID\
+      - CI\
+      - CIRCLECI\
+      - CIRCLE_BRANCH\
+      - CIRCLE_BUILD_NUM\
+      - CIRCLE_NODE_INDEX\
+      - CIRCLE_PROJECT_USERNAME\
+      - CIRCLE_PROJECT_REPONAME\
+      - CIRCLE_REPOSITORY_URL\
+      - CIRCLE_PR_NUMBER\
+      - CIRCLE_SHA1\
+      - CIRCLE_ARTIFACTS\
+      - CIRCLE_TEST_REPORTS
