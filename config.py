@@ -4,7 +4,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.1.12'  # Remember to bump this in every PR
+VERSION = '1.1.13'  # Remember to bump this in every PR
 
 print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
