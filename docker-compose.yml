@@ -3,8 +3,6 @@ services:
   app:
     build: app/server
     image: server
-    volumes:
-      - "./shared:/shared"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "APP"

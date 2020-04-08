@@ -1,5 +1,4 @@
 [run]
-data_file=shared/.coverage
 source=.
 omit=
     # omit everything in /worker and /test
