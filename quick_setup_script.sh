@@ -51,12 +51,12 @@ alembic upgrade heads
 echo ~~~~Resetting Ganache
 cd ../
 kill $(ps aux | grep '[g]anache-cli' | awk '{print $2}')
-rm -R ./ganacheDB
 
 if [ $ganachePersistInput != y ]
 then
   ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
 else
+  rm -R ./ganacheDB
   mkdir ganacheDB
   ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" --db './ganacheDB' &
 fi
