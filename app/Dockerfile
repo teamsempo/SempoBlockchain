@@ -34,9 +34,6 @@ RUN chmod +x /_docker_app_script.sh
 ARG GIT_HASH
 ENV GIT_HASH=$GIT_HASH
 
-ARG ci_env
-ENV ci_env=$ci_env
-
 EXPOSE 9000
 
 CMD ["/_docker_app_script.sh"]
