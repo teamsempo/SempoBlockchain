@@ -141,7 +141,7 @@ jobs:
       - run:
           name: Inject Codecov Variables
           command: |
-            sed "s|-CODECOV_VARIABLES|$(cat .circleci/codecov_env_variables)|g" docker-compose.yml > docker-compose.yml
+            sed -i "s|-CODECOV_VARIABLES|$(cat .circleci/codecov_env_variables)|g" docker-compose.yml
       - run:
           name: Run Docker Tests
           command: |
