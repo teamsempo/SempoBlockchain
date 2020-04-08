@@ -18,7 +18,7 @@ if [ "$ret" -ne 0 ]; then
 fi
 
 if [ "$CONTAINER_MODE" = 'TEST' ]; then
-   coverage run -m invoke_tests.py
+   coverage run invoke_tests.py
    bash <(curl -s https://codecov.io/bash) -cF python
 else
   uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app
