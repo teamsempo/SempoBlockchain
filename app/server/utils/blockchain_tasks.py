@@ -60,8 +60,12 @@ class BlockchainTasker(object):
             'gas_limit': gas_limit,
             'prior_tasks': prior_tasks
         }
-        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), kwargs).id
-
+        print('a!!')
+        task = self._eth_endpoint('transact_with_contract_function')
+        print('a!!!')
+        id = task_runner.delay_task(task, kwargs).id
+        print('b!!')
+        return id
     def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task
@@ -179,16 +183,7 @@ class BlockchainTasker(object):
         :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the transfer
         """
-
         raw_amount = token.system_amount_to_token(amount)
-
-        balance_wei = self.get_wallet_balance(from_address, token)
-
-        if balance_wei < raw_amount:
-            print(f'\nWarning: Balance for {from_address} is currently less than sending amount! Transfer may fail'
-                  f'\nBalance: {balance_wei} wei'
-                  f'\nSending: {raw_amount} wei \n')
-
 
         if signing_address == from_address:
             return self._synchronous_transaction_task(

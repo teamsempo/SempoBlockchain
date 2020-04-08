@@ -312,7 +312,7 @@ class CreditTransferAPI(MethodView):
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                         automatically_resolve_complete=auto_resolve)
-
+                    
                 elif transfer_type == 'BALANCE':
                     transfer = make_target_balance_transfer(
                         target_balance,
@@ -336,7 +336,8 @@ class CreditTransferAPI(MethodView):
 
             else:
                 message = 'Transfer Successful' if auto_resolve else 'Transfer Pending. Must be approved.'
-
+                print('zZzzzZZ-----')
+                print(transfer)
                 if is_bulk:
                     credit_transfers.append(transfer)
 
@@ -358,7 +359,7 @@ class CreditTransferAPI(MethodView):
                     return make_response(jsonify(response_object)), 201
 
         db.session.flush()
-
+        print('ayy')
         message = 'Bulk Transfer Creation Successful' if auto_resolve else 'Bulk Transfer Pending. Must be approved.'
         response_object = {
             'message': message,

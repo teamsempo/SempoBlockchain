@@ -297,7 +297,9 @@ def make_payment_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
+        print('zzom')
         transfer.resolve_as_completed()
+        print('moooz')
         pusher.push_admin_credit_transfer(transfer)
 
     if make_cashout_incentive_transaction:
