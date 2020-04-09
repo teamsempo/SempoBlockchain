@@ -154,8 +154,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
 
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
-        print('Aaaaaaaaa')
-        #REPLACE THIS!
         self.blockchain_task_uuid = bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
@@ -169,7 +167,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                             recipient_approval.eth_send_task_uuid, recipient_approval.approval_task_uuid
                         ]))
         )
-        print('Zzzzzzzzzz')
 
     def resolve_as_completed(self, existing_blockchain_txn=None):
         self.check_sender_transfer_limits()
@@ -184,11 +181,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_completed()
-        print('a')
-
         if not existing_blockchain_txn:
             self.send_blockchain_payload_to_worker()
-        print('b')
 
     def resolve_as_rejected(self, message=None):
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:

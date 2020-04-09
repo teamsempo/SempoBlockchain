@@ -60,12 +60,8 @@ class BlockchainTasker(object):
             'gas_limit': gas_limit,
             'prior_tasks': prior_tasks
         }
-        print('a!!')
-        task = self._eth_endpoint('transact_with_contract_function')
-        print('a!!!')
-        id = task_runner.delay_task(task, kwargs).id
-        print('b!!')
-        return id
+        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), kwargs).id	
+
     def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task

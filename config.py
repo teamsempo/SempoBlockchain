@@ -286,7 +286,7 @@ if MASTER_WALLET_PRIVATE_KEY:
 else:
     master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
     MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
-print(MASTER_WALLET_PRIVATE_KEY)
+
 MASTER_WALLET_ADDRESS = address_from_private_key(master_wallet_private_key)
 
 RESERVE_TOKEN_ADDRESS = config_parser['ETHEREUM'].get('reserve_token_address')
