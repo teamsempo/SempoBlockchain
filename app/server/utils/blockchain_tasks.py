@@ -60,7 +60,7 @@ class BlockchainTasker(object):
             'gas_limit': gas_limit,
             'prior_tasks': prior_tasks
         }
-        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), kwargs).id	
+        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), kwargs).id
 
     def get_blockchain_task(self, task_uuid):
         """

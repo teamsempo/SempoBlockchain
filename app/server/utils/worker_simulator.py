@@ -17,7 +17,6 @@ endpoint_simulators = {
 
 def simulate(task, kwargs, args):
     print('[WARN] Worker Simulator is running. This task will NOT be executed on the blockchain. Never use this mode in prod, or else bad stuff will happen')
-    print((task, kwargs, args))
     if task in endpoint_simulators:
         return endpoint_simulators[task](kwargs, args)
     else:
