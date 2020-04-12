@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { Link, NavLink } from "react-router-dom";
 
-import { updateActiveOrgRequest } from "../reducers/auth/actions";
+import { LoginAction } from "../reducers/auth/actions";
 import { replaceSpaces } from "../utils";
 
 const mapStateToProps = state => {
@@ -23,7 +23,7 @@ const mapDispatchToProps = dispatch => {
   return {
     updateActiveOrgRequest: organisationId =>
       dispatch(
-        updateActiveOrgRequest({
+        LoginAction.updateActiveOrgRequest({
           organisationId
         })
       )
@@ -109,10 +109,6 @@ class NavBar extends React.Component {
   }
 
   render() {
-    let deploymentName = window.DEPLOYMENT_NAME;
-    let beneficiaryTermPlural = window.BENEFICIARY_TERM_PLURAL;
-    let beneficiaryURL = "/" + beneficiaryTermPlural.toLowerCase();
-
     var tracker_link =
       window.ETH_EXPLORER_URL +
       "/address/" +
@@ -174,7 +170,8 @@ class NavBar extends React.Component {
                     >
                       <div style={{ margin: "auto 0", maxWidth: "100px" }}>
                         <BoldedNavBarHeaderText>
-                          {this.props.activeOrganisation.name}
+                          {this.props.activeOrganisation &&
+                            this.props.activeOrganisation.name}
                         </BoldedNavBarHeaderText>
                         <StandardNavBarHeaderText>
                           {this.props.email}
