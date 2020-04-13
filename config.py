@@ -3,6 +3,7 @@ from eth_keys import keys
 from eth_utils import keccak
 
 import logging
+logging.basicConfig(level=logging.DEBUG)
 logg = logging.getLogger(__name__)
 
 from web3 import Web3
@@ -376,7 +377,9 @@ TRANSFER_LIMITS['3.WD30']	= 1000000
 
 try:
     for k in config_parser['LIMITS'].keys():
-        TRANSFER_LIMITS[k.upper()] = int(config_parser['LIMITS'][k])
+        v = int(config_parser['LIMITS'][k])
+        logg.debug('replacing transfer limit {}:{} with value {}'.format(k.upper(), TRANSFER_LIMITS[k.upper()], v))
+        TRANSFER_LIMITS[k.upper()] = v 
 except KeyError:
     pass
     
