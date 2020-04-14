@@ -335,9 +335,6 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def keepalive(self):
-        return self.session.query()
-
     def get_task_from_uuid(self, task_uuid):
         return self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 

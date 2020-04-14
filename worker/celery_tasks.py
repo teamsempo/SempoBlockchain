@@ -151,7 +151,6 @@ def create_transaction_response(self, previous_result, credit_transfer_id):
 
         except Exception as e:
             print(e)
-            print('retry1')
             self.retry(countdown=transaction_response_countdown())
 
         else:
@@ -160,8 +159,6 @@ def create_transaction_response(self, previous_result, credit_transfer_id):
             blockchain_processor.send_blockchain_result_to_app(result)
 
             if result['status'] == 'PENDING':
-                print('retry2')
-
                 self.retry(countdown=transaction_response_countdown())
 
             return result
@@ -198,8 +195,6 @@ def resilient_bitcoin_send(self, transaction_data):
         return (transaction_hash, credit_transfer_ids)
 
     except ConnectionError:
-        print('retry3')
-
         self.retry(countdown=2 * 2 ** self.request.retries)
 
     except Exception as e:
@@ -234,8 +229,6 @@ def check_whether_transaction_sent_to_pool(self, submit_result):
     except Exception as e:
         # This is so we can log the underlying error rather than just getting a MaxRetriesExceededError
         if self.request.retries < self.max_retries - 1:
-            print('retry4')
-
             self.retry(countdown=2 * 2 ** self.request.retries)
         else:
             submitted_date = datetime.utcnow()
@@ -262,8 +255,6 @@ def check_transaction_status_in_pool(self, check_sent_to_pool_result):
         success = blockchain_processor.check_transaction_status_in_pool(transaction_hash, blockchain_transaction_ids)
 
         if not success:
-            print('retry5')
-
             self.retry(countdown=BITCOIN_CHECK_TRANSACTION_BASE_TIME * 2 ** self.request.retries)
 
     except MaxRetriesExceededError:
