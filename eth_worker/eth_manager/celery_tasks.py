@@ -28,7 +28,7 @@ class SqlAlchemyTask(celery.Task):
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         try:
-            persistence_interface.session.remove()
+            persistence_interface.keepalive()
         except:
             pass
 
