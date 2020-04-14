@@ -7,9 +7,9 @@ import config
 
 
 def execute_synchronous_celery(signature):
-    result = signature.apply()
+    async_result = signature.delay()
     try:
-        response = result.get(
+        response = async_result.get(
             timeout=config.SYNCRONOUS_TASK_TIMEOUT,
             propagate=True,
             interval=0.3)
@@ -17,11 +17,11 @@ def execute_synchronous_celery(signature):
     except Exception as e:
         raise e
     finally:
-        result.forget()
+        async_result.forget()
 
     return response
 
 
 def execute_task(signature):
-    result = signature.apply()
-    return result.id
+    ar = signature.delay()
+    return ar.id

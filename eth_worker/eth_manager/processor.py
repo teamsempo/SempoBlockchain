@@ -461,7 +461,7 @@ class TransactionProcessor(object):
 
         else:
             signature(utils.eth_endpoint('_attempt_transaction'),
-                      args=(task.uuid,)).apply(
+                      args=(task.uuid,)).apply_async(
                 countdown=RETRY_TRANSACTION_BASE_TIME * 4 ** number_of_attempts_this_round
             )
 
