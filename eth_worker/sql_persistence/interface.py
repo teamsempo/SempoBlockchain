@@ -14,7 +14,7 @@ from eth_manager.exceptions import (
     LockedNotAcquired
 )
 from sqlalchemy.orm import scoped_session
-
+from datetime import datetime
 class SQLPersistenceInterface(object):
 
     def _fail_expired_transactions(self):
@@ -98,7 +98,7 @@ class SQLPersistenceInterface(object):
               f'addr:{signing_wallet_obj.address}')
 
         try:
-            have_lock = lock.acquire(blocking_timeout=1)
+            have_lock = lock.acquire(blocking_timeout=10)
             if have_lock:
                 return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
             else:
@@ -106,25 +106,39 @@ class SQLPersistenceInterface(object):
                       f'addr:{signing_wallet_obj.address}')
                 raise LockedNotAcquired
         finally:
+            print('releasing lock')
             if have_lock:
+                print('for real')
+
                 lock.release()
 
     def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
-
+        print('starting to claim nonce')
+        print(datetime.now())
         network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
+        print('starting to claim nonce1')
+        print(datetime.now())
 
         blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
+        print('starting to claim nonce2')
+        print(datetime.now())
 
         if blockchain_transaction.nonce is not None:
+            print('not none')
             return blockchain_transaction.nonce, blockchain_transaction.id
+        print('starting to claim nonce3')
+        print(datetime.now())
 
         calculated_nonce = self._calculate_nonce(signing_wallet_obj, network_nonce)
+        print('starting to claim nonce4')
+        print(datetime.now())
 
         blockchain_transaction.signing_wallet = signing_wallet_obj
         blockchain_transaction.nonce = calculated_nonce
         blockchain_transaction.status = 'PENDING'
-
         self.session.commit()
+        print('done')
+        print(datetime.now())
 
         return calculated_nonce, blockchain_transaction.id
 
