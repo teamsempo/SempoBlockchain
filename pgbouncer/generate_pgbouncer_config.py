@@ -45,6 +45,7 @@ ini_file.write(f"""[databases]
 [pgbouncer]
 listen_addr = 0.0.0.0
 listen_port = 6543
+pool_mode = transaction
 unix_socket_dir =
 user = postgres
 auth_file = /etc/pgbouncer/userlist.txt
