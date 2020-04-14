@@ -90,24 +90,11 @@ class SQLPersistenceInterface(object):
 
     def locked_claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
         # Locks normally get released in less than 0.05 seconds
-
-        have_lock = False
-        lock = self.red.lock(signing_wallet_obj.address, timeout=10)
-
+        lock = self.red.lock(signing_wallet_obj.address)
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
-
-        try:
-            have_lock = lock.acquire(blocking_timeout=1)
-            if have_lock:
-                return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
-            else:
-                print(f'Lock not acquired for txn: {transaction_id} \n'
-                      f'addr:{signing_wallet_obj.address}')
-                raise LockedNotAcquired
-        finally:
-            if have_lock:
-                lock.release()
+        with lock:
+            return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
 
     def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
 
