@@ -251,7 +251,7 @@ workflows:
             branches:
               only:
                 - master
-                - generalised_deployment
+                - priority-queue
           requires:
             - test:backend
             - test:frontend
