@@ -98,40 +98,79 @@ class SQLPersistenceInterface(object):
 
         try:
             have_lock = lock.acquire(blocking_timeout=10)
+            print('have lock?')
+            print(signing_wallet_obj.address)
             if have_lock:
+                print('yes')
+                print(signing_wallet_obj.address)
                 return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
             else:
+                print('no')
+                print(signing_wallet_obj.address)
                 print(f'Lock not acquired for txn: {transaction_id} \n'
                       f'addr:{signing_wallet_obj.address}')
                 raise LockedNotAcquired
         finally:
             print('releasing lock')
+            print(signing_wallet_obj.address)
             if have_lock:
                 print('for real')
-
+                print(signing_wallet_obj.address)
                 lock.release()
 
     def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
+        print('~~~')
         print('starting to claim nonce')
+        print('wallet')
+        print(signing_wallet_obj.address)
+        print('trans')
+        print(transaction_id)
         print(datetime.datetime.now())
+        print('---')
         network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
+        print('~~~')
         print('starting to claim nonce1')
         print(datetime.datetime.now())
+        print('wallet')
+        print(signing_wallet_obj.address)
+        print('trans')
+        print(transaction_id)
+        print(datetime.datetime.now())
+        print('---')
 
         blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
+        print('~~~')
         print('starting to claim nonce2')
         print(datetime.datetime.now())
+        print('wallet')
+        print(signing_wallet_obj.address)
+        print('trans')
+        print(transaction_id)
+        print(datetime.datetime.now())
+        print('---')
 
         if blockchain_transaction.nonce is not None:
             print('not none')
             return blockchain_transaction.nonce, blockchain_transaction.id
+        print('~~~')
         print('starting to claim nonce3')
         print(datetime.datetime.now())
-
+        print('wallet')
+        print(signing_wallet_obj.address)
+        print('trans')
+        print(transaction_id)
+        print(datetime.datetime.now())
+        print('---')
         calculated_nonce = self._calculate_nonce(signing_wallet_obj, network_nonce)
+        print('~~~')
         print('starting to claim nonce4')
         print(datetime.datetime.now())
-
+        print('wallet')
+        print(signing_wallet_obj.address)
+        print('trans')
+        print(transaction_id)
+        print(datetime.datetime.now())
+        print('---')
         blockchain_transaction.signing_wallet = signing_wallet_obj
         blockchain_transaction.nonce = calculated_nonce
         blockchain_transaction.status = 'PENDING'
