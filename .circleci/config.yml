@@ -10,16 +10,11 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: download SOPS
-          command: |
-            wget https://github.com/mozilla/sops/releases/download/3.4.0/sops-3.4.0.linux -O ./sops
-            chmod +x ./sops
-      - run:
-          name: Decrypt SOPS Secrets
+          name: Generate Secrets Files
           command: |
             mkdir config_files/secret
-            ./sops --decrypt .sempoconfig/common_secrets.ini > ./config_files/secret/common_secrets.ini
-            ./sops --decrypt .sempoconfig/docker_test_secrets.ini > ./config_files/secret/docker_test_secrets.ini
+            cd config_files
+            python generate_secrets.py docker_test
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
