@@ -93,9 +93,10 @@ class SQLPersistenceInterface(object):
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
         with lock:
-            self.session.refresh()
-            return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
-            
+            self.session.close()
+            self.session = scoped_session(self.session_factory)
+            ct = self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+            return ct
 
     def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
         network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
