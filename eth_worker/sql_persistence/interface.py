@@ -88,71 +88,28 @@ class SQLPersistenceInterface(object):
         return next_nonce
 
     def locked_claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
-        # Locks normally get released in less than 0.05 seconds
-        lock = self.red.lock(signing_wallet_obj.address)
+        lock = self.red.lock(signing_wallet_obj.address, sleep = 5, timeout=600)
+        lock.release()
+        self.session.commit()
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
         with lock:
-            return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+            self.session.remove()
+            self.session = scoped_session(self.session_factory)
+            ct = self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+            return ct
 
     def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
-        print('~~~')
-        print('starting to claim nonce')
-        print('wallet')
-        print(signing_wallet_obj.address)
-        print('trans')
-        print(transaction_id)
-        print(datetime.datetime.now())
-        print('---')
         network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
-        print('~~~')
-        print('starting to claim nonce1')
-        print(datetime.datetime.now())
-        print('wallet')
-        print(signing_wallet_obj.address)
-        print('trans')
-        print(transaction_id)
-        print(datetime.datetime.now())
-        print('---')
-
         blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
-        print('~~~')
-        print('starting to claim nonce2')
-        print(datetime.datetime.now())
-        print('wallet')
-        print(signing_wallet_obj.address)
-        print('trans')
-        print(transaction_id)
-        print(datetime.datetime.now())
-        print('---')
 
         if blockchain_transaction.nonce is not None:
-            print('not none')
             return blockchain_transaction.nonce, blockchain_transaction.id
-        print('~~~')
-        print('starting to claim nonce3')
-        print(datetime.datetime.now())
-        print('wallet')
-        print(signing_wallet_obj.address)
-        print('trans')
-        print(transaction_id)
-        print(datetime.datetime.now())
-        print('---')
         calculated_nonce = self._calculate_nonce(signing_wallet_obj, network_nonce)
-        print('~~~')
-        print('starting to claim nonce4')
-        print(datetime.datetime.now())
-        print('wallet')
-        print(signing_wallet_obj.address)
-        print('trans')
-        print(transaction_id)
-        print(datetime.datetime.now())
-        print('---')
         blockchain_transaction.signing_wallet = signing_wallet_obj
         blockchain_transaction.nonce = calculated_nonce
         blockchain_transaction.status = 'PENDING'
         self.session.commit()
-        print('done')
 
         return calculated_nonce, blockchain_transaction.id
 
@@ -464,13 +421,15 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def __init__(self, w3, red, session, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
+    def __init__(self, w3, red, session_factory, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 
         self.w3 = w3
 
         self.red = red
 
-        self.session = scoped_session(session)
+        self.session_factory = session_factory
+
+        self.session = scoped_session(session_factory)
         
         self.first_block_hash = w3.eth.getBlock(0).hash.hex()
 

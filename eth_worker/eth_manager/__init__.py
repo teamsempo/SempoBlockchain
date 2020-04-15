@@ -82,7 +82,7 @@ engine = create_engine(
 
 session_factory = sessionmaker(autocommit=False, autoflush=True, bind=engine)
 
-persistence_interface = SQLPersistenceInterface(w3=w3, red=red, session=session_factory)
+persistence_interface = SQLPersistenceInterface(w3=w3, red=red, session_factory=session_factory)
 
 blockchain_processor = TransactionProcessor(
     **eth_config,

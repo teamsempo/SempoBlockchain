@@ -352,7 +352,6 @@ class TransactionProcessor(object):
         try:
             have_lock = lock.acquire(blocking_timeout=1)
             if have_lock:
-
                 current_status = task.status
                 if current_status in ['SUCCESS', 'PENDING']:
                     print(f'Skipping {task.id}: task status is currently {current_status}')
