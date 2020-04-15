@@ -74,7 +74,7 @@ if __name__ == '__main__':
     specific_secrets_write_path = os.path.join(secret_dir, f'{name}_secrets.ini')
     common_secrets_write_path = os.path.join(secret_dir, 'common_secrets.ini')
 
-    print('Generating deployment specific (local) secrets')
+    print(f'Generating deployment specific ({name}) secrets')
     generate_specific_secrets(specific_secrets_write_path)
     print('Generating common secrets')
     generate_common_secrets(common_secrets_write_path)
