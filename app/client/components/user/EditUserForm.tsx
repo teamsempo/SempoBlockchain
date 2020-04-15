@@ -300,6 +300,7 @@ class EditUserForm extends React.Component<
                     {/*
                     // @ts-ignore */}
                     <AsyncButton
+                      type="button"
                       onClick={this.props.onResetPin}
                       miniSpinnerStyle={{ height: "10px", width: "10px" }}
                       buttonStyle={{
@@ -328,6 +329,7 @@ class EditUserForm extends React.Component<
                   {/*
                   // @ts-ignore */}
                   <AsyncButton
+                    type="button"
                     onClick={this.props.onDeleteUser}
                     miniSpinnerStyle={{ height: "10px", width: "10px" }}
                     buttonStyle={{
