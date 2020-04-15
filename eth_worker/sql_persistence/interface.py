@@ -93,6 +93,7 @@ class SQLPersistenceInterface(object):
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
         with lock:
+            self.session.refresh()
             return self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
             
 
