@@ -68,7 +68,7 @@ jobs:
       - run:
           name: Build application Docker images
           command: |
-            docker build -t server . -f ./app/Dockerfile  --build-arg GIT_HASH=$CIRCLE_SHA1
+            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1
             docker build -t eth_worker . -f ./eth_worker/Dockerfile
             docker build -t proxy ./proxy
       - run:
@@ -158,7 +158,10 @@ jobs:
           name: Run Frontend Tests
           command: |
             cd app
-            npm run test
+            npm run test:coverage
+      - run:
+          name: Upload coverage report to Codecov
+          command: bash <(curl -s https://codecov.io/bash) -cF javascript
   deploy:
     working_directory: ~/project
     docker:
