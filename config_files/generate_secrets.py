@@ -3,8 +3,6 @@ import os
 import sys
 import base64
 import configparser
-from eth_utils import keccak
-from web3 import Web3
 
 def add_val(parser, section, key, value):
     try:
@@ -23,7 +21,7 @@ def rand_hex(hexlen=16):
     return os.urandom(hexlen).hex()
 
 def eth_pk():
-    return Web3.toHex(keccak(os.urandom(4096)))
+    return '0x' + os.urandom(32).hex()
 
 template_path = './templates'
 specific_secrets_read_path = os.path.join(template_path, 'specific_secrets_template.ini')
