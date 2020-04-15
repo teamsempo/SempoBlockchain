@@ -67,7 +67,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
     (lambda o: o.id, False, False, 'subadmin', 403),
     (lambda o: o.id, True, False, 'admin', 200),
     (lambda o: o.id, False, True, 'admin', 200),
-    (lambda o: 1222103, False, False, 'admin', 404),
+    (lambda o: 1222103, False, False, 'admin', 400),
 ])
 def test_edit_user(test_client, authed_sempo_admin_user, create_transfer_account_user, user_id_accessor, is_vendor, is_groupaccount, tier, status_code):
     if tier:

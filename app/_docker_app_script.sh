@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -eo pipefail
 
 cd src
 echo upgrading database
