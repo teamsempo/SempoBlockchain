@@ -88,7 +88,7 @@ class SQLPersistenceInterface(object):
         return next_nonce
 
     def locked_claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
-        lock = self.red.lock(signing_wallet_obj.address, sleep = 5, timeout=600)
+        lock = self.red.lock(signing_wallet_obj.address, timeout=600)
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
         self.session.commit()
