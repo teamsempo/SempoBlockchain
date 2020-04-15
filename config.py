@@ -4,7 +4,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.1.9'  # Remember to bump this in every PR
+VERSION = '1.1.14'  # Remember to bump this in every PR
 
 print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -61,7 +61,7 @@ if load_from_s3:
 
     client = session.client('s3')
 
-    SECRET_BUCKET = "ctp-prod-secrets"
+    SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
     FORCE_SSL = True
 
     common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
