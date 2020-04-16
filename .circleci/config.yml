@@ -211,19 +211,19 @@ jobs:
 
             printf "branch-defaults:
               default:
-               environment: blockchain-app-dev
+               environment: sempo-dev
             global:
-             application_name: blockchain-app
+             application_name: ${DEPLOY_APPLICATION_NAME}
              default_ec2_keyname: aws-eb
              default_platform: Multi-container Docker 18.03.1-ce (Generic)
-             default_region: eu-west-1
+             default_region: ${DEPLOY_REGION}
              include_git_submodules: true
              workspace_type: Application" > ./.elasticbeanstalk/config.yml
       - run:
           name: Push Docker Image
           command: |
 
-            eval $(aws ecr get-login --no-include-email --region ap-southeast-2);
+            eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
             docker tag server:latest ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker tag proxy:latest ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
@@ -238,7 +238,7 @@ jobs:
       - run:
           name: Deploy app to AWS Server via Docker
           command: |
-            eb deploy blockchain-app-dev3
+            eb deploy ${DEPLOY_ENV}
 
 workflows:
   version: 2
@@ -256,7 +256,7 @@ workflows:
             branches:
               only:
                 - master
-                - generalised_deployment
-          requires:
-            - test:backend
-            - test:frontend
+                - circle-ci-generic-dep
+#          requires:
+#            - test:backend
+#            - test:frontend
