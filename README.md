@@ -253,3 +253,5 @@ This will extract all keys into the config_files folder. To encrypt them again f
 Not that SOPS doesn't handle merge conflicts currently - if you try and merge an encrypted file, it will break in a bad way!
 
 Instead, if you need to merge in two config files, you need to save the old config, load the new one and merge them by hand.
+
+Testing non-trusted edits
