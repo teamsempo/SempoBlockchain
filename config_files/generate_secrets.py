@@ -15,7 +15,7 @@ def add_val(parser, section, key, value):
     except AttributeError:
         pass
 
-        parser[section][key] = str(value)
+    parser[section][key] = str(value)
 
 def rand_hex(hexlen=16):
     return os.urandom(hexlen).hex()
