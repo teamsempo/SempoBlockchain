@@ -53,18 +53,6 @@ directory_listing_other_state = partial(UssdSessionFactory, state="directory_lis
      (my_business_state, standard_user, "2", "change_my_business_prompt"),
      (my_business_state, standard_user, "3", "exit_invalid_menu_option"),
      (my_business_state, standard_user, "asdf", "exit_invalid_menu_option"),
-     # directory listing state tests
-     (directory_listing_state, standard_user, "9", "directory_listing_other"),
-     (directory_listing_state, standard_user, "1", "complete"),
-     (directory_listing_state, standard_user, "10", "exit_invalid_menu_option"),
-     (directory_listing_state, standard_user, "11", "exit_invalid_menu_option"),
-     (directory_listing_state, standard_user, "asdf", "exit_invalid_menu_option"),
-     # directory listing other state tests
-     (directory_listing_other_state, standard_user, "1", "complete"),
-     (directory_listing_other_state, standard_user, "9", "directory_listing_other"),
-     (directory_listing_other_state, standard_user, "10", "directory_listing_other"),
-     (directory_listing_other_state, standard_user, "11", "exit_invalid_menu_option"),
-     (directory_listing_other_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # choose_language state tests
      (choose_language_state, standard_user, "5", "exit_invalid_menu_option"),
      (choose_language_state, standard_user, "asdf", "exit_invalid_menu_option"),

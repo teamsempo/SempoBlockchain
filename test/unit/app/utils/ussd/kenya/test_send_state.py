@@ -35,44 +35,23 @@ def standard_user(test_client, init_database):
 
 send_enter_recipient_state = partial(UssdSessionFactory, state="send_enter_recipient")
 send_token_amount_state = partial(UssdSessionFactory, state="send_token_amount")
-send_token_reason_state = partial(UssdSessionFactory, state="send_token_reason")
-send_token_reason_other_state = partial(UssdSessionFactory, state="send_token_reason_other")
 send_token_pin_authorization_state = partial(UssdSessionFactory, state="send_token_pin_authorization")
-send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_confirmation")
 
 
 @pytest.mark.parametrize("session_factory, user_input, expected",
  [
      # send_token_amount state test
-     (send_token_amount_state, "12.5", "send_token_reason"),
-     (send_token_amount_state, "500", "send_token_reason"),
+     (send_token_amount_state, "12.5", "send_token_pin_authorization"),
+     (send_token_amount_state, "500", "send_token_pin_authorization"),
      (send_token_amount_state, "-1", "exit_invalid_input"),
      (send_token_amount_state, "asdf", "exit_invalid_input"),
-     # send_token_reasons state tests
-     (send_token_reason_state, "9", "send_token_reason_other"),
-     (send_token_reason_state, "1", "send_token_pin_authorization"),
-     (send_token_reason_state, "10", "exit_invalid_menu_option"),
-     (send_token_reason_state, "11", "exit_invalid_menu_option"),
-     (send_token_reason_state, "asdf", "exit_invalid_menu_option"),
-     # send_token_reason_other state tests
-     (send_token_reason_other_state, "1", "send_token_pin_authorization"),
-     (send_token_reason_other_state, "9", "send_token_reason_other"),
-     (send_token_reason_other_state, "10", "send_token_reason_other"),
-     (send_token_reason_other_state, "11", "exit_invalid_menu_option"),
-     (send_token_reason_other_state, "asdf", "exit_invalid_menu_option"),
-     # send_token_pin_authorization state tests
-     (send_token_pin_authorization_state, "0000", "send_token_confirmation"),
-     # send_token_confirmation state tests
-     (send_token_confirmation_state, "2", "exit"),
-     (send_token_confirmation_state, "3", "exit_invalid_menu_option"),
-     (send_token_confirmation_state, "asdf", "exit_invalid_menu_option"),
  ])
 def test_kenya_state_machine(test_client, init_database, standard_user, session_factory, user_input, expected):
     session = session_factory()
     session.session_data = {
         'transfer_usage_mapping': fake_transfer_mapping(10),
         'usage_menu': 1,
-        'usage_index_stack': [0, 8]
+        'usage_index_stack': [0, 8],
     }
     db.session.commit()
     state_machine = KenyaUssdStateMachine(session, standard_user)
@@ -143,22 +122,20 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
     recipient = create_transfer_account_user
     recipient.phone = make_kenyan_phone(recipient.phone)
 
-    send_token_confirmation = UssdSessionFactory(
-        state="send_token_confirmation",
+    send_token_pin_authorization = UssdSessionFactory(
+        state="send_token_pin_authorization",
         session_data=json.loads(
             "{" +
             f'"recipient_phone": "{recipient.phone}",'
-            '"transaction_amount": "10",'
-            '"transaction_reason_i18n": "A reason",'
-            '"transaction_reason_id": "1"'
+            '"transaction_amount": "10"'
             + "}"
         )
     )
 
-    state_machine = KenyaUssdStateMachine(send_token_confirmation, standard_user)
+    state_machine = KenyaUssdStateMachine(send_token_pin_authorization, standard_user)
     send_token = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.send_token', send_token)
 
-    state_machine.feed_char("1")
+    state_machine.feed_char("0000")
     assert state_machine.state == "complete"
-    send_token.assert_called_with(standard_user, recipient, 10, "A reason", 1)
+    send_token.assert_called_with(sender=standard_user, recipient=recipient, amount=10.0)
