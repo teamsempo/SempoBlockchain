@@ -181,7 +181,7 @@ def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
-                                                secrets_parser['DATABASE']['port'],
+                                                configparser['DATABASE']['port'],
                                                 name)
 
 
