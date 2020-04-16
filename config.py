@@ -8,7 +8,7 @@ logg = logging.getLogger(__name__)
 
 from web3 import Web3
 
-VERSION = '1.1.16'  # Remember to bump this in every PR
+VERSION = '1.1.17'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
