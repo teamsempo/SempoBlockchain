@@ -172,6 +172,13 @@ jobs:
       - attach_workspace:
           at: ~/project
       - run:
+          name: Check deploy Authorisation
+          command: |
+            if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+              echo "No AWS_ACCESS_KEY_ID is set! Failing..."
+              exit 1;
+            fi
+      - run:
           name: Load Docker image layer cache
           command: |
             gunzip -c ~/project/imagecaches/server.tar.gz | docker load
