@@ -44,16 +44,12 @@ en:
         10. Show previous
     send_token_pin_authorization:
       first: |
-        CON Please enter your PIN.
+        CON Send %{transaction_amount} %{token_name} to %{recipient_phone}.
+        Please enter your PIN to confirm.
         0. Back
       retry: |
         CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
         0. Back
-    send_token_confirmation: |
-      CON Send %{transaction_amount} %{token_name} to %{recipient_phone} for %{transaction_reason}
-      1. Confirm
-      2. Cancel
-      0. Back
     directory_listing: |
       CON Market Category
       %{options}

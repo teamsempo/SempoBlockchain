@@ -44,7 +44,6 @@ class KenyaUssdStateMachine(Machine):
         'send_token_reason',
         'send_token_reason_other',
         'send_token_pin_authorization',
-        'send_token_confirmation',
         # account management states
         'account_management',
         'balance_inquiry_pin_authorization',
@@ -227,9 +226,7 @@ class KenyaUssdStateMachine(Machine):
     def process_send_token_request(self, user_input):
         user = get_user_by_phone(self.session.get_data('recipient_phone'), "KE")
         amount = float(self.session.get_data('transaction_amount'))
-        reason_str = self.session.get_data('transaction_reason_i18n')
-        reason_id = float(self.session.get_data('transaction_reason_id'))
-        ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
+        ussd_tasker.send_token(sender=self.user, recipient=user, amount=amount)
 
     def upsell_unregistered_recipient(self, user_input):
         recipient_phone = proccess_phone_number(user_input)
@@ -390,7 +387,7 @@ class KenyaUssdStateMachine(Machine):
         ]
         self.add_transitions(initial_pin_confirmation_transitions)
 
-        # event: directory_listing
+        # event: account management transitions
         start_transitions = [
             {'trigger': 'feed_char',
              'source': 'start',
@@ -441,7 +438,7 @@ class KenyaUssdStateMachine(Machine):
         send_token_amount_transitions = [
             {'trigger': 'feed_char',
              'source': 'send_token_amount',
-             'dest': 'send_token_reason',
+             'dest': 'send_token_pin_authorization',
              'conditions': 'is_valid_token_amount',
              'after': ['save_transaction_amount', 'store_transfer_usage']},
             {'trigger': 'feed_char',
@@ -526,31 +523,15 @@ class KenyaUssdStateMachine(Machine):
         send_token_pin_authorization_transitions = [
             {'trigger': 'feed_char',
              'source': 'send_token_pin_authorization',
-             'dest': 'send_token_confirmation',
-             'conditions': 'is_authorized_pin'},
+             'dest': 'complete',
+             'conditions': 'is_authorized_pin',
+             'after': 'process_send_token_request'},
             {'trigger': 'feed_char',
              'source': 'send_token_pin_authorization',
              'dest': 'exit_pin_blocked',
              'conditions': 'is_blocked_pin'}
         ]
         self.add_transitions(send_token_pin_authorization_transitions)
-
-        # event: send_token_confirmation transitions
-        send_token_confirmation_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'send_token_confirmation',
-             'dest': 'complete',
-             'after': 'process_send_token_request',
-             'conditions': 'menu_one_selected'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_confirmation',
-             'dest': 'exit',
-             'conditions': 'menu_two_selected'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_confirmation',
-             'dest': 'exit_invalid_menu_option'}
-        ]
-        self.add_transitions(send_token_confirmation_transitions)
 
         # event: account_management transitions
         account_management_transitions = [
