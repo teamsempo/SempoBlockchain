@@ -257,6 +257,7 @@ workflows:
               only:
                 - master
                 - circle-ci-generic-dep
-#          requires:
+          requires:
+            - build
 #            - test:backend
 #            - test:frontend
