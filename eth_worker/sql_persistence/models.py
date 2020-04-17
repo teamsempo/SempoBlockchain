@@ -266,9 +266,16 @@ class BlockchainTransaction(ModelBase):
         print(self.blockchain_task)
         print(self.blockchain_task.uuid)
         print('000000-----')
-        # Put POST here
-        # Want to send current timestamp
-        # Want to send lookup(blockchain_task_id).uuid
+        #try:
+        #   Put POST here
+        #   Want to send current timestamp
+        #   Want to send blockchain_task.uuid
+        #   Want to send status/error/message
+
+        #   set is_synchronized_with_app TRUE
+        #except:
+        #   set is_synchronized_with_app to FALSE
+
         if value not in STATUS_STRING_TO_INT:
             raise ValueError('Status {} not allowed. (Must be {}'.format(value, STATUS_STRING_TO_INT))
 
