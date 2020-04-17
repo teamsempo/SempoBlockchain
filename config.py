@@ -4,7 +4,7 @@ from eth_utils import keccak
 
 from web3 import Web3
 
-VERSION = '1.1.14'  # Remember to bump this in every PR
+VERSION = '1.1.16'  # Remember to bump this in every PR
 
 print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -195,6 +195,7 @@ def get_database_uri(name, host, censored=True):
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
                                                 ACTIVE_DATABASE_PORT,
+                                                config_parser['DATABASE']['port'],
                                                 name)
 
 

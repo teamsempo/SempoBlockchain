@@ -10,16 +10,11 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: download SOPS
-          command: |
-            wget https://github.com/mozilla/sops/releases/download/3.4.0/sops-3.4.0.linux -O ./sops
-            chmod +x ./sops
-      - run:
-          name: Decrypt SOPS Secrets
+          name: Generate Secrets Files
           command: |
             mkdir config_files/secret
-            ./sops --decrypt .sempoconfig/common_secrets.ini > ./config_files/secret/common_secrets.ini
-            ./sops --decrypt .sempoconfig/docker_test_secrets.ini > ./config_files/secret/docker_test_secrets.ini
+            cd config_files
+            python generate_secrets.py docker_test
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
@@ -185,6 +180,13 @@ jobs:
       - attach_workspace:
           at: ~/project
       - run:
+          name: Check deploy Authorisation
+          command: |
+            if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+              echo "No AWS_ACCESS_KEY_ID is set! Failing..."
+              exit 1;
+            fi
+      - run:
           name: Load Docker image layer cache
           command: |
             gunzip -c ~/project/imagecaches/server.tar.gz | docker load
@@ -218,19 +220,19 @@ jobs:
 
             printf "branch-defaults:
               default:
-               environment: blockchain-app-dev
+               environment: sempo-dev
             global:
-             application_name: blockchain-app
+             application_name: ${DEPLOY_APPLICATION_NAME}
              default_ec2_keyname: aws-eb
              default_platform: Multi-container Docker 18.03.1-ce (Generic)
-             default_region: eu-west-1
+             default_region: ${DEPLOY_REGION}
              include_git_submodules: true
              workspace_type: Application" > ./.elasticbeanstalk/config.yml
       - run:
           name: Push Docker Image
           command: |
 
-            eval $(aws ecr get-login --no-include-email --region ap-southeast-2);
+            eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
             docker tag server:latest ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker tag proxy:latest ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
@@ -247,7 +249,7 @@ jobs:
       - run:
           name: Deploy app to AWS Server via Docker
           command: |
-            eb deploy blockchain-app-dev3
+            eb deploy ${DEPLOY_ENV}
 
 workflows:
   version: 2
