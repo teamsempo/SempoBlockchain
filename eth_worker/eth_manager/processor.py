@@ -71,7 +71,8 @@ class TransactionProcessor(object):
 
     def process_send_eth_transaction(self, transaction_id,
                                      recipient_address, amount, task_id=None):
-
+        print('recipient_address')
+        print(recipient_address)
         partial_txn_dict = {
             'to': recipient_address,
             'value': amount
@@ -254,7 +255,8 @@ class TransactionProcessor(object):
 
             print(f'Status for transaction {transaction_object.id} of task UUID {task.uuid} is:'
             f'\n {status}')
-
+            print('transaction_id')
+            print(transaction_id)
             if status == 'SUCCESS':
 
                 unstarted_posteriors = self.get_unstarted_posteriors(task)

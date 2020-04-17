@@ -172,6 +172,11 @@ class BlockchainTask(ModelBase):
 
     @type.setter
     def type(self, value):
+        print('SETTER 3!')
+        print(value)
+        print(self)
+        print(self.status_text)
+        print('---')
         if value not in ALLOWED_TASK_TYPES:
             raise ValueError(f'{value} not in allow task types')
         self._type = value
@@ -197,13 +202,13 @@ class BlockchainTask(ModelBase):
         return STATUS_INT_TO_STRING.get(lowest_status_code, 'UNSTARTED')
 
     @status.expression
-    def status(cls):
+    def status(status):
         return (
             case(
                 STATUS_INT_TO_STRING,
                 value=(
                     select([func.min(BlockchainTransaction.status_code)])
-                        .where(BlockchainTransaction.blockchain_task_id == cls.id)
+                        .where(BlockchainTransaction.blockchain_task_id == status.id)
                         .label('lowest_status')
                 ),
                 else_='UNSTARTED'
@@ -231,6 +236,8 @@ class BlockchainTransaction(ModelBase):
     nonce = Column(Integer)
     nonce_consumed = Column(Boolean, default=False)
 
+    is_synchronized_with_app = Column(Boolean, default=False)
+
     ignore = Column(Boolean, default=False)
 
     first_block_hash = Column(String)
@@ -245,7 +252,18 @@ class BlockchainTransaction(ModelBase):
 
     @status.setter
     def status(self, value):
-
+        print('SETTER 2!')
+        print(value)
+        print(self)
+        print(self.message)
+        print(self.block)
+        print(self.hash)
+        print(self.contract_address)
+        print(self.signing_wallet_id)
+        print(self.blockchain_task_id)
+        # Put POST here
+        # Want to send current timestamp
+        # Want to send lookup(blockchain_task_id).uuid
         if value not in STATUS_STRING_TO_INT:
             raise ValueError('Status {} not allowed. (Must be {}'.format(value, STATUS_STRING_TO_INT))
 
