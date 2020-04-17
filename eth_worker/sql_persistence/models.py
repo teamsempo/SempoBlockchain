@@ -246,6 +246,8 @@ class BlockchainTransaction(ModelBase):
 
     blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id))
 
+    blockchain_task = relationship('BlockchainTask', foreign_keys=[blockchain_task_id])
+
     @hybrid_property
     def status(self):
         return self._status
@@ -261,6 +263,9 @@ class BlockchainTransaction(ModelBase):
         print(self.contract_address)
         print(self.signing_wallet_id)
         print(self.blockchain_task_id)
+        print(self.blockchain_task)
+        print(self.blockchain_task.uuid)
+        print('000000-----')
         # Put POST here
         # Want to send current timestamp
         # Want to send lookup(blockchain_task_id).uuid
