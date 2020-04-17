@@ -32,7 +32,7 @@ echo If this section hangs, you might have a bunch of idle postgres connections.
 echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
 
 db_server=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@localhost:5432
-app_db=$db_server/${APP_DB:-sempo_blockchain_local}
+app_db=$db_server/${APP_DB:-sempo_app}
 eth_worker_db=$db_server/${WORKER_DB:-eth_worker}
 
 set -e
@@ -81,7 +81,7 @@ echo ~~~Starting App
 
 cd ../
 python -u run.py &
-sleep 5
+sleep 10
 
 echo ~~~Creating Default Account
 curl 'http://0.0.0.0:9000/api/v1/auth/register/' -H 'Connection: keep-alive' -H 'Accept: application/json' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36' -H 'Content-Type: application/json' -H 'Origin: http://0.0.0.0:9000' -H 'Referer: http://0.0.0.0:9000/login/sign-up' -H 'Accept-Language: en-US,en;q=0.9' -H 'Cookie: _ga=GA1.1.889304486.1568334223; _hp2_id.2461187681=%7B%22userId%22%3A%221109895996535790%22%2C%22pageviewId%22%3A%224425033411764656%22%2C%22sessionId%22%3A%221479247222978424%22%2C%22identity%22%3Anull%2C%22trackerVersion%22%3A%224.0%22%7D' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
