@@ -33,14 +33,17 @@ echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
 
 db_server=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@localhost:5432
 app_db=$db_server/${APP_DB:-sempo_blockchain_local}
-eth_worker_db=$db_server/${APP_DB:-eth_worker}
+eth_worker_db=$db_server/${WORKER_DB:-eth_worker}
 
-psql $app_db -c 'DROP SCHEMA public CASCADE'
-psql $app_db -c 'CREATE SCHEMA public'
+set -e
+psql $db_server -c ''
 
-psql $eth_worker_db -c 'DROP SCHEMA public CASCADE'
-psql $eth_worker_db -c 'CREATE SCHEMA public'
+set +e
 
+psql $db_server -c "DROP DATABASE IF EXISTS ${APP_DB:-sempo_app}"
+psql $db_server -c "DROP DATABASE IF EXISTS ${WORKER_DB:-sempo_eth_worker}"
+psql $db_server -c "CREATE DATABASE ${APP_DB:-sempo_app}"
+psql $db_server -c "CREATE DATABASE ${WORKER_DB:-sempo_eth_worker}"
 
 cd app
 python manage.py db upgrade
