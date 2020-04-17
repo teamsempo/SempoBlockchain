@@ -27,7 +27,7 @@ If you plan on using the quick setup script, be sure to install the [PSQL](https
 You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli)
 
 ```
-npm install ganache-cli@6.4.1
+npm install -g ganache-cli@6.4.1
 ```
 
 **Python**
@@ -66,7 +66,7 @@ To create some suitable secrets quickly:
 
 ```
 cd config files
-python generate_dev_test_secrets.py
+python generate_secrets.py
 ```
 
 ### Quick Setup Script
