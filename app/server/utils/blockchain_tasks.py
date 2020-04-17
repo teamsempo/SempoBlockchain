@@ -100,9 +100,10 @@ class BlockchainTasker(object):
     def retry_task(self, task_uuid):
         task_runner.delay_task(self._eth_endpoint('retry_task'), {'task_uuid': task_uuid })
 
-    def retry_failed(self, min_task_id, max_task_id):
+    def retry_failed(self, min_task_id, max_task_id, retry_unstarted):
         return self._execute_synchronous_celery(
-            self._eth_endpoint('retry_failed'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+            self._eth_endpoint('retry_failed'),
+            {'min_task_id': min_task_id, 'max_task_id': max_task_id, 'retry_unstarted': retry_unstarted}
         )
 
     def deduplicate(self, min_task_id, max_task_id):
@@ -292,13 +293,13 @@ class BlockchainTasker(object):
 
             token_supply = self._synchronous_call(
                 contract_address=token.address,
-                contract_type='ERC20Token',
+                contract_type='ERC20',
                 func='totalSupply'
             )
 
             subexchange_reserve = self._synchronous_call(
                 contract_address=reserve_token.address,
-                contract_type='ERC20Token',
+                contract_type='ERC20',
                 func='balanceOf',
                 args=[subexchange_address]
             )
