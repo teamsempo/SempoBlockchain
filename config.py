@@ -382,9 +382,3 @@ try:
         TRANSFER_LIMITS[k.upper()] = v 
 except KeyError:
     pass
-    
-l = locals()
-for v in dir():
-    if v.upper() == v:
-        logg.debug('loaded {}: {}'.format(v, l[v]))
-
