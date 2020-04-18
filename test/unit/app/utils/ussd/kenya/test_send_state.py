@@ -44,15 +44,10 @@ send_token_pin_authorization_state = partial(UssdSessionFactory, state="send_tok
      (send_token_amount_state, "12.5", "send_token_pin_authorization"),
      (send_token_amount_state, "500", "send_token_pin_authorization"),
      (send_token_amount_state, "-1", "exit_invalid_input"),
-     (send_token_amount_state, "asdf", "exit_invalid_input"),
+     (send_token_amount_state, "asdf", "exit_invalid_input")
  ])
 def test_kenya_state_machine(test_client, init_database, standard_user, session_factory, user_input, expected):
     session = session_factory()
-    session.session_data = {
-        'transfer_usage_mapping': fake_transfer_mapping(10),
-        'usage_menu': 1,
-        'usage_index_stack': [0, 8],
-    }
     db.session.commit()
     state_machine = KenyaUssdStateMachine(session, standard_user)
 
