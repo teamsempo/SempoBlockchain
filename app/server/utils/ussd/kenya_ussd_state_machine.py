@@ -41,8 +41,6 @@ class KenyaUssdStateMachine(Machine):
         # send token states
         'send_enter_recipient',
         'send_token_amount',
-        'send_token_reason',
-        'send_token_reason_other',
         'send_token_pin_authorization',
         # account management states
         'account_management',
@@ -447,42 +445,6 @@ class KenyaUssdStateMachine(Machine):
             },
         ]
         self.add_transitions(send_token_amount_transitions)
-
-        # event: send_token_reason transitions
-        send_token_reason_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason',
-             'dest': 'send_token_reason_other',
-             'conditions': 'menu_nine_selected',
-             'after': 'set_usage_menu_number'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason',
-             'dest': 'send_token_pin_authorization',
-             'after': 'save_transaction_reason',
-             'conditions': 'is_valid_menu_option'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason',
-             'dest': 'exit_invalid_menu_option'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason_other',
-             'dest': 'send_token_reason_other',
-             'conditions': 'menu_nine_selected',
-             'after': 'set_usage_menu_number'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason_other',
-             'dest': 'send_token_reason_other',
-             'conditions': 'menu_ten_selected',
-             'after': 'set_usage_menu_number'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason_other',
-             'dest': 'send_token_pin_authorization',
-             'after': 'save_transaction_reason',
-             'conditions': 'is_valid_other_menu_option'},
-            {'trigger': 'feed_char',
-             'source': 'send_token_reason_other',
-             'dest': 'exit_invalid_menu_option'},
-        ]
-        self.add_transitions(send_token_reason_transitions)
 
         directory_listing_transitions = [
             {'trigger': 'feed_char',
