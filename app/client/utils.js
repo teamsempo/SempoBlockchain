@@ -1,7 +1,7 @@
 import { call, put } from "redux-saga/effects";
 import merge from "deepmerge";
 import { LoginAction } from "./reducers/auth/actions";
-import { store } from "./app.jsx";
+import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
 export function formatMoney(

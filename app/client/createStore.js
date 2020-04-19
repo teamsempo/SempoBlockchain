@@ -1,0 +1,41 @@
+import { createStore, applyMiddleware, compose } from "redux";
+import createSagaMiddleware from "redux-saga";
+import { delayConfiguration } from "pusher-redux";
+import * as Sentry from "@sentry/browser";
+import { createBrowserHistory } from "history";
+import { version } from "../package.json";
+
+import appReducer from "./reducers/rootReducer";
+import rootSaga from "./sagas/rootSaga";
+
+const sagaMiddleware = createSagaMiddleware();
+
+// Setup redux dev tools
+const composeSetup =
+  process.env.NODE_ENV !== "prod" &&
+  typeof window === "object" &&
+  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    : compose;
+
+const store = createStore(
+  appReducer,
+  composeSetup(applyMiddleware(sagaMiddleware))
+);
+
+// Setup sentry
+Sentry.init({
+  dsn: window.SENTRY_REACT_DSN,
+  release: "sempo-blockchain-react@" + version
+});
+
+// Pusher Options
+const pusherOptions = {
+  cluster: "ap1"
+};
+
+delayConfiguration(store, window.PUSHER_KEY, pusherOptions);
+
+sagaMiddleware.run(rootSaga);
+
+export default store;
