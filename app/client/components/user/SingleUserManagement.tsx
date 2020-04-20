@@ -6,13 +6,21 @@ import { ReduxState } from "../../reducers/rootReducer";
 import EditUserForm, { IEditUser } from "./EditUserForm";
 import { TransferAccountTypes } from "../transferAccount/types";
 import { MessageAction } from "../../reducers/message/actions";
-import {DeleteUserAction, EditUserAction, ResetPinAction} from "../../reducers/user/actions";
-import {EditUserPayload, ResetPinPayload, EditUserActionTypes} from "../../reducers/user/types";
+import {
+  DeleteUserAction,
+  EditUserAction,
+  ResetPinAction
+} from "../../reducers/user/actions";
+import {
+  User,
+  ResetPinPayload,
+  DeleteUserPayload
+} from "../../reducers/user/types";
 
 interface DispatchProps {
-  editUser: (payload: EditUserPayload) => EditUserAction;
+  editUser: (body: User, path: number) => EditUserAction;
   resetPin: (payload: ResetPinPayload) => ResetPinAction;
-  deleteUser: (payload: EditUserActionTypes) => DeleteUserAction;
+  deleteUser: (payload: DeleteUserPayload) => DeleteUserAction;
   addMsg: (msg: string) => MessageAction;
 }
 
@@ -50,8 +58,8 @@ class SingleUserManagement extends React.Component<Props> {
       return attr_dict;
     });
 
-    this.props.editUser({
-        body: {
+    this.props.editUser(
+      {
         first_name: form.firstName,
         last_name: form.lastName,
         public_serial_number: form.publicSerialNumber,
@@ -65,9 +73,8 @@ class SingleUserManagement extends React.Component<Props> {
         referred_by: form.referredBy,
         custom_attributes: attr_dict,
         business_usage_name: businessUsage
-        }
       },
-      user_id
+      parseInt(user_id)
     );
   }
 
@@ -75,7 +82,7 @@ class SingleUserManagement extends React.Component<Props> {
     const { selectedUser } = this.props;
     window.confirm(
       `Are you sure you wish to reset ${selectedUser.first_name} ${selectedUser.last_name}'s PIN?`
-    ) && this.props.resetPin({ user_id: this.props.selectedUser.id });
+    ) && this.props.resetPin({ body: { user_id: this.props.selectedUser.id } });
   }
 
   onDeleteUser() {
@@ -84,8 +91,7 @@ class SingleUserManagement extends React.Component<Props> {
       `Are you sure you wish to delete user "${selectedUser.first_name} ${selectedUser.last_name}"? This action cannot be undone. Type DELETE to confirm`
     );
     if (del === "DELETE") {
-      let path = parseInt(selectedUser.id);
-      this.props.deleteUser(path);
+      this.props.deleteUser({ path: selectedUser.id });
     } else {
       this.props.addMsg("Action Canceled");
     }
@@ -115,9 +121,11 @@ const mapStateToProps = (state: ReduxState, ownProps: any): StateProps => {
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
-    editUser: (payload) => dispatch(EditUserAction.editUserRequest(payload)),
-    resetPin: (payload) => dispatch(ResetPinAction.resetPinRequest({body: payload})),
-    deleteUser: (path) => dispatch(DeleteUserAction.deleteUserRequest(path),
+    editUser: (body: User, path: number) =>
+      dispatch(EditUserAction.editUserRequest({ body, path })),
+    resetPin: payload => dispatch(ResetPinAction.resetPinRequest(payload)),
+    deleteUser: payload =>
+      dispatch(DeleteUserAction.deleteUserRequest(payload)),
     addMsg: msg =>
       dispatch(MessageAction.addMessage({ error: true, message: msg }))
   };

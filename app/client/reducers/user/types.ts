@@ -4,24 +4,34 @@ export enum UserListActionTypes {
 }
 
 export interface User {
-  id: number;
-  phone: string;
-  default_transfer_account_id: number;
-  first_name: string;
-  last_name: string;
-  lat: null | string;
-  lng: null | string;
-  location: string;
-  is_vendor: boolean;
-  is_beneficiary: boolean;
-  is_groupaccount: boolean;
-  is_tokenagent: boolean;
-  is_disabled: boolean;
-  custom_attributes: object;
-  public_serial_number: number;
-  business_usage_name: string;
-  referred_by: string;
+  id?: number;
+  phone?: string;
+  default_transfer_account_id?: number;
+  first_name?: string;
+  last_name?: string;
+  lat?: string;
+  lng?: string;
+  location?: string;
+  is_vendor?: boolean;
+  is_beneficiary?: boolean;
+  is_groupaccount?: boolean;
+  is_tokenagent?: boolean;
+  is_disabled?: boolean;
+  custom_attributes?: object;
+  public_serial_number?: string;
+  business_usage_name?: string;
+  referred_by?: string;
   one_time_code?: string;
+}
+
+export interface CreateUser extends User {
+  bio?: string;
+  gender?: string;
+  initial_disbursement?: number;
+  require_transfer_card_exists?: boolean;
+  existing_vendor_phone?: string;
+  existing_vendor_pin?: string;
+  transfer_account_name?: string;
 }
 
 export enum LoadUserActionTypes {
@@ -43,7 +53,7 @@ export enum EditUserActionTypes {
 
 export interface EditUserPayload {
   path: number;
-  body: User
+  body: User;
 }
 
 export enum CreateUserActionTypes {
@@ -54,14 +64,14 @@ export enum CreateUserActionTypes {
 }
 
 export interface CreateUserPayload {
-  body: User
+  body: CreateUser;
 }
 
 export interface CreateUserSuccessPayload {
   data: {
-    user: User
-    message: string
-  }
+    user: User;
+    message: string;
+  };
 }
 
 export enum DeleteUserActionTypes {
@@ -71,7 +81,7 @@ export enum DeleteUserActionTypes {
 }
 
 export interface DeleteUserPayload {
-  path: number
+  path: number;
 }
 
 export enum ResetPinActionTypes {
@@ -83,5 +93,5 @@ export enum ResetPinActionTypes {
 export interface ResetPinPayload {
   body: {
     user_id: number;
-  }
+  };
 }
