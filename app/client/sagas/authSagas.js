@@ -211,7 +211,6 @@ function* refreshToken() {
     yield put(LoginAction.reauthRequest());
     const token_request = yield call(refreshApiToken);
     if (token_request.auth_token) {
-      //todo: investigate this type error
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(token_request))
       );
