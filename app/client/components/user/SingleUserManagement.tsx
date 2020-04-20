@@ -6,7 +6,7 @@ import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import EditUserForm, { IEditUser } from "./EditUserForm";
 import { TransferAccountTypes } from "../transferAccount/types";
-import { ADD_FLASH_MESSAGE } from "../../reducers/messageReducer";
+import { MessageAction } from "../../reducers/message/actions";
 
 interface DispatchProps {
   //todo(typescript): editUser body should be written in EditUserPayload from reducers/user/types.ts
@@ -117,7 +117,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     resetPin: body => dispatch(resetPin({ body })),
     deleteUser: path => dispatch(deleteUser({ path })),
     addMsg: msg =>
-      dispatch({ type: ADD_FLASH_MESSAGE, error: true, message: msg })
+      dispatch(MessageAction.addMessage({ error: true, message: msg }))
   };
 };
 

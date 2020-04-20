@@ -7,9 +7,9 @@ export enum LoadUserActionTypes {
   LOAD_USER_FAILURE = "LOAD_USER_FAILURE"
 }
 
-export interface LoadUserPayload {
-  first_name: string;
-  last_name: string;
+export interface LoadUserRequestPayload {
+  query: {};
+  path: number;
 }
 
 export enum EditUserActionTypes {

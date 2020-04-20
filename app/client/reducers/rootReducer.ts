@@ -16,7 +16,7 @@ import {
   datasetList
 } from "./spreadsheetReducer";
 import { newExportRequest } from "./exportReducer";
-import { message } from "./messageReducer";
+import { message } from "./message/reducers";
 import { creditTransfers } from "./creditTransferReducer";
 import { transferAccounts } from "./transferAccountReducer";
 import { users } from "./userReducer";

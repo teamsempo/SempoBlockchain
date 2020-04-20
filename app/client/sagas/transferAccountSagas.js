@@ -21,7 +21,7 @@ import {
   loadTransferAccountListAPI,
   editTransferAccountAPI
 } from "../api/transferAccountAPI.js";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromTransferAccount(data) {
   //Schema expects a list of transfer account objects
@@ -78,7 +78,9 @@ function* loadTransferAccounts({ payload }) {
 
     yield put({ type: LOAD_TRANSFER_ACCOUNTS_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -95,17 +97,17 @@ function* editTransferAccount({ payload }) {
 
     yield put({ type: EDIT_TRANSFER_ACCOUNT_SUCCESS });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: edit_response.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: edit_response.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: EDIT_TRANSFER_ACCOUNT_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 

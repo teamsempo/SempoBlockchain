@@ -69,8 +69,8 @@ import {
 } from "../reducers/auth/actions";
 
 import { browserHistory } from "../app.jsx";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
 import { UPDATE_ORGANISATION_LIST } from "../reducers/organisation/types";
+import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromAdmin(data) {
   //Schema expects a list of admin user objects
@@ -248,11 +248,12 @@ function* register({ payload }) {
     ) {
       // manual sign up, need to activate email
       yield put(RegisterAction.registerSuccess());
-      yield put({
-        type: ADD_FLASH_MESSAGE,
-        error: false,
-        message: registered_account.message
-      });
+      yield put(
+        MessageAction.addMessage({
+          error: false,
+          message: registered_account.message
+        })
+      );
       browserHistory.push("/login");
     } else if (registered_account.auth_token && !registered_account.tfa_url) {
       yield call(updateOrganisationStateFromLoginData, registered_account);
@@ -413,14 +414,12 @@ function* updateUserRequest({ payload }) {
 
     yield put(EditAdminUserAction.editAdminUserSuccess());
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: result.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: result.message })
+    );
   } catch (error) {
     yield put(EditAdminUserAction.editAdminUserFailure(error));
-    yield put({ type: ADD_FLASH_MESSAGE, error: false, message: error });
+    yield put(MessageAction.addMessage({ error: true, message: error }));
   }
 }
 
@@ -444,11 +443,9 @@ function* deleteInvite({ payload }) {
     delete invites[payload.body.invite_id];
 
     yield put(InviteUserListAction.updateInviteUsers(invites));
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: result.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: result.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     yield put(DeleteInviteAction.deleteInviteFailure(error.message));
@@ -463,11 +460,9 @@ function* inviteUserRequest({ payload }) {
   try {
     const result = yield call(inviteUserAPI, payload);
     yield put(InviteUserAction.inviteUserSuccess());
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: result.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: result.message })
+    );
     browserHistory.push("/settings");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);

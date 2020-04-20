@@ -1,19 +1,16 @@
-import { delay } from "redux-saga";
-import { call, put, select, take, takeEvery } from "redux-saga/effects";
+import { call, put, select, take, takeEvery, delay } from "redux-saga/effects";
 
-import {
-  ADD_FLASH_MESSAGE,
-  SHOW_FLASH,
-  CLEAR_FLASH
-} from "../reducers/messageReducer";
+import { MessageAction } from "../reducers/message/actions";
+import { MessageActionTypes } from "../reducers/message/types";
+
 const getMessages = state => state.message.messageList;
 
 const FIVE_SECONDS = 5000;
 
 export function* showFlashMessage() {
-  yield put({ type: SHOW_FLASH });
-  yield call(delay, FIVE_SECONDS); // wait 5 secs
-  yield put({ type: CLEAR_FLASH });
+  yield put(MessageAction.showFlash());
+  yield delay(FIVE_SECONDS); // wait 5 secs
+  yield put(MessageAction.clearFlash());
 }
 
 export function* onAddFlashMessage() {
@@ -31,13 +28,9 @@ export function* onAddFlashMessage() {
         yield showFlashMessage();
       }
     }
-
-    // wait until we get a new ADD_FLASH_MESSAGE action
-    // yield put({type: ADD_FLASH_MESSAGE, message});
-    // yield showFlashMessage();
   }
 }
 
 export default function* watchOnAddFlashMessage() {
-  yield takeEvery(ADD_FLASH_MESSAGE, onAddFlashMessage);
+  yield takeEvery([MessageActionTypes.ADD_FLASH_MESSAGE], onAddFlashMessage);
 }

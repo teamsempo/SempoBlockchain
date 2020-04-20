@@ -28,7 +28,6 @@ import {
   createUserAPI,
   resetPinAPI
 } from "../api/userAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
 import {
   RESET_PIN_FAILURE,
   RESET_PIN_REQUEST,
@@ -37,6 +36,7 @@ import {
 import { LOAD_TRANSFER_USAGES_REQUEST } from "../reducers/transferUsage/types";
 import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
 import { browserHistory } from "../app";
+import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromUser(data) {
   //Schema expects a list of credit transfer objects
@@ -83,17 +83,17 @@ function* editUser({ payload }) {
 
     yield put({ type: EDIT_USER_SUCCESS, edit_user: edit_response });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: edit_response.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: edit_response.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: EDIT_USER_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -128,18 +128,21 @@ function* deleteUser({ payload }) {
       transfer_accounts: transferAccounts
     });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: delete_response.message
-    });
+    yield put(
+      MessageAction.addMessage({
+        error: false,
+        message: delete_response.message
+      })
+    );
     browserHistory.push("/accounts");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: DELETE_USER_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -155,17 +158,20 @@ function* resetPin({ payload }) {
 
     yield put({ type: RESET_PIN_SUCCESS, reset_user: reset_response });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: reset_response.message
-    });
+    yield put(
+      MessageAction.addMessage({
+        error: false,
+        message: reset_response.message
+      })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: RESET_PIN_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 

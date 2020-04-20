@@ -16,9 +16,8 @@ import {
   loadOrganisationAPI,
   editOrganisationAPI
 } from "../api/organisationApi.js";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
 import { organisationSchema } from "../schemas";
-import { browserHistory } from "../app";
+import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromOrganisation(data) {
   //Schema expects a list of organisation objects
@@ -49,7 +48,9 @@ function* loadOrganisation() {
 
     yield put({ type: LOAD_ORGANISATION_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -65,17 +66,17 @@ function* editOrganisation({ payload }) {
 
     yield put({ type: EDIT_ORGANISATION_SUCCESS });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: load_result.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: load_result.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: EDIT_ORGANISATION_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 

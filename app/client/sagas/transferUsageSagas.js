@@ -9,7 +9,7 @@ import {
 } from "../reducers/transferUsage/types";
 
 import { loadTransferUsagesAPI } from "../api/transferUsagesAPI.js";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromTransferUsage(data) {
   if (data.transfer_usages !== undefined) {
@@ -35,7 +35,9 @@ function* loadTransferUsages({ payload }) {
 
     yield put({ type: LOAD_TRANSFER_USAGES_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
