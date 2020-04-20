@@ -162,7 +162,7 @@ DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD") or secrets_parser['DATAB
 
 DATABASE_HOST = config_parser['DATABASE']['host']
 
-DATABASE_PORT = common_secrets_parser['DATABASE'].get('port') or 5432
+DATABASE_PORT = config_parser['DATABASE']['port'] or 5432
 
 DATABASE_NAME = config_parser['DATABASE'].get('database') \
                 or common_secrets_parser['DATABASE']['database']
@@ -199,7 +199,6 @@ def get_database_uri(name, host, censored=True):
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
                                                 ACTIVE_DATABASE_PORT,
-                                                config_parser['DATABASE']['port'],
                                                 name)
 
 
