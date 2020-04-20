@@ -21,7 +21,6 @@ import {
   DEEP_UPDATE_TRANSFER_ACCOUNTS,
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
 } from "../reducers/transferAccountReducer.js";
-import { DEEP_UPDATE_USER_LIST } from "../reducers/userReducer";
 
 import {
   loadCreditTransferListAPI,
@@ -31,6 +30,7 @@ import {
 import { creditTransferSchema } from "../schemas";
 import { handleError } from "../utils";
 import { MessageAction } from "../reducers/message/actions";
+import { UserListAction } from "../reducers/user/actions";
 
 function* updateStateFromCreditTransfer(result) {
   //Schema expects a list of credit transfer objects
@@ -50,7 +50,7 @@ function* updateStateFromCreditTransfer(result) {
 
   const users = normalizedData.entities.users;
   if (users) {
-    yield put({ type: DEEP_UPDATE_USER_LIST, users });
+    yield put(UserListAction.deepUpdateUserList(users));
   }
 
   if (result.is_create === true) {
