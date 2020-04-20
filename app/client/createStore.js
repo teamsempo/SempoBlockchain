@@ -22,6 +22,7 @@ const store = createStore(
   appReducer,
   composeSetup(applyMiddleware(sagaMiddleware))
 );
+export default store;
 
 // Setup sentry
 Sentry.init({
@@ -37,5 +38,3 @@ const pusherOptions = {
 delayConfiguration(store, window.PUSHER_KEY, pusherOptions);
 
 sagaMiddleware.run(rootSaga);
-
-export default store;

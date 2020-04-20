@@ -91,7 +91,15 @@ export const parseQuery = queryString => {
 
 export const generateFormattedURL = (url, query, path) => {
   let URL;
-  let version = store.getState().login.webApiVersion;
+  let version;
+
+  try {
+    version = store.getState().login.webApiVersion;
+  } catch (e) {
+    console.log("Something went wrong", e);
+    version = null;
+  }
+
   if (!version) {
     version = "1"; // fallback to V1 API
   }
