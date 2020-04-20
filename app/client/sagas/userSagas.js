@@ -34,7 +34,6 @@ import {
   RESET_PIN_REQUEST,
   RESET_PIN_SUCCESS
 } from "../reducers/userReducer";
-import { LOAD_TRANSFER_USAGES_REQUEST } from "../reducers/transferUsage/types";
 import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
 import { browserHistory } from "../app";
 
