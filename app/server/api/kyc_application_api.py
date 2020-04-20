@@ -301,6 +301,10 @@ class KycApplicationAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 400
 
+        if not is_mobile and (business_legal_name is None and tax_id is None) and not user_id:
+            # not mobile, not a org profile, thus user_id cannot be None
+            return make_response(jsonify({'message': 'Must provide a user id to create a user KYC profile'})), 400
+
         if beneficial_owners is not None:
             # filter empty beneficial owners
             beneficial_owners = [owner for owner in beneficial_owners if(owner['full_name'].strip(' ',) != '')]

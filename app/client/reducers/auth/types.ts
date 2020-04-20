@@ -32,12 +32,8 @@ export interface LoginSuccessPayload {
   vendorId: null | number;
   intercomHash: null | string;
   webApiVersion: null | string;
-  organisationName: null | string;
   organisationId: number;
-  organisationToken: null | string;
   usdToSatoshiRate: null | number;
-  organisations?: string[];
-  requireTransferCardExists: null | boolean;
   adminTier?: string;
 }
 
