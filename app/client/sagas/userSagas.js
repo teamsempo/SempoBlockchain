@@ -57,6 +57,7 @@ function* updateStateFromUser(data) {
 function* loadUser({ payload }) {
   try {
     const load_result = yield call(loadUserAPI, payload);
+    console.log("load_result", load_result);
 
     yield call(updateStateFromUser, load_result.data);
 
