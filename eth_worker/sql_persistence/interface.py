@@ -93,7 +93,7 @@ class SQLPersistenceInterface(object):
               f'addr:{signing_wallet_obj.address}')
         self.session.commit()
         with lock:
-            self.session.rollback()
+            self.session.commit()
             self.session.refresh(signing_wallet_obj)
             ct = self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
             return ct
