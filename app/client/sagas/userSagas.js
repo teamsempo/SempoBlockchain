@@ -179,8 +179,6 @@ function* createUser({ payload }) {
     yield call(updateStateFromUser, result.data);
 
     yield put({ type: CREATE_USER_SUCCESS, result });
-
-    yield put({ type: LOAD_TRANSFER_USAGES_REQUEST });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
