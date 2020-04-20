@@ -267,7 +267,6 @@ workflows:
             branches:
               only:
                 - master
-                - priority-queue
           requires:
             - test:backend
             - test:frontend
