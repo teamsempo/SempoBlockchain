@@ -176,7 +176,7 @@ BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') 
 BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
 
 if BOUNCER_ENABLED:
-    print('PGBBOUNCER Enabled')
+    logg.info('PGBBOUNCER Enabled')
     ACTIVE_DATABASE_HOST = config_parser['BOUNCER']['host']
     ACTIVE_DATABASE_PORT = config_parser['BOUNCER']['port']
 else:
