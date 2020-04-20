@@ -91,6 +91,9 @@ class SQLPersistenceInterface(object):
         lock = self.red.lock(signing_wallet_obj.address, timeout=600)
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
+        # Commits here are because the database would sometimes timeout during a long lock
+        # and could not cleanly restart with uncommitted data in the session. Committing before
+        # the lock, and then once it's reclaimed lets the session gracefully refresh if it has to.
         self.session.commit()
         with lock:
             self.session.commit()
