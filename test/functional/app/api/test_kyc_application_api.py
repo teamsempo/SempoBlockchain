@@ -59,8 +59,8 @@ def test_kyc_application_api_status_post(test_client, create_transfer_account_us
     logg.debug('using kyc id for status change {}'.format(kyc_id))
     response = test_client.put('/api/v1/kyc_application/{}'.format(kyc_id),
                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
-                               #data=json.dumps(dict(type=type, user_id=user_id, override=override, is_mobile=True)),
-                               data=json.dumps(dict(account_type=account_type, user_id=kyc_id, status='VERIFIED')),
+                               data=json.dumps(
+                                   dict(account_type=account_type, user_id=user_id_accessor(user), status='VERIFIED')),
                                follow_redirects=True,
                                content_type='application/json',
                                )
