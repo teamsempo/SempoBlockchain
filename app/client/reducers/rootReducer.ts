@@ -19,7 +19,7 @@ import { newExportRequest } from "./exportReducer";
 import { message } from "./message/reducers";
 import { creditTransfers } from "./creditTransferReducer";
 import { transferAccounts } from "./transferAccountReducer";
-import { users } from "./userReducer";
+import {users} from "./user/reducers";
 import { filters } from "./filterReducer";
 import { businessVerification } from "./businessVerificationReducer";
 import { wyre } from "./wyreReducer";
