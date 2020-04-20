@@ -8,9 +8,9 @@ import ReactTable from "react-table";
 import { TopRow, StyledButton, ModuleHeader } from "../styledElements.js";
 
 import {
-  loadUserList,
-  updateUser,
-  deleteInvite
+  LoadAdminUserListAction,
+  EditAdminUserAction,
+  DeleteInviteAction
 } from "../../reducers/auth/actions";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
@@ -42,9 +42,12 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadUserList: () => dispatch(loadUserList()),
-    updateUser: (body, query) => dispatch(updateUser({ body, query })),
-    deleteInvite: payload => dispatch(deleteInvite(payload))
+    loadUserList: () =>
+      dispatch(LoadAdminUserListAction.loadAdminUserListRequest()),
+    updateUser: (body, query) =>
+      dispatch(EditAdminUserAction.editAdminUserRequest({ body, query })),
+    deleteInvite: payload =>
+      dispatch(DeleteInviteAction.deleteInviteRequest(payload))
   };
 };
 

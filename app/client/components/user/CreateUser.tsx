@@ -158,7 +158,7 @@ const mapDispatchToProps = (dispatch: any) => {
       dispatch({ type: RESET_CREATE_USER });
     },
     loadTransferUsages: () => {
-      dispatch(loadTransferUsages());
+      dispatch(loadTransferUsages({}));
     },
     loadOrganisation: () => {
       dispatch(loadOrganisation());

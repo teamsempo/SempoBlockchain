@@ -1,10 +1,8 @@
 from functools import partial
 import os
-import hashlib
+import sys
 import base64
 import configparser
-from eth_utils import keccak
-from web3 import Web3
 
 def add_val(parser, section, key, value):
     try:
@@ -17,13 +15,13 @@ def add_val(parser, section, key, value):
     except AttributeError:
         pass
 
-        parser[section][key] = str(value)
+    parser[section][key] = str(value)
 
 def rand_hex(hexlen=16):
     return os.urandom(hexlen).hex()
 
 def eth_pk():
-    return Web3.toHex(keccak(os.urandom(4096)))
+    return '0x' + os.urandom(32).hex()
 
 template_path = './templates'
 specific_secrets_read_path = os.path.join(template_path, 'specific_secrets_template.ini')
@@ -32,10 +30,6 @@ common_secrets_read_path = os.path.join(template_path, 'common_secrets_template.
 secret_dir = './secret'
 if not os.path.isdir(secret_dir):
     os.mkdir(secret_dir)
-
-specific_secrets_write_path = os.path.join(secret_dir, 'local_secrets.ini')
-test_specific_secrets_write_path = os.path.join(secret_dir, 'test_secrets.ini')
-common_secrets_write_path = os.path.join(secret_dir, 'common_secrets.ini')
 
 def generate_specific_secrets(write_path):
 
@@ -75,10 +69,13 @@ def generate_common_secrets(write_path):
         common_secrets_parser.write(f)
 
 if __name__ == '__main__':
-    print('Generating deployment specific (local) secrets')
+    name = sys.argv[1] if len(sys.argv) > 1 else 'local'
+
+    specific_secrets_write_path = os.path.join(secret_dir, f'{name}_secrets.ini')
+    common_secrets_write_path = os.path.join(secret_dir, 'common_secrets.ini')
+
+    print(f'Generating deployment specific ({name}) secrets')
     generate_specific_secrets(specific_secrets_write_path)
-    print('Generating deployment specific (test) secrets')
-    generate_specific_secrets(test_specific_secrets_write_path)
     print('Generating common secrets')
     generate_common_secrets(common_secrets_write_path)
     print('Generated reasonable secrets, please modify as required')

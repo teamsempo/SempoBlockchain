@@ -21,17 +21,15 @@ function* updateStateFromTransferUsage(data) {
 }
 
 // Load Transfer Account List Saga
-function* loadTransferUsages() {
+function* loadTransferUsages({ payload }) {
   try {
-    const load_result = yield call(loadTransferUsagesAPI);
+    const load_result = yield call(loadTransferUsagesAPI, payload);
 
     yield call(updateStateFromTransferUsage, load_result.data);
 
     yield put({ type: LOAD_TRANSFER_USAGES_SUCCESS });
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
-
-    console.log("error is:", error);
 
     yield put({ type: LOAD_TRANSFER_USAGES_FAILURE, error: error });
 

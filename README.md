@@ -1,130 +1,149 @@
-[![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=svg)](https://circleci.com/gh/teamsempo/SempoBlockchain)
+<a href="https://withsempo.com">
+    <img width="200" src="app/server/static/media/sempo_logo_teal.png" alt="Sempo Logo" />
+</a>
 
-# Sempo
+---
 
-Sempo Admin Dashboard, SMS/WhatsApp API and crypto payments infrastructure
+[![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=shield)](https://circleci.com/gh/teamsempo/SempoBlockchain)
+[![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
+[![Codecov](https://img.shields.io/codecov/c/github/teamsempo/SempoBlockchain)](https://codecov.io/gh/teamsempo/SempoBlockchain)
 
-Includes:
+Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments
 
-- Generic spreadsheet upload
-- SMS API via Twilio
-- ERC20 (Dai) token mirroring
-- Vendor android app API
+## To run locally:
 
-## To run locally machine:
+### Install Requirements
+**Postgres**
 
-### Install _All_ Python Requirements
+We use [postgres](https://www.postgresql.org/) for regular (non-blockchain) data persistance.
 
-Download and install python 3.6 and its respective pip and virtualenv (python 3.7 will break things). Then:
+If you plan on using the quick setup script, be sure to install the [PSQL](https://www.postgresql.org/docs/current/app-psql.html) terminal application as well
+
+**Redis**
+[Redis](https://redis.io/) is used for passing tasks to an asynchronous worker queue
+
+**Local Test Blockchain**
+
+You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli)
 
 ```
-python3 -m venv venv
+npm install -g ganache-cli@6.4.1
+```
+
+**Python**
+
+Download and install python 3.6 and its respective pip and virtualenv (**python 3.7 will break things**). Then:
+
+```
+python3 -m venv venv
 source venv/bin/activate
 ./install.sh
 ```
 
-### Install Front-End Requirements
+**Front-End**
+
+Our frontend uses react.
 
 ```
 cd app
-```
-
-```
 npm install
 ```
 
-### Setup Script
+To build and watch for changes:
+```
+npm run dev
+```
+
+### Create config files
+The platform uses three kinds of config files:
+
+- deployment specific config: things that aren't sensitive, and change on a per deployment basis
+- deployment specific secrets: things that ARE sensitive, and change on a per deployment basis
+- common secrets: things that ARE sensitive, and can be the same between all deployments
+
+There's already a reasonable set of local configs in `config_files/local_config.ini`
+To create some suitable secrets quickly:
+
+```
+cd config files
+python generate_secrets.py
+```
+
+### Quick Setup Script
+
+(Requires PSQL to run)
 
 For quick setup, run `quick_setup_script.sh` with `MASTER_WALLET_PK` set as an environment variable to the master private key found in `/config_files/secret/local_secrets.ini/`.
 
 ```
 quick_setup_script.sh [activation path for your python env]
 ```
+The script will:
+- Reset your local Sempo state
+- Launch Ganache and Redis
+- Create an adminstrator account with email `admin@acme.org` and password `C0rrectH0rse`
+- Create a reserve token and bonded token
+When the script has finished running*, you can start your own app and worker processes (see next section) and continue on.
+\*This can be a little hard to identify because ganache continues to run, but a good indicator is if `Bringing Ganache to foreground` is echo'd in the console
 
-#### Enable the Simulator (Optional)
-
-If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth_worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. _Be warned, this will make your database fall out of sync with any ganache instance you have set up so use this with care_, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `contract_setup_script.py` without additional dependencies.
-
-To enable simulator mode, open `/config_files/local_config.ini` and add the line `enable_simulator_mode = true` under the `[APP]` heading.
-
-### Run the web app in a Virtual Env
+### Run the app in a Virtual Env
 
 ```
 cd app
 python ./run.py
 ```
 
-```
-npm run dev
-```
-
-### To use SMS API
-
-- Go to root dir
-
-```
-cd ..
-```
-
-- Run ngrok
-
-```
-./ngrok http 9000
-```
-
-- Login to Twilio:
-  https://www.twilio.com/login
-
-- Navigate to the phone number section of Twilio and find the below number
-
-```
-+61 428 639 172
-```
-
-- Click to edit, scroll to `Messaging` and find `A MESSAGE COMES IN` box
-- Add your ngrok server (e.g. `https://a833f3af.ngrok.io/api/sms/`) and save
-
-### Blockchain
+### Launch the worker
 
 Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue.
-This means that a lot of development can be done without actually connecting to a blockchain. Likewise, tests have
-blockchain endpoints mocked by default.
+```
+cd eth_worker
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+```
 
-If you do need to develop with a connection to an actual chain, the best option is to use a [ganache-cli](https://github.com/trufflesuite/ganache-cli)
-test-chain running locally, as there are a couple of transaction types (like deploying new token exhanges)
-that burn through gas at a rate that makes getting test-eth from a faucet a bit irritating.
+## Details and Other Options
 
-Once ganache is installed, run
+### Enable the Blockchain Simulator
+
+If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth_worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. _Be warned, this will make your database fall out of sync with any ganache instance you have set up so use this with care_, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `contract_setup_script.py` without additional dependencies.
+
+To enable simulator mode, open `/config_files/local_config.ini` and add the line `enable_simulator_mode = true` under the `[APP]` heading.
+
+### Ganache Detailed Setup
+
+Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue. If you are using ganache, the following command will launch ganache in a compatible manner.
 
 ```
 ganache-cli -l 80000000 -i 42 --db './ganacheDB' \
---account="0x00f49bc12b2e102e072ee086482e700ad7fe2b5ee417697b13ca04e4dc1572d9,10000000000000000000000000"
+--account=[YOUR PRIVATE KEY],10000000000000000000000000"
 ```
 
 Here:
 
 - the -l 80000000 argument increases the gas-limit, which is required for token-exchange deployments.
-- the --db argument persists your data to a local folder
-- the --account argument creates an account with LOTS of test ether, to stop you running out too quickly
+- the --db argument persists your data to a local folder. This can be a little flaky, so if you get any strange errors, try deleting the contents of the `ganacheDB` directory and retrying.
+- the --account argument creates an account with LOTS of test ether, to stop you running out too quickly. Note that you'll need to provide the 'master wallet' private key that's found within your config files.
 
-gacnache_cli.sh can be used to run this quickly.
+The bash script gacnache_cli.sh can be used to run this quickly. Be sure to set the MASTER_WALLET_PK environment variable beforehand.
 
-You will also need to set your local config to match:
+If it's not already, you will also need to set your local config to match:
 
 ```
 [ETHEREUM]
 http_provider           = http://127.0.0.1:8545
 ```
 
-Next you'll need to launch redis and celery. The following settings will work 90% of the time, but can be a _little_
-bit flaky because they force all tasks into one worker queue. This is a little annoying to address without running
-everything inside docker.
+### Blockchain Workers
 
-In terminal run:
+In order for the workers to run, you'll need to launch redis and celery. On production we run multiple workers to handle different tasks, but locally you can just launch one worker to run everything.
+
+First launch the redis server, which acts as a message-broker for celery tasks. In terminal run:
 
 ```
 redis-server
 ```
+
+If you get some message about `Creating Server TCP listening socket *:6379: bind: Address already in use`, this is probably just because redis is already running (did you use the quick setup script). You can probably carry on!
 
 Start celery:
 
@@ -212,7 +231,7 @@ Ensure redis-server is running (this is not ideal but necessary atm).
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
 
 ## Seed Data
-
+(Currently broken!!)
 You can quickly create seed data for a local machine, including exchanges and blockchain transactions:
 
 1. Clear all data out of ur databases by running /app/migrations/clear_seed_dev.py

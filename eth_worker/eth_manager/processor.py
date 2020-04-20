@@ -616,20 +616,32 @@ class TransactionProcessor(object):
 
         self._retry_task(task)
 
-    def retry_failed(self, min_task_id, max_task_id):
+    def retry_failed(self, min_task_id, max_task_id, retry_unstarted=False):
 
-        failed_tasks = self.persistence_interface.get_failed_tasks(min_task_id, max_task_id)
+        print(f'Testings Task from {min_task_id} to {max_task_id}, retrying unstarted={retry_unstarted}')
+
+        needing_retry = self.persistence_interface.get_failed_tasks(min_task_id, max_task_id)
         pending_tasks = self.persistence_interface.get_pending_tasks(min_task_id, max_task_id)
 
-        print(f"{len(failed_tasks)} tasks currently with failed state")
+        print(f"{len(needing_retry)} tasks currently with failed state")
         print(f"{len(pending_tasks)} tasks currently pending")
 
-        for task in failed_tasks:
+        unstarted_tasks = None
+        if retry_unstarted:
+            unstarted_tasks = self.persistence_interface.get_unstarted_tasks(min_task_id, max_task_id)
+            print(f"{len(unstarted_tasks)} tasks currently unstarted")
+
+            needing_retry = needing_retry + unstarted_tasks
+
+            needing_retry.sort(key=lambda t: t.id)
+
+        for task in needing_retry:
             self._retry_task(task)
 
         return {
-            'failed_count': len(failed_tasks),
-            'pending_count': len(pending_tasks)
+            'failed_count': len(needing_retry),
+            'pending_count': len(pending_tasks),
+            'unstarted_count': len(unstarted_tasks) if unstarted_tasks else 'Unknown'
         }
 
     def _retry_task(self, task):
