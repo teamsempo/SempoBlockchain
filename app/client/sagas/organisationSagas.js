@@ -3,19 +3,21 @@ import { handleError } from "../utils";
 import { normalize } from "normalizr";
 
 import {
-  LOAD_ORGANISATION_REQUEST,
-  LOAD_ORGANISATION_SUCCESS,
-  LOAD_ORGANISATION_FAILURE,
-  UPDATE_ORGANISATION_LIST,
-  EDIT_ORGANISATION_REQUEST,
-  EDIT_ORGANISATION_SUCCESS,
-  EDIT_ORGANISATION_FAILURE
+  LoadOrganisationActionTypes,
+  EditOrganisationActionTypes
 } from "../reducers/organisation/types";
+
+import {
+  EditOrganisationAction,
+  LoadOrganisationAction,
+  OrganisationAction
+} from "../reducers/organisation/actions";
 
 import {
   loadOrganisationAPI,
   editOrganisationAPI
 } from "../api/organisationApi.js";
+
 import { organisationSchema } from "../schemas";
 import { MessageAction } from "../reducers/message/actions";
 
@@ -32,7 +34,7 @@ function* updateStateFromOrganisation(data) {
   const organisations = normalizedData.entities.organisations;
 
   if (organisations) {
-    yield put({ type: UPDATE_ORGANISATION_LIST, organisations });
+    yield put(OrganisationAction.updateOrganisationList(organisations));
   }
 }
 
@@ -42,11 +44,11 @@ function* loadOrganisation() {
 
     yield call(updateStateFromOrganisation, load_result.data);
 
-    yield put({ type: LOAD_ORGANISATION_SUCCESS });
+    yield put(LoadOrganisationAction.loadOrganisationSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_ORGANISATION_FAILURE, error: error });
+    yield put(LoadOrganisationAction.loadOrganisationFailure(error.message));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -55,7 +57,10 @@ function* loadOrganisation() {
 }
 
 function* watchLoadOrganisation() {
-  yield takeEvery(LOAD_ORGANISATION_REQUEST, loadOrganisation);
+  yield takeEvery(
+    LoadOrganisationActionTypes.LOAD_ORGANISATION_REQUEST,
+    loadOrganisation
+  );
 }
 
 function* editOrganisation({ payload }) {
@@ -64,7 +69,7 @@ function* editOrganisation({ payload }) {
 
     yield call(updateStateFromOrganisation, load_result.data);
 
-    yield put({ type: EDIT_ORGANISATION_SUCCESS });
+    yield put(EditOrganisationAction.editOrganisationSuccess());
 
     yield put(
       MessageAction.addMessage({ error: false, message: load_result.message })
@@ -72,7 +77,7 @@ function* editOrganisation({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: EDIT_ORGANISATION_FAILURE, error: error });
+    yield put(EditOrganisationAction.editOrganisationFailure(error.message));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -81,7 +86,10 @@ function* editOrganisation({ payload }) {
 }
 
 function* watchEditOrganisation() {
-  yield takeEvery(EDIT_ORGANISATION_REQUEST, editOrganisation);
+  yield takeEvery(
+    EditOrganisationActionTypes.EDIT_ORGANISATION_REQUEST,
+    editOrganisation
+  );
 }
 
 export default function* organisationSagas() {

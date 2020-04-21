@@ -7,16 +7,16 @@ import { loadTransferUsages } from "../../reducers/transferUsage/actions";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { Organisation } from "../../reducers/organisation/types";
 import { ReduxState } from "../../reducers/rootReducer";
-import { loadOrganisation } from "../../reducers/organisation/actions";
+import { LoadOrganisationAction } from "../../reducers/organisation/actions";
 import CreateUserForm, { ICreateUserUpdate } from "./CreateUserForm";
 import { CreateUserAction } from "../../reducers/user/actions";
 import { CreateUserPayload } from "../../reducers/user/types";
 
 interface DispatchProps {
   createUser: (payload: CreateUserPayload) => CreateUserAction;
-  resetCreateUser: () => void;
+  resetCreateUser: () => CreateUserAction;
   loadTransferUsages: () => void;
-  loadOrganisation: () => void;
+  loadOrganisation: () => LoadOrganisationAction;
 }
 
 interface StateProps {
@@ -163,7 +163,7 @@ const mapDispatchToProps = (dispatch: any) => {
       dispatch(loadTransferUsages({}));
     },
     loadOrganisation: () => {
-      dispatch(loadOrganisation());
+      dispatch(LoadOrganisationAction.loadOrganisationRequest());
     }
   };
 };

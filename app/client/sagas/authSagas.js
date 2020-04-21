@@ -69,8 +69,8 @@ import {
 } from "../reducers/auth/actions";
 
 import { browserHistory } from "../app.jsx";
-import { UPDATE_ORGANISATION_LIST } from "../reducers/organisation/types";
 import { MessageAction } from "../reducers/message/actions";
+import { OrganisationAction } from "../reducers/organisation/actions";
 
 function* updateStateFromAdmin(data) {
   //Schema expects a list of admin user objects
@@ -112,7 +112,7 @@ export function* updateOrganisationStateFromLoginData(data) {
   const organisations = normalizedData.entities.organisations;
 
   if (organisations) {
-    yield put({ type: UPDATE_ORGANISATION_LIST, organisations });
+    yield put(OrganisationAction.updateOrganisationList(organisations));
   }
 }
 
