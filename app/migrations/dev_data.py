@@ -184,6 +184,7 @@ def get_or_create_transer_account(name, user):
 def seed_transfers(user_list, admin_user, token, number_of_transfers):
     print('Disbursing to users')
     for user in user_list:
+        print(f'Disbursing to user {user.id}')
         create_transfer(
             amount=50,
             sender_user=admin_user,
@@ -196,21 +197,25 @@ def seed_transfers(user_list, admin_user, token, number_of_transfers):
     create_transfers(user_list, number_of_transfers, token)
 
 
-def create_users_different_transer_usage(wanted_nr_users, new_organisation):
+def create_users_different_transer_usage(wanted_nr_users, org):
     i = 1
     user_list = []
     transer_usages = TransferUsage.query.all()
     while i < wanted_nr_users:
+
+        print(f'Created user {i}')
         random_usage = random.choice(transer_usages)
 
         new_user = get_or_create_transfer_user(
-            email=f'user-nr-{i}@test.com',
+            email=f'user_{i}@org{org.id}.com',
             business_usage=random_usage,
-            organisation=new_organisation
+            organisation=org
         )
 
         user_list.append(new_user)
         i += 1
+
+        db.session.commit()
     return user_list
 
 
@@ -229,6 +234,9 @@ def create_transfer(amount, sender_user, recipient_user, token, subtype=None):
     transfer.transfer_type = TransferTypeEnum.PAYMENT
     transfer.transfer_subtype = subtype
 
+    # Commit to prevent memory errors with large numbers of txns counts
+    db.session.commit()
+
     return transfer
 
 
@@ -236,6 +244,8 @@ def create_transfers(user_list, wanted_nr_transfers, token):
     transfer_list = []
     i = 0
     while i < wanted_nr_transfers:
+        print(f'Created transfer {i}')
+
         try:
             shuffled = user_list.copy()
             random.shuffle(shuffled)
@@ -249,6 +259,9 @@ def create_transfers(user_list, wanted_nr_transfers, token):
 
             transfer_list.append(transfer)
             i += 1
+
+            # Commit to prevent memory errors with large numbers of txns counts
+            db.session.commit()
         except:
             pass
     return transfer_list
@@ -261,7 +274,6 @@ def _get_or_create_model_object(obj_class: db.Model, filter_kwargs: dict, **kwar
     if instance:
         return instance
     else:
-        print('Creating new obj')
         instance = obj_class(**{**filter_kwargs, **kwargs})
         db.session.add(instance)
         return instance
@@ -317,6 +329,10 @@ def create_dev_data(organisation_id, data_size):
 
 
 if __name__ == '__main__':
+    # Creates dev data for the master org
     create_dev_data(1, 'small')
-    create_dev_data(2, 'large')
+
+    if len(sys.argv) > 1:
+        # Creates dev data for the secondary org
+        create_dev_data(2, sys.argv[1])
 

@@ -5,14 +5,31 @@ PYTHONUNBUFFERED=1
 
 source $1
 
-echo "This will wipe ALL local Sempo data."
-echo "Persist Ganache? (y/N)"
-read ganachePersistInput
-
 if [ -z ${MASTER_WALLET_PK+x} ]
 then
 echo "\$MASTER_WALLET_PK is empty"
 exit 0
+fi
+
+echo "This will wipe ALL local Sempo data."
+echo "Persist Ganache? y/N"
+read ganachePersistInput
+
+echo "Create Dev Data? (s)mall/(m)edium/(l)arge/(N)o"
+read testDataInput
+
+if [ "$testDataInput" == 's' ]; then
+    echo "Creating Small Dev Dataset"
+    testdata='small'
+elif [ "$testDataInput" == 'm' ]; then
+    echo "Creating Medium Dev Dataset"
+    testdata='medium'
+elif [ "$testDataInput" == 'l' ]; then
+    echo "Creating Large Dev Dataset"
+    testdata='large'
+else
+    echo "Not Creating Dev Dataset"
+    testdata='none'
 fi
 
 set +e
@@ -91,11 +108,18 @@ echo ~~~Setting up Contracts
 cd ../
 python -u contract_setup_script.py
 
+if [ "$testdata" != 'none' ]; then
+    echo ~~~Creating test data
+    cd ./app/migrations/
+    python -u dev_data.py ${testdata}
+fi
+
 echo ~~~Killing Python Processes
 sleep 5
 set +e
 kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
 kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
+sleep 2
 
 echo ~~~Done Setup! Bringing Ganache to foreground
 fg 2
