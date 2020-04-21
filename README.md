@@ -217,7 +217,12 @@ alembic revision --autogenerate
 
 ## Testing
 
-Ensure your test_config.ini is up to date.
+Ensure your test_config.ini and test_secrets.ini files are up to date. Test secrets can be generated using the previous python script, and supplying `test` as the filename:
+
+```
+cd config files
+python generate_secrets.py test
+```
 
 Create the test databases:
 
