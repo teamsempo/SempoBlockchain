@@ -2,6 +2,8 @@
 
 bash build_docker.sh
 
+# REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
+
 GIT_HASH=$(git rev-parse HEAD)
 
 sed "s|REPOSITORY_URI|$REPOSITORY_URI|g; s|TAG_SUFFIX|$GIT_HASH|g" awsDockerrunTemplate.json > Dockerrun.aws.json
@@ -16,3 +18,6 @@ docker push $REPOSITORY_URI:proxy_$GIT_HASH
 
 docker tag eth_worker:latest $REPOSITORY_URI:eth_worker_$GIT_HASH
 docker push $REPOSITORY_URI:eth_worker_$GIT_HASH
+
+docker tag pgbouncer:latest $REPOSITORY_URI:pgbouncer_$GIT_HASH
+docker push $REPOSITORY_URI:pgbouncer_$GIT_HASH

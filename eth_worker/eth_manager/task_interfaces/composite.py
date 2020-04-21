@@ -21,7 +21,7 @@ def get_contract_address(task_uuid):
     return pipe(task_uuid, await_tr, lambda r: r.get('contract_address'))
 
 
-def topup_wallets():
+def topup_wallets(queue='low-priority'):
     wallets = persistence_interface.get_all_wallets()
 
     for wallet in wallets:

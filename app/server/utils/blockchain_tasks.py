@@ -22,8 +22,8 @@ class BlockchainTasker(object):
         celery_tasks_name = 'celery_tasks'
         return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
 
-    def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None):
-        async_result = task_runner.delay_task(task, kwargs, args)
+    def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
+        async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
         try:
             response = async_result.get(
                 timeout=timeout or current_app.config['SYNCRONOUS_TASK_TIMEOUT'],
@@ -35,7 +35,7 @@ class BlockchainTasker(object):
             async_result.forget()
         return response
 
-    def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None):
+    def _synchronous_call(self, contract_address, contract_type, func, args=None, signing_address=None, queue='high-priority'):
         kwargs = {
             'contract_address': contract_address,
             'abi_type': contract_type,
@@ -43,14 +43,15 @@ class BlockchainTasker(object):
             'args': args,
             'signing_address': signing_address
         }
-        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), kwargs)
+        return self._execute_synchronous_celery(self._eth_endpoint('call_contract_function'), kwargs, queue=queue)
 
-    def _synchronous_transaction_task(self,
-                                      signing_address,
-                                      contract_address, contract_type,
-                                      func, args=None,
-                                      gas_limit=None,
-                                      prior_tasks=None):
+    def _transaction_task(self,
+                          signing_address,
+                          contract_address, contract_type,
+                          func, args=None,
+                          gas_limit=None,
+                          prior_tasks=None,
+                          queue=None):
         kwargs = {
             'signing_address': signing_address,
             'contract_address': contract_address,
@@ -60,7 +61,10 @@ class BlockchainTasker(object):
             'gas_limit': gas_limit,
             'prior_tasks': prior_tasks
         }
-        return task_runner.delay_task(self._eth_endpoint('transact_with_contract_function'), kwargs).id
+        return task_runner.delay_task(
+            self._eth_endpoint('transact_with_contract_function'),
+            kwargs=kwargs, queue=queue
+        ).id
 
     def get_blockchain_task(self, task_uuid):
         """
@@ -112,7 +116,9 @@ class BlockchainTasker(object):
         )
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
-    def create_blockchain_wallet(self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None):
+    def create_blockchain_wallet(
+            self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None, queue='high-priority'
+    ):
         """
         Creates a blockchain wallet on the blockchain worker
         :param wei_target_balance: How much eth to top the wallet's balance up to
@@ -125,10 +131,12 @@ class BlockchainTasker(object):
             'wei_topup_threshold': wei_topup_threshold,
             'private_key': private_key
         }
-        wallet_address = self._execute_synchronous_celery(self._eth_endpoint('create_new_blockchain_wallet'), args)
+        wallet_address = self._execute_synchronous_celery(
+            self._eth_endpoint('create_new_blockchain_wallet'), args, queue=queue
+        )
 
         if wei_target_balance or 0 > 0:
-            self.topup_wallet_if_required(wallet_address)
+            self.topup_wallet_if_required(wallet_address, queue=queue)
 
         return wallet_address
 
@@ -167,7 +175,8 @@ class BlockchainTasker(object):
 
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,
-                            prior_tasks=None):
+                            prior_tasks=None,
+                            queue='high-priority'):
         """
         Makes a "Transfer" or "Transfer From" transaction on an ERC20 token.
 
@@ -179,10 +188,10 @@ class BlockchainTasker(object):
         :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the transfer
         """
-        raw_amount = token.system_amount_to_token(amount)
+        raw_amount = token.system_amount_to_token(amount, queue=queue)
 
         if signing_address == from_address:
-            return self._synchronous_transaction_task(
+            return self._transaction_task(
                 signing_address=signing_address,
                 contract_address=token.address,
                 contract_type='ERC20',
@@ -191,10 +200,11 @@ class BlockchainTasker(object):
                     to_address,
                     raw_amount
                 ],
-                prior_tasks=prior_tasks
+                prior_tasks=prior_tasks,
+                queue=queue
             )
 
-        return self._synchronous_transaction_task(
+        return self._transaction_task(
             signing_address=signing_address,
             contract_address=token.address,
             contract_type='ERC20',
@@ -202,9 +212,10 @@ class BlockchainTasker(object):
             args=[
                 from_address,
                 to_address,
-                token.system_amount_to_token(amount)
+                token.system_amount_to_token(amount, queue)
             ],
-            prior_tasks=prior_tasks
+            prior_tasks=prior_tasks,
+            queue=queue
         )
 
     def make_approval(self,
@@ -214,7 +225,7 @@ class BlockchainTasker(object):
 
         # TODO: Fix the signature on this
 
-        return self._synchronous_transaction_task(
+        return self._transaction_task(
             signing_address=signing_address,
             contract_address=token.address,
             contract_type='ERC20',
@@ -256,7 +267,7 @@ class BlockchainTasker(object):
         # if topup_task_uuid:
         #     prior_tasks.append(topup_task_uuid)
 
-        return self._synchronous_transaction_task(
+        return self._transaction_task(
             signing_address=signing_address,
             contract_address=exchange_contract.blockchain_address,
             contract_type='bancor_converter',
@@ -371,20 +382,22 @@ class BlockchainTasker(object):
                 to_token.address
             ]
 
-    def get_token_decimals(self, token):
+    def get_token_decimals(self, token, queue='high-priority'):
         return self._synchronous_call(
             contract_address=token.address,
             contract_type='ERC20',
-            func='decimals'
+            func='decimals',
+            queue=queue
         )
 
-    def get_wallet_balance(self, address, token):
+    def get_wallet_balance(self, address, token, queue='high-priority'):
 
         balance_wei = self._synchronous_call(
             contract_address=token.address,
             contract_type='ERC20',
             func='balanceOf',
-            args=[address])
+            args=[address],
+            queue=queue)
 
         return balance_wei
 
@@ -404,11 +417,19 @@ class BlockchainTasker(object):
         :param deploying_address: The address of the wallet used to deploy the network
         :return: registry contract address
         """
-        return self._execute_synchronous_celery(self._eth_endpoint('deploy_exchange_network'), args = [deploying_address], timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25)
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deploy_exchange_network'),
+            args=[deploying_address],
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25
+        )
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
         args = [deploying_address, name, symbol, fund_amount_wei]
-        return self._execute_synchronous_celery(self._eth_endpoint('deploy_and_fund_reserve_token'), args = args, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10)
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deploy_and_fund_reserve_token'),
+            args=args,
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10
+        )
 
     def deploy_smart_token(self,
                            deploying_address,
@@ -427,8 +448,16 @@ class BlockchainTasker(object):
               reserve_token_address,
               int(reserve_ratio_ppm)]
 
-        return self._execute_synchronous_celery(self._eth_endpoint('deploy_smart_token'), args = args, timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15)
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('deploy_smart_token'),
+            args=args,
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15
+        )
 
-    def topup_wallet_if_required(self, wallet_address):
-        return self._execute_synchronous_celery(self._eth_endpoint('topup_wallet_if_required'), args = [wallet_address])
+    def topup_wallet_if_required(self, wallet_address, queue='high-priority'):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('topup_wallet_if_required'),
+            args=[wallet_address],
+            queue=queue
+        )
 
