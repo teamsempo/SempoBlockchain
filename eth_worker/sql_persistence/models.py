@@ -4,7 +4,11 @@ from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON, Numeric
 from sqlalchemy.orm import scoped_session
-from sqlalchemy import select, func, case
+from sqlalchemy import select, func, case, event
+
+import requests
+from requests.auth import HTTPBasicAuth
+import time
 import datetime, base64, os
 from cryptography.fernet import Fernet
 from eth_utils import keccak
@@ -245,28 +249,6 @@ class BlockchainTransaction(ModelBase):
 
     @status.setter
     def status(self, value):
-        print('SETTER 2!')
-        print(value)
-        print(self)
-        print(self.message)
-        print(self.block)
-        print(self.hash)
-        print(self.contract_address)
-        print(self.signing_wallet_id)
-        print(self.blockchain_task_id)
-        print(self.blockchain_task)
-        print(self.blockchain_task.uuid)
-        print('000000-----')
-        #try:
-        #   Put POST here
-        #   Want to send current timestamp
-        #   Want to send blockchain_task.uuid
-        #   Want to send status/error/message
-
-        #   set is_synchronized_with_app TRUE
-        #except:
-        #   set is_synchronized_with_app to FALSE
-
         if value not in STATUS_STRING_TO_INT:
             raise ValueError('Status {} not allowed. (Must be {}'.format(value, STATUS_STRING_TO_INT))
 
@@ -289,3 +271,32 @@ class BlockchainTransaction(ModelBase):
     def __repr__(self):
         return ('<BlockchainTransaction ID:{} Nonce:{} Status: {}>'
                 .format(self.id, self.nonce, self.status))
+    
+# When BlockchainTransaction is updated, let the api layer know about it
+@event.listens_for(BlockchainTransaction, 'after_update')
+def receive_after_update(mapper, connection, target):
+    post_data = {
+            'blockchain_task_uuid':target.blockchain_task.uuid,
+            'timestamp':time.time(),
+            'blockchain_status':target.status,
+            'error':target.error,
+            'message':target.message,
+            'hash':target.hash
+        }
+    callback_url = config.APP_HOST + '/api/v1/worker_callback'
+    r = requests.post(callback_url,
+        json=post_data,
+        auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                           config.INTERNAL_AUTH_PASSWORD))
+    if r.status_code == 200:
+        obj_table = BlockchainTransaction.__table__
+        connection.execute(
+            obj_table.update().
+            where(obj_table.c.id == target.id).
+            values(is_synchronized_with_app=True)
+        )
+    else:
+        # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
+        # where is_synchronized_with_app=False
+        # NOTE: Should change eth_worker to logg at some point 
+        print('Warning: Could not reach \'APP_HOST\' URL: {callback_url}. Please check your config.ini')
