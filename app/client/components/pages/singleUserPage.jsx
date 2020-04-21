@@ -1,6 +1,6 @@
 import React from "react";
-import {connect} from "react-redux";
-import styled, {ThemeProvider} from "styled-components";
+import { connect } from "react-redux";
+import styled, { ThemeProvider } from "styled-components";
 
 import SideBar from "../navBar.jsx";
 import {
@@ -9,12 +9,12 @@ import {
   CenterLoadingSideBarActive
 } from "../styledElements.js";
 import LoadingSpinner from "../loadingSpinner.jsx";
-import {LightTheme} from "../theme.js";
+import { LightTheme } from "../theme.js";
 import SingleUserManagement from "../user/SingleUserManagement.tsx";
 
-import {loadTransferUsages} from "../../reducers/transferUsage/actions";
+import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 import organizationWrapper from "../organizationWrapper";
-import {LoadUserAction} from "../../reducers/user/actions";
+import { LoadUserAction } from "../../reducers/user/actions";
 
 const mapStateToProps = state => {
   return {
@@ -25,7 +25,8 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     loadUser: path => dispatch(LoadUserAction.loadUserRequest(path)),
-    loadTransferUsages: query => dispatch(loadTransferUsages({query}))
+    loadTransferUsages: query =>
+      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({ query }))
   };
 };
 
@@ -40,8 +41,8 @@ class SingleUserPage extends React.Component {
     let userId = parseInt(pathname_array[1]);
 
     if (userId) {
-      this.props.loadUser({path: userId});
-      this.props.loadTransferUsages({show_all: true});
+      this.props.loadUser({ path: userId });
+      this.props.loadTransferUsages({ show_all: true });
     }
   }
 
@@ -52,11 +53,11 @@ class SingleUserPage extends React.Component {
 
     // check if transferAccount exists else show fallback
     if (this.props.users.byId[userId]) {
-      var userComponent = <SingleUserManagement userId={userId}/>;
+      var userComponent = <SingleUserManagement userId={userId} />;
     } else {
       userComponent = (
         <ModuleBox>
-          <p style={{padding: "1em", textAlign: "center"}}>
+          <p style={{ padding: "1em", textAlign: "center" }}>
             No Such User: {url_provided}
           </p>
         </ModuleBox>
@@ -66,17 +67,17 @@ class SingleUserPage extends React.Component {
     if (this.props.users.loadStatus.isRequesting === true) {
       return (
         <WrapperDiv>
-          <SideBar/>
+          <SideBar />
 
           <CenterLoadingSideBarActive>
-            <LoadingSpinner/>
+            <LoadingSpinner />
           </CenterLoadingSideBarActive>
         </WrapperDiv>
       );
     } else {
       return (
         <WrapperDiv>
-          <SideBar/>
+          <SideBar />
 
           <PageWrapper>
             <ThemeProvider theme={LightTheme}>{userComponent}</ThemeProvider>

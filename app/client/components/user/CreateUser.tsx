@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import { StyledButton, ModuleHeader } from "../styledElements";
 import * as styles from "./styles.module.css";
-import { loadTransferUsages } from "../../reducers/transferUsage/actions";
+import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { Organisation } from "../../reducers/organisation/types";
 import { ReduxState } from "../../reducers/rootReducer";
@@ -15,7 +15,7 @@ import { CreateUserPayload } from "../../reducers/user/types";
 interface DispatchProps {
   createUser: (payload: CreateUserPayload) => CreateUserAction;
   resetCreateUser: () => CreateUserAction;
-  loadTransferUsages: () => void;
+  loadTransferUsages: () => LoadTransferUsagesAction;
   loadOrganisation: () => LoadOrganisationAction;
 }
 
@@ -160,7 +160,7 @@ const mapDispatchToProps = (dispatch: any) => {
       dispatch(CreateUserAction.createUserRequest(payload)),
     resetCreateUser: () => dispatch(CreateUserAction.resetCreateUser()),
     loadTransferUsages: () => {
-      dispatch(loadTransferUsages({}));
+      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({}));
     },
     loadOrganisation: () => {
       dispatch(LoadOrganisationAction.loadOrganisationRequest());
