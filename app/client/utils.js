@@ -1,8 +1,7 @@
-import { call } from "redux-saga/effects";
+import { call, put } from "redux-saga/effects";
 import merge from "deepmerge";
-import { LOGIN_FAILURE } from "./reducers/auth/types";
-import { put } from "redux-saga/effects";
-import { store } from "./app.jsx";
+import { LoginAction } from "./reducers/auth/actions";
+import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 import { MessageAction } from "./reducers/message/actions";
 
@@ -93,7 +92,15 @@ export const parseQuery = queryString => {
 
 export const generateFormattedURL = (url, query, path) => {
   let URL;
-  let version = store.getState().login.webApiVersion;
+  let version;
+
+  try {
+    version = store.getState().login.webApiVersion;
+  } catch (e) {
+    console.log("Something went wrong", e);
+    version = null;
+  }
+
   if (!version) {
     version = "1"; // fallback to V1 API
   }
@@ -128,7 +135,7 @@ export function* handleError(error) {
   }
 
   if (error.status === 401) {
-    yield put({ type: LOGIN_FAILURE, error: message });
+    yield put(LoginAction.loginFailure(message));
   }
 
   return { message, status };
