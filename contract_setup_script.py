@@ -119,7 +119,6 @@ class Setup(object):
         print(f'Reserve Token id: {token_id}')
 
         self._wait_for_get_result(f'contract/token/{token_id}/', ('data', 'token', 'address'))
-
         return token_id
 
     def create_exchange_contract(self, reserve_token_id):
