@@ -83,7 +83,7 @@ def log_error(request, exc, traceback, credit_transfer_id):
     if type(exc) is PreBlockchainError:
         result = exc.args[0]
         result['credit_transfer_id'] = credit_transfer_id
-        blockchain_processor.send_blockchain_result_to_app(result)
+        return blockchain_processor.send_blockchain_result_to_app(result)
 
 
 @celery_app.task(bind=True, max_retries=3, soft_time_limit=300)
@@ -173,7 +173,7 @@ def create_transaction_response(self, previous_result, credit_transfer_id):
         blockchain_processor.send_blockchain_result_to_app(result)
 
         raise e
-
+    return True
 
 @celery_app.task()
 def check_if_valid_address(address):
@@ -210,7 +210,7 @@ def resilient_bitcoin_send(self, transaction_data):
             })
 
         raise
-
+    return True
 
 @celery_app.task(bind=True, max_retries=7, soft_time_limit=300)
 def check_whether_transaction_sent_to_pool(self, submit_result):
@@ -244,7 +244,7 @@ def check_whether_transaction_sent_to_pool(self, submit_result):
                 })
 
             raise e
-
+    return True
 
 @celery_app.task(bind=True, max_retries=BITCOIN_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
 def check_transaction_status_in_pool(self, check_sent_to_pool_result):
@@ -269,18 +269,20 @@ def check_transaction_status_in_pool(self, check_sent_to_pool_result):
                 'transaction_type': 'transfer',
                 'submitted_date': submitted_date.isoformat()
             })
+    return True
 
 @celery_app.task()
 def print_foo():
     print('foo')
+    return True
 
 @celery_app.task()
 def find_new_ouputs():
-    blockchain_processor.find_new_outputs()
+    return blockchain_processor.find_new_outputs()
 
 @celery_app.task()
 def find_new_external_inbounds():
-    blockchain_processor.find_new_external_inbounds()
+    return blockchain_processor.find_new_external_inbounds()
 
 @celery_app.task()
 def geolocate_address(geo_task):
@@ -296,7 +298,7 @@ def geolocate_address(geo_task):
                                 },
                           auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                                              config.INTERNAL_AUTH_PASSWORD))
-
+    return True
 
 @celery_app.task()
 def ip_location(ip_task):
@@ -311,7 +313,7 @@ def ip_location(ip_task):
                                 },
                           auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                                              config.INTERNAL_AUTH_PASSWORD))
-
+    return True
 
 @celery_app.task()
 def check_for_duplicate_person(image_name, image_id):
@@ -335,3 +337,4 @@ def check_for_duplicate_person(image_name, image_id):
                           auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                                              config.INTERNAL_AUTH_PASSWORD)
                           )
+    return True

@@ -27,7 +27,7 @@ app/server/static/javascript/bundle.*
 /config_files/*
 !/config_files/public
 !/config_files/templates
-!/config_files/generate_dev_test_secrets.py
+!/config_files/generate_secrets.py
 
 # Misc
 /random_files/

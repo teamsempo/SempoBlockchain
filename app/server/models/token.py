@@ -55,24 +55,28 @@ class Token(ModelBase):
     fiat_ramps = db.relationship('FiatRamp', backref='token', lazy=True,
                                  foreign_keys='FiatRamp.token_id')
 
-    @hybrid_property
-    def decimals(self):
+    def get_decimals(self, queue='high-priority'):
         if self._decimals:
             return self._decimals
 
-        decimals_from_contract_definition = bt.get_token_decimals(self)
+        decimals_from_contract_definition = bt.get_token_decimals(self, queue=queue)
 
         if decimals_from_contract_definition:
             return decimals_from_contract_definition
 
         raise Exception("Decimals not defined in either database or contract")
 
+
+    @hybrid_property
+    def decimals(self):
+        return self.get_decimals()
+
     @decimals.setter
     def decimals(self, value):
         self._decimals = value
 
-    def token_amount_to_system(self, token_amount):
-        return int(token_amount) / 10**self.decimals * 100
+    def token_amount_to_system(self, token_amount, queue='high-priority'):
+        return int(token_amount) / 10**self.get_decimals(queue) * 100
 
-    def system_amount_to_token(self, system_amount):
-        return int(float(system_amount)/100 * 10**self.decimals)
+    def system_amount_to_token(self, system_amount, queue='high-priority'):
+        return int(float(system_amount)/100 * 10**self.get_decimals(queue))
