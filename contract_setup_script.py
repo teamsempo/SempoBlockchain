@@ -286,7 +286,7 @@ def _base_setup(s, reserve_token_id):
         name='ACME',
         symbol='ACME',
         issue_amount_wei=int(10000000e18),
-        reserve_deposit_wei=int(10000e18),
+        reserve_deposit_wei=int(100000e18),
         reserve_ratio_ppm=250000
     )
 
@@ -302,13 +302,11 @@ def local_setup():
     reserve_token_id = s.create_reserve_token(
         name='Reserve Currency',
         symbol='RCU',
-        fund_amount_wei=int(10000e18)
+        fund_amount_wei=int(200000e18)
     )
 
     _base_setup(s, reserve_token_id)
 
 if __name__ == '__main__':
-
-    # ge_setup()
 
     local_setup()

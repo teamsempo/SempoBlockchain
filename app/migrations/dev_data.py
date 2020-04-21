@@ -21,6 +21,12 @@ from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 from server.utils.user import create_transfer_account_user
 
+data_size_options = {
+    'small': {'users': 15, 'transfers': 30},
+    'medium': {'users': 150, 'transfers': 300},
+    'large': {'users': 1000, 'transfers': 1000}
+}
+
 def load_account(address, amount_wei):
     from web3 import (
         Web3,
@@ -153,7 +159,7 @@ def get_or_create_transfer_user(email, business_usage, organisation):
         last_name = random.choice(['Panda', 'Birb', 'Doggo', 'Otter', 'Swearwolf', 'Kitty', 'Lion', 'Chimp', 'Cthulhu'])
         is_beneficiary = random.choice([True, False])
 
-        phone = ''.join([str(random.randint(0,10)) for i in range(0, 10)])
+        phone = '+1' + ''.join([str(random.randint(0,10)) for i in range(0, 10)])
 
         user = create_transfer_account_user(
             first_name=first_name,
@@ -175,7 +181,7 @@ def get_or_create_transer_account(name, user):
         TransferAccount, {'name': name}, bind_to_entity=user, is_approved=True)
 
 
-def seed_transfers(user_list, admin_user, token):
+def seed_transfers(user_list, admin_user, token, number_of_transfers):
     print('Disbursing to users')
     for user in user_list:
         create_transfer(
@@ -186,7 +192,6 @@ def seed_transfers(user_list, admin_user, token):
             subtype=TransferSubTypeEnum.DISBURSEMENT
         )
 
-    number_of_transfers = 30
     print('Creating %d transactions' % number_of_transfers)
     create_transfers(user_list, number_of_transfers, token)
 
@@ -262,44 +267,24 @@ def _get_or_create_model_object(obj_class: db.Model, filter_kwargs: dict, **kwar
         return instance
 
 
-def run_setup():
+def create_dev_data(organisation_id, data_size):
     app = create_app()
     ctx = app.app_context()
     ctx.push()
 
+    size_dict = data_size_options[data_size]
+
     # To simplify creation, we set the flask context to show all model data
     g.show_all = True
 
-    master_organisation = Organisation.master_organisation()
-    if master_organisation is None:
-        print('Creating master organisation')
-        master_organisation = Organisation(is_master=True)
-        db.session.add(master_organisation)
+    organisation = Organisation.query.get(organisation_id)
 
-    master_system_address = master_organisation.system_blockchain_address
+    if organisation is None:
+        raise Exception(f"Organisation not found for ID {organisation_id}")
 
-    load_account(master_system_address, int(1e18))
-    reserve_token = get_or_create_reserve_token(master_system_address, 'AUD Token', 'AUD')
+    admin_user = User.query.filter_by(email=str('admin@acme.org').lower()).first()
 
-    master_organisation.token = reserve_token
-
-    print('Creating organisation')
-    new_organisation = get_or_create_organisation('org1', reserve_token)
-    load_account(new_organisation.system_blockchain_address, int(1e18))
-
-    print('Creating admin user')
-    amount_to_load = 1000
-    admin_user = get_or_create_admin_user('admin@withsempo.com', 'TestPassword', new_organisation)
-    admin_transfer_account = admin_user.transfer_account
-    load_account(admin_transfer_account.blockchain_address, int(20e18))
-    send_eth_task = bt.send_eth(
-        signing_address=admin_transfer_account.blockchain_address,
-        recipient_address=reserve_token.address,
-        amount_wei=amount_to_load * int(1e16))
-
-    bt.await_task_success(send_eth_task)
-
-    admin_user.transfer_account.balance = amount_to_load
+    token = organisation.token
 
     print('Creating Transfer Usage')
     usages = list(map(
@@ -320,52 +305,18 @@ def run_setup():
          ]))
 
     print('Create a list of users with a different business usage id ')
-    user_list = create_users_different_transer_usage(15, new_organisation)
+    user_list = create_users_different_transer_usage(size_dict['users'], organisation)
 
     print('Making Bulk Transfers')
-    seed_transfers(user_list, admin_user, reserve_token)
+    seed_transfers(user_list, admin_user, token, size_dict['transfers'])
 
-    print('Deploying Smart Token')
-    smart_token, exchange_contract, registry_address = create_or_get_reserve_token(
-        deploying_address=admin_transfer_account.blockchain_address,
-        reserve_token=reserve_token,
-        reserve_deposit_wei=5e17,
-        issue_amount_wei=5e17,
-        name='CIC1', symbol='CIC1', reserve_ratio_ppm=250000
-    )
-
-    print('Making exchanges')
-    make_exchange(
-        user=admin_user,
-        from_token=reserve_token,
-        to_token=smart_token,
-        from_amount=2
-    )
-
-    create_transfer(
-        amount=10,
-        sender_user=admin_user,
-        recipient_user=user_list[0],
-        token=reserve_token
-    )
-
-    make_exchange(
-        user=user_list[0],
-        from_token=reserve_token,
-        to_token=smart_token,
-        from_amount=10
-    )
-
-    create_transfer(
-        amount=2,
-        sender_user=user_list[0],
-        recipient_user=user_list[1],
-        token=smart_token
-    )
+    # TODO: Create Exchanges between different currencies
 
     db.session.commit()
     ctx.pop()
 
 
 if __name__ == '__main__':
-    run_setup()
+    create_dev_data(1, 'small')
+    create_dev_data(2, 'large')
+
