@@ -8,7 +8,6 @@ import config
 
 def execute_synchronous_celery(signature):
     async_result = signature.delay()
-
     try:
         response = async_result.get(
             timeout=config.SYNCRONOUS_TASK_TIMEOUT,
