@@ -59,6 +59,8 @@ jobs:
             echo eth_worker
             if [ -f ~/project/caches/proxy.tar.gz ]; then gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images; fi
             echo proxy
+            if [ -f ~/project/caches/pgbouncer.tar.gz ]; then gunzip -c ~/project/caches/pgbouncer.tar.gz | docker load; docker images; fi
+            echo pgbouncer
       - run:
           name: Build Node
           command: |
@@ -69,8 +71,10 @@ jobs:
           name: Build application Docker images
           command: |
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1
-            docker build -t eth_worker . -f ./eth_worker/Dockerfile
+            docker build -t eth_worker . -f ./eth_worker/Dockerfile --build-arg CONTAINER_TYPE=ANY_PRIORITY_WORKER
+
             docker build -t proxy ./proxy
+            docker build -t pgbouncer . -f ./pgbouncer/Dockerfile
       - run:
           name: Save Docker total image caches
           command: |
@@ -80,6 +84,7 @@ jobs:
             docker save server:latest | gzip > ~/project/imagecaches/server.tar.gz
             docker save eth_worker:latest | gzip > ~/project/imagecaches/eth_worker.tar.gz
             docker save proxy:latest | gzip > ~/project/imagecaches/proxy.tar.gz
+            docker save pgbouncer:latest | gzip > ~/project/imagecaches/pgbouncer.tar.gz
 
             sudo chmod 777 -R ~/project/imagecaches
 
@@ -95,12 +100,14 @@ jobs:
             #
             docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
             docker build -t eth_worker . -f ./eth_worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/eth_worker_layers.txt
-            docker build -t proxy ./proxy| grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
+            docker build -t proxy ./proxy | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
+            docker build -t pgbouncer . -f ./pgbouncer/Dockerfile | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/pgbouncer_layers.txt
 
             docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
             docker save $(cat /tmp/eth_worker_layers.txt) | gzip > ~/project/caches/eth_worker.tar.gz
             docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
-
+            docker save $(cat /tmp/pgbouncer_layers.txt) | gzip > ~/project/caches/pgbouncer.tar.gz
+            
             sudo chmod 777 -R ~/project/caches
       - run:
           name: Create Current Build Number
@@ -133,6 +140,7 @@ jobs:
             gunzip -c ~/project/imagecaches/server.tar.gz | docker load
             gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
             gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/pgbouncer.tar.gz | docker load
       - run:
           name: Run Docker Tests
           command: |
@@ -184,6 +192,7 @@ jobs:
             gunzip -c ~/project/imagecaches/server.tar.gz | docker load
             gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
             gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/pgbouncer.tar.gz | docker load
       - run:
           name: Prepare for pyth venv install
           command: |
@@ -230,6 +239,8 @@ jobs:
             docker push ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
             docker tag eth_worker:latest ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+            docker tag pgbouncer:latest ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
+            docker push ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
       - run:
           name: Create Dockerrun config file
           command: |
