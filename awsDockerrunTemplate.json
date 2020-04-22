@@ -7,7 +7,7 @@
       "essential": true,
       "memoryReservation": 256,
       "cpu": 1,
-      "links": [],
+      "links": ["pgbouncer:pgbouncer"],
       "environment": [
         {
           "name": "CONTAINER_TYPE",
@@ -24,10 +24,30 @@
       ]
     },
     {
+      "name": "pgbouncer",
+      "image": "REPOSITORY_URI:pgbouncer_TAG_SUFFIX",
+      "essential": true,
+      "memory": 32,
+      "cpu": 1,
+      "environment": [
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
+        }
+      ],
+      "portMappings": [
+        {
+          "hostPort": 6543,
+          "containerPort": 6543
+        }
+      ],
+      "links": []
+    },
+    {
       "name": "proxy",
       "image": "REPOSITORY_URI:proxy_TAG_SUFFIX",
       "essential": true,
-      "memory": 64,
+      "memory": 32,
       "cpu": 1,
       "portMappings": [
         {
@@ -39,16 +59,38 @@
       "links": ["app:app"]
     },
     {
-      "name": "eth_worker",
+      "name": "high_pri_eth_worker",
       "image": "REPOSITORY_URI:eth_worker_TAG_SUFFIX",
       "essential": false,
       "memory": 256,
-      "links": [],
+      "links": ["pgbouncer:pgbouncer"],
       "mountPoints": [],
       "environment": [
         {
           "name": "CONTAINER_TYPE",
-          "value": "PRIMARY"
+          "value": "HIGH_PRIORITY_WORKER"
+        },
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
+        },
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "low_pri_eth_worker",
+      "image": "REPOSITORY_URI:eth_worker_TAG_SUFFIX",
+      "essential": true,
+      "memory": 128,
+      "links": ["pgbouncer:pgbouncer"],
+      "mountPoints": [],
+      "environment": [
+        {
+          "name": "CONTAINER_TYPE",
+          "value": "LOW_PRIORITY_WORKER"
         },
         {
           "name": "SERVER_HAS_S3_AUTH",
@@ -63,9 +105,9 @@
     {
       "name": "eth_processor",
       "image": "REPOSITORY_URI:eth_worker_TAG_SUFFIX",
-      "essential": false,
-      "memory": 256,
-      "links": [],
+      "essential": true,
+      "memory": 128,
+      "links": ["pgbouncer:pgbouncer"],
       "mountPoints": [],
       "environment": [
         {

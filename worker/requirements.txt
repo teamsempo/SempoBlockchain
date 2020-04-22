@@ -7,6 +7,6 @@ flower==0.9.3
 idna==2.6
 py-evm==0.3.0a5
 raven==6.9.0
-redis==3.2.0
+redis==3.4.1
 requests==2.20.0
 web3==5.0.2
