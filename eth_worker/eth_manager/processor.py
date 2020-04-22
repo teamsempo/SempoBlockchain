@@ -330,7 +330,6 @@ class TransactionProcessor(object):
         task = self.persistence_interface.get_task_from_uuid(task_uuid)
 
         unsatisfied_prior_tasks = self.get_unsatisfied_prior_tasks(task)
-
         if len(unsatisfied_prior_tasks) > 0:
             print('Skipping {}: prior tasks {} unsatisfied'.format(
                 task.id,
@@ -338,7 +337,6 @@ class TransactionProcessor(object):
             return
 
         topup_uuid = self.topup_if_required(task.signing_wallet, task_uuid)
-
         if topup_uuid:
             print(f'Skipping {task.id}: Topup required')
             return
@@ -353,7 +351,6 @@ class TransactionProcessor(object):
         try:
             have_lock = lock.acquire(blocking_timeout=1)
             if have_lock:
-
                 current_status = task.status
                 if current_status in ['SUCCESS', 'PENDING']:
                     print(f'Skipping {task.id}: task status is currently {current_status}')

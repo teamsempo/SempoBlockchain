@@ -8,7 +8,7 @@ logg = logging.getLogger(__name__)
 
 from web3 import Web3
 
-VERSION = '1.1.18'  # Remember to bump this in every PR
+VERSION = '1.1.19'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -50,7 +50,6 @@ else:
 
 if load_from_s3:
     # Load config from S3 Bucket
-
     if os.environ.get('AWS_ACCESS_KEY_ID'):
         # S3 Auth is set via access keys
         if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
@@ -62,7 +61,6 @@ if load_from_s3:
     else:
         # The server itself has S3 Auth
         session = boto3.Session()
-
     client = session.client('s3')
 
     SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
@@ -114,7 +112,7 @@ DEPLOYMENT_NAME = config_parser['APP']['DEPLOYMENT_NAME']
 if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
     raise RuntimeError('deployment name in env ({}) does not match that in config ({}), aborting'.format(ENV_DEPLOYMENT_NAME.lower(),
                                                                                             DEPLOYMENT_NAME.lower()))
-
+BOUNCER_ENABLED = config_parser['APP'].getboolean('BOUNCER_ENABLED', False)
 IS_TEST = config_parser['APP'].getboolean('IS_TEST', False)
 IS_PRODUCTION = config_parser['APP'].getboolean('IS_PRODUCTION')
 if IS_PRODUCTION is None:
@@ -140,7 +138,7 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
-PASSWORD_PEPPER     = secrets_parser['APP']['PASSWORD_PEPPER']
+PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')
 SECRET_KEY          = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
 
@@ -164,13 +162,28 @@ DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD") or secrets_parser['DATAB
 
 DATABASE_HOST = config_parser['DATABASE']['host']
 
+DATABASE_PORT = config_parser['DATABASE']['port'] or 5432
+
 DATABASE_NAME = config_parser['DATABASE'].get('database') \
                 or common_secrets_parser['DATABASE']['database']
 
 ETH_DATABASE_NAME = config_parser['DATABASE'].get('eth_database') \
                     or common_secrets_parser['DATABASE']['eth_database']
 
-ETH_DATABASE_HOST = config_parser['DATABASE'].get('eth_host') or DATABASE_HOST
+BOUNCER_MAX_CLIENT_CONN = config_parser['BOUNCER'].get('max_client_conn') or 1000
+BOUNCER_DEFAULT_POOL_SIZE = config_parser['BOUNCER'].get('default_pool_size') or 100
+BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') or 100
+BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
+
+if BOUNCER_ENABLED:
+    logg.info('PGBBOUNCER Enabled')
+    ACTIVE_DATABASE_HOST = config_parser['BOUNCER']['host']
+    ACTIVE_DATABASE_PORT = config_parser['BOUNCER']['port']
+else:
+    ACTIVE_DATABASE_HOST = DATABASE_HOST
+    ACTIVE_DATABASE_PORT = DATABASE_PORT
+
+ETH_DATABASE_HOST = config_parser['DATABASE'].get('eth_host') or ACTIVE_DATABASE_HOST
 ETH_WORKER_DB_POOL_SIZE = config_parser['DATABASE'].getint('eth_worker_pool_size', 40)
 ETH_WORKER_DB_POOL_OVERFLOW = config_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
 
@@ -185,19 +198,18 @@ def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
-                                                config_parser['DATABASE']['port'],
+                                                ACTIVE_DATABASE_PORT,
                                                 name)
 
 
-SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=False)
-CENSORED_URI            = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=True)
+SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, ACTIVE_DATABASE_HOST, censored=False)
+CENSORED_URI            = get_database_uri(DATABASE_NAME, ACTIVE_DATABASE_HOST, censored=True)
 
 ETH_DATABASE_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=False)
 CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=True)
 
 logg.info('Main database URI: ' + CENSORED_URI)
 logg.info('Eth database URI: ' + CENSORED_ETH_URI)
-
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
