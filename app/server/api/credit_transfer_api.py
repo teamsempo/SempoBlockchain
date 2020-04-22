@@ -33,6 +33,8 @@ class CreditTransferAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, credit_transfer_id):
+        print('AYY LMAO')
+        #ADD blockchain_status here
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
         get_transfer_stats = request.args.get('get_stats', False)
@@ -55,7 +57,7 @@ class CreditTransferAPI(MethodView):
                 transfer_list = view_credit_transfers_schema.dump([credit_transfer]).data
 
             transfer_stats = []
-
+            
             response_object = {
                 'status': 'success',
                 'message': 'Successfully Loaded.',
@@ -111,6 +113,13 @@ class CreditTransferAPI(MethodView):
                 transfer_list = credit_transfers_schema.dump(transfers).data
             elif AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'view'):
                 transfer_list = view_credit_transfers_schema.dump(transfers).data
+            new_transfer_list = []
+            for line in transfer_list:
+                print(line)
+                line['uuid'] = '1234-5678'
+                print(line)
+                new_transfer_list.append(line)
+            transfer_stats = new_transfer_list
 
             response_object = {
                 'status': 'success',
@@ -342,15 +351,13 @@ class CreditTransferAPI(MethodView):
 
             else:
                 message = 'Transfer Successful' if auto_resolve else 'Transfer Pending. Must be approved.'
-
+                db.session.commit()
                 if is_bulk:
                     credit_transfers.append(transfer)
 
                     response_list.append({'status': 201, 'message': message})
 
                 else:
-                    db.session.flush()
-
                     credit_transfer = credit_transfer_schema.dump(transfer).data
 
                     response_object = {

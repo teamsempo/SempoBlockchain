@@ -22,7 +22,7 @@ from server.exceptions import (
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, TransferModeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, BlockchainStatus, TransferModeEnum
 
 
 class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
@@ -38,7 +38,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode       = db.Column(db.Enum(TransferModeEnum))
     transfer_use        = db.Column(JSON)
-
     transfer_metadata = db.Column(JSONB)
 
     exclude_from_limit_calcs = db.Column(db.Boolean, default=False)
@@ -46,6 +45,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     resolution_message = db.Column(db.String())
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
+
+    # Present status, and time of last update (according to worker) to ensure the present blockchain_status 
+    # is the newest (since order of ack's is not guaranteed)
+    blockchain_status   = db.Column(db.Enum(BlockchainStatus), default=BlockchainStatus.PENDING)
+    last_worker_update  = db.Column(db.DateTime)
 
     sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
     recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
@@ -352,9 +356,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.transfer_type = transfer_type
         self.transfer_subtype = transfer_subtype
         self.transfer_metadata = transfer_metadata
-
+    
         if uuid is not None:
             self.uuid = uuid
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
+
+        self.last_worker_update = None

@@ -167,11 +167,6 @@ class BlockchainTask(ModelBase):
 
     @type.setter
     def type(self, value):
-        print('SETTER 3!')
-        print(value)
-        print(self)
-        print(self.status_text)
-        print('---')
         if value not in ALLOWED_TASK_TYPES:
             raise ValueError(f'{value} not in allow task types')
         self._type = value
@@ -197,13 +192,13 @@ class BlockchainTask(ModelBase):
         return STATUS_INT_TO_STRING.get(lowest_status_code, 'UNSTARTED')
 
     @status.expression
-    def status(status):
+    def status(cls):
         return (
             case(
                 STATUS_INT_TO_STRING,
                 value=(
                     select([func.min(BlockchainTransaction.status_code)])
-                        .where(BlockchainTransaction.blockchain_task_id == status.id)
+                        .where(BlockchainTransaction.blockchain_task_id == cls.id)
                         .label('lowest_status')
                 ),
                 else_='UNSTARTED'
@@ -288,7 +283,7 @@ def receive_after_update(mapper, connection, target):
         json=post_data,
         auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                            config.INTERNAL_AUTH_PASSWORD))
-    if r.status_code == 200:
+    if r.ok:
         obj_table = BlockchainTransaction.__table__
         connection.execute(
             obj_table.update().
@@ -300,3 +295,9 @@ def receive_after_update(mapper, connection, target):
         # where is_synchronized_with_app=False
         # NOTE: Should change eth_worker to logg at some point 
         print('Warning: Could not reach \'APP_HOST\' URL: {callback_url}. Please check your config.ini')
+        obj_table = BlockchainTransaction.__table__
+        connection.execute(
+            obj_table.update().
+            where(obj_table.c.id == target.id).
+            values(is_synchronized_with_app=False)
+        )
