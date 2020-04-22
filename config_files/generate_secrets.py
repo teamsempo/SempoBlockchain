@@ -3,6 +3,7 @@ import os
 import sys
 import base64
 import configparser
+import argparse
 
 def add_val(parser, section, key, value):
     try:
@@ -69,12 +70,17 @@ def generate_common_secrets(write_path):
         common_secrets_parser.write(f)
 
 if __name__ == '__main__':
-    name = sys.argv[1] if len(sys.argv) > 1 else 'local'
+    parser = argparse.ArgumentParser(description='Generate Test Secrets.')
 
-    specific_secrets_write_path = os.path.join(secret_dir, f'{name}_secrets.ini')
+    parser.add_argument('-n', '--name', default='local',
+                        help='The deployment name. Will produce file like "foo_secrets.ini"')
+
+    args = parser.parse_args()
+
+    specific_secrets_write_path = os.path.join(secret_dir, f'{args.name}_secrets.ini')
     common_secrets_write_path = os.path.join(secret_dir, 'common_secrets.ini')
 
-    print(f'Generating deployment specific ({name}) secrets')
+    print(f'Generating deployment specific ({args.name}) secrets')
     generate_specific_secrets(specific_secrets_write_path)
     print('Generating common secrets')
     generate_common_secrets(common_secrets_write_path)

@@ -103,7 +103,7 @@ services:
 
   ganache:
     image: "trufflesuite/ganache-cli:v6.7.0"
-    command: "-l 80000000 -i 42"
+    command: "-l 80000000 -i 42 ${GANACHE_ACCOUNT_COMMAND}"
 #  beat:
 #    build:
 #      context: app/server

@@ -5,13 +5,18 @@ PYTHONUNBUFFERED=1
 
 source $1
 
-if [ -z ${MASTER_WALLET_PK+x} ]
+if [ -z ${PGUSER+x} ]
 then
-echo "\$MASTER_WALLET_PK is empty"
-exit 0
+echo "[WARN] PGUSER environment variable not set, defaulting to postgres user 'postgres'"
 fi
 
-echo "This will wipe ALL local Sempo data."
+if [ -z ${PGPASSWORD+x} ]
+then
+echo "[WARN] PGPASSWORD environment variable not set, defaulting to postgres password 'password'"
+fi
+
+
+echo "This will wipe ALL local Sempo data, including local secrets"
 echo "Persist Ganache? y/N"
 read ganachePersistInput
 
@@ -19,22 +24,27 @@ echo "Create Dev Data? (s)mall/(m)edium/(l)arge/(N)o"
 read testDataInput
 
 if [ "$testDataInput" == 's' ]; then
-    echo "Creating Small Dev Dataset"
+    echo "Will create Small Dev Dataset"
     testdata='small'
 elif [ "$testDataInput" == 'm' ]; then
-    echo "Creating Medium Dev Dataset"
+    echo "Will create Medium Dev Dataset"
     testdata='medium'
 elif [ "$testDataInput" == 'l' ]; then
-    echo "Creating Large Dev Dataset"
+    echo "Will create Large Dev Dataset"
     testdata='large'
 else
-    echo "Not Creating Dev Dataset"
+    echo "Will not create Dev Dataset"
     testdata='none'
 fi
 
-set +e
+echo ~~~~Creating Secrets
+cd ./config_files/
+python generate_secrets.py
+MASTER_WALLET_PK=$(awk -F "=" '/master_wallet_private_key/ {print $2}' ./secret/local_secrets.ini  | tr -d ' ')
+cd ../
 
 echo ~~~~Killing any leftover workers or app
+set +e
 kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
 kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
 
@@ -48,7 +58,7 @@ echo ~~~~Resetting postgres
 echo If this section hangs, you might have a bunch of idle postgres connections. Kill them using
 echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
 
-db_server=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@localhost:5432
+db_server=postgres://${PGUSER:-postgres}:${PGPASSWORD:-password}@localhost:5432
 app_db=$db_server/${APP_DB:-sempo_app}
 eth_worker_db=$db_server/${WORKER_DB:-eth_worker}
 
