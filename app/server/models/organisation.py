@@ -152,7 +152,6 @@ class Organisation(ModelBase):
         self._setup_org_transfer_account()
 
     def __init__(self, token=None, is_master=False, **kwargs):
-
         super(Organisation, self).__init__(**kwargs)
     
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
