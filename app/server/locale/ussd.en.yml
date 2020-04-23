@@ -75,20 +75,20 @@ en:
         10. Show previous
     account_management: |
       CON My account
-      1. My Business
+      1. My Profile
       2. Change language
       3. Check Balances
       4. Change PIN
       5. Opt Out of Market Place
       0. Back
-    my_business: |
-      CON My Business
-      1. See my business
-      2. Change my business
-      0. Back
-    about_my_business:
-      bio: END You sell %{user_bio}
-      none: END No business set, please go to Change My Business to set it to something
+    about_me:
+      profile: |
+        END You details are:
+            Name %{full_name}
+            Gender %{gender}
+            Location %{location}
+            You sell %{user_bio}
+      none: END Some profile information is not set, please go to My profile to set %{empty_attrs}.
     change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back
@@ -119,6 +119,28 @@ en:
       0. Back
     new_pin_confirmation: |
       CON Enter new PIN again
+      0. Back
+    user_profile: |
+      CON My profile
+      1. Edit mame.
+      2. Edit gender.
+      3. Edit location.
+      4. Change business.
+      5. See my profile
+      0. Back
+    first_name_entry: |
+      CON Enter first name
+      0. Back
+    last_name_entry: |
+      CON Enter last name
+      0. Back
+    gender_entry: |
+      CON Enter your gender
+      1. Male
+      2. Female
+      0. Back
+    location_entry: |
+      CON Enter your location
       0. Back
     help: END For assistance call %{support_phone}
     exchange_token: |
@@ -163,6 +185,7 @@ en:
     exit_invalid_recipient: END Recipient phone number is incorrect
     exit_use_exchange_menu: END Recipient phone number is an agent. To exchange, use exchange menu
     exit_invalid_token_agent: END Agent phone number is incorrect
+    exit_account_creation_prompt: END Your account is being created. You’ll receive an SMS when your account is ready.
     exit_not_registered: |
       END Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
       To register send: name, number, location and business to 0757628885
@@ -208,3 +231,5 @@ en:
       Call 0757628885 for more info
     pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
     pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help
+    account_creation_success_sms: Welcome to Sarafu! Your account was successfully created.  You have just received your first Sarafu. Dial *483*46# Airtel or *384*96# to use Sarafu.
+    account_creation_error_sms: Whoops! There was a problem creating your account. To try again Dial *483*46#. If issues persist contact support 0757628885.

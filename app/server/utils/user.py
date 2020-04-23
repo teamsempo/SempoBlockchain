@@ -9,7 +9,7 @@ from flask import current_app, g
 from eth_utils import to_checksum_address
 import sentry_sdk
 
-from server import db
+from server import db, bt
 from server.models.device_info import DeviceInfo
 from server.models.organisation import Organisation
 from server.models.token import Token
@@ -829,3 +829,55 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
 
     ordered_transfer_usages = sorted(TransferUsage.query.all(), key=cmp_to_key(usage_sort))
     return ordered_transfer_usages
+
+
+def create_user_without_transfer_account(phone):
+    """
+    This method creates a user without a transfer account or blockchain wallet.
+    :param phone: string with user's msisdn
+    :return: User
+    """
+    temporary_given_names = 'Unknown'
+    user = User(first_name=temporary_given_names,
+                phone=phone,
+                registration_method=RegistrationMethod.USSD_SIGNUP.value)
+    return user
+
+
+def attach_transfer_account_to_user(user, organisation=None):
+    """
+    This method takes a user object argument, ideally one created through the ussd self sign up flow
+    https://docs.google.com/document/d/1UwGcNUFIlrRgpZiGkhMITeu_uqR7i3VcSRw_V89_q2c/edit (which should not have
+    a transfer account or wallet), it then creates a blockchain wallet whose address to attaches to the user object
+    as well as a transfer account that takes the created wallets's address, the user and an organization as arguments an
+    binds the account to the user.
+    The method also takes an organization object as an argument to match the user object to a specific organization.
+
+    :param user: The initial account the user created when they began the self sign up process.
+    :param organisation: The organization the user belongs to.
+    :return: A user with a transfer account,
+    """
+    if not organisation:
+        organisation = Organisation.master_organisation()
+
+    if user.primary_blockchain_address is None:
+        blockchain_address = bt.create_blockchain_wallet()
+        user.primary_blockchain_address = blockchain_address
+        user.set_held_role('BENEFICIARY', 'beneficiary')
+        user.add_user_to_organisation(organisation, is_admin=False)
+
+        db.session.add(user)
+
+        transfer_account = TransferAccount(bound_entity=user,
+                                           organisation=organisation,
+                                           blockchain_address=blockchain_address)
+
+        db.session.add(transfer_account)
+
+        user.default_transfer_account = transfer_account
+    else:
+        raise Exception('User already has a transfer account attached.')
+
+    db.session.commit()
+
+    return user

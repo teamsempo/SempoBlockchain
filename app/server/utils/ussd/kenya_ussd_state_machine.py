@@ -11,15 +11,14 @@ import math
 from transitions import Machine, State
 
 from server import message_processor, ussd_tasker
-from server.models.user import User
+from server.models.user import User, RegistrationMethod
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
-    get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required
+    get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required, attach_transfer_account_to_user
 from server.utils.credit_transfer import dollars_to_cents
 from server.utils.phone import proccess_phone_number
-
 
 ITEMS_PER_MENU = 8
 USSD_MAX_LENGTH = 164
@@ -53,10 +52,14 @@ class KenyaUssdStateMachine(Machine):
         'current_pin',
         'new_pin',
         'new_pin_confirmation',
-        'my_business',
-        'about_my_business',
+        'about_me',
         'change_my_business_prompt',
         'opt_out_of_market_place_pin_authorization',
+        'user_profile',
+        'first_name_entry',
+        'last_name_entry',
+        'gender_entry',
+        'location_entry',
         # directory listing state
         'directory_listing',
         'directory_listing_other',
@@ -82,6 +85,7 @@ class KenyaUssdStateMachine(Machine):
         'exit_pin_blocked',
         'exit_invalid_token_agent',
         'exit_invalid_exchange_amount',
+        'exit_account_creation_prompt',
         State(name='complete', on_enter=['send_terms_to_user_if_required'])
     ]
 
@@ -185,9 +189,9 @@ class KenyaUssdStateMachine(Machine):
     # recipient exists, is not initiator, matches active and agent requirements
     def is_valid_recipient(self, user, should_be_active, should_be_agent):
         return user is not None and \
-            user.phone != self.user.phone and \
-            user.is_disabled != should_be_active and \
-            user.has_token_agent_role == should_be_agent
+               user.phone != self.user.phone and \
+               user.is_disabled != should_be_active and \
+               user.has_token_agent_role == should_be_agent
 
     def is_user(self, user_input):
         user = get_user_by_phone(user_input, "KE")
@@ -310,6 +314,17 @@ class KenyaUssdStateMachine(Machine):
         selected_tranfer_usage_id = self.session.get_data('transfer_usage_mapping')[idx]['id']
         return TransferUsage.query.get(selected_tranfer_usage_id)
 
+    def is_ussd_signup(self, user_input):
+        return self.user.registration_method == RegistrationMethod.USSD_SIGNUP.value
+
+    def process_account_creation_request(self, user_input):
+        try:
+            attach_transfer_account_to_user(self.user)
+            self.send_sms(self.user.phone, "account_creation_success_sms")
+        except Exception as e:
+            self.send_sms(self.user.phone, "account_creation_error_sms")
+            raise Exception('Account creation failed. Error: ', e)
+
     def menu_one_selected(self, user_input):
         return user_input == '1'
 
@@ -381,8 +396,14 @@ class KenyaUssdStateMachine(Machine):
         initial_pin_confirmation_transitions = [
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
+             'dest': 'exit_account_creation_prompt',
+             'after': ['complete_initial_pin_change', 'set_phone_as_verified', 'send_terms_to_user_if_required',
+                       'process_account_creation_request'],
+             'conditions': ['is_ussd_signup', 'new_pins_match']},
+            {'trigger': 'feed_char',
+             'source': 'initial_pin_confirmation',
              'dest': 'start',
-             'after': ['complete_initial_pin_change', 'set_phone_as_verified'],
+             'after': ['complete_initial_pin_change', 'set_phone_as_verified', 'send_terms_to_user_if_required'],
              'conditions': 'new_pins_match'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
@@ -447,7 +468,7 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'send_token_amount',
              'dest': 'exit_invalid_input',
-            },
+             },
         ]
         self.add_transitions(send_token_amount_transitions)
 
@@ -556,7 +577,7 @@ class KenyaUssdStateMachine(Machine):
         account_management_transitions = [
             {'trigger': 'feed_char',
              'source': 'account_management',
-             'dest': 'my_business',
+             'dest': 'user_profile',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
              'source': 'account_management',
@@ -580,21 +601,33 @@ class KenyaUssdStateMachine(Machine):
         ]
         self.add_transitions(account_management_transitions)
 
-        # event: my_business transitions
-        my_business_transitions = [
+        # event: user_profile transitions
+        user_profile_transitions = [
             {'trigger': 'feed_char',
-             'source': 'my_business',
-             'dest': 'about_my_business',
+             'source': 'user_profile',
+             'dest': 'first_name_entry',
              'conditions': 'menu_one_selected'},
             {'trigger': 'feed_char',
-             'source': 'my_business',
-             'dest': 'change_my_business_prompt',
+             'source': 'user_profile',
+             'dest': 'gender_entry',
              'conditions': 'menu_two_selected'},
             {'trigger': 'feed_char',
-             'source': 'my_business',
+             'source': 'user_profile',
+             'dest': 'location_entry',
+             'conditions': 'menu_three_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'change_my_business_prompt',
+             'conditions': 'menu_four_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
+             'dest': 'about_me',
+             'conditions': 'menu_five_selected'},
+            {'trigger': 'feed_char',
+             'source': 'user_profile',
              'dest': 'exit_invalid_menu_option'}
         ]
-        self.add_transitions(my_business_transitions)
+        self.add_transitions(user_profile_transitions)
 
         # event change_my_business_prompt transition
         self.add_transition(trigger='feed_char',

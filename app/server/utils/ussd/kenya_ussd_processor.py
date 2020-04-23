@@ -76,17 +76,45 @@ class KenyaUssdProcessor:
 
         user = ussd_session.user
 
-        if menu.name == 'about_my_business':
+        if menu.name == 'about_me':
             bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
-            if bio:
+            first_name = user.first_name
+            last_name = user.last_name
+            gender = next(filter(lambda x: x.name == 'gender', user.custom_attributes), None)
+            location = user.location
+
+            if bio and gender:
                 bio_text = bio.value.strip('"')
+                gender_text = gender.value.strip('"')
             else:
                 bio_text = None
+                gender_text = None
 
-            if bio_text is None or '':
-                return i18n_for(user, "{}.none".format(menu.display_key))
+                # build profile dictionary
+            user_profile = dict(bio=bio_text,
+                                gender=gender_text,
+                                first_name=first_name,
+                                last_name=last_name,
+                                location=location)
+
+            # filter through user profile to find empty info
+            # the lambda function filters through the dictionaries keys checking which is None
+            # it returns a list of tuples with the key and corresponding None value
+            empty_profile_attrs_tuple_list = list(filter(lambda values: values[1] is None, user_profile.items()))
+
+            # this lambda function returns a list with the empty user attributes
+            empty_profile_attr_list = list(map(lambda attr_tuple: attr_tuple[0], empty_profile_attrs_tuple_list))
+
+            attrs_to_provide = ', '.join(empty_profile_attr_list)
+
+            if len(empty_profile_attr_list) > 0:
+                return i18n_for(user, "{}.none".format(menu.display_key), empty_attrs=attrs_to_provide)
             else:
-                return i18n_for(user, "{}.bio".format(menu.display_key), user_bio=bio_text)
+                full_name = "%{} %{}".format(first_name, last_name)
+                return i18n_for(user, "{}.profile".format(menu.display_key),
+                                full_name=full_name,
+                                gender=gender_text,
+                                location=location, user_bio=bio_text)
 
         if menu.name == 'send_token_confirmation':
             recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)
