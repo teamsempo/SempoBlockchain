@@ -2,8 +2,6 @@
 sleep 10
 
 WORKER_CONCURRENCY=4
-echo "Running alembic upgrade (Default)"
-alembic upgrade head
 
 echo "Running docker worker script"
 if [ "$CONTAINER_MODE" = 'TEST' ]; then
@@ -35,6 +33,7 @@ else
     exit $ret
   fi
   echo "Starting Generic Worker (Default)"
+  alembic upgrade head
   celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority --without-gossip --without-mingle
 fi
 
