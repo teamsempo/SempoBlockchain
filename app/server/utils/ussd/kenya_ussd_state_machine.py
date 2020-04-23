@@ -133,6 +133,32 @@ class KenyaUssdStateMachine(Machine):
     def save_pin_data(self, user_input):
         self.session.set_data('initial_pin', user_input)
 
+    def save_first_name_data(self, user_input):
+        self.session.set_data('first_name', user_input)
+
+    def save_username_info(self, user_input):
+        first_name = self.session.get_data('first_name')
+        last_name = user_input
+        self.user.first_name = first_name
+        self.user.last_name = last_name
+
+    def save_gender_info(self, user_input):
+        gender = ''
+        if self.menu_one_selected(user_input):
+            gender = 'Male'
+        if self.menu_two_selected(user_input):
+            gender = 'Female'
+
+        attrs = {
+            "custom_attributes": {
+                "gender": gender
+            }
+        }
+        set_custom_attributes(attrs, self.user)
+
+    def save_location_info(self, user_input):
+        self.user.location = user_input
+
     def is_valid_pin(self, user_input):
         pin_validity = False
         if len(user_input) == 4 and re.match(r"\d", user_input):
@@ -720,6 +746,31 @@ class KenyaUssdStateMachine(Machine):
              'conditions': 'is_blocked_pin'}
         ]
         self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
+
+        # first_name_entry transitions
+        first_name_entry_transitions = [
+            {'trigger': 'feed_char',
+             'source': 'first_name_entry',
+             'dest': 'last_name_entry',
+             'after': 'save_first_name_data'},
+            {'trigger': 'feed_char',
+             'source': 'last_name_entry',
+             'dest': 'exit',
+             'after': 'save_username_info'}
+        ]
+        self.add_transitions(first_name_entry_transitions)
+
+        # gender_entry transition
+        self.add_transition(trigger='feed_char',
+                            source='gender_entry',
+                            dest='exit',
+                            after='save_gender_info')
+
+        # location_entry transition
+        self.add_transition(trigger='feed_char',
+                            source='location_entry',
+                            dest='exit',
+                            after='save_location_info')
 
         # event: exchange_token transitions
         exchange_token_transitions = [
