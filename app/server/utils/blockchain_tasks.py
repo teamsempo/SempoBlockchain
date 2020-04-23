@@ -435,7 +435,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_and_fund_reserve_token'),
             args=args,
-            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 20
         )
 
     def deploy_smart_token(self,
