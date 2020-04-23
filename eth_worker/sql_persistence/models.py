@@ -279,14 +279,17 @@ def receive_after_update(mapper, connection, target):
             'hash':target.hash
         }
     callback_url = config.APP_HOST + '/api/v1/worker_callback'
-    print('aAAaa')
-    print(callback_url)
-    r = requests.post(callback_url,
-        timeout=5,
-        json=post_data,
-        auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
-                           config.INTERNAL_AUTH_PASSWORD))
-    if r.ok:
+
+    try:
+        r = requests.post(callback_url,
+            timeout=5,
+            json=post_data,
+            auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                               config.INTERNAL_AUTH_PASSWORD))
+    except:
+        r = None
+
+    if r and r.ok:
         obj_table = BlockchainTransaction.__table__
         connection.execute(
             obj_table.update().
