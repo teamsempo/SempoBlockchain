@@ -33,8 +33,6 @@ class CreditTransferAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, credit_transfer_id):
-        print('AYY LMAO')
-        #ADD blockchain_status here
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
         get_transfer_stats = request.args.get('get_stats', False)

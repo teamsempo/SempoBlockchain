@@ -38,6 +38,6 @@ class TransferStatusEnum(enum.Enum):
     # BLOCKCHAIN_COMPLETE = 2
 
 class BlockchainStatus(enum.Enum):
-    PENDING = 'PENDING',
-    SUCCESS = 'SUCCESS',
+    PENDING = 'PENDING'
+    SUCCESS = 'SUCCESS'
     FAILED = 'FAILED'

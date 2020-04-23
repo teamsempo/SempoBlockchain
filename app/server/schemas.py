@@ -162,6 +162,7 @@ class CreditTransferSchema(Schema):
     transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
     transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
     transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
+    blockchain_status       = fields.Function(lambda obj: obj.blockchain_status.value)
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
