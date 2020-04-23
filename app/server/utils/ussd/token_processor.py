@@ -220,7 +220,11 @@ class TokenProcessor(object):
             )
 
     @staticmethod
-    def send_token(sender: User, recipient: User, amount: float, reason_str: str = None, reason_id: int = None):
+    def send_token(sender: User,
+                   recipient: User,
+                   amount: float,
+                   reason_str: Optional[str] = None,
+                   reason_id: Optional[int] = None):
         try:
             exchanged_amount = TokenProcessor.transfer_token(sender, recipient, amount, reason_id)
 

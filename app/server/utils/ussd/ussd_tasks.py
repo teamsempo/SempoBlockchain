@@ -1,3 +1,4 @@
+from typing import Optional
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
 from server.utils.ussd.directory_listing_processor import DirectoryListingProcessor
@@ -11,7 +12,11 @@ class UssdTasker(object):
         processor.send_directory_listing()
 
     @staticmethod
-    def send_token(sender: User, recipient: User, amount: float, reason_str: str = None, reason_id: int = None):
+    def send_token(sender: User,
+                   recipient: User,
+                   amount: float,
+                   reason_str: Optional[str] = None,
+                   reason_id: Optional[int] = None):
         TokenProcessor.send_token(sender, recipient, amount, reason_str, reason_id)
 
     @staticmethod
