@@ -190,13 +190,6 @@ class BlockchainTasker(object):
         """
         raw_amount = token.system_amount_to_token(amount, queue=queue)
 
-        balance_wei = self.get_wallet_balance(from_address, token, queue=queue)
-
-        if balance_wei < raw_amount:
-            print(f'\nWarning: Balance for {from_address} is currently less than sending amount! Transfer may fail'
-                  f'\nBalance: {balance_wei} wei'
-                  f'\nSending: {raw_amount} wei \n')
-
         if signing_address == from_address:
             return self._transaction_task(
                 signing_address=signing_address,
