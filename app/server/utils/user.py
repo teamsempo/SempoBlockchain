@@ -15,7 +15,7 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
-from server.models.user import User
+from server.models.user import User, RegistrationMethod
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount
@@ -198,7 +198,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_groupaccount=False,
                                  is_self_sign_up=False,
                                  business_usage=None,
-                                 initial_disbursement=None):
+                                 initial_disbursement=None,
+                                 registration_method=None):
 
     user = User(first_name=first_name,
                 last_name=last_name,
@@ -208,7 +209,8 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 email=email,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
-                business_usage=business_usage)
+                business_usage=business_usage,
+                registration_method=registration_method)
 
     precreated_pin = None
     is_activated = False
@@ -475,6 +477,7 @@ def proccess_create_or_modify_user_request(
     primary_user_pin = attribute_dict.get('primary_user_pin')
 
     initial_disbursement = attribute_dict.get('initial_disbursement', None)
+    registration_method = attribute_dict.get('registration_method')
 
     is_vendor = attribute_dict.get('is_vendor', None)
     if is_vendor is None:
@@ -635,7 +638,8 @@ def proccess_create_or_modify_user_request(
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
-        business_usage=business_usage, initial_disbursement=initial_disbursement)
+        business_usage=business_usage, initial_disbursement=initial_disbursement,
+        registration_method=registration_method)
 
     if referred_by_user:
         user.referred_by.append(referred_by_user)
