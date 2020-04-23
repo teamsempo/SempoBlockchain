@@ -4,6 +4,7 @@ from flask.views import MethodView
 from server import db
 from server.utils.auth import requires_auth
 from server.models.credit_transfer import CreditTransfer
+from server.models.worker_messages import WorkerMessages
 
 from datetime import datetime
 import time
@@ -18,44 +19,29 @@ class WorkerCallbackAPI(MethodView):
         blockchain_status = post_data.get('blockchain_status')
         error = post_data.get('error')
         message = post_data.get('message')
-        
-        hash = post_data.get('hash')
-        print(post_data)
-        print(blockchain_task_uuid)
-        print(timestamp)
-        print(blockchain_status)
-        print(error)
-        print(message)
-        print(hash)
+        blockchain_hash = post_data.get('hash')
 
-        # lookup blockchain_task_uuid
-        print('===+++++++++++++++')
-        print(post_data)
-        print('\''+blockchain_task_uuid+'\'')
-        time.sleep(2)
         transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).first()
-       # 
-#
-        print(transfer)
-        print("++++222+")
-#
-       # print(transfer.last_worker_update)
-       # print("+++++")
-       # if not transfer.last_worker_update:
-       #     print('AAaaa')
-       # 
+        if not transfer:
+            # Single 2s sleep/retry on failure. Sometimtes when running locally the CreditTransfer object will not be committed yet
+            # by the time the worker hits the callback
+            time.sleep(2)
+            transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).first()
 
+        if not transfer:
+            return ('Credit transfer with ID {blockchain_task_uuid} not found', 404)
+        # We're not guaranteed the worker's messages will arrive in order, so make sure we 
+        # set the state as the latest
         if not transfer.last_worker_update or transfer.last_worker_update < timestamp:
-            print('saving')
-            print(blockchain_status)
             transfer.blockchain_status = blockchain_status
             transfer.last_worker_update = timestamp
-       # print('0-')
+            transfer.blockchain_hash = blockchain_hash
+        if error or message:
+            transfer.messages.append(WorkerMessages(error = error, message = message))
         return ('', 204)
 
 
 # add Rules for API Endpoints
-
 worker_callback_blueprint.add_url_rule(
     '/worker_callback',
     view_func=WorkerCallbackAPI.as_view('worker_callback_view'),

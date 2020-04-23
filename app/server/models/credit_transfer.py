@@ -49,7 +49,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     # Present status, and time of last update (according to worker) to ensure the present blockchain_status 
     # is the newest (since order of ack's is not guaranteed)
     blockchain_status   = db.Column(db.Enum(BlockchainStatus), default=BlockchainStatus.PENDING)
+    blockchain_hash = db.Column(db.String)
     last_worker_update  = db.Column(db.DateTime)
+    messages = db.relationship('WorkerMessages', backref='credit_transfer', lazy=True)
 
     sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
     recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
