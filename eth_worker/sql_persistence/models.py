@@ -279,7 +279,10 @@ def receive_after_update(mapper, connection, target):
             'hash':target.hash
         }
     callback_url = config.APP_HOST + '/api/v1/worker_callback'
+    print('aAAaa')
+    print(callback_url)
     r = requests.post(callback_url,
+        timeout=5,
         json=post_data,
         auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                            config.INTERNAL_AUTH_PASSWORD))
