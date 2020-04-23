@@ -55,7 +55,7 @@ class CreditTransferAPI(MethodView):
                 transfer_list = view_credit_transfers_schema.dump([credit_transfer]).data
 
             transfer_stats = []
-            
+
             response_object = {
                 'status': 'success',
                 'message': 'Successfully Loaded.',
