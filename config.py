@@ -2,11 +2,15 @@ import os, configparser, boto3, hashlib, datetime
 from eth_keys import keys
 from eth_utils import keccak
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logg = logging.getLogger(__name__)
+
 from web3 import Web3
 
-VERSION = '1.1.13'  # Remember to bump this in every PR
+VERSION = '1.1.19'  # Remember to bump this in every PR
 
-print('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
+logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -14,8 +18,8 @@ CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
 BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
 
-print('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
-print('with BUILD_HASH: ' + BUILD_HASH)
+logg.info('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
+logg.info('with BUILD_HASH: ' + BUILD_HASH)
 
 COMMON_FILENAME = "common_secrets.ini"
 CONFIG_FILENAME = "{}_config.ini".format(ENV_DEPLOYMENT_NAME.lower())
@@ -28,25 +32,24 @@ secrets_parser = configparser.ConfigParser()
 if os.environ.get('LOAD_FROM_S3') is not None:
     load_from_s3 = str(os.environ.get('LOAD_FROM_S3')).lower() in ['1', 'true']
     if load_from_s3:
-        print("ATTEMPT LOAD S3 CONFIG (FORCED FROM ENV VAR)")
+        logg.debug("ATTEMPT LOAD S3 CONFIG (FORCED FROM ENV VAR)")
     else:
-        print("ATTEMPT LOAD LOCAL CONFIG (FORCED FROM ENV VAR)")
+        logg.debug("ATTEMPT LOAD LOCAL CONFIG (FORCED FROM ENV VAR)")
 
 elif os.environ.get('AWS_ACCESS_KEY_ID'):
-    print("ATTEMPT LOAD S3 CONFIG (AWS ACCESS KEY FOUND)")
+    logg.debug("ATTEMPT LOAD S3 CONFIG (AWS ACCESS KEY FOUND)")
     load_from_s3 = True
 
 elif os.environ.get('SERVER_HAS_S3_AUTH'):
-    print("ATTEMPT LOAD S3 CONFIG (SERVER CLAIMS TO HAVE S3 AUTH)")
+    logg.debug("ATTEMPT LOAD S3 CONFIG (SERVER CLAIMS TO HAVE S3 AUTH)")
     load_from_s3 = True
 
 else:
-    print("ATTEMPT LOAD LOCAL CONFIG")
+    logg.debug("ATTEMPT LOAD LOCAL CONFIG")
     load_from_s3 = False
 
 if load_from_s3:
     # Load config from S3 Bucket
-
     if os.environ.get('AWS_ACCESS_KEY_ID'):
         # S3 Auth is set via access keys
         if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
@@ -58,7 +61,6 @@ if load_from_s3:
     else:
         # The server itself has S3 Auth
         session = boto3.Session()
-
     client = session.client('s3')
 
     SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
@@ -110,7 +112,7 @@ DEPLOYMENT_NAME = config_parser['APP']['DEPLOYMENT_NAME']
 if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
     raise RuntimeError('deployment name in env ({}) does not match that in config ({}), aborting'.format(ENV_DEPLOYMENT_NAME.lower(),
                                                                                             DEPLOYMENT_NAME.lower()))
-
+BOUNCER_ENABLED = config_parser['APP'].getboolean('BOUNCER_ENABLED', False)
 IS_TEST = config_parser['APP'].getboolean('IS_TEST', False)
 IS_PRODUCTION = config_parser['APP'].getboolean('IS_PRODUCTION')
 if IS_PRODUCTION is None:
@@ -136,7 +138,7 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
-PASSWORD_PEPPER     = secrets_parser['APP']['PASSWORD_PEPPER']
+PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')
 SECRET_KEY          = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
 ECDSA_SECRET        = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
 
@@ -160,13 +162,28 @@ DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD") or secrets_parser['DATAB
 
 DATABASE_HOST = config_parser['DATABASE']['host']
 
+DATABASE_PORT = config_parser['DATABASE']['port'] or 5432
+
 DATABASE_NAME = config_parser['DATABASE'].get('database') \
                 or common_secrets_parser['DATABASE']['database']
 
 ETH_DATABASE_NAME = config_parser['DATABASE'].get('eth_database') \
                     or common_secrets_parser['DATABASE']['eth_database']
 
-ETH_DATABASE_HOST = config_parser['DATABASE'].get('eth_host') or DATABASE_HOST
+BOUNCER_MAX_CLIENT_CONN = config_parser['BOUNCER'].get('max_client_conn') or 1000
+BOUNCER_DEFAULT_POOL_SIZE = config_parser['BOUNCER'].get('default_pool_size') or 100
+BOUNCER_MAX_DB_CONNECTIONS = config_parser['BOUNCER'].get('max_db_connections') or 100
+BOUNCER_MAX_USER_CONNECTIONS = config_parser['BOUNCER'].get('max_user_connections') or 100
+
+if BOUNCER_ENABLED:
+    logg.info('PGBBOUNCER Enabled')
+    ACTIVE_DATABASE_HOST = config_parser['BOUNCER']['host']
+    ACTIVE_DATABASE_PORT = config_parser['BOUNCER']['port']
+else:
+    ACTIVE_DATABASE_HOST = DATABASE_HOST
+    ACTIVE_DATABASE_PORT = DATABASE_PORT
+
+ETH_DATABASE_HOST = config_parser['DATABASE'].get('eth_host') or ACTIVE_DATABASE_HOST
 ETH_WORKER_DB_POOL_SIZE = config_parser['DATABASE'].getint('eth_worker_pool_size', 40)
 ETH_WORKER_DB_POOL_OVERFLOW = config_parser['DATABASE'].getint('eth_worker_pool_overflow', 160)
 
@@ -174,26 +191,25 @@ ETH_WORKER_DB_POOL_OVERFLOW = config_parser['DATABASE'].getint('eth_worker_pool_
 # Never ever ever enable this on prod, or anywhere you care about integrity
 ENABLE_SIMULATOR_MODE = config_parser['APP'].getboolean('enable_simulator_mode', False)
 if ENABLE_SIMULATOR_MODE:
-    print('[WARN] Simulator Mode is enabled. If you are seeing this message on a production system, \
+    logg.warn('Simulator Mode is enabled. If you are seeing this message on a production system, \
 or anywhere you care about workers actually running you should shut down and adjust your config')
 
 def get_database_uri(name, host, censored=True):
     return 'postgresql://{}:{}@{}:{}/{}'.format(DATABASE_USER,
                                                 '*******' if censored else DATABASE_PASSWORD,
                                                 host,
-                                                common_secrets_parser['DATABASE']['port'],
+                                                ACTIVE_DATABASE_PORT,
                                                 name)
 
 
-SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=False)
-CENSORED_URI            = get_database_uri(DATABASE_NAME, DATABASE_HOST, censored=True)
+SQLALCHEMY_DATABASE_URI = get_database_uri(DATABASE_NAME, ACTIVE_DATABASE_HOST, censored=False)
+CENSORED_URI            = get_database_uri(DATABASE_NAME, ACTIVE_DATABASE_HOST, censored=True)
 
 ETH_DATABASE_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=False)
 CENSORED_ETH_URI     = get_database_uri(ETH_DATABASE_NAME, ETH_DATABASE_HOST, censored=True)
 
-print('Main database URI: ' + CENSORED_URI)
-print('Eth database URI: ' + CENSORED_ETH_URI)
-
+logg.info('Main database URI: ' + CENSORED_URI)
+logg.info('Eth database URI: ' + CENSORED_ETH_URI)
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -352,3 +368,29 @@ except KeyError:
     GE_DB_PORT = ''
     GE_DB_PASSWORD = ''
     GE_HTTP_PROVIDER = ''
+
+TRANSFER_LIMITS = {}
+TRANSFER_LIMITS['0.P7']	= 5000
+TRANSFER_LIMITS['0.P30']	= 10000
+TRANSFER_LIMITS['0.WD7']	= 0
+TRANSFER_LIMITS['0.WD30']	= 0
+TRANSFER_LIMITS['1.P7']	= 5000
+TRANSFER_LIMITS['1.P30']	= 20000
+TRANSFER_LIMITS['1.WD7']	= 0
+TRANSFER_LIMITS['1.WD30']	= 0
+TRANSFER_LIMITS['2.P7']	= 50000
+TRANSFER_LIMITS['2.P30']	= 100000
+TRANSFER_LIMITS['2.WD7']	= 100000
+TRANSFER_LIMITS['2.WD30']	= 100000
+TRANSFER_LIMITS['3.P7']	= 500000
+TRANSFER_LIMITS['3.P30']	= 1000000
+TRANSFER_LIMITS['3.WD7']	= 500000
+TRANSFER_LIMITS['3.WD30']	= 1000000
+
+try:
+    for k in config_parser['LIMITS'].keys():
+        v = int(config_parser['LIMITS'][k])
+        logg.debug('replacing transfer limit {}:{} with value {}'.format(k.upper(), TRANSFER_LIMITS[k.upper()], v))
+        TRANSFER_LIMITS[k.upper()] = v 
+except KeyError:
+    pass

@@ -6,6 +6,7 @@
 
 [![CircleCI](https://circleci.com/gh/teamsempo/SempoBlockchain.svg?style=shield)](https://circleci.com/gh/teamsempo/SempoBlockchain)
 [![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
+[![Codecov](https://img.shields.io/codecov/c/github/teamsempo/SempoBlockchain)](https://codecov.io/gh/teamsempo/SempoBlockchain)
 
 Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments
 
@@ -26,7 +27,7 @@ If you plan on using the quick setup script, be sure to install the [PSQL](https
 You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli)
 
 ```
-npm install ganache-cli@6.4.1
+npm install -g ganache-cli@6.4.1
 ```
 
 **Python**
@@ -34,7 +35,7 @@ npm install ganache-cli@6.4.1
 Download and install python 3.6 and its respective pip and virtualenv (**python 3.7 will break things**). Then:
 
 ```
-python3 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 ./install.sh
 ```
@@ -65,7 +66,7 @@ To create some suitable secrets quickly:
 
 ```
 cd config files
-python generate_dev_test_secrets.py
+python generate_secrets.py
 ```
 
 ### Quick Setup Script
