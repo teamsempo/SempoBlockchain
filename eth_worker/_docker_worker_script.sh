@@ -13,7 +13,6 @@ elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
   python ethereum_filter_test.py
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
   echo "Starting Processor Worker"
-  alembic upgrade head
   celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor --without-gossip --without-mingle
 elif [ "$CONTAINER_TYPE" == 'LOW_PRIORITY_WORKER' ]; then
   echo "Starting Low Priority Worker"
