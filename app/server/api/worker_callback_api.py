@@ -40,7 +40,7 @@ class WorkerCallbackAPI(MethodView):
             transfer.blockchain_hash = blockchain_hash
 
         if error or message:
-            transfer.messages.append(WorkerMessages(error = error, message = message))
+            transfer.messages.append(WorkerMessages(error = error, message = message, worker_timestamp = timestamp))
 
         return ('', 204)
 

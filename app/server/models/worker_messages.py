@@ -9,3 +9,4 @@ class WorkerMessages(ModelBase):
     credit_transfer_id = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
     message = db.Column(db.String)
     error = db.Column(db.String)
+    worker_timestamp = db.Column(db.DateTime)
