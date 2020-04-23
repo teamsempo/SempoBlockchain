@@ -113,13 +113,6 @@ class CreditTransferAPI(MethodView):
                 transfer_list = credit_transfers_schema.dump(transfers).data
             elif AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'view'):
                 transfer_list = view_credit_transfers_schema.dump(transfers).data
-            new_transfer_list = []
-            for line in transfer_list:
-                print(line)
-                line['uuid'] = '1234-5678'
-                print(line)
-                new_transfer_list.append(line)
-            transfer_stats = new_transfer_list
 
             response_object = {
                 'status': 'success',
