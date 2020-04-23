@@ -2,7 +2,7 @@
 
 bash build_docker.sh
 
-REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
+# REPOSITORY_URI=290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/blockchaindemo
 
 GIT_HASH=$(git rev-parse HEAD)
 
@@ -21,6 +21,3 @@ docker push $REPOSITORY_URI:eth_worker_$GIT_HASH
 
 docker tag pgbouncer:latest $REPOSITORY_URI:pgbouncer_$GIT_HASH
 docker push $REPOSITORY_URI:pgbouncer_$GIT_HASH
-
-
-eb deploy blockchain-app-dev3

@@ -300,7 +300,7 @@ def receive_after_update(mapper, connection, target):
         # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
         # where is_synchronized_with_app=False
         # NOTE: Should change eth_worker to logg at some point 
-        print('Warning: Could not reach \'APP_HOST\' URL: {callback_url}. Please check your config.ini')
+        print('[\'WARN\'] Could not reach \'APP_HOST\' URL: {callback_url}. Please check your config.ini')
         obj_table = BlockchainTransaction.__table__
         connection.execute(
             obj_table.update().
