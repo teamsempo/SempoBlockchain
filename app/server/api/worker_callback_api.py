@@ -24,20 +24,24 @@ class WorkerCallbackAPI(MethodView):
         transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).first()
         if not transfer:
             # Single 2s sleep/retry on failure. Sometimtes when running locally the CreditTransfer object will not be committed yet
-            # by the time the worker hits the callback
+            # by the time the worker hits the callback. Extremely unlikely under prod/staging conditions.
+            print('[WARN] CreditTransfer likely not yet committed at time of request. Waiting 2s.')
             time.sleep(2)
             transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).first()
 
         if not transfer:
             return ('Credit transfer with ID {blockchain_task_uuid} not found', 404)
+
         # We're not guaranteed the worker's messages will arrive in order, so make sure we 
         # set the state as the latest
         if not transfer.last_worker_update or transfer.last_worker_update < timestamp:
             transfer.blockchain_status = blockchain_status
             transfer.last_worker_update = timestamp
             transfer.blockchain_hash = blockchain_hash
+
         if error or message:
             transfer.messages.append(WorkerMessages(error = error, message = message))
+
         return ('', 204)
 
 
