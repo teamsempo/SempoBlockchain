@@ -226,4 +226,4 @@ sw:
     pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.
     pin_change_error_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0757628885 kwa usaidizi
     account_creation_success_sms: Karibu Sarafu! Umepokea %{disbursement_amount} %{token_name} ya kwanzia. Bonyeza *483*46# Airtel ama *384*96# kutumia Sarafu
-    account_creation_error_sms: Pole! Kuna shida kwa system. Jaribu tena, bonyeza *483*46# ama *384*96# kutumia Sarafu. Ikiwa hida inaendelea pigia 0757628885 usaidike.
+    account_creation_error_sms: Pole! Kuna shida kwa system. Jaribu tena, bonyeza *483*46# ama *384*96# kutumia Sarafu. Ikiwa shida inaendelea pigia 0757628885 usaidike.

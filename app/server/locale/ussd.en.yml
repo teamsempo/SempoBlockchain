@@ -83,7 +83,7 @@ en:
       0. Back
     about_me:
       profile: |
-        END You details are:
+        END Your details are:
             Name %{full_name}
             Gender %{gender}
             Location %{location}
@@ -149,8 +149,7 @@ en:
       2. Exchange
       0. Back
     exchange_rate_pin_authorization:
-      first:
-        CON Please enter your PIN.
+      first: CON Please enter your PIN.
         0. Back
       retry:
         CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
@@ -163,8 +162,7 @@ en:
       CON Enter Amount (40 or more)
       0. Back
     exchange_token_pin_authorization:
-      first:
-        CON Please enter your PIN.
+      first: CON Please enter your PIN.
         0. Back
       retry:
         CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
