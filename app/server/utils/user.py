@@ -8,6 +8,7 @@ from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
 import sentry_sdk
+import config
 
 from server import db, bt
 from server.models.device_info import DeviceInfo
@@ -25,6 +26,7 @@ from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
+from server.utils.credit_transfer import make_payment_transfer
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
@@ -871,10 +873,25 @@ def attach_transfer_account_to_user(user, organisation=None):
         transfer_account = TransferAccount(bound_entity=user,
                                            organisation=organisation,
                                            blockchain_address=blockchain_address)
-
         db.session.add(transfer_account)
-
         user.default_transfer_account = transfer_account
+
+        org_users = organisation.users
+        initial_disbursement = config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT
+        disbursing_admin_list = []
+        for org_user in org_users:
+            if org_user.has_admin_role:
+                disbursing_admin_list.append(org_user)
+
+        if len(disbursing_admin_list) > 0:
+            disbursing_admin = disbursing_admin_list[0]
+            initial_disbursement = make_payment_transfer(transfer_amount=initial_disbursement,
+                                                         send_user=disbursing_admin,
+                                                         receive_user=user,
+                                                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
+            db.session.add(initial_disbursement)
+        else:
+            raise Exception('No admin user was found.')
     else:
         raise Exception('User already has a transfer account attached.')
 
