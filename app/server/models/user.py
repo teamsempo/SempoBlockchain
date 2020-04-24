@@ -36,6 +36,8 @@ from server.models.organisation import Organisation
 from server.models.blacklist_token import BlacklistToken
 from server.models.transfer_card import TransferCard
 from server.models.transfer_usage import TransferUsage
+from server.models.user_extension import UserExtension
+
 from server.exceptions import (
     RoleNotFoundException,
     TierNotFoundException,
@@ -53,7 +55,6 @@ referrals = Table(
     db.Column('referred_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('referrer_user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
-
 
 class User(ManyOrgBase, ModelBase, SoftDelete):
     """Establishes the identity of a user for both making transactions and more general interactions.
@@ -172,6 +173,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     exchanges = db.relationship("Exchange", backref="user")
 
+    _full_location = db.relationship(UserExtension)
+
     def delete_user_and_transfer_account(self):
         """
         Soft deletes a User and default Transfer account if no other users associated to it.
@@ -253,6 +256,19 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             issuer_name='Sempo: {}'.format(
                 current_app.config.get('DEPLOYMENT_NAME'))
         )
+
+    @hybrid_property
+    def full_location(self):
+        if len(self._full_location) == 0:
+            return None
+        return self._full_location[0]
+
+    @full_location.setter
+    def full_location(self, location):
+        if len(self._full_location) == 0:
+            self._full_location.append(location)
+        else:
+            self._full_location[0] = location
 
     @hybrid_property
     def location(self):
