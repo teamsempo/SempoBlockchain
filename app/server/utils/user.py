@@ -878,13 +878,12 @@ def attach_transfer_account_to_user(user, organisation=None):
 
         org_users = organisation.users
         initial_disbursement = config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT
-        disbursing_admin_list = []
+        disbursing_admin = None
         for org_user in org_users:
             if org_user.has_admin_role:
-                disbursing_admin_list.append(org_user)
-
-        if len(disbursing_admin_list) > 0:
-            disbursing_admin = disbursing_admin_list[0]
+                disbursing_admin = org_user
+                break
+        if disbursing_admin:
             initial_disbursement = make_payment_transfer(transfer_amount=initial_disbursement,
                                                          send_user=disbursing_admin,
                                                          receive_user=user,
@@ -896,5 +895,4 @@ def attach_transfer_account_to_user(user, organisation=None):
         raise Exception('User already has a transfer account attached.')
 
     db.session.commit()
-
     return user
