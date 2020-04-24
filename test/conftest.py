@@ -159,6 +159,17 @@ def new_credit_transfer(create_transfer_account_user, external_reserve_token):
     return credit_transfer
 
 @pytest.fixture(scope='function')
+def new_locations():
+    from server.models.location import Location
+
+    locations = {}
+    locations['top'] = Location('Croatia', 45.81318, 15.97624)
+    locations['node'] = Location('Porec', 45.22738, 13.59569, locations['top'])
+    locations['leaf'] = Location('Nice beach', 45.240173511, 13.597673455, locations['node'])
+
+    return locations
+
+@pytest.fixture(scope='function')
 def other_new_credit_transfer(create_transfer_account_user, external_reserve_token):
     # Janky copy paste job because of how pytest works
     from server.models.credit_transfer import CreditTransfer
