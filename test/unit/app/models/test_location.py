@@ -1,9 +1,6 @@
 import pytest
-import logging
 
 from helpers.factories import UserFactory 
-
-logg = logging.getLogger(__file__)
 
 def test_location_set_external(test_client, new_locations):
 
@@ -18,11 +15,9 @@ def test_location_hierarchy(new_locations):
     assert new_locations['node'].parent == new_locations['top']
 
 
-
 def test_user_location_link(new_locations):
 
     user = UserFactory(first_name='Melvin', last_name='Ferd')
     user.full_location = new_locations['leaf']
 
-    #assert user.get_full_location().common_name == new_locations['leaf'].common_name
     assert user.full_location.common_name == new_locations['leaf'].common_name
