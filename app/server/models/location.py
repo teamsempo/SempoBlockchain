@@ -41,6 +41,11 @@ class Location(db.Model):
     location_external = db.relationship('LocationExternal',
             lazy=True)
 
+    def set_parent(self, parent):
+        if self.parent != None:
+            raise ValueError('parent already set')
+        self.parent = parent
+
     def add_external_data(self, source, references_data):
         self.location_external.append(LocationExternal(self, source, references_data)) 
 
@@ -50,4 +55,4 @@ class Location(db.Model):
         self.latitude = latitude
         self.longitude = longitude
         if parent != None:
-            self.parent = parent
+            self.set_parent(parent)
