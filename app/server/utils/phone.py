@@ -1,6 +1,7 @@
 import phonenumbers
 import enum
 import sentry_sdk
+from phonenumbers.phonenumberutil import NumberParseException
 
 from flask import current_app, g
 
@@ -34,7 +35,10 @@ def proccess_phone_number(phone_number, region=None, ignore_region=False):
         except ValueError:
             pass
 
-    phone_number_object = phonenumbers.parse(phone_number, region)
+    try:
+        phone_number_object = phonenumbers.parse(phone_number, region)
+    except NumberParseException as e:
+        raise e
 
     parsed_phone_number = phonenumbers.format_number(phone_number_object, phonenumbers.PhoneNumberFormat.E164)
 
