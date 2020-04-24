@@ -18,7 +18,6 @@ interface LoginState {
   error: null | string;
   tfaURL: null | string;
   tfaFailure: boolean;
-  requireTransferCardExists: null | boolean;
   adminTier?: string;
 }
 
@@ -31,7 +30,6 @@ const initialLoginState: LoginState = {
   intercomHash: null,
   webApiVersion: null,
   organisationId: null,
-  requireTransferCardExists: null,
   usdToSatoshiRate: null,
   error: null,
   tfaURL: null,
@@ -58,7 +56,6 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         intercomHash: action.payload.intercomHash,
         webApiVersion: action.payload.webApiVersion,
         organisationId: action.payload.organisationId,
-        requireTransferCardExists: action.payload.requireTransferCardExists,
         email: action.payload.email,
         adminTier: action.payload.adminTier,
         usdToSatoshiRate: action.payload.usdToSatoshiRate,
@@ -74,7 +71,6 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         intercomHash: null,
         webApiVersion: null,
         organisationId: null,
-        requireTransferCardExists: null,
         tfaURL: action.payload.tfaURL,
         tfaFailure: action.payload.tfaFailure,
         error: action.payload.error || "unknown error"

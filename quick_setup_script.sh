@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -m
 
+PYTHONUNBUFFERED=1
+
 source $1
 
 echo "This will wipe ALL local Sempo data."
@@ -11,17 +13,24 @@ if [ -z ${MASTER_WALLET_PK+x} ]
 then
 echo "\$MASTER_WALLET_PK is empty"
 exit 0
-else
-echo "\$MASTER_WALLET_PK is NOT empty"
 fi
 
 set +e
+
+echo ~~~~Killing any leftover workers or app
+kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
+kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
 
 echo ~~~~Resetting readis
 redis-server &
 redis-cli FLUSHALL
 
+sleep 1
+
 echo ~~~~Resetting postgres
+echo If this section hangs, you might have a bunch of idle postgres connections. Kill them using
+echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
+
 db_server=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@localhost:5432
 app_db=$db_server/${APP_DB:-sempo_blockchain_local}
 eth_worker_db=$db_server/${APP_DB:-eth_worker}
@@ -42,12 +51,12 @@ alembic upgrade heads
 echo ~~~~Resetting Ganache
 cd ../
 kill $(ps aux | grep '[g]anache-cli' | awk '{print $2}')
-rm -R ./ganacheDB
 
 if [ $ganachePersistInput != y ]
 then
   ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
 else
+  rm -R ./ganacheDB
   mkdir ganacheDB
   ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" --db './ganacheDB' &
 fi
@@ -58,7 +67,7 @@ set -e
 
 echo ~~~Starting worker
 cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q processor,celery &
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q processor,celery,low-priority,high-priority &
 sleep 5
 
 echo ~~~Seeding Data
@@ -68,7 +77,7 @@ python -u seed.py
 echo ~~~Starting App
 
 cd ../
-python run.py &
+python -u run.py &
 sleep 5
 
 echo ~~~Creating Default Account
@@ -77,13 +86,14 @@ psql $app_db -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
-python contract_setup_script.py
+python -u contract_setup_script.py
 
 echo ~~~Killing Python Processes
+sleep 5
 set +e
-kill $(ps aux | grep '[r]un.py' | awk '{print $2}')
-kill $(ps aux | grep '[c]elery' | awk '{print $2}')
+kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
+kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
 
-echo ~~~Bringing Ganache to foreground
-fg 1
+echo ~~~Done Setup! Bringing Ganache to foreground
+fg 2
 

@@ -24,8 +24,11 @@ ADD ./app/RedisQueue.py /src
 ADD ./app/_docker_app_script.sh /
 ADD ./test /src/test
 ADD ./invoke_tests.py /src
+ADD .coveragerc /src
 
 WORKDIR /
+
+RUN apt -y install curl
 
 RUN chmod +x /_docker_app_script.sh
 
