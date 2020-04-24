@@ -98,17 +98,15 @@ class KenyaUssdProcessor:
                                 location=location)
 
             # filter through user profile to find empty info
-            # the lambda function filters through the dictionaries keys checking which is None
+            # the lambda function filters through the dictionary's keys checking which is None
             # it returns a list of tuples with the key and corresponding None value
             empty_profile_attrs_tuple_list = list(filter(lambda values: values[1] is None, user_profile.items()))
 
             # this lambda function returns a list with the empty user attributes
             empty_profile_attr_list = list(map(lambda attr_tuple: attr_tuple[0], empty_profile_attrs_tuple_list))
 
-            attrs_to_provide = ', '.join(empty_profile_attr_list)
-
             if len(empty_profile_attr_list) > 0:
-                return i18n_for(user, "{}.none".format(menu.display_key), empty_attrs=attrs_to_provide)
+                return i18n_for(user, "{}.none".format(menu.display_key))
             else:
                 full_name = "%{} %{}".format(first_name, last_name)
                 return i18n_for(user, "{}.profile".format(menu.display_key),
