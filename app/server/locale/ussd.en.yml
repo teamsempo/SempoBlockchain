@@ -88,7 +88,7 @@ en:
             Gender %{gender}
             Location %{location}
             You sell %{user_bio}
-      none: END Some profile information is not set, please go to My profile to set %{empty_attrs}.
+      none: END Please go to my profile to enter your missing information.
     change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back

@@ -87,7 +87,7 @@ sw:
             Jinsia %{gender}
             Eneo %{location}
             Unauza %{user_bio}
-      none: END Tafadhali enda kwa wasifu wako ili ukaweze kuweka %{empty_attrs}.
+      none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza.
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
@@ -120,7 +120,7 @@ sw:
     user_profile: |
       CON Wasifu wangu
       1. Weka jina.
-      2. Weka Jinsia.
+      2. Weka jinsia.
       3. Weka eneo.
       4. Badilish biashara.
       5. Angalia wasifu wako.
