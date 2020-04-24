@@ -7,6 +7,7 @@ the services provided by the  ussd app.
 """
 import re
 import math
+import config
 
 from transitions import Machine, State
 
@@ -346,7 +347,10 @@ class KenyaUssdStateMachine(Machine):
     def process_account_creation_request(self, user_input):
         try:
             attach_transfer_account_to_user(self.user)
-            self.send_sms(self.user.phone, "account_creation_success_sms")
+            self.send_sms(self.user.phone,
+                          "account_creation_success_sms",
+                          disbursement_amount=config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT,
+                          token_name=default_token(self.user).name)
         except Exception as e:
             self.send_sms(self.user.phone, "account_creation_error_sms")
             raise Exception('Account creation failed. Error: ', e)
