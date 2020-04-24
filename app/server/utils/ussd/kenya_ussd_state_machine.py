@@ -11,7 +11,7 @@ import math
 from transitions import Machine, State
 
 from server import message_processor, ussd_tasker
-from server.models.user import User, RegistrationMethod
+from server.models.user import User, RegistrationMethodEnum
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
@@ -341,7 +341,7 @@ class KenyaUssdStateMachine(Machine):
         return TransferUsage.query.get(selected_tranfer_usage_id)
 
     def is_ussd_signup(self, user_input):
-        return self.user.registration_method == RegistrationMethod.USSD_SIGNUP.value
+        return self.user.registration_method == RegistrationMethodEnum.USSD_SIGNUP
 
     def process_account_creation_request(self, user_input):
         try:
@@ -493,8 +493,7 @@ class KenyaUssdStateMachine(Machine):
              'after': ['save_transaction_amount', 'store_transfer_usage']},
             {'trigger': 'feed_char',
              'source': 'send_token_amount',
-             'dest': 'exit_invalid_input',
-             },
+             'dest': 'exit_invalid_input'},
         ]
         self.add_transitions(send_token_amount_transitions)
 

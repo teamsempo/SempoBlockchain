@@ -15,7 +15,7 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
-from server.models.user import User, RegistrationMethod
+from server.models.user import User, RegistrationMethodEnum
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount
@@ -840,7 +840,7 @@ def create_user_without_transfer_account(phone):
     temporary_given_names = 'Unknown'
     user = User(first_name=temporary_given_names,
                 phone=phone,
-                registration_method=RegistrationMethod.USSD_SIGNUP.value)
+                registration_method=RegistrationMethodEnum.USSD_SIGNUP)
     return user
 
 

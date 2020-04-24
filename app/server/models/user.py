@@ -56,6 +56,11 @@ referrals = Table(
 )
 
 
+class RegistrationMethodEnum(Enum):
+    USSD_SIGNUP = 'USSD_SIGNUP'
+    WEB_SIGNUP = 'WEB_SIGNUP'
+
+
 class User(ManyOrgBase, ModelBase, SoftDelete):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
@@ -89,7 +94,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
     seen_latest_terms = db.Column(db.Boolean, default=False)
-    registration_method = db.Column(db.String)
+    registration_method = db.Column(db.Enum(RegistrationMethodEnum))
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
 
@@ -692,7 +697,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
 
-        if self.registration_method != RegistrationMethod.USSD_SIGNUP.value:
+        if self.registration_method != RegistrationMethodEnum.USSD_SIGNUP:
             self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
 
     def __repr__(self):
@@ -703,7 +708,3 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         else:
             return '<User {} {}>'.format(self.id, self.phone)
 
-
-class RegistrationMethod(Enum):
-    USSD_SIGNUP = 'USSD_SIGNUP'
-    WEB_SIGNUP = 'WEB_SIGNUP'
