@@ -13,6 +13,7 @@ Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, A
 ## To run locally:
 
 ### Install Requirements
+
 **Postgres**
 
 We use [postgres](https://www.postgresql.org/) for regular (non-blockchain) data persistance.
@@ -50,11 +51,13 @@ npm install
 ```
 
 To build and watch for changes:
+
 ```
 npm run dev
 ```
 
 ### Create config files
+
 The platform uses three kinds of config files:
 
 - deployment specific config: things that aren't sensitive, and change on a per deployment basis
@@ -78,13 +81,15 @@ For quick setup, run `quick_setup_script.sh` with `MASTER_WALLET_PK` set as an e
 ```
 quick_setup_script.sh [activation path for your python env]
 ```
+
 The script will:
+
 - Reset your local Sempo state
 - Launch Ganache and Redis
 - Create an adminstrator account with email `admin@acme.org` and password `C0rrectH0rse`
 - Create a reserve token and bonded token
-When the script has finished running*, you can start your own app and worker processes (see next section) and continue on.
-\*This can be a little hard to identify because ganache continues to run, but a good indicator is if `Bringing Ganache to foreground` is echo'd in the console
+  When the script has finished running\*, you can start your own app and worker processes (see next section) and continue on.
+  \*This can be a little hard to identify because ganache continues to run, but a good indicator is if `Bringing Ganache to foreground` is echo'd in the console
 
 ### Run the app in a Virtual Env
 
@@ -96,6 +101,7 @@ python ./run.py
 ### Launch the worker
 
 Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue.
+
 ```
 cd eth_worker
 celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
@@ -105,7 +111,7 @@ celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=
 
 ### Enable the Blockchain Simulator
 
-If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth_worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. _Be warned, this will make your database fall out of sync with any ganache instance you have set up so use this with care_, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `contract_setup_script.py` without additional dependencies.
+If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth*worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. \_Be warned, this will make your database fall out of sync with any ganache instance you have set up so use this with care*, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `contract_setup_script.py` without additional dependencies.
 
 To enable simulator mode, open `/config_files/local_config.ini` and add the line `enable_simulator_mode = true` under the `[APP]` heading.
 
@@ -215,6 +221,13 @@ alembic revision --autogenerate
 
 (if you have installed the prod vendor app, ensure you clear data and uninstall before installing from dev)
 
+### USSD Interface
+
+To run and test the USSD interface locally there are two options.
+
+- Run `ussd.py` with the necessary environment variables
+- Setup ngrok and use Africa's Talking or another USSD simulator
+
 ## Testing
 
 Ensure your test_config.ini and test_secrets.ini files are up to date. Test secrets can be generated using the previous python script, and supplying `test` as the filename:
@@ -236,6 +249,7 @@ Ensure redis-server is running (this is not ideal but necessary atm).
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
 
 ## Seed Data
+
 (Currently broken!!)
 You can quickly create seed data for a local machine, including exchanges and blockchain transactions:
 
