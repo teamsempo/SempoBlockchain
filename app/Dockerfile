@@ -25,6 +25,7 @@ ADD ./app/_docker_app_script.sh /
 ADD ./test /src/test
 ADD ./invoke_tests.py /src
 ADD .coveragerc /src
+ADD ./share /src/share
 
 WORKDIR /
 
