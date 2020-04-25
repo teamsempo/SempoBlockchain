@@ -4,7 +4,7 @@ import sentry_sdk
 from server import db
 # from server import limiter
 from phonenumbers.phonenumberutil import NumberParseException
-from server.models.user import User
+from server.models.user import User, RegistrationMethodEnum
 from server.models.organisation import Organisation
 from server.models.email_whitelist import EmailWhitelist
 from server.models.blacklist_token import BlacklistToken
@@ -137,7 +137,8 @@ class RegisterAPI(MethodView):
         else:
             organisation = Organisation.master_organisation()
 
-        user = User(blockchain_address=organisation.primary_blockchain_address)
+        user = User(blockchain_address=organisation.primary_blockchain_address,
+                    registration_method=RegistrationMethodEnum.WEB_SIGNUP)
 
         user.create_admin_auth(email, password, tier, organisation)
 
