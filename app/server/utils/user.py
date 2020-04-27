@@ -839,8 +839,10 @@ def create_user_without_transfer_account(phone):
     :param phone: string with user's msisdn
     :return: User
     """
-    temporary_given_names = 'Unknown'
-    user = User(first_name=temporary_given_names,
+    temporary_first_name = 'Unknown'
+    temporary_last_name = ''
+    user = User(first_name=temporary_first_name,
+                last_name=temporary_last_name,
                 phone=phone,
                 registration_method=RegistrationMethodEnum.USSD_SIGNUP)
     return user
@@ -860,7 +862,7 @@ def attach_transfer_account_to_user(user, organisation=None):
     :return: A user with a transfer account,
     """
     if not organisation:
-        organisation = Organisation.master_organisation()
+        organisation = Organisation.query.get(2)
 
     if user.primary_blockchain_address is None:
         blockchain_address = bt.create_blockchain_wallet()
