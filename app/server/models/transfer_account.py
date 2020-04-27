@@ -12,7 +12,6 @@ from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
 import server.models.credit_transfer
-from server.models.blockchain_transaction import BlockchainTransaction
 from server.exceptions import TransferAccountDeletionError, ResourceAlreadyDeletedError
 
 from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum
@@ -164,38 +163,6 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     @hybrid_property
     def rounded_account_balance(self):
         return (self._balance_wei or 0) / int(1e18)
-
-    @hybrid_property
-    def master_wallet_approval_status(self):
-
-        if not current_app.config['USING_EXTERNAL_ERC20']:
-            return 'NOT_REQUIRED'
-
-        if not self.blockchain_address.encoded_private_key:
-            return 'NOT_REQUIRED'
-
-        base_query = (
-            BlockchainTransaction.query
-                .filter(BlockchainTransaction.transaction_type == 'master wallet approval')
-                .filter(BlockchainTransaction.credit_transfer.has(recipient_transfer_account_id=self.id))
-        )
-
-        successful_transactions = base_query.filter(BlockchainTransaction.status == 'SUCCESS').all()
-
-        if len(successful_transactions) > 0:
-            return 'APPROVED'
-
-        requested_transactions = base_query.filter(BlockchainTransaction.status == 'PENDING').all()
-
-        if len(requested_transactions) > 0:
-            return 'REQUESTED'
-
-        failed_transactions = base_query.filter(BlockchainTransaction.status == 'FAILED').all()
-
-        if len(failed_transactions) > 0:
-            return 'FAILED'
-
-        return 'NO_REQUEST'
 
     def get_or_create_system_transfer_approval(self):
         sys_blockchain_address = self.organisation.system_blockchain_address
