@@ -38,14 +38,14 @@ class TokenProcessor(object):
         message_processor.send_message(user.phone, message)
 
     @staticmethod
-    def send_success_sms(message_key: str, user: User, other_user: User, amount: float, reason: str, tx_time: datetime,
+    def send_success_sms(message_key: str, user: User, other_user: User, amount: float, tx_time: datetime,
                          balance: float):
 
         amount_dollars = rounded_dollars(amount)
         rounded_balance_dollars = rounded_dollars(balance)
 
         TokenProcessor.send_sms(user, message_key, amount=amount_dollars, token_name=default_token(user).symbol,
-                                other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'), reason=reason,
+                                other_user=other_user.user_details(), date=tx_time.strftime('%d/%m/%Y'),
                                 time=tx_time.strftime('%I:%M %p'), balance=rounded_balance_dollars)
 
     @staticmethod
@@ -232,14 +232,18 @@ class TokenProcessor(object):
             if exchanged_amount is None:
                 TokenProcessor.send_success_sms(
                     "send_token_sender_sms",
-                    sender, recipient, amount,
-                    reason_str, sender_tx_time,
+                    sender,
+                    recipient,
+                    amount,
+                    sender_tx_time,
                     sender_balance)
 
                 TokenProcessor.send_success_sms(
                     "send_token_recipient_sms",
-                    recipient, sender, amount,
-                    reason_str, recipient_tx_time,
+                    recipient,
+                    sender,
+                    amount,
+                    recipient_tx_time,
                     recipient_balance)
             else:
                 TokenProcessor.exchange_success_sms(
