@@ -21,6 +21,12 @@
           "name": "PYTHONUNBUFFERED",
           "value": 0
         }
+      ],
+      "portMappings": [
+        {
+          "hostPort": 3031,
+          "containerPort": 3031
+        }
       ]
     },
     {
