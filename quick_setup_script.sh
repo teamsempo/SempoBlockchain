@@ -16,7 +16,11 @@ echo "[WARN] PGPASSWORD environment variable not set, defaulting to postgres pas
 fi
 
 
-echo "This will wipe ALL local Sempo data, including local secrets"
+echo "This will wipe ALL local Sempo data"
+
+echo "Reset Local Secrets? y/N"
+read resetSecretsInput
+
 echo "Persist Ganache? y/N"
 read ganachePersistInput
 
@@ -37,11 +41,14 @@ else
     testdata='none'
 fi
 
-echo ~~~~Creating Secrets
-cd ./config_files/
-python generate_secrets.py
-MASTER_WALLET_PK=$(awk -F "=" '/master_wallet_private_key/ {print $2}' ./secret/local_secrets.ini  | tr -d ' ')
-cd ../
+if [ "$resetSecretsInput" == "y" ]; then
+  echo ~~~~Creating Secrets
+  cd ./config_files/
+  python generate_secrets.py
+  cd ../
+fi
+
+MASTER_WALLET_PK=$(awk -F "=" '/master_wallet_private_key/ {print $2}' ./config_files/secret/local_secrets.ini  | tr -d ' ')
 
 echo ~~~~Killing any leftover workers or app
 set +e
