@@ -3,7 +3,8 @@ from eth_keys import keys
 from eth_utils import keccak
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
+logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
 from web3 import Web3
