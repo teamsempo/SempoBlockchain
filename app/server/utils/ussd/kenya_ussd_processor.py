@@ -90,29 +90,33 @@ class KenyaUssdProcessor:
                 bio_text = None
                 gender_text = None
 
-                # build profile dictionary
-            user_profile = dict(bio=bio_text,
-                                gender=gender_text,
-                                first_name=first_name,
-                                last_name=last_name,
-                                location=location)
+            # translations
+            absent_value_placeholder = "missing"
+            if user.preferred_language == "sw":
+                absent_value_placeholder = 'hakuna'
+                if gender_text == 'male':
+                    gender_text = 'mwanaume'
+                elif gender_text == 'female':
+                    gender_text = 'mwanamke'
 
-            # filter through user profile to find empty info
-            # the lambda function filters through the dictionary's keys checking which is None
-            # it returns a list of tuples with the key and corresponding None value
-            empty_profile_attrs_tuple_list = list(filter(lambda values: values[1] is None, user_profile.items()))
+            if first_name == 'Unknown':
+                first_name = None
 
-            # this lambda function returns a list with the empty user attributes
-            empty_profile_attr_list = list(map(lambda attr_tuple: attr_tuple[0], empty_profile_attrs_tuple_list))
+            # define final values to show in menu
+            first_name = first_name or absent_value_placeholder
+            last_name = last_name or absent_value_placeholder
+            bio_text = bio_text or absent_value_placeholder
+            gender_text = gender_text or absent_value_placeholder
+            location = location or absent_value_placeholder
 
-            if len(empty_profile_attr_list) > 0:
-                return i18n_for(user, "{}.none".format(menu.display_key))
-            else:
-                full_name = "%{} %{}".format(first_name, last_name)
-                return i18n_for(user, "{}.profile".format(menu.display_key),
-                                full_name=full_name,
-                                gender=gender_text,
-                                location=location, user_bio=bio_text)
+            full_name = "{} {}".format(first_name, last_name)
+            if first_name == absent_value_placeholder and last_name == absent_value_placeholder:
+                full_name = absent_value_placeholder
+
+            return i18n_for(user, "{}.profile".format(menu.display_key),
+                            full_name=full_name,
+                            gender=gender_text,
+                            location=location, user_bio=bio_text)
 
         if menu.name == 'send_token_confirmation':
             recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)

@@ -75,7 +75,7 @@ en:
         10. Show previous
     account_management: |
       CON My account
-      1. My Profile
+      1. My profile
       2. Change language
       3. Check Balances
       4. Change PIN
@@ -84,11 +84,54 @@ en:
     about_me:
       profile: |
         END Your details are:
-            Name %{full_name}
-            Gender %{gender}
-            Location %{location}
-            You sell %{user_bio}
-      none: END Please go to my profile to enter your missing information.
+        Name: %{full_name}
+        Gender: %{gender}
+        Location: %{location}
+        You sell: %{user_bio}
+        If any details are missing, please use my profile to add your details.
+        0. Back
+    name_change_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
+    gender_change_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
+    location_change_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
+    bio_change_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
+    profile_info_change_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
+    view_profile_pin_authorization:
+      first: |
+        CON Please enter your PIN.
+        0. Back
+      retry: |
+        CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
+        0. Back
     change_my_business_prompt: |
       CON Please enter a product or service you offer
       0. Back
@@ -122,10 +165,10 @@ en:
       0. Back
     user_profile: |
       CON My profile
-      1. Edit mame.
-      2. Edit gender.
-      3. Edit location.
-      4. Change business.
+      1. Edit name
+      2. Edit gender
+      3. Edit location
+      4. Edit business
       5. See my profile
       0. Back
     first_name_entry: |

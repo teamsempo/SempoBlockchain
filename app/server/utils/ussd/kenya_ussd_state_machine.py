@@ -18,7 +18,7 @@ from server.models.transfer_usage import TransferUsage
 from server.utils.i18n import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
     get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required, attach_transfer_account_to_user
-from server.utils.credit_transfer import dollars_to_cents
+from server.utils.credit_transfer import dollars_to_cents, cents_to_dollars
 from server.utils.phone import proccess_phone_number
 
 ITEMS_PER_MENU = 8
@@ -56,11 +56,18 @@ class KenyaUssdStateMachine(Machine):
         'about_me',
         'change_my_business_prompt',
         'opt_out_of_market_place_pin_authorization',
+        # user profile state
         'user_profile',
         'first_name_entry',
         'last_name_entry',
         'gender_entry',
         'location_entry',
+        'name_change_pin_authorization',
+        'gender_change_pin_authorization',
+        'location_change_pin_authorization',
+        'bio_change_pin_authorization',
+        'profile_info_change_pin_authorization',
+        'view_profile_pin_authorization',
         # directory listing state
         'directory_listing',
         'directory_listing_other',
@@ -113,14 +120,6 @@ class KenyaUssdStateMachine(Machine):
     def initial_change_preferred_language_to(self, language):
         self.user.preferred_language = language
 
-    def save_business_directory_info(self, user_input):
-        attrs = {
-            "custom_attributes": {
-                "bio": user_input
-            }
-        }
-        set_custom_attributes(attrs, self.user)
-
     def change_opted_in_market_status(self, user_input):
         self.user.is_market_enabled = False
         self.send_sms(self.user.phone, "opt_out_of_market_place_sms")
@@ -134,21 +133,34 @@ class KenyaUssdStateMachine(Machine):
     def save_pin_data(self, user_input):
         self.session.set_data('initial_pin', user_input)
 
-    def save_first_name_data(self, user_input):
+    def add_first_name_to_session_data(self, user_input):
         self.session.set_data('first_name', user_input)
+
+    def add_last_name_to_session_data(self, user_input):
+        self.session.set_data('last_name', user_input)
+
+    def add_gender_to_session_data(self, user_input):
+        self.session.set_data('gender', user_input)
+
+    def add_location_to_session_data(self, user_input):
+        self.session.set_data('location', user_input)
+
+    def add_bio_to_session_data(self, user_input):
+        self.session.set_data('bio', user_input)
 
     def save_username_info(self, user_input):
         first_name = self.session.get_data('first_name')
-        last_name = user_input
+        last_name = self.session.get_data('last_name')
         self.user.first_name = first_name
         self.user.last_name = last_name
 
     def save_gender_info(self, user_input):
-        gender = ''
-        if self.menu_one_selected(user_input):
-            gender = 'Male'
-        if self.menu_two_selected(user_input):
-            gender = 'Female'
+        gender_selection = self.session.get_data('gender')
+        gender = None
+        if self.menu_one_selected(gender_selection):
+            gender = 'male'
+        if self.menu_two_selected(gender_selection):
+            gender = 'female'
 
         attrs = {
             "custom_attributes": {
@@ -158,7 +170,30 @@ class KenyaUssdStateMachine(Machine):
         set_custom_attributes(attrs, self.user)
 
     def save_location_info(self, user_input):
-        self.user.location = user_input
+        location = self.session.get_data('location')
+        self.user.location = location
+
+    def save_business_directory_info(self, user_input):
+        bio = self.session.get_data('bio')
+        attrs = {
+            "custom_attributes": {
+                "bio": bio
+            }
+        }
+        set_custom_attributes(attrs, self.user)
+
+    def save_profile_info(self, user_input):
+        # save name information
+        self.save_username_info(user_input)
+
+        # save bio information
+        self.save_business_directory_info(user_input)
+
+        # save gender info
+        self.save_gender_info(user_input)
+
+        # save location information
+        self.save_location_info(user_input)
 
     def is_valid_pin(self, user_input):
         pin_validity = False
@@ -344,12 +379,48 @@ class KenyaUssdStateMachine(Machine):
     def is_ussd_signup(self, user_input):
         return self.user.registration_method == RegistrationMethodEnum.USSD_SIGNUP
 
+    def has_empty_name_info(self, user_input):
+        if self.user.first_name == 'Unknown' or not self.user.first_name or not self.user.last_name:
+            return True
+        else:
+            return False
+
+    def has_empty_gender_info(self, user_input):
+        gender = next(filter(lambda x: x.name == 'gender', self.user.custom_attributes), None)
+        if not gender:
+            return True
+        else:
+            return False
+
+    def has_empty_location_info(self, user_input):
+        if not self.user.location:
+            return True
+        else:
+            return False
+
+    def has_empty_bio_info(self, user_input):
+        bio = next(filter(lambda x: x.name == 'bio', self.user.custom_attributes), None)
+        if not bio:
+            return True
+        else:
+            return False
+
+    def has_complete_profile(self, user_input):
+        if not self.has_empty_name_info(user_input) and not \
+                self.has_empty_bio_info(user_input) and not \
+                self.has_empty_gender_info(user_input) and not \
+                self.has_empty_location_info(user_input):
+            return True
+        else:
+            return False
+
     def process_account_creation_request(self, user_input):
         try:
             attach_transfer_account_to_user(self.user)
+            disbursement_amount = cents_to_dollars(config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT)
             self.send_sms(self.user.phone,
                           "account_creation_success_sms",
-                          disbursement_amount=config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT,
+                          disbursement_amount=disbursement_amount,
                           token_name=default_token(self.user).name)
         except Exception as e:
             self.send_sms(self.user.phone, "account_creation_error_sms")
@@ -650,19 +721,13 @@ class KenyaUssdStateMachine(Machine):
              'conditions': 'menu_four_selected'},
             {'trigger': 'feed_char',
              'source': 'user_profile',
-             'dest': 'about_me',
+             'dest': 'view_profile_pin_authorization',
              'conditions': 'menu_five_selected'},
             {'trigger': 'feed_char',
              'source': 'user_profile',
              'dest': 'exit_invalid_menu_option'}
         ]
         self.add_transitions(user_profile_transitions)
-
-        # event change_my_business_prompt transition
-        self.add_transition(trigger='feed_char',
-                            source='change_my_business_prompt',
-                            dest='exit',
-                            after='save_business_directory_info')
 
         # event: choose_language transition
         choose_language_transitions = [
@@ -751,29 +816,166 @@ class KenyaUssdStateMachine(Machine):
         self.add_transitions(opt_out_of_market_place_pin_authorization_transitions)
 
         # first_name_entry transitions
-        first_name_entry_transitions = [
-            {'trigger': 'feed_char',
-             'source': 'first_name_entry',
-             'dest': 'last_name_entry',
-             'after': 'save_first_name_data'},
+        self.add_transition(trigger='feed_char',
+                            source='first_name_entry',
+                            dest='last_name_entry',
+                            after='add_first_name_to_session_data')
+
+        # last_name_entry transitions
+        last_name_entry_transitions = [
+            # if profile is complete change last name and authorize..
             {'trigger': 'feed_char',
              'source': 'last_name_entry',
-             'dest': 'exit',
-             'after': 'save_username_info'}
-        ]
-        self.add_transitions(first_name_entry_transitions)
+             'dest': 'name_change_pin_authorization',
+             'conditions': 'has_complete_profile',
+             'after': 'add_last_name_to_session_data'},
 
-        # gender_entry transition
+            # if profile is complete save for last_name_entry change last name and authorize.
+            {'trigger': 'feed_char',
+             'source': 'last_name_entry',
+             'dest': 'name_change_pin_authorization',
+             'conditions': 'has_empty_name_info',
+             'unless': ['has_complete_profile', 'has_empty_gender_info', 'has_empty_location_info', 'has_empty_bio_info'],
+             'after': 'add_last_name_to_session_data'},
+
+            # if gender info is empty proceed to gender entry menu
+            {'trigger': 'feed_char',
+             'source': 'last_name_entry',
+             'dest': 'gender_entry',
+             'conditions': 'has_empty_gender_info',
+             'after': 'add_last_name_to_session_data'},
+
+            # if location info is empty and gender info is filled proceed to location entry menu
+            {'trigger': 'feed_char',
+             'source': 'last_name_entry',
+             'dest': 'location_entry',
+             'unless': 'has_empty_gender_info',
+             'conditions': 'has_empty_location_info',
+             'after': 'add_last_name_to_session_data'},
+
+            # if business info is empty and gender and location info is filled proceed to business_entry menu
+            {'trigger': 'feed_char',
+             'source': 'last_name_entry',
+             'dest': 'change_my_business_prompt',
+             'unless': ['has_empty_gender_info', 'has_empty_location_info'],
+             'conditions': 'has_empty_bio_info',
+             'after': 'add_last_name_to_session_data'}
+        ]
+        self.add_transitions(last_name_entry_transitions)
+
+        # gender_entry transitions
+        gender_entry_transitions = [
+            # if profile is complete, edit gender_entry and authorize.
+            {'trigger': 'feed_char',
+             'source': 'gender_entry',
+             'dest': 'gender_change_pin_authorization',
+             'conditions': 'has_complete_profile',
+             'after': 'add_gender_to_session_data'},
+
+            # if profile is complete save for gender_entry change gender and authorize.
+            {'trigger': 'feed_char',
+             'source': 'gender_entry',
+             'dest': 'gender_change_pin_authorization',
+             'conditions': 'has_empty_gender_info',
+             'unless': ['has_complete_profile', 'has_empty_name_info', 'has_empty_location_info', 'has_empty_location_info'],
+             'after': 'add_gender_to_session_data'},
+
+            # if location info is empty proceed to location entry menu
+            {'trigger': 'feed_char',
+             'source': 'gender_entry',
+             'dest': 'location_entry',
+             'conditions': 'has_empty_location_info',
+             'after': 'add_gender_to_session_data'},
+
+            # if business info is empty and gender and location info is filled proceed to business_entry menu
+            {'trigger': 'feed_char',
+             'source': 'gender_entry',
+             'dest': 'change_my_business_prompt',
+             'unless': 'has_empty_location_info',
+             'conditions': 'has_empty_bio_info'}
+        ]
+        self.add_transitions(gender_entry_transitions)
+
+        # location_entry_transitions
+        location_entry_transitions = [
+            # if profile is complete, edit location_entry and authorize.
+            {'trigger': 'feed_char',
+             'source': 'location_entry',
+             'dest': 'location_change_pin_authorization',
+             'conditions': 'has_complete_profile',
+             'after': 'add_location_to_session_data'},
+
+            # if profile is complete save for location_entry change location and authorize.
+            {'trigger': 'feed_char',
+             'source': 'location_entry',
+             'dest': 'location_change_pin_authorization',
+             'conditions': 'has_empty_location_info',
+             'unless': ['has_complete_profile', 'has_empty_name_info', 'has_empty_gender_info', 'has_empty_bio_info'],
+             'after': 'add_location_to_session_data'},
+
+            # if bio info is empty proceed to bio entry menu
+            {'trigger': 'feed_char',
+             'source': 'location_entry',
+             'dest': 'change_my_business_prompt',
+             'conditions': 'has_empty_bio_info',
+             'after': 'add_location_to_session_data'},
+
+        ]
+        self.add_transitions(location_entry_transitions)
+
+        # change_my_business_prompt_transitions
+        change_my_business_prompt_transitions = [
+            # if profile is complete, edit change_my_business_prompt and authorize.
+            {'trigger': 'feed_char',
+             'source': 'change_my_business_prompt',
+             'dest': 'bio_change_pin_authorization',
+             'conditions': 'has_complete_profile',
+             'after': 'add_bio_to_session_data'},
+
+            # if bio info is empty proceed to bio entry menu
+            {'trigger': 'feed_char',
+             'source': 'change_my_business_prompt',
+             'dest': 'profile_info_change_pin_authorization',
+             'conditions': 'has_empty_bio_info',
+             'after': 'add_bio_to_session_data'},
+
+        ]
+        self.add_transitions(change_my_business_prompt_transitions)
+
+        # name_change_pin_authorization transitions
         self.add_transition(trigger='feed_char',
-                            source='gender_entry',
+                            source='name_change_pin_authorization',
+                            dest='exit',
+                            after='save_username_info')
+
+        # gender_change_pin_authorization transitions
+        self.add_transition(trigger='feed_char',
+                            source='gender_change_pin_authorization',
                             dest='exit',
                             after='save_gender_info')
 
-        # location_entry transition
+        # location_change_pin_authorization transitions
         self.add_transition(trigger='feed_char',
-                            source='location_entry',
+                            source='location_change_pin_authorization',
                             dest='exit',
                             after='save_location_info')
+
+        # bio_change_pin_authorization transitions
+        self.add_transition(trigger='feed_char',
+                            source='bio_change_pin_authorization',
+                            dest='exit',
+                            after='save_bio_info')
+
+        # profile_info_change_pin_authorization transitions
+        self.add_transition(trigger='feed_char',
+                            source='profile_info_change_pin_authorization',
+                            dest='exit',
+                            after='save_profile_info')
+
+        # view_profile_pin_authorization transitions
+        self.add_transition(trigger='feed_char',
+                            source='view_profile_pin_authorization',
+                            dest='about_me')
 
         # event: exchange_token transitions
         exchange_token_transitions = [
