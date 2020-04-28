@@ -888,16 +888,9 @@ def attach_transfer_account_to_user(user):
 
     org_users = organisation.users
     initial_disbursement = config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT
-    disbursing_admin = None
-    for org_user in org_users:
-        if org_user.has_admin_role:
-            disbursing_admin = org_user
-            break
-    if not disbursing_admin:
-        raise Exception('No admin user was found.')
 
     initial_disbursement = make_payment_transfer(transfer_amount=initial_disbursement,
-                                                 send_user=disbursing_admin,
+                                                 send_transfer_account=organisation.org_level_transfer_account,
                                                  receive_user=user,
                                                  transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
     db.session.add(initial_disbursement)
