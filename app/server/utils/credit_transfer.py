@@ -210,6 +210,7 @@ def make_payment_transfer(transfer_amount,
                           uuid=None,
                           transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
                           is_ghost_transfer=False,
+                          enable_pusher=True,
                           queue='high-priority'):
     """
     This is used for internal transfers between Sempo wallets.
@@ -297,7 +298,8 @@ def make_payment_transfer(transfer_amount,
 
     if automatically_resolve_complete:
         transfer.resolve_as_completed(queue=queue)
-        pusher.push_admin_credit_transfer(transfer)
+        if enable_pusher:
+            pusher.push_admin_credit_transfer(transfer)
 
     if make_cashout_incentive_transaction:
         try:
