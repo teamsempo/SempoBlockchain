@@ -10,7 +10,8 @@ import math
 
 from transitions import Machine, State
 
-from server import message_processor, ussd_tasker
+from server import ussd_tasker
+from server.utils.phone import send_message
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
@@ -87,7 +88,7 @@ class KenyaUssdStateMachine(Machine):
 
     def send_sms(self, phone, message_key, **kwargs):
         message = i18n_for(self.user, "ussd.kenya.{}".format(message_key), **kwargs)
-        message_processor.send_message(phone, message)
+        send_message(phone, message)
 
     def change_preferred_language_to_sw(self, user_input):
         self.change_preferred_language_to("sw")

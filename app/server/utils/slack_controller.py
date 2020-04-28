@@ -1,5 +1,6 @@
 from flask import make_response
-from server import db, message_processor
+from server import db
+from server.utils.phone import send_message
 from server.models.kyc_application import KycApplication
 from server.models.user import User
 from server.utils.namescan import run_namescam_aml_check
@@ -188,7 +189,7 @@ def approve_user(message_blocks, username, message_ts, phone):
     )
 
     if phone:
-        message_processor.send_message(to_phone=phone,
+        send_message(to_phone=phone,
                              message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
 
     return make_response("", 200)
@@ -428,7 +429,7 @@ def slack_controller(payload):
             )
 
             if user.phone:
-                message_processor.send_message(to_phone=user.phone,
+                send_message(to_phone=user.phone,
                                      message="Unfortunately, we couldn't verify your identity with the documents provided. Please open the Sempo app to retry or contact our customer support.")
 
             return make_response("", 200)
@@ -564,7 +565,7 @@ def slack_controller(payload):
             kyc.kyc_actions = doc_outcomes
 
             if user.phone:
-                message_processor.send_message(to_phone=user.phone,
+                send_message(to_phone=user.phone,
                                      message="Unfortunately, we had a problem verifying your identity. Please open the Sempo app to retry or contact our customer support.")
 
             db.session.flush()
