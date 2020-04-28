@@ -848,8 +848,10 @@ def create_user_without_transfer_account(phone):
 
     organisation = g.active_organisation
 
-    if organisation:
-        user.add_user_to_organisation(organisation, False)
+    if organisation == None:
+        raise Exception('no active organisation')
+
+    user.add_user_to_organisation(organisation, False)
 
     return user
 
