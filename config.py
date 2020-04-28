@@ -308,6 +308,8 @@ MASTER_WALLET_ADDRESS = address_from_private_key(master_wallet_private_key)
 RESERVE_TOKEN_ADDRESS = config_parser['ETHEREUM'].get('reserve_token_address')
 RESERVE_TOKEN_NAME = config_parser['ETHEREUM'].get('reserve_token_name')
 RESERVE_TOKEN_SYMBOL = config_parser['ETHEREUM'].get('reserve_token_symbol')
+DEFAULT_LIQUID_TOKEN_NAME = config_parser['ETHEREUM'].get('default_liquid_token_name')
+DEFAULT_LIQUID_TOKEN_SYMBOL = config_parser['ETHEREUM'].get('default_liquid_token_symbol')
 
 SYSTEM_WALLET_TARGET_BALANCE = int(config_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
 SYSTEM_WALLET_TOPUP_THRESHOLD = int(config_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))

@@ -34,6 +34,8 @@ from server.utils.transfer_enums import TransferSubTypeEnum
 from server.utils.misc import rounded_dollars
 from server.utils.access_control import AccessControl
 
+import logging
+logg = logging.getLogger(__file__)
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     save_to_s3_from_url(url, new_filename)
@@ -833,7 +835,7 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
     return ordered_transfer_usages
 
 
-def create_user_without_transfer_account(phone):
+def create_user_without_transfer_account(phone, organisation=None):
     """
     This method creates a user without a transfer account or blockchain wallet.
     :param phone: string with user's msisdn
@@ -846,7 +848,9 @@ def create_user_without_transfer_account(phone):
                 phone=phone,
                 registration_method=RegistrationMethodEnum.USSD_SIGNUP)
 
-    organisation = g.active_organisation
+    if organisation == None:
+        organisation = g.active_organisation
+        logg.debug('no organisation given, reverting to session active organisation {}'.format(organisation))
 
     if organisation == None:
         raise Exception('no active organisation')
