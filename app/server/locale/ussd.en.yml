@@ -272,5 +272,6 @@ en:
       Call 0757628885 for more info
     pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
     pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help
-    account_creation_success_sms: Welcome to Sarafu! Your account was successfully created. You have just received %{disbursement_amount} %{token_name}. Dial *483*46# Airtel or *384*96# to use Sarafu.
+    invalid_service_code: Please dial %{valid_service_code} to access Sarafu Network
+    account_creation_success_sms: Welcome to Sarafu! Your account was successfully created. You have just received %{disbursement_amount} %{token_name}. Dial *483*46# to use Sarafu.
     account_creation_error_sms: Whoops! There was a problem creating your account. To try again Dial *483*46#. If issues persist contact support 0757628885.

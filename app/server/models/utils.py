@@ -13,7 +13,6 @@ import server
 from server import db, bt
 from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
 
-
 @contextmanager
 def ephemeral_alchemy_object(mod: db.Model, *args, **kwargs):
     # weird SQLAlchemy behaviour cause object  to be persisted under some circumstances, even if they're not committed
@@ -64,7 +63,7 @@ def paginate_query(query, queried_object=None, order_override=None):
     if order_override:
         query = query.order_by(order_override)
     elif queried_object:
-        query = query.order_by(queried_object.created.desc())
+        query = query.order_by(queried_object.id.desc())
 
     if per_page is None:
 
