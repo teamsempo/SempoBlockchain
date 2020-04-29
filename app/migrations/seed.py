@@ -205,44 +205,6 @@ def create_ussd_menus():
         parent_id=user_profile_menu.id
     )
 
-    update_or_create_menu(
-        name='name_change_pin_authorization',
-        description='PIN entry for authorization to change name',
-        parent_id=user_profile_menu.id
-    )
-
-    update_or_create_menu(
-        name='gender_change_pin_authorization',
-        description='PIN entry for authorization to change gender',
-        parent_id=user_profile_menu.id
-    )
-
-    update_or_create_menu(
-        name='location_change_pin_authorization',
-        description='PIN entry for authorization to change location',
-        parent_id=user_profile_menu.id
-    )
-
-    update_or_create_menu(
-        name='bio_change_pin_authorization',
-        description='PIN entry for authorization to change business directory',
-        parent_id=user_profile_menu.id
-    )
-
-    update_or_create_menu(
-        name='view_profile_pin_authorization',
-        description='PIN entry for authorization to view entire profile',
-        parent_id=user_profile_menu.id
-    )
-
-    update_or_create_menu(
-        name='profile_info_change_pin_authorization',
-        description='PIN entry for authorization to change entire profile',
-        parent_id=user_profile_menu.id
-    )
-
-
-
 
     print('***** Help Menu *********')
     update_or_create_menu(

@@ -83,62 +83,18 @@ sw:
     about_me:
       profile: |
         END Wasifu wako una maelezo yafuatayo:
-        Jina: %{full_name}
-        Jinsia: %{gender}
-        Eneo: %{location}
-        Unauza: %{user_bio}
-        Iwapo hakuna, enda kwa wasifu wako uweke maelezo zaidi.
-        0. Back
-    name_change_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
-        0. Nyuma
-      retry: |
-        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
-        0. Nyuma
-    gender_change_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
-        0. Nyuma
-      retry: |
-        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
-        0. Nyuma
-    location_change_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
-        0. Nyuma
-      retry: |
-        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
-        0. Nyuma
-    bio_change_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
-        0. Nyuma
-      retry: |
-        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
-        0. Nyuma
-    profile_info_change_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
-        0. Nyuma
-      retry: |
-        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
-        0. Nyuma
-    view_profile_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
-        0. Nyuma
-      retry: |
-        CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
-        0. Nyuma
+            Jina %{full_name}
+            Jinsia %{gender}
+            Eneo %{location}
+            Unauza %{user_bio}
+      none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza.
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
     balance_inquiry_pin_authorization:
-      first: |
-        CON Tafadhali weka PIN yako.
+      first: CON Tafadhali weka PIN yako.
         0. Nyuma
-      retry: |
+      retry:
         CON Tafadhali weka PIN yako. Una majaribio %{remaining_attempts} yaliyobaki.
         0. Nyuma
     choose_language: |
@@ -163,11 +119,11 @@ sw:
       0. Nyuma
     user_profile: |
       CON Wasifu wangu
-      1. Weka jina
-      2. Weka jinsia
-      3. Weka eneo
-      4. Weka biashara
-      5. Angalia wasifu wako
+      1. Weka jina.
+      2. Weka jinsia.
+      3. Weka eneo.
+      4. Badilish biashara.
+      5. Angalia wasifu wako.
       0. Nyuma
     first_name_entry: |
       CON Weka jina lako la kwanza
