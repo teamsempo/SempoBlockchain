@@ -8,9 +8,8 @@ from server.utils.user import get_user_by_phone, create_user_without_transfer_ac
 from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
-import config
-
 ussd_blueprint = Blueprint('ussd', __name__)
+
 
 class ProcessKenyaUssd(MethodView):
     """
@@ -40,11 +39,7 @@ class ProcessKenyaUssd(MethodView):
             # api chains all inputs that came through with *
             latest_input = user_input.split('*')[-1]
             if None in [user, session_id]:
-                default_token = Token.query.filter(Token.symbol==config.DEFAULT_LIQUID_TOKEN_SYMBOL).first()
-                if default_token != None:
-                    logg.debug('attempting to find organisation for default liquid token "{}" {}'.format(config.DEFAULT_LIQUID_TOKEN_SYMBOL, default_token))
-                    default_organisation = Organisation.query.filter(Organisation.token==default_token).first()
-                user_without_transfer_account = create_user_without_transfer_account(phone_number, default_organisation)
+                user_without_transfer_account = create_user_without_transfer_account(phone_number)
                 current_menu = UssdMenu.find_by_name('initial_language_selection')
                 ussd_session = create_or_update_session(session_id=session_id,
                                                         user=user_without_transfer_account,
