@@ -134,4 +134,4 @@ def test_invalid_service_code(mocker, test_client,
         pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
 
     resp = req("", test_client, sender, '*42*666#')
-    assert 'END Please dial {}'.format(valid_service_code) in resp
+    assert 'END Bonyeza {} kutumia mtandao'.format(valid_service_code) in resp
