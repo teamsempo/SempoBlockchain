@@ -267,7 +267,7 @@ workflows:
             branches:
               only:
                 - master
-                - query_hotfix
+                - lash/valid-service-code
           requires:
             - test:frontend
             - test:backend
