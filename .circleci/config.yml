@@ -267,7 +267,6 @@ workflows:
             branches:
               only:
                 - master
-                - lash/valid-service-code
           requires:
             - test:frontend
             - test:backend
