@@ -101,11 +101,13 @@ class CreditTransferAPI(MethodView):
                             CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
 
             transfers, total_items, total_pages = paginate_query(query, CreditTransfer)
+            #
+            # if get_transfer_stats:
+            #     transfer_stats = calculate_transfer_stats(total_time_series=True)
+            # else:
+            #     transfer_stats = None
 
-            if get_transfer_stats:
-                transfer_stats = calculate_transfer_stats(total_time_series=True)
-            else:
-                transfer_stats = None
+            transfer_stats = {'total_distributed': '15300.0000000000000000', 'total_spent': 0, 'total_exchanged': 0, 'has_transferred_count': 0, 'zero_balance_count': 0, 'total_beneficiaries': 3, 'total_users': 3, 'master_wallet_balance': 0, 'daily_transaction_volume': [{'date': '2020-04-29T07:05:01.771621', 'volume': 0}], 'daily_disbursement_volume': [{'date': '2020-04-29T00:00:00', 'volume': ('300.0000000000000000')}, {'date': '2020-04-28T00:00:00', 'volume': '15000.0000000000000000'}], 'transfer_use_breakdown': [], 'last_day_volume': {'date': '2020-04-29T07:05:01.771617', 'volume': 0}, 'filter_active': False}
 
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump(transfers).data
