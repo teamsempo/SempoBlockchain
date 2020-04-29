@@ -26,6 +26,6 @@ if [ "$CONTAINER_MODE" = 'TEST' ]; then
    fi
    bash <(curl -s https://codecov.io/bash) -cF python
 else
-  uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app
+  uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app --stats :3031 --stats-http
 fi
 
