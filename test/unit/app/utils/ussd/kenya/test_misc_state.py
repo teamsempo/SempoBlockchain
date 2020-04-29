@@ -54,7 +54,7 @@ directory_listing_other_state = partial(UssdSessionFactory, state="directory_lis
      (user_profile_state, standard_user, "2", "gender_entry"),
      (user_profile_state, standard_user, "3", "location_entry"),
      (user_profile_state, standard_user, "4", "change_my_business_prompt"),
-     (user_profile_state, standard_user, "5", "view_profile_pin_authorization"),
+     (user_profile_state, standard_user, "5", "about_me"),
      (user_profile_state, standard_user, "6", "exit_invalid_menu_option"),
      (user_profile_state, standard_user, "asdf", "exit_invalid_menu_option"),
      # directory listing state tests
@@ -149,11 +149,7 @@ def test_save_directory_info(mocker, test_client, init_database):
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("My Bio")
-    session.session_data = {
-        'bio': "My Bio"
-    }
-    assert state_machine.state == "profile_info_change_pin_authorization"
-    state_machine.feed_char("0000")
+    assert state_machine.state == "exit"
     bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
     assert bio.value == "My Bio"
 
