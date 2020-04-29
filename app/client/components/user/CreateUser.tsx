@@ -78,7 +78,8 @@ class CreateUserUpdated extends React.Component<Props> {
       transfer_account_name: form.transferAccountName,
       location: form.location,
       business_usage_name: businessUsage,
-      referred_by: form.referredBy
+      referred_by: form.referredBy,
+      registration_method: "WEB_SIGNUP"
     });
   }
 
