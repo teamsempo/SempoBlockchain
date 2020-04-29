@@ -269,4 +269,5 @@ workflows:
                 - master
                 - query_hotfix
           requires:
-            - build
+            - test:frontend
+            - test:backend
