@@ -35,7 +35,7 @@ class CreditTransferAPI(MethodView):
     def get(self, credit_transfer_id):
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
-        get_transfer_stats = request.args.get('get_stats', False)
+        get_transfer_stats = False
 
         transfer_list = None
 
@@ -101,6 +101,7 @@ class CreditTransferAPI(MethodView):
                             CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
 
             transfers, total_items, total_pages = paginate_query(query, CreditTransfer)
+
             #
             # if get_transfer_stats:
             #     transfer_stats = calculate_transfer_stats(total_time_series=True)

@@ -13,7 +13,6 @@ import server
 from server import db, bt
 from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
 
-
 @contextmanager
 def ephemeral_alchemy_object(mod: db.Model, *args, **kwargs):
     # weird SQLAlchemy behaviour cause object  to be persisted under some circumstances, even if they're not committed
