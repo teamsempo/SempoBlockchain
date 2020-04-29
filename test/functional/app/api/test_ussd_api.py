@@ -135,5 +135,5 @@ def test_invalid_service_code(mocker, test_client,
     sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
         pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
 
-    resp = req("", test_client, sender, '*384*23216#')
+    resp = req("", test_client, sender, '*42*666#')
     assert 'END Please dial {}'.format(valid_service_code) in resp
