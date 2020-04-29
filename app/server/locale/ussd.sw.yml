@@ -202,3 +202,4 @@ sw:
       Piga 0757628885 kwa usaidizi zaidi
     pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.
     pin_change_error_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0757628885 kwa usaidizi
+    invalid_service_code: Bonyeza %{valid_service_code} kutumia mtandao wa Sarafu
