@@ -27,9 +27,7 @@ def init_seed(test_client, init_database):
 # TODO make helper functions and messages array fixture object
 messages = []
 session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa'
-#valid_service_code = '*483*46#'
 valid_service_code = config.USSD_VALID_SERVICE_CODE
-#valid_service_code = '*384*23216#'
 
 def mock_send_message(phone, message):
     messages.append({'phone': phone, 'message': message})

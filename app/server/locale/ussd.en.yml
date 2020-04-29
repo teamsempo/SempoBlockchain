@@ -206,4 +206,4 @@ en:
       Call 0757628885 for more info
     pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
     pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help
-    invalid_service_code: END Please dial %{valid_service_code} to access Sarafu Network
+    invalid_service_code: Please dial %{valid_service_code} to access Sarafu Network
