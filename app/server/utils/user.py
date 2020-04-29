@@ -845,16 +845,10 @@ def create_user_without_transfer_account(phone):
                 last_name=temporary_last_name,
                 phone=phone,
                 registration_method=RegistrationMethodEnum.USSD_SIGNUP)
-
-    organisation = g.active_organisation
-
-    if organisation:
-        user.add_user_to_organisation(organisation, False)
-
     return user
 
 
-def attach_transfer_account_to_user(user):
+def attach_transfer_account_to_user(user, organisation=None):
     """
     This method takes a user object argument, ideally one created through the ussd self sign up flow
     https://docs.google.com/document/d/1UwGcNUFIlrRgpZiGkhMITeu_uqR7i3VcSRw_V89_q2c/edit (which should not have
@@ -864,36 +858,43 @@ def attach_transfer_account_to_user(user):
     The method also takes an organization object as an argument to match the user object to a specific organization.
 
     :param user: The initial account the user created when they began the self sign up process.
+    :param organisation: The organization the user belongs to.
     :return: A user with a transfer account,
     """
-
-    if user.primary_blockchain_address:
-        raise Exception('User already has a transfer account attached.')
-
-    organisation = g.active_organisation
     if not organisation:
-        raise Exception("No active organisation")
+        organisation = Organisation.query.get(2)
 
-    blockchain_address = bt.create_blockchain_wallet()
-    user.primary_blockchain_address = blockchain_address
-    user.set_held_role('BENEFICIARY', 'beneficiary')
+    if user.primary_blockchain_address is None:
+        blockchain_address = bt.create_blockchain_wallet()
+        user.primary_blockchain_address = blockchain_address
+        user.set_held_role('BENEFICIARY', 'beneficiary')
+        user.add_user_to_organisation(organisation, is_admin=False)
 
-    db.session.add(user)
+        db.session.add(user)
 
-    transfer_account = TransferAccount(bound_entity=user,
-                                       organisation=organisation,
-                                       blockchain_address=blockchain_address)
-    db.session.add(transfer_account)
-    user.default_transfer_account = transfer_account
+        transfer_account = TransferAccount(bound_entity=user,
+                                           organisation=organisation,
+                                           blockchain_address=blockchain_address)
+        db.session.add(transfer_account)
+        user.default_transfer_account = transfer_account
 
-    org_users = organisation.users
-    initial_disbursement = config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT
-
-    initial_disbursement = make_payment_transfer(transfer_amount=initial_disbursement,
-                                                 send_transfer_account=organisation.org_level_transfer_account,
-                                                 receive_user=user,
-                                                 transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
-    db.session.add(initial_disbursement)
+        org_users = organisation.users
+        initial_disbursement = config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT
+        disbursing_admin = None
+        for org_user in org_users:
+            if org_user.has_admin_role:
+                disbursing_admin = org_user
+                break
+        if disbursing_admin:
+            initial_disbursement = make_payment_transfer(transfer_amount=initial_disbursement,
+                                                         send_user=disbursing_admin,
+                                                         receive_user=user,
+                                                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
+            db.session.add(initial_disbursement)
+        else:
+            raise Exception('No admin user was found.')
+    else:
+        raise Exception('User already has a transfer account attached.')
 
     db.session.commit()
     return user
