@@ -42,7 +42,6 @@ interface attr_dict {
 
 class SingleUserManagement extends React.Component<Props> {
   onEditUser(form: IEditUser) {
-    const user_id = this.props.userId.toString();
     const { selectedUser } = this.props;
 
     let businessUsage = form.businessUsage;
@@ -74,7 +73,7 @@ class SingleUserManagement extends React.Component<Props> {
         custom_attributes: attr_dict,
         business_usage_name: businessUsage
       },
-      parseInt(user_id)
+      this.props.userId
     );
   }
 
