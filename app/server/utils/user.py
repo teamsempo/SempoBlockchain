@@ -8,15 +8,14 @@ from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
 import sentry_sdk
-import config
 
-from server import db, bt
+from server import db
 from server.models.device_info import DeviceInfo
 from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
-from server.models.user import User, RegistrationMethodEnum
+from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount
@@ -26,7 +25,6 @@ from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app, message_processor
 from server.utils import credit_transfer as CreditTransferUtils
-from server.utils.credit_transfer import make_payment_transfer
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
@@ -200,8 +198,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_groupaccount=False,
                                  is_self_sign_up=False,
                                  business_usage=None,
-                                 initial_disbursement=None,
-                                 registration_method=None):
+                                 initial_disbursement=None):
 
     user = User(first_name=first_name,
                 last_name=last_name,
@@ -211,8 +208,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 email=email,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
-                business_usage=business_usage,
-                registration_method=registration_method)
+                business_usage=business_usage)
 
     precreated_pin = None
     is_activated = False
@@ -479,7 +475,6 @@ def proccess_create_or_modify_user_request(
     primary_user_pin = attribute_dict.get('primary_user_pin')
 
     initial_disbursement = attribute_dict.get('initial_disbursement', None)
-    registration_method = attribute_dict.get('registration_method')
 
     is_vendor = attribute_dict.get('is_vendor', None)
     if is_vendor is None:
@@ -640,8 +635,7 @@ def proccess_create_or_modify_user_request(
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
-        business_usage=business_usage, initial_disbursement=initial_disbursement,
-        registration_method=registration_method)
+        business_usage=business_usage, initial_disbursement=initial_disbursement)
 
     if referred_by_user:
         user.referred_by.append(referred_by_user)
@@ -831,68 +825,3 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
 
     ordered_transfer_usages = sorted(TransferUsage.query.all(), key=cmp_to_key(usage_sort))
     return ordered_transfer_usages
-
-
-def create_user_without_transfer_account(phone):
-    """
-    This method creates a user without a transfer account or blockchain wallet.
-    :param phone: string with user's msisdn
-    :return: User
-    """
-    temporary_given_names = 'Unknown'
-    user = User(first_name=temporary_given_names,
-                phone=phone,
-                registration_method=RegistrationMethodEnum.USSD_SIGNUP)
-    return user
-
-
-def attach_transfer_account_to_user(user, organisation=None):
-    """
-    This method takes a user object argument, ideally one created through the ussd self sign up flow
-    https://docs.google.com/document/d/1UwGcNUFIlrRgpZiGkhMITeu_uqR7i3VcSRw_V89_q2c/edit (which should not have
-    a transfer account or wallet), it then creates a blockchain wallet whose address to attaches to the user object
-    as well as a transfer account that takes the created wallets's address, the user and an organization as arguments an
-    binds the account to the user.
-    The method also takes an organization object as an argument to match the user object to a specific organization.
-
-    :param user: The initial account the user created when they began the self sign up process.
-    :param organisation: The organization the user belongs to.
-    :return: A user with a transfer account,
-    """
-    if not organisation:
-        organisation = Organisation.master_organisation()
-
-    if user.primary_blockchain_address is None:
-        blockchain_address = bt.create_blockchain_wallet()
-        user.primary_blockchain_address = blockchain_address
-        user.set_held_role('BENEFICIARY', 'beneficiary')
-        user.add_user_to_organisation(organisation, is_admin=False)
-
-        db.session.add(user)
-
-        transfer_account = TransferAccount(bound_entity=user,
-                                           organisation=organisation,
-                                           blockchain_address=blockchain_address)
-        db.session.add(transfer_account)
-        user.default_transfer_account = transfer_account
-
-        org_users = organisation.users
-        initial_disbursement = config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT
-        disbursing_admin = None
-        for org_user in org_users:
-            if org_user.has_admin_role:
-                disbursing_admin = org_user
-                break
-        if disbursing_admin:
-            initial_disbursement = make_payment_transfer(transfer_amount=initial_disbursement,
-                                                         send_user=disbursing_admin,
-                                                         receive_user=user,
-                                                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
-            db.session.add(initial_disbursement)
-        else:
-            raise Exception('No admin user was found.')
-    else:
-        raise Exception('User already has a transfer account attached.')
-
-    db.session.commit()
-    return user
