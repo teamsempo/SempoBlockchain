@@ -74,20 +74,20 @@ sw:
         10. Onyesha chaguzi zilizopita
     account_management: |
       CON Akaunti yangu
-      1. Wasifu wangu
+      1. Biashara Yangu
       2. Chagua lugha utakayotumia
       3. Angalia salio
       4. Badilisha nambari ya siri
       5. Ondoka Sokoni
       0. Nyuma
-    about_me:
-      profile: |
-        END Wasifu wako una maelezo yafuatayo:
-            Jina %{full_name}
-            Jinsia %{gender}
-            Eneo %{location}
-            Unauza %{user_bio}
-      none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza.
+    my_business: |
+      CON Biashara Yangu
+      1. Angalia biashara
+      2. Badilisha biashara
+      0. Nyuma
+    about_my_business:
+      bio: END Unauza %{user_bio}
+      none: END Tafadhali enda kwa biashara yako ili ukaweze kuweka bidhaa unayouza
     change_my_business_prompt: |
       CON Tafadhali weka bidhaa ama huduma unauza
       0. Nyuma
@@ -116,28 +116,6 @@ sw:
       0. Nyuma
     new_pin_confirmation: |
       CON Weka PIN yako tena
-      0. Nyuma
-    user_profile: |
-      CON Wasifu wangu
-      1. Weka jina.
-      2. Weka jinsia.
-      3. Weka eneo.
-      4. Badilish biashara.
-      5. Angalia wasifu wako.
-      0. Nyuma
-    first_name_entry: |
-      CON Weka jina lako la kwanza
-      0. Nyuma
-    last_name_entry: |
-      CON Weka jina lako la mwisho
-      0. Nyuma
-    gender_entry: |
-      CON Weka jinsia yako
-      1. Mwanaume
-      2. Mwanamke
-      0. Nyuma
-    location_entry: |
-      CON Weka eneo lako
       0. Nyuma
     help: END Kwa usaidizi piga simu %{support_phone}
     exchange_token: |
@@ -183,7 +161,6 @@ sw:
     exit_not_registered: |
       END Haujasajiliwa kwa Sarafu. Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
     exit_invalid_exchange_amount: END Kiwango ulichoweka hakitoshi. Tafadhali weka kiwango cha 40 au zaidi.
-    exit_account_creation_prompt: END Akaunti yako ya Sarafu inatayarishwa. Utapokea ujumbe wa SMS akaunti yako ikiwa tayari.
     language_change_sms: Lugha imebadilishwa.
     opt_out_of_market_place_sms: Ombi lako la kuondoka sokoni limekamilika.
     upsell_message_sender: "Mpokeaji %{recipient_phone} hajasajiliwa kwa Sarafu. Tuma maelezo yake: jina, nambari ya simu, eneo, na aina ya biashara yake kwa 0757628885."
@@ -225,5 +202,3 @@ sw:
       Piga 0757628885 kwa usaidizi zaidi
     pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.
     pin_change_error_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0757628885 kwa usaidizi
-    account_creation_success_sms: Karibu Sarafu! Umepokea %{disbursement_amount} %{token_name} ya kwanzia. Bonyeza *483*46# Airtel ama *384*96# kutumia Sarafu
-    account_creation_error_sms: Pole! Kuna shida kwa system. Jaribu tena, bonyeza *483*46# ama *384*96# kutumia Sarafu. Ikiwa shida inaendelea pigia 0757628885 usaidike.

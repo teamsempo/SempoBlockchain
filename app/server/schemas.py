@@ -58,8 +58,6 @@ class UserSchema(SchemaBase):
     is_groupaccount         = fields.Boolean(attribute='has_group_account_role')
     is_any_admin            = fields.Boolean(attribute='is_any_admin')
 
-    registration_method     = fields.Function(lambda obj: obj.registration_method.value)
-
     business_usage_id = fields.Int()
 
     failed_pin_attempts = fields.Int()
