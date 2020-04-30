@@ -15,6 +15,8 @@ RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.
 
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
 
+ENV RESOURCE_BUCKET $RESOURCE_BUCKET
+ENV TEST_BUCKET $TEST_BUCKET
 
 COPY ./config.py ./config_files/* /src/
 ADD ./app/server /src/server
