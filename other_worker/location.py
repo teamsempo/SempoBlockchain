@@ -1,9 +1,11 @@
 # standard imports
+import urllib
 import requests
 import logging
 import json
 
 # platform imports
+import config
 from server import celery_app, db
 from server.models.location import Location, LocationExternal
 from share.location import LocationExternalSourceEnum, osm_extension_fields
@@ -16,7 +18,17 @@ logg = logging.getLogger(__file__)
 
 @celery_app.task()
 def search_name_from_osm(name, country=DEFAULT_COUNTRY_CODE):
-    url = 'https://nominatim.openstreetmap.org/search?format=json&dedupe=1&country={}&q={}'.format(country, name)
+    q = {
+            'format': 'json',
+            'dedupe': 1,
+            'country': country, 
+            'q': name,
+            }
+    if getattr(config, 'EXT_OSM_EMAIL', None):
+        q['email'] = config.EXT_OSM_EMAIL
+
+    q = urllib.parse.urlencode(q)
+    url = 'https://nominatim.openstreetmap.org/search?' + q
 
     try:
         response = requests.get(url, timeout=QUERY_TIMEOUT)

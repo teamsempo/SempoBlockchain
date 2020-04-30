@@ -369,6 +369,10 @@ except KeyError:
     GE_DB_PASSWORD = ''
     GE_HTTP_PROVIDER = ''
 
+EXT_OSM_EMAIL = os.environ.get('OSM_EMAIL')
+if not EXT_OSM_EMAIL and config_parser.has_section('OSM'):
+    EXT_OSM_EMAIL = config_parser['OSM']['email']
+
 TRANSFER_LIMITS = {}
 TRANSFER_LIMITS['0.P7']	= 5000
 TRANSFER_LIMITS['0.P30']	= 10000
