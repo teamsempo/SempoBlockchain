@@ -1,5 +1,6 @@
 # standard imports
 import hashlib
+import logging
 
 # framework imports
 from sqlalchemy.dialects.postgresql import JSON, JSONB
@@ -9,6 +10,9 @@ from sqlalchemy import text
 from server import db
 from server.models.utils import ModelBase
 from share.location import LocationExternalSourceEnum
+
+
+logg = logging.getLogger(__file__)
 
 class LocationExternal(db.Model):
     """Maps external map resources to location
@@ -26,7 +30,7 @@ class LocationExternal(db.Model):
     @staticmethod
     def Digest(enum_key: str, data_dict: dict):
         h = hashlib.sha1()
-        h.update(source.value)
+        h.update(enum_key.encode('utf-8'))
         for k in sorted(data_dict):
             v = str(data_dict[k])
             h.update(k.encode('utf-8'))
@@ -34,16 +38,20 @@ class LocationExternal(db.Model):
         return h.digest()
 
     def is_same(self, source, references_data):
-        ours = LocationExternal.Digest(self.source.value, self.external_reference)
-        theirs = LocationExternal.Digest(source, references_data)
+        ours = LocationExternal.Digest(source.value, self.external_reference)
+        theirs = LocationExternal.Digest(source.value, references_data)
         return ours == theirs
 
     @staticmethod
     def get_by_custom(source_enum, key, value):
-        sql = text('SELECT location_id FROM location_external WHERE source = :s and external_reference ->> :k = :v')
+        sql = text('SELECT id, location_id FROM location_external WHERE source = :s and external_reference ->> :k = :v')
         sql = sql.bindparams(k=key, v=str(value), s=source_enum.value)
         rs = db.session.get_bind().execute(sql)
-        return rs.fetchall()
+        exts = []
+        for le in rs.fetchall():
+            logg.debug('item {}'.format(le[0]))
+            exts.append(LocationExternal.query.get(le[0]))
+        return exts
 
     def __init__(self, location, source, references_data, **kwargs):
         super(LocationExternal, self).__init__(**kwargs)
@@ -68,7 +76,6 @@ class Location(db.Model):
     location_external = db.relationship('LocationExternal',
             lazy=True)
 
-   
     def set_parent(self, parent):
         if self.parent != None:
             raise ValueError('parent already set')
@@ -78,7 +85,17 @@ class Location(db.Model):
         self.location_external.append(LocationExternal(self, source, references_data)) 
 
     def is_same_external_data(self, source, references_data):
-        return self.location_external.is_same(source, references_data)
+        if len(self.location_external) == 0:
+            return False
+        return self.location_external[0].is_same(source, references_data)
+
+    @staticmethod
+    def get_by_custom(source_enum, key, value):
+        r = LocationExternal.get_by_custom(source_enum, key, value)
+        if len(r) == 0:
+            return None
+        l = Location.query.get(r[0].location_id)
+        return l
 
     def __init__(self, common_name, latitude, longitude, parent=None, **kwargs):
         super(Location, self).__init__(**kwargs)
