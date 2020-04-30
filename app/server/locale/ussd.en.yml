@@ -226,7 +226,7 @@ en:
     exit_invalid_recipient: END Recipient phone number is incorrect
     exit_use_exchange_menu: END Recipient phone number is an agent. To exchange, use exchange menu
     exit_invalid_token_agent: END Agent phone number is incorrect
-    exit_account_creation_prompt: END Your account is being created. You’ll receive an SMS when your account is ready.
+    exit_account_creation_prompt: END Your account is being created. You will receive an SMS when your account is ready.
     exit_not_registered: |
       END Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
       To register send: name, number, location and business to 0757628885
@@ -243,13 +243,13 @@ en:
     exchange_token_agent_sms: Successfully received a payment of %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} from %{other_user} on %{date} at %{time}. New %{own_token_name} balance is %{balance}
     exchange_rate_can_exchange_sms: |
       Exchange Rate:
-      For 1 %{token_name} you get %{exchange_rate} KSH
-      1000 %{token_name} = %{exchange_sample_value} KSH
+      For 1 %{token_name} you get 1 KSH
+      1000 %{token_name} = 1000 KSH
       You can transfer a maximum of %{exchange_limit} %{token_name} at an agent every %{limit_period} days.
     exchange_rate_sms: |
       Exchange Rate:
-      For 1 %{token_name} you get %{exchange_rate} KSH
-      1000 %{token_name} = %{exchange_sample_value} KSH
+      For 1 %{token_name} you get 1 KSH
+      1000 %{token_name} = 1000 KSH
     exchange_not_allowed_error_sms: Only a group account can exchange please contact 0757628885 for help
     exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
     exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
