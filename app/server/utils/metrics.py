@@ -11,8 +11,8 @@ from server.models.blockchain_transaction import BlockchainTransaction
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 
+from server.utils import metrics_cache
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
-
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql import func, text
@@ -23,7 +23,6 @@ import datetime, json
 
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
                              user_filter={}):
-
     date_filter = []
     filter_active = False
     if start_date is not None and end_date is not None:
@@ -63,22 +62,24 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
 
     total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
-    total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter).first().total or 0
+    total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter)
+    total_distributed = metrics_cache.execute_with_partial_history_cache('total_distributed', total_distributed, CreditTransfer, metrics_cache.SUM)
 
     total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
-    total_spent = (total_spent.filter(*standard_payment_filters).filter(*date_filter).first().total) or 0
-
-
+    total_spent = total_spent.filter(*standard_payment_filters).filter(*date_filter)
+    total_spent = metrics_cache.execute_with_partial_history_cache('total_spent', total_spent, CreditTransfer, metrics_cache.SUM)
+    
     total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
-    total_exchanged = (total_exchanged.filter(*exchanged_filters).filter(*date_filter).first().total) or 0
+    total_exchanged = total_exchanged.filter(*exchanged_filters).filter(*date_filter)
+    total_exchanged = metrics_cache.execute_with_partial_history_cache('total_exchanged', total_exchanged, CreditTransfer, metrics_cache.SUM)
 
     total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
-    total_beneficiaries = total_beneficiaries.count()
+    total_beneficiaries = metrics_cache.execute_with_partial_history_cache('total_beneficiaries', total_beneficiaries, CreditTransfer, metrics_cache.COUNT)
 
     total_vendors = db.session.query(User).filter(*vendor_filters)
-    total_vendors = total_vendors.count()
+    total_vendors = metrics_cache.execute_with_partial_history_cache('total_vendors', total_vendors, CreditTransfer, metrics_cache.COUNT)
 
     total_users = total_beneficiaries + total_vendors
 
