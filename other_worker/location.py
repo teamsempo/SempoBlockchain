@@ -1,12 +1,11 @@
-#!/usr/bin/python
-
+# standard imports
 import requests
 import logging
 import json
 
-from sqlalchemy import text
+# platform imports
 from server import celery_app, db
-from server.models.location import Location
+from server.models.location import Location, LocationExternal
 from share.location import LocationExternalSourceEnum, osm_extension_fields
 
 QUERY_TIMEOUT = 2.0
@@ -48,12 +47,10 @@ def search_name_from_osm(name, country=DEFAULT_COUNTRY_CODE):
     cache_index = -1
     while next_place_id != 0:
 
-        sql = text('SELECT location_id FROM location_external WHERE external_reference ->> \'place_id\' = \'{}\''.format(next_place_id))
-        rs = db.session.get_bind().execute(sql)
-
-        if rs.rowcount > 0:
+        r = LocationExternal.get_by_custom(LocationExternalSourceEnum.OSM, 'place_id', next_place_id)
+        if len(r) > 0:
             if len(locations) == 0:
-                return rs.fetchone()
+                return r[0]
             else:
                 cache_index = len(locations)
                 break
@@ -95,4 +92,4 @@ def search_name_from_osm(name, country=DEFAULT_COUNTRY_CODE):
         db.session.add(locations[i])
 
     db.session.commit()
-    return locations[0].id
+    return locations[0]
