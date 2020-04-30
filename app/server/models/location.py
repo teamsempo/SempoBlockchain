@@ -80,9 +80,6 @@ class Location(db.Model):
     def is_same_external_data(self, source, references_data):
         return self.location_external.is_same(source, references_data)
 
-    def get_external_data_hash(self):
-        return self.location_external.digest()
-    
     def __init__(self, common_name, latitude, longitude, parent=None, **kwargs):
         super(Location, self).__init__(**kwargs)
         self.common_name = common_name
