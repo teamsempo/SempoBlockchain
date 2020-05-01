@@ -56,8 +56,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
-    blockchain_transactions = db.relationship('BlockchainTransaction', backref='credit_transfer', lazy=True)
-
     attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy=True)
 
     fiat_ramp = db.relationship('FiatRamp', backref='credit_transfer', lazy=True, uselist=False)
@@ -78,77 +76,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     @transfer_amount.setter
     def transfer_amount(self, val):
         self._transfer_amount_wei = val * int(1e16)
-
-    @hybrid_property
-    def blockchain_status_breakdown(self):
-
-        required_task_dict = {x: {'status': 'UNKNOWN', 'hash': None} for x in self._get_required_blockchain_tasks()}
-
-        for transaction in self.blockchain_transactions:
-            status_hierarchy = ['UNKNOWN', 'FAILED', 'PENDING', 'SUCCESS']
-            task_type = transaction.transaction_type
-
-            current_status = required_task_dict.get(task_type).get('status')
-            proposed_new_status = transaction.status
-
-            try:
-                if current_status and status_hierarchy.index(proposed_new_status) > status_hierarchy.index(current_status):
-                    required_task_dict[task_type]['status'] = proposed_new_status
-                    required_task_dict[task_type]['hash'] = transaction.hash
-            except ValueError:
-                pass
-
-        return required_task_dict
-
-    @hybrid_property
-    def pending_blockchain_tasks(self):
-        return self._find_blockchain_tasks_with_status_of('PENDING')
-
-    @hybrid_property
-    def failed_blockchain_tasks(self):
-        return self._find_blockchain_tasks_with_status_of('FAILED')
-
-    @hybrid_property
-    def uncompleted_blockchain_tasks(self):
-        required_task_set = set(self._get_required_blockchain_tasks())
-        completed_task_set = self._find_blockchain_tasks_with_status_of('SUCCESS')
-        return required_task_set - completed_task_set
-
-    def _get_required_blockchain_tasks(self):
-        if self.transfer_type == TransferTypeEnum.DISBURSEMENT and not current_app.config['IS_USING_BITCOIN']:
-
-            if current_app.config['USING_EXTERNAL_ERC20']:
-                master_wallet_approval_status = self.recipient_transfer_account.master_wallet_approval_status
-
-                if (master_wallet_approval_status in ['APPROVED', 'NOT_REQUIRED']
-                        and float(current_app.config['FORCE_ETH_DISBURSEMENT_AMOUNT']) <= 0):
-
-                    required_tasks = ['disbursement']
-
-                elif master_wallet_approval_status in ['APPROVED', 'NOT_REQUIRED']:
-
-                    required_tasks = ['disbursement', 'ether load']
-
-                else:
-                    required_tasks = ['disbursement', 'ether load', 'master wallet approval']
-
-            else:
-                required_tasks = ['initial credit mint']
-
-        else:
-            required_tasks = ['transfer']
-
-        return required_tasks
-
-    def _find_blockchain_tasks_with_status_of(self, required_status):
-        if required_status not in ['PENDING', 'SUCCESS', 'FAILED']:
-            raise Exception('required_status must be one of PENDING, SUCCESS or FAILED')
-
-        completed_task_set = set()
-        for transaction in self.blockchain_transactions:
-            if transaction.status == required_status:
-                completed_task_set.add(transaction.transaction_type)
-        return completed_task_set
 
     def send_blockchain_payload_to_worker(self, is_retry=False, queue='high-priority'):
         sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
