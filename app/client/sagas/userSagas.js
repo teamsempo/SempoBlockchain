@@ -58,7 +58,7 @@ function* loadUser({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put(LoadUserAction.loadUserFailure(error.message));
+    yield put(LoadUserAction.loadUserFailure(error.message))
   }
 }
 
@@ -177,10 +177,12 @@ function* createUser({ payload }) {
     yield call(updateStateFromUser, result.data);
 
     yield put(CreateUserAction.createUserSuccess(result));
+
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(CreateUserAction.createUserFailure(error.message));
+
   }
 }
 
