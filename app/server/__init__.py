@@ -230,6 +230,8 @@ db = SQLAlchemy(session_options={
 })
 
 basic_auth = BasicAuth()
+
+app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
 executor = Executor()
 
 # limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
