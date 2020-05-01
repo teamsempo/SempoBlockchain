@@ -1,34 +1,24 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { DateRangePicker } from "react-dates";
 
 import AsyncButton from "../AsyncButton.jsx";
 
-import { newExport, RESET_EXPORT } from "../../reducers/exportReducer";
+import { ExportAction } from "../../reducers/export/actions";
 
-import {
-  Input,
-  StyledButton,
-  ErrorMessage,
-  ModuleHeader,
-  StyledSelect,
-  ModuleBox
-} from "../styledElements";
+import { ErrorMessage, ModuleHeader, StyledSelect } from "../styledElements";
 
 const mapStateToProps = state => {
   return {
-    newExportRequest: state.newExportRequest,
+    export: state.export,
     selectedTransferAccounts: state.transferAccounts.selected
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    resetExport: () => {
-      dispatch({ type: RESET_EXPORT });
-    },
-    newExport: body => dispatch(newExport({ body }))
+    resetExport: () => dispatch(ExportAction.exportReset()),
+    newExport: body => dispatch(ExportAction.exportRequest({ body }))
   };
 };
 
@@ -187,17 +177,16 @@ class ExportManager extends React.Component {
           </div>
           <AsyncButton
             onClick={() => this.attemptNewExport()}
-            isLoading={this.props.newExportRequest.isRequesting}
+            isLoading={this.props.export.isRequesting}
             buttonStyle={{ display: "flex" }}
             buttonText="Export"
           />
-          <ErrorMessage>{this.props.newExportRequest.error}</ErrorMessage>
+          <ErrorMessage>{this.props.export.error}</ErrorMessage>
           <a
-            href={this.props.newExportRequest.file_url}
+            href={this.props.export.file_url}
             target="_blank"
             style={{
-              display:
-                this.props.newExportRequest.file_url === null ? "none" : ""
+              display: this.props.export.file_url === null ? "none" : ""
             }}
           >
             Didn't automatically download?
@@ -212,36 +201,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(ExportManager);
-
-const SubRow = styled.div`
-  display: flex;
-  align-items: center;
-  width: 33%;
-  @media (max-width: 767px) {
-    width: 100%;
-    justify-content: space-between;
-  }
-`;
-
-const ManagerInput = styled.input`
-  color: #555;
-  border: solid #d8dbdd;
-  border-width: 0 0 1px 0;
-  outline: none;
-  margin-left: 0.5em;
-  width: 50%;
-  font-size: 15px;
-  &:focus {
-    border-color: #2d9ea0;
-  }
-`;
-
-const InputLabel = styled.p`
-  font-size: 15px;
-`;
-
-const Code = styled.p`
-  text-align: center;
-  font-size: 3em;
-  font-weight: 700;
-`;
