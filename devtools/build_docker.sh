@@ -2,7 +2,7 @@
 
 GIT_HASH=$(git rev-parse HEAD)
 
-cd ./app
+cd ../app
 
 npm run build
 
