@@ -22,6 +22,7 @@ export interface User {
   business_usage_name?: string;
   referred_by?: string;
   one_time_code?: string;
+  registration_method?:string;
 }
 
 export interface CreateUser extends User {
