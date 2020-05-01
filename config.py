@@ -8,7 +8,7 @@ logg = logging.getLogger(__name__)
 
 from web3 import Web3
 
-VERSION = '1.1.19'  # Remember to bump this in every PR
+VERSION = '1.1.20'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -136,6 +136,7 @@ ONBOARDING_SMS = config_parser['APP'].getboolean('ONBOARDING_SMS', False)
 TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
+DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')

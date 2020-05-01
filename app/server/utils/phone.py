@@ -1,6 +1,7 @@
 import phonenumbers
 import enum
 import sentry_sdk
+from phonenumbers.phonenumberutil import NumberParseException
 
 from flask import current_app, g
 from server import twilio_client, messagebird_client, africastalking_client, executor

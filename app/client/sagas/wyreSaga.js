@@ -18,8 +18,8 @@ import {
   loadWyreAccountBalance,
   createWyreTransferRequest
 } from "../api/wyreAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
 import { handleError } from "../utils";
+import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromWyreDetails(data) {
   let payload = data;
@@ -40,7 +40,9 @@ function* loadWyreExchangeRates({ payload }) {
 
     yield put({ type: LOAD_WYRE_EXCHANGE_RATES_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -60,7 +62,9 @@ function* loadWyreAccount({ payload }) {
 
     yield put({ type: LOAD_WYRE_ACCOUNT_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -75,10 +79,12 @@ function* createWyreTransfer({ payload }) {
     yield call(updateStateFromWyreDetails, create_result.data);
 
     if (create_result.data.wyre_transfer.id !== "PREVIEW") {
-      yield put({
-        type: ADD_FLASH_MESSAGE,
-        message: "Transfer Initiated! Check emails."
-      });
+      yield put(
+        MessageAction.addMessage({
+          error: false,
+          message: "Transfer Initiated! Check emails."
+        })
+      );
     }
 
     yield put({ type: CREATE_WYRE_TRANSFER_SUCCESS });
@@ -87,7 +93,9 @@ function* createWyreTransfer({ payload }) {
 
     yield put({ type: CREATE_WYRE_TRANSFER_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
