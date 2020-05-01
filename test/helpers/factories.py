@@ -3,6 +3,8 @@ from factory.alchemy import SQLAlchemyModelFactory
 from faker import Faker
 from faker.providers import phone_number
 
+import config
+
 from server import db
 from server.models.device_info import DeviceInfo
 from server.models.feedback import Feedback
@@ -21,6 +23,7 @@ fake.add_provider(phone_number)
 class UserFactory(SQLAlchemyModelFactory):
     class Meta:
         model = User
+        model.default_organisation.country_code = config.DEFAULT_COUNTRY
         sqlalchemy_session = db.session
 
 
@@ -65,6 +68,7 @@ class OrganisationFactory(SQLAlchemyModelFactory):
         model = Organisation
         sqlalchemy_session = db.session
     name = 'Francines Company'
+    country_code = config.DEFAULT_COUNTRY
 
 class UssdMenuFactory(SQLAlchemyModelFactory):
     class Meta:

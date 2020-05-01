@@ -15,7 +15,7 @@ import {
 } from "../reducers/filterReducer.js";
 
 import { loadFiltersAPI, createFilterAPI } from "../api/filterAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromFilter(data) {
   //Schema expects a list of filter objects
@@ -61,17 +61,17 @@ function* createFilter({ payload }) {
 
     yield put({ type: CREATE_FILTER_SUCCESS, result });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: result.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: result.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: CREATE_FILTER_FAILURE, error: error.message });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 

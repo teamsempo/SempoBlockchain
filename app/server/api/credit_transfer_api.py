@@ -345,7 +345,6 @@ class CreditTransferAPI(MethodView):
 
             else:
                 message = 'Transfer Successful' if auto_resolve else 'Transfer Pending. Must be approved.'
-
                 if is_bulk:
                     credit_transfers.append(transfer)
 
@@ -367,7 +366,6 @@ class CreditTransferAPI(MethodView):
                     return make_response(jsonify(response_object)), 201
 
         db.session.flush()
-
         message = 'Bulk Transfer Creation Successful' if auto_resolve else 'Bulk Transfer Pending. Must be approved.'
         response_object = {
             'message': message,

@@ -240,13 +240,13 @@ sw:
     exchange_token_agent_sms: Umepokea %{own_amount} %{own_token_name} = %{other_amount} %{other_token_name} kutoka kwa %{other_user} tarehe %{date} saa %{time}. Salio lako la %{own_token_name} ni %{balance}
     exchange_rate_can_exchange_sms: |
       Kiwango cha ubadilishaji:
-      Kwa kila 1 %{token_name} utapata %{exchange_rate} KSH
-      1000 %{token_name} = %{exchange_sample_value} KSH
+      Kwa kila 1 %{token_name} utapata 1 KSH
+      1000 %{token_name} = 1000 KSH
       Waweza kubadilisha %{exchange_limit} %{token_name} kwa wakala baada ya siku %{limit_period}.
     exchange_rate_sms: |
       Kiwango cha ubadilishaji:
-      Kwa kila 1 %{token_name} utapata %{exchange_rate} KSH
-      1000 %{token_name} = %{exchange_sample_value} KSH
+      Kwa kila 1 %{token_name} utapata 1 KSH
+      1000 %{token_name} = 1000 KSH
     exchange_not_allowed_error_sms: Kikundi pekee kinakubaliwa kubadilisha. Kwa maelezo piga 0757628885
     exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha mara %{count} kwa siku %{limit_period} pekee
     exchange_fraction_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{percent}% ya salio lako

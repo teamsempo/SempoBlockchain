@@ -20,7 +20,7 @@ def standard_user(test_client, init_database):
     from flask import g
 
     token = TokenFactory(name='Sarafu', symbol='SARAFU')
-    organisation = OrganisationFactory(token=token, country_code='AU')
+    organisation = OrganisationFactory(token=token, country_code='KE')
     g.active_organisation = organisation
 
     return UserFactory(
@@ -112,6 +112,23 @@ def test_invalid_recipient(
         last_name=standard_user.last_name,
         token_name=standard_user.default_organisation.token.name
     )
+
+
+def test_invalid_phone_number(
+        mocker, test_client, init_database, standard_user, create_transfer_account_user, external_reserve_token
+):
+    session = send_enter_recipient_state()
+
+    invalid_recipient_phone = "1"
+
+    state_machine = KenyaUssdStateMachine(session, standard_user)
+    state_machine.send_sms = mocker.MagicMock()
+    state_machine.feed_char(invalid_recipient_phone)
+
+    assert state_machine.state == "exit_invalid_recipient"
+    assert session.session_data is None
+
+    assert not state_machine.send_sms.called
 
 
 def test_standard_recipient(test_client, init_database, standard_user):

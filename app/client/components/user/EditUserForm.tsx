@@ -73,7 +73,7 @@ const validate = (values: IEditUser) => {
 class EditUserForm extends React.Component<
   InjectedFormProps<IEditUser, Props> & Props
 > {
-  componentDidMount() {
+  _updateForm() {
     let account_type;
     let { selectedUser, transferUsages } = this.props;
     let transferUsage = transferUsages.filter(
@@ -111,6 +111,16 @@ class EditUserForm extends React.Component<
       businessUsage: transferUsageName,
       ...attr_dict
     });
+  }
+
+  componentDidMount() {
+    this._updateForm();
+  }
+
+  componentDidUpdate(prevProps: OuterProps, prevState: IEditUser): void {
+    if (prevProps.selectedUser !== this.props.selectedUser) {
+      this._updateForm();
+    }
   }
 
   setSerialNumber(data: string) {
@@ -300,6 +310,7 @@ class EditUserForm extends React.Component<
                     {/*
                     // @ts-ignore */}
                     <AsyncButton
+                      type="button"
                       onClick={this.props.onResetPin}
                       miniSpinnerStyle={{ height: "10px", width: "10px" }}
                       buttonStyle={{
@@ -328,6 +339,7 @@ class EditUserForm extends React.Component<
                   {/*
                   // @ts-ignore */}
                   <AsyncButton
+                    type="button"
                     onClick={this.props.onDeleteUser}
                     miniSpinnerStyle={{ height: "10px", width: "10px" }}
                     buttonStyle={{
