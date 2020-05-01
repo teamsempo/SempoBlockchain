@@ -36,6 +36,8 @@ services:
     depends_on:
       - postgres
       - eth_worker
+    ports:
+      - "3031:3031"
 
   eth_worker:
     build:
