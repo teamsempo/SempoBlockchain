@@ -10,7 +10,6 @@ import {
   StyledButton,
   StyledSelect,
   Wrapper,
-  FooterBar
 } from "../styledElements.js";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
@@ -24,7 +23,6 @@ import {
   loadTransferAccounts
 } from "../../reducers/transferAccountReducer";
 import { TransferAccountTypes } from "../transferAccount/types";
-import organizationWrapper from "../organizationWrapper";
 
 const mapStateToProps = state => {
   return {
@@ -489,7 +487,7 @@ class TransferAccountList extends React.Component {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(organizationWrapper(TransferAccountList));
+)(TransferAccountList);
 
 const UserSVG = styled.img`
   width: 20px;
