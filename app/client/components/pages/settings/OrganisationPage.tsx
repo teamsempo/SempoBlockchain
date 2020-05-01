@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 
 import { Organisation } from "../../../reducers/organisation/types";
-import { editOrganisation } from "../../../reducers/organisation/actions";
+import { EditOrganisationAction } from "../../../reducers/organisation/actions";
 import SideBar from "../../navBar";
 import * as styles from "../../styledElements";
 import OrganisationSettingForm, {
@@ -12,7 +12,7 @@ import { generateQueryString, getToken, handleResponse } from "../../../utils";
 import LoadingSpinnger from "../../loadingSpinner";
 
 interface DispatchProps {
-  editOrganisation: (body: any, path: number) => void;
+  editOrganisation: (body: any, path: number) => EditOrganisationAction;
 }
 
 interface StateProps {
@@ -124,7 +124,7 @@ const mapStateToProps = (state: any) => {
 const mapDispatchToProps = (dispatch: any) => {
   return {
     editOrganisation: (body: any, path: number) => {
-      dispatch(editOrganisation({ body, path }));
+      dispatch(EditOrganisationAction.editOrganisationRequest({ body, path }));
     }
   };
 };
