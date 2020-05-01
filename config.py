@@ -3,7 +3,6 @@ from eth_keys import keys
 from eth_utils import keccak
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
 logg = logging.getLogger(__name__)
 
 from web3 import Web3
@@ -349,6 +348,8 @@ POLIPAYMENTS_HOST = config_parser['POLIPAYMENTS']['host']
 POLIPAYMENTS_MERCHANT = common_secrets_parser['POLIPAYMENTS']['merchant_code']
 POLIPAYMENTS_AUTH     = common_secrets_parser['POLIPAYMENTS']['auth_code']
 
+USSD_VALID_SERVICE_CODE = config_parser['USSD'].get('valid_service_code')
+
 try:
     NAMESCAN_KEY    = common_secrets_parser['NAMESCAN']['key']
 except KeyError:
@@ -387,6 +388,9 @@ TRANSFER_LIMITS['3.P7']	= 500000
 TRANSFER_LIMITS['3.P30']	= 1000000
 TRANSFER_LIMITS['3.WD7']	= 500000
 TRANSFER_LIMITS['3.WD30']	= 1000000
+
+
+SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT = config_parser['APP'].getint('self_service_wallet_initial_disbursement')
 
 try:
     for k in config_parser['LIMITS'].keys():

@@ -15,6 +15,7 @@ import jwt
 import random
 import string
 import sentry_sdk
+from enum import Enum
 
 from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -55,6 +56,11 @@ referrals = Table(
 )
 
 
+class RegistrationMethodEnum(Enum):
+    USSD_SIGNUP = 'USSD_SIGNUP'
+    WEB_SIGNUP = 'WEB_SIGNUP'
+
+
 class User(ManyOrgBase, ModelBase, SoftDelete):
     """Establishes the identity of a user for both making transactions and more general interactions.
 
@@ -88,6 +94,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     TFA_enabled = db.Column(db.Boolean, default=False)
     pin_hash = db.Column(db.String())
     seen_latest_terms = db.Column(db.Boolean, default=False)
+    registration_method = db.Column(db.Enum(RegistrationMethodEnum))
 
     failed_pin_attempts = db.Column(db.Integer, default=0)
 
@@ -690,7 +697,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         self.secret = ''.join(random.choices(
             string.ascii_letters + string.digits, k=16))
 
-        self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
+        if self.registration_method != RegistrationMethodEnum.USSD_SIGNUP:
+            self.primary_blockchain_address = blockchain_address or bt.create_blockchain_wallet()
 
     def __repr__(self):
         if self.has_admin_role:
@@ -699,3 +707,4 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
+

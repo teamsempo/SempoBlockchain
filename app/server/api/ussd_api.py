@@ -1,15 +1,20 @@
+import config
+import i18n
+
 from flask import Blueprint, request, make_response
 from flask.views import MethodView
 
 from server import db
 from server.utils.auth import show_all, requires_auth
 from server.models.ussd import UssdMenu
-from server.utils.user import get_user_by_phone
+from server.utils.user import get_user_by_phone, create_user_without_transfer_account
 from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
 ussd_blueprint = Blueprint('ussd', __name__)
 
+import logging
+logg = logging.getLogger(__file__)
 
 class ProcessKenyaUssd(MethodView):
     """
@@ -34,13 +39,28 @@ class ProcessKenyaUssd(MethodView):
         user_input = post_data.get('text')
         service_code = post_data.get('serviceCode')
 
-        if phone_number:
+        if config.USSD_VALID_SERVICE_CODE != service_code:
+            response = 'END '
+            i18n.set('locale', 'sw')
+            response += i18n.t('ussd.kenya.invalid_service_code', valid_service_code = config.USSD_VALID_SERVICE_CODE)
+            i18n.set('locale', 'en')
+            response += "\n"
+            response += i18n.t('ussd.kenya.invalid_service_code', valid_service_code = config.USSD_VALID_SERVICE_CODE)
+            return make_response(response, 200)
+
+        elif phone_number:
             user = get_user_by_phone(phone_number, 'KE')
             # api chains all inputs that came through with *
             latest_input = user_input.split('*')[-1]
             if None in [user, session_id]:
-                current_menu = UssdMenu.find_by_name('exit_not_registered')
-                text = menu_display_text_in_lang(current_menu, user)
+                user_without_transfer_account = create_user_without_transfer_account(phone_number)
+                current_menu = UssdMenu.find_by_name('initial_language_selection')
+                ussd_session = create_or_update_session(session_id=session_id,
+                                                        user=user_without_transfer_account,
+                                                        user_input=latest_input,
+                                                        service_code=service_code,
+                                                        current_menu=current_menu)
+                text = KenyaUssdProcessor.custom_display_text(current_menu, ussd_session)
             else:
                 current_menu = KenyaUssdProcessor.process_request(session_id, latest_input, user)
                 ussd_session = create_or_update_session(session_id, user, current_menu, user_input, service_code)
@@ -53,6 +73,7 @@ class ProcessKenyaUssd(MethodView):
                     print(f"Warning, text has length {len(text)}, display may be truncated")
 
                 db.session.commit()
+
         else:
             current_menu = UssdMenu.find_by_name('exit_invalid_request')
             text = menu_display_text_in_lang(current_menu, None)
