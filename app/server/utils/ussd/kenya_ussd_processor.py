@@ -102,6 +102,18 @@ class KenyaUssdProcessor:
             if first_name == 'Unknown':
                 first_name = None
 
+            if last_name == 'Unknown':
+                last_name = None
+
+            if bio_text == 'Unknown':
+                bio_text = None
+
+            if gender_text == 'Unknown':
+                gender_text = None
+
+            if location == 'Unknown':
+                location = None
+
             # define final values to show in menu
             first_name = first_name or absent_value_placeholder
             last_name = last_name or absent_value_placeholder

@@ -380,27 +380,31 @@ class KenyaUssdStateMachine(Machine):
         return self.user.registration_method == RegistrationMethodEnum.USSD_SIGNUP
 
     def has_empty_name_info(self, user_input):
-        if self.user.first_name == 'Unknown' or not self.user.first_name or not self.user.last_name:
+        if self.user.first_name == 'Unknown' or not \
+                self.user.first_name or \
+                self.user.last_name_name == 'Unknown' or not \
+                self.user.last_name:
             return True
         else:
             return False
 
     def has_empty_gender_info(self, user_input):
         gender = next(filter(lambda x: x.name == 'gender', self.user.custom_attributes), None)
-        if not gender:
+        if not gender or gender.value.strip('"') == 'Unknown':
             return True
         else:
             return False
 
     def has_empty_location_info(self, user_input):
-        if not self.user.location:
+        if not self.user.location or self.user.location == 'Unknown':
             return True
         else:
             return False
 
     def has_empty_bio_info(self, user_input):
         bio = next(filter(lambda x: x.name == 'bio', self.user.custom_attributes), None)
-        if not bio:
+        print(bio)
+        if not bio or bio.value.strip('"') == 'Unknown':
             return True
         else:
             return False
