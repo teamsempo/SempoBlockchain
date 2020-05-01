@@ -293,8 +293,7 @@ class CreditTransferAPI(MethodView):
                         transfer_use=transfer_use,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue,
-                        enable_pusher=not is_bulk
+                        queue=queue
                     )
 
                 elif transfer_type == 'RECLAMATION':
@@ -306,8 +305,7 @@ class CreditTransferAPI(MethodView):
                         transfer_subtype=TransferSubTypeEnum.RECLAMATION,
                         require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue,
-                        enable_pusher=not is_bulk
+                        queue=queue
                     )
 
                 elif transfer_type == 'DISBURSEMENT':
@@ -319,8 +317,7 @@ class CreditTransferAPI(MethodView):
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue,
-                        enable_pusher=not is_bulk
+                        queue=queue
                     )
 
                 elif transfer_type == 'BALANCE':
@@ -329,8 +326,7 @@ class CreditTransferAPI(MethodView):
                         recipient_user,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue,
-                        enable_pusher=not is_bulk
+                        queue=queue
                     )
 
             except (InsufficientBalanceError,
@@ -368,9 +364,6 @@ class CreditTransferAPI(MethodView):
                     return make_response(jsonify(response_object)), 201
 
         db.session.flush()
-
-        if is_bulk:
-            pusher.push_admin_credit_transfer(credit_transfers)
 
         message = 'Bulk Transfer Creation Successful' if auto_resolve else 'Bulk Transfer Pending. Must be approved.'
         response_object = {

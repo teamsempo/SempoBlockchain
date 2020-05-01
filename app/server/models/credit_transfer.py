@@ -2,7 +2,7 @@ import datetime
 from typing import List
 
 from sqlalchemy.dialects.postgresql import JSON, JSONB
-from flask import current_app
+from flask import current_app, g
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Index
 from sqlalchemy.sql import func
@@ -110,7 +110,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_completed()
         if not existing_blockchain_txn:
-            self.send_blockchain_payload_to_worker(queue=queue)
+            g.pending_transactions.append((self, queue))
 
     def resolve_as_rejected(self, message=None):
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
