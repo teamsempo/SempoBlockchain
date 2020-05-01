@@ -1,7 +1,7 @@
 """Enforcing non nullable Organisation columns
 
 Revision ID: 3500c08573ff
-Revises: 6d8a938930ff
+Revises: 0da0913f9dbd
 Create Date: 2020-04-24 15:41:41.934453
 
 """
