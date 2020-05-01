@@ -170,17 +170,17 @@ def before_compile(query):
 user_transfer_account_association_table = db.Table(
     'user_transfer_account_association_table',
     db.Model.metadata,
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'))
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
+    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'), index=True)
 )
 
 organisation_association_table = db.Table(
     'organisation_association_table',
     db.Model.metadata,
-    db.Column('organisation_id', db.Integer, db.ForeignKey('organisation.id')),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id')),
-    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id')),
+    db.Column('organisation_id', db.Integer, db.ForeignKey('organisation.id'), index=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
+    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'), index=True),
+    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id'), index=True),
 )
 
 exchange_contract_token_association_table = db.Table(
