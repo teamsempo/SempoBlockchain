@@ -121,7 +121,7 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
                     token1_symbol, token2_symbol,
                     recipient_balance, expected_send_msg, expected_receive_msg):
 
-    org = OrganisationFactory()
+    org = OrganisationFactory(country_code='KE')
     sender = UserFactory(preferred_language=lang, phone=phone(), first_name="Bob", last_name="Foo",
                          default_organisation=org)
     token1 = Token.query.filter_by(symbol=token1_symbol).first()
@@ -155,7 +155,7 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
 
 
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network, mock_sms_apis):
-    org = OrganisationFactory()
+    org = OrganisationFactory(country_code='KE')
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo", default_organisation=org)
     sender.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
@@ -175,7 +175,7 @@ def test_exchange_token(mocker, test_client, init_database, initialised_blockcha
     TokenProcessor.exchange_token(sender, agent, 1000)
     assert default_transfer_account(sender).balance == 19000
     assert default_transfer_account(agent).balance == 31200
-    
+
     messages = mock_sms_apis
 
     assert len(messages) == 2

@@ -31,7 +31,7 @@ class Organisation(ModelBase):
     default_lng = db.Column(db.Float())
 
     _timezone = db.Column(db.String)
-    _country_code = db.Column(db.String)
+    _country_code = db.Column(db.String, nullable=False)
     _default_disbursement_wei = db.Column(db.Numeric(27), default=0)
     require_transfer_card = db.Column(db.Boolean, default=False)
 

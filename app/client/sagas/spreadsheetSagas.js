@@ -1,8 +1,6 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 import { browserHistory } from "../app.jsx";
 
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
-
 import {
   SPREADSHEET_UPLOAD_REQUEST,
   SPREADSHEET_UPLOAD_SUCCESS,
@@ -21,6 +19,7 @@ import {
   loadDatasetListAPI
 } from "../api/spreadsheetAPI.js";
 import { handleError } from "../utils";
+import { MessageAction } from "../reducers/message/actions";
 
 function* spreadsheetUpload({ payload }) {
   try {
@@ -34,7 +33,9 @@ function* spreadsheetUpload({ payload }) {
 
     yield put({ type: SPREADSHEET_UPLOAD_FAILURE, error: error, preview_id });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
