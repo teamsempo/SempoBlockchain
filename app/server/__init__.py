@@ -55,6 +55,7 @@ def create_app():
 
     app.config.from_object('config')
     app.config['BASEDIR'] = os.path.abspath(os.path.dirname(__file__))
+    app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
     # app.config["SQLALCHEMY_ECHO"] = True
 
     # ensure the instance folder exists
@@ -230,8 +231,6 @@ db = SQLAlchemy(session_options={
 })
 
 basic_auth = BasicAuth()
-
-app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
 executor = Executor()
 
 # limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
