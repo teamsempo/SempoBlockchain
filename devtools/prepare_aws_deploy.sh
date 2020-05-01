@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#bash build_docker.sh
+bash build_docker.sh
 
 GIT_HASH=$(git rev-parse HEAD)
 
