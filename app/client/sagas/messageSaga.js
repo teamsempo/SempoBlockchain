@@ -1,4 +1,12 @@
-import { call, put, select, take, takeEvery, delay } from "redux-saga/effects";
+import {
+  call,
+  put,
+  select,
+  take,
+  takeEvery,
+  delay,
+  all
+} from "redux-saga/effects";
 
 import { MessageAction } from "../reducers/message/actions";
 import { MessageActionTypes } from "../reducers/message/types";
@@ -31,6 +39,10 @@ export function* onAddFlashMessage() {
   }
 }
 
-export default function* watchOnAddFlashMessage() {
+function* watchOnAddFlashMessage() {
   yield takeEvery([MessageActionTypes.ADD_FLASH_MESSAGE], onAddFlashMessage);
+}
+
+export default function* messageSagas() {
+  yield all([watchOnAddFlashMessage()]);
 }
