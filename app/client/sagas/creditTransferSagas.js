@@ -21,7 +21,6 @@ import {
   DEEP_UPDATE_TRANSFER_ACCOUNTS,
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
 } from "../reducers/transferAccountReducer.js";
-import { DEEP_UPDATE_USER_LIST } from "../reducers/userReducer";
 
 import {
   loadCreditTransferListAPI,
@@ -29,8 +28,9 @@ import {
   newTransferAPI
 } from "../api/creditTransferAPI.js";
 import { creditTransferSchema } from "../schemas";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
 import { handleError } from "../utils";
+import { MessageAction } from "../reducers/message/actions";
+import { UserListAction } from "../reducers/user/actions";
 
 function* updateStateFromCreditTransfer(result) {
   //Schema expects a list of credit transfer objects
@@ -50,7 +50,7 @@ function* updateStateFromCreditTransfer(result) {
 
   const users = normalizedData.entities.users;
   if (users) {
-    yield put({ type: DEEP_UPDATE_USER_LIST, users });
+    yield put(UserListAction.deepUpdateUserList(users));
   }
 
   if (result.is_create === true) {
@@ -61,20 +61,19 @@ function* updateStateFromCreditTransfer(result) {
       type: UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS,
       credit_transfer_list
     });
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: result.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: result.message })
+    );
   }
 
   if (result.bulk_responses) {
     // bulk transfers created!
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: result.bulk_responses[0].status !== 201,
-      message: result.bulk_responses[0].message
-    });
+    yield put(
+      MessageAction.addMessage({
+        error: result.bulk_responses[0].status !== 201,
+        message: result.bulk_responses[0].message
+      })
+    );
   }
 
   const metrics = result.data.transfer_stats;
@@ -100,7 +99,9 @@ function* loadCreditTransferList({ payload }) {
 
     yield put({ type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -132,17 +133,17 @@ function* modifyTransfer({ payload }) {
 
     yield put({ type: MODIFY_TRANSFER_SUCCESS });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: result.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: result.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: MODIFY_TRANSFER_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -162,7 +163,9 @@ function* createTransfer({ payload }) {
 
     yield put({ type: CREATE_TRANSFER_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 

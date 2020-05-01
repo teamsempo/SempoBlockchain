@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -m
+cd ../
 
 PYTHONUNBUFFERED=1
 
@@ -86,7 +87,7 @@ psql $app_db -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
-python -u contract_setup_script.py
+python -u devtools/contract_setup_script.py
 
 echo ~~~Killing Python Processes
 sleep 5
