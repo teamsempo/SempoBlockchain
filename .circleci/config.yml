@@ -267,6 +267,6 @@ workflows:
             branches:
               only:
                 - master
-                - run-api-calls-in-threads
           requires:
-            - build
+            - test:backend
+            - test:frontend

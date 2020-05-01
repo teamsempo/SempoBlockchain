@@ -110,9 +110,6 @@ def get_email_template(TEMPLATE_FILE):
 def ses_email_handler(recipient, subject, textbody, htmlbody = None):
     sender = "admin@withsempo.com"
 
-    from time import sleep
-    sleep(90)
-
     awsregion = "us-west-2"
     htmlbody = htmlbody or textbody
     charset = "UTF-8"
