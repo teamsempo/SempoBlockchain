@@ -6,8 +6,7 @@ The class contains methods responsible for validation of user input and processi
 the services provided by the  ussd app.
 """
 import re
-import math
-
+from phonenumbers.phonenumberutil import NumberParseException
 from transitions import Machine, State
 
 from server import message_processor, ussd_tasker
@@ -227,7 +226,11 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.send_token(sender=self.user, recipient=user, amount=amount)
 
     def upsell_unregistered_recipient(self, user_input):
-        recipient_phone = proccess_phone_number(user_input)
+        try:
+            recipient_phone = proccess_phone_number(user_input)
+        except NumberParseException:
+            return None
+
         self.send_sms(
             self.user.phone,
             'upsell_message_sender',
