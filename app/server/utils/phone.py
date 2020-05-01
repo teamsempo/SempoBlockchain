@@ -35,10 +35,7 @@ def proccess_phone_number(phone_number, region=None, ignore_region=False):
         except ValueError:
             pass
 
-    try:
-        phone_number_object = phonenumbers.parse(phone_number, region)
-    except NumberParseException as e:
-        raise e
+    phone_number_object = phonenumbers.parse(phone_number, region)
 
     parsed_phone_number = phonenumbers.format_number(phone_number_object, phonenumbers.PhoneNumberFormat.E164)
 
