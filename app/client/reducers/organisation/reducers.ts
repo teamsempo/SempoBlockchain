@@ -1,17 +1,18 @@
 import { combineReducers } from "redux";
+
 import {
-  LOAD_ORGANISATION_REQUEST,
-  UPDATE_ORGANISATION_LIST,
-  LOAD_ORGANISATION_SUCCESS,
-  LOAD_ORGANISATION_FAILURE,
-  LoadOrganisationsAction,
-  EDIT_ORGANISATION_REQUEST,
-  EDIT_ORGANISATION_SUCCESS,
-  EDIT_ORGANISATION_FAILURE,
-  EditOrganisationAction,
-  OrganisationAction,
-  Organisation
+  OrganisationActionTypes,
+  Organisation,
+  EditOrganisationActionTypes,
+  LoadOrganisationActionTypes
 } from "./types";
+
+import {
+  OrganisationAction,
+  EditOrganisationAction,
+  LoadOrganisationAction
+} from "./actions";
+
 import { DEEEEEEP } from "../../utils";
 
 const byId = (
@@ -19,35 +20,34 @@ const byId = (
   action: OrganisationAction
 ): Organisation[] => {
   switch (action.type) {
-    case UPDATE_ORGANISATION_LIST:
-      return DEEEEEEP(state, action.organisations);
+    case OrganisationActionTypes.UPDATE_ORGANISATION_LIST:
+      return DEEEEEEP(state, action.payload);
     default:
       return state;
   }
 };
 
-export interface EditOrganisationState {
+interface RequestingState {
   isRequesting: boolean;
-  error?: string;
   success: boolean;
+  error: null | string;
 }
 
-const initialEditStatusState: EditOrganisationState = {
+const initialState: RequestingState = {
   isRequesting: false,
-  success: false
+  success: false,
+  error: null
 };
-const editStatus = (
-  state = initialEditStatusState,
-  action: EditOrganisationAction
-): EditOrganisationState => {
+
+const editStatus = (state = initialState, action: EditOrganisationAction) => {
   switch (action.type) {
-    case EDIT_ORGANISATION_REQUEST:
+    case EditOrganisationActionTypes.EDIT_ORGANISATION_REQUEST:
       return { ...state, isRequesting: true };
 
-    case EDIT_ORGANISATION_SUCCESS:
+    case EditOrganisationActionTypes.EDIT_ORGANISATION_SUCCESS:
       return { ...state, isRequesting: false, success: true };
 
-    case EDIT_ORGANISATION_FAILURE:
+    case EditOrganisationActionTypes.EDIT_ORGANISATION_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:
@@ -55,27 +55,15 @@ const editStatus = (
   }
 };
 
-export interface LoadOrganisationState {
-  isRequesting: boolean;
-  error?: string;
-  success: boolean;
-}
-const initialLoadStatusState: LoadOrganisationState = {
-  isRequesting: false,
-  success: false
-};
-const loadStatus = (
-  state = initialLoadStatusState,
-  action: LoadOrganisationsAction
-): LoadOrganisationState => {
+const loadStatus = (state = initialState, action: LoadOrganisationAction) => {
   switch (action.type) {
-    case LOAD_ORGANISATION_REQUEST:
+    case LoadOrganisationActionTypes.LOAD_ORGANISATION_REQUEST:
       return { ...state, isRequesting: true };
 
-    case LOAD_ORGANISATION_SUCCESS:
+    case LoadOrganisationActionTypes.LOAD_ORGANISATION_SUCCESS:
       return { ...state, isRequesting: false, success: true };
 
-    case LOAD_ORGANISATION_FAILURE:
+    case LoadOrganisationActionTypes.LOAD_ORGANISATION_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:

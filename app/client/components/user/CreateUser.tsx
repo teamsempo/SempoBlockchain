@@ -1,21 +1,22 @@
 import * as React from "react";
 import { connect } from "react-redux";
 
-import { createUser, RESET_CREATE_USER } from "../../reducers/userReducer";
 import { StyledButton, ModuleHeader } from "../styledElements";
 import * as styles from "./styles.module.css";
-import { loadTransferUsages } from "../../reducers/transferUsage/actions";
+import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { Organisation } from "../../reducers/organisation/types";
 import { ReduxState } from "../../reducers/rootReducer";
-import { loadOrganisation } from "../../reducers/organisation/actions";
+import { LoadOrganisationAction } from "../../reducers/organisation/actions";
 import CreateUserForm, { ICreateUserUpdate } from "./CreateUserForm";
+import { CreateUserAction } from "../../reducers/user/actions";
+import { CreateUserPayload } from "../../reducers/user/types";
 
 interface DispatchProps {
-  createUser: (body: any) => void;
-  resetCreateUser: () => void;
-  loadTransferUsages: () => void;
-  loadOrganisation: () => void;
+  createUser: (payload: CreateUserPayload) => CreateUserAction;
+  resetCreateUser: () => CreateUserAction;
+  loadTransferUsages: () => LoadTransferUsagesAction;
+  loadOrganisation: () => LoadOrganisationAction;
 }
 
 interface StateProps {
@@ -60,26 +61,28 @@ class CreateUserUpdated extends React.Component<Props> {
     }
 
     this.props.createUser({
-      first_name: form.firstName,
-      last_name: form.lastName,
-      bio: form.bio,
-      gender: form.gender,
-      public_serial_number: form.publicSerialNumber,
-      phone: form.phone,
-      is_vendor:
-        form.accountType === "vendor" || form.accountType === "cashier",
-      is_tokenagent: form.accountType === "tokenagent",
-      is_groupaccount: form.accountType === "groupaccount",
-      initial_disbursement: (form.initialDisbursement || 0) * 100,
-      require_transfer_card_exists:
-        activeOrganisation && activeOrganisation.require_transfer_card,
-      existing_vendor_phone: form.existingVendorPhone,
-      existing_vendor_pin: form.existingVendorPin,
-      transfer_account_name: form.transferAccountName,
-      location: form.location,
-      business_usage_name: businessUsage,
-      referred_by: form.referredBy,
-      registration_method: "WEB_SIGNUP"
+      body: {
+        first_name: form.firstName,
+        last_name: form.lastName,
+        bio: form.bio,
+        gender: form.gender,
+        public_serial_number: form.publicSerialNumber,
+        phone: form.phone,
+        is_vendor:
+          form.accountType === "vendor" || form.accountType === "cashier",
+        is_tokenagent: form.accountType === "tokenagent",
+        is_groupaccount: form.accountType === "groupaccount",
+        initial_disbursement: (form.initialDisbursement || 0) * 100,
+        require_transfer_card_exists:
+          activeOrganisation && activeOrganisation.require_transfer_card,
+        existing_vendor_phone: form.existingVendorPhone,
+        existing_vendor_pin: form.existingVendorPin,
+        transfer_account_name: form.transferAccountName,
+        location: form.location,
+        business_usage_name: businessUsage,
+        referred_by: form.referredBy,
+        registration_method: "WEB_SIGNUP"
+      }
     });
   }
 
@@ -154,15 +157,14 @@ const mapStateToProps = (state: ReduxState): StateProps => {
 
 const mapDispatchToProps = (dispatch: any) => {
   return {
-    createUser: (body: any) => dispatch(createUser({ body })),
-    resetCreateUser: () => {
-      dispatch({ type: RESET_CREATE_USER });
-    },
+    createUser: (payload: CreateUserPayload) =>
+      dispatch(CreateUserAction.createUserRequest(payload)),
+    resetCreateUser: () => dispatch(CreateUserAction.resetCreateUser()),
     loadTransferUsages: () => {
-      dispatch(loadTransferUsages({}));
+      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({}));
     },
     loadOrganisation: () => {
-      dispatch(loadOrganisation());
+      dispatch(LoadOrganisationAction.loadOrganisationRequest());
     }
   };
 };

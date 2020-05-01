@@ -1,13 +1,12 @@
 import React from "react";
-import classNames from "classnames";
 import { StyledButton } from "./styledElements";
-import loadingSpinner from "./loadingSpinner.jsx";
 
 export default class AsyncButton extends React.Component {
   render() {
     if (this.props.isLoading) {
       return (
         <StyledButton
+          type={this.props.type}
           onClick={() => null}
           theme={this.props.theme}
           style={{
@@ -29,6 +28,7 @@ export default class AsyncButton extends React.Component {
     } else if (this.props.isSuccess) {
       return (
         <StyledButton
+          type={this.props.type}
           onClick={() => null}
           style={{
             display: "flex",
