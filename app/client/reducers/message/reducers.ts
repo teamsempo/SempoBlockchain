@@ -1,18 +1,5 @@
-export const ADD_FLASH_MESSAGE = "ADD_FLASH_MESSAGE";
-interface AddFlashMessage {
-  type: typeof ADD_FLASH_MESSAGE;
-  error: boolean;
-  message: string;
-}
-export const SHOW_FLASH = "SHOW_FLASH";
-interface ShowFlash {
-  type: typeof SHOW_FLASH;
-}
-export const CLEAR_FLASH = "CLEAR_FLASH";
-interface ClearFlash {
-  type: typeof CLEAR_FLASH;
-}
-type MessageAction = AddFlashMessage | ShowFlash | ClearFlash;
+import { MessageActionTypes } from "./types";
+import { MessageAction } from "./actions";
 
 interface MessageState {
   showMessage: boolean;
@@ -28,15 +15,15 @@ const initialMessageState: MessageState = {
 
 export const message = (state = initialMessageState, action: MessageAction) => {
   switch (action.type) {
-    case ADD_FLASH_MESSAGE:
+    case MessageActionTypes.ADD_FLASH_MESSAGE:
       return {
         ...state,
-        error: action.error,
-        messageList: [...state.messageList, action.message]
+        error: action.payload.error,
+        messageList: [...state.messageList, action.payload.message]
       };
-    case SHOW_FLASH:
+    case MessageActionTypes.SHOW_FLASH:
       return { ...state, showMessage: true };
-    case CLEAR_FLASH:
+    case MessageActionTypes.CLEAR_FLASH:
       return {
         ...state,
         showMessage: false,

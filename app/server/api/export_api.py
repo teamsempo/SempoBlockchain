@@ -263,9 +263,10 @@ class ExportAPI(MethodView):
             os.remove(local_save_path)
 
             response_object = {
-                'status': 'success',
                 'message': 'Export file created.',
-                'file_url': file_url,
+                'data': {
+                    'file_url': file_url,
+                }
             }
 
             return make_response(jsonify(response_object)), 201
@@ -273,12 +274,10 @@ class ExportAPI(MethodView):
         else:
             # return no data
             response_object = {
-                'status': 'Fail',
                 'message': 'No data available for export',
-                'file_url': None,
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 404
 
 
 class MeExportAPI(MethodView):

@@ -2,7 +2,6 @@ import threading
 from functools import cmp_to_key
 from typing import Optional, List
 from phonenumbers.phonenumberutil import NumberParseException
-from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app, g
@@ -24,13 +23,10 @@ from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app, message_processor
-from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
-from server.utils.transfer_enums import TransferSubTypeEnum
 from server.utils.misc import rounded_dollars
-from server.utils.access_control import AccessControl
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -782,9 +778,16 @@ def default_token(user: User) -> Token:
 
 
 def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[User]:
-    user = User.query.execution_options(show_all=True).filter_by(
-        phone=proccess_phone_number(phone_number=phone, region=region)
-    ).first()
+    try:
+        user = User.query.execution_options(show_all=True).filter_by(
+            phone=proccess_phone_number(phone_number=phone, region=region)
+        ).first()
+    except NumberParseException as e:
+        if should_raise:
+            raise e
+        else:
+            return None
+
     if user is not None:
         return user
     else:

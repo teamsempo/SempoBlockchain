@@ -31,7 +31,7 @@ import {
   createBankAccountAPI,
   editBankAccountAPI
 } from "../api/businessVerificationAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+import { MessageAction } from "../reducers/message/actions";
 import { handleError } from "../utils";
 
 function* updateStateFromBusinessVerificationStep(data) {
@@ -54,7 +54,9 @@ function* editBusinessVerification({ payload }) {
 
     yield put({ type: EDIT_BUSINESS_VERIFICATION_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -104,7 +106,9 @@ function* createBusinessVerification({ payload }) {
 
     yield put({ type: CREATE_BUSINESS_VERIFICATION_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -128,7 +132,9 @@ function* uploadDocument({ payload }) {
 
     yield put({ type: UPLOAD_DOCUMENT_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -151,7 +157,9 @@ function* createBankAccount({ payload }) {
 
     yield put({ type: CREATE_BANK_ACCOUNT_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -174,7 +182,9 @@ function* editBankAccount({ payload }) {
 
     yield put({ type: EDIT_BANK_ACCOUNT_FAILURE });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 

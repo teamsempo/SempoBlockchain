@@ -1,21 +1,18 @@
 import { combineReducers } from "redux";
 import {
-  LOAD_TRANSFER_USAGES_FAILURE,
-  LOAD_TRANSFER_USAGES_REQUEST,
-  LOAD_TRANSFER_USAGES_SUCCESS,
-  LoadTransferUsagesAction,
-  UPDATE_TRANSFER_USAGES,
-  TransferUsagesAction,
+  LoadTransferUsagesActionTypes,
+  TransferUsageActionTypes,
   TransferUsage
 } from "./types";
+import { TransferUsageAction, LoadTransferUsagesAction } from "./actions";
 
 const transferUsages = (
   state: TransferUsage[] = [],
-  action: TransferUsagesAction
+  action: TransferUsageAction
 ): TransferUsage[] => {
   switch (action.type) {
-    case UPDATE_TRANSFER_USAGES:
-      return action.transferUsages;
+    case TransferUsageActionTypes.UPDATE_TRANSFER_USAGES:
+      return action.payload;
 
     default:
       return state;
@@ -36,13 +33,13 @@ const loadStatus = (
   action: LoadTransferUsagesAction
 ): LoadTransferUsageState => {
   switch (action.type) {
-    case LOAD_TRANSFER_USAGES_REQUEST:
+    case LoadTransferUsagesActionTypes.LOAD_TRANSFER_USAGES_REQUEST:
       return { ...state, isRequesting: true };
 
-    case LOAD_TRANSFER_USAGES_SUCCESS:
+    case LoadTransferUsagesActionTypes.LOAD_TRANSFER_USAGES_SUCCESS:
       return { ...state, isRequesting: false, success: true };
 
-    case LOAD_TRANSFER_USAGES_FAILURE:
+    case LoadTransferUsagesActionTypes.LOAD_TRANSFER_USAGES_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:
