@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set +e
 
+cd ../
 mkdir ./ganacheDB
 
 ganache-cli -l 80000000 -i 42 \
