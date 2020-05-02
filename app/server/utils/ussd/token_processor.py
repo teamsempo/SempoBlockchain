@@ -173,6 +173,10 @@ class TokenProcessor(object):
         # only will have a single token balance
         balances = ''
         for transfer_account in user.transfer_accounts:
+            if transfer_account.balance == 0.0:
+                continue
+            if len(balances) > 0:
+                balances += '\n'
             balances += '{} {}'.format(int(transfer_account.balance/100), transfer_account.token.symbol)
         return balances
 
