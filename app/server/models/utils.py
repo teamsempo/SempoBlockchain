@@ -64,7 +64,7 @@ def paginate_query(query, queried_object=None, order_override=None):
     if order_override:
         query = query.order_by(order_override)
     elif queried_object:
-        query = query.order_by(queried_object.created.desc())
+        query = query.order_by(queried_object.id.desc())
 
     if per_page is None:
 
