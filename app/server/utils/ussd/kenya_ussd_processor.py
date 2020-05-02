@@ -128,14 +128,16 @@ class KenyaUssdProcessor:
             )
 
         # in matching is scary since it might pick up unintentional ones
-        if 'pin_authorization' in menu.name or 'current_pin' == menu.name:
-            if user.failed_pin_attempts is not None and user.failed_pin_attempts > 0:
-                return i18n_for(
-                    user, "{}.retry".format(menu.display_key),
-                    remaining_attempts=3 - user.failed_pin_attempts
-                )
-            else:
-                return i18n_for(user, "{}.first".format(menu.display_key))
+        pin_authorization_transitions = ['current_pin', 'pin_authorization']
+        for transition in pin_authorization_transitions:
+            if transition in menu.name:
+                if user.failed_pin_attempts is not None and user.failed_pin_attempts > 0:
+                    return i18n_for(
+                        user, "{}.retry".format(menu.display_key),
+                        remaining_attempts=3 - user.failed_pin_attempts
+                    )
+                else:
+                    return i18n_for(user, "{}.first".format(menu.display_key))
 
         if menu.name == 'directory_listing' or menu.name == 'send_token_reason':
 
