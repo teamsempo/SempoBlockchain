@@ -843,8 +843,8 @@ def create_user_without_transfer_account(phone):
     :param phone: string with user's msisdn
     :return: User
     """
-    temporary_first_name = 'Unknown'
-    temporary_last_name = ''
+    temporary_first_name = 'Unknown first name'
+    temporary_last_name = 'Unknown last name'
     user = User(first_name=temporary_first_name,
                 last_name=temporary_last_name,
                 phone=phone,
@@ -854,7 +854,6 @@ def create_user_without_transfer_account(phone):
 
     if organisation:
         user.add_user_to_organisation(organisation, False)
-
     return user
 
 
@@ -881,6 +880,9 @@ def attach_transfer_account_to_user(user):
     blockchain_address = bt.create_blockchain_wallet()
     user.primary_blockchain_address = blockchain_address
     user.set_held_role('BENEFICIARY', 'beneficiary')
+    temporary_gender = 'Unknown gender'
+    temporary_business_directory = 'Unknown business'
+    temporary_location = 'Unknown location'
 
     db.session.add(user)
 
@@ -889,8 +891,15 @@ def attach_transfer_account_to_user(user):
                                        blockchain_address=blockchain_address)
     db.session.add(transfer_account)
     user.default_transfer_account = transfer_account
+    attrs = {
+        "custom_attributes": {
+            "bio": temporary_business_directory,
+            "gender": temporary_gender
+        }
+    }
+    user.location = temporary_location
+    set_custom_attributes(attrs, user)
 
-    org_users = organisation.users
     initial_disbursement = config.SELF_SERVICE_WALLET_INITIAL_DISBURSEMENT
 
     initial_disbursement = make_payment_transfer(transfer_amount=initial_disbursement,
