@@ -29,6 +29,7 @@ from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
 from server.utils.misc import rounded_dollars
+from server.utils.transfer_enums import TransferSubTypeEnum
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -842,14 +843,14 @@ def create_user_without_transfer_account(phone):
     :param phone: string with user's msisdn
     :return: User
     """
-    temporary_first_name = 'Unknown'
-    temporary_last_name = 'Unknown'
+    temporary_first_name = 'Unknown first name'
+    temporary_last_name = 'Unknown last name'
     user = User(first_name=temporary_first_name,
                 last_name=temporary_last_name,
                 phone=phone,
                 registration_method=RegistrationMethodEnum.USSD_SIGNUP)
 
-    organisation = g.active_organisation
+    organisation = Organisation.query.get(2)
 
     if organisation:
         user.add_user_to_organisation(organisation, False)
@@ -872,16 +873,16 @@ def attach_transfer_account_to_user(user):
     if user.primary_blockchain_address:
         raise Exception('User already has a transfer account attached.')
 
-    organisation = g.active_organisation
+    organisation = Organisation.query.get(2)
     if not organisation:
         raise Exception("No active organisation")
 
     blockchain_address = bt.create_blockchain_wallet()
     user.primary_blockchain_address = blockchain_address
     user.set_held_role('BENEFICIARY', 'beneficiary')
-    temporary_gender = 'Unknown'
-    temporary_business_directory = 'Unknown'
-    temporary_location = 'Unknown'
+    temporary_gender = 'Unknown gender'
+    temporary_business_directory = 'Unknown business'
+    temporary_location = 'Unknown location'
 
     db.session.add(user)
 

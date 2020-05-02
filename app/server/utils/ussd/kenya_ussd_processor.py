@@ -99,19 +99,19 @@ class KenyaUssdProcessor:
                 elif gender_text == 'female':
                     gender_text = 'mwanamke'
 
-            if first_name == 'Unknown':
+            if first_name == 'Unknown first name':
                 first_name = None
 
-            if last_name == 'Unknown':
+            if last_name == 'Unknown last name':
                 last_name = None
 
-            if bio_text == 'Unknown':
+            if bio_text == 'Unknown business':
                 bio_text = None
 
-            if gender_text == 'Unknown':
+            if gender_text == 'Unknown gender':
                 gender_text = None
 
-            if location == 'Unknown':
+            if location == 'Unknown location':
                 location = None
 
             # define final values to show in menu
