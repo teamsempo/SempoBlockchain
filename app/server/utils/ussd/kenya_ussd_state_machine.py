@@ -12,7 +12,6 @@ import config
 
 from transitions import Machine, State
 
-from server.utils.transfer_enums import TransferSubTypeEnum
 from server import message_processor, ussd_tasker
 from server.models.user import User, RegistrationMethodEnum
 from server.models.ussd import UssdSession
