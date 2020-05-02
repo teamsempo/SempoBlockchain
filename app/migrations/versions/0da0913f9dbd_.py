@@ -23,6 +23,8 @@ def upgrade():
     op.add_column('user', sa.Column('registration_method', registration_method, nullable=True))
     op.execute('ALTER TABLE "user" ALTER COLUMN registration_method TYPE registrationmethodenum'
                ' USING registration_method::text::registrationmethodenum')
+    conn = op.get_bind()
+    conn.execute(sa.sql.text('insert into ussd_menu (name,description,display_key) values (\'exit_account_creation_prompt\', \'The self signup process has been initiated and the account is being created\', \'ussd.kenya.exit_account_creation_prompt\') on conflict do nothing'));
     # ### end Alembic commands ###
 
 
