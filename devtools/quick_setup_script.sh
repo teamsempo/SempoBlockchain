@@ -1,23 +1,56 @@
 #!/usr/bin/env bash
 set -m
-set +e
+set -e
 cd ../
 
 PYTHONUNBUFFERED=1
 
 source $1
 
-echo "This will wipe ALL local Sempo data."
-echo "Persist Ganache? (y/N)"
-read ganachePersistInput
-
-if [ -z ${MASTER_WALLET_PK+x} ]
+if [ -z ${PGUSER+x} ]
 then
-echo "\$MASTER_WALLET_PK is empty"
-exit 0
+echo "[WARN] PGUSER environment variable not set, defaulting to postgres user 'postgres'"
 fi
 
-set +e
+if [ -z ${PGPASSWORD+x} ]
+then
+echo "[WARN] PGPASSWORD environment variable not set, defaulting to postgres password 'password'"
+fi
+
+
+echo "This will wipe ALL local Sempo data"
+
+echo "Reset Local Secrets? y/N"
+read resetSecretsInput
+
+echo "Persist Ganache? y/N"
+read ganachePersistInput
+
+echo "Create Dev Data? (s)mall/(m)edium/(l)arge/(N)o"
+read testDataInput
+
+if [ "$testDataInput" == 's' ]; then
+    echo "Will create Small Dev Dataset"
+    testdata='small'
+elif [ "$testDataInput" == 'm' ]; then
+    echo "Will create Medium Dev Dataset"
+    testdata='medium'
+elif [ "$testDataInput" == 'l' ]; then
+    echo "Will create Large Dev Dataset"
+    testdata='large'
+else
+    echo "Will not create Dev Dataset"
+    testdata='none'
+fi
+
+if [ "$resetSecretsInput" == "y" ]; then
+  echo ~~~~Creating Secrets
+  cd ./config_files/
+  python generate_secrets.py
+  cd ../
+fi
+
+MASTER_WALLET_PK=$(awk -F "=" '/master_wallet_private_key/ {print $2}' ./config_files/secret/local_secrets.ini  | tr -d ' ')
 
 echo ~~~~Killing any leftover workers or app
 set +e
