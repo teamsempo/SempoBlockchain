@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -m
+set +e
 
 PYTHONUNBUFFERED=1
 
@@ -89,13 +90,14 @@ echo ~~~~Resetting Ganache
 cd ../
 kill $(ps aux | grep '[g]anache-cli' | awk '{print $2}')
 
-if [ $ganachePersistInput != y ]
+if [ "$ganachePersistInput" == 'y' ]
 then
-  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
-else
+  echo clearing old ganache data
   rm -R ./ganacheDB
   mkdir ganacheDB
   ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" --db './ganacheDB' &
+else
+  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
 fi
 
 sleep 5
@@ -125,7 +127,7 @@ echo ~~~Setting up Contracts
 cd ../
 python -u contract_setup_script.py
 
-if [ "$testdata" != 'none' ]; then
+if [[ "$testdata" != 'none' ]]; then
     echo ~~~Creating test data
     cd ./app/migrations/
     python -u dev_data.py ${testdata}
