@@ -322,8 +322,8 @@ def create_user_response_object(user, auth_token, message):
         usd_to_satoshi_rate = None
 
     conversion_rate = 1
-    currency_symbol = user.default_organisation.token.symbol if user.default_organisation else None
-    currency_decimals = user.default_organisation.token.display_decimals if user.default_organisation else None
+    currency_symbol = user.default_organisation.token.symbol if user.default_organisation and user.default_organisation.token else None
+    currency_decimals = user.default_organisation.token.display_decimals if user.default_organisation and user.default_organisation.token else None
     if user.default_currency:
         conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
         if conversion is not None:
