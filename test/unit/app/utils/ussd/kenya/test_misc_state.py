@@ -180,15 +180,10 @@ def test_send_directory_listing(mocker, test_client, init_database):
     send_directory_listing.assert_called_with(user, transfer_usage)
 
 
-def test_terms_only_sent_once(mocker, test_client, init_database):
+def test_terms_only_sent_once(mocker, test_client, init_database, mock_sms_apis):
     session = UssdSessionFactory(state="balance_inquiry_pin_authorization")
     user = standard_user()
     user.phone = phone()
-
-    messages = []
-    def mock_send_message(phone, message):
-        messages.append({'phone': phone, 'message': message})
-    mocker.patch('server.message_processor.send_message', mock_send_message)
 
     inquire_balance = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.inquire_balance', inquire_balance)
@@ -197,6 +192,8 @@ def test_terms_only_sent_once(mocker, test_client, init_database):
     state_machine.feed_char('0000')
 
     db.session.commit()
+
+    messages = mock_sms_apis
 
     assert len(messages) == 1
 
