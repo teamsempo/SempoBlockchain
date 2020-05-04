@@ -120,9 +120,6 @@ if IS_PRODUCTION is None:
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
 
-# todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
-CURRENCY_NAME       = config_parser['APP']['CURRENCY_NAME']
-CURRENCY_DECIMALS   = int(config_parser['APP']['CURRENCY_DECIMALS'])
 APP_HOST            = config_parser['APP']['APP_HOST']
 BENEFICIARY_TERM    = config_parser['APP']['BENEFICIARY_TERM']
 BENEFICIARY_TERM_PLURAL = config_parser['APP']['BENEFICIARY_TERM_PLURAL']
