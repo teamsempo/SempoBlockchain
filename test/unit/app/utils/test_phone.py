@@ -13,8 +13,8 @@ def proccess_phone_number(test_client, init_database, create_master_organisation
 
 @pytest.fixture(scope='function')
 def channel_for_number(test_client):
-    from server import message_processor
-    return message_processor.channel_for_number
+    from server.utils.phone import channel_for_number
+    return channel_for_number
 
 @pytest.mark.parametrize("phone,region,expected", [
     ("0401391419", None, "+61401391419"),
@@ -37,13 +37,12 @@ def test_proccess_phone_number(proccess_phone_number, phone, region, expected):
 def test_channel_for_number(channel_for_number, phone, expected):
     assert channel_for_number(phone) == expected
 
-
 def test_send_message(test_client, init_database, mock_sms_apis):
-    from server import message_processor
+    from server.utils.phone import send_message
 
-    message_processor.send_message("+1401391419", 'bonjour')
-    message_processor.send_message("+961401391419", 'mon')
-    message_processor.send_message("+254796918514", 'chéri')
+    send_message("+1401391419", 'bonjour')
+    send_message("+961401391419", 'mon')
+    send_message("+254796918514", 'chéri')
 
     messages = mock_sms_apis
 
