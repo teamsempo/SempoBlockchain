@@ -484,8 +484,6 @@ class TransferAccountList extends React.Component {
   }
 }
 
-let reactTableStyle = {};
-
 export default connect(
   mapStateToProps,
   mapDispatchToProps
