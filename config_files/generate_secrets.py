@@ -47,8 +47,10 @@ def generate_specific_secrets(write_path):
     add_val_sp(APP, 'basic_auth_password', rand_hex())
 
     DATABASE = 'DATABASE'
-    add_val_sp(DATABASE, 'user', 'postgres')
-    add_val_sp(DATABASE, 'password', 'password')
+    username = os.environ.get('PGUSER', 'postgres')
+    password = os.environ.get('PGPASSWORD', 'password')
+    add_val_sp(DATABASE, 'user', username)
+    add_val_sp(DATABASE, 'password', password)
 
     ETHEREUM = 'ETHEREUM'
     add_val_sp(ETHEREUM, 'master_wallet_private_key', eth_pk())
