@@ -330,7 +330,6 @@ class TransactionProcessor(object):
         task = self.persistence_interface.get_task_from_uuid(task_uuid)
 
         unsatisfied_prior_tasks = self.get_unsatisfied_prior_tasks(task)
-
         if len(unsatisfied_prior_tasks) > 0:
             print('Skipping {}: prior tasks {} unsatisfied'.format(
                 task.id,

@@ -26,7 +26,7 @@ class UpdateData(Command):
             create_ussd_menus()
             create_business_categories()
             reserve_token = create_reserve_token(app)
-            create_master_organisation(reserve_token)
+            create_master_organisation(app, reserve_token)
             create_float_wallet(app)
 
 

@@ -1,55 +1,23 @@
 #!/usr/bin/env bash
 set -m
 set +e
+cd ../
 
 PYTHONUNBUFFERED=1
 
 source $1
 
-if [ -z ${PGUSER+x} ]
-then
-echo "[WARN] PGUSER environment variable not set, defaulting to postgres user 'postgres'"
-fi
-
-if [ -z ${PGPASSWORD+x} ]
-then
-echo "[WARN] PGPASSWORD environment variable not set, defaulting to postgres password 'password'"
-fi
-
-
-echo "This will wipe ALL local Sempo data"
-
-echo "Reset Local Secrets? y/N"
-read resetSecretsInput
-
-echo "Persist Ganache? y/N"
+echo "This will wipe ALL local Sempo data."
+echo "Persist Ganache? (y/N)"
 read ganachePersistInput
 
-echo "Create Dev Data? (s)mall/(m)edium/(l)arge/(N)o"
-read testDataInput
-
-if [ "$testDataInput" == 's' ]; then
-    echo "Will create Small Dev Dataset"
-    testdata='small'
-elif [ "$testDataInput" == 'm' ]; then
-    echo "Will create Medium Dev Dataset"
-    testdata='medium'
-elif [ "$testDataInput" == 'l' ]; then
-    echo "Will create Large Dev Dataset"
-    testdata='large'
-else
-    echo "Will not create Dev Dataset"
-    testdata='none'
+if [ -z ${MASTER_WALLET_PK+x} ]
+then
+echo "\$MASTER_WALLET_PK is empty"
+exit 0
 fi
 
-if [ "$resetSecretsInput" == "y" ]; then
-  echo ~~~~Creating Secrets
-  cd ./config_files/
-  python generate_secrets.py
-  cd ../
-fi
-
-MASTER_WALLET_PK=$(awk -F "=" '/master_wallet_private_key/ {print $2}' ./config_files/secret/local_secrets.ini  | tr -d ' ')
+set +e
 
 echo ~~~~Killing any leftover workers or app
 set +e
@@ -120,12 +88,12 @@ python -u run.py &
 sleep 10
 
 echo ~~~Creating Default Account
-curl 'http://0.0.0.0:9000/api/v1/auth/register/'  -H 'Content-Type: application/json' -H 'Origin: http://0.0.0.0:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
+curl 'http://localhost:9000/api/v1/auth/register/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
 psql $app_db -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
-python -u contract_setup_script.py
+python -u devtools/contract_setup_script.py
 
 if [[ "$testdata" != 'none' ]]; then
     echo ~~~Creating test data

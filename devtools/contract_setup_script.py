@@ -1,8 +1,10 @@
 from functools import reduce
 import requests
-import config
 from time import sleep
-import os
+import os, sys
+
+sys.path.append('./')
+import config
 
 def load_account(address, amount_wei):
     from web3 import (

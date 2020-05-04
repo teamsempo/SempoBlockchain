@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd app
+cd ../app
 pip install -r slow_requirements.txt
 pip install -r requirements.txt
 cd ../eth_worker

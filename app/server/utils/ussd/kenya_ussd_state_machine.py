@@ -6,11 +6,11 @@ The class contains methods responsible for validation of user input and processi
 the services provided by the  ussd app.
 """
 import re
-import math
-
+from phonenumbers.phonenumberutil import NumberParseException
 from transitions import Machine, State
 
-from server import message_processor, ussd_tasker
+from server import ussd_tasker
+from server.utils.phone import send_message
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
@@ -87,7 +87,7 @@ class KenyaUssdStateMachine(Machine):
 
     def send_sms(self, phone, message_key, **kwargs):
         message = i18n_for(self.user, "ussd.kenya.{}".format(message_key), **kwargs)
-        message_processor.send_message(phone, message)
+        send_message(phone, message)
 
     def change_preferred_language_to_sw(self, user_input):
         self.change_preferred_language_to("sw")
@@ -232,7 +232,11 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.send_token(self.user, user, amount, reason_str, reason_id)
 
     def upsell_unregistered_recipient(self, user_input):
-        recipient_phone = proccess_phone_number(user_input)
+        try:
+            recipient_phone = proccess_phone_number(user_input)
+        except NumberParseException:
+            return None
+
         self.send_sms(
             self.user.phone,
             'upsell_message_sender',
