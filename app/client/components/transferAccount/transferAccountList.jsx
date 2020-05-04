@@ -457,19 +457,6 @@ class TransferAccountList extends React.Component {
                         return;
                       }
 
-                      //FIX
-                      // Uncaught TypeError: Cannot read property 'row' of undefined
-                      //     at onClick (transferAccountList.jsx?c814:451)
-                      //     at HTMLUnknownElement.callCallback (react-dom.development.js?61bb:336)
-                      //     at HTMLUnknownElement.wrapped (index.js?69b4:3221)
-                      //     at Object.invokeGuardedCallbackDev (react-dom.development.js?61bb:385)
-                      //     at invokeGuardedCallback (react-dom.development.js?61bb:440)
-                      //     at invokeGuardedCallbackAndCatchFirstError (react-dom.development.js?61bb:454)
-                      //     at executeDispatch (react-dom.development.js?61bb:584)
-                      //     at executeDispatchesInOrder (react-dom.development.js?61bb:609)
-                      //     at executeDispatchesAndRelease (react-dom.development.js?61bb:713)
-                      //     at executeDispatchesAndReleaseTopLevel (react-dom.development.js?61bb:722)
-
                       if (rowInfo && rowInfo.row) {
                         browserHistory.push("/accounts/" + rowInfo.row.id);
                       }
