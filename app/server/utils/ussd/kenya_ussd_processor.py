@@ -128,19 +128,20 @@ class KenyaUssdProcessor:
             )
 
         # in matching is scary since it might pick up unintentional ones
-        pin_authorization_transitions = ['current_pin', 'pin_authorization']
-        for transition in pin_authorization_transitions:
-            if transition in menu.name:
-                if user.failed_pin_attempts is not None and user.failed_pin_attempts > 0:
-                    return i18n_for(
-                        user, "{}.retry".format(menu.display_key),
-                        remaining_attempts=3 - user.failed_pin_attempts
-                    )
-                else:
-                    return i18n_for(user, "{}.first".format(menu.display_key))
+        pin_authorization_transitions = ['current_pin',
+                                         'balance_inquiry_pin_authorization',
+                                         'opt_out_of_market_place_pin_authorization',
+                                         'exchange_token_pin_authorization']
+        if menu.name in pin_authorization_transitions:
+            if user.failed_pin_attempts is not None and user.failed_pin_attempts > 0:
+                return i18n_for(
+                    user, "{}.retry".format(menu.display_key),
+                    remaining_attempts=3 - user.failed_pin_attempts
+                )
+            else:
+                return i18n_for(user, "{}.first".format(menu.display_key))
 
         if menu.name == 'directory_listing' or menu.name == 'send_token_reason':
-
             blank_template = i18n_for(
                 user, menu.display_key, options=''
             )
@@ -225,7 +226,7 @@ class KenyaUssdProcessor:
                     user.preferred_language)
             if business_usage_string is None:
                 business_usage_string = usage.get('name')
-            message_option = '%d. %s' % (i+1, business_usage_string)
+            message_option = '%d. %s' % (i + 1, business_usage_string)
             if i < len(usages):
                 message_option += '\n'
             menu_options += message_option
