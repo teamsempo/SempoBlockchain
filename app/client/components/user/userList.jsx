@@ -106,10 +106,22 @@ class UserList extends React.Component {
               showPageSizeOptions={false}
               className="react-table"
               resizable={false}
+              getTrProps={(state, rowInfo, instance) => {
+                if (rowInfo) {
+                  return {
+                    style: {
+                      cursor: rowInfo.row ? "pointer" : null
+                    }
+                  };
+                }
+                return {};
+              }}
               getTdProps={(state, rowInfo) => {
                 return {
                   onClick: (e, handleOriginal) => {
-                    browserHistory.push("/users/" + rowInfo.row.id);
+                    if (rowInfo && rowInfo.row) {
+                      browserHistory.push("/users/" + rowInfo.row.id);
+                    }
                     if (handleOriginal) {
                       handleOriginal();
                     }
