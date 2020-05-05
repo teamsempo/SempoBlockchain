@@ -1,7 +1,7 @@
 import sentry_sdk
 
 from flask import current_app
-from server import pusher_client
+from server import pusher_client, executor
 from server.schemas import credit_transfer_schema
 from server.utils import credit_transfer
 from server.utils import misc
@@ -9,6 +9,14 @@ from server.utils import misc
 # Pusher currently only allowes batches of 10 at a time
 # https://pusher.com/docs/channels/library_auth_reference/rest-api#post-batch-events-trigger-multiple-events-
 PUSHER_MAX_BATCH_SIZE = 10
+
+@executor.job
+def async_pusher_trigger(*args, **kwargs):
+    pusher_client.trigger(*args, **kwargs)
+
+@executor.job
+def async_pusher_trigger_batch(*args, **kwargs):
+    pusher_client.trigger_batch(*args, **kwargs)
 
 def push_admin_credit_transfer(transfers):
     # If we only get one transfer, make it a list
@@ -29,14 +37,14 @@ def push_admin_credit_transfer(transfers):
     # Break the list of prepared transfers into MAX_BATCH_SIZE chunks and send each batch to the API
     for pusher_payload_chunk in misc.chunk_list(pusher_batch_payload, PUSHER_MAX_BATCH_SIZE):
         try:
-            pusher_client.trigger_batch(pusher_payload_chunk)
+            async_pusher_trigger_batch.submit(pusher_payload_chunk)
         except Exception as e:
             print(e)
             sentry_sdk.capture_exception(e)
 
 def push_user_transfer_confirmation(receive_user, transfer_random_key):
     try:
-        pusher_client.trigger(
+        async_pusher_trigger.submit(
             'private-user-{}-{}'.format(current_app.config['DEPLOYMENT_NAME'], receive_user.id),
             'payment_confirmed',
             {'transfer_random_key': transfer_random_key}
