@@ -1,4 +1,4 @@
-"""empty message
+"""Add Transfer Mode Enum Types
 
 Revision ID: d4b0c04961cc
 Revises: 984d7e9c50af
