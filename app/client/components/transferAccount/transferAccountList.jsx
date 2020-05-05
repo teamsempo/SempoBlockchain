@@ -9,7 +9,7 @@ import {
   TopRow,
   StyledButton,
   StyledSelect,
-  Wrapper,
+  Wrapper
 } from "../styledElements.js";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
@@ -65,19 +65,6 @@ class TransferAccountList extends React.Component {
     );
     this.onNewTransfer = this.onNewTransfer.bind(this);
     this.approveSelected = this.approveSelected.bind(this);
-  }
-
-  componentDidMount() {
-    // if (this.props.item_list !== undefined) {
-    //   this.props.item_list.map(i => {
-    //     this.setState(prevState => ({
-    //       transfer_account_ids: {
-    //         ...prevState.transfer_account_ids,
-    //         [i.id]: false,
-    //       }
-    //     }))
-    //   });
-    // }
   }
 
   componentWillUnmount() {
@@ -420,7 +407,7 @@ class TransferAccountList extends React.Component {
                     accessor: "is_approved",
                     headerClassName: "react-table-header",
                     Cell: cellInfo => (
-                      <p style={{ margin: 0 }}>
+                      <p style={{ margin: 0, cursor: "pointer" }}>
                         {cellInfo.value === true ? "Approved" : "Unapproved"}
                       </p>
                     )
@@ -450,6 +437,16 @@ class TransferAccountList extends React.Component {
                 showPageSizeOptions={false}
                 className="react-table"
                 resizable={false}
+                getTrProps={(state, rowInfo, instance) => {
+                  if (rowInfo) {
+                    return {
+                      style: {
+                        cursor: rowInfo.row ? "pointer" : null
+                      }
+                    };
+                  }
+                  return {};
+                }}
                 getTdProps={(state, rowInfo, column) => {
                   return {
                     onClick: (e, handleOriginal) => {
@@ -459,7 +456,9 @@ class TransferAccountList extends React.Component {
                         return;
                       }
 
-                      browserHistory.push("/accounts/" + rowInfo.row.id);
+                      if (rowInfo && rowInfo.row) {
+                        browserHistory.push("/accounts/" + rowInfo.row.id);
+                      }
 
                       if (handleOriginal) {
                         handleOriginal();
@@ -490,6 +489,7 @@ export default connect(
 )(TransferAccountList);
 
 const UserSVG = styled.img`
+  cursor: pointer;
   width: 20px;
   height: 20px;
 `;
