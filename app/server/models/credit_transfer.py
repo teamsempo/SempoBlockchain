@@ -97,6 +97,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         )
 
     def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority'):
+        if self.transfer_status:
+            raise Exception(f'Transfer resolve function called multiple times for transaciton {self.id}')
         self.check_sender_transfer_limits()
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
@@ -113,6 +115,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.send_blockchain_payload_to_worker(queue=queue)
 
     def resolve_as_rejected(self, message=None):
+        if self.transfer_status:
+            raise Exception(f'Transfer resolve function called multiple times for transaciton {self.id}')
+
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_rejected()
 
