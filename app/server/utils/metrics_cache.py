@@ -5,10 +5,11 @@ from flask import g
 from decimal import Decimal
 
 SUM = 'SUM'
+SUM_OBJECTS ='SUM_OBJECTS'
 TIMESERIES ='TIMESERIES'
 COUNT ='COUNT'
 
-valid_strategies = [SUM, TIMESERIES, COUNT]
+valid_strategies = [SUM, TIMESERIES, COUNT, SUM_OBJECTS]
 
 def execute_with_partial_history_cache(metric_name, query, object_model, strategy):
     # Redis object names
@@ -37,8 +38,8 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     result = _handle_combinatory_strategy(filtered_query, cache_result, strategy)
 
     # Updates the cache with new data
-    red.set(CACHE_RESULT, result)
-    red.set(HIGHEST_ID_CACHED, current_max_id)
+    #red.set(CACHE_RESULT, result)
+    #red.set(HIGHEST_ID_CACHED, current_max_id)
 
     return result
 
@@ -53,4 +54,8 @@ def _count_strategy(query, cache_result):
     cache_result = int(cache_result)
     return query.count() + cache_result
 
-strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy }
+def _sum_list_of_objects(query, cache_result):
+    query_result = query.all()
+    return query_result
+    
+strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects }

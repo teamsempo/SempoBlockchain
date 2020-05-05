@@ -110,8 +110,9 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
     daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
         .filter(*disbursement_filters) \
-        .filter(*date_filter) \
-            .all()
+        .filter(*date_filter)
+
+    daily_disbursement_volume = metrics_cache.execute_with_partial_history_cache('daily_disbursement_volume', daily_disbursement_volume, CreditTransfer, metrics_cache.SUM_OBJECTS)
 
     transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
     transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
