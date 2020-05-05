@@ -422,6 +422,15 @@ class KenyaUssdStateMachine(Machine):
         else:
             return False
 
+    def is_admin_pin_reset(self, user_input):
+        pin_reset_tokens = self.user.pin_reset_tokens
+        valid_reset_tokens = []
+        for reset_token in pin_reset_tokens:
+            if self.user.is_pin_reset_token_valid(reset_token):
+                valid_reset_tokens.append(reset_token)
+        has_valid_reset_tokens = len(valid_reset_tokens) > 0
+        return has_valid_reset_tokens
+
     def process_account_creation_request(self, user_input):
         try:
             attach_transfer_account_to_user(self.user)
@@ -506,9 +515,15 @@ class KenyaUssdStateMachine(Machine):
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'exit_account_creation_prompt',
+             'unless': 'is_admin_pin_reset',
              'after': ['complete_initial_pin_change', 'set_phone_as_verified', 'send_terms_to_user_if_required',
                        'process_account_creation_request'],
              'conditions': ['is_ussd_signup', 'new_pins_match']},
+            {'trigger': 'feed_char',
+             'source': 'initial_pin_confirmation',
+             'dest': 'start',
+             'conditions': ['new_pins_match', 'is_admin_pin_reset'],
+             'after': 'complete_initial_pin_change'},
             {'trigger': 'feed_char',
              'source': 'initial_pin_confirmation',
              'dest': 'start',
