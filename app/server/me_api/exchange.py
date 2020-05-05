@@ -6,6 +6,8 @@ from server.models.token import Token
 from server.models.exchange import Exchange
 from server.schemas import me_exchange_schema, me_exchanges_schema
 from server import db
+from server.utils.transfer_enums import TransferModeEnum
+
 
 class ExchangeAPI(MethodView):
 
@@ -88,7 +90,8 @@ class ExchangeAPI(MethodView):
                     user=user,
                     from_token=from_token,
                     to_token=to_token,
-                    from_amount=from_amount
+                    from_amount=from_amount,
+                    transfer_mode=TransferModeEnum.MOBILE
                 )
 
             except Exception as e:
@@ -110,7 +113,8 @@ class ExchangeAPI(MethodView):
                     user=user,
                     from_token=from_token,
                     to_token=to_token,
-                    to_desired_amount=to_desired_amount
+                    to_desired_amount=to_desired_amount,
+                    transfer_mode=TransferModeEnum.MOBILE
                 )
             except Exception as e:
 
