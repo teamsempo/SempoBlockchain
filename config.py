@@ -3,12 +3,13 @@ from eth_keys import keys
 from eth_utils import keccak
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
+logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
 from web3 import Web3
 
-VERSION = '1.1.22'  # Remember to bump this in every PR
+VERSION = '1.1.23'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
