@@ -423,7 +423,7 @@ class KenyaUssdStateMachine(Machine):
             return False
 
     def is_admin_pin_reset(self, user_input):
-        pin_reset_tokens = self.user.pin_reset_tokens
+        pin_reset_tokens = self.user.pin_reset_tokens or []
         valid_reset_tokens = []
         for reset_token in pin_reset_tokens:
             if self.user.is_pin_reset_token_valid(reset_token):
