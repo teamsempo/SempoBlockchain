@@ -1,7 +1,7 @@
 FROM python:3.6-slim-stretch
 
 RUN apt update \
-  && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
+  && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev curl
 
 # GE MIGRATION
 # For local OSX try:
