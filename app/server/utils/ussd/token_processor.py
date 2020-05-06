@@ -100,7 +100,7 @@ class TokenProcessor(object):
 
                 for limit in limits:
                     if 'GE Liquid Token' not in limit.name:
-                        transaction_volume = limit.apply_all_filters(
+                        transaction_volume = limit._aggregate_transfer_query(
                             dummy_transfer,
                             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
                         ).execution_options(show_all=True).first().total

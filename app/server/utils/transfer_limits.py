@@ -1,14 +1,23 @@
 from typing import List, Callable, Optional, Union, Tuple, Iterable
+from abc import ABC, abstractmethod
+
 import datetime
 from functools import reduce
 from toolz import curry, pipe
 from sqlalchemy import or_
 from sqlalchemy.orm import Query
+from sqlalchemy.sql import func
 
-from server.exceptions import TransferLimitCreationError
+from server.exceptions import (
+    NoTransferAllowedLimitError,
+    MinimumSentLimitError,
+    TransferAmountLimitError,
+    TransferCountLimitError,
+    TransferBalanceFractionLimitError)
 
 from server.models.kyc_application import KycApplication
 from server.models import token
+from server import db
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum, TransferStatusEnum
 from server.utils.access_control import AccessControl
@@ -33,6 +42,7 @@ RECLAMATION_PAYMENT = (PAYMENT, RECLAMATION)
 
 GENERAL_PAYMENTS = [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT, RECLAMATION_PAYMENT]
 
+
 def get_transfer_limits(credit_transfer: CreditTransfer):
     relevant_limits = []
     for limit in LIMITS:
@@ -40,25 +50,10 @@ def get_transfer_limits(credit_transfer: CreditTransfer):
         if applied and (credit_transfer.transfer_type in limit.applied_to_transfer_types
                         or (credit_transfer.transfer_type, credit_transfer.transfer_subtype)
                         in limit.applied_to_transfer_types):
-            
             relevant_limits.append(limit)
 
     return relevant_limits
 
-
-    # # Supports filtering over type-subtype tuples of the form ('PAYMENT', 'AGENT_OUT')
-    # applied = limit.application_filter(self)
-    # if applied:
-    #     for transfer_type in limit.applied_to_transfer_types:
-    #         if isinstance(transfer_type, (tuple, list)):
-    #             if str(self.transfer_type) == transfer_type[0]\
-    #                     and str(self.transfer_subtype) == transfer_type[1]:
-    #                 relevant_limits.append(limit)
-    #                 continue
-    #         else:
-    #             if str(self.transfer_type) == transfer_type:
-    #                 relevant_limits.append(limit)
-    #                 continue
 
 # ~~~~~~SIMPLE CHECKS~~~~~~
 
@@ -119,10 +114,12 @@ def token_is_reserve_type(credit_transfer):
 def transfer_is_agent_out_subtype(credit_transfer):
     return credit_transfer.transfer_subtype is TransferSubTypeEnum.AGENT_OUT
 
+
 # ~~~~~~COMPOSITE CHECKS~~~~~~
 def base_check(credit_transfer):
     # Only ever check transfers with a sender user and no sempoadmin (those involving sempoadmins are always allowed)
     return sender_user_exists(credit_transfer) and not sempo_admin_involved(credit_transfer)
+
 
 def is_user_and_any_token(credit_transfer):
     return base_check(credit_transfer) \
@@ -157,12 +154,12 @@ def is_any_token_and_user_is_kyc_verified(credit_transfer):
 def is_any_token_and_user_is_kyc_business_verified(credit_transfer):
     return is_user_and_any_token(credit_transfer) and user_business_or_multidoc_kyc_verified(credit_transfer)
 
+
 # ~~~~~~LIMIT FILTERS~~~~~~
 
 
 @curry
 def after_time_period_filter(days: int, query: Query):
-
     epoch = datetime.datetime.today() - datetime.timedelta(days=days)
 
     return query.filter(CreditTransfer.created >= epoch)
@@ -174,7 +171,17 @@ def matching_sender_user_filter(transfer: CreditTransfer, query: Query):
 
 
 @curry
-def matching_transfer_type_filter(transfer: CreditTransfer, query: Query,):
+def not_this_transfer_filter(transfer: CreditTransfer, query: Query):
+    return query.filter(CreditTransfer.id != transfer.id)
+
+
+@curry
+def regular_payment_filter(query: Query):
+    return query.filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD)
+
+
+@curry
+def matching_transfer_type_filter(transfer: CreditTransfer, query: Query, ):
     return query.filter(CreditTransfer.transfer_type == transfer.transfer_type)
 
 
@@ -204,30 +211,86 @@ def empty_filter(transfer: CreditTransfer, query: Query):
     return query
 
 
-class TransferLimit(object):
+# class TransferLimit(ABC):
+#
+#     def __repr__(self):
+#         return f"<TransferLimit {self.name}>"
+#
+#     def _aggregate_transfer_query(self, transfer: CreditTransfer, query: Query):
+#
+#         return pipe(query,
+#                     matching_sender_user_filter(transfer),
+#                     not_rejected_filter,
+#                     after_time_period_filter(self.time_period_days),
+#                     self.transfer_filter(transfer))
+#
+#     def __init__(self,
+#                  name: str,
+#                  applied_to_transfer_types: AppliedToTypes,
+#                  application_filter: Callable,
+#                  time_period_days: int,
+#                  transfer_filter: Optional[Query.filter] = matching_transfer_type_filter,
+#                  no_transfer_allowed: [bool] = False,
+#                  total_amount: Optional[int] = None,
+#                  transfer_count: Optional[int] = None,
+#                  transfer_balance_fraction: Optional[float] = None):
+#
+#         self.name = name
+#
+#         # Force to list of tuples to ensure the use of 'in' behaves as expected
+#         self.applied_to_transfer_types = [tuple(t) if isinstance(t, list) else t for t in applied_to_transfer_types]
+#
+#         self.application_filter = application_filter
+#         self.time_period_days = time_period_days
+#         # TODO: Make LIMIT_EXCHANGE_RATE configurable per org
+#         self.transfer_filter = transfer_filter
+#
+#         self.no_transfer_allowed = no_transfer_allowed
+#         self.total_amount = int(total_amount * config.LIMIT_EXCHANGE_RATE) if total_amount else None
+#         self.transfer_count = transfer_count
+#         self.transfer_balance_fraction = transfer_balance_fraction
+#
+#         if reduce(lambda x, y: x + bool(y not in [None, False]),
+#                   [no_transfer_allowed, total_amount, transfer_count or transfer_balance_fraction], 0) != 1:
+#
+#             raise TransferLimitCreationError(
+#                 'Must set exactly one of no_exchange_allowed, total_amount,'
+#                 ' or transfer_count and transfer_balance_fraction'
+#             )
 
-    def __repr__(self):
-        return f"<TransferLimit {self.name}>"
 
-    def apply_all_filters(self, transfer: CreditTransfer, query: Query):
+class TransferLimit(ABC):
 
+    @abstractmethod
+    def validate_transfer(self, transfer: CreditTransfer):
+        pass
+
+    @abstractmethod
+    def get_allowance(self, transfer: CreditTransfer):
+        pass
+
+    def _aggregate_transfers(self, transfer: CreditTransfer):
+        # Not specified as an abstract method because a few classes don't use it
+        pass
+
+    def _aggregate_transfer_query(self, transfer: CreditTransfer, query: Query):
         return pipe(query,
+                    not_this_transfer_filter(transfer),
                     matching_sender_user_filter(transfer),
                     not_rejected_filter,
                     after_time_period_filter(self.time_period_days),
-                    self.transfer_filter(transfer))
+                    self.custom_aggregation_filter(transfer))
+
+    def __repr__(self):
+        return f"<{self.__class__}: {self.name}>"
 
     def __init__(self,
                  name: str,
                  applied_to_transfer_types: AppliedToTypes,
                  application_filter: Callable,
                  time_period_days: int,
-                 transfer_filter: Optional[Query.filter] = matching_transfer_type_filter,
-                 no_transfer_allowed: [bool] = False,
-                 total_amount: Optional[int] = None,
-                 transfer_count: Optional[int] = None,
-                 transfer_balance_fraction: Optional[float] = None):
-
+                 aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+                 ):
         self.name = name
 
         # Force to list of tuples to ensure the use of 'in' behaves as expected
@@ -236,81 +299,270 @@ class TransferLimit(object):
         self.application_filter = application_filter
         self.time_period_days = time_period_days
         # TODO: Make LIMIT_EXCHANGE_RATE configurable per org
-        self.transfer_filter = transfer_filter
+        self.custom_aggregation_filter = aggregation_filter
 
-        self.no_transfer_allowed = no_transfer_allowed
-        self.total_amount = int(total_amount * config.LIMIT_EXCHANGE_RATE) if total_amount else None
-        self.transfer_count = transfer_count
-        self.transfer_balance_fraction = transfer_balance_fraction
 
-        if reduce(lambda x, y: x + bool(y not in [None, False]),
-                  [no_transfer_allowed, total_amount, transfer_count or transfer_balance_fraction], 0) != 1:
+class TotalAmountLimit(TransferLimit):
 
-            raise TransferLimitCreationError(
-                'Must set exactly one of no_exchange_allowed, total_amount,'
-                ' or transfer_count and transfer_balance_fraction'
+    def validate_transfer(self, transfer: CreditTransfer):
+        allowance = self.get_allowance(transfer)
+        if allowance < int(transfer.transfer_amount):
+            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(allowance, 0))
+
+            raise TransferAmountLimitError(
+                transfer_amount_limit=self.total_amount,
+                transfer_amount_avail=allowance,
+                limit_time_period_days=self.time_period_days,
+                token=transfer.token.name,
+                message=message
             )
+
+    def get_allowance(self, transfer: CreditTransfer):
+        return self.total_amount - self._aggregate_transfers(transfer)
+
+    def _aggregate_transfers(self, transfer: CreditTransfer):
+        return self._aggregate_transfer_query(
+            transfer,
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        ).execution_options(show_all=True).first().total or 0
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: Callable,
+            time_period_days: int,
+            total_amount: int,
+            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
+            application_filter,
+            time_period_days,
+            aggregation_filter
+        )
+
+        self.total_amount = int(total_amount * config.LIMIT_EXCHANGE_RATE)
+
+
+class MinimumSentLimit(TransferLimit):
+
+    def validate_transfer(self, transfer: CreditTransfer):
+        allowance = self.get_allowance(transfer)
+        if allowance < int(transfer.transfer_amount):
+            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(allowance, 0))
+
+            raise MinimumSentLimitError(
+                transfer_amount_limit=self._aggregate_sent(transfer),
+                transfer_amount_avail=allowance,
+                limit_time_period_days=self.time_period_days,
+                token=transfer.token.name,
+                message=message
+            )
+
+    def get_allowance(self, transfer: CreditTransfer):
+        return self._aggregate_sent(transfer) - self._aggregate_transfers(transfer)
+
+    def _aggregate_transfers(self, transfer: CreditTransfer):
+        return self._aggregate_transfer_query(
+            transfer,
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        ).execution_options(show_all=True).first().total or 0
+
+    def _aggregate_sent(self, transfer: CreditTransfer):
+        return pipe(
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')),
+            not_this_transfer_filter(transfer),
+            matching_sender_user_filter(transfer),
+            not_rejected_filter,
+            after_time_period_filter(self.time_period_days),
+            regular_payment_filter
+        ).execution_options(show_all=True).first().total or 0
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: Callable,
+            time_period_days: int,
+            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
+            application_filter,
+            time_period_days,
+            aggregation_filter
+        )
+
+
+class TransferCountLimit(TransferLimit):
+
+    def validate_transfer(self, transfer: CreditTransfer):
+        allowance = self.get_allowance(transfer)
+
+        if (allowance or 0) < self.transfer_count:
+            message = 'Account Limit "{}" reached. Allowed {} transaction per {} days' \
+                .format(self.name, self.transfer_count, self.time_period_days)
+            raise TransferCountLimitError(
+                transfer_count_limit=self.transfer_count,
+                limit_time_period_days=self.time_period_days,
+                token=transfer.token.name,
+                message=message
+            )
+
+    def get_allowance(self, transfer: CreditTransfer):
+        return self.transfer_count - self._aggregate_transfers(transfer)
+
+    def _aggregate_transfers(self, transfer: CreditTransfer):
+        return self._aggregate_transfer_query(
+            transfer,
+            db.session.query(func.count(CreditTransfer.id).label('count'))
+        ).execution_options(show_all=True).first().count
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: Callable,
+            time_period_days: int,
+            transfer_count: int,
+            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
+            application_filter,
+            time_period_days,
+            aggregation_filter
+        )
+
+        self.transfer_count = transfer_count
+
+
+class BalanceFractionLimit(TransferLimit):
+
+    def validate_transfer(self, transfer: CreditTransfer):
+        allowance = self.get_allowance(transfer)
+        if allowance < transfer.transfer_amount:
+            message = 'Account % Limit "{}" reached. {} available'.format(
+                self.name,
+                max(allowance, 0)
+            )
+            raise TransferBalanceFractionLimitError(
+                transfer_balance_fraction_limit=self.balance_fraction,
+                transfer_amount_avail=int(allowance),
+                limit_time_period_days=self.time_period_days,
+                token=transfer.token.name,
+                message=message
+            )
+
+    def get_allowance(self, transfer: CreditTransfer):
+        return self.balance_fraction * transfer.sender_transfer_account.balance
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: Callable,
+            time_period_days: int,
+            balance_fraction: float,
+            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
+            application_filter,
+            time_period_days,
+            aggregation_filter
+        )
+
+        self.balance_fraction = balance_fraction
+
+
+class NoTransferAllowedLimit(TransferLimit):
+
+    def validate_transfer(self, transfer: CreditTransfer):
+        raise NoTransferAllowedLimitError(token=transfer.token.name)
+
+    def get_allowance(self, transfer: CreditTransfer):
+        return 0
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: Callable,
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
+            application_filter,
+            0
+        )
 
 
 LIMITS = [
-    TransferLimit('Sempo Level 0: P7', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_not_phone_and_not_kyc_verified, 7,
-                  total_amount=config.TRANSFER_LIMITS['0.P7']),
-    TransferLimit('Sempo Level 0: P30', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
-                  total_amount=config.TRANSFER_LIMITS['0.P30']),
+    TotalAmountLimit('Sempo Level 0: P7', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_not_phone_and_not_kyc_verified, 7,
+                     total_amount=config.TRANSFER_LIMITS['0.P7']),
+    TotalAmountLimit('Sempo Level 0: P30', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
+                     total_amount=config.TRANSFER_LIMITS['0.P30']),
 
-    TransferLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT],
-                  is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
-                  no_transfer_allowed=True),
+    NoTransferAllowedLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT],
+                           is_any_token_and_user_is_not_phone_and_not_kyc_verified),
 
-    TransferLimit('Sempo Level 1: P7', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_phone_but_not_kyc_verified, 7,
-                  total_amount=config.TRANSFER_LIMITS['1.P7']),
-    TransferLimit('Sempo Level 1: P30', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
-                  total_amount=config.TRANSFER_LIMITS['1.P30']),
-    TransferLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT],
-                  is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
-                  no_transfer_allowed=True),
+    TotalAmountLimit('Sempo Level 1: P7', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_phone_but_not_kyc_verified, 7,
+                     total_amount=config.TRANSFER_LIMITS['1.P7']),
+    TotalAmountLimit('Sempo Level 1: P30', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
+                     total_amount=config.TRANSFER_LIMITS['1.P30']),
+    NoTransferAllowedLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT],
+                           is_any_token_and_user_is_phone_but_not_kyc_verified),
 
-    TransferLimit('Sempo Level 2: P7', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_kyc_verified, 7,
-                  total_amount=config.TRANSFER_LIMITS['2.P7']),
-    TransferLimit('Sempo Level 2: P30', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_kyc_verified, 30,
-                  total_amount=config.TRANSFER_LIMITS['2.P30']),
-    TransferLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT],
-                  is_any_token_and_user_is_kyc_verified, 7,
-                  total_amount=config.TRANSFER_LIMITS['2.WD7']),
-    TransferLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT],
-                  is_any_token_and_user_is_kyc_verified, 30,
-                  total_amount=config.TRANSFER_LIMITS['2.WD30']),
+    TotalAmountLimit('Sempo Level 2: P7', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_kyc_verified, 7,
+                     total_amount=config.TRANSFER_LIMITS['2.P7']),
+    TotalAmountLimit('Sempo Level 2: P30', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_kyc_verified, 30,
+                     total_amount=config.TRANSFER_LIMITS['2.P30']),
+    TotalAmountLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT],
+                     is_any_token_and_user_is_kyc_verified, 7,
+                     total_amount=config.TRANSFER_LIMITS['2.WD7']),
+    TotalAmountLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT],
+                     is_any_token_and_user_is_kyc_verified, 30,
+                     total_amount=config.TRANSFER_LIMITS['2.WD30']),
 
-    TransferLimit('Sempo Level 3: P7', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_kyc_business_verified, 7,
-                  total_amount=config.TRANSFER_LIMITS['3.P7']),
-    TransferLimit('Sempo Level 3: P30', GENERAL_PAYMENTS,
-                  is_any_token_and_user_is_kyc_business_verified, 30,
-                  total_amount=config.TRANSFER_LIMITS['3.P30']),
-    TransferLimit('Sempo Level 3: WD7', [WITHDRAWAL, DEPOSIT],
-                  is_any_token_and_user_is_kyc_business_verified, 7,
-                  total_amount=config.TRANSFER_LIMITS['3.WD7']),
-    TransferLimit('Sempo Level 3: WD30', [WITHDRAWAL, DEPOSIT],
-                  is_any_token_and_user_is_kyc_business_verified, 30,
-                  total_amount=config.TRANSFER_LIMITS['3.WD30']),
+    TotalAmountLimit('Sempo Level 3: P7', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_kyc_business_verified, 7,
+                     total_amount=config.TRANSFER_LIMITS['3.P7']),
+    TotalAmountLimit('Sempo Level 3: P30', GENERAL_PAYMENTS,
+                     is_any_token_and_user_is_kyc_business_verified, 30,
+                     total_amount=config.TRANSFER_LIMITS['3.P30']),
+    TotalAmountLimit('Sempo Level 3: WD7', [WITHDRAWAL, DEPOSIT],
+                     is_any_token_and_user_is_kyc_business_verified, 7,
+                     total_amount=config.TRANSFER_LIMITS['3.WD7']),
+    TotalAmountLimit('Sempo Level 3: WD30', [WITHDRAWAL, DEPOSIT],
+                     is_any_token_and_user_is_kyc_business_verified, 30,
+                     total_amount=config.TRANSFER_LIMITS['3.WD30']),
 
+    NoTransferAllowedLimit('GE Liquid Token - Standard User',
+                           [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                           is_user_and_liquid_token),
 
-    TransferLimit('GE Liquid Token - Standard User',
-                  [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                  is_user_and_liquid_token, 7,
-                  transfer_filter=withdrawal_or_agent_out_and_not_excluded_filter,
-                  no_transfer_allowed=True),
+    TransferCountLimit('GE Liquid Token - Group Account User',
+                       [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                       is_group_and_liquid_token, 30,
+                       aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter,
+                       transfer_count=1),
 
-    TransferLimit('GE Liquid Token - Group Account User',
-                  [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                  is_group_and_liquid_token, 30,
-                  transfer_filter=withdrawal_or_agent_out_and_not_excluded_filter,
-                  transfer_count=1, transfer_balance_fraction=0.50)
+    BalanceFractionLimit('GE Liquid Token - Group Account User',
+                         [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                         is_group_and_liquid_token, 30,
+                         aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter,
+                         balance_fraction=0.50)
 ]
-
