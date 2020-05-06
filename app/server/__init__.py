@@ -261,6 +261,8 @@ except:
             return ''
         def trigger(self, *args, **kwargs):
             pass
+        def trigger_batch(self, *args, **kwargs):
+            pass
 
     pusher_client = PusherMock()
 
