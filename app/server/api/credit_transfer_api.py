@@ -9,6 +9,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.blockchain_address import BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
+from server.utils import pusher
 from server.utils.access_control import AccessControl
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
@@ -291,7 +292,9 @@ class CreditTransferAPI(MethodView):
                         transfer_mode=TransferModeEnum.WEB,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue)
+                        queue=queue,
+                        enable_pusher=not is_bulk
+                    )
 
                 elif transfer_type == 'RECLAMATION':
                     transfer = make_payment_transfer(
@@ -303,7 +306,8 @@ class CreditTransferAPI(MethodView):
                         transfer_mode=TransferModeEnum.WEB,
                         require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        queue=queue,
+                        enable_pusher=not is_bulk
                     )
 
                 elif transfer_type == 'DISBURSEMENT':
@@ -316,7 +320,9 @@ class CreditTransferAPI(MethodView):
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                         transfer_mode=TransferModeEnum.WEB,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue)
+                        queue=queue,
+                        enable_pusher=not is_bulk
+                    )
 
                 elif transfer_type == 'BALANCE':
                     transfer = make_target_balance_transfer(
@@ -325,7 +331,9 @@ class CreditTransferAPI(MethodView):
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
                         transfer_mode=TransferModeEnum.WEB,
-                        queue=queue)
+                        queue=queue,
+                        enable_pusher=not is_bulk
+                    )
 
             except (InsufficientBalanceError,
                     AccountNotApprovedError,
@@ -345,12 +353,10 @@ class CreditTransferAPI(MethodView):
                 message = 'Transfer Successful' if auto_resolve else 'Transfer Pending. Must be approved.'
                 if is_bulk:
                     credit_transfers.append(transfer)
-
                     response_list.append({'status': 201, 'message': message})
 
                 else:
                     db.session.flush()
-
                     credit_transfer = credit_transfer_schema.dump(transfer).data
 
                     response_object = {
@@ -364,6 +370,10 @@ class CreditTransferAPI(MethodView):
                     return make_response(jsonify(response_object)), 201
 
         db.session.flush()
+
+        if is_bulk:
+            pusher.push_admin_credit_transfer(credit_transfers)
+
         message = 'Bulk Transfer Creation Successful' if auto_resolve else 'Bulk Transfer Pending. Must be approved.'
         response_object = {
             'message': message,
