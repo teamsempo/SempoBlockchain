@@ -171,11 +171,6 @@ def matching_sender_user_filter(transfer: CreditTransfer, query: Query):
 
 
 @curry
-def not_this_transfer_filter(transfer: CreditTransfer, query: Query):
-    return query.filter(CreditTransfer.id != transfer.id)
-
-
-@curry
 def regular_payment_filter(query: Query):
     return query.filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD)
 
@@ -275,14 +270,13 @@ class TransferLimit(ABC):
 
     def _aggregate_transfer_query(self, transfer: CreditTransfer, query: Query):
         return pipe(query,
-                    not_this_transfer_filter(transfer),
                     matching_sender_user_filter(transfer),
                     not_rejected_filter,
                     after_time_period_filter(self.time_period_days),
                     self.custom_aggregation_filter(transfer))
 
     def __repr__(self):
-        return f"<{self.__class__}: {self.name}>"
+        return f"<{self.__class__.__name__}: {self.name}>"
 
     def __init__(self,
                  name: str,
@@ -321,10 +315,11 @@ class TotalAmountLimit(TransferLimit):
         return self.total_amount - self._aggregate_transfers(transfer)
 
     def _aggregate_transfers(self, transfer: CreditTransfer):
+        # We need to sub the own transfer amount to the allowance because it's hard to exclude it from the aggregation
         return self._aggregate_transfer_query(
             transfer,
             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-        ).execution_options(show_all=True).first().total or 0
+        ).execution_options(show_all=True).first().total - int(transfer.transfer_amount) or 0
 
     def __init__(
             self,
@@ -373,7 +368,6 @@ class MinimumSentLimit(TransferLimit):
     def _aggregate_sent(self, transfer: CreditTransfer):
         return pipe(
             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')),
-            not_this_transfer_filter(transfer),
             matching_sender_user_filter(transfer),
             not_rejected_filter,
             after_time_period_filter(self.time_period_days),
@@ -402,7 +396,7 @@ class TransferCountLimit(TransferLimit):
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.get_allowance(transfer)
 
-        if (allowance or 0) < self.transfer_count:
+        if allowance <= 0:
             message = 'Account Limit "{}" reached. Allowed {} transaction per {} days' \
                 .format(self.name, self.transfer_count, self.time_period_days)
             raise TransferCountLimitError(
@@ -419,7 +413,7 @@ class TransferCountLimit(TransferLimit):
         return self._aggregate_transfer_query(
             transfer,
             db.session.query(func.count(CreditTransfer.id).label('count'))
-        ).execution_options(show_all=True).first().count
+        ).execution_options(show_all=True).first().count - 1
 
     def __init__(
             self,

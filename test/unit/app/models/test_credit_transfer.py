@@ -163,7 +163,7 @@ def test_exclude_transfer_from_ge_limit(create_credit_transfer, other_new_credit
 
     create_credit_transfer.exclude_from_limit_calcs = True
 
-    assert len(other_new_credit_transfer.check_sender_transfer_limits()) == 3
+    assert len(other_new_credit_transfer.check_sender_transfer_limits()) == 4
 
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(create_credit_transfer):
