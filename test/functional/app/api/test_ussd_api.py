@@ -29,7 +29,7 @@ def init_seed(test_client, init_database):
 def test_golden_path_send_token(mocker, test_client,
                                 init_database, initialised_blockchain_network, init_seed):
     token = Token.query.filter_by(symbol="SM1").first()
-    org = OrganisationFactory()
+    org = OrganisationFactory(country_code='KE')
     sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
                          pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
     create_transfer_account_for_user(sender, token, 4220)
@@ -58,7 +58,9 @@ def test_golden_path_send_token(mocker, test_client,
 
     def mock_send_message(phone, message):
         messages.append({'phone': phone, 'message': message})
-    mocker.patch('server.message_processor.send_message', mock_send_message)
+    mocker.patch(f'server.utils.phone._send_twilio_message.submit', mock_send_message)
+    mocker.patch(f'server.utils.phone._send_messagebird_message.submit', mock_send_message)
+    mocker.patch(f'server.utils.phone._send_at_message.submit', mock_send_message)
 
     def req(text):
         response = test_client.post(

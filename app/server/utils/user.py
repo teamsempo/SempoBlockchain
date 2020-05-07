@@ -2,7 +2,6 @@ import threading
 from functools import cmp_to_key
 from typing import Optional, List
 from phonenumbers.phonenumberutil import NumberParseException
-from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.attributes import flag_modified
 from bit import base58
 from flask import current_app, g
@@ -23,14 +22,13 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
-from server import celery_app, message_processor
+from server import celery_app
+from server.utils.phone import send_message
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.i18n import i18n_for
-from server.utils.transfer_enums import TransferSubTypeEnum
 from server.utils.misc import rounded_dollars
-from server.utils.access_control import AccessControl
 
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
@@ -651,7 +649,7 @@ def proccess_create_or_modify_user_request(
     if is_self_sign_up and attribute_dict.get('deviceInfo', None) is not None:
         save_device_info(device_info=attribute_dict.get(
             'deviceInfo'), user=user)
-
+    send_onboarding_sms_messages(user)
     # Location fires an async task that needs to know user ID
     db.session.flush()
 
@@ -694,7 +692,7 @@ def send_onboarding_sms_messages(user):
         token=user.transfer_account.token.name
     )
 
-    message_processor.send_message(user.phone, intro_message)
+    send_message(user.phone, intro_message)
 
     send_terms_message_if_required(user)
 
@@ -703,7 +701,7 @@ def send_terms_message_if_required(user):
 
     if not user.seen_latest_terms:
         terms_message = i18n_for(user, "general_sms.terms")
-        message_processor.send_message(user.phone, terms_message)
+        send_message(user.phone, terms_message)
         user.seen_latest_terms = True
 
 
@@ -721,18 +719,18 @@ def send_onboarding_message(to_phone, first_name, credits, one_time_code):
             current_app.config['CURRENCY_NAME']
         )
 
-        message_processor.send_message(to_phone, receiver_message)
+        send_message(to_phone, receiver_message)
 
 
 def send_phone_verification_message(to_phone, one_time_code):
     if to_phone:
         reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
-        message_processor.send_message(to_phone, reciever_message)
+        send_message(to_phone, reciever_message)
 
 
 def send_sms(user, message_key):
     message = i18n_for(user, "user.{}".format(message_key))
-    message_processor.send_message(user.phone, message)
+    send_message(user.phone, message)
 
 
 def change_pin(user, new_pin):
@@ -755,7 +753,7 @@ def admin_reset_user_pin(user: User):
     user.failed_pin_attempts = 0
 
     pin_reset_message = i18n_for(user, "general_sms.pin_reset")
-    message_processor.send_message(user.phone, pin_reset_message)
+    send_message(user.phone, pin_reset_message)
 
 
 def default_transfer_account(user: User) -> TransferAccount:
@@ -782,9 +780,16 @@ def default_token(user: User) -> Token:
 
 
 def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[User]:
-    user = User.query.execution_options(show_all=True).filter_by(
-        phone=proccess_phone_number(phone_number=phone, region=region)
-    ).first()
+    try:
+        user = User.query.execution_options(show_all=True).filter_by(
+            phone=proccess_phone_number(phone_number=phone, region=region)
+        ).first()
+    except NumberParseException as e:
+        if should_raise:
+            raise e
+        else:
+            return None
+
     if user is not None:
         return user
     else:

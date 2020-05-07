@@ -7,7 +7,6 @@ from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
 from server.models.credit_transfer import CreditTransfer
-from server.models.blockchain_transaction import BlockchainTransaction
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 

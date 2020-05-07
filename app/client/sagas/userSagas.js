@@ -5,37 +5,33 @@ import { handleError } from "../utils";
 import { userSchema } from "../schemas";
 
 import {
-  UPDATE_USER_LIST,
-  DEEP_UPDATE_USER_LIST,
-  LOAD_USER_REQUEST,
-  LOAD_USER_SUCCESS,
-  LOAD_USER_FAILURE,
-  EDIT_USER_REQUEST,
-  EDIT_USER_SUCCESS,
-  EDIT_USER_FAILURE,
-  DELETE_USER_REQUEST,
-  DELETE_USER_SUCCESS,
-  DELETE_USER_FAILURE,
-  CREATE_USER_REQUEST,
-  CREATE_USER_SUCCESS,
-  CREATE_USER_FAILURE
-} from "../reducers/userReducer.js";
-
-import {
   loadUserAPI,
   editUserAPI,
   deleteUserAPI,
   createUserAPI,
   resetPinAPI
 } from "../api/userAPI";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
-import {
-  RESET_PIN_FAILURE,
-  RESET_PIN_REQUEST,
-  RESET_PIN_SUCCESS
-} from "../reducers/userReducer";
+
 import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
 import { browserHistory } from "../app";
+import { MessageAction } from "../reducers/message/actions";
+
+import {
+  CreateUserAction,
+  DeleteUserAction,
+  EditUserAction,
+  LoadUserAction,
+  ResetPinAction,
+  UserListAction
+} from "../reducers/user/actions";
+
+import {
+  CreateUserActionTypes,
+  DeleteUserActionTypes,
+  EditUserActionTypes,
+  LoadUserActionTypes,
+  ResetPinActionTypes
+} from "../reducers/user/types";
 
 function* updateStateFromUser(data) {
   //Schema expects a list of credit transfer objects
@@ -49,54 +45,51 @@ function* updateStateFromUser(data) {
 
   const users = normalizedData.entities.users;
 
-  yield put({ type: DEEP_UPDATE_USER_LIST, users });
+  yield put(UserListAction.deepUpdateUserList(users));
 }
 
-// Load User Saga
 function* loadUser({ payload }) {
   try {
     const load_result = yield call(loadUserAPI, payload);
 
     yield call(updateStateFromUser, load_result.data);
 
-    const users = normalize(load_result.data, userSchema).entities.users;
-    yield put({ type: LOAD_USER_SUCCESS, users });
+    yield put(LoadUserAction.loadUserSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_USER_FAILURE, error: error });
+    yield put(LoadUserAction.loadUserFailure(error.message));
   }
 }
 
 function* watchLoadUser() {
-  yield takeEvery(LOAD_USER_REQUEST, loadUser);
+  yield takeEvery(LoadUserActionTypes.LOAD_USER_REQUEST, loadUser);
 }
 
-// Edit User Saga
 function* editUser({ payload }) {
   try {
     const edit_response = yield call(editUserAPI, payload);
 
     yield call(updateStateFromUser, edit_response.data);
 
-    yield put({ type: EDIT_USER_SUCCESS, edit_user: edit_response });
+    yield put(EditUserAction.editUserSuccess());
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: edit_response.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: edit_response.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: EDIT_USER_FAILURE, error: error });
+    yield put(EditUserAction.editUserFailure(error.message));
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
 function* watchEditUser() {
-  yield takeEvery(EDIT_USER_REQUEST, editUser);
+  yield takeEvery(EditUserActionTypes.EDIT_USER_REQUEST, editUser);
 }
 
 const getUserState = state => state.users.byId;
@@ -105,7 +98,7 @@ const getTransferAccountState = state => state.transferAccounts.byId;
 function* deleteUser({ payload }) {
   try {
     const delete_response = yield call(deleteUserAPI, payload);
-    yield put({ type: DELETE_USER_SUCCESS, delete_response });
+    yield put(DeleteUserAction.deleteUserSuccess());
 
     let userState = yield select(getUserState);
 
@@ -120,29 +113,32 @@ function* deleteUser({ payload }) {
     let users = { ...userState };
     delete users[payload.path];
 
-    yield put({ type: UPDATE_USER_LIST, users });
+    yield put(UserListAction.updateUserList(users));
     yield put({
       type: UPDATE_TRANSFER_ACCOUNTS,
       transfer_accounts: transferAccounts
     });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: delete_response.message
-    });
+    yield put(
+      MessageAction.addMessage({
+        error: false,
+        message: delete_response.message
+      })
+    );
     browserHistory.push("/accounts");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: DELETE_USER_FAILURE, error: error });
+    yield put(DeleteUserAction.deleteUserFailure(error.message));
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
 function* watchDeleteUser() {
-  yield takeEvery(DELETE_USER_REQUEST, deleteUser);
+  yield takeEvery(DeleteUserActionTypes.DELETE_USER_REQUEST, deleteUser);
 }
 
 function* resetPin({ payload }) {
@@ -151,24 +147,27 @@ function* resetPin({ payload }) {
 
     yield call(updateStateFromUser, reset_response.data);
 
-    yield put({ type: RESET_PIN_SUCCESS, reset_user: reset_response });
+    yield put(ResetPinAction.resetPinSuccess());
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: reset_response.message
-    });
+    yield put(
+      MessageAction.addMessage({
+        error: false,
+        message: reset_response.message
+      })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: RESET_PIN_FAILURE, error: error });
+    yield put(ResetPinAction.resetPinFailure(error.message));
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
 function* watchResetPin() {
-  yield takeEvery(RESET_PIN_REQUEST, resetPin);
+  yield takeEvery(ResetPinActionTypes.RESET_PIN_REQUEST, resetPin);
 }
 
 function* createUser({ payload }) {
@@ -177,16 +176,16 @@ function* createUser({ payload }) {
 
     yield call(updateStateFromUser, result.data);
 
-    yield put({ type: CREATE_USER_SUCCESS, result });
+    yield put(CreateUserAction.createUserSuccess(result));
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_USER_FAILURE, error: error.message });
+    yield put(CreateUserAction.createUserFailure(error.message));
   }
 }
 
 function* watchCreateUser() {
-  yield takeEvery(CREATE_USER_REQUEST, createUser);
+  yield takeEvery(CreateUserActionTypes.CREATE_USER_REQUEST, createUser);
 }
 
 export default function* userSagas() {

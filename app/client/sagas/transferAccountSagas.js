@@ -14,14 +14,15 @@ import {
   EDIT_TRANSFER_ACCOUNT_FAILURE
 } from "../reducers/transferAccountReducer.js";
 
-import { DEEP_UPDATE_USER_LIST } from "../reducers/userReducer";
 import { UPDATE_CREDIT_TRANSFER_LIST } from "../reducers/creditTransferReducer";
 
 import {
   loadTransferAccountListAPI,
   editTransferAccountAPI
 } from "../api/transferAccountAPI.js";
-import { ADD_FLASH_MESSAGE } from "../reducers/messageReducer";
+
+import { MessageAction } from "../reducers/message/actions";
+import { UserListAction } from "../reducers/user/actions";
 
 function* updateStateFromTransferAccount(data) {
   //Schema expects a list of transfer account objects
@@ -37,7 +38,7 @@ function* updateStateFromTransferAccount(data) {
 
   const users = normalizedData.entities.users;
   if (users) {
-    yield put({ type: DEEP_UPDATE_USER_LIST, users });
+    yield put(UserListAction.deepUpdateUserList(users));
   }
 
   const credit_sends = normalizedData.entities.credit_sends;
@@ -78,7 +79,9 @@ function* loadTransferAccounts({ payload }) {
 
     yield put({ type: LOAD_TRANSFER_ACCOUNTS_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
@@ -95,17 +98,17 @@ function* editTransferAccount({ payload }) {
 
     yield put({ type: EDIT_TRANSFER_ACCOUNT_SUCCESS });
 
-    yield put({
-      type: ADD_FLASH_MESSAGE,
-      error: false,
-      message: edit_response.message
-    });
+    yield put(
+      MessageAction.addMessage({ error: false, message: edit_response.message })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put({ type: EDIT_TRANSFER_ACCOUNT_FAILURE, error: error });
 
-    yield put({ type: ADD_FLASH_MESSAGE, error: true, message: error.message });
+    yield put(
+      MessageAction.addMessage({ error: true, message: error.message })
+    );
   }
 }
 
