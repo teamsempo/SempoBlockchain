@@ -50,7 +50,7 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     highest_id_in_cache = int(red.get(HIGHEST_ID_CACHED) or 0)
     cache_result = _load_cache(CACHE_RESULT)
     filtered_query = query.filter(object_model.id > highest_id_in_cache)
-    
+
     #Combines results
     result = _handle_combinatory_strategy(filtered_query, cache_result, strategy)
 

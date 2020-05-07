@@ -74,7 +74,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
     total_spent = total_spent.filter(*standard_payment_filters).filter(*date_filter)
     total_spent = metrics_cache.execute_with_partial_history_cache('total_spent', total_spent, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
-    
+
     total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
     total_exchanged = total_exchanged.filter(*exchanged_filters).filter(*date_filter)
@@ -107,8 +107,8 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
     daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
         .filter(*standard_payment_filters) \
-        .filter(*date_filter) \
-            .all()
+        .filter(*date_filter)
+    daily_transaction_volume = metrics_cache.execute_with_partial_history_cache('daily_transaction_volume', daily_transaction_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
 
     daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                 func.date_trunc('day', CreditTransfer.created).label('date'))
@@ -117,16 +117,18 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         .filter(*disbursement_filters) \
         .filter(*date_filter)
     daily_disbursement_volume = metrics_cache.execute_with_partial_history_cache('daily_disbursement_volume', daily_disbursement_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
+
     transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
     transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
     transfer_use_breakdown = transfer_use_breakdown.filter(*transfer_use_filters) \
         .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
             .all()
+
     try:
-        last_day = daily_transaction_volume[0].date
-        last_day_volume = daily_transaction_volume[0].volume
+        last_day = daily_transaction_volume[0][1]
+        last_day_volume = daily_transaction_volume[0][0]
         transaction_vol_list = [
-            {'date': item.date.isoformat(), 'volume': item.volume} for item in daily_transaction_volume
+            {'date': item[1].isoformat(), 'volume': item[0]} for item in daily_transaction_volume
         ]
     except IndexError:  # No transactions
         last_day = datetime.datetime.utcnow()
@@ -161,7 +163,6 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
         'filter_active': filter_active
     }
-
     return data
 
 def apply_filters(query, filters, query_table):
