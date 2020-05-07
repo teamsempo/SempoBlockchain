@@ -15,9 +15,9 @@ from server.exceptions import (
     TransferCountLimitError,
     TransferBalanceFractionLimitError)
 
-from server.models.kyc_application import KycApplication
 from server.models import token
 from server import db
+from server.sempo_types import TransferAmount
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum, TransferStatusEnum
 from server.utils.access_control import AccessControl
@@ -206,54 +206,6 @@ def empty_filter(transfer: CreditTransfer, query: Query):
     return query
 
 
-# class TransferLimit(ABC):
-#
-#     def __repr__(self):
-#         return f"<TransferLimit {self.name}>"
-#
-#     def _aggregate_transfer_query(self, transfer: CreditTransfer, query: Query):
-#
-#         return pipe(query,
-#                     matching_sender_user_filter(transfer),
-#                     not_rejected_filter,
-#                     after_time_period_filter(self.time_period_days),
-#                     self.transfer_filter(transfer))
-#
-#     def __init__(self,
-#                  name: str,
-#                  applied_to_transfer_types: AppliedToTypes,
-#                  application_filter: Callable,
-#                  time_period_days: int,
-#                  transfer_filter: Optional[Query.filter] = matching_transfer_type_filter,
-#                  no_transfer_allowed: [bool] = False,
-#                  total_amount: Optional[int] = None,
-#                  transfer_count: Optional[int] = None,
-#                  transfer_balance_fraction: Optional[float] = None):
-#
-#         self.name = name
-#
-#         # Force to list of tuples to ensure the use of 'in' behaves as expected
-#         self.applied_to_transfer_types = [tuple(t) if isinstance(t, list) else t for t in applied_to_transfer_types]
-#
-#         self.application_filter = application_filter
-#         self.time_period_days = time_period_days
-#         # TODO: Make LIMIT_EXCHANGE_RATE configurable per org
-#         self.transfer_filter = transfer_filter
-#
-#         self.no_transfer_allowed = no_transfer_allowed
-#         self.total_amount = int(total_amount * config.LIMIT_EXCHANGE_RATE) if total_amount else None
-#         self.transfer_count = transfer_count
-#         self.transfer_balance_fraction = transfer_balance_fraction
-#
-#         if reduce(lambda x, y: x + bool(y not in [None, False]),
-#                   [no_transfer_allowed, total_amount, transfer_count or transfer_balance_fraction], 0) != 1:
-#
-#             raise TransferLimitCreationError(
-#                 'Must set exactly one of no_exchange_allowed, total_amount,'
-#                 ' or transfer_count and transfer_balance_fraction'
-#             )
-
-
 class TransferLimit(ABC):
 
     @abstractmethod
@@ -261,7 +213,7 @@ class TransferLimit(ABC):
         pass
 
     @abstractmethod
-    def get_allowance(self, transfer: CreditTransfer):
+    def get_allowance(self, transfer: CreditTransfer) -> Union[int, TransferAmount]:
         pass
 
     def _aggregate_transfers(self, transfer: CreditTransfer):
@@ -296,7 +248,13 @@ class TransferLimit(ABC):
         self.custom_aggregation_filter = aggregation_filter
 
 
-class TotalAmountLimit(TransferLimit):
+class AmountLimit(TransferLimit):
+    @abstractmethod
+    def get_allowance(self, transfer: CreditTransfer) -> TransferAmount:
+        pass
+
+
+class TotalAmountLimit(AmountLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.get_allowance(transfer)
@@ -341,7 +299,7 @@ class TotalAmountLimit(TransferLimit):
         self.total_amount = int(total_amount * config.LIMIT_EXCHANGE_RATE)
 
 
-class MinimumSentLimit(TransferLimit):
+class MinimumSentLimit(AmountLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.get_allowance(transfer)
@@ -391,51 +349,7 @@ class MinimumSentLimit(TransferLimit):
         )
 
 
-class TransferCountLimit(TransferLimit):
-
-    def validate_transfer(self, transfer: CreditTransfer):
-        allowance = self.get_allowance(transfer)
-
-        if allowance <= 0:
-            message = 'Account Limit "{}" reached. Allowed {} transaction per {} days' \
-                .format(self.name, self.transfer_count, self.time_period_days)
-            raise TransferCountLimitError(
-                transfer_count_limit=self.transfer_count,
-                limit_time_period_days=self.time_period_days,
-                token=transfer.token.name,
-                message=message
-            )
-
-    def get_allowance(self, transfer: CreditTransfer):
-        return self.transfer_count - self._aggregate_transfers(transfer)
-
-    def _aggregate_transfers(self, transfer: CreditTransfer):
-        return self._aggregate_transfer_query(
-            transfer,
-            db.session.query(func.count(CreditTransfer.id).label('count'))
-        ).execution_options(show_all=True).first().count - 1
-
-    def __init__(
-            self,
-            name: str,
-            applied_to_transfer_types: AppliedToTypes,
-            application_filter: Callable,
-            time_period_days: int,
-            transfer_count: int,
-            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
-    ):
-        super().__init__(
-            name,
-            applied_to_transfer_types,
-            application_filter,
-            time_period_days,
-            aggregation_filter
-        )
-
-        self.transfer_count = transfer_count
-
-
-class BalanceFractionLimit(TransferLimit):
+class BalanceFractionLimit(AmountLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.get_allowance(transfer)
@@ -476,13 +390,57 @@ class BalanceFractionLimit(TransferLimit):
         self.balance_fraction = balance_fraction
 
 
+class TransferCountLimit(TransferLimit):
+
+    def validate_transfer(self, transfer: CreditTransfer):
+        allowance = self.get_allowance(transfer)
+
+        if allowance <= 0:
+            message = 'Account Limit "{}" reached. Allowed {} transaction per {} days' \
+                .format(self.name, self.transfer_count, self.time_period_days)
+            raise TransferCountLimitError(
+                transfer_count_limit=self.transfer_count,
+                limit_time_period_days=self.time_period_days,
+                token=transfer.token.name,
+                message=message
+            )
+
+    def get_allowance(self, transfer: CreditTransfer) -> int:
+        return self.transfer_count - self._aggregate_transfers(transfer)
+
+    def _aggregate_transfers(self, transfer: CreditTransfer):
+        return self._aggregate_transfer_query(
+            transfer,
+            db.session.query(func.count(CreditTransfer.id).label('count'))
+        ).execution_options(show_all=True).first().count - 1
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: Callable,
+            time_period_days: int,
+            transfer_count: int,
+            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
+            application_filter,
+            time_period_days,
+            aggregation_filter
+        )
+
+        self.transfer_count = transfer_count
+
+
 class NoTransferAllowedLimit(TransferLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         raise NoTransferAllowedLimitError(token=transfer.token.name)
 
-    def get_allowance(self, transfer: CreditTransfer):
-        return 0
+    def get_allowance(self, transfer: CreditTransfer) -> None:
+        return None
 
     def __init__(
             self,
@@ -496,6 +454,20 @@ class NoTransferAllowedLimit(TransferLimit):
             application_filter,
             0
         )
+
+
+# class ContextualisedLimit(object):
+#     """
+#     Binds a transfer to a limit, so that get_allowance can be easily accessed
+#     """
+#
+#     def get_allowance(self) -> Union[int, TransferAmount]:
+#         return self.limit.get_allowance(self.transfer)
+#
+#     def __init__(self, limit: TransferLimit, transfer: CreditTransfer):
+#         self.limit = limit
+#         self.transfer = transfer
+#
 
 
 LIMITS = [

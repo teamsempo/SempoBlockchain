@@ -26,7 +26,7 @@ from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
-from server.utils.transfer_limits import TransferLimit
+from server.utils.transfer_limits import TransferLimit, AmountLimit, BalanceFractionLimit, TotalAmountLimit
 
 
 class TokenProcessor(object):
@@ -74,7 +74,7 @@ class TokenProcessor(object):
         :param user:
         :param token:
         :param transfer_account:
-        :return: lowest limit applicable for a given CreditTransfer
+        :return: lowest amount limit applicable for a given CreditTransfer
         """
 
         with ephemeral_alchemy_object(
@@ -91,37 +91,19 @@ class TokenProcessor(object):
 
             if len(limits) == 0:
                 return None
-            else:
-                # should only ever be one ge limit
-                ge_limit = [limit for limit in limits if 'GE Liquid Token' in limit.name]
 
-                lowest_limit = None
-                lowest_amount_avail = float('inf')
+            amount_limits = filter(lambda l: isinstance(l, AmountLimit), limits)
 
-                for limit in limits:
-                    if 'GE Liquid Token' not in limit.name:
-                        transaction_volume = limit._aggregate_transfer_query(
-                            dummy_transfer,
-                            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-                        ).execution_options(show_all=True).first().total
+            sorted_amount_limits = sorted(amount_limits, key=lambda l: l.get_allowance(dummy_transfer))
 
-                        amount_avail = limit.total_amount - (transaction_volume or 0)
-                        fraction = ge_limit[0].transfer_balance_fraction or 0
-                        if amount_avail < (fraction * transfer_account.balance)\
-                                and amount_avail < lowest_amount_avail:
-                            lowest_limit = limit
-                            lowest_amount_avail = amount_avail
-
-                if lowest_limit:
-                    return lowest_limit
-                else:
-                    return ge_limit[0]
+            return sorted_amount_limits[0] if len(sorted_amount_limits) > 0 else None
 
     @staticmethod
     def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
-        if limit is not None and limit.transfer_balance_fraction is not None:
-            return limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
-        elif limit.total_amount is not None:
+        if isinstance(limit, BalanceFractionLimit):
+            # TODO: limit.get_allowance should be able to pull this off on its own (can't b/c get_allowance needs a transfer)
+            return limit.balance_fraction * TokenProcessor.get_balance(user)
+        elif isinstance(limit, TotalAmountLimit):
             return limit.total_amount
         else:
             return None
@@ -353,9 +335,9 @@ class TokenProcessor(object):
             #         and token_info['limit'].transfer_balance_fraction is not None)
 
         def ge_string(t):
-            if t['limit'].transfer_balance_fraction:
+            if isinstance(t['limit'], BalanceFractionLimit):
                 # TODO: This doesn't seem DRY with respect to 'get default exchange rate'
-                allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
+                allowed_amount = rounded_dollars(t['limit'].balance_fraction * t['balance'])
                 rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
                 return (
                     f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
