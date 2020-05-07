@@ -1,24 +1,59 @@
 #!/usr/bin/env bash
 set -m
+set -e
 cd ../
 
 PYTHONUNBUFFERED=1
 
 source $1
 
-echo "This will wipe ALL local Sempo data."
-echo "Persist Ganache? (y/N)"
-read ganachePersistInput
-
-if [ -z ${MASTER_WALLET_PK+x} ]
+if [ -z ${PGUSER+x} ]
 then
-echo "\$MASTER_WALLET_PK is empty"
-exit 0
+echo "[WARN] PGUSER environment variable not set, defaulting to postgres user 'postgres'"
 fi
 
-set +e
+if [ -z ${PGPASSWORD+x} ]
+then
+echo "[WARN] PGPASSWORD environment variable not set, defaulting to postgres password 'password'"
+fi
+
+
+echo "This will wipe ALL local Sempo data"
+
+echo "Reset Local Secrets? y/N"
+read resetSecretsInput
+
+echo "Persist Ganache? y/N"
+read ganachePersistInput
+
+echo "Create Dev Data? (s)mall/(m)edium/(l)arge/(N)o"
+read testDataInput
+
+if [ "$testDataInput" == 's' ]; then
+    echo "Will create Small Dev Dataset"
+    testdata='small'
+elif [ "$testDataInput" == 'm' ]; then
+    echo "Will create Medium Dev Dataset"
+    testdata='medium'
+elif [ "$testDataInput" == 'l' ]; then
+    echo "Will create Large Dev Dataset"
+    testdata='large'
+else
+    echo "Will not create Dev Dataset"
+    testdata='none'
+fi
+
+if [ "$resetSecretsInput" == "y" ]; then
+  echo ~~~~Creating Secrets
+  cd ./config_files/
+  python generate_secrets.py
+  cd ../
+fi
+
+MASTER_WALLET_PK=$(awk -F "=" '/master_wallet_private_key/ {print $2}' ./config_files/secret/local_secrets.ini  | tr -d ' ')
 
 echo ~~~~Killing any leftover workers or app
+set +e
 kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
 kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
 
@@ -32,16 +67,19 @@ echo ~~~~Resetting postgres
 echo If this section hangs, you might have a bunch of idle postgres connections. Kill them using
 echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
 
-db_server=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@localhost:5432
-app_db=$db_server/${APP_DB:-sempo_blockchain_local}
-eth_worker_db=$db_server/${APP_DB:-eth_worker}
+db_server=postgres://${PGUSER:-postgres}:${PGPASSWORD:-password}@localhost:5432
+app_db=$db_server/${APP_DB:-sempo_app}
+eth_worker_db=$db_server/${WORKER_DB:-eth_worker}
 
-psql $app_db -c 'DROP SCHEMA public CASCADE'
-psql $app_db -c 'CREATE SCHEMA public'
+set -e
+psql $db_server -c ''
 
-psql $eth_worker_db -c 'DROP SCHEMA public CASCADE'
-psql $eth_worker_db -c 'CREATE SCHEMA public'
+set +e
 
+psql $db_server -c "DROP DATABASE IF EXISTS ${APP_DB:-sempo_app}"
+psql $db_server -c "DROP DATABASE IF EXISTS ${WORKER_DB:-sempo_eth_worker}"
+psql $db_server -c "CREATE DATABASE ${APP_DB:-sempo_app}"
+psql $db_server -c "CREATE DATABASE ${WORKER_DB:-sempo_eth_worker}"
 
 cd app
 python manage.py db upgrade
@@ -53,13 +91,14 @@ echo ~~~~Resetting Ganache
 cd ../
 kill $(ps aux | grep '[g]anache-cli' | awk '{print $2}')
 
-if [ $ganachePersistInput != y ]
+if [ "$ganachePersistInput" == 'y' ]
 then
-  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
-else
+  echo clearing old ganache data
   rm -R ./ganacheDB
   mkdir ganacheDB
   ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" --db './ganacheDB' &
+else
+  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
 fi
 
 sleep 5
@@ -79,21 +118,28 @@ echo ~~~Starting App
 
 cd ../
 python -u run.py &
-sleep 5
+sleep 10
 
 echo ~~~Creating Default Account
-curl 'http://0.0.0.0:9000/api/v1/auth/register/' -H 'Connection: keep-alive' -H 'Accept: application/json' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36' -H 'Content-Type: application/json' -H 'Origin: http://0.0.0.0:9000' -H 'Referer: http://0.0.0.0:9000/login/sign-up' -H 'Accept-Language: en-US,en;q=0.9' -H 'Cookie: _ga=GA1.1.889304486.1568334223; _hp2_id.2461187681=%7B%22userId%22%3A%221109895996535790%22%2C%22pageviewId%22%3A%224425033411764656%22%2C%22sessionId%22%3A%221479247222978424%22%2C%22identity%22%3Anull%2C%22trackerVersion%22%3A%224.0%22%7D' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
+curl 'http://localhost:9000/api/v1/auth/register/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
 psql $app_db -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
 python -u devtools/contract_setup_script.py
 
+if [[ "$testdata" != 'none' ]]; then
+    echo ~~~Creating test data
+    cd ./app/migrations/
+    python -u dev_data.py ${testdata}
+fi
+
 echo ~~~Killing Python Processes
 sleep 5
 set +e
 kill -9 $(ps aux | grep '[r]un.py' | awk '{print $2}')
 kill -9 $(ps aux | grep '[c]elery' | awk '{print $2}')
+sleep 2
 
 echo ~~~Done Setup! Bringing Ganache to foreground
 fg 2
