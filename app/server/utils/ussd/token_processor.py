@@ -98,11 +98,8 @@ class TokenProcessor(object):
                 return None
 
             amount_limits = filter(lambda l: isinstance(l, AmountLimit), limits)
-
             with_amounts = [(limit, limit.available_amount(dummy_transfer)) for limit in amount_limits]
-
             sorted_amount_limits = sorted(with_amounts, key=lambda l: l[1])
-
             return sorted_amount_limits[0] if len(sorted_amount_limits) > 0 else None
 
     @staticmethod

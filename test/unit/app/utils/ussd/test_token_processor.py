@@ -172,6 +172,11 @@ def test_exchange_token(mocker, test_client, init_database, initialised_blockcha
         return from_amount * 1.2
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
+    def mock_validate(self, transfer):
+        pass
+    mocker.patch('server.utils.transfer_limits.MinimumSentLimit.validate_transfer', mock_validate)
+
+
     TokenProcessor.exchange_token(sender, agent, 1000)
     assert default_transfer_account(sender).balance == 19000
     assert default_transfer_account(agent).balance == 31200

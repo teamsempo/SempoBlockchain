@@ -256,7 +256,7 @@ class AmountLimit(TransferLimit):
         return self._aggregate_transfer_query(
             transfer,
             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-        ).execution_options(show_all=True).first().total - int(transfer.transfer_amount) or 0
+        ).execution_options(show_all=True).first().total - int(transfer.transfer_amount)
 
 
 class TotalAmountLimit(AmountLimit):
@@ -302,7 +302,7 @@ class MinimumSentLimit(AmountLimit):
     def validate_transfer(self, transfer: CreditTransfer):
         available = self.available_amount(transfer)
         if available < int(transfer.transfer_amount):
-            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(allowance, 0))
+            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(available, 0))
 
             raise MinimumSentLimitError(
                 transfer_amount_limit=self._aggregate_sent(transfer),
@@ -512,7 +512,12 @@ LIMITS = [
                          [AGENT_OUT_PAYMENT, WITHDRAWAL],
                          is_group_and_liquid_token, 30,
                          aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter,
-                         balance_fraction=0.50)
+                         balance_fraction=0.50),
+
+    MinimumSentLimit('GE Liquid Token - Group Account User',
+                     [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                     is_group_and_liquid_token, 30,
+                     aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter)
 ]
 
 
