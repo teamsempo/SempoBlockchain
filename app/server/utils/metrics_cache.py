@@ -8,10 +8,9 @@ import pickle
 
 SUM = 'SUM'
 SUM_OBJECTS ='SUM_OBJECTS'
-TIMESERIES ='TIMESERIES'
 COUNT ='COUNT'
 
-valid_strategies = [SUM, TIMESERIES, COUNT, SUM_OBJECTS]
+valid_strategies = [SUM, COUNT, SUM_OBJECTS]
 
 def _store_cache(key, value):
     pickled_object = pickle.dumps(value)
