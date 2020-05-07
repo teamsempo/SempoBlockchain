@@ -202,7 +202,7 @@ class CreditTransferList extends React.Component {
 
     if (this.props.login.adminTier === "view") {
       return blockchainAddress;
-    } else if (sender && firstName) {
+    } else if (sender && (firstName || lastName)) {
       return (
         <a
           style={{ cursor: "pointer" }}
@@ -210,7 +210,9 @@ class CreditTransferList extends React.Component {
             this.navigateToAccount(creditTransfer.sender_transfer_account_id)
           }
         >
-          {firstName + " " + lastName}
+          {(firstName === null ? "" : firstName) +
+            " " +
+            (lastName === null ? "" : lastName)}
         </a>
       );
     } else if (creditTransfer.transfer_type === "DISBURSEMENT" && email) {
@@ -236,7 +238,7 @@ class CreditTransferList extends React.Component {
 
     if (this.props.login.adminTier === "view") {
       return blockchainAddress;
-    } else if (recipient && firstName) {
+    } else if (recipient && (firstName || lastName)) {
       return (
         <a
           style={{ cursor: "pointer" }}
@@ -244,7 +246,9 @@ class CreditTransferList extends React.Component {
             this.navigateToAccount(creditTransfer.recipient_transfer_account_id)
           }
         >
-          {firstName + " " + lastName}
+          {(firstName === null ? "" : firstName) +
+            " " +
+            (lastName === null ? "" : lastName)}
         </a>
       );
     } else if (creditTransfer.transfer_type === "RECLAMATION" && email) {
