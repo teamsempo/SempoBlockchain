@@ -70,8 +70,7 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
         if limit:
             assert "{:.2f} SM1 (1 SM1 = 1.41 AUD)".format(limit * 200) in message
             assert "{:.2f} SM2 (1 SM2 = 0.84 AUD)".format(limit * 350) in message
-
-    mocker.patch('server.message_processor.send_message', mock_send_message)
+    mocker.patch('server.utils.phone.send_message', mock_send_message)
     TokenProcessor.send_balance_sms(user)
 
 
@@ -99,7 +98,7 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
     def mock_send_message(phone, message):
         assert exchange_text in message
         assert limit_text in message
-    mocker.patch('server.message_processor.send_message', mock_send_message)
+    mocker.patch('server.utils.phone.send_message', mock_send_message)
     TokenProcessor.fetch_exchange_rate(user)
 
 @pytest.mark.parametrize("lang, token1_symbol, token2_symbol, recipient_balance, expected_send_msg, expected_receive_msg", [
@@ -118,11 +117,11 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
      "Umepokea 15.00 SM2 = 10.00 SM1 kutoka kwa Bob Foo")
 ])
 def test_send_token(mocker, test_client, init_database, initialised_blockchain_network,
-                    lang,
+                    lang, mock_sms_apis,
                     token1_symbol, token2_symbol,
                     recipient_balance, expected_send_msg, expected_receive_msg):
 
-    org = OrganisationFactory()
+    org = OrganisationFactory(country_code='KE')
     sender = UserFactory(preferred_language=lang, phone=phone(), first_name="Bob", last_name="Foo",
                          default_organisation=org)
     token1 = Token.query.filter_by(symbol=token1_symbol).first()
@@ -140,15 +139,11 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
             return from_amount * 0.75
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
-    messages = []
-
-    def mock_send_message(phone, message):
-        messages.append({'phone': phone, 'message': message})
-    mocker.patch('server.message_processor.send_message', mock_send_message)
-
     TokenProcessor.send_token(sender, recipient, 1000, "A reason", 1)
     assert default_transfer_account(sender).balance == 19000
     assert default_transfer_account(recipient).balance == recipient_balance
+
+    messages = mock_sms_apis
 
     assert len(messages) == 2
     sent_message = messages[0]
@@ -159,8 +154,8 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
     assert expected_receive_msg in received_message['message']
 
 
-def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network):
-    org = OrganisationFactory()
+def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network, mock_sms_apis):
+    org = OrganisationFactory(country_code='KE')
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo", default_organisation=org)
     sender.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
@@ -177,15 +172,11 @@ def test_exchange_token(mocker, test_client, init_database, initialised_blockcha
         return from_amount * 1.2
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
-    messages = []
-
-    def mock_send_message(phone, message):
-        messages.append({'phone': phone, 'message': message})
-    mocker.patch('server.message_processor.send_message', mock_send_message)
-
     TokenProcessor.exchange_token(sender, agent, 1000)
     assert default_transfer_account(sender).balance == 19000
     assert default_transfer_account(agent).balance == 31200
+
+    messages = mock_sms_apis
 
     assert len(messages) == 2
     sent_message = messages[0]

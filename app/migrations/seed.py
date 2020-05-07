@@ -346,7 +346,7 @@ def create_reserve_token(app):
     return None
 
 
-def create_master_organisation(reserve_token):
+def create_master_organisation(app, reserve_token):
 
     print_section_title('Creating/Updating Master Organisation')
 
@@ -355,7 +355,10 @@ def create_master_organisation(reserve_token):
         print('Creating master organisation')
         if reserve_token:
             print('Binding to reserve token')
-        master_organisation = Organisation(name='Reserve', is_master=True, token=reserve_token)
+        master_organisation = Organisation(
+            name='Reserve', is_master=True,
+            token=reserve_token, country_code=app.config.get('DEFAULT_COUNTRY', 'AU')
+        )
         db.session.add(master_organisation)
 
         db.session.commit()
@@ -389,7 +392,7 @@ if __name__ == '__main__':
     create_business_categories()
 
     reserve_token = create_reserve_token(current_app)
-    create_master_organisation(reserve_token)
+    create_master_organisation(current_app, reserve_token)
 
     create_float_wallet(current_app)
 
