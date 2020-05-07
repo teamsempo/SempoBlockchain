@@ -24,11 +24,15 @@ def _load_cache(key):
         return None
     return pickle.loads(cached_object)       
 
-def execute_with_partial_history_cache(metric_name, query, object_model, strategy):
+def execute_with_partial_history_cache(metric_name, query, object_model, strategy, disable_cache = False):
+    # disable_cache pass-thru. This is so we don't cache data when filters are active.
+    if disable_cache:
+        return _handle_combinatory_strategy(query, None, strategy)
+
     # Redis object names
-    CURRENT_MAX_ID = f'{g.active_organisation}_{object_model.__table__.name}_max_id_10'
-    HIGHEST_ID_CACHED = f'{metric_name}_{g.active_organisation}_max_cached_id_10'
-    CACHE_RESULT = f'{metric_name}_{g.active_organisation}_10'
+    CURRENT_MAX_ID = f'{g.active_organisation}_{object_model.__table__.name}_max_id'
+    HIGHEST_ID_CACHED = f'{metric_name}_{g.active_organisation}_max_cached_id'
+    CACHE_RESULT = f'{metric_name}_{g.active_organisation}'
 
     # Checks if provided combinatry strategy is valid
     if strategy not in valid_strategies:
@@ -44,7 +48,6 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
 
     # Gets cache results since the last time the metrics were fetched
     highest_id_in_cache = int(red.get(HIGHEST_ID_CACHED) or 0)
-    highest_id_in_cache = 0
     cache_result = _load_cache(CACHE_RESULT)
     filtered_query = query.filter(object_model.id > highest_id_in_cache)
     
@@ -67,12 +70,20 @@ def _count_strategy(query, cache_result):
     return query.count() + (cache_result or 0)
 
 def _sum_list_of_objects(query, cache_result):
+    combined_results = {}
+    for r in cache_result or []:
+        combined_results[r[1]] = r[0]
     query_result = query.all()
-    print('aaa')
-    print(query_result)
-    print('aaa')
-    print(cache_result)
-    print('aaa')
-    return query_result
+
+    for r in query_result:
+        if r[1] not in combined_results:
+            combined_results[r[1]] = r[0]
+        else:
+            combined_results[r[1]] = combined_results[r[1]] + r[0]
+    
+    formatted_results = []
+    for result in combined_results:
+        formatted_results.append((combined_results[result], result))
+    return formatted_results
 
 strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects }
