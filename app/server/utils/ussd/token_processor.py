@@ -28,7 +28,6 @@ from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 from server.utils.transfer_limits import TransferLimit
 
 
-
 class TokenProcessor(object):
 
 
@@ -76,7 +75,7 @@ class TokenProcessor(object):
         :param transfer_account:
         :return: lowest limit applicable for a given CreditTransfer
         """
-        
+
         with ephemeral_alchemy_object(
             CreditTransfer,
             transfer_type=TransferTypeEnum.PAYMENT,
@@ -90,7 +89,7 @@ class TokenProcessor(object):
             limits = dummy_transfer.get_transfer_limits()
 
             if len(limits) == 0:
-                raise Exception('eek, no limits found')
+                return None
             else:
                 # should only ever be one ge limit
                 ge_limit = [limit for limit in limits if 'GE Liquid Token' in limit.name]
@@ -105,11 +104,8 @@ class TokenProcessor(object):
                             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
                         ).execution_options(show_all=True).first().total
 
-                        # TODO: this seems to be close to absolute gibberish. Either fix or rinse with rewrite
                         amount_avail = limit.total_amount - (transaction_volume or 0)
-                        fraction = 1.0
-                        if len(ge_limit) > 0:
-                            fraction = ge_limit[0].transfer_balance_fraction
+                        fraction = ge_limit[0].transfer_balance_fraction or 0
                         if amount_avail < (fraction * transfer_account.balance)\
                                 and amount_avail < lowest_amount_avail:
                             lowest_limit = limit
@@ -117,10 +113,8 @@ class TokenProcessor(object):
 
                 if lowest_limit:
                     return lowest_limit
-                elif len(ge_limit) > 0:
-                    return ge_limit[0]
                 else:
-                    raise Exception('no limits found')
+                    return ge_limit[0]
 
     @staticmethod
     def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
@@ -167,27 +161,32 @@ class TokenProcessor(object):
         return exchanged_amount
 
     @staticmethod
-    def _temporary_override_for_completely_incomprihensible_token_balance_list(user: User):
-        # this is a temporary override for use until this component is rewritten
-        # it deliberately just chooses the first and returns it, since any user currently
-        # only will have a single token balance
-        balances = ''
-        for transfer_account in user.transfer_accounts:
-            if transfer_account.balance == 0.0:
-                continue
-            if len(balances) > 0:
-                balances += '\n'
-            balances += '{} {}'.format(int(transfer_account.balance/100), transfer_account.token.symbol)
-        return balances
-
-
-    @staticmethod
     def send_balance_sms(user: User):
-        token_balances_dollars = TokenProcessor._temporary_override_for_completely_incomprihensible_token_balance_list(user)
+
+        token_balances_dollars, token_exchanges = TokenProcessor._get_token_balances(user)
+
+        if token_exchanges in ["\n", '']:
+            TokenProcessor.send_sms(
+                user,
+                "send_balance_sms",
+                token_balances=token_balances_dollars)
+            return
+
+        default_limit = TokenProcessor.get_default_limit(user, default_token(user), default_transfer_account(user))
+        if default_limit:
+            TokenProcessor.send_sms(
+                user,
+                "send_balance_exchange_limit_sms",
+                token_balances=token_balances_dollars,
+                token_exchanges=token_exchanges,
+                limit_period=default_limit.time_period_days)
+            return
+
         TokenProcessor.send_sms(
             user,
-            "send_balance_sms",
+            "send_balance_exchange_sms",
             token_balances=token_balances_dollars,
+            token_exchanges=token_exchanges
         )
 
     @staticmethod
@@ -351,9 +350,10 @@ class TokenProcessor(object):
             }
 
         def check_if_ge_limit(token_info):
-            if token_info['limit'] == None:
-                return False
             return 'GE Liquid Token' in token_info['limit'].name
+            # return (token_info['exchange_rate'] is not None
+            #         and token_info['limit'] is not None
+            #         and token_info['limit'].transfer_balance_fraction is not None)
 
         def ge_string(t):
             if t['limit'].transfer_balance_fraction:

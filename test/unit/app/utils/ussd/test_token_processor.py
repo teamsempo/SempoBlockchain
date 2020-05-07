@@ -31,30 +31,6 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
 
 
 @pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
-    ("standard", None, "en", "Your Sarafu-Network balances are as follows: 200 SM1\nCall 0757628885 for more info"),
-])
-def test_temporary_send_balance_sms(mocker, test_client, init_database, initialised_blockchain_network, user_type, limit,
-                     preferred_language, sample_text):
-    user = UserFactory(preferred_language=preferred_language, phone=phone())
-    if user_type == "group":
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
-        user.is_phone_verified = True
-        kyc = KycApplication(type='INDIVIDUAL')
-        kyc.user = user
-        kyc.kyc_status = 'VERIFIED'
-
-    token1 = Token.query.filter_by(symbol="SM1").first()
-    create_transfer_account_for_user(user, token1, 20000)
-
-    def mock_send_message(phone, message):
-        assert sample_text in message
-
-    mocker.patch('server.message_processor.send_message', mock_send_message)
-    TokenProcessor.send_balance_sms(user)
-
-
-@pytest.mark.xfail(reason='the balance component has been short-circuited')
-@pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
     ("standard", None, "en", "Your Sarafu-Network balances are as follows: SM1 200.00\nSM2 350.00\nCall 0757628885 for more info"),
     ("standard", None, "sw", "Akaunti yako ya Sarafu-Network ina salio yafuatayo: SM1 200.00\nSM2 350.00\nPiga 0757628885 kwa usaidizi zaidi"),
     ("group", 0.5, "en", "in 30"),
