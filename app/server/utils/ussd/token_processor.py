@@ -1,11 +1,11 @@
 import datetime
 import pendulum
-from typing import Optional
+from typing import Optional, Tuple
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.sql import func
 
 from server import db
-from server.utils.phone import send_message
+from server.sempo_types import TransferAmount
 from server.exceptions import (
     NoTransferAllowedLimitError,
     TransferBalanceFractionLimitError,
@@ -19,6 +19,7 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.models.user import User
 
+from server.utils.phone import send_message
 from server.utils.misc import round_to_decimals, rounded_dollars, round_to_sig_figs
 from server.utils.credit_transfer import make_payment_transfer
 from server.models.utils import ephemeral_alchemy_object
@@ -26,7 +27,12 @@ from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
-from server.utils.transfer_limits import TransferLimit, AmountLimit, BalanceFractionLimit, TotalAmountLimit
+from server.utils.transfer_limits import (
+    TransferLimit,
+    AmountLimit,
+    BalanceFractionLimit,
+    TotalAmountLimit
+)
 
 
 class TokenProcessor(object):
@@ -69,11 +75,10 @@ class TokenProcessor(object):
         return default_transfer_account(user).balance
 
     @staticmethod
-    def get_default_limit(user: User, token: Token, transfer_account: TransferAccount) -> Optional[TransferLimit]:
+    def get_default_limit(user: User, token: Token) -> Optional[Tuple[AmountLimit, TransferAmount]]:
         """
         :param user:
         :param token:
-        :param transfer_account:
         :return: lowest amount limit applicable for a given CreditTransfer
         """
 
@@ -94,19 +99,11 @@ class TokenProcessor(object):
 
             amount_limits = filter(lambda l: isinstance(l, AmountLimit), limits)
 
-            sorted_amount_limits = sorted(amount_limits, key=lambda l: l.get_allowance(dummy_transfer))
+            with_amounts = [(limit, limit.available_amount(dummy_transfer)) for limit in amount_limits]
+
+            sorted_amount_limits = sorted(with_amounts, key=lambda l: l[1])
 
             return sorted_amount_limits[0] if len(sorted_amount_limits) > 0 else None
-
-    @staticmethod
-    def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
-        if isinstance(limit, BalanceFractionLimit):
-            # TODO: limit.get_allowance should be able to pull this off on its own (can't b/c get_allowance needs a transfer)
-            return limit.balance_fraction * TokenProcessor.get_balance(user)
-        elif isinstance(limit, TotalAmountLimit):
-            return limit.total_amount
-        else:
-            return None
 
     @staticmethod
     def get_exchange_rate(user: User, from_token: Token):
@@ -155,7 +152,7 @@ class TokenProcessor(object):
                 token_balances=token_balances_dollars)
             return
 
-        default_limit = TokenProcessor.get_default_limit(user, default_token(user), default_transfer_account(user))
+        default_limit, limit_amount = TokenProcessor.get_default_limit(user, default_token(user))
         if default_limit:
             TokenProcessor.send_sms(
                 user,
@@ -176,10 +173,10 @@ class TokenProcessor(object):
     def fetch_exchange_rate(user: User):
         from_token = default_token(user)
 
-        default_limit = TokenProcessor.get_default_limit(user, from_token, default_transfer_account(user))
+        default_limit, limit_amount = TokenProcessor.get_default_limit(user, from_token)
         exchange_rate_full_precision = TokenProcessor.get_exchange_rate(user, from_token)
 
-        exchange_limit = rounded_dollars(TokenProcessor.get_default_exchange_limit(default_limit, user))
+        exchange_limit = rounded_dollars(limit_amount)
         exchange_rate = round_to_sig_figs(exchange_rate_full_precision, 3)
         exchange_sample_value = round(exchange_rate_full_precision * float(1000))
 
@@ -319,7 +316,7 @@ class TokenProcessor(object):
     def _get_token_balances(user: User):
         def get_token_info(transfer_account: TransferAccount):
             token = transfer_account.token
-            limit = TokenProcessor.get_default_limit(user, token, transfer_account)
+            limit, limit_amount = TokenProcessor.get_default_limit(user, token)
             exchange_rate = TokenProcessor.get_exchange_rate(user, token)
             return {
                 "name": token.symbol,
@@ -330,14 +327,11 @@ class TokenProcessor(object):
 
         def check_if_ge_limit(token_info):
             return 'GE Liquid Token' in token_info['limit'].name
-            # return (token_info['exchange_rate'] is not None
-            #         and token_info['limit'] is not None
-            #         and token_info['limit'].transfer_balance_fraction is not None)
 
         def ge_string(t):
             if isinstance(t['limit'], BalanceFractionLimit):
-                # TODO: This doesn't seem DRY with respect to 'get default exchange rate'
-                allowed_amount = rounded_dollars(t['limit'].balance_fraction * t['balance'])
+                # Ideally this multiplication wo
+                allowed_amount = rounded_dollars(t['limit'].total_from_balance(t['balance']))
                 rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
                 return (
                     f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
@@ -347,7 +341,7 @@ class TokenProcessor(object):
 
         def standard_string(t):
             if t['limit'].total_amount:
-                allowed_amount = f"{rounded_dollars(str(t['limit'].total_amount))}"
+                allowed_amount = f"{rounded_dollars(str(t['limit']._total_amount))}"
                 rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
                 return (
                     f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"

@@ -1,5 +1,11 @@
 import os
 
+def assert_resp_status_code(response, status_code):
+    try:
+        assert response.status_code == status_code
+    except AssertionError as e:
+        e.args += (f'JSON: {response.json}',)
+        raise e
 
 def mock_class(orginal, substitute, monkey):
     for func_name in dir(orginal):
