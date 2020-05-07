@@ -1,7 +1,8 @@
 import pytest
-from flask import current_app
+from flask import current_app, g
 from faker.providers import phone_number
 from faker import Faker
+from functools import partial
 
 import os
 import sys
@@ -14,11 +15,15 @@ from server import create_app, db
 from server.utils.auth import get_complete_auth_token
 from server.models.token import TokenType
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.user import create_user_without_transfer_account
+from helpers.ussd_utils import make_kenyan_phone
 import config
 # from app.manage import manager
 
 fake = Faker()
 fake.add_provider(phone_number)
+phone = partial(fake.msisdn)
+unregistered_user_phone = make_kenyan_phone(phone())
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
@@ -480,3 +485,20 @@ def monkeymodule(request):
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()
+
+
+@pytest.fixture(scope='module')
+def create_temporary_user(test_client, init_database, create_organisation):
+    # create organisation
+    organisation = create_organisation
+    organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
+
+    # set active organisation
+    g.active_organisation = organisation
+
+    # create user without a transfer account
+    temp_user = create_user_without_transfer_account(unregistered_user_phone)
+    db.session.add(temp_user)
+    db.session.commit()
+
+    return temp_user
