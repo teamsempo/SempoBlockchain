@@ -908,5 +908,4 @@ def attach_transfer_account_to_user(user):
                                                  transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
     db.session.add(initial_disbursement)
 
-    db.session.commit()
     return user
