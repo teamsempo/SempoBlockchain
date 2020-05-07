@@ -1,7 +1,4 @@
 import pytest
-import os
-import sys
-
 from helpers.utils import mock_class, will_func_test_blockchain
 from helpers.blockchain_tasker import MockBlockchainTasker
 
