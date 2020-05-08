@@ -99,7 +99,7 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
     assert isinstance(user.pin_reset_tokens, list)
     assert len(user.pin_reset_tokens) == 1
     messages = mock_sms_apis
-    assert messsage == [({'phone': user.phone, 'message': 'Dial *483*46# to change your PIN')]
+    assert messages == [{'phone': user.phone, 'message': 'Dial *483*46# to change your PIN'}]
 
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [
 

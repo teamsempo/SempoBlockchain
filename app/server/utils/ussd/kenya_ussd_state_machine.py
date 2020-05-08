@@ -12,7 +12,7 @@ import config
 
 from transitions import Machine, State
 
-from server import message_processor, ussd_tasker
+from server import ussd_tasker
 from server.utils.phone import send_message
 from server.models.user import User, RegistrationMethodEnum
 from server.models.ussd import UssdSession
