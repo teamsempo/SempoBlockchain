@@ -148,7 +148,6 @@ function createLoginSuccessObject(token) {
   return {
     token: token.auth_token,
     userId: token.user_id,
-    vendorId: token.vendor_id,
     email: token.email,
     adminTier: token.admin_tier,
     usdToSatoshiRate: token.usd_to_satoshi_rate,
