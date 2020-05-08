@@ -29,7 +29,6 @@ export interface LoginSuccessPayload {
   token: null | string;
   userId: null | number;
   email: null | string;
-  vendorId: null | number;
   intercomHash: null | string;
   webApiVersion: null | string;
   organisationId: number;
