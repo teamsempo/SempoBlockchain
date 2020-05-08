@@ -1,7 +1,6 @@
 import pytest, json
 from server.utils.auth import get_complete_auth_token
 
-# todo-  put credit transfer
 
 @pytest.mark.parametrize("transfer_amount, target_balance, credit_transfer_uuid_selector_func, "
                          "recipient_transfer_accounts_ids_accessor, sender_user_id_accessor,"
