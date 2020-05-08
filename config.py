@@ -3,12 +3,13 @@ from eth_keys import keys
 from eth_utils import keccak
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
+logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
 from web3 import Web3
 
-VERSION = '1.1.22'  # Remember to bump this in every PR
+VERSION = '1.1.27'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -120,6 +121,9 @@ if IS_PRODUCTION is None:
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
 
+# todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
+CURRENCY_NAME       = config_parser['APP']['CURRENCY_NAME']
+CURRENCY_DECIMALS   = int(config_parser['APP']['CURRENCY_DECIMALS'])
 APP_HOST            = config_parser['APP']['APP_HOST']
 BENEFICIARY_TERM    = config_parser['APP']['BENEFICIARY_TERM']
 BENEFICIARY_TERM_PLURAL = config_parser['APP']['BENEFICIARY_TERM_PLURAL']
