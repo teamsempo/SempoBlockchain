@@ -96,26 +96,9 @@ def test_golden_path_send_token(mocker, test_client,
     assert "CON Enter Amount" in resp
 
     resp = req("12.5", test_client, sender)
-    assert "CON Transfer Reason" in resp
-    assert f"1. {top_priority.translations['en']}" in resp
-    assert "9." in resp
-
-    resp = req("9", test_client, sender)
-    assert "CON Please specify" in resp
-    assert "10. Show previous" in resp
-    assert "9." not in resp
-
-    resp = req("10", test_client, sender)
-
-    resp = req("4", test_client, sender)
-    assert "CON Please enter your PIN" in resp
+    assert "CON Send 12.5 SM1" in resp
 
     resp = req("0000", test_client, sender)
-    assert "CON Send 12.5 SM1" in resp
-    # went to second page, should not be the first
-    assert f"for {top_priority.translations['en']}" not in resp
-
-    resp = req("1", test_client, sender)
     assert "END Your request has been sent." in resp
 
     assert default_transfer_account(sender).balance == (4220 - 100 - 100 - 1250)
@@ -131,11 +114,11 @@ def test_golden_path_send_token(mocker, test_client,
 
 
 def test_invalid_service_code(mocker, test_client,
-                                init_database, initialised_blockchain_network, init_seed):
+                              init_database, initialised_blockchain_network, init_seed):
 
     org = OrganisationFactory()
     sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
-        pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
+                         pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
 
     resp = req("", test_client, sender, '*42*666#')
     assert 'END Bonyeza {} kutumia mtandao'.format(valid_service_code) in resp
