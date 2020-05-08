@@ -713,7 +713,6 @@ def send_onboarding_message(to_phone, first_name, amount, currency_name, one_tim
             amount if not None else 0,
             currency_name,
             one_time_code,
-            currency_name
         )
 
         message_processor.send_message(to_phone, receiver_message)
