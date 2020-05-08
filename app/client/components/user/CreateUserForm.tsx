@@ -25,6 +25,7 @@ export interface ICreateUser {
   businessUsage?: string;
   usageOtherSpecific?: string;
   accountType: any[TransferAccountTypes];
+  registration_method?: string;
 }
 
 export interface ICreateVendor {
@@ -37,6 +38,7 @@ export interface ICreateVendor {
   existingVendorPin?: string;
   location?: string;
   transferAccountName?: string;
+  registration_method?: string;
 }
 
 export type ICreateUserUpdate = ICreateUser & ICreateVendor;
@@ -74,6 +76,7 @@ class CreateUserForm extends React.Component<
     this.props.initialize({
       accountType: TransferAccountTypes.USER.toLowerCase(),
       gender: "female",
+      registration_method: "WEB_SIGNUP",
       initialDisbursement: defaultDisbursement
     });
   }

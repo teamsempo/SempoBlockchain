@@ -19,17 +19,41 @@ fake = Faker()
 fake.add_provider(phone_number)
 phone = partial(fake.msisdn)
 
-
 @pytest.fixture(scope='module')
 def init_seed(test_client, init_database):
     create_ussd_menus()
     create_business_categories()
 
+# TODO make helper functions and messages array fixture object
+messages = []
+session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa'
+valid_service_code = config.USSD_VALID_SERVICE_CODE
+
+def mock_send_message(phone, message):
+    messages.append({'phone': phone, 'message': message})
+
+def req(text, client, sender, serviceCode=None):
+    if serviceCode == None:
+        serviceCode = valid_service_code
+    response = client.post(
+        f'/api/v1/ussd/kenya?username={config.EXTERNAL_AUTH_USERNAME}&password={config.EXTERNAL_AUTH_PASSWORD}',
+        headers=dict(Accept='application/json'),
+        json={'sessionId': session_id,
+              'phoneNumber': sender.phone,
+              'text': text,
+              'serviceCode': serviceCode,
+              }
+    )
+    assert response.status_code == 200
+    return response.data.decode("utf-8")
+
+def get_session():
+    return UssdSession.query.filter_by(session_id=session_id).first()
 
 def test_golden_path_send_token(mocker, test_client,
                                 init_database, initialised_blockchain_network, init_seed):
     token = Token.query.filter_by(symbol="SM1").first()
-    org = OrganisationFactory(country_code='KE')
+    org = OrganisationFactory(country_code=config.DEFAULT_COUNTRY)
     sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
                          pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
     create_transfer_account_for_user(sender, token, 4220)
@@ -38,8 +62,6 @@ def test_golden_path_send_token(mocker, test_client,
                             first_name="Joe", last_name="Bar", default_organisation=org)
     create_transfer_account_for_user(recipient, token, 1980)
 
-    messages = []
-    session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa'
 
     usages = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).all()
     top_priority = usages[0]
@@ -62,54 +84,38 @@ def test_golden_path_send_token(mocker, test_client,
     mocker.patch(f'server.utils.phone._send_messagebird_message.submit', mock_send_message)
     mocker.patch(f'server.utils.phone._send_at_message.submit', mock_send_message)
 
-    def req(text):
-        response = test_client.post(
-            f'/api/v1/ussd/kenya?username={config.EXTERNAL_AUTH_USERNAME}&password={config.EXTERNAL_AUTH_PASSWORD}',
-            headers=dict(Accept='application/json'),
-            json={'sessionId': session_id,
-                  'phoneNumber': sender.phone,
-                  'text': text,
-                  'serviceCode': '*384*23216#'
-                  }
-        )
-        assert response.status_code == 200
-        return response.data.decode("utf-8")
-
-    def get_session():
-        return UssdSession.query.filter_by(session_id=session_id).first()
-
     assert get_session() is None
-    resp = req("")
+    resp = req("", test_client, sender)
     assert get_session() is not None
     assert "CON Welcome" in resp
 
-    resp = req("1")
+    resp = req("1", test_client, sender)
     assert "CON Enter Phone" in resp
 
-    resp = req(recipient.phone)
+    resp = req(recipient.phone, test_client, sender)
     assert "CON Enter Amount" in resp
 
-    resp = req("12.5")
+    resp = req("12.5", test_client, sender)
     assert "CON Transfer Reason" in resp
     assert f"1. {top_priority.translations['en']}" in resp
     assert "9." in resp
 
-    resp = req("9")
+    resp = req("9", test_client, sender)
     assert "CON Please specify" in resp
     assert "10. Show previous" in resp
     assert "9." not in resp
 
-    resp = req("10")
+    resp = req("10", test_client, sender)
 
-    resp = req("4")
+    resp = req("4", test_client, sender)
     assert "CON Please enter your PIN" in resp
 
-    resp = req("0000")
+    resp = req("0000", test_client, sender)
     assert "CON Send 12.5 SM1" in resp
     # went to second page, should not be the first
     assert f"for {top_priority.translations['en']}" not in resp
 
-    resp = req("1")
+    resp = req("1", test_client, sender)
     assert "END Your request has been sent." in resp
 
     assert default_transfer_account(sender).balance == (4220 - 100 - 100 - 1250)
@@ -122,3 +128,14 @@ def test_golden_path_send_token(mocker, test_client,
     received_message = messages[2]
     assert received_message['phone'] == recipient.phone
     assert f"Umepokea 12.50 SM1 kutoka kwa {sender.first_name}" in received_message['message']
+
+
+def test_invalid_service_code(mocker, test_client,
+                                init_database, initialised_blockchain_network, init_seed):
+
+    org = OrganisationFactory()
+    sender = UserFactory(preferred_language="en", phone=make_kenyan_phone(phone()), first_name="Bob", last_name="Foo",
+        pin_hash=User.salt_hash_secret('0000'), default_organisation=org)
+
+    resp = req("", test_client, sender, '*42*666#')
+    assert 'END Bonyeza {} kutumia mtandao'.format(valid_service_code) in resp

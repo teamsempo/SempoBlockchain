@@ -23,143 +23,145 @@ import datetime, json
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
                              user_filter={}):
 
-    date_filter = []
-    filter_active = False
-    if start_date is not None and end_date is not None:
-        date_filter.append(CreditTransfer.created >= start_date)
-        date_filter.append(CreditTransfer.created <= end_date)
-        filter_active = True
+    return {}
 
-    disbursement_filters = [
-        CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-        CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
-        CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT]
-
-    standard_payment_filters = [
-        CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-        CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
-        CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD
-    ]
-
-    exchanged_filters = [
-        CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-        CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
-        CreditTransfer.token == g.active_organisation.token
-    ]
-
-    beneficiary_filters = [User.has_beneficiary_role == True]
-    vendor_filters = [User.has_vendor_role == True]
-
-    exhaused_balance_filters = [
-        CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
-        TransferAccount._balance_wei == 0
-    ]
-
-    transfer_use_filters = [
-        *standard_payment_filters,
-        CreditTransfer.transfer_use.isnot(None),
-    ]
-
-    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
-    total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter).first().total or 0
-
-    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
-    total_spent = (total_spent.filter(*standard_payment_filters).filter(*date_filter).first().total) or 0
-
-
-    total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
-    total_exchanged = (total_exchanged.filter(*exchanged_filters).filter(*date_filter).first().total) or 0
-
-    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
-    total_beneficiaries = total_beneficiaries.count()
-
-    total_vendors = db.session.query(User).filter(*vendor_filters)
-    total_vendors = total_vendors.count()
-
-    total_users = total_beneficiaries + total_vendors
-
-    has_transferred_count = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
-        .label('transfer_count'))\
-        .filter(*standard_payment_filters) \
-        .filter(*date_filter) \
-            .first().transfer_count
-
-    exhausted_balance_count = db.session.query(func.count(func.distinct(
-        CreditTransfer.sender_transfer_account_id))
-        .label('transfer_count')) \
-        .join(CreditTransfer.sender_transfer_account)\
-        .filter(*exhaused_balance_filters) \
-        .filter(*date_filter) \
-            .first().transfer_count
-
-    daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', CreditTransfer.created).label('date'))
-    daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
-    daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
-        .filter(*standard_payment_filters) \
-        .filter(*date_filter) \
-            .all()
-
-    daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', CreditTransfer.created).label('date'))
-    daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
-    daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
-        .filter(*disbursement_filters) \
-        .filter(*date_filter) \
-            .all()
-
-    transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
-    transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
-    transfer_use_breakdown = transfer_use_breakdown.filter(*transfer_use_filters) \
-        .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
-            .all()
-
-    try:
-        last_day = daily_transaction_volume[0].date
-        last_day_volume = daily_transaction_volume[0].volume
-        transaction_vol_list = [
-            {'date': item.date.isoformat(), 'volume': item.volume} for item in daily_transaction_volume
-        ]
-    except IndexError:  # No transactions
-        last_day = datetime.datetime.utcnow()
-        last_day_volume = 0
-        has_transferred_count = 0
-        transaction_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-
-    try:
-        last_day_disbursement_volume = daily_disbursement_volume[0].volume
-        disbursement_vol_list = [
-            {'date': item.date.isoformat(), 'volume': item.volume} for item in daily_disbursement_volume
-        ]
-    except IndexError:
-        last_day_disbursement_volume = 0
-        disbursement_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-
-    try:
-        master_wallet_balance = cached_funds_available()
-    except:
-        master_wallet_balance = 0
-
-    data = {
-        'total_distributed': total_distributed,
-        'total_spent': total_spent,
-        'total_exchanged': total_exchanged,
-        'has_transferred_count': has_transferred_count,
-        'zero_balance_count': exhausted_balance_count,
-        'total_beneficiaries': total_beneficiaries,
-        'total_users': total_users,
-        'master_wallet_balance': master_wallet_balance,
-        'daily_transaction_volume': transaction_vol_list,
-        'daily_disbursement_volume': disbursement_vol_list,
-        'transfer_use_breakdown': transfer_use_breakdown,
-        'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
-        'filter_active': filter_active
-    }
-
-    return data
+    # date_filter = []
+    # filter_active = False
+    # if start_date is not None and end_date is not None:
+    #     date_filter.append(CreditTransfer.created >= start_date)
+    #     date_filter.append(CreditTransfer.created <= end_date)
+    #     filter_active = True
+    #
+    # disbursement_filters = [
+    #     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+    #     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+    #     CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT]
+    #
+    # standard_payment_filters = [
+    #     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+    #     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+    #     CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD
+    # ]
+    #
+    # exchanged_filters = [
+    #     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+    #     CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
+    #     CreditTransfer.token == g.active_organisation.token
+    # ]
+    #
+    # beneficiary_filters = [User.has_beneficiary_role == True]
+    # vendor_filters = [User.has_vendor_role == True]
+    #
+    # exhaused_balance_filters = [
+    #     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+    #     TransferAccount._balance_wei == 0
+    # ]
+    #
+    # transfer_use_filters = [
+    #     *standard_payment_filters,
+    #     CreditTransfer.transfer_use.isnot(None),
+    # ]
+    #
+    # total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+    # total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
+    # total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter).first().total or 0
+    #
+    # total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+    # total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
+    # total_spent = (total_spent.filter(*standard_payment_filters).filter(*date_filter).first().total) or 0
+    #
+    #
+    # total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+    # total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
+    # total_exchanged = (total_exchanged.filter(*exchanged_filters).filter(*date_filter).first().total) or 0
+    #
+    # total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
+    # total_beneficiaries = total_beneficiaries.count()
+    #
+    # total_vendors = db.session.query(User).filter(*vendor_filters)
+    # total_vendors = total_vendors.count()
+    #
+    # total_users = total_beneficiaries + total_vendors
+    #
+    # has_transferred_count = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
+    #     .label('transfer_count'))\
+    #     .filter(*standard_payment_filters) \
+    #     .filter(*date_filter) \
+    #         .first().transfer_count
+    #
+    # exhausted_balance_count = db.session.query(func.count(func.distinct(
+    #     CreditTransfer.sender_transfer_account_id))
+    #     .label('transfer_count')) \
+    #     .join(CreditTransfer.sender_transfer_account)\
+    #     .filter(*exhaused_balance_filters) \
+    #     .filter(*date_filter) \
+    #         .first().transfer_count
+    #
+    # daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+    #                                             func.date_trunc('day', CreditTransfer.created).label('date'))
+    # daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
+    # daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
+    #     .filter(*standard_payment_filters) \
+    #     .filter(*date_filter) \
+    #         .all()
+    #
+    # daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+    #                                             func.date_trunc('day', CreditTransfer.created).label('date'))
+    # daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
+    # daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
+    #     .filter(*disbursement_filters) \
+    #     .filter(*date_filter) \
+    #         .all()
+    #
+    # transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
+    # transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
+    # transfer_use_breakdown = transfer_use_breakdown.filter(*transfer_use_filters) \
+    #     .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
+    #         .all()
+    #
+    # try:
+    #     last_day = daily_transaction_volume[0].date
+    #     last_day_volume = daily_transaction_volume[0].volume
+    #     transaction_vol_list = [
+    #         {'date': item.date.isoformat(), 'volume': item.volume} for item in daily_transaction_volume
+    #     ]
+    # except IndexError:  # No transactions
+    #     last_day = datetime.datetime.utcnow()
+    #     last_day_volume = 0
+    #     has_transferred_count = 0
+    #     transaction_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
+    #
+    # try:
+    #     last_day_disbursement_volume = daily_disbursement_volume[0].volume
+    #     disbursement_vol_list = [
+    #         {'date': item.date.isoformat(), 'volume': item.volume} for item in daily_disbursement_volume
+    #     ]
+    # except IndexError:
+    #     last_day_disbursement_volume = 0
+    #     disbursement_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
+    #
+    # try:
+    #     master_wallet_balance = cached_funds_available()
+    # except:
+    #     master_wallet_balance = 0
+    #
+    # data = {
+    #     'total_distributed': total_distributed,
+    #     'total_spent': total_spent,
+    #     'total_exchanged': total_exchanged,
+    #     'has_transferred_count': has_transferred_count,
+    #     'zero_balance_count': exhausted_balance_count,
+    #     'total_beneficiaries': total_beneficiaries,
+    #     'total_users': total_users,
+    #     'master_wallet_balance': master_wallet_balance,
+    #     'daily_transaction_volume': transaction_vol_list,
+    #     'daily_disbursement_volume': disbursement_vol_list,
+    #     'transfer_use_breakdown': transfer_use_breakdown,
+    #     'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
+    #     'filter_active': filter_active
+    # }
+    #
+    # return data
 
 def apply_filters(query, filters, query_table):
 

@@ -46,3 +46,6 @@ eth_worker/complete_compiled_contracts/
 app/migrations/fromGE/secrets.py
 eth_worker/celerybeat-schedule
 eth_worker/celerybeat.pid
+
+.envrc
+**/.terraform/

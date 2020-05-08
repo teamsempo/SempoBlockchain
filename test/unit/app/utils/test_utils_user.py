@@ -99,7 +99,7 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
     assert isinstance(user.pin_reset_tokens, list)
     assert len(user.pin_reset_tokens) == 1
     messages = mock_sms_apis
-    assert messages == [{'phone': user.phone, 'message': 'Dial *384*96# Safaricom or *483*46# Airtel to change your PIN'}]
+    assert messsage == [({'phone': user.phone, 'message': 'Dial *483*46# to change your PIN')]
 
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [
 
@@ -108,7 +108,7 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
      'By using the service, you agree to the terms and conditions at https://www.grassrootseconomics.org/terms-and-conditions.'),
 
     (None, "grassroots",
-     'Hello Magoo you have been registered on Sarafu Network! Your balance is 100.00 Sarafu. To use dial *384*96# Safaricom or *483*46# Airtel. For help 0757628885',
+     'Hello Magoo you have been registered on Sarafu Network! Your balance is 100.00 Sarafu. To use dial *483*46#. For help 0757628885',
      'By using the service, you agree to the terms and conditions at https://www.grassrootseconomics.org/terms-and-conditions.'),
 
     ('sw', None,
@@ -116,7 +116,7 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
      'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://www.grassrootseconomics.org/terms-and-conditions.'),
 
     ('sw', 'grassroots',
-     'Habari Magoo, umesajiliwa kwa huduma ya sarafu! Salio lako ni Sarafu 100.00. Kutumia bonyeza *384*96# kwa Safaricom au *483*46# Airtel. Kwa Usaidizi 0757628885',
+     'Habari Magoo, umesajiliwa kwa huduma ya sarafu! Salio lako ni Sarafu 100.00. Kutumia bonyeza *483*46#. Kwa Usaidizi 0757628885',
      'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://www.grassrootseconomics.org/terms-and-conditions.'),
 
 ])

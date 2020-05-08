@@ -123,16 +123,7 @@ def create_ussd_menus():
         description='Manage account menu',
         parent_id=start_menu.id
     )
-    update_or_create_menu(
-        name='my_business',
-        description='Manage business directory info',
-        parent_id=account_management_menu.id
-    )
-    update_or_create_menu(
-        name='about_my_business',
-        description='About business directory info',
-        parent_id=account_management_menu.id
-    )
+
     update_or_create_menu(
         name='change_my_business_prompt',
         description='Change business directory info',
@@ -154,6 +145,12 @@ def create_ussd_menus():
         parent_id=account_management_menu.id
     )
 
+    user_profile_menu = update_or_create_menu(
+        name='user_profile',
+        description='Manage user profile menu',
+        parent_id=account_management_menu.id
+    )
+
     print('******** Change PIN Menu ********************')
     update_or_create_menu(
         name='current_pin',
@@ -170,6 +167,82 @@ def create_ussd_menus():
         description='Confirm new PIN menu',
         parent_id=account_management_menu.id
     )
+
+    print('********* User Profile Menu **********')
+    update_or_create_menu(
+        name='first_name_entry',
+        description='First name entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='last_name_entry',
+        description='Last name entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='gender_entry',
+        description='Gender entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='location_entry',
+        description='Location entry prompt.',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='change_my_business_prompt',
+        description='Change business directory info',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='about_me',
+        description='About user profile info',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='name_change_pin_authorization',
+        description='PIN entry for authorization to change name',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='gender_change_pin_authorization',
+        description='PIN entry for authorization to change gender',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='location_change_pin_authorization',
+        description='PIN entry for authorization to change location',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='bio_change_pin_authorization',
+        description='PIN entry for authorization to change business directory',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='view_profile_pin_authorization',
+        description='PIN entry for authorization to view entire profile',
+        parent_id=user_profile_menu.id
+    )
+
+    update_or_create_menu(
+        name='profile_info_change_pin_authorization',
+        description='PIN entry for authorization to change entire profile',
+        parent_id=user_profile_menu.id
+    )
+
+
+
 
     print('***** Help Menu *********')
     update_or_create_menu(
@@ -267,6 +340,11 @@ def create_ussd_menus():
     update_or_create_menu(
         name='exit_invalid_exchange_amount',
         description='The token exchange amount is insufficient',
+    )
+
+    update_or_create_menu(
+        name='exit_account_creation_prompt',
+        description='The self signup process has been initiated and the account is being created.'
     )
 
     print_section_conclusion('Done creating USSD Menus')

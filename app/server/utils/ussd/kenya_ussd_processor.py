@@ -76,17 +76,59 @@ class KenyaUssdProcessor:
 
         user = ussd_session.user
 
-        if menu.name == 'about_my_business':
+        if menu.name == 'about_me':
             bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
-            if bio:
+            first_name = user.first_name
+            last_name = user.last_name
+            gender = next(filter(lambda x: x.name == 'gender', user.custom_attributes), None)
+            location = user.location
+
+            if bio and gender:
                 bio_text = bio.value.strip('"')
+                gender_text = gender.value.strip('"')
             else:
                 bio_text = None
+                gender_text = None
 
-            if bio_text is None or '':
-                return i18n_for(user, "{}.none".format(menu.display_key))
-            else:
-                return i18n_for(user, "{}.bio".format(menu.display_key), user_bio=bio_text)
+            # translations
+            absent_value_placeholder = "missing"
+            if user.preferred_language == "sw":
+                absent_value_placeholder = 'hakuna'
+                if gender_text == 'male':
+                    gender_text = 'mwanaume'
+                elif gender_text == 'female':
+                    gender_text = 'mwanamke'
+
+            if first_name == 'Unknown first name':
+                first_name = None
+
+            if last_name == 'Unknown last name':
+                last_name = None
+
+            if bio_text == 'Unknown business':
+                bio_text = None
+
+            if gender_text == 'Unknown gender':
+                gender_text = None
+
+            if location == 'Unknown location':
+                location = None
+
+            # define final values to show in menu
+            first_name = first_name or absent_value_placeholder
+            last_name = last_name or absent_value_placeholder
+            bio_text = bio_text or absent_value_placeholder
+            gender_text = gender_text or absent_value_placeholder
+            location = location or absent_value_placeholder
+
+            full_name = "{} {}".format(first_name, last_name)
+            if first_name == absent_value_placeholder and last_name == absent_value_placeholder:
+                full_name = absent_value_placeholder
+
+            return i18n_for(user, "{}.profile".format(menu.display_key),
+                            full_name=full_name,
+                            gender=gender_text,
+                            location=location, user_bio=bio_text)
 
         if menu.name == 'send_token_confirmation':
             recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)

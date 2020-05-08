@@ -268,5 +268,5 @@ workflows:
               only:
                 - master
           requires:
-            - test:backend
             - test:frontend
+            - test:backend
