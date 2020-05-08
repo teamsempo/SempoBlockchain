@@ -102,7 +102,6 @@ class ExchangeAPI(MethodView):
 
         elif to_desired_amount:
 
-            # TODO: Test this
             try:
                 exchange = Exchange()
 
