@@ -73,7 +73,6 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
-    this.buildFilterForAPI();
 
     const parsed = parseQuery(location.search);
 
