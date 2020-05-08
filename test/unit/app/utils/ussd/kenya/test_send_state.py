@@ -39,13 +39,13 @@ send_token_pin_authorization_state = partial(UssdSessionFactory, state="send_tok
 
 
 @pytest.mark.parametrize("session_factory, user_input, expected",
- [
-     # send_token_amount state test
-     (send_token_amount_state, "12.5", "send_token_pin_authorization"),
-     (send_token_amount_state, "500", "send_token_pin_authorization"),
-     (send_token_amount_state, "-1", "exit_invalid_input"),
-     (send_token_amount_state, "asdf", "exit_invalid_input")
- ])
+                         [
+                             # send_token_amount state test
+                             (send_token_amount_state, "12.5", "send_token_pin_authorization"),
+                             (send_token_amount_state, "500", "send_token_pin_authorization"),
+                             (send_token_amount_state, "-1", "exit_invalid_input"),
+                             (send_token_amount_state, "asdf", "exit_invalid_input")
+                         ])
 def test_kenya_state_machine(test_client, init_database, standard_user, session_factory, user_input, expected):
     session = session_factory()
     db.session.commit()
@@ -150,4 +150,4 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
 
     state_machine.feed_char("0000")
     assert state_machine.state == "complete"
-    send_token.assert_called_with(sender=standard_user, recipient=recipient, amount=10.0)
+    send_token.assert_called_with(standard_user, recipient=recipient, amount=10.0)
