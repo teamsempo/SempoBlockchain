@@ -456,17 +456,13 @@ def init_database():
 @pytest.fixture(autouse=True)
 def mock_sms_apis(mocker):
     # Always patch out all sms sending apis because we don't want to spam messages with our tests!!
-
-    from server.utils.phone import MessageProcessor
-
     messages = []
     def mock_sms_api(phone, message):
         messages.append({'phone': phone, 'message': message})
 
-    # Aggressively patch methods inside the class so we don't accidentally leave one out
-    for method in dir(MessageProcessor):
-        if not method.startswith('__') and method not in ['channel_for_number', 'send_message']:
-            mocker.patch(f'server.message_processor.{method}', mock_sms_api)
+    mocker.patch('server.utils.phone._send_twilio_message.submit', mock_sms_api)
+    mocker.patch('server.utils.phone._send_messagebird_message.submit', mock_sms_api)
+    mocker.patch('server.utils.phone._send_at_message.submit', mock_sms_api)
 
     return messages
 

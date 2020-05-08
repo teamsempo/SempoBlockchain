@@ -305,7 +305,7 @@ class CreditTransferAPI(MethodView):
                         transfer_subtype=TransferSubTypeEnum.RECLAMATION,
                         require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        queue=queue,
                     )
 
                 elif transfer_type == 'DISBURSEMENT':

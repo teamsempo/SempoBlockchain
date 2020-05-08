@@ -22,7 +22,7 @@ import {
 } from "../api/transferAccountAPI.js";
 
 import { MessageAction } from "../reducers/message/actions";
-import {UserListAction} from "../reducers/user/actions";
+import { UserListAction } from "../reducers/user/actions";
 
 function* updateStateFromTransferAccount(data) {
   //Schema expects a list of transfer account objects
