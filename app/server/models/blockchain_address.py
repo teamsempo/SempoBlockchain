@@ -24,11 +24,6 @@ class BlockchainAddress(OneOrgBase, ModelBase):
 
     transfer_account_id = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
 
-    signed_transactions = db.relationship('BlockchainTransaction',
-                                          backref='signing_blockchain_address',
-                                          lazy='dynamic',
-                                          foreign_keys='BlockchainTransaction.signing_blockchain_address_id')
-
     credit_sends = db.relationship('CreditTransfer', backref='sender_blockchain_address',
                                    lazy='dynamic', foreign_keys='CreditTransfer.sender_blockchain_address_id')
 

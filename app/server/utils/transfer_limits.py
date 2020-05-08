@@ -40,6 +40,7 @@ def get_transfer_limits(credit_transfer: CreditTransfer):
         if applied and (credit_transfer.transfer_type in limit.applied_to_transfer_types
                         or (credit_transfer.transfer_type, credit_transfer.transfer_subtype)
                         in limit.applied_to_transfer_types):
+            
             relevant_limits.append(limit)
 
     return relevant_limits
@@ -312,3 +313,4 @@ LIMITS = [
                   transfer_filter=withdrawal_or_agent_out_and_not_excluded_filter,
                   transfer_count=1, transfer_balance_fraction=0.50)
 ]
+
