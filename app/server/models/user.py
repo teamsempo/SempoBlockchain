@@ -560,6 +560,11 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         is_valid = password_reset_token in self.password_reset_tokens
         return is_valid
 
+    def is_pin_reset_token_valid(self, pin_reset_token):
+        self.clear_expired_pin_reset_tokens()
+        pin_reset_token_in_valid_reset_tokens = pin_reset_token in self.pin_reset_tokens
+        return pin_reset_token_in_valid_reset_tokens
+
     def delete_password_reset_tokens(self):
         self.password_reset_tokens = []
 
