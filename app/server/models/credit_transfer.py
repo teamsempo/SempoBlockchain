@@ -80,10 +80,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def send_blockchain_payload_to_worker(self, is_retry=False, queue='high-priority'):
         sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
-
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
-        self.blockchain_task_uuid = str(uuid4())
-        db.session.commit()
         return bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
@@ -116,6 +113,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_completed()
         if not existing_blockchain_txn:
+            self.blockchain_task_uuid = str(uuid4())
+            db.session.commit()
             g.pending_transactions.append((self, queue))
 
     def resolve_as_rejected(self, message=None):
