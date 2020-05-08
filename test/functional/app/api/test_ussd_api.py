@@ -78,7 +78,11 @@ def test_golden_path_send_token(mocker, test_client,
                           transfer_use=str(int(usage.id)), is_ghost_transfer=False,
                           require_sender_approved=False, require_recipient_approved=False)
 
-    mocker.patch('server.message_processor.send_message', mock_send_message)
+    def mock_send_message(phone, message):
+        messages.append({'phone': phone, 'message': message})
+    mocker.patch(f'server.utils.phone._send_twilio_message.submit', mock_send_message)
+    mocker.patch(f'server.utils.phone._send_messagebird_message.submit', mock_send_message)
+    mocker.patch(f'server.utils.phone._send_at_message.submit', mock_send_message)
 
     assert get_session() is None
     resp = req("", test_client, sender)

@@ -91,19 +91,15 @@ def test_transfer_usages_for_user(authed_sempo_admin_user):
     assert isinstance(usages, list)
 
 
-def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfer_account_user):
-    send_message = mocker.MagicMock()
-    mocker.patch('server.message_processor.send_message', send_message)
-
+def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfer_account_user, mock_sms_apis):
     user = create_transfer_account_user
     admin_reset_user_pin(user)
 
     assert user.failed_pin_attempts == 0
     assert isinstance(user.pin_reset_tokens, list)
     assert len(user.pin_reset_tokens) == 1
-
-    send_message.assert_has_calls([mocker.call(user.phone, 'Dial *483*46# to change your PIN')])
-
+    messages = mock_sms_apis
+    assert messages == [{'phone': user.phone, 'message': 'Dial *483*46# to change your PIN'}]
 
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [
 
@@ -124,7 +120,7 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
      'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://www.grassrootseconomics.org/terms-and-conditions.'),
 
 ])
-def test_send_welcome_sms(mocker, test_client, init_database,
+def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
                           preferred_language, org_key, expected_welcome, expected_terms):
     from flask import g
 
@@ -139,12 +135,8 @@ def test_send_welcome_sms(mocker, test_client, init_database,
                        default_organisation=organisation,
                        transfer_accounts=[transfer_account])
 
-    send_message = mocker.MagicMock()
-    mocker.patch('server.message_processor.send_message', send_message)
-
     send_onboarding_sms_messages(user)
 
-    send_message.assert_has_calls(
-        [mocker.call('+61123456789', expected_welcome),
-         mocker.call('+61123456789', expected_terms)])
-
+    messages = mock_sms_apis
+    assert messages == [{'phone': '+61123456789', 'message': expected_welcome},
+                        {'phone': '+61123456789', 'message': expected_terms},]
