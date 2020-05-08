@@ -44,7 +44,6 @@ class TokenAPI(MethodView):
         rather than creating a new contract.
         To create a new token contract, use api/contract/token/.
         """
-        # TODO: Requires tests
         post_data = request.get_json()
         name = post_data['name']
         symbol = post_data['symbol']
