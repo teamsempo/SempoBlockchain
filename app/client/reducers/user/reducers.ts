@@ -18,13 +18,9 @@ import {
   ResetPinAction
 } from "./actions";
 
-import {DEEEEEEP} from "../../utils";
+import { DEEEEEEP } from "../../utils";
 
-
-const byId = (
-  state: User[] = [] || {},
-  action: UserListAction
-): User[] => {
+const byId = (state: User[] = [] || {}, action: UserListAction): User[] => {
   switch (action.type) {
     case UserListActionTypes.DEEP_UPDATE_USER_LIST:
       return DEEEEEEP(state, action.payload);
@@ -36,7 +32,6 @@ const byId = (
       return state;
   }
 };
-
 
 interface RequestingState {
   isRequesting: boolean;
@@ -50,17 +45,16 @@ const initialState: RequestingState = {
   error: null
 };
 
-
 const loadStatus = (state = initialState, action: LoadUserAction) => {
   switch (action.type) {
     case LoadUserActionTypes.LOAD_USER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case LoadUserActionTypes.LOAD_USER_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case LoadUserActionTypes.LOAD_USER_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -70,13 +64,13 @@ const loadStatus = (state = initialState, action: LoadUserAction) => {
 const editStatus = (state = initialState, action: EditUserAction) => {
   switch (action.type) {
     case EditUserActionTypes.EDIT_USER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case EditUserActionTypes.EDIT_USER_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case EditUserActionTypes.EDIT_USER_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -86,11 +80,11 @@ const editStatus = (state = initialState, action: EditUserAction) => {
 const deleteStatus = (state = initialState, action: DeleteUserAction) => {
   switch (action.type) {
     case DeleteUserActionTypes.DELETE_USER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
     case DeleteUserActionTypes.DELETE_USER_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
     case DeleteUserActionTypes.DELETE_USER_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
     default:
       return state;
   }
@@ -99,13 +93,13 @@ const deleteStatus = (state = initialState, action: DeleteUserAction) => {
 const pinStatus = (state = initialState, action: ResetPinAction) => {
   switch (action.type) {
     case ResetPinActionTypes.RESET_PIN_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case ResetPinActionTypes.RESET_PIN_SUCCESS:
-      return {...state, isRequesting: false, success: true};
+      return { ...state, isRequesting: false, success: true };
 
     case ResetPinActionTypes.RESET_PIN_FAILURE:
-      return {...state, isRequesting: false, error: action.error};
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -126,20 +120,23 @@ const initialCreateStatusState: CreateUserState = {
   one_time_code: null
 };
 
-const createStatus = (state = initialCreateStatusState, action: CreateUserAction) => {
+const createStatus = (
+  state = initialCreateStatusState,
+  action: CreateUserAction
+) => {
   switch (action.type) {
     case CreateUserActionTypes.RESET_CREATE_USER:
       return initialCreateStatusState;
 
     case CreateUserActionTypes.CREATE_USER_REQUEST:
-      return {...state, isRequesting: true};
+      return { ...state, isRequesting: true };
 
     case CreateUserActionTypes.CREATE_USER_SUCCESS:
       return {
         ...state,
         isRequesting: false,
         success: true,
-        one_time_code: action.payload.data.user.one_time_code,
+        one_time_code: action.payload.data.user.one_time_code
       };
 
     case CreateUserActionTypes.CREATE_USER_FAILURE:

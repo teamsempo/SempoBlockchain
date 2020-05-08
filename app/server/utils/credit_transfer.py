@@ -19,7 +19,6 @@ from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
 from server.models.credit_transfer import CreditTransfer
-from server.models.blockchain_transaction import BlockchainTransaction
 from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
@@ -176,18 +175,6 @@ def make_blockchain_transfer(transfer_amount,
     if uuid:
         transfer.uuid = uuid
 
-    if existing_blockchain_txn:
-        existing_blockchain_txn_obj = BlockchainTransaction(
-            status='SUCCESS',
-            message='External Txn',
-            added_date=datetime.datetime.utcnow(),
-            hash=existing_blockchain_txn,
-            transaction_type='transfer'
-        )
-
-        existing_blockchain_txn_obj.credit_transfer = transfer
-        db.session.add(existing_blockchain_txn_obj)
-
     if automatically_resolve_complete:
         transfer.resolve_as_completed(existing_blockchain_txn=existing_blockchain_txn)
 
@@ -210,6 +197,7 @@ def make_payment_transfer(transfer_amount,
                           uuid=None,
                           transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
                           is_ghost_transfer=False,
+                          enable_pusher=True,
                           queue='high-priority'):
     """
     This is used for internal transfers between Sempo wallets.
@@ -297,7 +285,8 @@ def make_payment_transfer(transfer_amount,
 
     if automatically_resolve_complete:
         transfer.resolve_as_completed(queue=queue)
-        pusher.push_admin_credit_transfer(transfer)
+        if enable_pusher:
+            pusher.push_admin_credit_transfer(transfer)
 
     if make_cashout_incentive_transaction:
         try:

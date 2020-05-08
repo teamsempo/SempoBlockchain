@@ -1,7 +1,7 @@
 FROM python:3.6-slim-stretch
 
 RUN apt update \
-  && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
+  && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev curl
 
 # GE MIGRATION
 # For local OSX try:
@@ -17,18 +17,16 @@ RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-de
 
 
 COPY ./config.py ./config_files/* /src/
-ADD ./app/server /src/server
-ADD ./app/migrations /src/migrations
-ADD ./app/manage.py /src
-ADD ./app/RedisQueue.py /src
-ADD ./app/_docker_app_script.sh /
-ADD ./test /src/test
-ADD ./invoke_tests.py /src
-ADD .coveragerc /src
+COPY ./app/server /src/server
+COPY ./app/migrations /src/migrations
+COPY ./app/manage.py /src
+COPY ./app/RedisQueue.py /src
+COPY ./app/_docker_app_script.sh /
+COPY ./test /src/test
+COPY ./invoke_tests.py /src
+COPY .coveragerc /src
 
 WORKDIR /
-
-RUN apt -y install curl
 
 RUN chmod +x /_docker_app_script.sh
 

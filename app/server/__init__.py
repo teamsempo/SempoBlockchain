@@ -1,5 +1,6 @@
 from typing import Callable, Union
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g, abort
+from flask_executor import Executor
 import json
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy, BaseQuery, Pagination
@@ -21,7 +22,6 @@ import sys
 import os
 from web3 import Web3, HTTPProvider
 
-from server.utils.phone import MessageProcessor
 
 # try:
 #     import uwsgi
@@ -55,6 +55,7 @@ def create_app():
 
     app.config.from_object('config')
     app.config['BASEDIR'] = os.path.abspath(os.path.dirname(__file__))
+    app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
     # app.config["SQLALCHEMY_ECHO"] = True
 
     # ensure the instance folder exists
@@ -72,7 +73,7 @@ def create_app():
 
 def register_extensions(app):
     db.init_app(app)
-
+    executor.init_app(app)
     basic_auth.init_app(app)
 
     @app.before_request
@@ -308,6 +309,7 @@ db = SQLAlchemy(query_class=NoCountPaginateQuery,
                 })
 
 basic_auth = BasicAuth()
+executor = Executor()
 
 # limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
 
@@ -337,6 +339,8 @@ except:
             return ''
         def trigger(self, *args, **kwargs):
             pass
+        def trigger_batch(self, *args, **kwargs):
+            pass
 
     pusher_client = PusherMock()
 
@@ -349,9 +353,6 @@ def africas_talking_launcher():
 twilio_client = none_if_exception(lambda: TwilioClient(config.TWILIO_SID, config.TWILIO_TOKEN))
 messagebird_client = none_if_exception(lambda: messagebird.Client(config.MESSAGEBIRD_KEY))
 africastalking_client = none_if_exception(africas_talking_launcher)
-
-message_processor = MessageProcessor(
-    twilio_client=twilio_client, messagebird_client=messagebird_client, africastalking_client=africastalking_client)
 
 from server.utils.blockchain_tasks import BlockchainTasker
 bt = BlockchainTasker()

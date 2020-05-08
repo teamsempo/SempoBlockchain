@@ -23,6 +23,10 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
     else:
         auth = None
 
+    # create the user who is referring
+    create_transfer_account_user.phone = referred_by
+    user_phone_accessor(create_transfer_account_user)
+
     response = test_client.post(
         "/api/v1/user/",
         headers=dict(
@@ -41,7 +45,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             'initial_disbursement': 0,
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
-            'referred_by': user_phone_accessor(create_transfer_account_user) #create the user who is referring
+            'referred_by': user_phone_accessor(create_transfer_account_user)
         })
     
     assert response.status_code == status_code
@@ -60,7 +64,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
         assert data['user']['location'] == 'Elwood'
         assert data['user']['business_usage_id'] == init_database.session.query(TransferUsage)\
             .filter_by(name=business_usage_name).first().id
-        # assert data['user']['referred_by'] == referred_by  #todo: not returned in schema, fixed in #PR123
+        assert data['user']['referred_by'] == user_phone_accessor(create_transfer_account_user)
 
 
 @pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, tier, status_code", [

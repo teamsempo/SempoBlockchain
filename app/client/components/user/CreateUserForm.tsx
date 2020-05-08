@@ -1,12 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 
-import {
-  reduxForm,
-  InjectedFormProps,
-  formValueSelector,
-  FormSection
-} from "redux-form";
+import { reduxForm, InjectedFormProps, formValueSelector } from "redux-form";
 import QrReadingModal from "../qrReadingModal";
 import { ErrorMessage, ModuleHeader } from "../styledElements";
 import AsyncButton from "../AsyncButton";
@@ -51,6 +46,7 @@ export type ICreateUserUpdate = ICreateUser & ICreateVendor;
 interface OuterProps {
   users: any;
   transferUsages: TransferUsage[];
+  transferAccountType: string;
 }
 
 interface StateProps {
@@ -252,11 +248,9 @@ class CreateUserForm extends React.Component<
   }
 }
 
-// TODO: can't figure out the typing here...
-const CreateUserFormReduxForm = reduxForm({
+const CreateUserFormReduxForm = reduxForm<ICreateUser, Props>({
   form: "createUser",
   validate
-  // @ts-ignore
 })(CreateUserForm);
 
 export default connect(
@@ -273,5 +267,4 @@ export default connect(
           .default_disbursement / 100
     };
   }
-  // @ts-ignore
 )(CreateUserFormReduxForm);

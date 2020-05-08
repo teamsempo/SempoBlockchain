@@ -4,7 +4,8 @@ from typing import Optional
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.sql import func
 
-from server import db, message_processor
+from server import db
+from server.utils.phone import send_message
 from server.exceptions import (
     NoTransferAllowedLimitError,
     TransferBalanceFractionLimitError,
@@ -35,7 +36,7 @@ class TokenProcessor(object):
     def send_sms(user, message_key, **kwargs):
         # if we use token processor similarly for other countries later, can generalize country to init
         message = i18n_for(user, "ussd.kenya.{}".format(message_key), **kwargs)
-        message_processor.send_message(user.phone, message)
+        send_message(user.phone, message)
 
     @staticmethod
     def send_success_sms(message_key: str, user: User, other_user: User, amount: float, tx_time: datetime,
