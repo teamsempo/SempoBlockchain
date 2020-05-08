@@ -302,7 +302,7 @@ class MinimumSentLimit(AmountLimit):
     def validate_transfer(self, transfer: CreditTransfer):
         available = self.available_amount(transfer)
         if available < int(transfer.transfer_amount):
-            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(available, 0))
+            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(int(available), 0))
 
             raise MinimumSentLimitError(
                 transfer_amount_limit=self._aggregate_sent(transfer),

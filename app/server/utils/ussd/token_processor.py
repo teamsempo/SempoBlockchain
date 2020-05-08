@@ -11,7 +11,8 @@ from server.exceptions import (
     TransferBalanceFractionLimitError,
     TransferCountLimitError,
     TransferAmountLimitError,
-    InsufficientBalanceError
+    InsufficientBalanceError,
+    MinimumSentLimitError
 )
 from server.models.credit_transfer import CreditTransfer
 from server.models.exchange import Exchange
@@ -285,7 +286,7 @@ class TokenProcessor(object):
                 "exchange_not_allowed_error_sms",
             )
 
-        except TransferAmountLimitError as e:
+        except (TransferAmountLimitError, MinimumSentLimitError) as e:
             TokenProcessor.send_sms(
                 sender,
                 "exchange_amount_error_sms",
