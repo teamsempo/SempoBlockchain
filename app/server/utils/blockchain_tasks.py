@@ -51,7 +51,9 @@ class BlockchainTasker(object):
                           func, args=None,
                           gas_limit=None,
                           prior_tasks=None,
-                          queue=None):
+                          queue=None,
+                          task_uuid=None
+                          ):
         kwargs = {
             'signing_address': signing_address,
             'contract_address': contract_address,
@@ -63,7 +65,7 @@ class BlockchainTasker(object):
         }
         return task_runner.delay_task(
             self._eth_endpoint('transact_with_contract_function'),
-            kwargs=kwargs, queue=queue
+            kwargs=kwargs, queue=queue, task_uuid=task_uuid
         ).id
 
     def get_blockchain_task(self, task_uuid):
@@ -176,7 +178,8 @@ class BlockchainTasker(object):
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,
                             prior_tasks=None,
-                            queue='high-priority'):
+                            queue='high-priority',
+                            task_uuid=None):
         """
         Makes a "Transfer" or "Transfer From" transaction on an ERC20 token.
 
@@ -201,7 +204,8 @@ class BlockchainTasker(object):
                     raw_amount
                 ],
                 prior_tasks=prior_tasks,
-                queue=queue
+                queue=queue,
+                task_uuid=task_uuid
             )
 
         return self._transaction_task(
@@ -215,7 +219,8 @@ class BlockchainTasker(object):
                 token.system_amount_to_token(amount, queue)
             ],
             prior_tasks=prior_tasks,
-            queue=queue
+            queue=queue,
+            task_uuid=task_uuid
         )
 
     def make_approval(self,
