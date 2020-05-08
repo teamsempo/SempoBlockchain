@@ -21,7 +21,11 @@ def _load_cache(key):
     cached_object = red.get(key)
     if not cached_object:
         return None
-    return pickle.loads(cached_object)       
+    try:
+        return pickle.loads(cached_object)
+    except:
+        red.delete(key)
+        return None
 
 def execute_with_partial_history_cache(metric_name, query, object_model, strategy, disable_cache = False):
     # disable_cache pass-thru. This is so we don't cache data when filters are active.
@@ -29,9 +33,9 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
         return _handle_combinatory_strategy(query, None, strategy)
 
     # Redis object names
-    CURRENT_MAX_ID = f'{g.active_organisation}_{object_model.__table__.name}_max_id'
-    HIGHEST_ID_CACHED = f'{metric_name}_{g.active_organisation}_max_cached_id'
-    CACHE_RESULT = f'{metric_name}_{g.active_organisation}'
+    CURRENT_MAX_ID = f'{g.active_organisation.id}_{object_model.__table__.name}_max_id'
+    HIGHEST_ID_CACHED = f'{g.active_organisation.id}_{metric_name}_max_cached_id'
+    CACHE_RESULT = f'{g.active_organisation.id}_{metric_name}'
 
     # Checks if provided combinatry strategy is valid
     if strategy not in valid_strategies:
@@ -48,7 +52,12 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     # Gets cache results since the last time the metrics were fetched
     highest_id_in_cache = int(red.get(HIGHEST_ID_CACHED) or 0)
     cache_result = _load_cache(CACHE_RESULT)
-    filtered_query = query.filter(object_model.id > highest_id_in_cache)
+    # If there's no cache (either it's a new attribute we're tracking, or the cache is corrupted)
+    # then we should pull results starting at id=0
+    if cache_result:
+        filtered_query = query.filter(object_model.id > highest_id_in_cache)
+    else:
+        filtered_query = query
 
     #Combines results
     result = _handle_combinatory_strategy(filtered_query, cache_result, strategy)
