@@ -437,7 +437,7 @@ def init_database():
     # Create the database and the database table
 
     with current_app.app_context():
-        db.create_all()  # todo- use manage.py
+        db.create_all()
 
     yield db  # this is where the testing happens!
 
@@ -469,6 +469,10 @@ def mock_pusher(mocker):
     mocker.patch('server.pusher_client.trigger')
     mocker.patch('server.pusher_client.authenticate')
 
+
+@pytest.fixture(autouse=True)
+def mock_amazon_ses(mocker):
+    mocker.patch('server.utils.amazon_ses.ses_email_handler')
 
 @pytest.fixture(scope="module")
 def monkeymodule(request):
