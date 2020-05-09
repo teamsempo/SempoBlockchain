@@ -45,9 +45,8 @@ sw:
     send_token_pin_authorization:
       first: |
         CON Tuma %{transaction_amount} %{token_name} kwa %{recipient_phone}.
-                Weka nambari ya siri kuthibitisha.
-                0. Nyuma
-                0. Nyuma
+        Weka nambari ya siri kuthibitisha.
+        0. Nyuma
       retry: |
         CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
         0. Nyuma
