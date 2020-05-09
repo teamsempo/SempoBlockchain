@@ -852,7 +852,7 @@ def create_user_without_transfer_account(phone):
                 phone=phone,
                 registration_method=RegistrationMethodEnum.USSD_SIGNUP)
 
-    organisation = Organisation.query.get(2)
+    organisation = g.active_organisation
 
     if organisation:
         user.add_user_to_organisation(organisation, False)
@@ -875,7 +875,7 @@ def attach_transfer_account_to_user(user):
     if user.primary_blockchain_address:
         raise Exception('User already has a transfer account attached.')
 
-    organisation = Organisation.query.get(2)
+    organisation = g.active_organisation
     if not organisation:
         raise Exception("No active organisation")
 

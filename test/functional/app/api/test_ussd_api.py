@@ -167,8 +167,7 @@ def test_invalid_service_code(mocker, test_client, init_database, initialised_bl
     assert 'END Bonyeza {} kutumia mtandao'.format(valid_service_code) in resp
 
 
-def test_ussd_self_signup_flow(mocker,
-                               test_client,
+def test_ussd_self_signup_flow(test_client,
                                init_database,
                                init_seed,
                                create_temporary_user,
@@ -207,8 +206,7 @@ def test_ussd_self_signup_flow(mocker,
     assert user.location == 'Unknown location'
 
 
-def test_ussd_self_signup_wrong_pin_entry(mocker,
-                                          test_client,
+def test_ussd_self_signup_wrong_pin_entry(test_client,
                                           init_database,
                                           create_temporary_user,
                                           create_organisation):
