@@ -16,11 +16,11 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
   const [switcherActive, setSwitcherActive] = React.useState(false);
 
   const login: LoginState = useSelector((state: ReduxState) => state.login);
-  let { email, organisationId } = login;
+  let { email } = login;
   const organisations: Organisation[] = useSelector((state: ReduxState) => Object.keys(state.organisations.byId).map(
     id => state.organisations.byId[Number(id)]
   ));
-  const activeOrganisation = organisationId != null && organisations[organisationId];
+  const activeOrganisation = useSelector((state: ReduxState) => state.organisations.byId[Number(state.login.organisationId)]);
 
   const dispatch: any = useDispatch();
 
