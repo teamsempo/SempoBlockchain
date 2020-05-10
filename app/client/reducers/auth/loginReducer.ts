@@ -16,12 +16,6 @@ export interface LoginState {
   adminTier?: string;
 }
 
-export interface OrganisationFlat {
-  id: number;
-  name: string;
-  token: string;
-}
-
 const initialLoginState: LoginState = {
   isLoggingIn: false,
   token: null,

@@ -2,7 +2,7 @@ import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { SVG, StyledLogoLink } from "./styles";
 import styled from "styled-components";
-import { LoginState, OrganisationFlat } from "../../reducers/auth/loginReducer";
+import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 import { LoginAction } from "../../reducers/auth/actions";
 import { Organisation } from "../../reducers/organisation/types";
