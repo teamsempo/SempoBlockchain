@@ -8,11 +8,13 @@ import { ReduxState } from "../../reducers/rootReducer";
 import { replaceSpaces } from "../../utils";
 import MobileTopBar from "./MobileTopBar";
 import OrgSwitcher from "./OrgSwitcher";
+import { Organisation } from "../../reducers/organisation/types";
 
 interface StateProps {
   loggedIn: boolean;
   email: string | null;
-  orgName: string;
+  activeOrganisation: Organisation,
+  organisationList: Organisation[]
 }
 
 interface DispatchProps {}
@@ -39,14 +41,19 @@ declare global {
 class NavBar extends React.Component<Props, State> {
   readonly state = initialState;
 
-  componentWillMount() {
+  componentDidMount() {
+    let activeOrg = this.props.activeOrganisation;
+    let orgName =
+      (activeOrg && replaceSpaces(activeOrg.name).toLowerCase()) || null;
     let deploymentName = window.DEPLOYMENT_NAME;
 
     //TODO: Allow setting of region for this
     let s3_region = "https://sempo-logos.s3-ap-southeast-2.amazonaws.com";
-    let custom_url = `${s3_region}/${this.props.orgName.toLowerCase()}.${
+    let custom_url = `${s3_region}/${orgName}.${
       deploymentName === "dev" ? "svg" : "png"
     }`;
+
+    console.log("Custom URL is", custom_url);
 
     this.imageExists(custom_url, exists => {
       if (exists) {
@@ -149,7 +156,10 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     loggedIn: state.login.token != null,
     email: state.login.email,
-    orgName: state.login.organisationId != null ? replaceSpaces(state.organisations.byId[state.login.organisationId].name) : null
+    activeOrganisation: state.organisations.byId[Number(state.login.organisationId)],
+    organisationList: Object.keys(state.organisations.byId).map(
+      id => state.organisations.byId[Number(id)]
+    )
   };
 };
 
