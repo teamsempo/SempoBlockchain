@@ -149,7 +149,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     loggedIn: state.login.token != null,
     email: state.login.email,
-    orgName: replaceSpaces(state.login.organisationName)
+    orgName: state.login.organisationId != null ? replaceSpaces(state.organisations.byId[state.login.organisationId].name) : null
   };
 };
 

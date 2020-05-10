@@ -18,9 +18,9 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
   const login: LoginState = useSelector((state: ReduxState) => state.login);
   let { email, organisationId } = login;
   const organisations: Organisation[] = useSelector((state: ReduxState) => Object.keys(state.organisations.byId).map(
-    id => state.organisations.byId[id]
+    id => state.organisations.byId[Number(id)]
   ));
-  const activeOrganisation = organisations[organisationId];
+  const activeOrganisation = organisationId != null && organisations[organisationId];
 
   const dispatch: any = useDispatch();
 
@@ -31,7 +31,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
   }
 
   let toggleSwitchOrgDropdown = () => {
-    if (organisations == null || organisations.length <= 1) {
+    if (organisations.length <= 1) {
       return;
     }
 
