@@ -21,9 +21,13 @@ class TransferSubTypeEnum(enum.Enum):
 
 class TransferModeEnum(enum.Enum):
     NFC = "NFC"
+    USSD = "USSD"
     SMS = "SMS"
     QR  = "QR"
+    WEB = "WEB"
+    MOBILE = "MOBILE"
     INTERNAL = "INTERNAL"
+    EXTERNAL = "EXTERNAL"
     OTHER    = "OTHER"
 
 
