@@ -1,8 +1,7 @@
 import { LoginAction } from "./actions";
-
 import { LoginActionTypes } from "./types";
 
-interface LoginState {
+export interface LoginState {
   isLoggingIn: boolean;
   token: null | string;
   userId: null | number;
@@ -15,6 +14,12 @@ interface LoginState {
   tfaURL: null | string;
   tfaFailure: boolean;
   adminTier?: string;
+}
+
+export interface OrganisationFlat {
+  id: number;
+  name: string;
+  token: string;
 }
 
 const initialLoginState: LoginState = {
