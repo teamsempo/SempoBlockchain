@@ -39,7 +39,6 @@ def fake_username():
 def fake_password():
     return 'FakePass'
 
-# todo- permissions api, reset password, request reset password
 
 @pytest.mark.parametrize("activation_token", [
     "alsdfjkadsljflk",
@@ -220,22 +219,23 @@ def test_logout_api(test_client, authed_sempo_admin_user):
         assert register_response.status_code == status_code
 
 
-# todo- need to mock boto3 SES api so i'm not bombarded with emails
-# @pytest.mark.parametrize("email,status_code", [
-#     ("tristan+1@withsempo.com", 201),
-#     ("tristan", 403),
-# ])
-# def test_register_and_activate_api(test_client, init_database, email, status_code):
-#     """
-#     GIVEN a Flask application
-#     WHEN the '/api/auth/register/' api is posted to (POST)
-#     THEN check the response
-#     """
-#     from server.models.user import User
-#     register_response = test_client.post('/api/auth/register/',
-#                                 data=json.dumps(dict(email=email, password='TestPassword')),
-#                                 content_type='application/json', follow_redirects=True)
-#     assert register_response.status_code == status_code
+@pytest.mark.parametrize("email,status_code", [
+    ("admin@acme.org", 201),
+    ("tristan", 403),
+    ("invalid@domain.org", 403)
+])
+def test_register_api(init_database, test_client, email, status_code):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/register/' api is posted to (POST)
+    THEN check the response
+    """
+    register_response = test_client.post('/api/v1/auth/register/',
+                                         data=json.dumps(dict(email=email, password='TestPassword')),
+                                         content_type='application/json', follow_redirects=True)
+
+    assert register_response.status_code == status_code
+
 
 @pytest.mark.parametrize("tier,status_code", [
     ('admin', 403),
