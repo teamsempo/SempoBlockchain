@@ -239,6 +239,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  transfer_metadata=None,
                  fiat_ramp=None,
                  transfer_subtype: TransferSubTypeEnum=None,
+                 transfer_mode: TransferModeEnum = None,
                  is_ghost_transfer=False):
 
         if amount < 0:
@@ -285,6 +286,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.transfer_type = transfer_type
         self.transfer_subtype = transfer_subtype
+        self.transfer_mode = transfer_mode
         self.transfer_metadata = transfer_metadata
     
         if uuid is not None:
