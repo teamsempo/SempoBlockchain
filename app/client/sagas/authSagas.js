@@ -123,7 +123,10 @@ function* saveOrgId({ payload }) {
     let query_params = parseQuery(window.location.search);
 
     // if query param and payload are matching then just reload to update navbar
-    if (query_params["org"] && payload.organisationId == query_params["org"]) {
+    if (
+      query_params["org"] &&
+      payload.organisationId === parseInt(query_params["org"])
+    ) {
       window.location.reload();
     } else {
       window.location.assign("/");
