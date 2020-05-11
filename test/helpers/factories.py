@@ -86,7 +86,7 @@ class UssdSessionFactoryBase(SQLAlchemyModelFactory):
 def UssdSessionFactory(**kwargs):
     # Uses Class Naming Convention because it's actually a delayed execution Class
     def inner():
-        unique_name = 'Foo' + str(Sequence(lambda n: n))
+        unique_name = Sequence(lambda n: f'FooSSD{n}')
         ussd_menu = UssdMenuFactory(name=unique_name, display_key=unique_name)
 
         return UssdSessionFactoryBase(ussd_menu=ussd_menu, **kwargs)
