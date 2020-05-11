@@ -4,11 +4,7 @@ const { jsWithBabel: tsjPreset } = require("ts-jest/presets");
 module.exports = {
   verbose: true,
   roots: ["./client"],
-  collectCoverageFrom: [
-    //TODO(COV): Get Typescript coverage working for untested files
-    "**/*.{js,jsx}",
-    "!**/node_modules/**"
-  ],
+  collectCoverageFrom: ["**/*.{js,jsx,ts,tsx}", "!**/node_modules/**"],
   globals: {
     // this is needed to use our babel.config.js settings
     "ts-jest": {
