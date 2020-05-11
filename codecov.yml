@@ -1,2 +1,2 @@
 fixes:
-  - "server/*::app/server/"
+  - "server/::app/server/"
