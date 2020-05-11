@@ -13,6 +13,9 @@ def test_new_credit_transfer_complete(create_credit_transfer):
     create_credit_transfer.resolve_as_completed()  # complete credit transfer
     assert create_credit_transfer.transfer_status is TransferStatusEnum.COMPLETE
 
+    with pytest.raises(Exception):
+        assert create_credit_transfer.resolve_as_completed()
+
 
 def test_new_credit_transfer_rejected(create_credit_transfer):
     """
@@ -30,3 +33,6 @@ def test_new_credit_transfer_rejected(create_credit_transfer):
 
     assert create_credit_transfer.transfer_status is TransferStatusEnum.REJECTED
     assert create_credit_transfer.resolution_message is not None
+
+    with pytest.raises(Exception):
+        assert create_credit_transfer.resolve_as_rejected()

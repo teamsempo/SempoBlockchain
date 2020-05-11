@@ -1,12 +1,13 @@
 {
   "name": "SempoBlockchain",
-  "version": "1.1.11",
+  "version": "1.1.13",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:clear": "jest --clearCache",
     "test:coverage": "jest --coverage",
     "dev": "NODE_ENV=dev && webpack -d --watch",
     "build": "NODE_ENV=prod && webpack -p",

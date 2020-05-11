@@ -2,7 +2,7 @@ from typing import Optional, Union
 from decimal import Decimal
 import datetime, enum
 from sqlalchemy.sql import func
-from flask import current_app, g
+from flask import g
 from sqlalchemy.ext.hybrid import hybrid_property
 from server import db, bt
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, \
@@ -14,7 +14,7 @@ from server.models.organisation import Organisation
 import server.models.credit_transfer
 from server.exceptions import TransferAccountDeletionError, ResourceAlreadyDeletedError
 
-from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum
+from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum, TransferModeEnum
 
 
 class TransferAccountType(enum.Enum):
@@ -231,16 +231,19 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
         disbursement = make_payment_transfer(
             initial_disbursement, token=self.token, send_user=sender, receive_user=self.primary_user,
-            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT, is_ghost_transfer=False, require_sender_approved=False,
+            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT, transfer_mode=TransferModeEnum.WEB,
+            is_ghost_transfer=False, require_sender_approved=False,
             require_recipient_approved=False, automatically_resolve_complete=auto_resolve)
 
         return disbursement
 
-    def initialise_withdrawal(self, withdrawal_amount):
+    def initialise_withdrawal(self, withdrawal_amount, transfer_mode):
         from server.utils.credit_transfer import make_withdrawal_transfer
         withdrawal = make_withdrawal_transfer(withdrawal_amount,
                                               send_account=self,
-                                              automatically_resolve_complete=False)
+                                              automatically_resolve_complete=False,
+                                              transfer_mode=transfer_mode,
+                                              token=self.token)
         return withdrawal
 
     def _bind_to_organisation(self, organisation):

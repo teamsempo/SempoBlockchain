@@ -27,14 +27,13 @@ from server.models.utils import ephemeral_alchemy_object
 from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 from server.utils.transfer_limits import (
     TransferLimit,
     AmountLimit,
     BalanceFractionLimit,
     TotalAmountLimit
 )
-
 
 class TokenProcessor(object):
 
@@ -127,13 +126,14 @@ class TokenProcessor(object):
         transfer = make_payment_transfer(amount, token=sent_token, send_user=sender, receive_user=recipient,
                                          transfer_use=transfer_use, is_ghost_transfer=True,
                                          require_sender_approved=False, require_recipient_approved=False,
-                                         transfer_subtype=transfer_subtype)
+                                         transfer_subtype=transfer_subtype, transfer_mode=TransferModeEnum.USSD)
         exchanged_amount = None
 
         if sent_token.id != received_token.id:
             exchange = Exchange()
             exchange.exchange_from_amount(user=recipient, from_token=sent_token, to_token=received_token,
-                                          from_amount=amount, prior_task_uuids=[transfer.blockchain_task_uuid])
+                                          from_amount=amount, prior_task_uuids=[transfer.blockchain_task_uuid],
+                                          transfer_mode=TransferModeEnum.USSD)
             exchanged_amount = exchange.to_transfer.transfer_amount
 
         return exchanged_amount

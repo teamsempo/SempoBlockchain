@@ -1,8 +1,7 @@
 import hashlib
 import hmac
 import time
-from flask import make_response, jsonify, current_app, g
-import datetime, json
+from flask import make_response, jsonify, current_app
 import sentry_sdk
 
 from server.exceptions import (
@@ -14,7 +13,7 @@ from server.exceptions import (
     TransferAccountNotFoundError
 )
 
-from server import db, red, bt
+from server import db
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
 from server.models.blockchain_address import BlockchainAddress
@@ -23,8 +22,7 @@ from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
-from sqlalchemy.dialects.postgresql import JSONB
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 
 
 def cents_to_dollars(amount_cents):
@@ -75,7 +73,7 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
     return None
 
 def handle_transfer_to_blockchain_address(
-    transfer_amount, sender_user, recipient_blockchain_address, transfer_use, uuid=None):
+        transfer_amount, sender_user, recipient_blockchain_address, transfer_use, transfer_mode, uuid=None):
 
     if transfer_amount > sender_user.transfer_account.balance:
         response_object = {
@@ -89,6 +87,7 @@ def handle_transfer_to_blockchain_address(
                                             sender_user.transfer_account.blockchain_address.address,
                                             recipient_blockchain_address,
                                             transfer_use,
+                                            transfer_mode,
                                             uuid=None)
 
         # This is the top-level commit for this flow
@@ -182,6 +181,7 @@ def make_blockchain_transfer(transfer_amount,
 
     return transfer
 
+
 def make_payment_transfer(transfer_amount,
                           token=None,
                           send_user=None,
@@ -208,7 +208,7 @@ def make_payment_transfer(transfer_amount,
     :param receive_user:
     :param receive_transfer_account:
     :param transfer_use:
-    :param transfer_mode:
+    :param transfer_mode: TransferModeEnum
     :param require_sender_approved:
     :param require_recipient_approved:
     :param require_sufficient_balance:
@@ -216,6 +216,8 @@ def make_payment_transfer(transfer_amount,
     :param uuid:
     :param transfer_subtype: accepts TransferSubType str.
     :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
+    :param enable_pusher:
+    :param queue:
     :return:
     """
 
@@ -243,6 +245,7 @@ def make_payment_transfer(transfer_amount,
                               uuid=uuid,
                               transfer_type=TransferTypeEnum.PAYMENT,
                               transfer_subtype=transfer_subtype,
+                              transfer_mode=transfer_mode,
                               is_ghost_transfer=is_ghost_transfer)
 
     make_cashout_incentive_transaction = False
@@ -265,7 +268,6 @@ def make_payment_transfer(transfer_amount,
 
         transfer.transfer_use = usages
 
-    transfer.transfer_mode = transfer_mode
     transfer.uuid = uuid
 
     if require_sender_approved and not transfer.check_sender_is_approved():
@@ -296,7 +298,8 @@ def make_payment_transfer(transfer_amount,
             make_payment_transfer(
                 incentive_amount,
                 receive_user=receive_user,
-                transfer_subtype=TransferSubTypeEnum.INCENTIVE
+                transfer_subtype=TransferSubTypeEnum.INCENTIVE,
+                transfer_mode=TransferModeEnum.INTERNAL
             )
 
         except Exception as e:
@@ -329,9 +332,7 @@ def make_withdrawal_transfer(transfer_amount,
 
     transfer = CreditTransfer(transfer_amount, token,
                               sender_user=send_account,
-                              uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL)
-
-    transfer.transfer_mode = transfer_mode
+                              uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL, transfer_mode=transfer_mode)
 
     if require_sender_approved and not transfer.check_sender_is_approved():
         message = "Sender {} is not approved".format(send_account)
@@ -372,9 +373,8 @@ def make_deposit_transfer(transfer_amount,
     transfer = CreditTransfer(amount=transfer_amount,
                               token=token,
                               recipient_user=receive_account,
-                              transfer_type=TransferTypeEnum.DEPOSIT, uuid=uuid, fiat_ramp=fiat_ramp)
-
-    transfer.transfer_mode = transfer_mode
+                              transfer_type=TransferTypeEnum.DEPOSIT, transfer_mode=transfer_mode,
+                              uuid=uuid, fiat_ramp=fiat_ramp)
 
     if automatically_resolve_complete:
         transfer.resolve_as_completed()
@@ -390,7 +390,8 @@ def make_target_balance_transfer(target_balance,
                                  require_sufficient_balance=True,
                                  automatically_resolve_complete=True,
                                  uuid=None,
-                                 queue='high-priority'):
+                                 queue='high-priority',
+                                 enable_pusher=True):
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
 
@@ -410,7 +411,8 @@ def make_target_balance_transfer(target_balance,
                                          automatically_resolve_complete=automatically_resolve_complete,
                                          uuid=uuid,
                                          transfer_subtype=TransferSubTypeEnum.RECLAMATION,
-                                         queue=queue)
+                                         queue=queue,
+                                         enable_pusher=enable_pusher)
 
     else:
         transfer = make_payment_transfer(transfer_amount,
@@ -420,7 +422,8 @@ def make_target_balance_transfer(target_balance,
                                          automatically_resolve_complete=automatically_resolve_complete,
                                          uuid=uuid,
                                          transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
-                                         queue=queue)
+                                         queue=queue,
+                                         enable_pusher=enable_pusher)
 
     return transfer
 
@@ -440,7 +443,7 @@ def transfer_credit_via_phone(send_phone, receive_phone, transfer_amount):
     if send_user.transfer_account.balance < transfer_amount:
         return {'status': 'Fail', 'message': "Insufficient Funds"}
 
-    transfer = make_payment_transfer(transfer_amount, send_user, receive_user)
+    transfer = make_payment_transfer(transfer_amount, send_user, receive_user, transfer_mode=TransferModeEnum.SMS)
 
     return {
         'status': 'Success',
