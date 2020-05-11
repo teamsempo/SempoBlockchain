@@ -44,9 +44,7 @@ class authModuleContainer extends React.Component {
     if (this.props.loggedIn) {
       var button = (
         <div style={{ margin: "auto 1em" }}>
-          <StyledButton onClick={this.props.logout}>
-            Logout{this.props.loginData.vendorId ? " Vendor" : " Admin"}
-          </StyledButton>
+          <StyledButton onClick={this.props.logout}>Logout Admin</StyledButton>
         </div>
       );
     } else {
