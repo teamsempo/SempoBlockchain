@@ -8,7 +8,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:clear": "jest --clearCache",
-    "test:coverage": "jest --coverage -w 1",
+    "test:coverage": "jest --coverage --maxWorkers 2",
     "dev": "NODE_ENV=dev && webpack -d --watch",
     "build": "NODE_ENV=prod && webpack -p",
     "analyze": "source-map-explorer server/static/javascript/dist/main.bundle.*",
