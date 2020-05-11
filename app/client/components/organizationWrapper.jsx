@@ -12,9 +12,9 @@ const OrganizationWrapper = Component =>
       let query_params = parseQuery(location.search);
       if (
         query_params["org"] &&
-        this.props.login.organisationId !== query_params["org"]
+        this.props.login.organisationId !== parseInt(query_params["org"])
       ) {
-        let org_id = query_params["org"];
+        let org_id = parseInt(query_params["org"]);
         // retrieve org of "org_id" from state
         let org = this.props.organisationList.find(e => e.id === org_id);
 
