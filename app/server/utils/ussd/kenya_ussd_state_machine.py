@@ -385,7 +385,7 @@ class KenyaUssdStateMachine(Machine):
     def has_empty_name_info(self, user_input):
         if self.user.first_name == 'Unknown first name' or not \
                 self.user.first_name or \
-                self.user.last_name_name == 'Unknown last name' or not \
+                self.user.last_name == 'Unknown last name' or not \
                 self.user.last_name:
             return True
         else:
