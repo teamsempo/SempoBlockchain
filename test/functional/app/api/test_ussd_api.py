@@ -6,7 +6,6 @@ from flask import g
 
 import config
 from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_phone
-from migrations.seed import create_ussd_menus, create_business_categories
 from helpers.factories import UserFactory, TransferUsageFactory, OrganisationFactory
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
@@ -19,12 +18,6 @@ fake = Faker()
 fake.add_provider(phone_number)
 phone = partial(fake.msisdn)
 unregistered_user_phone = make_kenyan_phone(phone())
-
-
-@pytest.fixture(scope='module')
-def init_seed(test_client, init_database):
-    create_ussd_menus()
-    create_business_categories()
 
 
 # TODO make helper functions and messages array fixture object
