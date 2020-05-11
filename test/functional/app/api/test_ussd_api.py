@@ -1,4 +1,4 @@
-import pytest
+import json
 from faker.providers import phone_number
 from faker import Faker
 from functools import partial
@@ -9,16 +9,16 @@ from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_pho
 from helpers.factories import UserFactory, TransferUsageFactory, OrganisationFactory
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
-from server.models.user import User
+from server.models.user import User, RegistrationMethodEnum
 from server.models.ussd import UssdSession
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import default_transfer_account, create_user_without_transfer_account
+from server.utils.auth import get_complete_auth_token
 
 fake = Faker()
 fake.add_provider(phone_number)
 phone = partial(fake.msisdn)
 unregistered_user_phone = make_kenyan_phone(phone())
-
 
 # TODO make helper functions and messages array fixture object
 messages = []
@@ -34,6 +34,7 @@ def req(text,
         client,
         sender_phone,
         service_code=None,
+        session_id=session_id,
         auth_username=config.EXTERNAL_AUTH_USERNAME,
         auth_password=config.EXTERNAL_AUTH_PASSWORD):
     if service_code is None:
@@ -98,6 +99,7 @@ def test_golden_path_send_token(mocker, test_client, init_database, initialised_
 
     def mock_send_message(phone, message):
         messages.append({'phone': phone, 'message': message})
+
     mocker.patch(f'server.utils.phone._send_twilio_message.submit', mock_send_message)
     mocker.patch(f'server.utils.phone._send_messagebird_message.submit', mock_send_message)
     mocker.patch(f'server.utils.phone._send_at_message.submit', mock_send_message)
@@ -165,7 +167,6 @@ def test_ussd_self_signup_flow(test_client,
                                init_seed,
                                create_temporary_user,
                                create_organisation):
-
     # create organisation
     organisation = create_organisation
     organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
@@ -203,7 +204,6 @@ def test_ussd_self_signup_wrong_pin_entry(test_client,
                                           init_database,
                                           create_temporary_user,
                                           create_organisation):
-
     # create organisation
     organisation = create_organisation
     organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
@@ -214,11 +214,17 @@ def test_ussd_self_signup_wrong_pin_entry(test_client,
 
     # set active organisation
     g.active_organisation = organisation
+    other_unregistered_user_phone = '+611256465214'
 
-    resp = req("", test_client, unregistered_user_phone)
+    resp = req("", test_client, other_unregistered_user_phone)
     assert "CON Welcome to Sarafu" in resp
 
-    user = create_temporary_user
+    # create self signup user
+    user = UserFactory(id=22,
+                       phone=other_unregistered_user_phone,
+                       first_name='Unknown first name',
+                       last_name='Unknown last name',
+                       registration_method=RegistrationMethodEnum.USSD_SIGNUP)
 
     resp = req("1", test_client, user.phone, auth_username=external_auth_username)
     assert "CON Please enter a PIN" in resp
@@ -229,3 +235,64 @@ def test_ussd_self_signup_wrong_pin_entry(test_client,
     resp = req("1212", test_client, user.phone, auth_username=external_auth_username)
     assert "END The new PIN does not match the one you entered." in resp
 
+
+def test_reset_pin_flow(test_client,
+                        init_database,
+                        create_organisation,
+                        authed_sempo_admin_user):
+
+    # define different session id
+    other_session_id = 'ATUid_05af06225e6163ec2dc9dc9cf8bc97aa000'
+
+    # create organisation
+    organisation = create_organisation
+    organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
+
+    # external auth password matching model definition of the same value.
+    # org.external_auth_username = 'admin_'+(org.name or '').lower().replace(' ', '_') /961ab9adc300_.py
+    external_auth_username = 'admin_' + (organisation.name or '').lower().replace(' ', '_')
+
+    # create highest tier admin
+    admin = authed_sempo_admin_user
+    admin.set_held_role('ADMIN', 'sempoadmin')
+
+    # get admin's auth token
+    auth = get_complete_auth_token(authed_sempo_admin_user)
+
+    # create self signup user
+    user = UserFactory(id=21,
+                       phone='+6185274136',
+                       first_name='Unknown first name',
+                       last_name='Unknown last name',
+                       pin_hash=User.salt_hash_secret('0000'),
+                       failed_pin_attempts=0,
+                       preferred_language="en",
+                       registration_method=RegistrationMethodEnum.USSD_SIGNUP)
+
+    # bind user to organisation
+    user.add_user_to_organisation(organisation, False)
+
+    # reset pin as admin
+    response = test_client.post(
+        '/api/v1/user/reset_pin/',
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ),
+        content_type='application/json',
+        json={
+            'user_id': user.id
+        }
+    )
+    assert response.status_code == 200
+    assert len(user.pin_reset_tokens) > 0
+
+    # test user's reset process
+    ussd_resp = req("", test_client, user.phone, session_id=other_session_id)
+    assert "CON Please enter a PIN to manage your account." in ussd_resp
+
+    ussd_resp = req("1212", test_client, user.phone, session_id=other_session_id)
+    assert "CON Enter your PIN again" in ussd_resp
+
+    ussd_resp = req("1212", test_client, user.phone, session_id=other_session_id)
+    assert "CON Welcome to Sarafu" in ussd_resp
