@@ -166,7 +166,6 @@ jobs:
           name: Run Frontend Tests
           command: |
             cd app
-            npm run test:clear
             npm run test:coverage
       - run:
           name: Upload coverage report to Codecov
