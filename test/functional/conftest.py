@@ -1,9 +1,7 @@
 import pytest
-import os
-import sys
-
 from helpers.utils import mock_class, will_func_test_blockchain
 from helpers.blockchain_tasker import MockBlockchainTasker
+from migrations.seed import create_ussd_menus, create_business_categories
 
 @pytest.fixture(scope='module', autouse=True)
 def mock_blockchain_tasks(monkeymodule):
@@ -32,3 +30,8 @@ def load_account():
             # print(f' Load account result {hash}')
             return hash
     return inner
+
+@pytest.fixture(scope='module')
+def init_seed(test_client, init_database):
+    create_ussd_menus()
+    create_business_categories()
