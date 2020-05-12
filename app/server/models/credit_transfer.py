@@ -281,11 +281,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.transfer_subtype = transfer_subtype
         self.transfer_mode = transfer_mode
         self.transfer_metadata = transfer_metadata
-    
+
         if uuid is not None:
             self.uuid = uuid
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
-
-        self.last_worker_update = None
