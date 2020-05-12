@@ -209,5 +209,3 @@ def test_terms_only_sent_once(mocker, test_client, init_database, mock_sms_apis)
     state_machine.feed_char('0000')
 
     assert len(messages) == 1
-
-

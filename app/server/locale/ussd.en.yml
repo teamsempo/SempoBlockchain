@@ -44,7 +44,8 @@ en:
         10. Show previous
     send_token_pin_authorization:
       first: |
-        CON Please enter your PIN.
+        CON Send %{transaction_amount} %{token_name} to %{recipient_phone}.
+        Please enter your PIN to confirm.
         0. Back
       retry: |
         CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.

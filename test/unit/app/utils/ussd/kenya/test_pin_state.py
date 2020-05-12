@@ -7,6 +7,7 @@ import json
 from helpers.factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
+from server import db
 from server.utils import user as user_utils
 
 fake = Faker()
@@ -22,7 +23,8 @@ pin_blocked_user = partial(base_user, pin_hash=User.salt_hash_secret('0000'), fa
 initial_pin_entry_state = partial(UssdSessionFactory, state="initial_pin_entry")
 initial_pin_confirmation_state = partial(UssdSessionFactory, state="initial_pin_confirmation",
                                          session_data=json.loads('{"initial_pin": "0000"}'))
-send_token_pin_authorization_state = partial(UssdSessionFactory, state="send_token_pin_authorization")
+send_token_pin_authorization_state = partial(UssdSessionFactory, state="send_token_pin_authorization",
+                                             session_data=json.loads('{"transaction_amount": "10" }'))
 current_pin_state = partial(UssdSessionFactory, state="current_pin")
 new_pin_state = partial(UssdSessionFactory, state="new_pin")
 new_pin_confirmation_state = partial(UssdSessionFactory, state="new_pin_confirmation",
@@ -69,56 +71,41 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
  [
      # send token pin auth combinations
      (send_token_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
-     (send_token_pin_authorization_state, standard_user, "1212",
-      "send_token_pin_authorization", 1, 2),
-     (send_token_pin_authorization_state, standard_user, "0000",
-      "send_token_confirmation", 1, 0),
-     (send_token_pin_authorization_state, standard_user, "1212",
-      "exit_pin_blocked", 2, 3),
-     (send_token_pin_authorization_state, standard_user, "0000",
-      "send_token_confirmation", 2, 0),
+     (send_token_pin_authorization_state, standard_user, "1212", "send_token_pin_authorization", 1, 2),
+     (send_token_pin_authorization_state, standard_user, "0000", "complete", 1, 0),
+     (send_token_pin_authorization_state, standard_user, "1212", "exit_pin_blocked", 2, 3),
+     (send_token_pin_authorization_state, standard_user, "0000", "complete", 2, 0),
      # balance inquiry pin auth combinations
      (balance_inquiry_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
-     (balance_inquiry_pin_authorization_state, standard_user, "1212",
-      "balance_inquiry_pin_authorization", 1, 2),
-     (balance_inquiry_pin_authorization_state, standard_user, "0000",
-      "complete", 1, 0),
-     (balance_inquiry_pin_authorization_state, standard_user, "1212",
-      "exit_pin_blocked", 2, 3),
-     (balance_inquiry_pin_authorization_state, standard_user, "0000",
-      "complete", 2, 0),
+     (balance_inquiry_pin_authorization_state, standard_user, "1212", "balance_inquiry_pin_authorization", 1, 2),
+     (balance_inquiry_pin_authorization_state, standard_user, "0000", "complete", 1, 0),
+     (balance_inquiry_pin_authorization_state, standard_user, "1212", "exit_pin_blocked", 2, 3),
+     (balance_inquiry_pin_authorization_state, standard_user, "0000", "complete", 2, 0),
      # exchange token pin auth combinations
      (exchange_token_pin_authorization_state, pin_blocked_user, "1111", "exit_pin_blocked", 3, 3),
-     (exchange_token_pin_authorization_state, standard_user, "1212",
-      "exchange_token_pin_authorization", 1, 2),
-     (exchange_token_pin_authorization_state, standard_user, "0000",
-      "exchange_token_confirmation", 1, 0),
-     (exchange_token_pin_authorization_state, standard_user, "1212",
-      "exit_pin_blocked", 2, 3),
-     (exchange_token_pin_authorization_state, standard_user, "0000",
-      "exchange_token_confirmation", 2, 0),
+     (exchange_token_pin_authorization_state, standard_user, "1212", "exchange_token_pin_authorization", 1, 2),
+     (exchange_token_pin_authorization_state, standard_user, "0000", "exchange_token_confirmation", 1, 0),
+     (exchange_token_pin_authorization_state, standard_user, "1212", "exit_pin_blocked", 2, 3),
+     (exchange_token_pin_authorization_state, standard_user, "0000", "exchange_token_confirmation", 2, 0),
      # exchange rate pin auth combinations
      (exchange_rate_pin_authorization_state, pin_blocked_user, "1111", "exit_pin_blocked", 3, 3),
-     (exchange_rate_pin_authorization_state, standard_user, "1212",
-      "exchange_rate_pin_authorization", 1, 2),
-     (exchange_rate_pin_authorization_state, standard_user, "0000",
-      "complete", 1, 0),
-     (exchange_rate_pin_authorization_state, standard_user, "1212",
-      "exit_pin_blocked", 2, 3),
-     (exchange_rate_pin_authorization_state, standard_user, "0000",
-      "complete", 2, 0),
+     (exchange_rate_pin_authorization_state, standard_user, "1212", "exchange_rate_pin_authorization", 1, 2),
+     (exchange_rate_pin_authorization_state, standard_user, "0000", "complete", 1, 0),
+     (exchange_rate_pin_authorization_state, standard_user, "1212", "exit_pin_blocked", 2, 3),
+     (exchange_rate_pin_authorization_state, standard_user, "0000", "complete", 2, 0),
  ])
 def test_authorize_pin(test_client, init_database, session_factory, user_factory, user_input, expected,
                        before_failed_pin_attempts, after_failed_pin_attempts):
-    session = session_factory()
-    user = user_factory(phone='+6140000000')
-    user.failed_pin_attempts = before_failed_pin_attempts
+    with db.session.no_autoflush:
+        session = session_factory()
+        user = user_factory(phone='+6140000000')
+        user.failed_pin_attempts = before_failed_pin_attempts
 
-    state_machine = KenyaUssdStateMachine(session, user)
+        state_machine = KenyaUssdStateMachine(session, user)
 
-    state_machine.feed_char(user_input)
-    assert state_machine.state == expected
-    assert user.failed_pin_attempts == after_failed_pin_attempts
+        state_machine.feed_char(user_input)
+        assert state_machine.state == expected
+        assert user.failed_pin_attempts == after_failed_pin_attempts
 
 
 def test_change_initial_pin(mocker, test_client, init_database):

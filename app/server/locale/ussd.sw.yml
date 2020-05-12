@@ -43,16 +43,13 @@ sw:
         %{other_options}
         10. Onyesha chaguzi zilizopita
     send_token_pin_authorization:
-      first: CON Weka nambari ya siri.
+      first: |
+        CON Tuma %{transaction_amount} %{token_name} kwa %{recipient_phone}.
+        Weka nambari ya siri kuthibitisha.
         0. Nyuma
-      retry:
+      retry: |
         CON Weka nambari ya siri. Una majaribio %{remaining_attempts} yaliyobaki.
         0. Nyuma
-    send_token_confirmation: |
-      CON Tuma %{transaction_amount} %{token_name} kwa %{recipient_phone}
-      1. Thibitisha
-      2. Futa
-      0. Nyuma
     directory_listing: |
       CON Sokoni
       %options%
