@@ -135,7 +135,7 @@ class KenyaUssdProcessor:
             recipient_phone = recipient.user_details()
             token = default_token(user)
             transaction_amount = ussd_session.get_data('transaction_amount')
-            if user.failed_pin_attempts is not None and user.failed_pin_attempts > 0:
+            if user.failed_pin_attempts > 0:
                 return i18n_for(
                     user=user,
                     key="{}.{}".format(menu.display_key, 'retry'),

@@ -46,6 +46,7 @@ en:
       first: |
         CON Send %{transaction_amount} %{token_name} to %{recipient_phone}.
         Please enter your PIN to confirm.
+        0. Back
       retry: |
         CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
         0. Back
