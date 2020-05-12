@@ -171,8 +171,7 @@ def test_ussd_self_signup_flow(test_client,
     organisation = create_organisation
     organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
 
-    # external auth password matching model definition of the same value.
-    # org.external_auth_username = 'admin_'+(org.name or '').lower().replace(' ', '_') /961ab9adc300_.py
+    # define username to match the external_auth_username as defined in : /app/migrations/versions/961ab9adc300_.py
     external_auth_username = 'admin_' + (organisation.name or '').lower().replace(' ', '_')
 
     # set active organisation
@@ -208,8 +207,7 @@ def test_ussd_self_signup_wrong_pin_entry(test_client,
     organisation = create_organisation
     organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
 
-    # external auth password matching model definition of the same value.
-    # org.external_auth_username = 'admin_'+(org.name or '').lower().replace(' ', '_') /961ab9adc300_.py
+    # define username to match the external_auth_username as defined in : /app/migrations/versions/961ab9adc300_.py
     external_auth_username = 'admin_' + (organisation.name or '').lower().replace(' ', '_')
 
     # set active organisation
@@ -247,10 +245,6 @@ def test_reset_pin_flow(test_client,
     # create organisation
     organisation = create_organisation
     organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
-
-    # external auth password matching model definition of the same value.
-    # org.external_auth_username = 'admin_'+(org.name or '').lower().replace(' ', '_') /961ab9adc300_.py
-    external_auth_username = 'admin_' + (organisation.name or '').lower().replace(' ', '_')
 
     # create highest tier admin
     admin = authed_sempo_admin_user
