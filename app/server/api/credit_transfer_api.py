@@ -351,8 +351,6 @@ class CreditTransferAPI(MethodView):
 
             else:
                 message = 'Transfer Successful' if auto_resolve else 'Transfer Pending. Must be approved.'
-                db.session.commit()
-                
                 if is_bulk:
                     credit_transfers.append(transfer)
                     response_list.append({'status': 201, 'message': message})

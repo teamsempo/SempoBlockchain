@@ -22,7 +22,7 @@ from server.exceptions import (
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, BlockchainStatus, TransferModeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, TransferModeEnum
 
 
 class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
@@ -45,13 +45,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     resolution_message = db.Column(db.String())
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
-
-    # Present status, and time of last update (according to worker) to ensure the present blockchain_status 
-    # is the newest (since order of ack's is not guaranteed)
-    blockchain_status   = db.Column(db.Enum(BlockchainStatus), default=BlockchainStatus.PENDING)
-    blockchain_hash = db.Column(db.String)
-    last_worker_update  = db.Column(db.DateTime)
-    messages = db.relationship('WorkerMessages', backref='credit_transfer', lazy=True)
 
     sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
     recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
