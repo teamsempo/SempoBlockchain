@@ -4,7 +4,8 @@ This file (test_utils_user.py) contains the unit tests for the user.py file in u
 from functools import partial
 
 import pytest
-
+import config
+from flask import g
 
 # REDACTED: USERS NOW HAVE MULTIPLE TRANSFER ACCOUNTS
 # def test_create_transfer_account_user(create_transfer_account_user):
@@ -18,7 +19,10 @@ import pytest
 #     assert create_transfer_account_user.one_time_code is not None
 #     assert create_transfer_account_user.transfer_account is not None
 from helpers.factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory, fake
-from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages, admin_reset_user_pin, proccess_create_or_modify_user_request
+from server.models.user import RegistrationMethodEnum
+from server.utils.user import transfer_usages_for_user, admin_reset_user_pin, proccess_create_or_modify_user_request, send_onboarding_sms_messages, attach_transfer_account_to_user
+from server import db
+
 
 @pytest.mark.parametrize("last_name, location, lat, lng, initial_disbursement", [
     ('Hound', 'Melbourne, Victoria Australia', -37.8104277, 144.9629153, 400),
@@ -140,3 +144,22 @@ def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
     messages = mock_sms_apis
     assert messages == [{'phone': '+61123456789', 'message': expected_welcome},
                         {'phone': '+61123456789', 'message': expected_terms},]
+
+def test_attach_transfer_account_to_user(test_client, init_database, create_organisation):
+    with db.session.no_autoflush:
+        organisation = create_organisation
+        organisation.external_auth_password = config.EXTERNAL_AUTH_PASSWORD
+
+        g.active_organisation = organisation
+
+        user = UserFactory(id=20,
+                           phone='+61756432178',
+                           first_name='Unknown first name',
+                           last_name='Unknown last name',
+                           registration_method=RegistrationMethodEnum.USSD_SIGNUP)
+
+        user.add_user_to_organisation(organisation, False)
+        assert user.primary_blockchain_address is None
+
+        user_with_transfer_account = attach_transfer_account_to_user(user)
+        assert user_with_transfer_account.primary_blockchain_address is not None
