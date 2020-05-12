@@ -71,6 +71,7 @@ class TransactionProcessor(object):
 
     def process_send_eth_transaction(self, transaction_id,
                                      recipient_address, amount, task_id=None):
+
         partial_txn_dict = {
             'to': recipient_address,
             'value': amount
