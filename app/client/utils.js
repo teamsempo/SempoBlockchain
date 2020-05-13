@@ -3,7 +3,6 @@ import merge from "deepmerge";
 import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
-import { MessageAction } from "./reducers/message/actions";
 
 export function formatMoney(
   amount,

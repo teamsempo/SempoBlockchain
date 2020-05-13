@@ -1,5 +1,5 @@
-import "./setup/setupTests";
-import * as utils from "../utils";
+import "../setup/setupTests";
+import * as utils from "../../utils";
 
 describe("test formatMoney", () => {
   it.each([
