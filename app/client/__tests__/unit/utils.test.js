@@ -34,18 +34,62 @@ describe("test URL functions", () => {
 });
 
 describe("test localStorage", () => {
-  test("test setOrgId", () => {
-    utils.storeOrgid("1");
-    expect(localStorage).toHaveProperty("orgId", "1");
+  const orgId = "1";
+  const TFAToken = "abcdadsf123123123";
+  const sessionToken = "asfdasfd91234pfa";
+
+  describe("orgId", () => {
+    test("test setOrgId", () => {
+      utils.storeOrgid(orgId);
+      expect(localStorage).toHaveProperty("orgId", orgId);
+    });
+
+    test("test getOrgId", () => {
+      expect(utils.getOrgId()).toEqual(orgId);
+    });
+
+    test("test removeOrgId", () => {
+      utils.removeOrgId();
+      expect(localStorage).not.toHaveProperty("orgId", orgId);
+    });
   });
 
-  test("test getOrgId", () => {
-    expect(utils.getOrgId()).toEqual("1");
+  describe("TFAToken", () => {
+    test("test storeTFAToken", () => {
+      utils.storeTFAToken(TFAToken);
+      expect(localStorage).toHaveProperty("TFAToken", TFAToken);
+    });
+
+    test("test getTFAToken", () => {
+      expect(utils.getTFAToken()).toEqual(TFAToken);
+    });
+
+    test("test removeTFAToken", () => {
+      utils.removeTFAToken();
+      expect(localStorage).not.toHaveProperty("TFAToken", TFAToken);
+    });
   });
 
-  test("test removeOrgId", () => {
-    utils.removeOrgId("1");
-    expect(localStorage).not.toHaveProperty("orgId", "1");
+  describe("sessionToken", () => {
+    test("test storeSessionToken", () => {
+      utils.storeSessionToken(sessionToken);
+      expect(localStorage).toHaveProperty("sessionToken", sessionToken);
+    });
+
+    test("test getToken - sessionToken only", () => {
+      expect(utils.getToken()).toEqual(sessionToken);
+    });
+
+    test("test getToken - sessionToken + TFAToken", () => {
+      utils.storeTFAToken(TFAToken);
+      expect(utils.getToken()).toEqual(sessionToken + "|" + TFAToken);
+      utils.removeTFAToken();
+    });
+
+    test("test removeSessionToken", () => {
+      utils.removeSessionToken();
+      expect(localStorage).not.toHaveProperty("sessionToken", sessionToken);
+    });
   });
 });
 
