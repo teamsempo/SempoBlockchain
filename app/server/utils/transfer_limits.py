@@ -210,10 +210,6 @@ class TransferLimit(ABC):
                 or (transfer.transfer_type, transfer.transfer_subtype) in self.applied_to_transfer_types
         ) and self.application_filter(transfer)
 
-    def _aggregate_transfers(self, transfer: CreditTransfer):
-        # Not specified as an abstract method because a few classes don't use it
-        pass
-
     def _aggregate_transfer_query(self, transfer: CreditTransfer, query: Query):
         return pipe(query,
                     matching_sender_user_filter(transfer),
@@ -242,14 +238,14 @@ class TransferLimit(ABC):
         self.custom_aggregation_filter = aggregation_filter
 
 
-class AmountLimit(TransferLimit):
+class AggregateAmountLimit(TransferLimit):
 
     @abstractmethod
-    def total_amount(self, transfer: CreditTransfer) -> TransferAmount:
+    def period_amount(self, transfer: CreditTransfer) -> TransferAmount:
         pass
 
     def available_amount(self, transfer: CreditTransfer) -> TransferAmount:
-        return self.total_amount(transfer) - self._aggregate_transfers(transfer)
+        return self.period_amount(transfer) - self._aggregate_transfers(transfer)
 
     def _aggregate_transfers(self, transfer: CreditTransfer):
         # We need to sub the own transfer amount to the allowance because it's hard to exclude it from the aggregation
@@ -259,7 +255,7 @@ class AmountLimit(TransferLimit):
         ).execution_options(show_all=True).first().total - int(transfer.transfer_amount)
 
 
-class TotalAmountLimit(AmountLimit):
+class TotalAmountLimit(AggregateAmountLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.available_amount(transfer)
@@ -267,14 +263,14 @@ class TotalAmountLimit(AmountLimit):
             message = 'Account Limit "{}" reached. {} available'.format(self.name, max(allowance, 0))
 
             raise TransferAmountLimitError(
-                transfer_amount_limit=self.total_amount(transfer),
+                transfer_amount_limit=self.period_amount(transfer),
                 transfer_amount_avail=allowance,
                 limit_time_period_days=self.time_period_days,
                 token=transfer.token.name,
                 message=message
             )
 
-    def total_amount(self, transfer: CreditTransfer) -> TransferAmount:
+    def period_amount(self, transfer: CreditTransfer) -> TransferAmount:
         return self._total_amount
 
     def __init__(
@@ -297,7 +293,7 @@ class TotalAmountLimit(AmountLimit):
         self._total_amount: TransferAmount = int(total_amount * config.LIMIT_EXCHANGE_RATE)
 
 
-class MinimumSentLimit(AmountLimit):
+class MinimumSentLimit(AggregateAmountLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         available = self.available_amount(transfer)
@@ -312,7 +308,7 @@ class MinimumSentLimit(AmountLimit):
                 message=message
             )
 
-    def total_amount(self, transfer: CreditTransfer):
+    def period_amount(self, transfer: CreditTransfer):
         return self._aggregate_sent(transfer)
 
     def _aggregate_sent(self, transfer: CreditTransfer):
@@ -341,7 +337,7 @@ class MinimumSentLimit(AmountLimit):
         )
 
 
-class BalanceFractionLimit(AmountLimit):
+class BalanceFractionLimit(AggregateAmountLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.available_amount(transfer)
@@ -358,7 +354,7 @@ class BalanceFractionLimit(AmountLimit):
                 message=message
             )
 
-    def total_amount(self, transfer: CreditTransfer) -> TransferAmount:
+    def period_amount(self, transfer: CreditTransfer) -> TransferAmount:
         return self.total_from_balance(transfer.sender_transfer_account.balance)
 
     def total_from_balance(self, balance: int) -> TransferAmount:

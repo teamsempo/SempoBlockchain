@@ -30,7 +30,7 @@ from server.utils.credit_transfer import cents_to_dollars
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 from server.utils.transfer_limits import (
     TransferLimit,
-    AmountLimit,
+    AggregateAmountLimit,
     BalanceFractionLimit,
     TotalAmountLimit
 )
@@ -75,7 +75,7 @@ class TokenProcessor(object):
         return default_transfer_account(user).balance
 
     @staticmethod
-    def get_default_limit(user: User, token: Token) -> Optional[Tuple[AmountLimit, TransferAmount]]:
+    def get_default_limit(user: User, token: Token) -> Optional[Tuple[AggregateAmountLimit, TransferAmount]]:
         """
         :param user:
         :param token:
@@ -97,7 +97,7 @@ class TokenProcessor(object):
             if len(limits) == 0:
                 return None
 
-            amount_limits = filter(lambda l: isinstance(l, AmountLimit), limits)
+            amount_limits = filter(lambda l: isinstance(l, AggregateAmountLimit), limits)
             with_amounts = [(limit, limit.available_amount(dummy_transfer)) for limit in amount_limits]
             sorted_amount_limits = sorted(with_amounts, key=lambda l: l[1])
             return sorted_amount_limits[0] if len(sorted_amount_limits) > 0 else None
@@ -338,7 +338,7 @@ class TokenProcessor(object):
                 return ""
 
         def standard_string(t):
-            if t['limit'].total_amount:
+            if t['limit'].period_amount:
                 allowed_amount = f"{rounded_dollars(str(t['limit']._total_amount))}"
                 rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
                 return (
