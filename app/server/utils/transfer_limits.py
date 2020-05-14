@@ -9,8 +9,8 @@ from sqlalchemy.orm import Query
 from sqlalchemy.sql import func
 
 from server.exceptions import (
-    TransferLimitError,
     NoTransferAllowedLimitError,
+    MaximumPerTransferLimitError,
     MinimumSentLimitError,
     TransferAmountLimitError,
     TransferCountLimitError,
@@ -307,8 +307,40 @@ class NoTransferAllowedLimit(BaseTransferLimit):
         super().__init__(
             name,
             applied_to_transfer_types,
+            application_filter
+        )
+
+
+class MaximumAmountPerTransferLimit(BaseTransferLimit):
+
+    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+        return self.maximum_amount
+
+    def case_will_use(self, transfer: CreditTransfer):
+        return transfer.transfer_amount
+
+    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+        message = 'Maximum Per Transfer Exceeded (Limit {}). {} available'.format(self.name, self.maximum_amount)
+
+        raise MaximumPerTransferLimitError(
+            message=message,
+            maximum_amount_limit=self.maximum_amount,
+            token=transfer.token.name)
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: FilterFun,
+            maximum_amount: TransferAmount
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
             application_filter,
         )
+
+        self.maximum_amount = int(maximum_amount * config.LIMIT_EXCHANGE_RATE)
 
 
 class AggregateLimit(BaseTransferLimit):
