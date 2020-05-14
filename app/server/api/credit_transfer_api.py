@@ -1,10 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import or_
-from functools import partial
 import json
-import sentry_sdk
-import base64
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
@@ -14,7 +11,7 @@ from server.schemas import credit_transfers_schema, credit_transfer_schema, view
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
@@ -27,6 +24,7 @@ from server.exceptions import NoTransferAccountError, UserNotFoundError, Insuffi
     InvalidTargetBalanceError, BlockchainError
 
 credit_transfer_blueprint = Blueprint('credit_transfer', __name__)
+
 
 class CreditTransferAPI(MethodView):
 
@@ -290,6 +288,7 @@ class CreditTransferAPI(MethodView):
                         send_user=sender_user,
                         receive_user=recipient_user,
                         transfer_use=transfer_use,
+                        transfer_mode=TransferModeEnum.WEB,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
                         queue=queue
@@ -302,6 +301,7 @@ class CreditTransferAPI(MethodView):
                         send_user=sender_user,
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.RECLAMATION,
+                        transfer_mode=TransferModeEnum.WEB,
                         require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve,
                         queue=queue,
@@ -315,6 +315,7 @@ class CreditTransferAPI(MethodView):
                         receive_user=recipient_user,
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+                        transfer_mode=TransferModeEnum.WEB,
                         automatically_resolve_complete=auto_resolve,
                         queue=queue
                     )
@@ -325,7 +326,9 @@ class CreditTransferAPI(MethodView):
                         recipient_user,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        transfer_mode=TransferModeEnum.WEB,
+                        queue=queue,
+                        enable_pusher=not is_bulk
                     )
 
             except (InsufficientBalanceError,
@@ -407,6 +410,7 @@ class ConfirmWithdrawalAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
+
 class InternalCreditTransferAPI(MethodView):
 
     @requires_auth
@@ -439,7 +443,8 @@ class InternalCreditTransferAPI(MethodView):
                                             sender_blockchain_address,
                                             recipient_blockchain_address,
                                             existing_blockchain_txn=blockchain_transaction_hash,
-                                            require_sufficient_balance=False)
+                                            require_sufficient_balance=False,
+                                            transfer_mode=TransferModeEnum.INTERNAL)
 
         db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
@@ -451,6 +456,7 @@ class InternalCreditTransferAPI(MethodView):
             }
         }
         return make_response(jsonify(response_object)), 201
+
 
 class CreditTransferStatsApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
@@ -472,6 +478,7 @@ class CreditTransferStatsApi(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
+
 class CreditTransferFiltersApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
@@ -483,6 +490,7 @@ class CreditTransferFiltersApi(MethodView):
             }
         }
         return make_response(jsonify(response_object)), 200
+
 
 # add Rules for API Endpoints
 credit_transfer_blueprint.add_url_rule(

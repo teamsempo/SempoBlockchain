@@ -158,7 +158,8 @@ class Exchange(BlockchainTaskableBase):
         return to_amount/from_amount
 
     def exchange_from_amount(
-            self, user, from_token, to_token, from_amount, calculated_to_amount=None, prior_task_uuids=None
+            self, user, from_token, to_token, from_amount, calculated_to_amount=None, prior_task_uuids=None,
+            transfer_mode=None
     ):
         self.user = user
         self.from_token = from_token
@@ -171,7 +172,7 @@ class Exchange(BlockchainTaskableBase):
             from_token,
             sender_user=user,
             recipient_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, from_token),
-            transfer_type=TransferTypeEnum.EXCHANGE
+            transfer_type=TransferTypeEnum.EXCHANGE, transfer_mode=transfer_mode
         )
 
         if not self.from_transfer.check_sender_has_sufficient_balance():
@@ -242,7 +243,7 @@ class Exchange(BlockchainTaskableBase):
             to_token,
             sender_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, to_token),
             recipient_user=user,
-            transfer_type=TransferTypeEnum.EXCHANGE
+            transfer_type=TransferTypeEnum.EXCHANGE, transfer_mode=transfer_mode
         )
 
         db.session.add(self.to_transfer)
@@ -253,14 +254,14 @@ class Exchange(BlockchainTaskableBase):
         self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
         self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)
 
-    def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount):
+    def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount, transfer_mode):
         """
         This is 'to_desired_amount' rather than just 'to_amount'
         because we can't actually guarantee how much of the 'to' token the user will receive through the exchange
         """
         from_amount, calculated_to_amount = self._estimate_from_amount(from_token, to_token, to_desired_amount)
 
-        self.exchange_from_amount(user, from_token, to_token, from_amount, calculated_to_amount)
+        self.exchange_from_amount(user, from_token, to_token, from_amount, calculated_to_amount, transfer_mode)
 
     @staticmethod
     def _find_exchange_contract(from_token, to_token):
