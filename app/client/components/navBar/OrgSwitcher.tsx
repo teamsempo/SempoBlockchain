@@ -17,10 +17,15 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
 
   const login: LoginState = useSelector((state: ReduxState) => state.login);
   let { email } = login;
-  const organisations: Organisation[] = useSelector((state: ReduxState) => Object.keys(state.organisations.byId).map(
-    id => state.organisations.byId[Number(id)]
-  ));
-  const activeOrganisation = useSelector((state: ReduxState) => state.organisations.byId[Number(state.login.organisationId)]);
+  const organisations: Organisation[] = useSelector((state: ReduxState) =>
+    Object.keys(state.organisations.byId).map(
+      id => state.organisations.byId[Number(id)]
+    )
+  );
+  const activeOrganisation = useSelector(
+    (state: ReduxState) =>
+      state.organisations.byId[Number(state.login.organisationId)]
+  );
 
   const dispatch: any = useDispatch();
 
@@ -64,7 +69,9 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
           onClick={toggleSwitchOrgDropdown}
         >
           <div style={{ margin: "auto 0", maxWidth: "100px" }}>
-            <BoldedNavBarHeaderText>{activeOrganisation && activeOrganisation.name}</BoldedNavBarHeaderText>
+            <BoldedNavBarHeaderText>
+              {activeOrganisation && activeOrganisation.name}
+            </BoldedNavBarHeaderText>
             <StandardNavBarHeaderText>{email}</StandardNavBarHeaderText>
           </div>
           {orgs.length <= 1 ? null : (
@@ -82,7 +89,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         }}
       >
         <DropdownContentTitle>Switch Organisation</DropdownContentTitle>
-        {orgs.map(org => {
+        {orgs.map((org: Organisation) => {
           return (
             <DropdownContentText key={org.id} onClick={() => selectOrg(org.id)}>
               {org.name}
