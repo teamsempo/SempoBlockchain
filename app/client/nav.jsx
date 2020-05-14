@@ -59,7 +59,7 @@ import { ThemeProvider } from "styled-components";
 import { DefaultTheme } from "./components/theme.js";
 import { browserHistory } from "./app.jsx";
 import LoadingSpinner from "./components/loadingSpinner.jsx";
-import NavBar from "./components/navBar.jsx";
+import NavBar from "./components/navBar";
 
 const mapStateToProps = state => {
   return {
@@ -232,7 +232,7 @@ const LoadingSpinnerWrapperSideBarActive = () => {
 const PageWrapper = ({ noNav, component: Component, ...props }) => {
   return (
     <ErrorBoundary>
-      {noNav ? null : <NavBar location={props.location} />}
+      {noNav ? null : <NavBar />}
 
       <MessageBar />
 
