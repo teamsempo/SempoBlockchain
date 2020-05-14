@@ -1,5 +1,5 @@
 from typing import List, Callable, Optional, Union, Tuple, Iterable
-from abc import ABC, abstractmethod, ABCMeta
+from abc import ABC, abstractmethod
 
 import datetime
 from functools import reduce
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Query
 from sqlalchemy.sql import func
 
 from server.exceptions import (
+    TransferLimitError,
     NoTransferAllowedLimitError,
     MinimumSentLimitError,
     TransferAmountLimitError,
@@ -25,6 +26,12 @@ import config
 
 AppliedToTypes = List[Union[TransferTypeEnum,
                             Tuple[TransferTypeEnum, TransferSubTypeEnum]]]
+
+AggregateAvailability = Union[int, TransferAmount]
+
+FilterFun = Callable[[CreditTransfer], bool]
+
+QueryConstructorFunc = Callable[[CreditTransfer, Query]]
 
 PAYMENT = TransferTypeEnum.PAYMENT
 DEPOSIT = TransferTypeEnum.DEPOSIT
@@ -195,13 +202,68 @@ def empty_filter(transfer: CreditTransfer, query: Query):
 
 
 class BaseTransferLimit(ABC):
+    """
+    Base Limit Class. All limits use `applies_to_transfer` to determine if they are applied.
+    Specific Limit rules vary hugely, so this class is pretty sparse,
+    however, all limits follow the same overall process:
+    1. Check if the limit applies to the transfer, based off the a) Type/Subtype & b) Query Filters
+    2. Calculate how large the limit is (may be fixed, or variable)
+    3. Calculate how much of the limit is available (this may involve aggregating across prev transfers and subtracting)
+    4. Calculate how much the current transfer cases uses
+    5. Check if the current case uses more than what's available
+    """
+
     @abstractmethod
-    def validate_transfer(self, transfer: CreditTransfer):
+    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+        """
+        How much of the limit is still available. Uses a CreditTransfer object for context.
+        Is generally an amount, but can also be something like a number of transfers.
+        :param transfer: the transfer in question
+        :return: Count or Amount
+        """
         pass
 
     @abstractmethod
-    def available_amount(self, transfer: CreditTransfer) -> Union[int, TransferAmount]:
+    def case_will_use(self, transfer: CreditTransfer) -> AggregateAvailability:
+        """
+        How much of the limit will be used in this particular transfer case.
+        Is generally an amount, but can also be something like a number of transfers.
+        :param transfer: the transfer in question
+        :return: count or TransferAmount
+        """
+
+    @abstractmethod
+    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+        """
+        Throws some sort of TransferLimitError
+        """
         pass
+
+    def validate_transfer(self, transfer: CreditTransfer):
+        """
+        Will raise an exception if the provided transfer doesn't pass this limit
+        :param transfer: the transfer you wish to validate
+        :return: Nothing, just throws the appropriate error if the transfer doesn't pass
+        """
+
+        available = self.available(transfer)
+        if available < self.case_will_use(transfer):
+            self.throw_validation_error(transfer, available)
+
+    def applies_to_transfer(self, transfer: CreditTransfer) -> bool:
+        """
+        Determines if the limit applies to the given transfer. Uses a two step process:
+
+        - Include transfer only if it matches either a Type or a (Type,Subtype) tuple from applied_to_transfer_types
+        - Include transfer only if calling `application_filter` on the transfer returns true
+
+        :param transfer: the credit transfer in question
+        :return: boolean of whether the limit is applied or not
+        """
+        return (
+                       transfer.transfer_type in self.applied_to_transfer_types
+                       or (transfer.transfer_type, transfer.transfer_subtype) in self.applied_to_transfer_types
+               ) and self.application_filter(transfer)
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: {self.name}>"
@@ -209,8 +271,15 @@ class BaseTransferLimit(ABC):
     def __init__(self,
                  name: str,
                  applied_to_transfer_types: AppliedToTypes,
-                 application_filter: Callable,
+                 application_filter: FilterFun,
                  ):
+        """
+        :param name: Human-friendly name
+        :param applied_to_transfer_types: list which each item is either a
+         TransferType or a (TransferType ,TransferSubType) tuple
+        :param application_filter: one of the base or composite checks listed at the top of this file
+        """
+
         self.name = name
 
         # Force to list of tuples to ensure the use of 'in' behaves as expected
@@ -218,65 +287,142 @@ class BaseTransferLimit(ABC):
         self.application_filter = application_filter
 
 
-class AggregableLimit(ABC):
+class NoTransferAllowedLimit(BaseTransferLimit):
 
-    def _aggregate_transfer_query(self, transfer: CreditTransfer, query: Query):
-        return pipe(query,
-                    matching_sender_user_filter(transfer),
-                    not_rejected_filter,
-                    after_time_period_filter(self.time_period_days),
-                    self.custom_aggregation_filter(transfer))
+    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+        return 0
 
-    def __init__(self,
-                 time_period_days: int,
-                 aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
-                 ):
+    def case_will_use(self, transfer: CreditTransfer):
+        return 1
 
-        self.time_period_days = time_period_days
-        # TODO: Make LIMIT_EXCHANGE_RATE configurable per org
-        self.custom_aggregation_filter = aggregation_filter
-
-
-class AggregateAmountLimit(BaseTransferLimit, AggregableLimit):
-
-    @abstractmethod
-    def period_amount(self, transfer: CreditTransfer) -> TransferAmount:
-        pass
-
-    def available_amount(self, transfer: CreditTransfer) -> TransferAmount:
-        return self.period_amount(transfer) - self._aggregate_transfers(transfer)
-
-    def _aggregate_transfers(self, transfer: CreditTransfer):
-        # We need to sub the own transfer amount to the allowance because it's hard to exclude it from the aggregation
-        return self._aggregate_transfer_query(
-            transfer,
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-        ).execution_options(show_all=True).first().total - int(transfer.transfer_amount)
-
-
-class TotalAmountLimit(AggregateAmountLimit):
-
-    def validate_transfer(self, transfer: CreditTransfer):
-        allowance = self.available_amount(transfer)
-        if allowance < int(transfer.transfer_amount):
-            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(allowance, 0))
-
-            raise TransferAmountLimitError(
-                transfer_amount_limit=self.period_amount(transfer),
-                transfer_amount_avail=allowance,
-                limit_time_period_days=self.time_period_days,
-                token=transfer.token.name,
-                message=message
-            )
-
-    def period_amount(self, transfer: CreditTransfer) -> TransferAmount:
-        return self._total_amount
+    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+        raise NoTransferAllowedLimitError(token=transfer.token.name)
 
     def __init__(
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: Callable,
+            application_filter: FilterFun,
+    ):
+        super().__init__(
+            name,
+            applied_to_transfer_types,
+            application_filter,
+        )
+
+
+class AggregateLimit(BaseTransferLimit):
+    """
+    A transfer limit that uses an aggregate (count, total sent etc) of previous transfers over some time period
+    for its available amount criteria.
+    """
+
+    @abstractmethod
+    def available_base(self, transfer: CreditTransfer) -> AggregateAvailability:
+        """
+        Calculate the how much base availability there is
+        :param transfer: the credit transfer in question
+        :return:
+        """
+        pass
+    
+    @abstractmethod
+    def used_aggregator(
+            self,
+            transfer: CreditTransfer,
+            query_constructor: QueryConstructorFunc
+    ) -> AggregateAvailability:
+        """
+        The aggregator function is used to calculate the how much of the availability has been consumed.
+        Takes the query_constructor as an input rather than accessing via 'self' as it allows us to easily create
+        mixins for various types of aggregation (for example total transfer amounts).
+        :param transfer: the credit transfer in question
+        :param query_constructor: the query constructor as defined below.
+        :return:
+        """
+        pass
+
+    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+        base = self.available_base(transfer)
+        used = self.used_aggregator(transfer, self.query_constructor)
+
+        return base - used
+
+    def query_constructor(
+            self,
+            transfer: CreditTransfer,
+            query: Query,
+            custom_filter: Optional[FilterFun] = None
+    ) -> Query:
+
+        return pipe(
+            query,
+            matching_sender_user_filter(transfer),
+            not_rejected_filter,
+            after_time_period_filter(self.time_period_days),
+            custom_filter(transfer) if custom_filter else self.custom_aggregation_filter(transfer)
+        )
+
+    def __init__(self,
+                 name: str,
+                 applied_to_transfer_types: AppliedToTypes,
+                 application_filter: FilterFun,
+                 time_period_days: int,
+                 aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+                 ):
+        """
+        :param name:
+        :param applied_to_transfer_types:
+        :param application_filter:
+        :param time_period_days: How many days back to include in aggregation
+        :param aggregation_filter: An SQLAlchemy Query Filter
+        """
+
+        super().__init__(name, applied_to_transfer_types, application_filter)
+
+        self.time_period_days = time_period_days
+        self.custom_aggregation_filter = aggregation_filter
+
+
+class AggregateTransferAmountMixin(object):
+    """
+    A Mixing for aggregating over transfer amounts
+    """
+
+    @staticmethod
+    def used_aggregator(transfer: CreditTransfer, query_constructor: QueryConstructorFunc):
+        # We need to sub the transfer amount from the allowance because it's hard to exclude it from the aggregation
+        return query_constructor(
+            transfer,
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        ).execution_options(show_all=True).first() - int(transfer.transfer_amount)
+
+    @staticmethod
+    def case_will_use(transfer: CreditTransfer):
+        return transfer.transfer_amount
+
+
+class TotalAmountLimit(AggregateTransferAmountMixin, AggregateLimit):
+
+    def available_base(self, transfer: CreditTransfer) -> TransferAmount:
+        return self._total_amount
+
+    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+        message = 'Account Limit "{}" reached. {} available'.format(self.name, max(available, 0))
+
+        raise TransferAmountLimitError(
+            transfer_amount_limit=self.available_base(transfer),
+            transfer_amount_avail=available,
+            limit_time_period_days=self.time_period_days,
+            token=transfer.token.name,
+            message=message
+        )
+
+    def __init__(
+            self,
+            name: str,
+            applied_to_transfer_types: AppliedToTypes,
+            application_filter: FilterFun,
             time_period_days: int,
             total_amount: TransferAmount,
             aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
@@ -289,41 +435,34 @@ class TotalAmountLimit(AggregateAmountLimit):
             aggregation_filter
         )
 
+        # TODO: Make LIMIT_EXCHANGE_RATE configurable per org
         self._total_amount: TransferAmount = int(total_amount * config.LIMIT_EXCHANGE_RATE)
 
 
-class MinimumSentLimit(AggregateAmountLimit):
+class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
 
-    def validate_transfer(self, transfer: CreditTransfer):
-        available = self.available_amount(transfer)
-        if available < int(transfer.transfer_amount):
-            message = 'Account Limit "{}" reached. {} available'.format(self.name, max(int(available), 0))
-
-            raise MinimumSentLimitError(
-                transfer_amount_limit=self._aggregate_sent(transfer),
-                transfer_amount_avail=available,
-                limit_time_period_days=self.time_period_days,
-                token=transfer.token.name,
-                message=message
-            )
-
-    def period_amount(self, transfer: CreditTransfer):
-        return self._aggregate_sent(transfer)
-
-    def _aggregate_sent(self, transfer: CreditTransfer):
-        return pipe(
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')),
-            matching_sender_user_filter(transfer),
-            not_rejected_filter,
-            after_time_period_filter(self.time_period_days),
-            regular_payment_filter
+    def available_base(self, transfer: CreditTransfer) -> TransferAmount:
+        return self.query_constructor(
+            transfer,
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
         ).execution_options(show_all=True).first().total or 0
+
+    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+        message = 'Account Limit "{}" reached. {} available'.format(self.name, max(int(available), 0))
+
+        raise MinimumSentLimitError(
+            transfer_amount_limit=self.available_base(transfer),
+            transfer_amount_avail=available,
+            limit_time_period_days=self.time_period_days,
+            token=transfer.token.name,
+            message=message
+        )
 
     def __init__(
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: Callable,
+            application_filter: FilterFun,
             time_period_days: int,
             aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
     ):
@@ -336,35 +475,33 @@ class MinimumSentLimit(AggregateAmountLimit):
         )
 
 
-class BalanceFractionLimit(AggregateAmountLimit):
+class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
 
-    def validate_transfer(self, transfer: CreditTransfer):
-        allowance = self.available_amount(transfer)
-        if allowance < int(transfer.transfer_amount):
-            message = 'Account % Limit "{}" reached. {} available'.format(
-                self.name,
-                max([allowance, 0])
-            )
-            raise TransferBalanceFractionLimitError(
-                transfer_balance_fraction_limit=self.balance_fraction,
-                transfer_amount_avail=int(allowance),
-                limit_time_period_days=self.time_period_days,
-                token=transfer.token.name,
-                message=message
-            )
-
-    def period_amount(self, transfer: CreditTransfer) -> TransferAmount:
+    def available_base(self, transfer: CreditTransfer):
         return self.total_from_balance(transfer.sender_transfer_account.balance)
 
     def total_from_balance(self, balance: int) -> TransferAmount:
         amount: TransferAmount = int(self.balance_fraction * balance)
         return amount
 
+    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+        message = 'Account % Limit "{}" reached. {} available'.format(
+            self.name,
+            max([available, 0])
+        )
+        raise TransferBalanceFractionLimitError(
+            transfer_balance_fraction_limit=self.balance_fraction,
+            transfer_amount_avail=available,
+            limit_time_period_days=self.time_period_days,
+            token=transfer.token.name,
+            message=message
+        )
+
     def __init__(
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: Callable,
+            application_filter: FilterFun,
             time_period_days: int,
             balance_fraction: float,
             aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
@@ -383,33 +520,33 @@ class BalanceFractionLimit(AggregateAmountLimit):
 
 class TransferCountLimit(AggregateLimit):
 
-    def validate_transfer(self, transfer: CreditTransfer):
-        allowance = self.available_amount(transfer)
-
-        if allowance <= 0:
-            message = 'Account Limit "{}" reached. Allowed {} transaction per {} days' \
-                .format(self.name, self.transfer_count, self.time_period_days)
-            raise TransferCountLimitError(
-                transfer_count_limit=self.transfer_count,
-                limit_time_period_days=self.time_period_days,
-                token=transfer.token.name,
-                message=message
-            )
-
-    def available_amount(self, transfer: CreditTransfer) -> int:
-        return self.transfer_count - self._aggregate_transfers(transfer)
-
-    def _aggregate_transfers(self, transfer: CreditTransfer):
-        return self._aggregate_transfer_query(
+    def used_aggregator(self, transfer: CreditTransfer, query_constructor: QueryConstructorFunc):
+        return query_constructor(
             transfer,
             db.session.query(func.count(CreditTransfer.id).label('count'))
         ).execution_options(show_all=True).first().count - 1
+
+    def case_will_use(self, transfer: CreditTransfer):
+        return 1
+
+    def available_base(self, transfer: CreditTransfer):
+        return self.transfer_count
+
+    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+        message = 'Account Limit "{}" reached. Allowed {} transaction per {} days' \
+            .format(self.name, self.transfer_count, self.time_period_days)
+        raise TransferCountLimitError(
+            transfer_count_limit=self.transfer_count,
+            limit_time_period_days=self.time_period_days,
+            token=transfer.token.name,
+            message=message
+        )
 
     def __init__(
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: Callable,
+            application_filter: FilterFun,
             time_period_days: int,
             transfer_count: int,
             aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
@@ -423,28 +560,6 @@ class TransferCountLimit(AggregateLimit):
         )
 
         self.transfer_count = transfer_count
-
-
-class NoTransferAllowedLimit(AggregateLimit):
-
-    def validate_transfer(self, transfer: CreditTransfer):
-        raise NoTransferAllowedLimitError(token=transfer.token.name)
-
-    def available_amount(self, transfer: CreditTransfer) -> None:
-        return None
-
-    def __init__(
-            self,
-            name: str,
-            applied_to_transfer_types: AppliedToTypes,
-            application_filter: Callable,
-    ):
-        super().__init__(
-            name,
-            applied_to_transfer_types,
-            application_filter,
-            0
-        )
 
 
 LIMITS = [

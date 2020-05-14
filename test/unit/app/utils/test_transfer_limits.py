@@ -1,7 +1,7 @@
 import pytest
 
 from server.exceptions import (
-    AccountLimitError,
+    TransferLimitError,
     TransferCountLimitError,
     TransferBalanceFractionLimitError,
     MinimumSentLimitError
@@ -104,7 +104,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
     new_credit_transfer.sender_user.kyc_applications = []
 
     # Sempo Level 0 LIMITS (payment only) on init
-    with pytest.raises(AccountLimitError):
+    with pytest.raises(TransferLimitError):
         c = credit_transfer.CreditTransfer(
             amount=1000000,
             token=external_reserve_token,
@@ -200,7 +200,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_lim
     new_credit_transfer.sender_user.kyc_applications = []
 
     # Sempo Level 0 LIMITS (payment only) on check LIMITS
-    with pytest.raises(AccountLimitError):
+    with pytest.raises(TransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
 
 
@@ -224,7 +224,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_withdrawa
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
     new_credit_transfer.sender_transfer_account.balance = 1000
-    with pytest.raises(AccountLimitError):
+    with pytest.raises(TransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
 
 
@@ -235,5 +235,5 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_agent_out
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.sender_transfer_account.balance = 1000
-    with pytest.raises(AccountLimitError):
+    with pytest.raises(TransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
