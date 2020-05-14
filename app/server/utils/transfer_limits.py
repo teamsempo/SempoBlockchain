@@ -1,5 +1,5 @@
 from typing import List, Callable, Optional, Union, Tuple, Iterable
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 
 import datetime
 from functools import reduce
@@ -194,8 +194,7 @@ def empty_filter(transfer: CreditTransfer, query: Query):
     return query
 
 
-class TransferLimit(ABC):
-
+class BaseTransferLimit(ABC):
     @abstractmethod
     def validate_transfer(self, transfer: CreditTransfer):
         pass
@@ -204,11 +203,22 @@ class TransferLimit(ABC):
     def available_amount(self, transfer: CreditTransfer) -> Union[int, TransferAmount]:
         pass
 
-    def applies_to_transfer(self, transfer: CreditTransfer) -> bool:
-        return (
-                transfer.transfer_type in self.applied_to_transfer_types
-                or (transfer.transfer_type, transfer.transfer_subtype) in self.applied_to_transfer_types
-        ) and self.application_filter(transfer)
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: {self.name}>"
+
+    def __init__(self,
+                 name: str,
+                 applied_to_transfer_types: AppliedToTypes,
+                 application_filter: Callable,
+                 ):
+        self.name = name
+
+        # Force to list of tuples to ensure the use of 'in' behaves as expected
+        self.applied_to_transfer_types = [tuple(t) if isinstance(t, list) else t for t in applied_to_transfer_types]
+        self.application_filter = application_filter
+
+
+class AggregableLimit(ABC):
 
     def _aggregate_transfer_query(self, transfer: CreditTransfer, query: Query):
         return pipe(query,
@@ -217,28 +227,17 @@ class TransferLimit(ABC):
                     after_time_period_filter(self.time_period_days),
                     self.custom_aggregation_filter(transfer))
 
-    def __repr__(self):
-        return f"<{self.__class__.__name__}: {self.name}>"
-
     def __init__(self,
-                 name: str,
-                 applied_to_transfer_types: AppliedToTypes,
-                 application_filter: Callable,
                  time_period_days: int,
                  aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
                  ):
-        self.name = name
 
-        # Force to list of tuples to ensure the use of 'in' behaves as expected
-        self.applied_to_transfer_types = [tuple(t) if isinstance(t, list) else t for t in applied_to_transfer_types]
-
-        self.application_filter = application_filter
         self.time_period_days = time_period_days
         # TODO: Make LIMIT_EXCHANGE_RATE configurable per org
         self.custom_aggregation_filter = aggregation_filter
 
 
-class AggregateAmountLimit(TransferLimit):
+class AggregateAmountLimit(BaseTransferLimit, AggregableLimit):
 
     @abstractmethod
     def period_amount(self, transfer: CreditTransfer) -> TransferAmount:
@@ -341,7 +340,7 @@ class BalanceFractionLimit(AggregateAmountLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.available_amount(transfer)
-        if allowance < transfer.transfer_amount:
+        if allowance < int(transfer.transfer_amount):
             message = 'Account % Limit "{}" reached. {} available'.format(
                 self.name,
                 max([allowance, 0])
@@ -382,7 +381,7 @@ class BalanceFractionLimit(AggregateAmountLimit):
         self.balance_fraction = balance_fraction
 
 
-class TransferCountLimit(TransferLimit):
+class TransferCountLimit(AggregateLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         allowance = self.available_amount(transfer)
@@ -426,7 +425,7 @@ class TransferCountLimit(TransferLimit):
         self.transfer_count = transfer_count
 
 
-class NoTransferAllowedLimit(TransferLimit):
+class NoTransferAllowedLimit(AggregateLimit):
 
     def validate_transfer(self, transfer: CreditTransfer):
         raise NoTransferAllowedLimitError(token=transfer.token.name)
@@ -517,6 +516,6 @@ LIMITS = [
 ]
 
 
-def get_transfer_limits(transfer: CreditTransfer) -> List[TransferLimit]:
+def get_transfer_limits(transfer: CreditTransfer) -> List[AggregateLimit]:
     return [limit for limit in LIMITS if limit.applies_to_transfer(transfer)]
 
