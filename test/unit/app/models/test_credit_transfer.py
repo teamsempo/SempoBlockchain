@@ -1,3 +1,5 @@
+import pytest
+
 def test_new_credit_transfer_complete(create_credit_transfer):
     """
     GIVEN a CreditTransfer model
