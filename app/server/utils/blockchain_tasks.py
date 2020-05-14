@@ -250,7 +250,8 @@ class BlockchainTasker(object):
                                    to_token,
                                    reserve_token,
                                    from_amount,
-                                   prior_tasks=None):
+                                   prior_tasks=None,
+                                   task_uuid=None):
         """
         Uses a Liquid Token Contract network to exchange between two ERC20 smart tokens.
         :param signing_address: address of wallet signing txn
@@ -262,7 +263,6 @@ class BlockchainTasker(object):
         :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the exchange
         """
-
         prior_tasks = prior_tasks or []
 
         path = self._get_path(from_token, to_token, reserve_token)
@@ -282,7 +282,8 @@ class BlockchainTasker(object):
                 from_token.system_amount_to_token(from_amount),
                 1
             ],
-            prior_tasks=prior_tasks
+            prior_tasks=prior_tasks,
+            task_uuid=task_uuid
         )
 
     def get_conversion_amount(self, exchange_contract, from_token, to_token, from_amount, signing_address=None):

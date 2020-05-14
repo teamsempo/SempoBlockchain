@@ -106,6 +106,7 @@ def register_blueprints(app):
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.celery_tasks = []
         g.pending_transactions = []
+        g.pending_exchanges = []
 
         if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
@@ -127,6 +128,9 @@ def register_blueprints(app):
 
         for transaction, queue in g.pending_transactions:
             transaction.send_blockchain_payload_to_worker(queue=queue)
+
+        for exchange_args in g.pending_exchanges:
+            bt.make_liquid_token_exchange(**exchange_args)
 
         transactions = [t[0] for t in g.pending_transactions]
         pusher.push_admin_credit_transfer(transactions)
