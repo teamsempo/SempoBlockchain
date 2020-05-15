@@ -40,7 +40,7 @@ def test_exchange(test_client, user_with_reserve_balance, initialised_blockchain
         import time
         time.sleep(4)
         result = bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
-        print('RRRR')
+        print('RRRRR')
         print(result)
         print('--')
         print(task_uuid)
