@@ -3,8 +3,6 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 
 import ResetPasswordForm from "../auth/resetPasswordForm.jsx";
-import LoadingSpinner from "../loadingSpinner.jsx";
-import SideBar from "../navBar.jsx";
 
 import { ModuleBox, ModuleHeader } from "../styledElements";
 

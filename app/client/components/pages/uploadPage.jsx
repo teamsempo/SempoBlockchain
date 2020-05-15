@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import UploadButton from "../uploader/uploadButton.jsx";
 import UploadedTable from "../uploader/uploadedTable.jsx";
-import SideBar from "../navBar.jsx";
+import SideBar from "../navBar";
 
 const mapStateToProps = state => {
   return {
