@@ -20,7 +20,7 @@ import { message } from "./message/reducers";
 import { creditTransfers } from "./creditTransferReducer";
 import { transferAccounts } from "./transferAccountReducer";
 import { users } from "./user/reducers";
-import { filters } from "./filterReducer";
+import { filters } from "./filter/reducers";
 import { businessVerification } from "./businessVerificationReducer";
 import { wyre } from "./wyreReducer";
 import { TransferUsageReducer } from "./transferUsage/reducers";
