@@ -36,8 +36,9 @@ class NoTransferAllowedLimitError(TransferLimitError):
 
 class MaximumPerTransferLimitError(TransferLimitError):
     def __init__(self, maximum_amount_limit: int,  **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(limit_time_period_days=0, **kwargs)
         self.maximum_amount_limit = maximum_amount_limit
+
 
 class TransferCountLimitError(TransferLimitError):
     def __init__(self, transfer_count_limit: int, **kwargs):

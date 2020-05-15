@@ -194,6 +194,9 @@ def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer)
 
 def test_liquidtoken_max_amount_limit(new_credit_transfer):
     from server.models import token
+
+    # The max per-amount transfer limit is higher than the KYC classes, so it's easier to test by just creating a new
+    # one with a lower amount
     from server.utils.transfer_limits import (
         LIMITS,
         AGENT_OUT_PAYMENT,
@@ -222,7 +225,8 @@ def test_liquidtoken_max_amount_limit(new_credit_transfer):
         new_credit_transfer.check_sender_transfer_limits()
 
     new_credit_transfer.exclude_from_limit_calcs = True
-
+    
+    LIMITS.pop(-1)
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(new_credit_transfer):
     from server.models import token
