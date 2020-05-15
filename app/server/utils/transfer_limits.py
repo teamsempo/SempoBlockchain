@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import datetime
 from functools import reduce
-from toolz import curry, pipe
+
 from sqlalchemy import or_
 from sqlalchemy.orm import Query
 from sqlalchemy.sql import func
@@ -22,16 +22,14 @@ from server.sempo_types import TransferAmount
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum, TransferStatusEnum
 from server.utils.access_control import AccessControl
+
 import config
 
-AppliedToTypes = List[Union[TransferTypeEnum,
-                            Tuple[TransferTypeEnum, TransferSubTypeEnum]]]
-
+AppliedToTypes = List[Union[TransferTypeEnum, Tuple[TransferTypeEnum, TransferSubTypeEnum]]]
 AggregateAvailability = Union[int, TransferAmount]
-
-FilterFun = Callable[[CreditTransfer], bool]
-
-QueryConstructorFunc = Callable[[CreditTransfer, Query]]
+ApplicationFilter = Callable[[CreditTransfer], bool]
+AggregationFilter = Callable[[CreditTransfer], list]
+QueryConstructorFunc = Callable[[CreditTransfer, Query], Query]
 
 PAYMENT = TransferTypeEnum.PAYMENT
 DEPOSIT = TransferTypeEnum.DEPOSIT
@@ -50,7 +48,11 @@ RECLAMATION_PAYMENT = (PAYMENT, RECLAMATION)
 GENERAL_PAYMENTS = [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT, RECLAMATION_PAYMENT]
 
 
+def combine_filter_lists(filter_lists: List[List]) -> List:
+    return reduce(lambda f, i: f + i, filter_lists, [])
+
 # ~~~~~~SIMPLE CHECKS~~~~~~
+
 
 def sempo_admin_involved(credit_transfer):
     if credit_transfer.recipient_user and AccessControl.has_sufficient_tier(
@@ -64,7 +66,7 @@ def sempo_admin_involved(credit_transfer):
     return False
 
 
-def sender_user_exists(credit_transfer):
+def sender_user_exists(credit_transfer: CreditTransfer):
     return credit_transfer.sender_user
 
 
@@ -153,52 +155,40 @@ def is_any_token_and_user_is_kyc_business_verified(credit_transfer):
 # ~~~~~~LIMIT FILTERS~~~~~~
 
 
-@curry
-def after_time_period_filter(days: int, query: Query):
+def after_time_period_filter(days: int):
     epoch = datetime.datetime.today() - datetime.timedelta(days=days)
-
-    return query.filter(CreditTransfer.created >= epoch)
-
-
-@curry
-def matching_sender_user_filter(transfer: CreditTransfer, query: Query):
-    return query.filter(CreditTransfer.sender_user == transfer.sender_user)
+    return [CreditTransfer.created >= epoch]
 
 
-@curry
-def regular_payment_filter(query: Query):
-    return query.filter(CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD)
+def matching_sender_user_filter(transfer: CreditTransfer):
+    return [CreditTransfer.sender_user == transfer.sender_user]
 
 
-@curry
-def matching_transfer_type_filter(transfer: CreditTransfer, query: Query, ):
-    return query.filter(CreditTransfer.transfer_type == transfer.transfer_type)
+def regular_payment_filter(transfer: CreditTransfer):
+    return [CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD]
 
 
-@curry
-def matching_transfer_type_and_subtype_filter(transfer: CreditTransfer, query: Query):
-    return (query
-            .filter(CreditTransfer.transfer_type == transfer.transfer_type)
-            .filter(CreditTransfer.transfer_subtype == transfer.transfer_subtype))
+def matching_transfer_type_filter(transfer: CreditTransfer):
+    return [CreditTransfer.transfer_type == transfer.transfer_type]
 
 
-@curry
-def withdrawal_or_agent_out_and_not_excluded_filter(transfer: CreditTransfer, query: Query):
-    return (query
-            .filter(or_(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL,
-                        CreditTransfer.transfer_subtype == TransferSubTypeEnum.AGENT_OUT))
-            .filter(CreditTransfer.exclude_from_limit_calcs == False)
-            )
+def matching_transfer_type_and_subtype_filter(transfer: CreditTransfer):
+    return [
+        CreditTransfer.transfer_type == transfer.transfer_type,
+        CreditTransfer.transfer_subtype == transfer.transfer_subtype
+    ]
 
 
-@curry
-def not_rejected_filter(query: Query):
-    return query.filter(CreditTransfer.transfer_status != TransferStatusEnum.REJECTED)
+def withdrawal_or_agent_out_and_not_excluded_filter(transfer: CreditTransfer):
+    return [
+        or_(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL,
+            CreditTransfer.transfer_subtype == TransferSubTypeEnum.AGENT_OUT),
+        CreditTransfer.exclude_from_limit_calcs == False
+    ]
 
 
-@curry
-def empty_filter(transfer: CreditTransfer, query: Query):
-    return query
+def not_rejected_filter():
+    return [CreditTransfer.transfer_status != TransferStatusEnum.REJECTED]
 
 
 class BaseTransferLimit(ABC):
@@ -271,7 +261,7 @@ class BaseTransferLimit(ABC):
     def __init__(self,
                  name: str,
                  applied_to_transfer_types: AppliedToTypes,
-                 application_filter: FilterFun,
+                 application_filter: ApplicationFilter,
                  ):
         """
         :param name: Human-friendly name
@@ -292,7 +282,7 @@ class NoTransferAllowedLimit(BaseTransferLimit):
     def available(self, transfer: CreditTransfer) -> AggregateAvailability:
         return 0
 
-    def case_will_use(self, transfer: CreditTransfer):
+    def case_will_use(self, transfer: CreditTransfer) -> int:
         return 1
 
     def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
@@ -302,7 +292,7 @@ class NoTransferAllowedLimit(BaseTransferLimit):
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: FilterFun,
+            application_filter: ApplicationFilter,
     ):
         super().__init__(
             name,
@@ -316,7 +306,7 @@ class MaximumAmountPerTransferLimit(BaseTransferLimit):
     def available(self, transfer: CreditTransfer) -> AggregateAvailability:
         return self.maximum_amount
 
-    def case_will_use(self, transfer: CreditTransfer):
+    def case_will_use(self, transfer: CreditTransfer) -> AggregateAvailability:
         return transfer.transfer_amount
 
     def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
@@ -331,7 +321,7 @@ class MaximumAmountPerTransferLimit(BaseTransferLimit):
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: FilterFun,
+            application_filter: ApplicationFilter,
             maximum_amount: TransferAmount
     ):
         super().__init__(
@@ -376,31 +366,58 @@ class AggregateLimit(BaseTransferLimit):
 
     def available(self, transfer: CreditTransfer) -> AggregateAvailability:
         base = self.available_base(transfer)
-        used = self.used_aggregator(transfer, self.query_constructor)
+        used = self.used_aggregator(
+            transfer,
+            self.query_constructor
+        )
 
         return base - used
+
+    def query_constructor_filter_specifiable(
+            self,
+            transfer: CreditTransfer,
+            base_query: Query,
+            custom_filter: AggregationFilter) -> Query:
+        """
+        Constructs a filtered query for aggregation, where the last filter step can be provided by the user
+        :param transfer:
+        :param base_query:
+        :param custom_filter:
+        :return:
+        """
+
+        filter_list = combine_filter_lists(
+            [
+                matching_sender_user_filter(transfer),
+                not_rejected_filter(),
+                after_time_period_filter(self.time_period_days),
+                custom_filter(transfer)
+            ]
+        )
+
+        return base_query.filter(*filter_list)
 
     def query_constructor(
             self,
             transfer: CreditTransfer,
-            query: Query,
-            custom_filter: Optional[FilterFun] = None
+            base_query: Query,
     ) -> Query:
+        """
+        Acts as a partial for `query_constructor_filter_specifiable`, with the custom aggregation filter set to that
+        provided to the limit on instantiation. We don't use an actual partial because mypy type checking won't work.
+        :param transfer:
+        :param base_query:
+        :return:
+        """
 
-        return pipe(
-            query,
-            matching_sender_user_filter(transfer),
-            not_rejected_filter,
-            after_time_period_filter(self.time_period_days),
-            custom_filter(transfer) if custom_filter else self.custom_aggregation_filter(transfer)
-        )
+        return self.query_constructor_filter_specifiable(transfer, base_query, self.custom_aggregation_filter)
 
     def __init__(self,
                  name: str,
                  applied_to_transfer_types: AppliedToTypes,
-                 application_filter: FilterFun,
+                 application_filter: ApplicationFilter,
                  time_period_days: int,
-                 aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+                 aggregation_filter: AggregationFilter = matching_transfer_type_filter
                  ):
         """
         :param name:
@@ -413,6 +430,7 @@ class AggregateLimit(BaseTransferLimit):
         super().__init__(name, applied_to_transfer_types, application_filter)
 
         self.time_period_days = time_period_days
+
         self.custom_aggregation_filter = aggregation_filter
 
 
@@ -427,7 +445,7 @@ class AggregateTransferAmountMixin(object):
         return query_constructor(
             transfer,
             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-        ).execution_options(show_all=True).first() - int(transfer.transfer_amount)
+        ).execution_options(show_all=True).first().total - int(transfer.transfer_amount)
 
     @staticmethod
     def case_will_use(transfer: CreditTransfer):
@@ -454,10 +472,10 @@ class TotalAmountLimit(AggregateTransferAmountMixin, AggregateLimit):
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: FilterFun,
+            application_filter: ApplicationFilter,
             time_period_days: int,
             total_amount: TransferAmount,
-            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+            aggregation_filter: AggregationFilter = matching_transfer_type_filter
     ):
         super().__init__(
             name,
@@ -474,9 +492,10 @@ class TotalAmountLimit(AggregateTransferAmountMixin, AggregateLimit):
 class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
 
     def available_base(self, transfer: CreditTransfer) -> TransferAmount:
-        return self.query_constructor(
+        return self.query_constructor_filter_specifiable(
             transfer,
-            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')),
+            regular_payment_filter
         ).execution_options(show_all=True).first().total or 0
 
     def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
@@ -494,9 +513,9 @@ class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: FilterFun,
+            application_filter: ApplicationFilter,
             time_period_days: int,
-            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+            aggregation_filter: AggregationFilter = matching_transfer_type_filter
     ):
         super().__init__(
             name,
@@ -509,10 +528,10 @@ class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
 
 class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
 
-    def available_base(self, transfer: CreditTransfer):
-        return self.total_from_balance(transfer.sender_transfer_account.balance)
+    def available_base(self, transfer: CreditTransfer) -> TransferAmount:
+        return self._total_from_balance(transfer.sender_transfer_account.balance)
 
-    def total_from_balance(self, balance: int) -> TransferAmount:
+    def _total_from_balance(self, balance: int) -> TransferAmount:
         amount: TransferAmount = int(self.balance_fraction * balance)
         return amount
 
@@ -533,10 +552,10 @@ class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: FilterFun,
+            application_filter: ApplicationFilter,
             time_period_days: int,
             balance_fraction: float,
-            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+            aggregation_filter: AggregationFilter = matching_transfer_type_filter
 
     ):
         super().__init__(
@@ -578,10 +597,10 @@ class TransferCountLimit(AggregateLimit):
             self,
             name: str,
             applied_to_transfer_types: AppliedToTypes,
-            application_filter: FilterFun,
+            application_filter: ApplicationFilter,
             time_period_days: int,
             transfer_count: int,
-            aggregation_filter: Optional[Query.filter] = matching_transfer_type_filter
+            aggregation_filter: AggregationFilter = matching_transfer_type_filter
     ):
         super().__init__(
             name,
@@ -663,6 +682,6 @@ LIMITS = [
 ]
 
 
-def get_transfer_limits(transfer: CreditTransfer) -> List[AggregateLimit]:
+def get_transfer_limits(transfer: CreditTransfer) -> List[BaseTransferLimit]:
     return [limit for limit in LIMITS if limit.applies_to_transfer(transfer)]
 

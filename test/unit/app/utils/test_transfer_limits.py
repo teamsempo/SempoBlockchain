@@ -125,7 +125,7 @@ def test_liquidtoken_number_of_limits(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
 
-    assert len(new_credit_transfer.check_sender_transfer_limits()) == 5
+    assert len(new_credit_transfer.get_transfer_limits()) == 5
 
     # TODO: We need this jank because these aren't full unit tests; alchemy is prone to committing when it feels like it
     # Rather we should use mock db objects
