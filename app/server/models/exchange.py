@@ -225,7 +225,11 @@ class Exchange(BlockchainTaskableBase):
         self.exchange_rate = to_amount/from_amount
 
         self.blockchain_task_uuid = str(uuid4())
-
+        print('zz')
+        print(self.blockchain_task_uuid)
+        print(self.blockchain_task_uuid)
+        print(self.blockchain_task_uuid)
+        print(self.blockchain_task_uuid)
         args = {
             'signing_address': signing_address,
             'exchange_contract': exchange_contract,
