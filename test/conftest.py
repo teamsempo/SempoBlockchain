@@ -164,6 +164,25 @@ def new_credit_transfer(create_transfer_account_user, external_reserve_token):
     return credit_transfer
 
 @pytest.fixture(scope='function')
+def new_locations(test_client, init_database):
+    from server.models.location import Location
+
+    locations = {}
+
+    locations['top'] = Location('Croatia', 45.81318, 15.97624)
+    db.session.add(locations['top'])
+
+    locations['node'] = Location('Porec', 45.22738, 13.59569, locations['top'])
+    db.session.add(locations['node'])
+
+    locations['leaf'] = Location('Nice beach', 45.240173511, 13.597673455, locations['node'])
+    db.session.add(locations['leaf'])
+ 
+    db.session.commit()
+
+    return locations
+
+@pytest.fixture(scope='function')
 def other_new_credit_transfer(create_transfer_account_user, external_reserve_token):
     # Janky copy paste job because of how pytest works
     from server.models.credit_transfer import CreditTransfer
@@ -485,7 +504,6 @@ def monkeymodule(request):
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()
-
 
 @pytest.fixture(scope='module')
 def create_temporary_user(test_client, init_database, create_organisation):
