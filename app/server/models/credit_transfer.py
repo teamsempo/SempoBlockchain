@@ -16,6 +16,7 @@ from server.exceptions import (
     NoTransferAccountError,
     MinimumSentLimitError,
     NoTransferAllowedLimitError,
+    MaximumPerTransferLimitError,
     TransferAmountLimitError,
     TransferCountLimitError,
     TransferBalanceFractionLimitError)
@@ -147,6 +148,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                     TransferAmountLimitError,
                     TransferCountLimitError,
                     TransferBalanceFractionLimitError,
+                    MaximumPerTransferLimitError,
                     MinimumSentLimitError,
                     NoTransferAllowedLimitError
             ) as e:

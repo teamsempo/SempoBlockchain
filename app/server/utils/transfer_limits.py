@@ -678,7 +678,12 @@ LIMITS = [
     MinimumSentLimit('GE Liquid Token - Group Account User',
                      [AGENT_OUT_PAYMENT, WITHDRAWAL],
                      is_group_and_liquid_token, 30,
-                     aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter)
+                     aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter),
+
+    MaximumAmountPerTransferLimit('GE Liquid Token - Group Account User',
+                                  [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                                  is_group_and_liquid_token,
+                                  maximum_amount=config.TRANSFER_LIMITS['LT.MaxAm'])
 ]
 
 

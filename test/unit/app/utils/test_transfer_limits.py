@@ -4,10 +4,12 @@ from server.exceptions import (
     TransferLimitError,
     TransferCountLimitError,
     TransferBalanceFractionLimitError,
-    MinimumSentLimitError
+    MinimumSentLimitError,
+    MaximumPerTransferLimitError
 )
 
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.sempo_types import TransferAmount
 
 
 def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
@@ -125,7 +127,7 @@ def test_liquidtoken_number_of_limits(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
 
-    assert len(new_credit_transfer.get_transfer_limits()) == 5
+    assert len(new_credit_transfer.get_transfer_limits()) == 6
 
     # TODO: We need this jank because these aren't full unit tests; alchemy is prone to committing when it feels like it
     # Rather we should use mock db objects
@@ -147,7 +149,6 @@ def test_liquidtoken_fraction_limit(new_credit_transfer):
         new_credit_transfer.check_sender_transfer_limits()
 
     new_credit_transfer.exclude_from_limit_calcs = True
-
 
 def test_liquidtoken_min_send_limit(new_credit_transfer):
     from server.models import token
@@ -190,6 +191,38 @@ def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer)
 
     new_credit_transfer.exclude_from_limit_calcs = True
     other_new_credit_transfer.exclude_from_limit_calcs = True
+
+def test_liquidtoken_max_amount_limit(new_credit_transfer):
+    from server.models import token
+    from server.utils.transfer_limits import (
+        LIMITS,
+        AGENT_OUT_PAYMENT,
+        WITHDRAWAL,
+        is_group_and_liquid_token,
+        MaximumAmountPerTransferLimit)
+
+    amount: TransferAmount = 10
+
+    LIMITS.append(
+        MaximumAmountPerTransferLimit('GE Liquid Token - Group Account User',
+                                      [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                                      is_group_and_liquid_token,
+                                      maximum_amount=amount)
+    )
+
+    new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
+    new_credit_transfer.token.token_type = token.TokenType.LIQUID
+    new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+    new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+    new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
+
+    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+
+    with pytest.raises(MaximumPerTransferLimitError):
+        new_credit_transfer.check_sender_transfer_limits()
+
+    new_credit_transfer.exclude_from_limit_calcs = True
+
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(new_credit_transfer):
     from server.models import token
@@ -237,3 +270,4 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_agent_out
     new_credit_transfer.sender_transfer_account.balance = 1000
     with pytest.raises(TransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
+

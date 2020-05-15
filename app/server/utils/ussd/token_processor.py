@@ -9,6 +9,7 @@ from server.sempo_types import TransferAmount
 from server.exceptions import (
     NoTransferAllowedLimitError,
     TransferBalanceFractionLimitError,
+    MaximumPerTransferLimitError,
     TransferCountLimitError,
     TransferAmountLimitError,
     InsufficientBalanceError,
@@ -308,6 +309,13 @@ class TokenProcessor(object):
                 count=e.transfer_count_limit,
                 token=e.token,
                 limit_period=e.limit_time_period_days
+            )
+        except MaximumPerTransferLimitError as e:
+            TokenProcessor.send_sms(
+                sender,
+                "maximum_per_transaction_error_sms",
+                token=e.token,
+                amount=e.maximum_amount_limit
             )
 
     @staticmethod
