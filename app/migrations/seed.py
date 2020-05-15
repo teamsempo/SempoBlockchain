@@ -347,6 +347,11 @@ def create_ussd_menus():
         description='The self signup process has been initiated and the account is being created.'
     )
 
+    update_or_create_menu(
+        name='exit_successful_send_token',
+        description='The payment transaction has been made successfully.',
+    )
+
     print_section_conclusion('Done creating USSD Menus')
 
 

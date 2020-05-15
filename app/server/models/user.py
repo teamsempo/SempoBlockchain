@@ -664,8 +664,11 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         return self.pin_hash is not None and not_resetting and self.failed_pin_attempts < 3
 
     def user_details(self):
-        # should drop the country code from phone number?
-        return "{} {} {}".format(self.first_name, self.last_name, self.phone)
+        # return phone numbers only if any of user's details are unknown
+        if 'Unknown' in self.first_name or 'Unknown' in self.last_name:
+            return "{}".format(self.phone)
+        else:
+            return "{} {} {}".format(self.first_name, self.last_name, self.phone)
 
     def get_most_relevant_transfer_usages(self):
         '''Finds the transfer usage/business categories there are most relevant for the user

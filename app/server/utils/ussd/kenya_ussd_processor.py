@@ -132,7 +132,8 @@ class KenyaUssdProcessor:
 
         if menu.name == 'send_token_pin_authorization':
             recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)
-            recipient_phone = recipient.user_details()
+            other_user_details = recipient.user_details()
+            user_details = user.user_details()
             token = default_token(user)
             transaction_amount = ussd_session.get_data('transaction_amount')
             if user.failed_pin_attempts > 0:
@@ -147,8 +148,26 @@ class KenyaUssdProcessor:
                     key="{}.{}".format(menu.display_key, 'first'),
                     transaction_amount=cents_to_dollars(transaction_amount),
                     token_name=token.symbol,
-                    recipient_phone=recipient_phone
+                    other_user_details=other_user_details,
+                    user_details=user_details
+
                 )
+
+        if menu.name == 'exit_successful_send_token':
+            recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)
+            other_user_details = recipient.user_details()
+            user_details = user.user_details()
+            token = default_token(user)
+            transaction_amount = ussd_session.get_data('transaction_amount')
+            return i18n_for(
+                user=user,
+                key="{}".format(menu.display_key, 'exit_successful_send_token'),
+                transaction_amount=cents_to_dollars(transaction_amount),
+                token_name=token.symbol,
+                other_user_details=other_user_details,
+                user_details=user_details
+
+            )
 
         if menu.name == 'exchange_token_confirmation':
             agent = get_user_by_phone(ussd_session.get_data('agent_phone'), 'KE', True)

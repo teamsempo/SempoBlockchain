@@ -149,5 +149,5 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
     mocker.patch('server.ussd_tasker.send_token', send_token)
 
     state_machine.feed_char("0000")
-    assert state_machine.state == "complete"
+    assert state_machine.state == "exit_successful_send_token"
     send_token.assert_called_with(standard_user, recipient=recipient, amount=10.0)

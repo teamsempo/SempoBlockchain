@@ -95,6 +95,7 @@ class KenyaUssdStateMachine(Machine):
         'exit_invalid_token_agent',
         'exit_invalid_exchange_amount',
         'exit_account_creation_prompt',
+        'exit_successful_send_token',
         State(name='complete', on_enter=['send_terms_to_user_if_required'])
     ]
 
@@ -668,7 +669,7 @@ class KenyaUssdStateMachine(Machine):
         send_token_pin_authorization_transitions = [
             {'trigger': 'feed_char',
              'source': 'send_token_pin_authorization',
-             'dest': 'complete',
+             'dest': 'exit_successful_send_token',
              'conditions': 'is_authorized_pin',
              'after': 'process_send_token_request'},
             {'trigger': 'feed_char',

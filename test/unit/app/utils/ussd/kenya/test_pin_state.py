@@ -72,9 +72,9 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
      # send token pin auth combinations
      (send_token_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
      (send_token_pin_authorization_state, standard_user, "1212", "send_token_pin_authorization", 1, 2),
-     (send_token_pin_authorization_state, standard_user, "0000", "complete", 1, 0),
+     (send_token_pin_authorization_state, standard_user, "0000", "exit_successful_send_token", 1, 0),
      (send_token_pin_authorization_state, standard_user, "1212", "exit_pin_blocked", 2, 3),
-     (send_token_pin_authorization_state, standard_user, "0000", "complete", 2, 0),
+     (send_token_pin_authorization_state, standard_user, "0000", "exit_successful_send_token", 2, 0),
      # balance inquiry pin auth combinations
      (balance_inquiry_pin_authorization_state, pin_blocked_user, "1212", "exit_pin_blocked", 3, 3),
      (balance_inquiry_pin_authorization_state, standard_user, "1212", "balance_inquiry_pin_authorization", 1, 2),
