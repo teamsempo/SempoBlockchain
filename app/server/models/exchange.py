@@ -236,6 +236,7 @@ class Exchange(BlockchainTaskableBase):
             'prior_tasks': [to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + (prior_task_uuids or []),
             'task_uuid': self.blockchain_task_uuid
         }
+
         g.pending_exchanges.append(args)
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(

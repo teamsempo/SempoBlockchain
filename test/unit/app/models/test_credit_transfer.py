@@ -12,6 +12,7 @@ def test_new_credit_transfer_complete(create_credit_transfer):
     from server.utils.transfer_enums import TransferStatusEnum
     from flask import g
     g.pending_transactions = []
+    g.pending_exchanges = []
     g.celery_tasks = []
     assert isinstance(create_credit_transfer.transfer_amount, float)
     assert create_credit_transfer.transfer_amount == 1000
