@@ -25,7 +25,12 @@ def init():
     #    raise(Exception('translation files are available on AWS S3 only for the moment, but no AWS credentials found'))
     logg.debug('syncing resource files from {}'.format(config.RESOURCE_BUCKET))
 
-    locale_syncer = S3(config.RESOURCE_BUCKET, config.SYSTEM_LOCALE_PATH, key=config.AWS_ACCESS_KEY_ID, secret=config.AWS_SECRET_ACCESS_KEY)
+    locale_syncer = None
+    if config.SERVER_HAS_S3_AUTH:
+        locale_syncer = S3(config.RESOURCE_BUCKET, config.SYSTEM_LOCALE_PATH)
+    else:
+        locale_syncer = S3(config.RESOURCE_BUCKET, config.SYSTEM_LOCALE_PATH, key=config.AWS_ACCESS_KEY_ID, secret=config.AWS_SECRET_ACCESS_KEY)
+
     r = locale_syncer.sync([
         'general_sms.en.yml',
         'general_sms.sw.yml',

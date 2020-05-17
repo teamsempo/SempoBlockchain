@@ -31,6 +31,7 @@ config_parser = configparser.ConfigParser()
 secrets_parser = configparser.ConfigParser()
 
 load_from_s3 = False
+SERVER_HAS_S3_AUTH = False
 if os.environ.get('LOAD_FROM_S3') is not None:
     logg.debug("LOAD_FROM_S3 EXPLICITLY SET - ATTEMPT LOAD CONFIG FROM S3")
     load_from_s3 = True
@@ -38,6 +39,7 @@ if os.environ.get('LOAD_FROM_S3') is not None:
 elif os.environ.get('SERVER_HAS_S3_AUTH') is not None:
     logg.debug("SERVER_HAS_S3_AUTH SET - ATTEMPT LOAD CONFIG FROM S3")
     load_from_s3 = True
+    SERVER_HAS_S3_AUTH = True
 else:
     logg.debug("ATTEMPT LOAD LOCAL CONFIG")
 
@@ -52,17 +54,18 @@ if TEST_BUCKET == '':
 
 if load_from_s3:
     # Load config from S3 Bucket
-    if os.environ.get('AWS_ACCESS_KEY_ID'):
+    if SERVER_HAS_S3_AUTH:
+        # The server itself has S3 Auth
+        session = boto3.Session()
+    #if os.environ.get('AWS_ACCESS_KEY_ID'):
+    else:
         # S3 Auth is set via access keys
-        if not os.environ.get('AWS_SECRET_ACCESS_KEY'):
+        if not os.environ.get('AWS_SECRET_ACCESS_KEY') or not os.environ.get('AWS_ACCESS_KEY_ID'):
             raise Exception("Missing AWS_SECRET_ACCESS_KEY")
         session = boto3.Session(
             aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
             aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
         )
-    else:
-        # The server itself has S3 Auth
-        session = boto3.Session()
     client = session.client('s3')
 
     FORCE_SSL = True
