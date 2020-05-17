@@ -39,13 +39,13 @@ class ProcessKenyaUssd(MethodView):
         user_input = post_data.get('text')
         service_code = post_data.get('serviceCode')
 
+        # enforce only one single service code that can access the ussd state machine
+        # through the endpoint
         if config.USSD_VALID_SERVICE_CODE != service_code:
             response = 'END '
-            i18n.set('locale', 'sw')
-            response += i18n.t('ussd.kenya.invalid_service_code', valid_service_code = config.USSD_VALID_SERVICE_CODE)
-            i18n.set('locale', 'en')
+            response += i18n.t('ussd.kenya.invalid_service_code', valid_service_code = config.USSD_VALID_SERVICE_CODE, locale='sw')
             response += "\n"
-            response += i18n.t('ussd.kenya.invalid_service_code', valid_service_code = config.USSD_VALID_SERVICE_CODE)
+            response += i18n.t('ussd.kenya.invalid_service_code', valid_service_code = config.USSD_VALID_SERVICE_CODE, locale='en')
             return make_response(response, 200)
 
         elif phone_number:

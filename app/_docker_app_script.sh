@@ -12,6 +12,9 @@ fi
 echo upgrading dataset
 python manage.py update_data
 
+echo updating resource files
+python init.py
+
 ret=$?
 if [ "$ret" -ne 0 ]; then
   exit $ret

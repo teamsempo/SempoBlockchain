@@ -30,24 +30,16 @@ common_secrets_parser = configparser.ConfigParser()
 config_parser = configparser.ConfigParser()
 secrets_parser = configparser.ConfigParser()
 
+load_from_s3 = False
 if os.environ.get('LOAD_FROM_S3') is not None:
+    logg.debug("ATTEMPT LOAD CONFIG FROM S3")
     load_from_s3 = str(os.environ.get('LOAD_FROM_S3')).lower() in ['1', 'true']
-    if load_from_s3:
-        logg.debug("ATTEMPT LOAD S3 CONFIG (FORCED FROM ENV VAR)")
-    else:
-        logg.debug("ATTEMPT LOAD LOCAL CONFIG (FORCED FROM ENV VAR)")
-
-elif os.environ.get('AWS_ACCESS_KEY_ID'):
-    logg.debug("ATTEMPT LOAD S3 CONFIG (AWS ACCESS KEY FOUND)")
-    load_from_s3 = True
-
-elif os.environ.get('SERVER_HAS_S3_AUTH'):
-    logg.debug("ATTEMPT LOAD S3 CONFIG (SERVER CLAIMS TO HAVE S3 AUTH)")
-    load_from_s3 = True
-
 else:
     logg.debug("ATTEMPT LOAD LOCAL CONFIG")
-    load_from_s3 = False
+
+SECRET_BUCKET = os.environ.get("SECRETS_BUCKET")
+RESOURCE_BUCKET = os.environ.get("RESOURCE_BUCKET", 'sarafu-resources')
+TEST_BUCKET = os.environ.get("TEST_BUCKET", 'sarafu-tests')
 
 if load_from_s3:
     # Load config from S3 Bucket
@@ -64,7 +56,6 @@ if load_from_s3:
         session = boto3.Session()
     client = session.client('s3')
 
-    SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
     FORCE_SSL = True
 
     common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
@@ -113,6 +104,9 @@ DEPLOYMENT_NAME = config_parser['APP']['DEPLOYMENT_NAME']
 if ENV_DEPLOYMENT_NAME.lower() != DEPLOYMENT_NAME.lower():
     raise RuntimeError('deployment name in env ({}) does not match that in config ({}), aborting'.format(ENV_DEPLOYMENT_NAME.lower(),
                                                                                             DEPLOYMENT_NAME.lower()))
+
+SYSTEM_LOCALE_PATH = config_parser['SYSTEM'].get('locale_path') or CONFIG_DIR + '/var/lib/locale'
+
 BOUNCER_ENABLED = config_parser['APP'].getboolean('BOUNCER_ENABLED', False)
 IS_TEST = config_parser['APP'].getboolean('IS_TEST', False)
 IS_PRODUCTION = config_parser['APP'].getboolean('IS_PRODUCTION')
@@ -217,6 +211,9 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 AWS_SES_KEY_ID = common_secrets_parser['AWS']['ses_key_id']
 AWS_SES_SECRET = common_secrets_parser['AWS']['ses_secret']
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_HAVE_CREDENTIALS = AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 
 if IS_PRODUCTION:
     SENTRY_SERVER_DSN = common_secrets_parser['SENTRY']['server_dsn']

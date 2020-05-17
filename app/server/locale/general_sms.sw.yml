@@ -1,6 +1,0 @@
-sw:
-  welcome:
-    generic: Habari %{first_name}, umesajiliwa kwa Sempo! Salio yako ni %{balance} %{token}.
-    grassroots: Habari %{first_name}, umesajiliwa kwa huduma ya sarafu! Salio lako ni %{token} %{balance}. Kutumia bonyeza *483*46#. Kwa Usaidizi 0757628885
-  terms: Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://www.grassrootseconomics.org/terms-and-conditions.
-  pin_reset: Bonyeza *483*46# kubadilisha PIN yako

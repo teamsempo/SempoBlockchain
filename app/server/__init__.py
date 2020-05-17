@@ -33,10 +33,9 @@ from web3 import Web3, HTTPProvider
 sys.path.append('../')
 import config
 
-dirname = os.path.dirname(__file__)
-i18n.load_path.append(os.path.abspath(os.path.join(dirname, 'locale')))
+# TODO: encapsulate in generic object throughout implementation
+i18n.load_path.append(config.SYSTEM_LOCALE_PATH)
 i18n.set('fallback', config.LOCALE_FALLBACK)
-
 
 class ExtendedJSONEncoder(json.JSONEncoder):
     def default(self, obj):
