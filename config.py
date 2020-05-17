@@ -43,7 +43,12 @@ else:
 
 SECRET_BUCKET = os.environ.get("SECRETS_BUCKET")
 RESOURCE_BUCKET = os.environ.get("RESOURCE_BUCKET", 'sarafu-resources')
+if RESOURCE_BUCKET == '': 
+    RESOURCE_BUCKET = 'sarafu-resources'
+
 TEST_BUCKET = os.environ.get("TEST_BUCKET", 'sarafu-tests')
+if TEST_BUCKET == '': 
+    TEST_BUCKET = 'sarafu-tests'
 
 if load_from_s3:
     # Load config from S3 Bucket
