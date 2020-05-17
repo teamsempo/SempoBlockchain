@@ -1,7 +1,7 @@
 """extended location information
 
 Revision ID: 241af81119c4
-Revises: 6d8a938930ff
+Revises: fbc9b56af590
 Create Date: 2020-04-23 11:37:45.838998
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '241af81119c4'
-down_revision = '9ce32573d450'
+down_revision = 'fbc9b56af590'
 branch_labels = None
 depends_on = None
 
