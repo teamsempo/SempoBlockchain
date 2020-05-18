@@ -15,8 +15,6 @@ import {
   CREATE_TRANSFER_FAILURE
 } from "../reducers/creditTransferReducer.js";
 
-import { UPDATE_METRICS } from "../reducers/metricReducer";
-
 import {
   DEEP_UPDATE_TRANSFER_ACCOUNTS,
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
@@ -31,6 +29,7 @@ import { creditTransferSchema } from "../schemas";
 import { handleError } from "../utils";
 import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
+import { MetricAction } from "../reducers/metric/actions";
 
 function* updateStateFromCreditTransfer(result) {
   //Schema expects a list of credit transfer objects
@@ -78,7 +77,7 @@ function* updateStateFromCreditTransfer(result) {
 
   const metrics = result.data.transfer_stats;
   if (metrics) {
-    yield put({ type: UPDATE_METRICS, metrics });
+    yield put(MetricAction.updateMetrics(metrics));
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
 
