@@ -159,9 +159,6 @@ def test_liquidtoken_min_send_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_amount = 1500
 
-    # other_new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
-    # other_new_credit_transfer.token.token_type = token.TokenType.LIQUID
-    # other_new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.sender_transfer_account.balance = 5000
     new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
@@ -169,8 +166,6 @@ def test_liquidtoken_min_send_limit(new_credit_transfer):
         new_credit_transfer.check_sender_transfer_limits()
 
     new_credit_transfer.exclude_from_limit_calcs = True
-    # other_new_credit_transfer.exclude_from_limit_calcs = True
-
 
 def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer):
     from server.models import token
