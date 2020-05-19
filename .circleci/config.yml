@@ -278,7 +278,10 @@ workflows:
   main_workflow:
     jobs:
       - build
-      - test:backend:
+      - test:app:
+          requires:
+            - build
+      - test:worker:
           requires:
             - build
       - test:frontend:
