@@ -9,7 +9,7 @@ from celery import chain, signature
 import requests
 
 import config
-from eth_manager.exceptions import PreBlockchainError, TaskRetriesExceededError
+from exceptions import PreBlockchainError, TaskRetriesExceededError
 from eth_manager import utils
 from eth_manager.contract_registry import ContractRegistry
 from sempo_types import UUIDList, UUID

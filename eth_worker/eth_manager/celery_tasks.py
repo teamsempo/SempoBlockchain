@@ -6,7 +6,7 @@ from celery import signals
 import config
 import eth_manager.task_interfaces.composite
 from eth_manager import celery_app, blockchain_processor, persistence_module
-from eth_manager.exceptions import (
+from exceptions import (
     LockedNotAcquired
 )
 class SqlAlchemyTask(celery.Task):
