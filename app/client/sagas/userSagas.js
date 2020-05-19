@@ -13,7 +13,7 @@ import {
 } from "../api/userAPI";
 
 import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
-import { browserHistory } from "../app";
+import { browserHistory } from "../app.jsx";
 import { MessageAction } from "../reducers/message/actions";
 
 import {
