@@ -1,4 +1,5 @@
 import datetime
+from typing import Tuple
 from sqlalchemy import and_, or_
 
 from sempo_types import UUID, UUIDList
@@ -87,42 +88,57 @@ class SQLPersistenceInterface(object):
 
         return next_nonce
 
-    def locked_claim_transaction_nonce(self, network_nonce, signing_wallet_obj, transaction_id):
+    def locked_claim_transaction_nonce(
+            self,
+            network_nonce,
+            signing_wallet_id: int,
+            transaction_id: int
+    ) -> Tuple[int, int]:
         """
         Claim a transaction a nonce for a particular transaction, using a lock to prevent another transaction
         from accidentially claiming the same nonce.
 
-        :param network_nonce: the highest nonce that we know has been claimed onchain
-        :param signing_wallet_obj:
-        :param transaction_id:
-        :return:
+        :param network_nonce: the highest nonce that we know has been claimed on chain
+        :param signing_wallet_id: the wallet object that will be used to sign the transaction
+        :param transaction_id: the id of the transaction object
+        :return: a tuple of the claimed nonce, and the transaction_id (transaction_id is passed through for chaining)
         """
-        lock = self.red.lock(signing_wallet_obj.address, timeout=600)
+
+        signing_wallet = self.session.query(BlockchainWallet).get(signing_wallet_id)
+        transaction = self.session.query(BlockchainTransaction).get(transaction_id)
+
+        lock = self.red.lock(signing_wallet.address, timeout=600)
         print(f'Attempting lock for txn: {transaction_id} \n'
-              f'addr:{signing_wallet_obj.address}')
+              f'addr:{signing_wallet.address}')
         # Commits here are because the database would sometimes timeout during a long lock
         # and could not cleanly restart with uncommitted data in the session. Committing before
         # the lock, and then once it's reclaimed lets the session gracefully refresh if it has to.
         self.session.commit()
         with lock:
             self.session.commit()
-            self.session.refresh(signing_wallet_obj)
+            self.session.refresh(signing_wallet)
 
-            ct = self._claim_transaction_nonce(network_nonce, signing_wallet_obj, transaction_id)
+            ct = self._claim_transaction_nonce(network_nonce, signing_wallet, transaction)
             return ct
 
-    def _claim_transaction_nonce(self, network_nonce, signing_wallet_obj, transaction_id):
-        blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
+    def _claim_transaction_nonce(
+            self,
+            network_nonce: int,
+            signing_wallet: BlockchainWallet,
+            transaction: BlockchainTransaction,
+    ) -> Tuple[int, int]:
 
-        if blockchain_transaction.nonce is not None:
-            return blockchain_transaction.nonce, blockchain_transaction.id
-        calculated_nonce = self._calculate_nonce(signing_wallet_obj, network_nonce)
-        blockchain_transaction.signing_wallet = signing_wallet_obj
-        blockchain_transaction.nonce = calculated_nonce
-        blockchain_transaction.status = 'PENDING'
+        if transaction.nonce is not None:
+            return transaction.nonce, transaction.id
+        calculated_nonce = self._calculate_nonce(signing_wallet, network_nonce)
+        transaction.signing_wallet = signing_wallet
+        transaction.nonce = calculated_nonce
+        transaction.status = 'PENDING'
+
+        # TODO: can we shift this commit out?
         self.session.commit()
 
-        return calculated_nonce, blockchain_transaction.id
+        return calculated_nonce, transaction.id
 
     def update_transaction_data(self, transaction_id, transaction_data):
 

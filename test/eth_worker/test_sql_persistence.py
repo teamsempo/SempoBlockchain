@@ -158,6 +158,44 @@ class TestModels:
         queried_task = db_session.query(BlockchainTask).filter(BlockchainTask.status == 'SUCCESS').first()
         assert queried_task == task
 
-# class TestInterface:
-#
-#     def test_claim_
+class TestInterface:
+
+    def test_claim_transaction_nonce(self, db_session, persistence_int: SQLPersistenceInterface):
+        def created_nonced_transaction():
+            t = BlockchainTransaction(first_block_hash=persistence_int.first_block_hash)
+            t.signing_wallet = wallet
+            db_session.add(t)
+            db_session.commit()
+
+            nonce, id = persistence_int.locked_claim_transaction_nonce(
+                network_nonce=starting_nonce,
+                signing_wallet_id=wallet.id,
+                transaction_id=t.id
+            )
+
+            t.nonce_consumed = True
+
+            return t, nonce
+
+
+        wallet = BlockchainWallet()
+        db_session.add(wallet)
+
+        starting_nonce = 4
+        transactions = []
+        for i in range(0, 3):
+            trans, nonce = created_nonced_transaction()
+            transactions.append(trans)
+            assert nonce == starting_nonce + i
+
+        for t in transactions:
+            t.nonce_consumed = False
+
+        transactions[0].status = 'FAILED'
+
+        trans, nonce = created_nonced_transaction()
+        transactions.append(trans)
+
+        assert trans.nonce == starting_nonce
+
+

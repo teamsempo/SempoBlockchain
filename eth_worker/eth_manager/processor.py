@@ -158,7 +158,7 @@ class TransactionProcessor(object):
             network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
 
             nonce, transaction_id = self.persistence_interface.locked_claim_transaction_nonce(
-                network_nonce, signing_wallet_obj, transaction_id
+                network_nonce, signing_wallet_obj.id, transaction_id
             )
 
             metadata = {
