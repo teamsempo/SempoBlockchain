@@ -293,5 +293,5 @@ workflows:
               only:
                 - master
           requires:
-            - test:backend
+            - test:app
             - test:frontend
