@@ -22,7 +22,7 @@ COPY ./app/migrations /src/migrations
 COPY ./app/manage.py /src
 COPY ./app/RedisQueue.py /src
 COPY ./app/_docker_app_script.sh /
-COPY ./test /src/test
+COPY ./app/test /src/test
 COPY ./invoke_tests.py /src
 COPY .coveragerc /src
 
