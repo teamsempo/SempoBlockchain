@@ -243,8 +243,8 @@ class CreditTransferAPI(MethodView):
                 transfer_user_list = []
                 individual_sender_user = None
                 all_accounts_query = TransferAccount.query.filter(TransferAccount.is_ghost != True).filter_by(organisation_id=g.active_organisation.id)
-                all_accounts_query = (all_accounts_query.filter(TransferAccount.account_type == TransferAccountType.USER))
-                all_accounts_except_selected_query = all_accounts_query.filter(not_(TransferAccount.id.in_(recipient_transfer_accounts_ids)))
+                all_user_accounts_query = (all_accounts_query.filter(TransferAccount.account_type == TransferAccountType.USER))
+                all_accounts_except_selected_query = all_user_accounts_query.filter(not_(TransferAccount.id.in_(recipient_transfer_accounts_ids)))
                 for individual_recipient_user in all_accounts_except_selected_query.all():
                     transfer_user_list.append((individual_sender_user, individual_recipient_user.primary_user))
             else:
