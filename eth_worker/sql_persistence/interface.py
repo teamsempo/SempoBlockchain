@@ -10,7 +10,7 @@ from sql_persistence.models import (
     BlockchainWallet
 )
 
-from eth_worker.exceptions import (
+from exceptions import (
     WalletExistsError
 )
 from sqlalchemy.orm import scoped_session

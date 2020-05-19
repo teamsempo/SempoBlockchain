@@ -4,8 +4,13 @@ sleep 10
 WORKER_CONCURRENCY=4
 
 echo "Running docker worker script"
-if [ "$CONTAINER_MODE" = 'TEST' ]; then
-  echo pass
+if [ "$CONTAINER_MODE" = 'ETH_WORKER_TEST' ]; then
+   coverage pytest
+   ret=$?
+   if [ "$ret" -ne 0 ]; then
+     exit $ret
+   fi
+   bash <(curl -s https://codecov.io/bash) -cF python
 elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
   echo "Starting Beat Worker"
   celery -A eth_manager beat --loglevel=WARNING

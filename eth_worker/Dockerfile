@@ -3,8 +3,9 @@ FROM python:3.6-slim-stretch
 RUN apt update && apt -y install gcc libssl-dev libffi-dev
 
 COPY ./eth_worker/requirements.txt /
+COPY ./test_requirements.txt /
 
-RUN pip install -r requirements.txt
+RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
 COPY ./eth_worker /
 COPY ./config.py config_files/* /

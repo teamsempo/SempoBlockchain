@@ -18,7 +18,7 @@ if [ "$ret" -ne 0 ]; then
 fi
 
 if [ "$CONTAINER_MODE" = 'TEST' ]; then
-   coverage pytest -k app
+   coverage pytest
    ret=$?
    if [ "$ret" -ne 0 ]; then
      exit $ret

@@ -4,7 +4,7 @@ GIT_HASH=$(git rev-parse HEAD)
 
 cd ../app
 
-npm run build
+#npm run build
 
 cd ../
 

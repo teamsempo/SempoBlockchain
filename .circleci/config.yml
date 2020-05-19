@@ -123,12 +123,34 @@ jobs:
           paths:
             - imagecaches
             - app/node_modules
-  test:backend:
+  test:app:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
         environment:
           CONTAINER_MODE: TEST
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            gunzip -c ~/project/imagecaches/server.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
+            gunzip -c ~/project/imagecaches/pgbouncer.tar.gz | docker load
+      - run:
+          name: Run Docker Tests
+          command: |
+            docker-compose up --exit-code-from app
+  test:worker:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+        environment:
+          CONTAINER_MODE: ETH_WORKER_TEST
     steps:
       - checkout
       - setup_remote_docker
