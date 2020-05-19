@@ -5,7 +5,7 @@ from celery import signals
 
 import config
 import eth_manager.task_interfaces.composite
-from eth_manager import celery_app, blockchain_processor, persistence_interface
+from eth_manager import celery_app, blockchain_processor, persistence_module
 from eth_manager.exceptions import (
     LockedNotAcquired
 )
@@ -16,26 +16,26 @@ class SqlAlchemyTask(celery.Task):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         try:
-            persistence_interface.session.remove()
+            persistence_module.session.remove()
         except:
             pass
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         try:
-            persistence_interface.session.remove()
+            persistence_module.session.remove()
         except:
             pass
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         try:
-            persistence_interface.session.remove()
-            persistence_interface.session = scoped_session(session)
+            persistence_module.session.remove()
+            persistence_module.session = scoped_session(session)
         except:
             pass
 
     def on_success(self, retval, task_id, args, kwargs):
         try:
-            persistence_interface.session.remove()
+            persistence_module.session.remove()
         except:
             pass
 
@@ -106,9 +106,9 @@ def deploy_smart_token(self, deploying_address,
 
 @celery_app.task(**base_task_config)
 def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
-    wallet = persistence_interface.create_new_blockchain_wallet(wei_target_balance=wei_target_balance,
-                                                                wei_topup_threshold=wei_topup_threshold,
-                                                                private_key=private_key)
+    wallet = persistence_module.create_new_blockchain_wallet(wei_target_balance=wei_target_balance,
+                                                             wei_topup_threshold=wei_topup_threshold,
+                                                             private_key=private_key)
     return wallet.address
 
 

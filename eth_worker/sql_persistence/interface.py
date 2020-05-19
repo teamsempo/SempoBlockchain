@@ -9,11 +9,11 @@ from sql_persistence.models import (
     BlockchainWallet
 )
 
-from eth_manager.exceptions import (
-    WalletExistsError,
-    LockedNotAcquired
+from eth_worker.exceptions import (
+    WalletExistsError
 )
 from sqlalchemy.orm import scoped_session
+
 class SQLPersistenceInterface(object):
 
     def _fail_expired_transactions(self):
@@ -87,7 +87,7 @@ class SQLPersistenceInterface(object):
 
         return next_nonce
 
-    def locked_claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
+    def locked_claim_transaction_nonce(self, network_nonce, signing_wallet_obj, transaction_id):
         lock = self.red.lock(signing_wallet_obj.address, timeout=600)
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
@@ -98,11 +98,11 @@ class SQLPersistenceInterface(object):
         with lock:
             self.session.commit()
             self.session.refresh(signing_wallet_obj)
-            ct = self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+
+            ct = self.claim_transaction_nonce(network_nonce, signing_wallet_obj, transaction_id)
             return ct
 
-    def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
-        network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
+    def claim_transaction_nonce(self, network_nonce, signing_wallet_obj, transaction_id):
         blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
 
         if blockchain_transaction.nonce is not None:
@@ -336,9 +336,6 @@ class SQLPersistenceInterface(object):
 
         return query
 
-    def get_failed_tasks(self, min_task_id=None, max_task_id=None):
-        return self._get_tasks_by_status('FAILED', min_task_id, max_task_id)
-
     def _get_tasks_by_status(self, status, min_task_id, max_task_id):
         query = self.session.query(BlockchainTask) \
             .filter(BlockchainTask.status == status) \
@@ -423,16 +420,12 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def __init__(self, w3, red, session_factory, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
-
-        self.w3 = w3
+    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 
         self.red = red
 
-        self.session_factory = session_factory
-
-        self.session = scoped_session(session_factory)
+        self.session = session
         
-        self.first_block_hash = w3.eth.getBlock(0).hash.hex()
+        self.first_block_hash = first_block_hash
 
         self.PENDING_TRANSACTION_EXPIRY_SECONDS = PENDING_TRANSACTION_EXPIRY_SECONDS
