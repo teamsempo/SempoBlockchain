@@ -238,10 +238,9 @@ class CreditTransferAPI(MethodView):
                 return make_response(jsonify(response_object)), 400
 
             transfer_user_list = []
+            individual_sender_user = None
 
             if invert_recipient_list:
-                transfer_user_list = []
-                individual_sender_user = None
                 all_accounts_query = TransferAccount.query.filter(TransferAccount.is_ghost != True).filter_by(organisation_id=g.active_organisation.id)
                 all_user_accounts_query = (all_accounts_query.filter(TransferAccount.account_type == TransferAccountType.USER))
                 all_accounts_except_selected_query = all_user_accounts_query.filter(not_(TransferAccount.id.in_(recipient_transfer_accounts_ids)))
@@ -250,7 +249,6 @@ class CreditTransferAPI(MethodView):
             else:
                 for transfer_account_id in recipient_transfer_accounts_ids:
                     try:
-                        individual_sender_user = None
                         individual_recipient_user = find_user_with_transfer_account_from_identifiers(
                             None, None, transfer_account_id)
 
