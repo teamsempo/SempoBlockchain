@@ -68,7 +68,7 @@ import {
   ValidateTfaAction
 } from "../reducers/auth/actions";
 
-import { browserHistory } from "../app.jsx";
+import { browserHistory } from "../createStore.js";
 import { MessageAction } from "../reducers/message/actions";
 import { OrganisationAction } from "../reducers/organisation/actions";
 

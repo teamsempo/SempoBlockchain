@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { browserHistory } from "../../app.jsx";
+import { browserHistory } from "../../createStore.js";
 
 import styled from "styled-components";
 import ReactTable from "react-table";
