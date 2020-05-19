@@ -18,8 +18,7 @@ if [ "$ret" -ne 0 ]; then
 fi
 
 if [ "$CONTAINER_MODE" = 'TEST' ]; then
-   #todo(COVERAGE): fix so that eth_worker is included
-   coverage run invoke_tests.py
+   coverage pytest -k app
    ret=$?
    if [ "$ret" -ne 0 ]; then
      exit $ret

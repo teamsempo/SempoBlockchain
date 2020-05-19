@@ -88,6 +88,15 @@ class SQLPersistenceInterface(object):
         return next_nonce
 
     def locked_claim_transaction_nonce(self, network_nonce, signing_wallet_obj, transaction_id):
+        """
+        Claim a transaction a nonce for a particular transaction, using a lock to prevent another transaction
+        from accidentially claiming the same nonce.
+
+        :param network_nonce: the highest nonce that we know has been claimed onchain
+        :param signing_wallet_obj:
+        :param transaction_id:
+        :return:
+        """
         lock = self.red.lock(signing_wallet_obj.address, timeout=600)
         print(f'Attempting lock for txn: {transaction_id} \n'
               f'addr:{signing_wallet_obj.address}')
@@ -99,10 +108,10 @@ class SQLPersistenceInterface(object):
             self.session.commit()
             self.session.refresh(signing_wallet_obj)
 
-            ct = self.claim_transaction_nonce(network_nonce, signing_wallet_obj, transaction_id)
+            ct = self._claim_transaction_nonce(network_nonce, signing_wallet_obj, transaction_id)
             return ct
 
-    def claim_transaction_nonce(self, network_nonce, signing_wallet_obj, transaction_id):
+    def _claim_transaction_nonce(self, network_nonce, signing_wallet_obj, transaction_id):
         blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
 
         if blockchain_transaction.nonce is not None:
