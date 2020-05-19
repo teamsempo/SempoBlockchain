@@ -4,14 +4,8 @@ sleep 10
 WORKER_CONCURRENCY=4
 
 echo "Running docker worker script"
-if [ "$CONTAINER_MODE" = 'ETH_WORKER_TEST' ]; then
-   coverage pytest
-   ret=$?
-   if [ "$ret" -ne 0 ]; then
-     exit $ret
-   fi
-   bash <(curl -s https://codecov.io/bash) -cF python
-elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
+
+if [ "$CONTAINER_TYPE" == 'BEAT' ]; then
   echo "Starting Beat Worker"
   celery -A eth_manager beat --loglevel=WARNING
 elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
@@ -34,13 +28,22 @@ elif [ "$CONTAINER_TYPE" == 'ANY_PRIORITY_WORKER' ]; then
 else
   echo "Running alembic upgrade (Default)"
   alembic upgrade head
-
   ret=$?
   if [ "$ret" -ne 0 ]; then
     exit $ret
   fi
-  echo "Starting Generic Worker (Default)"
-  celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority --without-gossip --without-mingle
+
+  if [ "$CONTAINER_MODE" = 'ETH_WORKER_TEST' ]; then
+    coverage pytest
+    ret=$?
+    if [ "$ret" -ne 0 ]; then
+      exit $ret
+    fi
+    bash <(curl -s https://codecov.io/bash) -cF python
+  else
+    echo "Starting Generic Worker (Default)"
+    celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority --without-gossip --without-mingle
+  fi
 fi
 
 #
