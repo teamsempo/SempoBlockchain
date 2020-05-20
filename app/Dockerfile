@@ -23,7 +23,6 @@ COPY ./app/manage.py /src
 COPY ./app/RedisQueue.py /src
 COPY ./app/_docker_app_script.sh /
 COPY ./app/test_app /src/test_app
-COPY ./invoke_tests.py /src
 COPY .coveragerc /src
 
 WORKDIR /

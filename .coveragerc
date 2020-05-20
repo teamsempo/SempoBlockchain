@@ -1,6 +1,6 @@
 [run]
 source=.
 omit=
-    # omit everything in /worker and /test
-    */worker/*
-    */test/*
+    # omit everything in test folders
+    */test_app/*
+    */test_eth_worker/*

@@ -1,2 +1,3 @@
 fixes:
   - "server/::app/server/"
+  - "::eth_worker/"

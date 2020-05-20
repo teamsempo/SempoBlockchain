@@ -9,6 +9,7 @@ RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.
 
 COPY ./eth_worker /
 COPY ./config.py config_files/* /
+COPY .coveragerc /.coveragerc
 
 WORKDIR /
 

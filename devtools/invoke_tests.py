@@ -5,8 +5,8 @@ import sys
 A convenience script to allow easy testing of multiple components
 """
 
-if os.environ.get('DEPLOYMENT_NAME') != 'DOCKER_TEST':
-    os.environ['DEPLOYMENT_NAME'] = "TEST"
+os.chdir('../')
+os.environ['DEPLOYMENT_NAME'] = "TEST"
 
 if __name__ == '__main__':
 
@@ -23,3 +23,4 @@ if __name__ == '__main__':
     r_app = pytest.main(['app/test_app'] + flags + sys.argv[1:])
     r_eth_worker = pytest.main(['eth_worker/test_eth_worker'] + flags + sys.argv[1:])
     exit(max(r_app, r_eth_worker))
+
