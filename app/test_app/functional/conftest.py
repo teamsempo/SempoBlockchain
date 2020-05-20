@@ -2,8 +2,9 @@ import pytest
 import os
 import sys
 
-from helpers.utils import mock_class, will_func_test_blockchain
-from helpers.blockchain_tasker import MockBlockchainTasker
+from helpers.utils import will_func_test_blockchain
+from helpers.mocks import MockBlockchainTasker, mock_class
+
 
 @pytest.fixture(scope='module', autouse=True)
 def mock_blockchain_tasks(monkeymodule):

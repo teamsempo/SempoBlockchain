@@ -1,12 +1,12 @@
 import pytest
 from functools import partial
 
-from helpers.ussd_utils import fake_transfer_mapping
+from helpers.utils import fake_transfer_mapping
 from server.models.transfer_usage import TransferUsage
 from server.models.ussd import UssdMenu
 from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
 
-from helpers.factories import UserFactory, UssdSessionFactory
+from helpers.model_factories import UserFactory, UssdSessionFactory
 from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 

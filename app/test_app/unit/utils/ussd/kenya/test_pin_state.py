@@ -4,7 +4,7 @@ from faker.providers import phone_number
 from faker import Faker
 import json
 
-from helpers.factories import UserFactory, UssdSessionFactory, OrganisationFactory
+from helpers.model_factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
 from server.utils import user as user_utils

@@ -1,58 +1,26 @@
-import os
 import uuid
 import pytest
-import redis
-from sqlalchemy.orm import scoped_session
 from sqlalchemy.exc import IntegrityError
 from typing import cast
-
-import config
 
 from web3 import (
     Web3
 )
 from eth_keys import keys
 
-from sql_persistence import engine, session_factory
 from sql_persistence.interface import SQLPersistenceInterface
-from sql_persistence.models import Base, BlockchainWallet, BlockchainTask, BlockchainTransaction
+from sql_persistence.models import BlockchainWallet, BlockchainTask, BlockchainTransaction
 from sempo_types import UUID
 
-# @pytest.fixture(autouse=True)
-# def mocker_web3(mocker):
-#     mocker.patch('server.pusher_client.trigger')
-#     mocker.patch('server.pusher_client.authenticate')
-#     mocker.patch('server.pusher_client.trigger_batch')
 
 def str_uuid() -> UUID:
     return cast(UUID, str(uuid.uuid4()))
-
-@pytest.fixture(scope='function')
-def db_session():
-    # Create the database and the database table
-
-    Base.metadata.create_all(engine)
-
-    session = scoped_session(session_factory)
-
-    yield session
-
-    session.close()
-    Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture(scope='function')
-def persistence_int(db_session):
-    red = redis.Redis.from_url(config.REDIS_URL)
-
-    return SQLPersistenceInterface(
-        red=red, session=db_session, first_block_hash='deadbeef01'
-    )
 
 
 # Just a randomly generated key. Needless to say, DON'T USE THIS FOR REAL FUNDS ANYWHERE
 pk = '0x2bd62cccd89e375b2c248eaa123dc24141f7a8c6e384e045c0698ebaa1d62922'
 address = '0x468F90c5a236130E5D51260A2A5Bfde834C694b6'
+
 
 class TestModels:
 

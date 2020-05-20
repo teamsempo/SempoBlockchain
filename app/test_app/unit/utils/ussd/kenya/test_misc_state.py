@@ -3,8 +3,8 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 
-from helpers.factories import UserFactory, UssdSessionFactory, OrganisationFactory
-from helpers.ussd_utils import fake_transfer_mapping
+from helpers.model_factories import UserFactory, UssdSessionFactory, OrganisationFactory
+from helpers.utils import fake_transfer_mapping
 from server import db
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User

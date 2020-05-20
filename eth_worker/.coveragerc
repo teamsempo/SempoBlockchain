@@ -2,5 +2,4 @@
 source=.
 omit=
     # omit everything in test folders
-    */test_app/*
     */test_eth_worker/*

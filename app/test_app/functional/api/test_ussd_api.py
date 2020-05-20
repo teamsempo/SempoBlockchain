@@ -4,10 +4,9 @@ from faker import Faker
 from functools import partial
 
 import config
-from helpers.ussd_utils import create_transfer_account_for_user, make_kenyan_phone
+from helpers.utils import create_transfer_account_for_user, make_kenyan_phone
 from migrations.seed import create_ussd_menus, create_business_categories
-from helpers.factories import UserFactory, TransferUsageFactory, OrganisationFactory
-from server.models.credit_transfer import CreditTransfer
+from helpers.model_factories import UserFactory, OrganisationFactory
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User

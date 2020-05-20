@@ -2,7 +2,7 @@ import pytest
 from functools import partial
 
 from server import db
-from helpers.factories import UserFactory, OrganisationFactory
+from helpers.model_factories import UserFactory, OrganisationFactory
 from server.models.ussd import UssdMenu, UssdSession
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 

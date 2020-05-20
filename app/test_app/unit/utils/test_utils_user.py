@@ -17,7 +17,7 @@ import pytest
 #     import config
 #     assert create_transfer_account_user.one_time_code is not None
 #     assert create_transfer_account_user.transfer_account is not None
-from helpers.factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory, fake
+from helpers.model_factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory, fake
 from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages, admin_reset_user_pin, proccess_create_or_modify_user_request
 
 @pytest.mark.parametrize("last_name, location, lat, lng, initial_disbursement", [

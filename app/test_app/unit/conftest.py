@@ -1,9 +1,6 @@
 import pytest
 
-from helpers.blockchain_tasker import MockBlockchainTasker
-from helpers.misc_tasker import MockMiscTasker
-from helpers.ussd_tasker import MockUssdTasker
-from helpers.utils import mock_class
+from helpers.mocks import MockMiscTasker, MockBlockchainTasker, MockUssdTasker, mock_class
 
 
 @pytest.fixture(scope='module')

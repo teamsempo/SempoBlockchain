@@ -3,8 +3,8 @@ from functools import partial
 from faker.providers import phone_number
 from faker import Faker
 
-from helpers.factories import UserFactory
-from helpers.ussd_utils import create_transfer_account_for_user
+from helpers.model_factories import UserFactory
+from helpers.utils import create_transfer_account_for_user
 from server.models.token import Token
 from server.models.transfer_usage import TransferUsage
 from server.utils.credit_transfer import make_payment_transfer
