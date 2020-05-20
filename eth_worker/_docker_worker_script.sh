@@ -21,6 +21,7 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
         bash <(curl -s https://codecov.io/bash) -cF python
     else
         echo pass
+        sleep infinity
     fi
 else
     if [ "$CONTAINER_TYPE" == 'BEAT' ]; then
