@@ -16,4 +16,3 @@ if __name__ == '__main__':
 
     r = pytest.main(['-v', '-x', '-s', 'test'] + sys.argv[1:])
     exit(r)
-# Try tests
