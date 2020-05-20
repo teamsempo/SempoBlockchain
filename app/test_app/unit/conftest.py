@@ -2,7 +2,6 @@ import pytest
 
 from helpers.mocks import MockMiscTasker, MockBlockchainTasker, MockUssdTasker, mock_class
 
-
 @pytest.fixture(scope='module')
 def load_account():
     """

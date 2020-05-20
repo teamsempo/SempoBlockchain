@@ -18,6 +18,7 @@ from server.models.token import Token
 fake = Faker()
 fake.add_provider(phone_number)
 
+
 class UserFactory(SQLAlchemyModelFactory):
     class Meta:
         model = User

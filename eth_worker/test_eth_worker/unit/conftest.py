@@ -1,6 +1,11 @@
 import pytest
-import redis
 from sqlalchemy.orm import scoped_session
+import redis
+
+import config
+from sql_persistence import engine, session_factory
+from sql_persistence.interface import SQLPersistenceInterface
+from sql_persistence.models import Base
 
 # @pytest.fixture(autouse=True)
 # def mock_sms_apis(mocker):
@@ -14,12 +19,6 @@ from sqlalchemy.orm import scoped_session
 #     mocker.patch('server.utils.phone._send_at_message.submit', mock_sms_api)
 #
 #     return messages
-
-
-import config
-from sql_persistence import engine, session_factory
-from sql_persistence.interface import SQLPersistenceInterface
-from sql_persistence.models import Base
 
 
 @pytest.fixture(scope='function')
