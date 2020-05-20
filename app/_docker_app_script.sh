@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo $CONTAINER_MODE
+
 cd src
 echo upgrading database
 python manage.py db upgrade

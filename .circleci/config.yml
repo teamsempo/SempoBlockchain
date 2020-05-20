@@ -166,7 +166,7 @@ jobs:
       - run:
           name: Run Docker Tests
           command: |
-            docker-compose up --exit-code-from app
+            docker-compose up --exit-code-from eth_worker
   test:frontend:
     working_directory: ~/project
     docker:
