@@ -9,6 +9,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+        docker_layer_caching: true 
       - run:
           name: Generate Secrets Files
           command: |
@@ -132,6 +133,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+        docker_layer_caching: true 
       - attach_workspace:
           at: ~/project
       - run:
@@ -154,6 +156,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+        docker_layer_caching: true 
       - attach_workspace:
           at: ~/project
       - restore_cache:
@@ -177,6 +180,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+        docker_layer_caching: true 
       - attach_workspace:
           at: ~/project
       - run:
