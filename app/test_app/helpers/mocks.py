@@ -3,7 +3,7 @@ import random
 import time
 import uuid
 
-from eth_keys.main import lazy_key_api
+from eth_keys import keys
 
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User
