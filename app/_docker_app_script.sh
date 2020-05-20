@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-echo $CONTAINER_MODE
-
 cd src
 echo upgrading database
 python manage.py db upgrade
@@ -17,7 +15,7 @@ if [ "$ret" -ne 0 ]; then
 fi
 
 if [ "$CONTAINER_MODE" == 'TEST' ]; then
-   coverage run -m pytest
+   coverage run -m pytest test_app
    ret=$?
    if [ "$ret" -ne 0 ]; then
      exit $ret

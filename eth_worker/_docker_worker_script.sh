@@ -13,7 +13,7 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
         if [ "$ret" -ne 0 ]; then
             exit $ret
         fi
-        coverage run -m pytest
+        coverage run -m pytest test_eth_worker
         ret=$?
         if [ "$ret" -ne 0 ]; then
           exit $ret

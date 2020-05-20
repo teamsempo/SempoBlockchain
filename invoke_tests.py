@@ -1,7 +1,9 @@
 import pytest
 import os
 import sys
-import subprocess
+"""
+A convenience script to allow easy testing of multiple components
+"""
 
 if os.environ.get('DEPLOYMENT_NAME') != 'DOCKER_TEST':
     os.environ['DEPLOYMENT_NAME'] = "TEST"
@@ -14,5 +16,10 @@ if __name__ == '__main__':
     # Argument definitions here https://gist.github.com/kwmiebach/3fd49612ef7a52b5ce3a
     # or (pytest --help)
 
-    r = pytest.main(['-v', '-x', '-s', 'test'] + sys.argv[1:])
-    exit(r)
+    flags = ['-v', '-x', '-s']
+
+    # We do 'test_eth_worker' and 'test_app' because then we can feed -k 'test_app' to only test the app
+    # Explicity providing the two directories runs  faster than forcing pycharm to find tests from root
+    r_app = pytest.main(['app/test_app'] + flags + sys.argv[1:])
+    r_eth_worker = pytest.main(['eth_worker/test_eth_worker'] + flags + sys.argv[1:])
+    exit(max(r_app, r_eth_worker))
