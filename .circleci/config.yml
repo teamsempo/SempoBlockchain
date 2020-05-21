@@ -32,9 +32,13 @@ jobs:
             - ~/project/app/node_modules
           key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
+      - run:
+          name: Generate Client hash
+          command: |
+            tar -c ~/project/app/client | sha1sum > ~/project/ThisClientHash.txt
       - restore_cache:
           keys:
-            - client_build-v1-{{ tar -c ~/project/app/client | sha1sum }}
+            - client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
       - run:
           # Only build if the hash of the client folder is different to that of the recovered cash.
           # In general, we could just check for the presence of a bundle in the dist folder,
@@ -43,16 +47,15 @@ jobs:
           name: Build Node
           command: |
             cd ./app
-            touch ~/project/ClientHash.txt
-            if [ $(cat ~/project/ClientHash.txt) != $(tar -c ~/project/app/client | sha1sum) ]; then  npm run build; fi
+            if [ -f ~/project/PrevClientHash.txt ] && [ $(cat ~/project/PrevClientHash.txt) != $(cat ~/project/ThisClientHash.txt) ]; then  npm run build; fi
       - run:
           name: Generate Client hash
           command: |
-            tar -c ~/project/app/client | sha1sum > ~/project/ClientHash.txt
+            tar -c ~/project/app/client | sha1sum > ~/project/PrevClientHash.txt
       - save_cache:
           paths:
             - ~/project/app/server/static/javascript/dist/
-            - ~/project/ClientHash.txt
+            - ~/project/PrevClientHash.txt
           key: client_build-v1-{{ tar -c ~/project/app/client | sha1sum }}
 
       - run:
