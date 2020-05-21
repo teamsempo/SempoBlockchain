@@ -56,7 +56,7 @@ jobs:
       - run:
           name: Build application Docker images
           command: |
-            docker-compose build --build-arg GIT_HASH=$CIRCLE_SHA1
+            docker-compose build
       - persist_to_workspace:
           root: ~/project
           paths:

@@ -30,8 +30,8 @@ WORKDIR /
 
 RUN chmod +x /_docker_app_script.sh
 
-ARG GIT_HASH
-ENV GIT_HASH=$GIT_HASH
+#ARG GIT_HASH
+#ENV GIT_HASH=$GIT_HASH
 
 EXPOSE 9000
 
