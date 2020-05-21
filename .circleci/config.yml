@@ -10,11 +10,11 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run:
-          name: Inject Build Hash
-          # We'd love to inject this as a build argument, but it breaks the layer cache
-          command: |
-            sed -i "s|\$GIT_HASH|${GIT_HASH}|g" ./app/_docker_app_script.sh
+      #      - run:
+      #          name: Inject Build Hash
+      #          # We'd love to inject this as a build argument, but it breaks the layer cache
+      #          command: |
+      #            sed -i "s|\$GIT_HASH|${GIT_HASH}|g" ./app/_docker_app_script.sh
       - run:
           name: Generate Secrets Files
           command: |
