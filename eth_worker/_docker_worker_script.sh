@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+echo Container mode: $CONTAINER_MODE
+echo Container type: $CONTAINER_TYPE
+
 sleep 10
 
 WORKER_CONCURRENCY=4
@@ -13,7 +16,7 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
         if [ "$ret" -ne 0 ]; then
             exit $ret
         fi
-        coverage run -m pytest test_eth_worker
+        coverage run -m pytest test_eth_worker -x -v
         ret=$?
         if [ "$ret" -ne 0 ]; then
           exit $ret

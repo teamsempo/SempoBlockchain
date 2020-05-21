@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+echo Container mode: $CONTAINER_MODE
 
 cd src
 echo upgrading database
@@ -15,7 +16,7 @@ if [ "$ret" -ne 0 ]; then
 fi
 
 if [ "$CONTAINER_MODE" == 'TEST' ]; then
-   coverage run -m pytest test_app
+   coverage run -m pytest test_app -x -v
    ret=$?
    if [ "$ret" -ne 0 ]; then
      exit $ret

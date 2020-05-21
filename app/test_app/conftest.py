@@ -6,9 +6,7 @@ from faker import Faker
 import os
 import sys
 
-app_dir = os.path.abspath(os.path.join(os.getcwd(), "app"))
-sys.path.append(app_dir)
-sys.path.append(os.getcwd())
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
