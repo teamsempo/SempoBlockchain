@@ -16,22 +16,13 @@ jobs:
             mkdir config_files/secret
             cd config_files
             python generate_secrets.py -n docker_test
+
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
             - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
             - node-v1-{{ .Branch }}-
             - node-v1-
-      - run:
-          name: Setup npm
-          command: |
-            cd app
-            npm install
-      - save_cache:
-          paths:
-            - ~/project/app/node_modules
-          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-
       - run:
           name: Generate Client Hash For This Build
           command: |
@@ -47,7 +38,7 @@ jobs:
           name: Build Node
           command: |
             cd ./app
-            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm run build; fi
+            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm install & npm run build; fi
       - run:
           name: Generate New 'Previous Client Hash'
           command: |
@@ -57,6 +48,10 @@ jobs:
             - ~/project/app/server/static/javascript/dist/
             - ~/project/PrevClientHash.txt
           key: client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
+      - save_cache:
+          paths:
+            - ~/project/app/node_modules
+          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
       - run:
           name: Build application Docker images
