@@ -40,9 +40,7 @@ services:
       - "3031:3031"
 
   eth_worker:
-    build:
-      context: app/server
-      dockerfile: eth_worker/Dockerfile
+    build: eth_worker
     image: eth_worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
@@ -56,9 +54,7 @@ services:
       - eth_postgres
 
   eth_worker_processor:
-    build:
-      context: app/server
-      dockerfile: eth_worker/Dockerfile
+    build: eth_worker
     image: eth_worker
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
