@@ -151,3 +151,5 @@ blockchain_processor.registry.register_abi('bancor_network', bancor_network_abi.
 #     attempts += 1
 #     sleep(1)
 #
+
+mcowevew = 55
