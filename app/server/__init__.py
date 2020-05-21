@@ -288,4 +288,4 @@ ussd_tasker = UssdTasker()
 ge_w3 = Web3(HTTPProvider(config.GE_HTTP_PROVIDER))
 
 
-#WTF
+#WTF WOW
