@@ -32,12 +32,29 @@ jobs:
             - ~/project/app/node_modules
           key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
+      - restore_cache:
+          keys:
+            - client_build-v1-{{ tar -c ~/project/app/client | sha1sum }}
       - run:
+          # Only build if the hash of the client folder is different to that of the recovered cash.
+          # In general, we could just check for the presence of a bundle in the dist folder,
+          # (if a cache is recovered, it'll match) but this prevents bad things from happening
+          # if someone accidentally added a bundle to dist, or ClientHash.txt file in the git repo
           name: Build Node
           command: |
             cd ./app
-            npm run build
-            cd ../
+            touch ~/project/ClientHash.txt
+            if [ $(cat ~/project/ClientHash.txt) != $(tar -c ~/project/app/client | sha1sum) ]; then  npm run build; fi
+      - run:
+          name: Generate Client hash
+          command: |
+            tar -c ~/project/app/client | sha1sum > ~/project/ClientHash.txt
+      - save_cache:
+          paths:
+            - ~/project/app/server/static/javascript/dist/
+            - ~/project/ClientHash.txt
+          key: client_build-v1-{{ tar -c ~/project/app/client | sha1sum }}
+
       - run:
           name: Build application Docker images
           command: |
