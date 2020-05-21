@@ -52,7 +52,7 @@ class SavedFiltersAPI(MethodView):
         create_filter = SavedFilter(
             name=filter_name,
             filter=filter_attributes,
-            organisation_id=g.user.default_organisation_id
+            organisation_id=g.active_organisation.id
         )
 
         db.session.add(create_filter)
