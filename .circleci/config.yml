@@ -35,7 +35,7 @@ jobs:
       - run:
           name: Generate Client Hash For This Build
           command: |
-            tar -c ~/project/app/client | sha1sum > ~/project/ThisClientHash.txt
+            find ~/project/app/client/ -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/ThisClientHash.txt
       - restore_cache:
           keys:
             - client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
@@ -51,7 +51,7 @@ jobs:
       - run:
           name: Generate New 'Previous Client Hash'
           command: |
-            tar -c ~/project/app/client | sha1sum > ~/project/PrevClientHash.txt
+            find ~/project/app/client/ -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/PrevClientHash.txt
       - save_cache:
           paths:
             - ~/project/app/server/static/javascript/dist/
