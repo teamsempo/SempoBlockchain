@@ -10,8 +10,6 @@ import Nav from "./nav.jsx";
 
 export const browserHistory = createBrowserHistory({});
 
-const mcowvew = 55;
-
 export default class App extends React.Component {
   render() {
     return (
