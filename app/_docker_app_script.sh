@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#Looks trivial, but gives us a place to sed in the build hash on circle without breaking docker layer caches
-GIT_HASH=$GIT_HASH
 
 cd src
 echo upgrading database
