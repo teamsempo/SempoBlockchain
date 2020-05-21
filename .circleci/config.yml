@@ -61,10 +61,7 @@ jobs:
       - run:
           name: Build application Docker images
           command: |
-            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1
-            docker build -t eth_worker . -f ./eth_worker/Dockerfile
-            docker build -t proxy ./proxy
-            docker build -t pgbouncer . -f ./pgbouncer/Dockerfile
+            docker-compose build --build-arg GIT_HASH=$CIRCLE_SHA1
       - persist_to_workspace:
           root: ~/project
           paths:
