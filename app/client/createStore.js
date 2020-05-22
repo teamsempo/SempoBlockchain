@@ -11,7 +11,7 @@ import rootSaga from "./sagas/rootSaga";
 const sagaMiddleware = createSagaMiddleware();
 export const browserHistory = createBrowserHistory({});
 
-// Setup redux dev tools
+// Setup redux dev toolio
 const composeSetup =
   process.env.NODE_ENV !== "prod" &&
   typeof window === "object" &&
