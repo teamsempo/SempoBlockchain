@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 cd src
 echo upgrading database
 python manage.py db upgrade

@@ -1,8 +1,7 @@
 import { LoginAction } from "./actions";
-
 import { LoginActionTypes } from "./types";
 
-interface LoginState {
+export interface LoginState {
   isLoggingIn: boolean;
   token: null | string;
   userId: null | number;
