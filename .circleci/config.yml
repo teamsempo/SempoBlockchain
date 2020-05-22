@@ -194,6 +194,7 @@ workflows:
             branches:
               only:
                 - master
+                - build-fix
           requires:
             - test:backend
             - test:frontend
