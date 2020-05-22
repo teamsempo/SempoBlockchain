@@ -1,24 +1,17 @@
-import {
-  take,
-  fork,
-  put,
-  takeEvery,
-  call,
-  all,
-  cancelled,
-  cancel,
-  race
-} from "redux-saga/effects";
+import { put, takeEvery, call, all } from "redux-saga/effects";
 import { handleError } from "../utils";
 
 import { ExportAction } from "../reducers/export/actions";
-import { ExportActionTypes } from "../reducers/export/types";
+import { ExportActionTypes, ExportPayload } from "../reducers/export/types";
 
 import { exportAPI } from "../api/exportAPI";
+import { ActionWithPayload } from "../reduxUtils";
 
-function* newExport({ payload }) {
+function* newExport(
+  action: ActionWithPayload<ExportActionTypes.NEW_EXPORT_REQUEST, ExportPayload>
+) {
   try {
-    const result = yield call(exportAPI, payload);
+    const result = yield call(exportAPI, action.payload);
 
     yield put(ExportAction.exportSuccess(result.data));
   } catch (fetch_error) {

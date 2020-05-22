@@ -1,3 +1,5 @@
+import { Filter } from "../filter/types";
+
 export interface Organisation {
   id: number;
   name: string;
@@ -7,6 +9,11 @@ export interface Organisation {
   require_transfer_card: boolean;
   default_disbursement: number;
   country_code: string;
+}
+
+export interface OrganisationData {
+  organisations: Organisation[];
+  organisation: Organisation;
 }
 
 export enum OrganisationActionTypes {
