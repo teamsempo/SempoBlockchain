@@ -12,11 +12,13 @@ import {
 import {
   LoadFilterActionTypes,
   CreateFilterActionTypes,
-  FilterData
+  FilterData,
+  CreateFilterPayload
 } from "../reducers/filter/types";
 
 import { loadFiltersAPI, createFilterAPI } from "../api/filterAPI";
 import { MessageAction } from "../reducers/message/actions";
+import { ActionWithPayload } from "../reduxUtils";
 
 function* updateStateFromFilter(data: FilterData) {
   //Schema expects a list of filter objects
@@ -51,9 +53,13 @@ function* watchLoadFilters() {
   yield takeEvery(LoadFilterActionTypes.LOAD_FILTERS_REQUEST, loadFilters);
 }
 
-function* createFilter(action: CreateFilterAction) {
+function* createFilter(
+  action: ActionWithPayload<
+    CreateFilterActionTypes.CREATE_FILTER_REQUEST,
+    CreateFilterPayload
+  >
+) {
   try {
-    //@ts-ignore
     const result = yield call(createFilterAPI, action.payload);
 
     yield call(updateStateFromFilter, result.data);
