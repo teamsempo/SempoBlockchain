@@ -1,3 +1,5 @@
+import { Organisation } from "../organisation/types";
+
 export enum LoginActionTypes {
   REAUTH_REQUEST = "REAUTH_REQUEST",
   LOGIN_REQUEST = "LOGIN_REQUEST",
@@ -169,4 +171,27 @@ export interface ValidateTfaPayload {
     otp: string;
     otp_expiry_interval: number;
   };
+}
+
+export interface TokenData {
+  auth_token: string;
+  user_id: number;
+  email: string;
+  admin_tier: string;
+  usd_to_satoshi_rate: null | number;
+  web_intercom_hash: string;
+  web_api_version: string;
+  active_organisation_id: number;
+}
+
+export interface OrganisationLoginData extends TokenData {
+  organisations: Organisation[];
+  organisation: Organisation;
+}
+
+export interface AdminData {
+  admin: AdminUser[];
+  admins: AdminUser[];
+  invites: Invite[];
+  invite: Invite;
 }

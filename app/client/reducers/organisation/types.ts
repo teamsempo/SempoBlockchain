@@ -1,5 +1,3 @@
-import { Filter } from "../filter/types";
-
 export interface Organisation {
   id: number;
   name: string;
