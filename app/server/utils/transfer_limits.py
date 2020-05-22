@@ -278,6 +278,9 @@ class BaseTransferLimit(ABC):
 
 
 class NoTransferAllowedLimit(BaseTransferLimit):
+    """
+    A special limit that always throws a 'NoTransferAllowedLimitError' exception when `validate_transfer` is called
+    """
 
     def available(self, transfer: CreditTransfer) -> AggregateAvailability:
         return 0
@@ -302,6 +305,9 @@ class NoTransferAllowedLimit(BaseTransferLimit):
 
 
 class MaximumAmountPerTransferLimit(BaseTransferLimit):
+    """
+    A limit that specifies a maximum amount that can be transferred per transfer
+    """
 
     def available(self, transfer: CreditTransfer) -> AggregateAvailability:
         return self.maximum_amount
@@ -436,7 +442,7 @@ class AggregateLimit(BaseTransferLimit):
 
 class AggregateTransferAmountMixin(object):
     """
-    A Mixing for aggregating over transfer amounts
+    A Mixin for aggregating over transfer amounts. Use it alongside the AggregateLimit class
     """
 
     @staticmethod
@@ -453,6 +459,10 @@ class AggregateTransferAmountMixin(object):
 
 
 class TotalAmountLimit(AggregateTransferAmountMixin, AggregateLimit):
+    """
+    A limit that where the maxium amount that can be transferred over a set of transfers within a time period is fixed.
+    Eg "You can transfer a maximum of 400 Foo token every 10 days"
+    """
 
     def available_base(self, transfer: CreditTransfer) -> TransferAmount:
         return self._total_amount
@@ -490,12 +500,18 @@ class TotalAmountLimit(AggregateTransferAmountMixin, AggregateLimit):
 
 
 class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
+    """
+    A limit that where the maximum amount that can be transferred over a set of transfers within a time period must be
+    less than the amount sent of some other transfer type (defaults to regular payments) in that same time period
+    Eg "You have made 300 FooTokens worth of payments in the last 7 days, so you can make a maximum of 300 Footokens
+    worth of withdrawals"
+    """
 
     def available_base(self, transfer: CreditTransfer) -> TransferAmount:
         return self.query_constructor_filter_specifiable(
             transfer,
             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')),
-            regular_payment_filter
+            self.minimum_sent_aggregation_filter
         ).execution_options(show_all=True).first().total or 0
 
     def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
@@ -515,7 +531,8 @@ class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
             applied_to_transfer_types: AppliedToTypes,
             application_filter: ApplicationFilter,
             time_period_days: int,
-            aggregation_filter: AggregationFilter = matching_transfer_type_filter
+            aggregation_filter: AggregationFilter = matching_transfer_type_filter,
+            minimum_sent_aggregation_filter: AggregationFilter = regular_payment_filter
     ):
         super().__init__(
             name,
@@ -525,8 +542,16 @@ class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
             aggregation_filter
         )
 
+        self.minimum_sent_aggregation_filter = minimum_sent_aggregation_filter
+
 
 class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
+    """
+    A limit that where the maximum amount that can be transferred over a set of transfers within a time period must be
+    less than some fraction of the balance of the user at that moment.
+    Has slightly weird behaviour in that the limit can change a lot depending on the balance (that's the point)
+    Eg "Your current balance is 500 FooTokens, you're allowed to withdrawl half in a 7 day period.
+    """
 
     def available_base(self, transfer: CreditTransfer) -> TransferAmount:
         return self._total_from_balance(transfer.sender_transfer_account.balance)
@@ -570,6 +595,10 @@ class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
 
 
 class TransferCountLimit(AggregateLimit):
+    """
+    An Aggregate Limit that limits based on the number of transfers made (rather than the amount transferred).
+    If we end up making more variations of this, it may be worth creating a count mixin.
+    """
 
     def used_aggregator(self, transfer: CreditTransfer, query_constructor: QueryConstructorFunc):
         return query_constructor(
@@ -678,7 +707,8 @@ LIMITS = [
     MinimumSentLimit('GE Liquid Token - Group Account User',
                      [AGENT_OUT_PAYMENT, WITHDRAWAL],
                      is_group_and_liquid_token, 30,
-                     aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter),
+                     aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter
+                     ),
 
     MaximumAmountPerTransferLimit('GE Liquid Token - Group Account User',
                                   [AGENT_OUT_PAYMENT, WITHDRAWAL],
