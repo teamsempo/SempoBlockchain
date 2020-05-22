@@ -11,10 +11,11 @@ const mapStateToProps = state => {
 
 class useagePieChart extends React.Component {
   formatTransferUsages = (usage_count, labels, transfer_use) => {
-    transfer_use.forEach(category => {
-      labels.push(category[0][0]);
-      usage_count.push(category[1]);
-    });
+    transfer_use &&
+      transfer_use.forEach(category => {
+        labels.push(category[0][0]);
+        usage_count.push(category[1]);
+      });
   };
 
   render() {

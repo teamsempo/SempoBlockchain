@@ -5,7 +5,11 @@ import styled from "styled-components";
 import matchSorter from "match-sorter";
 import PropTypes from "prop-types";
 
-import { loadFilters, createFilter } from "../reducers/filterReducer";
+import {
+  LoadFilterAction,
+  CreateFilterAction
+} from "../reducers/filter/actions";
+
 import LoadingSpinner from "./loadingSpinner.jsx";
 import { USER_FILTER_TYPE } from "../constants";
 
@@ -30,8 +34,9 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadFilters: () => dispatch(loadFilters()),
-    createFilter: body => dispatch(createFilter({ body }))
+    loadFilters: () => dispatch(LoadFilterAction.loadFilterRequest()),
+    createFilter: body =>
+      dispatch(CreateFilterAction.createFilterRequest({ body }))
   };
 };
 

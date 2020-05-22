@@ -1,4 +1,4 @@
-import { generateFormattedURL, getToken } from "../utils";
+import { generateFormattedURLPath, getToken } from "../utils";
 import { startConfiguration } from "pusher-redux";
 
 export const authenticatePusher = () => {
@@ -8,6 +8,6 @@ export const authenticatePusher = () => {
         Authorization: getToken()
       }
     },
-    authEndpoint: generateFormattedURL("/pusher/auth")
+    authEndpoint: generateFormattedURLPath("/pusher/auth")
   });
 };

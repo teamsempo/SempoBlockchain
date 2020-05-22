@@ -1,7 +1,9 @@
 version: "3"
 services:
   app:
-    build: app/server
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     image: server
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
@@ -41,7 +43,7 @@ services:
 
   eth_worker:
     build:
-      context: app/server
+      context: .
       dockerfile: eth_worker/Dockerfile
     image: eth_worker
     environment:
@@ -57,7 +59,7 @@ services:
 
   eth_worker_processor:
     build:
-      context: app/server
+      context: .
       dockerfile: eth_worker/Dockerfile
     image: eth_worker
     environment:
