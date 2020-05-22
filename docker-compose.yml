@@ -75,6 +75,7 @@ services:
 
   proxy:
     build: proxy
+    image: proxy
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
     ports:
