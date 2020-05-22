@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: app/Dockerfile
-    image: server
+    image: "server:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "APP"
@@ -45,7 +45,7 @@ services:
     build:
       context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "PRIMARY"
@@ -61,7 +61,7 @@ services:
     build:
       context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "PROCESSOR"
@@ -77,13 +77,13 @@ services:
     build:
       context: .
       dockerfile: pgbouncer/Dockerfile
-    image: pgbouncer
+    image: "pgbouncer:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
 
   proxy:
     build: proxy
-    image: proxy
+    image: "proxy:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
     ports:
