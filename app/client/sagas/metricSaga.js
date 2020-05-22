@@ -1,13 +1,10 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 
-import {
-  LOAD_METRICS_REQUEST,
-  LOAD_METRICS_ERROR,
-  LOAD_METRICS_SUCCESS,
-  UPDATE_METRICS
-} from "../reducers/metricReducer";
+import { MetricAction, LoadMetricAction } from "../reducers/metric/actions";
+import { LoadMetricsActionType } from "../reducers/metric/types";
 
 import { loadCreditTransferStatsAPI } from "../api/creditTransferAPI.js";
+import { handleError } from "../utils";
 
 function* loadMetrics({ payload }) {
   try {
@@ -17,16 +14,18 @@ function* loadMetrics({ payload }) {
     );
     const metrics = credit_stat_load_result.data.transfer_stats;
 
-    yield put({ type: UPDATE_METRICS, metrics });
+    yield put(MetricAction.updateMetrics(metrics));
 
-    yield put({ type: LOAD_METRICS_SUCCESS });
+    yield put(LoadMetricAction.loadMetricSuccess());
   } catch (fetch_error) {
-    yield put({ type: LOAD_METRICS_ERROR, error: fetch_error });
+    const error = yield call(handleError, fetch_error);
+
+    yield put(LoadMetricAction.loadMetricFailure(error));
   }
 }
 
 function* watchLoadMetrics() {
-  yield takeEvery(LOAD_METRICS_REQUEST, loadMetrics);
+  yield takeEvery(LoadMetricsActionType.LOAD_METRICS_REQUEST, loadMetrics);
 }
 
 export default function* metricSagas() {
