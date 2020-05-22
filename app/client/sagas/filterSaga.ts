@@ -11,13 +11,14 @@ import {
 } from "../reducers/filter/actions";
 import {
   LoadFilterActionTypes,
-  CreateFilterActionTypes
+  CreateFilterActionTypes,
+  FilterData
 } from "../reducers/filter/types";
 
 import { loadFiltersAPI, createFilterAPI } from "../api/filterAPI";
 import { MessageAction } from "../reducers/message/actions";
 
-function* updateStateFromFilter(data) {
+function* updateStateFromFilter(data: FilterData) {
   //Schema expects a list of filter objects
   if (data.filters) {
     var filter_list = data.filters;
@@ -50,9 +51,10 @@ function* watchLoadFilters() {
   yield takeEvery(LoadFilterActionTypes.LOAD_FILTERS_REQUEST, loadFilters);
 }
 
-function* createFilter({ payload }) {
+function* createFilter(action: CreateFilterAction) {
   try {
-    const result = yield call(createFilterAPI, payload);
+    //@ts-ignore
+    const result = yield call(createFilterAPI, action.payload);
 
     yield call(updateStateFromFilter, result.data);
 

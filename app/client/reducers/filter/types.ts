@@ -21,10 +21,18 @@ export interface CreateFilter {
 }
 
 export interface Filter {
+  created: string;
   name: string;
   filter: object;
+  id: number;
+  updated: string;
 }
 
 export interface CreateFilterPayload {
   body: CreateFilter;
+}
+
+export interface FilterData {
+  filters: Filter[];
+  filter: Filter;
 }
