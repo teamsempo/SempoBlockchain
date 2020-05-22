@@ -26,10 +26,20 @@ describe("test URL functions", () => {
     });
   });
 
+  test("test generateFormattedURLPath", () => {
+    expect(
+      utils.generateFormattedURLPath(
+        "/user/",
+        { is_deleted: true, foo: "bar" },
+        1
+      )
+    ).toBe("/api/v1/user/?is_deleted=true&foo=bar");
+  });
+
   test("test generateFormattedURL", () => {
     expect(
       utils.generateFormattedURL("/user/", { is_deleted: true, foo: "bar" }, 1)
-    ).toBe("/api/v1/user/?is_deleted=true&foo=bar");
+    ).toBe("http://localhost/api/v1/user/?is_deleted=true&foo=bar");
   });
 });
 
