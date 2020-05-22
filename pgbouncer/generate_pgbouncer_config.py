@@ -7,7 +7,7 @@ from pathlib import Path
 
 config_parser = configparser.ConfigParser()
 secrets_parser = configparser.ConfigParser()
-ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME')
+ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
 session = boto3.Session()
 client = session.client('s3')
 SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
