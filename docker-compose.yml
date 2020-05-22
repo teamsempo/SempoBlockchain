@@ -73,6 +73,11 @@ services:
       - ganache
       - eth_postgres
 
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: pgbouncer/Dockerfile
+
   proxy:
     build: proxy
     image: proxy
