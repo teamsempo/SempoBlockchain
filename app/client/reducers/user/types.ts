@@ -34,6 +34,11 @@ export interface CreateUser extends User {
   transfer_account_name?: string;
 }
 
+export interface UserData {
+  user: User;
+  users: User[];
+}
+
 export enum LoadUserActionTypes {
   LOAD_USER_REQUEST = "LOAD_USER_REQUEST",
   LOAD_USER_SUCCESS = "LOAD_USER_SUCCESS",

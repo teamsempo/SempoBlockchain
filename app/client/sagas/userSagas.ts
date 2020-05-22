@@ -13,7 +13,7 @@ import {
 } from "../api/userAPI";
 
 import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
-import { browserHistory } from "../createStore.js";
+import { browserHistory } from "../createStore";
 import { MessageAction } from "../reducers/message/actions";
 
 import {
@@ -27,13 +27,21 @@ import {
 
 import {
   CreateUserActionTypes,
+  CreateUserPayload,
   DeleteUserActionTypes,
+  DeleteUserPayload,
   EditUserActionTypes,
+  EditUserPayload,
   LoadUserActionTypes,
-  ResetPinActionTypes
+  LoadUserRequestPayload,
+  ResetPinActionTypes,
+  ResetPinPayload,
+  UserData
 } from "../reducers/user/types";
+import { ActionWithPayload } from "../reduxUtils";
+import { ReduxState } from "../reducers/rootReducer";
 
-function* updateStateFromUser(data) {
+function* updateStateFromUser(data: UserData) {
   //Schema expects a list of credit transfer objects
   if (data.users) {
     var user_list = data.users;
@@ -48,9 +56,14 @@ function* updateStateFromUser(data) {
   yield put(UserListAction.deepUpdateUserList(users));
 }
 
-function* loadUser({ payload }) {
+function* loadUser(
+  action: ActionWithPayload<
+    LoadUserActionTypes.LOAD_USER_REQUEST,
+    LoadUserRequestPayload
+  >
+) {
   try {
-    const load_result = yield call(loadUserAPI, payload);
+    const load_result = yield call(loadUserAPI, action.payload);
 
     yield call(updateStateFromUser, load_result.data);
 
@@ -66,9 +79,14 @@ function* watchLoadUser() {
   yield takeEvery(LoadUserActionTypes.LOAD_USER_REQUEST, loadUser);
 }
 
-function* editUser({ payload }) {
+function* editUser(
+  action: ActionWithPayload<
+    EditUserActionTypes.EDIT_USER_REQUEST,
+    EditUserPayload
+  >
+) {
   try {
-    const edit_response = yield call(editUserAPI, payload);
+    const edit_response = yield call(editUserAPI, action.payload);
 
     yield call(updateStateFromUser, edit_response.data);
 
@@ -92,12 +110,18 @@ function* watchEditUser() {
   yield takeEvery(EditUserActionTypes.EDIT_USER_REQUEST, editUser);
 }
 
-const getUserState = state => state.users.byId;
-const getTransferAccountState = state => state.transferAccounts.byId;
+const getUserState = (state: ReduxState) => state.users.byId;
+const getTransferAccountState = (state: ReduxState) =>
+  state.transferAccounts.byId;
 
-function* deleteUser({ payload }) {
+function* deleteUser(
+  action: ActionWithPayload<
+    DeleteUserActionTypes.DELETE_USER_REQUEST,
+    DeleteUserPayload
+  >
+) {
   try {
-    const delete_response = yield call(deleteUserAPI, payload);
+    const delete_response = yield call(deleteUserAPI, action.payload);
     yield put(DeleteUserAction.deleteUserSuccess());
 
     let userState = yield select(getUserState);
@@ -106,12 +130,12 @@ function* deleteUser({ payload }) {
     let transferAccountState = yield select(getTransferAccountState);
     let transferAccounts = { ...transferAccountState };
     delete transferAccounts[
-      userState[payload.path].default_transfer_account_id
+      userState[action.payload.path].default_transfer_account_id
     ];
 
     // delete user from local state
     let users = { ...userState };
-    delete users[payload.path];
+    delete users[action.payload.path];
 
     yield put(UserListAction.updateUserList(users));
     yield put({
@@ -141,9 +165,14 @@ function* watchDeleteUser() {
   yield takeEvery(DeleteUserActionTypes.DELETE_USER_REQUEST, deleteUser);
 }
 
-function* resetPin({ payload }) {
+function* resetPin(
+  action: ActionWithPayload<
+    ResetPinActionTypes.RESET_PIN_REQUEST,
+    ResetPinPayload
+  >
+) {
   try {
-    const reset_response = yield call(resetPinAPI, payload);
+    const reset_response = yield call(resetPinAPI, action.payload);
 
     yield call(updateStateFromUser, reset_response.data);
 
@@ -170,9 +199,14 @@ function* watchResetPin() {
   yield takeEvery(ResetPinActionTypes.RESET_PIN_REQUEST, resetPin);
 }
 
-function* createUser({ payload }) {
+function* createUser(
+  action: ActionWithPayload<
+    CreateUserActionTypes.CREATE_USER_REQUEST,
+    CreateUserPayload
+  >
+) {
   try {
-    const result = yield call(createUserAPI, payload);
+    const result = yield call(createUserAPI, action.payload);
 
     yield call(updateStateFromUser, result.data);
 
