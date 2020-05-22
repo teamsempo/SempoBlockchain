@@ -17,12 +17,14 @@ RUN \
   mkdir -p /etc/pgbouncer /var/log/pgbouncer /var/run/pgbouncer && \
   chown -R postgres /var/run/pgbouncer /etc/pgbouncer
 
-# Prepare and use config.py
+# Install requirements
 ADD ./pgbouncer/requirements.txt /requirements.txt
+RUN pip3 install -r requirements.txt
+
+# Prepare and use config.py
 ADD ./pgbouncer/generate_pgbouncer_config.py /generate_pgbouncer_config.py
 COPY ./config.py config_files/* /
 
-RUN pip3 install -r requirements.txt
 
 ADD ./pgbouncer/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
