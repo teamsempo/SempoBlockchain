@@ -350,7 +350,7 @@ class AggregateLimit(BaseTransferLimit):
         """
         Calculate the how much base availability there is
         :param transfer: the credit transfer in question
-        :return:
+        :return: Either a transfer amount or a count
         """
         pass
     
@@ -366,7 +366,7 @@ class AggregateLimit(BaseTransferLimit):
         mixins for various types of aggregation (for example total transfer amounts).
         :param transfer: the credit transfer in question
         :param query_constructor: the query constructor as defined below.
-        :return:
+        :return: Either a transfer amount or transfer count
         """
         pass
 
@@ -389,7 +389,7 @@ class AggregateLimit(BaseTransferLimit):
         :param transfer:
         :param base_query:
         :param custom_filter:
-        :return:
+        :return: An SQLAlchemy Query Object
         """
 
         filter_list = combine_filter_lists(
@@ -413,7 +413,7 @@ class AggregateLimit(BaseTransferLimit):
         provided to the limit on instantiation. We don't use an actual partial because mypy type checking won't work.
         :param transfer:
         :param base_query:
-        :return:
+        :return: An SQLAlchemy Query Object
         """
 
         return self.query_constructor_filter_specifiable(transfer, base_query, self.custom_aggregation_filter)
@@ -454,7 +454,7 @@ class AggregateTransferAmountMixin(object):
         ).execution_options(show_all=True).first().total - int(transfer.transfer_amount)
 
     @staticmethod
-    def case_will_use(transfer: CreditTransfer):
+    def case_will_use(transfer: CreditTransfer) -> TransferAmount:
         return transfer.transfer_amount
 
 
@@ -600,16 +600,21 @@ class TransferCountLimit(AggregateLimit):
     If we end up making more variations of this, it may be worth creating a count mixin.
     """
 
-    def used_aggregator(self, transfer: CreditTransfer, query_constructor: QueryConstructorFunc):
+    def used_aggregator(
+            self,
+            transfer: CreditTransfer,
+            query_constructor: QueryConstructorFunc
+    ) -> AggregateAvailability:
+
         return query_constructor(
             transfer,
             db.session.query(func.count(CreditTransfer.id).label('count'))
         ).execution_options(show_all=True).first().count - 1
 
-    def case_will_use(self, transfer: CreditTransfer):
+    def case_will_use(self, transfer: CreditTransfer) -> int:
         return 1
 
-    def available_base(self, transfer: CreditTransfer):
+    def available_base(self, transfer: CreditTransfer) -> int:
         return self.transfer_count
 
     def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
