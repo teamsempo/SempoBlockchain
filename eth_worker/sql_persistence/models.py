@@ -271,21 +271,23 @@ class BlockchainTransaction(ModelBase):
 @event.listens_for(BlockchainTransaction, 'after_update')
 def receive_after_update(mapper, connection, target):
     post_data = {
-            'blockchain_task_uuid':target.blockchain_task.uuid,
-            'timestamp':time.time(),
-            'blockchain_status':target.status,
-            'error':target.error,
-            'message':target.message,
-            'hash':target.hash
+            'blockchain_task_uuid': target.blockchain_task.uuid,
+            'timestamp': time.time(),
+            'blockchain_status': target.status,
+            'error': target.error,
+            'message': target.message,
+            'hash': target.hash
         }
     callback_url = config.APP_HOST + '/api/v1/worker_callback'
 
     try:
-        r = requests.post(callback_url,
+        r = requests.post(
+            callback_url,
             timeout=5,
             json=post_data,
             auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
-                               config.INTERNAL_AUTH_PASSWORD))
+                               config.INTERNAL_AUTH_PASSWORD)
+        )
     except:
         r = None
 
