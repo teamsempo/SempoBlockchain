@@ -63,6 +63,7 @@ jobs:
           paths:
             - config_files/secret
             - app/node_modules
+            - app/server/static/javascript/dist
   test:app:
     working_directory: ~/project
     docker:
