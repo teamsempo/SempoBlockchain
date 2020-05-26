@@ -23,7 +23,10 @@ RUN pip3 install -r requirements.txt
 
 # Prepare and use config.py
 ADD ./pgbouncer/generate_pgbouncer_config.py /generate_pgbouncer_config.py
-COPY ./config.py config_files/* /
+
+COPY ./config.py /
+RUN mkdir /config_files
+COPY ./config_files/* /config_files/
 
 
 ADD ./pgbouncer/entrypoint.sh /entrypoint.sh
