@@ -218,6 +218,7 @@ workflows:
             branches:
               only:
                 - master
+                - fix-eth-lock
           requires:
             - test:app
             - test:frontend
