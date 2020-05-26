@@ -1,0 +1,55 @@
+# Overrides docker-compose.yml to enable a ci test environment
+
+version: "3"
+services:
+  app:
+    image: "server:${GIT_HASH}"
+    environment: &CI_ENV
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+      CONTAINER_TYPE: "APP"
+      CONTAINER_MODE: ${CONTAINER_MODE} # TEST || ETH_WORKER_TEST depending on what is being tested
+      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      CODECOV_ENV: ${CODECOV_ENV}
+      CODECOV_TOKEN: ${CODECOV_TOKEN}
+      CODECOV_URL: ${CODECOV_URL}
+      CODECOV_SLUG: ${CODECOV_SLUG}
+      VCS_COMMIT_ID: ${VCS_COMMIT_ID}
+      VCS_BRANCH_NAME: ${VCS_BRANCH_NAME}
+      VCS_PULL_REQUEST: ${VCS_PULL_REQUEST}
+      VCS_SLUG: ${VCS_SLUG}
+      VCS_TAG: ${VCS_TAG}
+      # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
+      CI_BUILD_URL: ${CI_BUILD_URL}
+      CI_BUILD_ID: ${CI_BUILD_ID}
+      CI_JOB_ID: ${CI_JOB_ID}
+      CI: "true"
+      CIRCLECI: ${CIRCLECI}
+      CIRCLE_BRANCH: ${CIRCLE_BRANCH}
+      CIRCLE_BUILD_NUM: ${CIRCLE_BUILD_NUM}
+      CIRCLE_NODE_INDEX: ${CIRCLE_NODE_INDEX}
+      CIRCLE_PROJECT_USERNAME: ${CIRCLE_PROJECT_USERNAME}
+      CIRCLE_PROJECT_REPONAME: ${CIRCLE_PROJECT_REPONAME}
+      CIRCLE_REPOSITORY_URL: ${CIRCLE_REPOSITORY_URL}
+      CIRCLE_PR_NUMBER: ${CIRCLE_PR_NUMBER}
+      CIRCLE_SHA1: ${CIRCLE_SHA1}
+      CIRCLE_ARTIFACTS: ${CIRCLE_ARTIFACTS}
+      CIRCLE_TEST_REPORTS: ${CIRCLE_TEST_REPORTS}
+  eth_worker:
+    environment:
+      <<: *CI_ENV
+      CONTAINER_TYPE: "PRIMARY"
+      PYTHONUNBUFFERED: 0
+    image: "eth_worker:${GIT_HASH}"
+  eth_worker_processor:
+    environment:
+      <<: *CI_ENV
+      CONTAINER_TYPE: "PROCESSOR"
+      PYTHONUNBUFFERED: 0
+    image: "eth_worker_process:${GIT_HASH}"
+  pgbouncer:
+    environment:
+      <<: *CI_ENV
+    image: "pgbouncer:${GIT_HASH}"
+  ganache:
+    command: "-l 80000000 -i 42 -s GANACHE_SEED_DETERMINISTIC"
