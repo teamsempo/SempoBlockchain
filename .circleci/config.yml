@@ -62,7 +62,7 @@ jobs:
           root: ~/project
           paths:
             - config_files/secret
-  test:backend:
+  test:app:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
