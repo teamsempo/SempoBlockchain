@@ -1,6 +1,6 @@
 # --- Modified from https://github.com/edoburu/docker-pgbouncer ---
 FROM alpine:3.7
-ARG VERSION=1.11.0
+ENV VERSION=1.11.0
 
 RUN \
   # Download
