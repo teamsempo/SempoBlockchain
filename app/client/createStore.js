@@ -10,7 +10,7 @@ import rootSaga from "./sagas/rootSaga";
 
 const sagaMiddleware = createSagaMiddleware();
 
-// Setup redux dev toolio
+// Setup redux dev toolsz
 const composeSetup =
   process.env.NODE_ENV !== "prod" &&
   typeof window === "object" &&
