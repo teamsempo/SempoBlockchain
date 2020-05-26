@@ -62,6 +62,7 @@ jobs:
           root: ~/project
           paths:
             - config_files/secret
+            - app/node_modules
   test:app:
     working_directory: ~/project
     docker:
@@ -95,7 +96,7 @@ jobs:
           name: Run Docker Tests
           command: |
             export GIT_HASH=$CIRCLE_SHA1
-            docker-compose up --exit-code-from app
+            docker-compose up --exit-code-from eth_worker
   test:frontend:
     working_directory: ~/project
     docker:
