@@ -9,7 +9,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          docker_layer_caching: true
+          docker_layer_caching: false
       - run:
           name: Generate Secrets Files
           command: |
@@ -60,7 +60,6 @@ jobs:
             - ~/project/app/server/static/javascript/dist/
             - ~/project/PrevClientHash.txt
           key: client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
-
       - run:
           name: Build application Docker images
           command: |
@@ -141,6 +140,12 @@ jobs:
               echo "No AWS_ACCESS_KEY_ID is set! Failing..."
               exit 1;
             fi
+      - run:
+          name: Safety Build of Docker images
+          command: |
+            export GIT_HASH=$CIRCLE_SHA1
+            docker-compose build --build-arg GIT_HASH=$CIRCLE_SHA1
+
       - run:
           name: Prepare for pyth venv install
           command: |
