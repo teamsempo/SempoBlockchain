@@ -1,8 +1,10 @@
 version: "3"
 services:
   app:
-    build: app/server
-    image: server
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: "server:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "APP"
@@ -41,9 +43,9 @@ services:
 
   eth_worker:
     build:
-      context: app/server
+      context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "PRIMARY"
@@ -82,9 +84,9 @@ services:
 
   eth_worker_processor:
     build:
-      context: app/server
+      context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "PROCESSOR"
@@ -97,8 +99,17 @@ services:
       - ganache
       - eth_postgres
 
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: pgbouncer/Dockerfile
+    image: "pgbouncer:${GIT_HASH}"
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+
   proxy:
     build: proxy
+    image: "proxy:${GIT_HASH}"
     environment:
       DEPLOYMENT_NAME: "DOCKER_TEST"
     ports:

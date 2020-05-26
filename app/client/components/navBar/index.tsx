@@ -9,12 +9,14 @@ import { replaceSpaces } from "../../utils";
 import MobileTopBar from "./MobileTopBar";
 import OrgSwitcher from "./OrgSwitcher";
 import { Organisation } from "../../reducers/organisation/types";
+import { LoginState } from "../../reducers/auth/loginReducer";
 
 interface StateProps {
   loggedIn: boolean;
+  login: LoginState | null;
   email: string | null;
-  activeOrganisation: Organisation,
-  organisationList: Organisation[]
+  activeOrganisation: Organisation;
+  organisationList: Organisation[];
 }
 
 interface DispatchProps {}
@@ -155,8 +157,10 @@ class NavBar extends React.Component<Props, State> {
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     loggedIn: state.login.token != null,
+    login: state.login,
     email: state.login.email,
-    activeOrganisation: state.organisations.byId[Number(state.login.organisationId)],
+    activeOrganisation:
+      state.organisations.byId[Number(state.login.organisationId)],
     organisationList: Object.keys(state.organisations.byId).map(
       id => state.organisations.byId[Number(id)]
     )

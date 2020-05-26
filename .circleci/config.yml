@@ -8,13 +8,15 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Generate Secrets Files
           command: |
             mkdir config_files/secret
             cd config_files
             python generate_secrets.py -n docker_test
+
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
@@ -22,106 +24,43 @@ jobs:
             - node-v1-{{ .Branch }}-
             - node-v1-
       - run:
-          name: Setup npm
+          name: Generate Client Hash For This Build
           command: |
-            cd app
-            npm install
-
+            find ~/project/app/client/ -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/ThisClientHash.txt
+      - restore_cache:
+          keys:
+            - client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
+      - run:
+          # Only build if the hash of the client folder is different to that of the recovered cash.
+          # In general, we could just check for the presence of a bundle in the dist folder,
+          # (if a cache is recovered, it'll match) but this prevents bad things from happening
+          # if someone accidentally added a bundle to dist, or ClientHash.txt file in the git repo
+          name: Build Node
+          command: |
+            cd ./app
+            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm install & npm run build; fi
+      - run:
+          name: Generate New 'Previous Client Hash'
+          command: |
+            find ~/project/app/client/ -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/PrevClientHash.txt
+      - save_cache:
+          paths:
+            - ~/project/app/server/static/javascript/dist/
+            - ~/project/PrevClientHash.txt
+          key: client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
       - save_cache:
           paths:
             - ~/project/app/node_modules
           key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
       - run:
-          name: Recover Previous 6 Builds
-          command: |
-            if [ "$CIRCLE_BUILD_NUM" -gt 1 ]; then expr $CIRCLE_BUILD_NUM - 1 > BuildMinus1.txt; fi
-            if [ "$CIRCLE_BUILD_NUM" -gt 2 ]; then expr $CIRCLE_BUILD_NUM - 2 > BuildMinus2.txt; fi
-            if [ "$CIRCLE_BUILD_NUM" -gt 3 ]; then expr $CIRCLE_BUILD_NUM - 3 > BuildMinus3.txt; fi
-            if [ "$CIRCLE_BUILD_NUM" -gt 4 ]; then expr $CIRCLE_BUILD_NUM - 4 > BuildMinus4.txt; fi
-            if [ "$CIRCLE_BUILD_NUM" -gt 5 ]; then expr $CIRCLE_BUILD_NUM - 5 > BuildMinus5.txt; fi
-            if [ "$CIRCLE_BUILD_NUM" -gt 6 ]; then expr $CIRCLE_BUILD_NUM - 6 > BuildMinus6.txt; fi
-      - restore_cache:
-          keys:
-            - v5-{{ .Branch }}-{{ checksum "BuildMinus1.txt" }}
-            - v5-{{ .Branch }}-{{ checksum "BuildMinus2.txt" }}
-            - v5-{{ .Branch }}-{{ checksum "BuildMinus3.txt" }}
-            - v5-{{ .Branch }}-{{ checksum "BuildMinus4.txt" }}
-            - v5-{{ .Branch }}-{{ checksum "BuildMinus5.txt" }}
-            - v5-{{ .Branch }}-{{ checksum "BuildMinus6.txt" }}
-      - run:
-          name: Load Docker image layer cache
-          command: |
-            set -o pipefail
-            if [ -f ~/project/caches/server.tar.gz ]; then gunzip -c ~/project/caches/server.tar.gz | docker load; docker images; fi
-            echo server
-            if [ -f ~/project/caches/eth_worker.tar.gz ]; then gunzip -c ~/project/caches/eth_worker.tar.gz | docker load; docker images; fi
-            echo eth_worker
-            if [ -f ~/project/caches/proxy.tar.gz ]; then gunzip -c ~/project/caches/proxy.tar.gz | docker load; docker images; fi
-            echo proxy
-            if [ -f ~/project/caches/pgbouncer.tar.gz ]; then gunzip -c ~/project/caches/pgbouncer.tar.gz | docker load; docker images; fi
-            echo pgbouncer
-      - run:
-          name: Build Node
-          command: |
-            cd ./app
-            npm run build
-            cd ../
-      - run:
           name: Build application Docker images
           command: |
-            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1
-            docker build -t eth_worker . -f ./eth_worker/Dockerfile --build-arg CONTAINER_TYPE=ANY_PRIORITY_WORKER
-
-            docker build -t proxy ./proxy
-            docker build -t pgbouncer . -f ./pgbouncer/Dockerfile
-      - run:
-          name: Save Docker total image caches
-          command: |
-            sudo mkdir -p ~/project/imagecaches
-            sudo chmod 777 -R ~/project/imagecaches
-
-            docker save server:latest | gzip > ~/project/imagecaches/server.tar.gz
-            docker save eth_worker:latest | gzip > ~/project/imagecaches/eth_worker.tar.gz
-            docker save proxy:latest | gzip > ~/project/imagecaches/proxy.tar.gz
-            docker save pgbouncer:latest | gzip > ~/project/imagecaches/pgbouncer.tar.gz
-
-            sudo chmod 777 -R ~/project/imagecaches
-
-      - run:
-          name: Save Docker image layer cache
-          command: |
-            GIT_HASH=$(git rev-parse HEAD)
-            sudo mkdir -p ~/project/caches
-            sudo chmod 777 -R ~/project/caches
-            # See here: https://github.com/mozmeao/snippets-service/pull/208/files
-            # and here: https://stackoverflow.com/q/49965396
-            # The build commands here will be completely cached, and so very quick
-            #
-            docker build -t server . -f ./app/Dockerfile --build-arg GIT_HASH=$CIRCLE_SHA1 | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/server_layers.txt
-            docker build -t eth_worker . -f ./eth_worker/Dockerfile |  grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/eth_worker_layers.txt
-            docker build -t proxy ./proxy | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/proxy_layers.txt
-            docker build -t pgbouncer . -f ./pgbouncer/Dockerfile | grep '\-\-\->' | grep -v 'Using cache' | sed -e 's/[ >-]//g' > /tmp/pgbouncer_layers.txt
-
-            docker save $(cat /tmp/server_layers.txt) | gzip > ~/project/caches/server.tar.gz
-            docker save $(cat /tmp/eth_worker_layers.txt) | gzip > ~/project/caches/eth_worker.tar.gz
-            docker save $(cat /tmp/proxy_layers.txt) | gzip > ~/project/caches/proxy.tar.gz
-            docker save $(cat /tmp/pgbouncer_layers.txt) | gzip > ~/project/caches/pgbouncer.tar.gz
-
-            sudo chmod 777 -R ~/project/caches
-      - run:
-          name: Create Current Build Number
-          command: |
-            expr $CIRCLE_BUILD_NUM > CurrBuildNum.txt
-
-      - save_cache:
-          key: v5-{{ .Branch }}-{{ checksum "CurrBuildNum.txt" }}
-          paths:
-            - ~/project/caches
+            export GIT_HASH=$CIRCLE_SHA1
+            docker-compose build --build-arg GIT_HASH=$CIRCLE_SHA1
       - persist_to_workspace:
           root: ~/project
           paths:
-            - imagecaches
             - app/node_modules
   test:app:
     working_directory: ~/project
@@ -131,19 +70,14 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - attach_workspace:
           at: ~/project
       - run:
-          name: Load Docker image layer cache
-          command: |
-            gunzip -c ~/project/imagecaches/server.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/pgbouncer.tar.gz | docker load
-      - run:
           name: Run Docker Tests
           command: |
+            export GIT_HASH=$CIRCLE_SHA1
             docker-compose up --exit-code-from app
   test:worker:
     working_directory: ~/project
@@ -175,7 +109,8 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - attach_workspace:
           at: ~/project
       - restore_cache:
@@ -198,7 +133,8 @@ jobs:
       - image: circleci/python:3.6-node
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - attach_workspace:
           at: ~/project
       - run:
@@ -208,13 +144,6 @@ jobs:
               echo "No AWS_ACCESS_KEY_ID is set! Failing..."
               exit 1;
             fi
-      - run:
-          name: Load Docker image layer cache
-          command: |
-            gunzip -c ~/project/imagecaches/server.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/eth_worker.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/proxy.tar.gz | docker load
-            gunzip -c ~/project/imagecaches/pgbouncer.tar.gz | docker load
       - run:
           name: Prepare for pyth venv install
           command: |
@@ -255,13 +184,13 @@ jobs:
           command: |
 
             eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
-            docker tag server:latest ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker tag server:${CIRCLE_SHA1} ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
-            docker tag proxy:latest ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
+            docker tag proxy:${CIRCLE_SHA1} ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
-            docker tag eth_worker:latest ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+            docker tag eth_worker:${CIRCLE_SHA1} ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
-            docker tag pgbouncer:latest ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
+            docker tag pgbouncer:${CIRCLE_SHA1} ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
       - run:
           name: Create Dockerrun config file
