@@ -17,12 +17,24 @@ jobs:
             cd config_files
             python generate_secrets.py -n docker_test
 
+      # First bring node modules up to date
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v2-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-            - node-v2-{{ .Branch }}-
-            - node-v2-
+            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
+      - run:
+          name: Install Node
+          command: |
+            cd ./app
+            npm install
+      - save_cache:
+          paths:
+            - ~/project/app/node_modules
+          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+
+      # Then, if the src or packages have changed run a new build
       - run:
           name: Generate Client Hash For This Build
           command: |
@@ -35,10 +47,10 @@ jobs:
           # In general, we could just check for the presence of a bundle in the dist folder,
           # (if a cache is recovered, it'll match) but this prevents bad things from happening
           # if someone accidentally added a bundle to dist, or ClientHash.txt file in the git repo
-          name: Build Node
+          name: Build JS client
           command: |
             cd ./app
-            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm install & npm run build; fi
+            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm run build; fi
       - run:
           name: Generate New 'Previous Client Hash'
           command: |
@@ -48,10 +60,6 @@ jobs:
             - ~/project/app/server/static/javascript/dist/
             - ~/project/PrevClientHash.txt
           key: client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
-      - save_cache:
-          paths:
-            - ~/project/app/node_modules
-          key: node-v2-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
       - run:
           name: Build application Docker images
