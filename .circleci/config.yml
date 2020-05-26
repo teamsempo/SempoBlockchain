@@ -20,9 +20,9 @@ jobs:
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-            - node-v1-{{ .Branch }}-
-            - node-v1-
+            - node-v2-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+            - node-v2-{{ .Branch }}-
+            - node-v2-
       - run:
           name: Generate Client Hash For This Build
           command: |
@@ -51,7 +51,7 @@ jobs:
       - save_cache:
           paths:
             - ~/project/app/node_modules
-          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+          key: node-v2-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
       - run:
           name: Build application Docker images
@@ -106,16 +106,8 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - attach_workspace:
           at: ~/project
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-            - node-v1-{{ .Branch }}-
-            - node-v1-
       - run:
           name: Run Frontend Tests
           command: |
