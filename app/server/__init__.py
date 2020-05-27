@@ -122,17 +122,15 @@ def register_blueprints(app):
     @app.after_request
     def after_request(response):
         from server.utils import pusher
-
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
 
         for transaction, queue in g.pending_transactions:
             transaction.send_blockchain_payload_to_worker(queue=queue)
-
-        for exchange_args in g.pending_exchanges:
-            bt.make_liquid_token_exchange(**exchange_args)
-
-        transactions = [t[0] for t in g.pending_transactions]
+        
+        # Push only credit transfers, not exchanges
+        from server.models.credit_transfer import CreditTransfer
+        transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
         pusher.push_admin_credit_transfer(transactions)
 
         for task in g.celery_tasks:
