@@ -6,7 +6,7 @@ logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
 
-VERSION = '1.1.35'  # Remember to bump this in every PR
+VERSION = '1.1.36'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -16,8 +16,8 @@ CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
 BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
 
-print('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
-print('with BUILD_HASH: ' + BUILD_HASH)
+logg.info('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
+logg.info('with BUILD_HASH: ' + BUILD_HASH)
 
 COMMON_FILENAME = "common_secrets.ini"
 CONFIG_FILENAME = "{}_config.ini".format(ENV_DEPLOYMENT_NAME.lower())

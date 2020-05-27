@@ -20,8 +20,6 @@ from config import (
     BOUNCER_MAX_USER_CONNECTIONS,
 )
 
-print('Woo imported!!')
-
 # Make pgbouncer folder if not exists
 Path('/etc/pgbouncer').mkdir(parents=True, exist_ok=True)
 
