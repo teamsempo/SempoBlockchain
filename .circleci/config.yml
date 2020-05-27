@@ -225,4 +225,6 @@ workflows:
                 - master
                 - fix-eth-lock
           requires:
-            - build
+            - test:app
+            - test:worker
+            - test:frontend
