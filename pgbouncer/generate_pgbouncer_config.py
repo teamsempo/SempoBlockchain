@@ -16,9 +16,17 @@ from eth_utils import keccak
 print('1 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 import logging
+print('1.0 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
+
 env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
+print('1.1 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
+
 logging.basicConfig(level=env_loglevel)
+print('1.2 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
+
 logg = logging.getLogger(__name__)
+print('1.3 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
+
 
 from web3 import Web3
 
