@@ -437,7 +437,6 @@ def init_database():
     # Create the database and the database table
     from flask import g
     g.pending_transactions = []
-    g.pending_exchanges = []
     
     with current_app.app_context():
         db.create_all()
