@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import config
+
 from config import (
     DATABASE_NAME,
     DATABASE_HOST,
@@ -16,8 +18,6 @@ from config import (
     BOUNCER_MAX_DB_CONNECTIONS,
     BOUNCER_MAX_USER_CONNECTIONS,
 )
-
-import config
 
 # Make pgbouncer folder if not exists
 Path('/etc/pgbouncer').mkdir(parents=True, exist_ok=True)
@@ -41,7 +41,7 @@ max_user_connections = {BOUNCER_MAX_USER_CONNECTIONS}
 server_idle_timeout = 0
 """
 
-config.logg.debug(config_string)
+print(config_string)
 
 # Writes pgbouncer.ini with configs
 ini_file = open('/etc/pgbouncer/pgbouncer.ini', 'w')

@@ -19,8 +19,8 @@ CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
 BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
 
-logg.info('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
-logg.info('with BUILD_HASH: ' + BUILD_HASH)
+print('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
+print('with BUILD_HASH: ' + BUILD_HASH)
 
 COMMON_FILENAME = "common_secrets.ini"
 CONFIG_FILENAME = "{}_config.ini".format(ENV_DEPLOYMENT_NAME.lower())
