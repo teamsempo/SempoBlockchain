@@ -71,7 +71,7 @@ jobs:
             - config_files/secret
             - app/node_modules
             - app/server/static/javascript/dist
-  test:app:
+  test:backend:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -209,7 +209,7 @@ workflows:
   main_workflow:
     jobs:
       - build
-      - test:app:
+      - test:backend:
           requires:
             - build
       - test:worker:
@@ -224,6 +224,6 @@ workflows:
               only:
                 - master
           requires:
-            - test:app
+            - test:backend
             - test:worker
             - test:frontend
