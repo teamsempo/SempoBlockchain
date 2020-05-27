@@ -1,0 +1,8 @@
+fixes:
+  - "server/::app/server/"
+  - "manage.py::app/manage.py"
+  - "migrations/seed.py::app/migrations/seed.py"
+  - "sql_persistence/::eth_worker/sql_persistence"
+  - "exceptions.py::eth_worker/exceptions.py"
+  - "sempo_types.py::eth_worker/sempo_types.py"
+  - "generate_secrets.py::config/generate_secrets.py"
