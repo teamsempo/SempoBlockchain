@@ -1,6 +1,6 @@
 {
   "name": "SempoBlockchain",
-  "version": "1.1.17",
+  "version": "1.1.18",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
@@ -103,6 +103,7 @@
     "react-map-gl": "^3.2.5",
     "react-moment-proptypes": "^1.6.0",
     "react-password-strength": "^2.4.0",
+    "react-phone-input-2": "^2.13.5",
     "react-places-autocomplete": "^7.2.0",
     "react-qr-reader": "^2.2.1",
     "react-redux": "^7.2.0",
