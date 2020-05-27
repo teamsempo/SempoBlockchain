@@ -114,7 +114,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.fiat_ramp.resolve_as_completed()
         if not existing_blockchain_txn:
             self.blockchain_task_uuid = str(uuid4())
-            db.session.commit()
             g.pending_transactions.append((self, queue))
 
     def resolve_as_rejected(self, message=None):
