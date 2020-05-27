@@ -6,12 +6,20 @@ import datetime
 
 print('0 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import os, configparser, boto3, hashlib
 from eth_keys import keys
 from eth_utils import keccak
+
+print('version')
+print(sys.version)
+
+print('packages')
+
+import pkg_resources
+installed_packages = [(d.project_name, d.version) for d in pkg_resources.working_set]
+print(installed_packages)
 
 print('1 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -26,7 +34,6 @@ print('1.2 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 logg = logging.getLogger(__name__)
 print('1.3 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
-
 
 from web3 import Web3
 
