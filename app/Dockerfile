@@ -24,8 +24,6 @@ COPY ./app/RedisQueue.py /src
 COPY ./app/_docker_app_script.sh /
 COPY ./app/test_app /src/test_app
 COPY ./app/.coveragerc /src
-COPY ./app/codecov.yml /src
-
 
 WORKDIR /
 
