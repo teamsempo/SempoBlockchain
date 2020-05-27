@@ -2,12 +2,18 @@ print('Starting pgbouncer configuration generation script')
 import os
 import sys
 from pathlib import Path
+import datetime
+
+print('0 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
+
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import os, configparser, boto3, hashlib, datetime
+import os, configparser, boto3, hashlib
 from eth_keys import keys
 from eth_utils import keccak
+
+print('1 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 import logging
 env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
@@ -18,7 +24,7 @@ from web3 import Web3
 
 VERSION = '1.1.35'  # Remember to bump this in every PR
 
-logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
+print('2 Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
 

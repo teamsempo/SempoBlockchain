@@ -28,5 +28,4 @@ COPY ./config.py config_files/* /
 
 ADD ./pgbouncer/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/usr/bin/pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+CMD ["/entrypoint.sh"]

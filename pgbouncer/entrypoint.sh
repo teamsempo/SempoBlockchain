@@ -7,5 +7,3 @@ echo "Generated sempo pgboucner file. Starting pgbouncer"
 
 echo "config contents:"
 cat /etc/pgbouncer/pgbouncer.ini
-
-exec "$@"
