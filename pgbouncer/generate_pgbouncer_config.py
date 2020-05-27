@@ -14,15 +14,15 @@ from config import (
     BOUNCER_MAX_CLIENT_CONN,
     BOUNCER_DEFAULT_POOL_SIZE,
     BOUNCER_MAX_DB_CONNECTIONS,
-    BOUNCER_MAX_USER_CONNECTIONS
+    BOUNCER_MAX_USER_CONNECTIONS,
 )
+
+import config
 
 # Make pgbouncer folder if not exists
 Path('/etc/pgbouncer').mkdir(parents=True, exist_ok=True)
 
-# Writes pgbouncer.ini with configs
-ini_file = open('/etc/pgbouncer/pgbouncer.ini', 'w')
-ini_file.write(f"""[databases]
+config_string = f"""[databases]
 {DATABASE_NAME} = host={DATABASE_HOST} port={DATABASE_PORT} user={DATABASE_USER}
 {ETH_DATABASE_NAME} = host={DATABASE_HOST} port={DATABASE_PORT} user={DATABASE_USER}
 
@@ -39,7 +39,13 @@ default_pool_size = {BOUNCER_DEFAULT_POOL_SIZE}
 max_db_connections = {BOUNCER_MAX_DB_CONNECTIONS}
 max_user_connections = {BOUNCER_MAX_USER_CONNECTIONS}
 server_idle_timeout = 0
-""")
+"""
+
+config.logg.debug(config_string)
+
+# Writes pgbouncer.ini with configs
+ini_file = open('/etc/pgbouncer/pgbouncer.ini', 'w')
+ini_file.write(config_string)
 ini_file.close()
 
 # Writes userlist.txt with configs

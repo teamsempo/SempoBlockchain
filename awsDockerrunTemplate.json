@@ -39,6 +39,10 @@
         {
           "name": "SERVER_HAS_S3_AUTH",
           "value": true
+        },
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": 0
         }
       ],
       "portMappings": [
