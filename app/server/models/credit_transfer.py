@@ -7,8 +7,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Index
 from sqlalchemy.sql import func
 
-import server.utils.transfer_limits
-import server.utils.transfer_limits.limits
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token

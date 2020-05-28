@@ -7,7 +7,6 @@ from typing import List
 import config
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
-from server.utils.transfer_limits import BaseTransferLimit
 from server.utils.transfer_limits.checks import (
     is_any_token_and_user_is_not_phone_and_not_kyc_verified,
     is_any_token_and_user_is_phone_but_not_kyc_verified,

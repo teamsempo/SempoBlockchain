@@ -29,7 +29,7 @@ from server.utils.i18n import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
-from server.utils.transfer_limits import (
+from server.utils.transfer_limits.limits import (
     AggregateTransferAmountMixin,
     AggregateLimit,
     BalanceFractionLimit,
