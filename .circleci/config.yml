@@ -16,6 +16,7 @@ jobs:
             mkdir config_files/secret
             cd config_files
             python generate_secrets.py -n docker_test
+
       # First bring node modules up to date
       - restore_cache:
           keys:
@@ -87,6 +88,23 @@ jobs:
           command: |
             export GIT_HASH=$CIRCLE_SHA1
             docker-compose up --exit-code-from app
+  test:worker:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+        environment:
+          CONTAINER_MODE: ETH_WORKER_TEST
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Run Docker Tests
+          command: |
+            export GIT_HASH=$CIRCLE_SHA1
+            docker-compose up --exit-code-from eth_worker
   test:frontend:
     working_directory: ~/project
     docker:
@@ -95,16 +113,8 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - attach_workspace:
           at: ~/project
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-            - node-v1-{{ .Branch }}-
-            - node-v1-
       - run:
           name: Run Frontend Tests
           command: |
@@ -130,6 +140,12 @@ jobs:
               echo "No AWS_ACCESS_KEY_ID is set! Failing..."
               exit 1;
             fi
+      - run:
+          name: Safety Build of Docker images
+          command: |
+            export GIT_HASH=$CIRCLE_SHA1
+            docker-compose build --build-arg GIT_HASH=$CIRCLE_SHA1
+
       - run:
           name: Prepare for pyth venv install
           command: |
@@ -196,6 +212,9 @@ workflows:
       - test:backend:
           requires:
             - build
+      - test:worker:
+          requires:
+            - build
       - test:frontend:
           requires:
             - build
@@ -206,4 +225,5 @@ workflows:
                 - master
           requires:
             - test:backend
+            - test:worker
             - test:frontend
