@@ -1,6 +1,6 @@
 import json
 from eth_utils import to_checksum_address
-from eth_manager.exceptions import WrongContractNameError
+from exceptions import WrongContractNameError
 
 
 class ContractRegistry(object):
