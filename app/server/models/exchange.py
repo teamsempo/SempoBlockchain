@@ -226,7 +226,8 @@ class Exchange(BlockchainTaskableBase):
         self.exchange_rate = to_amount/from_amount
 
         self.blockchain_task_uuid = str(uuid4())
-
+        print('BT_UUID')
+        print(self.blockchain_task_uuid)
         g.pending_transactions.append((self, queue))
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(
@@ -253,7 +254,8 @@ class Exchange(BlockchainTaskableBase):
             to_token=self.to_token,
             reserve_token=self.exchange_contract.reserve_token,
             from_amount=self.from_amount,
-            prior_tasks=[self.to_approval_uuid, self.reserve_approval_uuid, self.from_approval_uuid]
+            prior_tasks=[self.to_approval_uuid, self.reserve_approval_uuid, self.from_approval_uuid],
+            task_uuid=self.task_uuid
         )
 
     def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount, transfer_mode):
