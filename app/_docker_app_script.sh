@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+echo Container mode: $CONTAINER_MODE
 
 cd src
 echo upgrading database
@@ -10,23 +10,27 @@ if [ "$ret" -ne 0 ]; then
   exit $ret
 fi
 
-echo upgrading dataset
-python manage.py update_data
-
 ret=$?
 if [ "$ret" -ne 0 ]; then
   exit $ret
 fi
 
-if [ "$CONTAINER_MODE" = 'TEST' ]; then
-   #todo(COVERAGE): fix so that eth_worker is included
-   coverage run invoke_tests.py
+if [ "$CONTAINER_MODE" == 'TEST' ]; then
+   coverage run -m pytest test_app -x -v
    ret=$?
    if [ "$ret" -ne 0 ]; then
      exit $ret
    fi
    bash <(curl -s https://codecov.io/bash) -cF python
+elif [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
+   echo pass
+   sleep infinity
 else
+
+  echo upgrading dataset
+
+  python manage.py update_data
+
   uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app --stats :3031 --stats-http
 fi
 

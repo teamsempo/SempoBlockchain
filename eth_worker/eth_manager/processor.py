@@ -9,7 +9,7 @@ from celery import chain, signature
 import requests
 
 import config
-from eth_manager.exceptions import PreBlockchainError, TaskRetriesExceededError
+from exceptions import PreBlockchainError, TaskRetriesExceededError
 from eth_manager import utils
 from eth_manager.contract_registry import ContractRegistry
 from sempo_types import UUIDList, UUID
@@ -139,7 +139,6 @@ class TransactionProcessor(object):
 
             chainId = self.ethereum_chain_id
             gasPrice = gas_price or self.gas_price
-            # gasPrice = gas_price or self.get_gas_price()
 
             signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
 
@@ -156,8 +155,10 @@ class TransactionProcessor(object):
 
                     raise e
 
+            network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
+
             nonce, transaction_id = self.persistence_interface.locked_claim_transaction_nonce(
-                signing_wallet_obj, transaction_id
+                network_nonce, signing_wallet_obj.id, transaction_id
             )
 
             metadata = {
@@ -651,20 +652,22 @@ class TransactionProcessor(object):
                  red,
                  gas_price_gwei,
                  gas_limit,
-                 persistence_interface,
+                 peristence_module,
                  task_max_retries=3):
 
             self.registry = ContractRegistry(w3)
 
             self.ethereum_chain_id = int(ethereum_chain_id) if ethereum_chain_id else None
-            self.w3 = w3
+
             self.red = red
+
+            self.w3 = w3
 
             self.gas_price = self.w3.toWei(gas_price_gwei, 'gwei')
             self.gas_limit = gas_limit
             self.transaction_max_value = self.gas_price * self.gas_limit
 
-            self.persistence_interface = persistence_interface
+            self.persistence_interface = peristence_module
 
             self.task_max_retries = task_max_retries
 

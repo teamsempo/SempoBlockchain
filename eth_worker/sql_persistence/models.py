@@ -160,7 +160,6 @@ class BlockchainTask(ModelBase):
                              backref='posterior_tasks')
 
 
-
     @hybrid_property
     def type(self):
         return self._type
@@ -187,9 +186,18 @@ class BlockchainTask(ModelBase):
         return None
 
     @hybrid_property
-    def status(self):
-        lowest_status_code = min(set(t.status_code for t in self.transactions) or [3])
-        return STATUS_INT_TO_STRING.get(lowest_status_code, 'UNSTARTED')
+    def status_code(self) -> int:
+        """
+        For all the transactions associated with this task, get the lowest status code
+        """
+        return min(set(t.status_code for t in self.transactions) or [3])
+
+    @hybrid_property
+    def status(self) -> str:
+        """
+        Human-friendly string of the status code
+        """
+        return STATUS_INT_TO_STRING.get(self.status_code, 'UNSTARTED')
 
     @status.expression
     def status(cls):
@@ -205,7 +213,7 @@ class BlockchainTask(ModelBase):
             )
         )
 
-    def __init__(self, uuid: UUID, **kwargs):
+    def __init__(self, uuid: UUID,  **kwargs):
         super(BlockchainTask, self).__init__(**kwargs)
 
         self.uuid = uuid
@@ -240,7 +248,7 @@ class BlockchainTransaction(ModelBase):
 
     @hybrid_property
     def status(self):
-        return self._status
+        return self._status or 'UNKNOWN'
 
     @status.setter
     def status(self, value):
