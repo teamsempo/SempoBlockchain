@@ -31,7 +31,7 @@ export const apiClient = ({
   errorHandling = true
 }) => {
   if (["PUT", "POST", "GET", "DELETE"].indexOf(method) === -1) {
-    throw Error("Method provided is not supported");
+    throw new Error("Method provided is not supported");
   }
 
   let formData;
@@ -41,7 +41,6 @@ export const apiClient = ({
     method: method
   };
 
-  //todo: check which headers are needed for given method
   if (isForm) {
     formData = new FormData();
     Object.keys(body).map(key => {

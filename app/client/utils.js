@@ -89,8 +89,8 @@ export const parseQuery = queryString => {
   return query;
 };
 
-export const generateFormattedURL = (url, query, path) => {
-  let URL;
+export const generateFormattedURLPath = (url, query, path) => {
+  let urlPath;
   let version;
 
   try {
@@ -107,13 +107,19 @@ export const generateFormattedURL = (url, query, path) => {
   if (url === null || typeof url === "undefined") {
     return console.log("URL cannot be null");
   } else if (query) {
-    URL = `/api/v${version}${url}${query_string}`;
+    urlPath = `/api/v${version}${url}${query_string}`;
   } else if (path) {
-    URL = `/api/v${version}${url}${path}/${query_string}`;
+    urlPath = `/api/v${version}${url}${path}/${query_string}`;
   } else {
-    URL = `/api/v${version}${url}${query_string}`;
+    urlPath = `/api/v${version}${url}${query_string}`;
   }
-  return URL;
+  return urlPath;
+};
+
+export const generateFormattedURL = (url, query, path) => {
+  let urlPath = generateFormattedURLPath(url, query, path);
+  const baseUrl = window && window.location ? `${window.location.origin}` : "";
+  return new URL(urlPath, baseUrl).href;
 };
 
 export const handleResponse = response => {

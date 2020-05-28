@@ -5,14 +5,14 @@ import { handleError } from "../utils";
 import { filterSchema } from "../schemas";
 
 import {
-  UPDATE_FILTER_LIST,
-  LOAD_FILTERS_REQUEST,
-  LOAD_FILTERS_SUCCESS,
-  LOAD_FILTERS_FAILURE,
-  CREATE_FILTER_REQUEST,
-  CREATE_FILTER_SUCCESS,
-  CREATE_FILTER_FAILURE
-} from "../reducers/filterReducer.js";
+  FilterListAction,
+  LoadFilterAction,
+  CreateFilterAction
+} from "../reducers/filter/actions";
+import {
+  LoadFilterActionTypes,
+  CreateFilterActionTypes
+} from "../reducers/filter/types";
 
 import { loadFiltersAPI, createFilterAPI } from "../api/filterAPI";
 import { MessageAction } from "../reducers/message/actions";
@@ -29,37 +29,34 @@ function* updateStateFromFilter(data) {
 
   const filters = normalizedData.entities.filters;
 
-  yield put({ type: UPDATE_FILTER_LIST, filters });
+  yield put(FilterListAction.updateFilterList(filters));
 }
 
-// Load Filters Saga
-function* loadFilters({ payload }) {
+function* loadFilters() {
   try {
-    const load_result = yield call(loadFiltersAPI, payload);
+    const load_result = yield call(loadFiltersAPI);
 
     yield call(updateStateFromFilter, load_result.data);
 
-    const filters = normalize(load_result.data, filterSchema).entities.filters;
-    yield put({ type: LOAD_FILTERS_SUCCESS, filters });
+    yield put(LoadFilterAction.loadFilterSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_FILTERS_FAILURE, error: error.message });
+    yield put(LoadFilterAction.loadFilterFailure(error.message));
   }
 }
 
 function* watchLoadFilters() {
-  yield takeEvery(LOAD_FILTERS_REQUEST, loadFilters);
+  yield takeEvery(LoadFilterActionTypes.LOAD_FILTERS_REQUEST, loadFilters);
 }
 
-// Create filter saga
 function* createFilter({ payload }) {
   try {
     const result = yield call(createFilterAPI, payload);
 
     yield call(updateStateFromFilter, result.data);
 
-    yield put({ type: CREATE_FILTER_SUCCESS, result });
+    yield put(CreateFilterAction.createFilterSuccess());
 
     yield put(
       MessageAction.addMessage({ error: false, message: result.message })
@@ -67,7 +64,7 @@ function* createFilter({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_FILTER_FAILURE, error: error.message });
+    yield put(CreateFilterAction.createFilterFailure(error.message));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -76,7 +73,7 @@ function* createFilter({ payload }) {
 }
 
 function* watchCreateFilter() {
-  yield takeEvery(CREATE_FILTER_REQUEST, createFilter);
+  yield takeEvery(CreateFilterActionTypes.CREATE_FILTER_REQUEST, createFilter);
 }
 
 export default function* filterSagas() {
