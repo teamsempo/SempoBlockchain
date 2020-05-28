@@ -1,15 +1,12 @@
 import os, configparser, boto3, hashlib, datetime
-from eth_keys import keys
-from eth_utils import keccak
 
 import logging
 env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-from web3 import Web3
 
-VERSION = '1.1.34'  # Remember to bump this in every PR
+VERSION = '1.1.36'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -259,75 +256,86 @@ try:
     ECDSA_SIGNING_KEY = SigningKey.from_string(ECDSA_SECRET, curve=NIST192p)
     ECDSA_PUBLIC = '04' + ECDSA_SIGNING_KEY.get_verifying_key().to_string().hex()
 except ImportError:
-    pass
+    logg.warn("Cannot import ECDSA Packages, make sure they're not required!")
+
 
 # https://ropsten.infura.io/9CAC3Lb5OjaoecQIpPNP
 # https://kovan.infura.io/9CAC3Lb5OjaoecQIpPNP
 
-def address_from_private_key(private_key):
-    if isinstance(private_key, str):
-        private_key = bytes.fromhex(private_key.replace('0x', ''))
-    return keys.PrivateKey(private_key).public_key.to_checksum_address()
+try:
+    from eth_keys import keys
+    from eth_utils import keccak
+    from web3 import Web3
 
-ETH_HTTP_PROVIDER       = config_parser['ETHEREUM']['http_provider']
-ETH_WEBSOCKET_PROVIDER  = config_parser['ETHEREUM'].get('websocket_provider')
-ETH_CHAIN_ID            = config_parser['ETHEREUM'].get('chain_id')
-ETH_EXPLORER_URL        = (config_parser['ETHEREUM'].get('explorer_url') or 'https://etherscan.io').strip('/')
-ETH_OWNER_PRIVATE_KEY   = secrets_parser['ETHEREUM']['owner_private_key']
-ETH_OWNER_ADDRESS       = address_from_private_key(ETH_OWNER_PRIVATE_KEY)
-ETH_FLOAT_PRIVATE_KEY   = secrets_parser['ETHEREUM']['float_private_key']
-ETH_CONTRACT_VERSION    = config_parser['ETHEREUM']['contract_version']
-ETH_GAS_PRICE           = int(config_parser['ETHEREUM']['gas_price_gwei'] or 0)
-ETH_GAS_LIMIT           = int(config_parser['ETHEREUM']['gas_limit'] or 0)
-ETH_TARGET_TRANSACTION_TIME = int(config_parser['ETHEREUM']['target_transaction_time'] or 120)
-ETH_GAS_PRICE_PROVIDER  = config_parser['ETHEREUM']['gas_price_provider']
-ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME, str(ETH_CONTRACT_VERSION))
+    def address_from_private_key(private_key):
+        if isinstance(private_key, str):
+            private_key = bytes.fromhex(private_key.replace('0x', ''))
+        return keys.PrivateKey(private_key).public_key.to_checksum_address()
 
-ETH_CHECK_TRANSACTION_BASE_TIME = 20
-ETH_CHECK_TRANSACTION_RETRIES = int(config_parser['ETHEREUM']['check_transaction_retries'])
-ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = sum(
-    [ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** i for i in range(1, ETH_CHECK_TRANSACTION_RETRIES + 1)]
-)
+    ETH_HTTP_PROVIDER       = config_parser['ETHEREUM']['http_provider']
+    ETH_WEBSOCKET_PROVIDER  = config_parser['ETHEREUM'].get('websocket_provider')
+    ETH_CHAIN_ID            = config_parser['ETHEREUM'].get('chain_id')
+    ETH_EXPLORER_URL        = (config_parser['ETHEREUM'].get('explorer_url') or 'https://etherscan.io').strip('/')
+    ETH_OWNER_PRIVATE_KEY   = secrets_parser['ETHEREUM']['owner_private_key']
+    ETH_OWNER_ADDRESS       = address_from_private_key(ETH_OWNER_PRIVATE_KEY)
+    ETH_FLOAT_PRIVATE_KEY   = secrets_parser['ETHEREUM']['float_private_key']
+    ETH_CONTRACT_VERSION    = config_parser['ETHEREUM']['contract_version']
+    ETH_GAS_PRICE           = int(config_parser['ETHEREUM']['gas_price_gwei'] or 0)
+    ETH_GAS_LIMIT           = int(config_parser['ETHEREUM']['gas_limit'] or 0)
+    ETH_TARGET_TRANSACTION_TIME = int(config_parser['ETHEREUM']['target_transaction_time'] or 120)
+    ETH_GAS_PRICE_PROVIDER  = config_parser['ETHEREUM']['gas_price_provider']
+    ETH_CONTRACT_NAME       = 'SempoCredit{}_v{}'.format(DEPLOYMENT_NAME, str(ETH_CONTRACT_VERSION))
 
-INTERNAL_TO_TOKEN_RATIO = float(config_parser['ETHEREUM'].get('internal_to_token_ratio', 1))
-FORCE_ETH_DISBURSEMENT_AMOUNT = float(config_parser['ETHEREUM'].get('force_eth_disbursement_amount', 0))
+    ETH_CHECK_TRANSACTION_BASE_TIME = 20
+    ETH_CHECK_TRANSACTION_RETRIES = int(config_parser['ETHEREUM']['check_transaction_retries'])
+    ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = sum(
+        [ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** i for i in range(1, ETH_CHECK_TRANSACTION_RETRIES + 1)]
+    )
 
-unchecksummed_withdraw_to_address     = config_parser['ETHEREUM'].get('withdraw_to_address')
-if unchecksummed_withdraw_to_address:
-    WITHDRAW_TO_ADDRESS = Web3.toChecksumAddress(unchecksummed_withdraw_to_address)
-else:
-    WITHDRAW_TO_ADDRESS = None
+    INTERNAL_TO_TOKEN_RATIO = float(config_parser['ETHEREUM'].get('internal_to_token_ratio', 1))
+    FORCE_ETH_DISBURSEMENT_AMOUNT = float(config_parser['ETHEREUM'].get('force_eth_disbursement_amount', 0))
 
-MASTER_WALLET_PRIVATE_KEY = secrets_parser['ETHEREUM'].get('master_wallet_private_key')
-if MASTER_WALLET_PRIVATE_KEY:
-    master_wallet_private_key = bytes.fromhex(MASTER_WALLET_PRIVATE_KEY.replace('0x', ''))
-else:
-    master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
-    MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
+    unchecksummed_withdraw_to_address     = config_parser['ETHEREUM'].get('withdraw_to_address')
+    if unchecksummed_withdraw_to_address:
+        WITHDRAW_TO_ADDRESS = Web3.toChecksumAddress(unchecksummed_withdraw_to_address)
+    else:
+        WITHDRAW_TO_ADDRESS = None
 
-MASTER_WALLET_ADDRESS = address_from_private_key(master_wallet_private_key)
+    MASTER_WALLET_PRIVATE_KEY = secrets_parser['ETHEREUM'].get('master_wallet_private_key')
+    if MASTER_WALLET_PRIVATE_KEY:
+        master_wallet_private_key = bytes.fromhex(MASTER_WALLET_PRIVATE_KEY.replace('0x', ''))
+    else:
+        master_wallet_private_key = keccak(text=SECRET_KEY + DEPLOYMENT_NAME)
+        MASTER_WALLET_PRIVATE_KEY = master_wallet_private_key.hex()
 
-RESERVE_TOKEN_ADDRESS = config_parser['ETHEREUM'].get('reserve_token_address')
-RESERVE_TOKEN_NAME = config_parser['ETHEREUM'].get('reserve_token_name')
-RESERVE_TOKEN_SYMBOL = config_parser['ETHEREUM'].get('reserve_token_symbol')
+    MASTER_WALLET_ADDRESS = address_from_private_key(master_wallet_private_key)
 
-SYSTEM_WALLET_TARGET_BALANCE = int(config_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
-SYSTEM_WALLET_TOPUP_THRESHOLD = int(config_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))
+    RESERVE_TOKEN_ADDRESS = config_parser['ETHEREUM'].get('reserve_token_address')
+    RESERVE_TOKEN_NAME = config_parser['ETHEREUM'].get('reserve_token_name')
+    RESERVE_TOKEN_SYMBOL = config_parser['ETHEREUM'].get('reserve_token_symbol')
 
-ETH_CONTRACT_TYPE       = config_parser['ETHEREUM'].get('contract_type', 'standard').lower()
-ETH_CONTRACT_ADDRESS    = config_parser['ETHEREUM'].get('contract_address')
-USING_EXTERNAL_ERC20    = ETH_CONTRACT_TYPE != 'mintable'
+    SYSTEM_WALLET_TARGET_BALANCE = int(config_parser['ETHEREUM'].get('system_wallet_target_balance', 0))
+    SYSTEM_WALLET_TOPUP_THRESHOLD = int(config_parser['ETHEREUM'].get('system_wallet_topup_threshold', 0))
 
-if config_parser['ETHEREUM'].get('dai_contract_address'):
-    # support of old config file syntax
-    ETH_CONTRACT_ADDRESS = config_parser['ETHEREUM'].get('dai_contract_address')
+    ETH_CONTRACT_TYPE       = config_parser['ETHEREUM'].get('contract_type', 'standard').lower()
+    ETH_CONTRACT_ADDRESS    = config_parser['ETHEREUM'].get('contract_address')
+    USING_EXTERNAL_ERC20    = ETH_CONTRACT_TYPE != 'mintable'
 
-IS_USING_BITCOIN = False
+    if config_parser['ETHEREUM'].get('dai_contract_address'):
+        # support of old config file syntax
+        ETH_CONTRACT_ADDRESS = config_parser['ETHEREUM'].get('dai_contract_address')
 
-EXCHANGE_CONTRACT_ADDRESS = config_parser['ETHEREUM'].get('exchange_contract_address')
+    IS_USING_BITCOIN = False
 
-SYNCRONOUS_TASK_TIMEOUT = config_parser['ETHEREUM'].getint('synchronous_task_timeout', 4)
-CALL_TIMEOUT = config_parser['ETHEREUM'].getint('call_timeout', 2)
+    EXCHANGE_CONTRACT_ADDRESS = config_parser['ETHEREUM'].get('exchange_contract_address')
+
+    SYNCRONOUS_TASK_TIMEOUT = config_parser['ETHEREUM'].getint('synchronous_task_timeout', 4)
+    CALL_TIMEOUT = config_parser['ETHEREUM'].getint('call_timeout', 2)
+
+except ImportError:
+    logg.warn("Cannot import Ethereum Packages, make sure they're not required!")
+
+
 
 FACEBOOK_TOKEN = common_secrets_parser['FACEBOOK']['token']
 FACEBOOK_VERIFY_TOKEN = common_secrets_parser['FACEBOOK']['verify_token']
@@ -397,3 +405,4 @@ try:
         TRANSFER_LIMITS[k.upper()] = v 
 except KeyError:
     pass
+

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Query
 from sqlalchemy import or_
 
 import server
-from server import db, bt
+from server import db, bt, AppQuery
 from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
 
 
@@ -94,8 +94,8 @@ def no_expire():
     s.expire_on_commit = True
 
 
-@event.listens_for(Query, "before_compile", retval=True)
-def before_compile(query):
+@event.listens_for(AppQuery, "before_compile", retval=True)
+def filter_by_org(query):
     """A query compilation rule that will add limiting criteria for every
     subclass of OrgBase"""
     show_deleted = query._execution_options.get("show_deleted", False)

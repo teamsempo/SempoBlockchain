@@ -57,6 +57,7 @@ export default function InputField(props: InputFieldJson) {
       label={label}
       disabled={disabled}
       children={children}
+      isPhoneNumber={isPhoneNumber}
     />
   );
 }
