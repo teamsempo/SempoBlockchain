@@ -1,5 +1,6 @@
 import pytest, json
 from server.utils.auth import get_complete_auth_token
+from test_app.helpers.utils import assert_resp_status_code
 
 
 @pytest.mark.parametrize("transfer_amount, target_balance, credit_transfer_uuid_selector_func, "
@@ -71,7 +72,7 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
         )),
         content_type='application/json', follow_redirects=True)
 
-    assert response.status_code == status_code
+    assert_resp_status_code(response, status_code)
 
     if response.status_code == 201:
         data = response.json['data']
