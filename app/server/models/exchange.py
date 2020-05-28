@@ -226,8 +226,6 @@ class Exchange(BlockchainTaskableBase):
         self.exchange_rate = to_amount/from_amount
 
         self.blockchain_task_uuid = str(uuid4())
-        print('BT_UUID')
-        print(self.blockchain_task_uuid)
         g.pending_transactions.append((self, queue))
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(
