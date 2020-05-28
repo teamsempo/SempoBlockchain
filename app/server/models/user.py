@@ -207,7 +207,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
             limits = example_transfer.get_transfer_limits()
             limit = limits[0]
-            return limit.total_amount > 0
+            return limit.period_amount > 0
         else:
             # default to false
             return False

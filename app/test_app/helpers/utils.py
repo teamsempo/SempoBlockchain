@@ -40,3 +40,11 @@ def fake_transfer_mapping(length: int):
         mapping.append(KenyaUssdStateMachine.make_usage_mapping(transfer_usage))
 
     return mapping
+
+
+def assert_resp_status_code(response, status_code):
+    try:
+        assert response.status_code == status_code
+    except AssertionError as e:
+        e.args += (f'JSON: {response.json}',)
+        raise e
