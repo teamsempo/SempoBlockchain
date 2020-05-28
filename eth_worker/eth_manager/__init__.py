@@ -16,13 +16,12 @@ from web3.exceptions import BadFunctionCallOutput
 import os
 import sys
 
-from sql_persistence import session
-
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 import config
+from sql_persistence import session
 from sql_persistence.interface import SQLPersistenceInterface
 
 from eth_manager.ABIs import (
