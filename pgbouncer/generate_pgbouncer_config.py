@@ -42,8 +42,6 @@ max_user_connections = {BOUNCER_MAX_USER_CONNECTIONS}
 server_idle_timeout = 0
 """
 
-config.logg.debug(config_string)
-
 # Writes pgbouncer.ini with configs
 ini_file = open('/etc/pgbouncer/pgbouncer.ini', 'w')
 ini_file.write(config_string)

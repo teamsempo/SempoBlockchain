@@ -13,7 +13,6 @@ from sql_persistence.models import (
 from exceptions import (
     WalletExistsError
 )
-from sqlalchemy.orm import scoped_session
 
 class SQLPersistenceInterface(object):
 
