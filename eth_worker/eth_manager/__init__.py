@@ -31,7 +31,6 @@ from eth_manager.ABIs import (
     bancor_network_abi
 )
 
-from exceptions import WalletExistsError
 from eth_manager.processor import TransactionProcessor
 from eth_manager.contract_registry import ContractRegistry
 from eth_manager import utils
