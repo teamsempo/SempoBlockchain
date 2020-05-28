@@ -9,7 +9,7 @@ RUN apt update \
 RUN apt -y install mysql-server default-libmysqlclient-dev
 
 COPY ./app/requirements.txt /
-COPY ./test/requirements.txt /test_requirements.txt
+COPY ./test_requirements.txt /
 
 RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
@@ -22,9 +22,8 @@ COPY ./app/migrations /src/migrations
 COPY ./app/manage.py /src
 COPY ./app/RedisQueue.py /src
 COPY ./app/_docker_app_script.sh /
-COPY ./test /src/test
-COPY ./invoke_tests.py /src
-COPY .coveragerc /src
+COPY ./app/test_app /src/test_app
+COPY ./app/.coveragerc /src
 
 WORKDIR /
 

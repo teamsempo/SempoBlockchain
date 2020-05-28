@@ -1,0 +1,5 @@
+[run]
+source=.
+omit=
+    # omit everything in test folders
+    */test_app/*
