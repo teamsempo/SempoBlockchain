@@ -23,7 +23,7 @@ from server.utils.transfer_limits.filters import (
     regular_payment_filter
 )
 from server.utils.transfer_limits.types import (
-    AggregateAvailability,
+    NumericAvailability,
     AppliedToTypes,
     ApplicationFilter,
     QueryConstructorFunc,
@@ -35,16 +35,37 @@ class BaseTransferLimit(ABC):
     """
     Base Limit Class. All limits use `applies_to_transfer` to determine if they are applied.
     Specific Limit rules vary hugely, so this class is pretty sparse,
-    however, all limits follow the same overall process:
-    1. Check if the limit applies to the transfer, based off the a) Type/Subtype & b) Query Filters
-    2. Calculate how large the limit is (may be fixed, or variable)
-    3. Calculate how much of the limit is available (this may involve aggregating across prev transfers and subtracting)
-    4. Calculate how much the current transfer cases uses
-    5. Check if the current case uses more than what's available
+    however, the usage of all limits follows the same overall process:
+
+    1. Check if the limit applies to the transfer
+       This is done using `applies_to_transfer`, and is  based off:
+        a) Type/Subtype
+        b) Query Filters
+
+    2. Calculate how much of the limit is available, without considering this transfer
+       This is done using `available`. This number may be fixed, though it often varies due to a base amount that is
+       deducted from by aggregating across previous transfers and subtracting.
+       See the AggregateLimit abstract class for an example of this.
+
+    3. Calculate how much the current transfer cases uses
+       This is done using `case_will_use`
+
+    4. Check if the current case uses more than what's available
+       This is done using `validate_transfer`. If there's insufficient availability, throw an exception
+       that is appropriately subclassed from TransferLimitError
+
+
+    While the above steps represent a typical "workflow", all the functions defined in this Abstract Class can and
+    are called upon in other contexts outside of pure validation, for example to tell a user how much of a limit
+    is remaining for them.
+    These methods can be overridden as required. See NoTransferAllowedLimit for an example of this.
+
+    All methods require a CreditTransfer object, as this contains the full context of amount, senders, recipients
+    and so forth to fully determine how to apply the limit
     """
 
     @abstractmethod
-    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+    def available(self, transfer: CreditTransfer) -> NumericAvailability:
         """
         How much of the limit is still available. Uses a CreditTransfer object for context.
         Is generally an amount, but can also be something like a number of transfers.
@@ -54,7 +75,7 @@ class BaseTransferLimit(ABC):
         pass
 
     @abstractmethod
-    def case_will_use(self, transfer: CreditTransfer) -> AggregateAvailability:
+    def case_will_use(self, transfer: CreditTransfer) -> NumericAvailability:
         """
         How much of the limit will be used in this particular transfer case.
         Is generally an amount, but can also be something like a number of transfers.
@@ -63,7 +84,7 @@ class BaseTransferLimit(ABC):
         """
 
     @abstractmethod
-    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+    def throw_validation_error(self, transfer: CreditTransfer, available: NumericAvailability):
         """
         Throws some sort of TransferLimitError
         """
@@ -119,10 +140,11 @@ class BaseTransferLimit(ABC):
 
 class NoTransferAllowedLimit(BaseTransferLimit):
     """
-    A special limit that always throws a 'NoTransferAllowedLimitError' exception when `validate_transfer` is called
+    A special limit that always throws a 'NoTransferAllowedLimitError' exception when `validate_transfer` is called.
+    Includes an example of overriding `validate_transfer` as the usual rule doesn't really apply
     """
 
-    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+    def available(self, transfer: CreditTransfer) -> NumericAvailability:
         return 0
 
     def case_will_use(self, transfer: CreditTransfer) -> None:
@@ -132,7 +154,7 @@ class NoTransferAllowedLimit(BaseTransferLimit):
         available = self.available(transfer)
         self.throw_validation_error(transfer, available)
 
-    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+    def throw_validation_error(self, transfer: CreditTransfer, available: NumericAvailability):
         raise NoTransferAllowedLimitError(token=transfer.token.name)
 
     def __init__(
@@ -153,13 +175,13 @@ class MaximumAmountPerTransferLimit(BaseTransferLimit):
     A limit that specifies a maximum amount that can be transferred per transfer
     """
 
-    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+    def available(self, transfer: CreditTransfer) -> NumericAvailability:
         return self.maximum_amount
 
-    def case_will_use(self, transfer: CreditTransfer) -> AggregateAvailability:
+    def case_will_use(self, transfer: CreditTransfer) -> NumericAvailability:
         return transfer.transfer_amount
 
-    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+    def throw_validation_error(self, transfer: CreditTransfer, available: NumericAvailability):
         message = 'Maximum Per Transfer Exceeded (Limit {}). {} available'.format(self.name, self.maximum_amount)
 
         raise MaximumPerTransferLimitError(
@@ -190,9 +212,10 @@ class AggregateLimit(BaseTransferLimit):
     """
 
     @abstractmethod
-    def available_base(self, transfer: CreditTransfer) -> AggregateAvailability:
+    def available_base(self, transfer: CreditTransfer) -> NumericAvailability:
         """
-        Calculate the how much base availability there is
+        Calculate how much base availability there is for the limit,
+        before historical transactions are taken into account
         :param transfer: the credit transfer in question
         :return: Either a transfer amount or a count
         """
@@ -203,7 +226,7 @@ class AggregateLimit(BaseTransferLimit):
             self,
             transfer: CreditTransfer,
             query_constructor: QueryConstructorFunc
-    ) -> AggregateAvailability:
+    ) -> NumericAvailability:
         """
         The aggregator function is used to calculate the how much of the availability has been consumed.
         Takes the query_constructor as an input rather than accessing via 'self' as it allows us to easily create
@@ -214,7 +237,7 @@ class AggregateLimit(BaseTransferLimit):
         """
         pass
 
-    def available(self, transfer: CreditTransfer) -> AggregateAvailability:
+    def available(self, transfer: CreditTransfer) -> NumericAvailability:
         base = self.available_base(transfer)
         used = self.used_aggregator(
             transfer,
@@ -311,7 +334,7 @@ class TotalAmountLimit(AggregateTransferAmountMixin, AggregateLimit):
     def available_base(self, transfer: CreditTransfer) -> TransferAmount:
         return self._total_amount
 
-    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+    def throw_validation_error(self, transfer: CreditTransfer, available: NumericAvailability):
         message = 'Account Limit "{}" reached. {} available'.format(self.name, max(available, 0))
 
         raise TransferAmountLimitError(
@@ -358,7 +381,7 @@ class MinimumSentLimit(AggregateTransferAmountMixin, AggregateLimit):
             self.minimum_sent_aggregation_filter
         ).execution_options(show_all=True).first().total or 0
 
-    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+    def throw_validation_error(self, transfer: CreditTransfer, available: NumericAvailability):
         message = 'Account Limit "{}" reached. {} available'.format(self.name, max(int(available), 0))
 
         raise MinimumSentLimitError(
@@ -404,7 +427,7 @@ class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
         amount: TransferAmount = int(self.balance_fraction * balance)
         return amount
 
-    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+    def throw_validation_error(self, transfer: CreditTransfer, available: NumericAvailability):
         message = 'Account % Limit "{}" reached. {} available'.format(
             self.name,
             max([available, 0])
@@ -448,7 +471,7 @@ class TransferCountLimit(AggregateLimit):
             self,
             transfer: CreditTransfer,
             query_constructor: QueryConstructorFunc
-    ) -> AggregateAvailability:
+    ) -> NumericAvailability:
 
         return query_constructor(
             transfer,
@@ -461,7 +484,7 @@ class TransferCountLimit(AggregateLimit):
     def available_base(self, transfer: CreditTransfer) -> int:
         return self.transfer_count
 
-    def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
+    def throw_validation_error(self, transfer: CreditTransfer, available: NumericAvailability):
         message = 'Account Limit "{}" reached. Allowed {} transaction per {} days' \
             .format(self.name, self.transfer_count, self.time_period_days)
         raise TransferCountLimitError(

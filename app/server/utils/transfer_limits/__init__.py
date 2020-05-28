@@ -1,3 +1,8 @@
+# Limits used to work out if a transfer requested by a particular user is allowable or othewise
+# for example due to KYC restrictions
+# The standard limits we use are defined below in LIMIT_IMPLEMENTATIONS
+# Use the BaseTransferLimit or the other subclasses to add your own
+
 from typing import List
 import config
 from server.models.credit_transfer import CreditTransfer
@@ -28,6 +33,13 @@ def get_applicable_transfer_limits(
         candidate_limits: List[BaseTransferLimit],
         transfer: CreditTransfer
 ) -> List[BaseTransferLimit]:
+    """
+    Convenience function filtering a list of limits to find the ones that apply to a transfer
+
+    :param candidate_limits: the set of limits to filter
+    :param transfer: the transfer to test for applicability
+    :return: a list of the limits that do apply
+    """
     return [limit for limit in candidate_limits if limit.applies_to_transfer(transfer)]
 
 
@@ -43,6 +55,7 @@ AGENT_OUT_PAYMENT = (PAYMENT, AGENT_OUT)
 AGENT_IN_PAYMENT = (PAYMENT, AGENT_IN)
 RECLAMATION_PAYMENT = (PAYMENT, RECLAMATION)
 GENERAL_PAYMENTS = [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT, RECLAMATION_PAYMENT]
+
 
 LIMIT_IMPLEMENTATIONS = [
     TotalAmountLimit('Sempo Level 0: P7', GENERAL_PAYMENTS,
