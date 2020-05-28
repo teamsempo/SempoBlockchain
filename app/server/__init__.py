@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, render_template, make_response, json
 from flask_executor import Executor
 import json
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, BaseQuery
 from flask_basicauth import BasicAuth
 from celery import Celery
 from pusher import Pusher
@@ -230,13 +230,27 @@ def encrypt_string(raw_string):
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
 
 
-db = SQLAlchemy(session_options={
-    "expire_on_commit": not config.IS_TEST,
-    # enable_baked_queries prevents the before_compile query from getting trapped on
-    # organisation change. Shouldn't by default but ¯\_(ツ)_/¯
-    # https://docs.sqlalchemy.org/en/13/orm/extensions/baked.html
-    "enable_baked_queries": False,
-})
+class AppQuery(BaseQuery):
+    """
+    We subclass the base Query to ensure that the `filter_by_org` event listener only applies to the app.
+    Otherwise, SQLAlchemy will apply it to the base 'Query' class.
+    In this case if `filter_by_org` happens to be imported by eg the eth_worker during tests
+    (pytest will do this if you run both test sets simultaneously), the lister will be applied to eth_worker
+    SQLAlachemy queries
+    """
+    pass
+
+
+db = SQLAlchemy(
+    query_class=AppQuery,
+    session_options={
+        "expire_on_commit": not config.IS_TEST,
+        "enable_baked_queries": False
+        # enable_baked_queries prevents the filter_by_org query from getting trapped on
+        # organisation change. Shouldn't by default but ¯\_(ツ)_/¯
+        # https://docs.sqlalchemy.org/en/13/orm/extensions/baked.html
+    }
+)
 
 basic_auth = BasicAuth()
 executor = Executor()
