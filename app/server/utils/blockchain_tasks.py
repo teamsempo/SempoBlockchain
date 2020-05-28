@@ -263,6 +263,7 @@ class BlockchainTasker(object):
         :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the exchange
         """
+        print((signing_address, exchange_contract, from_token, to_token, reserve_token, from_amount, prior_tasks, task_uuid))
         prior_tasks = prior_tasks or []
 
         path = self._get_path(from_token, to_token, reserve_token)

@@ -126,8 +126,8 @@ def register_blueprints(app):
 
         for transaction, queue in g.pending_transactions:
             print('send to worker')
-            transaction.send_blockchain_payload_to_worker(queue=queue)
-        
+            a = transaction.send_blockchain_payload_to_worker(queue=queue)
+            print(a)
         # Push only credit transfers, not exchanges
         from server.models.credit_transfer import CreditTransfer
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
