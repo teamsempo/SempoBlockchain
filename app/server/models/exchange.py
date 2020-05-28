@@ -255,7 +255,7 @@ class Exchange(BlockchainTaskableBase):
             reserve_token=self.exchange_contract.reserve_token,
             from_amount=self.from_amount,
             prior_tasks=[self.to_approval_uuid, self.reserve_approval_uuid, self.from_approval_uuid],
-            task_uuid=self.task_uuid
+            task_uuid=self.blockchain_task_uuid
         )
 
     def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount, transfer_mode):
