@@ -326,7 +326,11 @@ class EditUserForm extends React.Component<
                   </InputField>
                 </SubRow>
                 <SubRow>
-                  <InputField name="referredBy" label="Referred By" />
+                  <InputField
+                    name="referredBy"
+                    label="Referred By"
+                    isPhoneNumber
+                  />
                 </SubRow>
               </Row>
               <Row>
