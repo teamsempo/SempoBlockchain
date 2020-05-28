@@ -7,6 +7,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Index
 from sqlalchemy.sql import func
 
+import server.utils.transfer_limits
+import server.utils.transfer_limits.limits
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
 from server.models.token import Token
@@ -129,9 +131,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.resolution_message = message
 
     def get_transfer_limits(self):
-        import server.utils.transfer_limits
+        from server.utils.transfer_limits import (LIMIT_IMPLEMENTATIONS, get_applicable_transfer_limits)
 
-        return server.utils.transfer_limits.get_transfer_limits(self)
+        return get_applicable_transfer_limits(LIMIT_IMPLEMENTATIONS, self)
 
     def check_sender_transfer_limits(self):
         if self.sender_user is None:

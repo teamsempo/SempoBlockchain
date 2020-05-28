@@ -1,6 +1,6 @@
 import pytest, json
 from server.utils.auth import get_complete_auth_token
-from helpers.utils import assert_resp_status_code
+from test_app.helpers.utils import assert_resp_status_code
 
 
 @pytest.mark.parametrize("transfer_amount, target_balance, credit_transfer_uuid_selector_func, "

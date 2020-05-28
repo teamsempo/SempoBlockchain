@@ -18,20 +18,20 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     WHEN a new credit transfer is created
     THEN check the correct check_sender_transfer_limits apply
     """
-    from server.utils.transfer_limits import LIMITS
+    from server.utils.transfer_limits import LIMIT_IMPLEMENTATIONS
     from server.models.kyc_application import KycApplication
     from server.models import token
 
     # Sempo Level 0 LIMITS (payment only)
     assert new_credit_transfer.check_sender_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'Sempo Level 0: P' in limit.name
     ]
 
     # Check Sempo Level 1 LIMITS (payment only)
     new_credit_transfer.sender_user.is_phone_verified = True
     assert new_credit_transfer.check_sender_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'Sempo Level 1: P' in limit.name
     ]
 
@@ -40,14 +40,14 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     kyc.user = new_credit_transfer.sender_user
     kyc.kyc_status = 'VERIFIED'
     assert new_credit_transfer.check_sender_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'Sempo Level 2: P' in limit.name
     ]
 
     # Check Sempo Level 3 LIMITS for business (payment only)
     kyc.type = 'BUSINESS'
     assert new_credit_transfer.check_sender_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'Sempo Level 3: P' in limit.name
     ]
 
@@ -55,7 +55,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     kyc.type = 'INDIVIDUAL'
     kyc.multiple_documents_verified = True
     assert new_credit_transfer.check_sender_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'Sempo Level 3: P' in limit.name
     ]
 
@@ -64,7 +64,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     new_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
     new_credit_transfer.sender_transfer_account.balance = 10000
     assert new_credit_transfer.get_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'GE Liquid Token - Standard User' == limit.name or 'Sempo Level 3: WD' in limit.name
     ]
 
@@ -74,7 +74,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.sender_transfer_account.balance = 10000
     assert new_credit_transfer.get_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
 
@@ -85,7 +85,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.sender_transfer_account.balance = 10000
     assert new_credit_transfer.get_transfer_limits() == [
-        limit for limit in LIMITS
+        limit for limit in LIMIT_IMPLEMENTATIONS
         if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
 
@@ -193,7 +193,7 @@ def test_liquidtoken_max_amount_limit(new_credit_transfer):
     # The max per-amount transfer limit is higher than the KYC classes, so it's easier to test by just creating a new
     # one with a lower amount
     from server.utils.transfer_limits import (
-        LIMITS,
+        LIMIT_IMPLEMENTATIONS,
         AGENT_OUT_PAYMENT,
         WITHDRAWAL,
         is_group_and_liquid_token,
@@ -201,7 +201,7 @@ def test_liquidtoken_max_amount_limit(new_credit_transfer):
 
     amount: TransferAmount = 10
 
-    LIMITS.append(
+    LIMIT_IMPLEMENTATIONS.append(
         MaximumAmountPerTransferLimit('GE Liquid Token - Group Account User',
                                       [AGENT_OUT_PAYMENT, WITHDRAWAL],
                                       is_group_and_liquid_token,
@@ -221,7 +221,7 @@ def test_liquidtoken_max_amount_limit(new_credit_transfer):
 
     new_credit_transfer.exclude_from_limit_calcs = True
     
-    LIMITS.pop(-1)
+    LIMIT_IMPLEMENTATIONS.pop(-1)
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(new_credit_transfer):
     from server.models import token

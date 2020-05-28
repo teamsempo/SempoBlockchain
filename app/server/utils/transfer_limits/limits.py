@@ -1,194 +1,34 @@
-from typing import List, Callable, Optional, Union, Tuple, Iterable
 from abc import ABC, abstractmethod
-
-import datetime
-from functools import reduce
-
-from sqlalchemy import or_
+from sqlalchemy import func
 from sqlalchemy.orm import Query
-from sqlalchemy.sql import func
 
+import config
+from server import db
 from server.exceptions import (
     NoTransferAllowedLimitError,
     MaximumPerTransferLimitError,
-    MinimumSentLimitError,
     TransferAmountLimitError,
-    TransferCountLimitError,
-    TransferBalanceFractionLimitError)
-
-from server.models import token
-from server import db
-from server.sempo_types import TransferAmount
+    MinimumSentLimitError,
+    TransferBalanceFractionLimitError,
+    TransferCountLimitError
+)
 from server.models.credit_transfer import CreditTransfer
-from server.utils.transfer_enums import TransferSubTypeEnum, TransferTypeEnum, TransferStatusEnum
-from server.utils.access_control import AccessControl
-
-import config
-
-AppliedToTypes = List[Union[TransferTypeEnum, Tuple[TransferTypeEnum, TransferSubTypeEnum]]]
-AggregateAvailability = Union[int, TransferAmount]
-ApplicationFilter = Callable[[CreditTransfer], bool]
-AggregationFilter = Callable[[CreditTransfer], list]
-QueryConstructorFunc = Callable[[CreditTransfer, Query], Query]
-
-PAYMENT = TransferTypeEnum.PAYMENT
-DEPOSIT = TransferTypeEnum.DEPOSIT
-WITHDRAWAL = TransferTypeEnum.WITHDRAWAL
-
-AGENT_OUT = TransferSubTypeEnum.AGENT_OUT
-AGENT_IN = TransferSubTypeEnum.AGENT_IN
-STANDARD = TransferSubTypeEnum.STANDARD
-RECLAMATION = TransferSubTypeEnum.RECLAMATION
-
-STANDARD_PAYMENT = (PAYMENT, STANDARD)
-AGENT_OUT_PAYMENT = (PAYMENT, AGENT_OUT)
-AGENT_IN_PAYMENT = (PAYMENT, AGENT_IN)
-RECLAMATION_PAYMENT = (PAYMENT, RECLAMATION)
-
-GENERAL_PAYMENTS = [STANDARD_PAYMENT, AGENT_OUT_PAYMENT, AGENT_IN_PAYMENT, RECLAMATION_PAYMENT]
-
-
-def combine_filter_lists(filter_lists: List[List]) -> List:
-    return reduce(lambda f, i: f + i, filter_lists, [])
-
-# ~~~~~~SIMPLE CHECKS~~~~~~
-
-
-def sempo_admin_involved(credit_transfer):
-    if credit_transfer.recipient_user and AccessControl.has_sufficient_tier(
-            credit_transfer.recipient_user.roles, 'ADMIN', 'sempoadmin'):
-        return True
-
-    if credit_transfer.sender_user and AccessControl.has_sufficient_tier(
-            credit_transfer.sender_user.roles, 'ADMIN', 'sempoadmin'):
-        return True
-
-    return False
-
-
-def sender_user_exists(credit_transfer: CreditTransfer):
-    return credit_transfer.sender_user
-
-
-def user_has_group_account_role(credit_transfer):
-    return credit_transfer.sender_user.has_group_account_role
-
-
-def user_phone_is_verified(credit_transfer):
-    return credit_transfer.sender_user.is_phone_verified
-
-
-def user_individual_kyc_is_verified(credit_transfer):
-    return _sender_matches_kyc_criteria(
-        credit_transfer,
-        lambda app: app.kyc_status == 'VERIFIED' and app.type == 'INDIVIDUAL' and not app.multiple_documents_verified
-    )
-
-
-def user_business_or_multidoc_kyc_verified(credit_transfer):
-    return _sender_matches_kyc_criteria(
-        credit_transfer,
-        lambda app: app.kyc_status == 'VERIFIED'
-                    and (app.type == 'BUSINESS' or app.multiple_documents_verified)
-    )
-
-
-def _sender_matches_kyc_criteria(credit_transfer, criteria):
-    if credit_transfer.sender_user is not None:
-        matches_criteria = next((app for app in credit_transfer.sender_user.kyc_applications if criteria(app)), None)
-        return bool(matches_criteria)
-    return False
-
-
-def token_is_liquid_type(credit_transfer):
-    return credit_transfer.token and credit_transfer.token.token_type is token.TokenType.LIQUID
-
-
-def token_is_reserve_type(credit_transfer):
-    return credit_transfer.token and credit_transfer.token.token_type is token.TokenType.RESERVE
-
-
-def transfer_is_agent_out_subtype(credit_transfer):
-    return credit_transfer.transfer_subtype is TransferSubTypeEnum.AGENT_OUT
-
-
-# ~~~~~~COMPOSITE CHECKS~~~~~~
-def base_check(credit_transfer):
-    # Only ever check transfers with a sender user and no sempoadmin (those involving sempoadmins are always allowed)
-    return sender_user_exists(credit_transfer) and not sempo_admin_involved(credit_transfer)
-
-
-def is_user_and_any_token(credit_transfer):
-    return base_check(credit_transfer) \
-           and (token_is_reserve_type(credit_transfer) or token_is_liquid_type(credit_transfer))
-
-
-def is_user_and_liquid_token(credit_transfer):
-    return base_check(credit_transfer) and token_is_liquid_type(credit_transfer) \
-           and not user_has_group_account_role(credit_transfer)
-
-
-def is_group_and_liquid_token(credit_transfer):
-    return base_check(credit_transfer) and token_is_liquid_type(credit_transfer) \
-           and user_has_group_account_role(credit_transfer)
-
-
-def is_any_token_and_user_is_not_phone_and_not_kyc_verified(credit_transfer):
-    return is_user_and_any_token(credit_transfer) and \
-           not user_phone_is_verified(credit_transfer) and not user_individual_kyc_is_verified(credit_transfer)
-
-
-def is_any_token_and_user_is_phone_but_not_kyc_verified(credit_transfer):
-    return is_user_and_any_token(credit_transfer) and user_phone_is_verified(credit_transfer) and not (
-            user_individual_kyc_is_verified(credit_transfer) or user_business_or_multidoc_kyc_verified(credit_transfer)
-    )
-
-
-def is_any_token_and_user_is_kyc_verified(credit_transfer):
-    return is_user_and_any_token(credit_transfer) and user_individual_kyc_is_verified(credit_transfer)
-
-
-def is_any_token_and_user_is_kyc_business_verified(credit_transfer):
-    return is_user_and_any_token(credit_transfer) and user_business_or_multidoc_kyc_verified(credit_transfer)
-
-
-# ~~~~~~LIMIT FILTERS~~~~~~
-
-
-def after_time_period_filter(days: int):
-    epoch = datetime.datetime.today() - datetime.timedelta(days=days)
-    return [CreditTransfer.created >= epoch]
-
-
-def matching_sender_user_filter(transfer: CreditTransfer):
-    return [CreditTransfer.sender_user == transfer.sender_user]
-
-
-def regular_payment_filter(transfer: CreditTransfer):
-    return [CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD]
-
-
-def matching_transfer_type_filter(transfer: CreditTransfer):
-    return [CreditTransfer.transfer_type == transfer.transfer_type]
-
-
-def matching_transfer_type_and_subtype_filter(transfer: CreditTransfer):
-    return [
-        CreditTransfer.transfer_type == transfer.transfer_type,
-        CreditTransfer.transfer_subtype == transfer.transfer_subtype
-    ]
-
-
-def withdrawal_or_agent_out_and_not_excluded_filter(transfer: CreditTransfer):
-    return [
-        or_(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL,
-            CreditTransfer.transfer_subtype == TransferSubTypeEnum.AGENT_OUT),
-        CreditTransfer.exclude_from_limit_calcs == False
-    ]
-
-
-def not_rejected_filter():
-    return [CreditTransfer.transfer_status != TransferStatusEnum.REJECTED]
+from server.sempo_types import TransferAmount
+from server.utils.transfer_limits.filters import (
+    combine_filter_lists,
+    matching_sender_user_filter,
+    not_rejected_filter,
+    after_time_period_filter,
+    matching_transfer_type_filter,
+    regular_payment_filter
+)
+from server.utils.transfer_limits.types import (
+    AggregateAvailability,
+    AppliedToTypes,
+    ApplicationFilter,
+    QueryConstructorFunc,
+    AggregationFilter
+)
 
 
 class BaseTransferLimit(ABC):
@@ -285,8 +125,12 @@ class NoTransferAllowedLimit(BaseTransferLimit):
     def available(self, transfer: CreditTransfer) -> AggregateAvailability:
         return 0
 
-    def case_will_use(self, transfer: CreditTransfer) -> int:
-        return 1
+    def case_will_use(self, transfer: CreditTransfer) -> None:
+        return None
+
+    def validate_transfer(self, transfer: CreditTransfer):
+        available = self.available(transfer)
+        self.throw_validation_error(transfer, available)
 
     def throw_validation_error(self, transfer: CreditTransfer, available: AggregateAvailability):
         raise NoTransferAllowedLimitError(token=transfer.token.name)
@@ -353,7 +197,7 @@ class AggregateLimit(BaseTransferLimit):
         :return: Either a transfer amount or a count
         """
         pass
-    
+
     @abstractmethod
     def used_aggregator(
             self,
@@ -645,83 +489,4 @@ class TransferCountLimit(AggregateLimit):
         )
 
         self.transfer_count = transfer_count
-
-
-LIMITS = [
-    TotalAmountLimit('Sempo Level 0: P7', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_not_phone_and_not_kyc_verified, 7,
-                     total_amount=config.TRANSFER_LIMITS['0.P7']),
-    TotalAmountLimit('Sempo Level 0: P30', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_not_phone_and_not_kyc_verified, 30,
-                     total_amount=config.TRANSFER_LIMITS['0.P30']),
-
-    NoTransferAllowedLimit('Sempo Level 0: WD30', [WITHDRAWAL, DEPOSIT],
-                           is_any_token_and_user_is_not_phone_and_not_kyc_verified),
-
-    TotalAmountLimit('Sempo Level 1: P7', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_phone_but_not_kyc_verified, 7,
-                     total_amount=config.TRANSFER_LIMITS['1.P7']),
-    TotalAmountLimit('Sempo Level 1: P30', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_phone_but_not_kyc_verified, 30,
-                     total_amount=config.TRANSFER_LIMITS['1.P30']),
-    NoTransferAllowedLimit('Sempo Level 1: WD30', [WITHDRAWAL, DEPOSIT],
-                           is_any_token_and_user_is_phone_but_not_kyc_verified),
-
-    TotalAmountLimit('Sempo Level 2: P7', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_kyc_verified, 7,
-                     total_amount=config.TRANSFER_LIMITS['2.P7']),
-    TotalAmountLimit('Sempo Level 2: P30', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_kyc_verified, 30,
-                     total_amount=config.TRANSFER_LIMITS['2.P30']),
-    TotalAmountLimit('Sempo Level 2: WD7', [WITHDRAWAL, DEPOSIT],
-                     is_any_token_and_user_is_kyc_verified, 7,
-                     total_amount=config.TRANSFER_LIMITS['2.WD7']),
-    TotalAmountLimit('Sempo Level 2: WD30', [WITHDRAWAL, DEPOSIT],
-                     is_any_token_and_user_is_kyc_verified, 30,
-                     total_amount=config.TRANSFER_LIMITS['2.WD30']),
-
-    TotalAmountLimit('Sempo Level 3: P7', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_kyc_business_verified, 7,
-                     total_amount=config.TRANSFER_LIMITS['3.P7']),
-    TotalAmountLimit('Sempo Level 3: P30', GENERAL_PAYMENTS,
-                     is_any_token_and_user_is_kyc_business_verified, 30,
-                     total_amount=config.TRANSFER_LIMITS['3.P30']),
-    TotalAmountLimit('Sempo Level 3: WD7', [WITHDRAWAL, DEPOSIT],
-                     is_any_token_and_user_is_kyc_business_verified, 7,
-                     total_amount=config.TRANSFER_LIMITS['3.WD7']),
-    TotalAmountLimit('Sempo Level 3: WD30', [WITHDRAWAL, DEPOSIT],
-                     is_any_token_and_user_is_kyc_business_verified, 30,
-                     total_amount=config.TRANSFER_LIMITS['3.WD30']),
-
-    NoTransferAllowedLimit('GE Liquid Token - Standard User',
-                           [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                           is_user_and_liquid_token),
-
-    TransferCountLimit('GE Liquid Token - Group Account User',
-                       [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                       is_group_and_liquid_token, 30,
-                       aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter,
-                       transfer_count=1),
-
-    BalanceFractionLimit('GE Liquid Token - Group Account User',
-                         [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                         is_group_and_liquid_token, 30,
-                         aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter,
-                         balance_fraction=0.50),
-
-    MinimumSentLimit('GE Liquid Token - Group Account User',
-                     [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                     is_group_and_liquid_token, 30,
-                     aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter
-                     ),
-
-    MaximumAmountPerTransferLimit('GE Liquid Token - Group Account User',
-                                  [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                                  is_group_and_liquid_token,
-                                  maximum_amount=config.TRANSFER_LIMITS['LT.MaxAm'])
-]
-
-
-def get_transfer_limits(transfer: CreditTransfer) -> List[BaseTransferLimit]:
-    return [limit for limit in LIMITS if limit.applies_to_transfer(transfer)]
 
