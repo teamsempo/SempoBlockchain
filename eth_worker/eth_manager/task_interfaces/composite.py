@@ -4,25 +4,25 @@ from toolz import pipe
 import datetime
 
 import config
-from eth_manager import persistence_interface, utils, w3, red
+from eth_manager import persistence_module, utils, w3, red
 from eth_manager.task_interfaces.regular import (
     deploy_contract_task,
     transaction_task,
     send_eth_task,
     synchronous_call,
-    await_task_success,
+    await_blockchain_success_evil,
     get_wallet_balance
 )
 
 timeout = config.SYNCRONOUS_TASK_TIMEOUT
 
 def get_contract_address(task_uuid):
-    await_tr = partial(await_task_success, timeout=timeout)
+    await_tr = partial(await_blockchain_success_evil, timeout=timeout)
     return pipe(task_uuid, await_tr, lambda r: r.get('contract_address'))
 
 
 def topup_wallets(queue='low-priority'):
-    wallets = persistence_interface.get_all_wallets()
+    wallets = persistence_module.get_all_wallets()
 
     for wallet in wallets:
         if (wallet.wei_topup_threshold or 0) > 0:
@@ -30,7 +30,7 @@ def topup_wallets(queue='low-priority'):
             last_topup_task_uuid = wallet.last_topup_task_uuid
 
             if last_topup_task_uuid:
-                task = persistence_interface.get_task_from_uuid(last_topup_task_uuid)
+                task = persistence_module.get_task_from_uuid(last_topup_task_uuid)
 
                 if task and task.status in ['PENDING', 'UNSTARTED']:
                     return
@@ -44,7 +44,7 @@ def topup_wallets(queue='low-priority'):
 def topup_if_required(address):
     balance = w3.eth.getBalance(address)
 
-    wallet = persistence_interface.get_wallet_by_address(address)
+    wallet = persistence_module.get_wallet_by_address(address)
     wei_topup_threshold = wallet.wei_topup_threshold
     wei_target_balance = wallet.wei_target_balance or 0
 
@@ -59,7 +59,7 @@ def topup_if_required(address):
 
         task_uuid = utils.execute_task(sig)
 
-        persistence_interface.set_wallet_last_topup_task_uuid(address, task_uuid)
+        persistence_module.set_wallet_last_topup_task_uuid(address, task_uuid)
 
         return task_uuid
 
@@ -80,7 +80,7 @@ def deploy_exchange_network(deploying_address):
             func=name
         )
 
-        task = await_task_success(task_uuid, timeout=timeout)
+        task = await_blockchain_success_evil(task_uuid, timeout=timeout)
         contract_address = task['contract_address']
 
         return transaction_task(
@@ -137,7 +137,7 @@ def deploy_exchange_network(deploying_address):
         gas_limit=8000000
     )
 
-    res = await_task_success(set_signer_task, timeout=timeout)
+    res = await_blockchain_success_evil(set_signer_task, timeout=timeout)
 
     return registry_contract_address
 
@@ -154,7 +154,7 @@ def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_w
 
     send_eth_task_id = send_eth_task(deploying_address, fund_amount_wei, reserve_token_address)
 
-    res = await_task_success(send_eth_task_id, timeout=timeout)
+    res = await_blockchain_success_evil(send_eth_task_id, timeout=timeout)
 
     balance = synchronous_call(
         contract_address=reserve_token_address,
@@ -285,7 +285,7 @@ def deduplicate(min_task_id, max_task_id):
 
     lock_timout = 10
 
-    duplicates = persistence_interface.get_duplicates(min_task_id, max_task_id)
+    duplicates = persistence_module.get_duplicates(min_task_id, max_task_id)
 
     print(f'search found {len(duplicates)} duplicates')
 
@@ -294,7 +294,7 @@ def deduplicate(min_task_id, max_task_id):
 
     for task_id, txns in duplicates:
 
-        task = persistence_interface.get_task_from_id(task_id)
+        task = persistence_module.get_task_from_id(task_id)
 
         if task.function != 'transferFrom':
             print(f'Skipping de-duplication of {task_id} - task is not of type "transferFrom"')
