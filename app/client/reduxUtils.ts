@@ -35,3 +35,15 @@ type ActionCreatorsMapObject = { [actionCreator: string]: FunctionType };
 export type ActionsUnion<T extends ActionCreatorsMapObject> = ReturnType<
   T[keyof T]
 >;
+
+interface State {
+  [Key: string]: any;
+}
+
+interface Reducer<S extends State, A extends Action<string>> {
+  (state: S, action: A): S;
+}
+
+// interface Reducer {
+//   <S extends State, A> (state: S, action: A): State & Action<string>;
+// }

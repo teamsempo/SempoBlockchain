@@ -100,6 +100,11 @@ export interface AdminUser {
   is_activated: boolean;
   is_disabled: boolean;
 }
+
+export interface AdminUserByIDs {
+  [key: number]: AdminUser;
+}
+
 export const UPDATE_ADMIN_USER_LIST = "UPDATE_ADMIN_USER_LIST";
 
 export interface Invite {
@@ -107,6 +112,10 @@ export interface Invite {
   email: string;
   admin_tier: string;
   created: string;
+}
+
+export interface InviteByIDs {
+  [key: number]: Invite;
 }
 
 export enum InviteUserListActionTypes {

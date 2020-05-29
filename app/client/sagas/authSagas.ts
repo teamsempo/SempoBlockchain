@@ -63,7 +63,8 @@ import {
   ValidateTfaPayload,
   TokenData,
   OrganisationLoginData,
-  AdminData
+  AdminData,
+  InviteByIDs
 } from "../reducers/auth/types";
 
 import {
@@ -482,7 +483,8 @@ function* watchUpdateUserRequest() {
   );
 }
 
-const getInviteState = (state: ReduxState) => state.adminUsers.invitesById;
+const getInviteState = (state: ReduxState): InviteByIDs =>
+  state.adminUsers.invitesById;
 
 function* deleteInvite(
   action: ActionWithPayload<

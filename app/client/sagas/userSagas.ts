@@ -36,10 +36,12 @@ import {
   LoadUserRequestPayload,
   ResetPinActionTypes,
   ResetPinPayload,
-  UserData
+  UserData,
+  UserByIDs
 } from "../reducers/user/types";
 import { ActionWithPayload } from "../reduxUtils";
 import { ReduxState } from "../reducers/rootReducer";
+import { TransferAccountByIDs } from "../reducers/transferAccount/types";
 
 function* updateStateFromUser(data: UserData) {
   //Schema expects a list of credit transfer objects
@@ -110,8 +112,8 @@ function* watchEditUser() {
   yield takeEvery(EditUserActionTypes.EDIT_USER_REQUEST, editUser);
 }
 
-const getUserState = (state: ReduxState) => state.users.byId;
-const getTransferAccountState = (state: ReduxState) =>
+const getUserState = (state: ReduxState): UserByIDs => state.users.byId;
+const getTransferAccountState = (state: ReduxState): TransferAccountByIDs =>
   state.transferAccounts.byId;
 
 function* deleteUser(

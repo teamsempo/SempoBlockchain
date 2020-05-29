@@ -4,7 +4,7 @@ import { ReduxState } from "../reducers/rootReducer";
 import { MessageAction } from "../reducers/message/actions";
 import { MessageActionTypes } from "../reducers/message/types";
 
-const getMessages = (state: ReduxState) => state.message.messageList;
+const getMessages = (state: ReduxState): string[] => state.message.messageList;
 
 const FIVE_SECONDS = 5000;
 

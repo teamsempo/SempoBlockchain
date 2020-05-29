@@ -100,3 +100,7 @@ export interface ResetPinPayload {
     user_id: number;
   };
 }
+
+export interface UserByIDs {
+  [key: number]: User;
+}
