@@ -16,7 +16,6 @@ from web3.exceptions import BadFunctionCallOutput
 import os
 import sys
 
-
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(parent_dir)
 sys.path.append(os.getcwd())

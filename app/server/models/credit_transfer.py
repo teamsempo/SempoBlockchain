@@ -2,10 +2,11 @@ import datetime
 from typing import List
 
 from sqlalchemy.dialects.postgresql import JSON, JSONB
-from flask import current_app
+from flask import current_app, g
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Index
 from sqlalchemy.sql import func
+from uuid import uuid4
 
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase
@@ -80,9 +81,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def send_blockchain_payload_to_worker(self, is_retry=False, queue='high-priority'):
         sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
-
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
-        self.blockchain_task_uuid = bt.make_token_transfer(
+        return bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,
@@ -94,7 +94,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                             sender_approval.eth_send_task_uuid, sender_approval.approval_task_uuid,
                             recipient_approval.eth_send_task_uuid, recipient_approval.approval_task_uuid
                         ])),
-            queue=queue
+            queue=queue,
+            task_uuid=self.blockchain_task_uuid
         )
 
     def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority'):
@@ -113,7 +114,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_completed()
         if not existing_blockchain_txn:
-            self.send_blockchain_payload_to_worker(queue=queue)
+            self.blockchain_task_uuid = str(uuid4())
+            g.pending_transactions.append((self, queue))
 
     def resolve_as_rejected(self, message=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
