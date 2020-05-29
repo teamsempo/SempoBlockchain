@@ -3,7 +3,6 @@ import { DEEEEEEP } from "../../utils";
 
 import {
   UPDATE_ADMIN_USER_LIST,
-  AdminUser,
   RegisterActionTypes,
   ActivateActionTypes,
   ResetPasswordEmailActionTypes,
