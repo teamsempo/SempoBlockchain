@@ -16,13 +16,12 @@ from web3.exceptions import BadFunctionCallOutput
 import os
 import sys
 
-from sql_persistence import session
-
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 import config
+from sql_persistence import session
 from sql_persistence.interface import SQLPersistenceInterface
 
 from eth_manager.ABIs import (
@@ -32,7 +31,6 @@ from eth_manager.ABIs import (
     bancor_network_abi
 )
 
-from exceptions import WalletExistsError
 from eth_manager.processor import TransactionProcessor
 from eth_manager.contract_registry import ContractRegistry
 from eth_manager import utils

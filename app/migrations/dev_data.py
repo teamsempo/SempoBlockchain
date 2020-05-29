@@ -228,8 +228,14 @@ def create_transfer(amount, sender_user, recipient_user, token, subtype=None):
         uuid=str(uuid4()))
 
     db.session.add(transfer)
+    # Mimics before_request hook
+    g.pending_transactions = []
 
     transfer.resolve_as_completed()
+    
+    # Mimics after_request hook
+    for transaction, queue in g.pending_transactions:
+        transaction.send_blockchain_payload_to_worker(queue=queue)
 
     transfer.transfer_type = TransferTypeEnum.PAYMENT
     transfer.transfer_subtype = subtype
