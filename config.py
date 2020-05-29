@@ -6,7 +6,7 @@ logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
 
-VERSION = '1.1.36'  # Remember to bump this in every PR
+VERSION = '1.1.37'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -396,6 +396,7 @@ TRANSFER_LIMITS['3.P7']	= 500000
 TRANSFER_LIMITS['3.P30']	= 1000000
 TRANSFER_LIMITS['3.WD7']	= 500000
 TRANSFER_LIMITS['3.WD30']	= 1000000
+TRANSFER_LIMITS['LT.MaxAm'] = 300000
 
 try:
     for k in config_parser['LIMITS'].keys():
