@@ -2,9 +2,9 @@ import { combineReducers } from "redux";
 
 import {
   OrganisationActionTypes,
-  Organisation,
   EditOrganisationActionTypes,
-  LoadOrganisationActionTypes
+  LoadOrganisationActionTypes,
+  OrganisationByIDs
 } from "./types";
 
 import {
@@ -16,9 +16,9 @@ import {
 import { DEEEEEEP } from "../../utils";
 
 const byId = (
-  state: Organisation[] = [] || {},
+  state: OrganisationByIDs = {},
   action: OrganisationAction
-): Organisation[] => {
+): OrganisationByIDs => {
   switch (action.type) {
     case OrganisationActionTypes.UPDATE_ORGANISATION_LIST:
       return DEEEEEEP(state, action.payload);

@@ -9,6 +9,15 @@ export interface Organisation {
   country_code: string;
 }
 
+export interface OrganisationByIDs {
+  [key: number]: Organisation;
+}
+
+export interface OrganisationData {
+  organisations: Organisation[];
+  organisation: Organisation;
+}
+
 export enum OrganisationActionTypes {
   UPDATE_ORGANISATION_LIST = "UPDATE_ORGANISATION_LIST"
 }

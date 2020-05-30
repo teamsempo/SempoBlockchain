@@ -1,5 +1,5 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
-import { browserHistory } from "../app.jsx";
+import { browserHistory } from "../createStore.js";
 
 import {
   SPREADSHEET_UPLOAD_REQUEST,

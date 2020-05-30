@@ -1,17 +1,10 @@
-import {
-  call,
-  put,
-  select,
-  take,
-  takeEvery,
-  delay,
-  all
-} from "redux-saga/effects";
+import { put, select, takeEvery, delay, all } from "redux-saga/effects";
 
+import { ReduxState } from "../reducers/rootReducer";
 import { MessageAction } from "../reducers/message/actions";
 import { MessageActionTypes } from "../reducers/message/types";
 
-const getMessages = state => state.message.messageList;
+const getMessages = (state: ReduxState): string[] => state.message.messageList;
 
 const FIVE_SECONDS = 5000;
 

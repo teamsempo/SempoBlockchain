@@ -1,25 +1,36 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 import { handleError } from "../utils";
 
-import { LoadTransferUsagesActionTypes } from "../reducers/transferUsage/types";
+import {
+  LoadTransferUsageData,
+  LoadTransferUsagePayload,
+  LoadTransferUsagesActionTypes
+} from "../reducers/transferUsage/types";
 
-import { loadTransferUsagesAPI } from "../api/transferUsagesAPI.js";
+import { loadTransferUsagesAPI } from "../api/transferUsagesAPI";
 import { MessageAction } from "../reducers/message/actions";
 import {
   LoadTransferUsagesAction,
   TransferUsageAction
 } from "../reducers/transferUsage/actions";
+import { ActionWithPayload } from "../reduxUtils";
 
-function* updateStateFromTransferUsage(data) {
+function* updateStateFromTransferUsage(data: LoadTransferUsageData) {
   if (data.transfer_usages !== undefined) {
     yield put(TransferUsageAction.updateTransferUsages(data.transfer_usages));
   }
 }
 
-// Load Transfer Account List Saga
-function* loadTransferUsages({ payload }) {
+function* loadTransferUsages(
+  action: ActionWithPayload<
+    LoadTransferUsagesActionTypes.LOAD_TRANSFER_USAGES_REQUEST,
+    LoadTransferUsagePayload
+  >
+) {
   try {
-    const load_result = yield call(loadTransferUsagesAPI, payload);
+    //todo: fix this type error - optional query param
+    //@ts-ignore
+    const load_result = yield call(loadTransferUsagesAPI, action.payload);
 
     yield call(updateStateFromTransferUsage, load_result.data);
 

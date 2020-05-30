@@ -13,6 +13,10 @@ export interface LoadTransferUsagePayload {
   };
 }
 
+export interface LoadTransferUsageData {
+  transfer_usages: TransferUsage[];
+}
+
 export enum LoadTransferUsagesActionTypes {
   LOAD_TRANSFER_USAGES_REQUEST = "LOAD_TRANSFER_USAGES_REQUEST",
   LOAD_TRANSFER_USAGES_SUCCESS = "LOAD_TRANSFER_USAGES_SUCCESS",
