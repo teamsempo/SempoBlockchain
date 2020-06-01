@@ -5,7 +5,7 @@ interface Props {
   created: string | number | void | moment.Moment | Date | React.ReactText[] | moment.MomentInputObject | undefined
 }
 
-export function DateTime(props: Props) {
+export default function DateTime(props: Props) {
   const {created} = props
   if (created) {
     var formatted_time = moment.utc(created).fromNow();
