@@ -1,10 +1,11 @@
-import pytest, json
+import pytest, json, time
 from faker.providers import phone_number
 from faker import Faker
 
 from server.utils.auth import get_complete_auth_token
 from server.utils.phone import proccess_phone_number
 from server.models.transfer_usage import TransferUsage
+from server.models.user import User
 
 fake = Faker()
 fake.add_provider(phone_number)
@@ -65,6 +66,16 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
         assert data['user']['business_usage_id'] == init_database.session.query(TransferUsage)\
             .filter_by(name=business_usage_name).first().id
         assert data['user']['referred_by'] == user_phone_accessor(create_transfer_account_user)
+
+        # Done async, so sleep to prevent race on this check
+        time.sleep(0.5)
+        # Commit to avoid stale data
+        init_database.session.commit()
+        db_user = init_database.session.query(User).get(data['user']['id'])
+
+        assert db_user.lat == -37.81
+        assert db_user.lng == 144.97
+
 
 
 @pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, tier, status_code", [
