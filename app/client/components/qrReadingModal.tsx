@@ -6,7 +6,7 @@ interface Props {
   updateData: (any: any) => any
 }
 export default function QrReadingModal(props: Props) {
-  const [existingQrData, setExistingQrData] = useState<any | undefined>(null)
+  const [existingQrData, setExistingQrData] = useState<any | null>(null)
   const [readerActive, setReaderActive] = useState(false)
 
   function handleScan(data: any) {
