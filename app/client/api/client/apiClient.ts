@@ -32,6 +32,10 @@ export function apiClient<T>({
   path = null,
   errorHandling = true
 }: ApiClientType): Promise<T> {
+  if (["PUT", "POST", "GET", "DELETE"].indexOf(method.toUpperCase()) === -1) {
+    throw new Error("Method provided is not supported");
+  }
+
   let formData: FormData;
   let headers: HeadersInit = {};
   let request: RequestInit = {

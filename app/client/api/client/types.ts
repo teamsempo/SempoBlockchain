@@ -23,3 +23,9 @@ export interface ApiClientType {
   path?: null | number;
   errorHandling?: boolean;
 }
+
+export interface API {
+  query?: null | object;
+  path?: null | number;
+  body?: null | Body;
+}
