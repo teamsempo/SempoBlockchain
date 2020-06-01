@@ -15,9 +15,9 @@ def test_osm_lookup(location, expected_coordinates):
 
 
 @pytest.mark.parametrize("location, expected_coordinates", [
+    ("not a real place", (None, None)),
     ("fooplace", (-37.81, 144.97)),
     ("multiple matched place", (12.0, 14.4)),
-    ("not a real place", (None, None))
 ])
 def test_set_location(create_transfer_account_user, location, expected_coordinates):
     _set_user_gps_from_location(create_transfer_account_user.id, location)
