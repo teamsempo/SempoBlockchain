@@ -1,4 +1,4 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "./client/apiClient";
 
 export const loadUserAPI = ({ query, path }) =>
   apiClient({ url: "/user/", method: "GET", query: query, path: path });
