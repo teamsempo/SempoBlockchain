@@ -9,7 +9,7 @@ export type Method =
   | "DELETE";
 
 interface Body {
-  [key: string]: string;
+  [key: string]: any;
 }
 
 export interface ApiClientType {
@@ -22,10 +22,4 @@ export interface ApiClientType {
   body?: null | Body;
   path?: null | number;
   errorHandling?: boolean;
-}
-
-export interface API {
-  query?: null | object;
-  path?: null | number;
-  body?: null | Body;
 }

@@ -1,17 +1,23 @@
 import { apiClient } from "./client/apiClient";
-import { API } from "./client/types";
+import {
+  CreateUserPayload,
+  DeleteUserPayload,
+  EditUserPayload,
+  LoadUserRequestPayload,
+  ResetPinPayload
+} from "../reducers/user/types";
 
-export const loadUserAPI = ({ query, path }: API) =>
+export const loadUserAPI = ({ query, path }: LoadUserRequestPayload) =>
   apiClient({ url: "/user/", method: "GET", query: query, path: path });
 
-export const createUserAPI = ({ body }: API) =>
+export const createUserAPI = ({ body }: CreateUserPayload) =>
   apiClient({ url: "/user/", method: "POST", body: body });
 
-export const editUserAPI = ({ body, path }: API) =>
+export const editUserAPI = ({ body, path }: EditUserPayload) =>
   apiClient({ url: "/user/", method: "PUT", body: body, path: path });
 
-export const deleteUserAPI = ({ path }: API) =>
+export const deleteUserAPI = ({ path }: DeleteUserPayload) =>
   apiClient({ url: "/user/", method: "DELETE", path: path });
 
-export const resetPinAPI = ({ body }: API) =>
+export const resetPinAPI = ({ body }: ResetPinPayload) =>
   apiClient({ url: "/user/reset_pin/", method: "POST", body: body });
