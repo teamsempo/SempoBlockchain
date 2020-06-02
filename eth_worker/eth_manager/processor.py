@@ -2,15 +2,21 @@ from typing import Optional, Any
 
 import datetime
 
-from eth_keys import keys
-
 from celery import chain, signature
 
 import requests
 
+from eth_manager.celery_tasks import ( _process_send_eth_transaction)
 import config
+from eth_manager.celery_dispatchers.regular import (
+    queue_attempt_transaction,
+    queue_send_eth,
+    sig_process_send_eth_transaction,
+    sig_process_function_transaction,
+    sig_process_deploy_contract_transaction,
+    sig_check_transaction_response
+)
 from exceptions import PreBlockchainError, TaskRetriesExceededError
-from eth_manager import utils
 from eth_manager.contract_registry import ContractRegistry
 from sempo_types import UUIDList, UUID
 
@@ -18,14 +24,8 @@ RETRY_TRANSACTION_BASE_TIME = 2
 ETH_CHECK_TRANSACTION_BASE_TIME = 2
 ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
 
+
 class TransactionProcessor(object):
-
-    def private_key_to_address(self, private_key):
-
-        if isinstance(private_key, str):
-            private_key = bytearray.fromhex(private_key.replace('0x', ''))
-
-        return keys.PrivateKey(private_key).public_key.to_checksum_address()
 
     def get_gas_price(self, target_transaction_time=None):
 
@@ -52,22 +52,47 @@ class TransactionProcessor(object):
         wei_target_balance = wallet.wei_target_balance or 0
 
         if balance <= wei_topup_threshold and wei_target_balance > balance:
-            sig = signature(utils.eth_endpoint('send_eth'),
-                            kwargs={
-                                'signing_address': config.MASTER_WALLET_ADDRESS,
-                                'amount_wei': wei_target_balance - balance,
-                                'recipient_address': wallet.address,
-                                'prior_tasks': [],
-                                'posterior_tasks': [posterior_task_uuid]
-                            })
 
-            task_uuid = utils.execute_task(sig)
+            task_uuid = queue_send_eth(
+                signing_address=config.MASTER_WALLET_ADDRESS,
+                amount_wei=wei_target_balance - balance,
+                recipient_address=wallet.address,
+                prior_tasks=[],
+                posterior_tasks=[posterior_task_uuid]
+            )
 
             self.persistence_interface.set_wallet_last_topup_task_uuid(wallet.address, task_uuid)
 
             return task_uuid
 
         return None
+
+    def call_contract_function(self,
+                               contract_address: str, abi_type: str, function_name: str,
+                               args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+                               signing_address: Optional[str] = None) -> Any:
+
+        args = args or tuple()
+        if not isinstance(args, (list, tuple)):
+            args = [args]
+
+        kwargs = kwargs or dict()
+
+        function_list = self.registry.get_contract_function(contract_address, function_name, abi_type)
+
+        function = function_list(*args, **kwargs)
+
+        txn_meta = {'gasPrice': self.get_gas_price()}
+
+        if signing_address:
+            txn_meta['from'] = signing_address
+
+        call_data = function.call(txn_meta)
+
+        if isinstance(call_data, bytes):
+            return call_data.rstrip(b'\x00').decode()
+
+        return call_data
 
     def process_send_eth_transaction(self, transaction_id,
                                      recipient_address, amount, task_id=None):
@@ -180,7 +205,7 @@ class TransactionProcessor(object):
             try:
                 print('@@@@@@@@@@@@@@ tx {} using nonce {} @@@@@@@@@@@@@@'.format(transaction_id, nonce))
 
-                result = self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+                self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
             except ValueError as e:
 
@@ -216,15 +241,6 @@ class TransactionProcessor(object):
 
             raise e
 
-    def get_unstarted_posteriors(self, task):
-
-        unstarted_posteriors = []
-        for posterior in task.posterior_tasks:
-            if posterior.status == 'UNSTARTED':
-                unstarted_posteriors.append(posterior)
-
-        return unstarted_posteriors
-
     def check_transaction_response(self, celery_task, transaction_id):
         def transaction_response_countdown():
             t = lambda retries: ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** retries
@@ -258,11 +274,11 @@ class TransactionProcessor(object):
 
             if status == 'SUCCESS':
 
-                unstarted_posteriors = self.get_unstarted_posteriors(task)
+                unstarted_posteriors = self.persistence_interface.get_unstarted_posteriors(task.uuid)
 
                 for dep_task in unstarted_posteriors:
                     print('Starting posterior task: {}'.format(dep_task.uuid))
-                    signature(utils.eth_endpoint('_attempt_transaction'), args=(dep_task.uuid,)).delay()
+                    queue_attempt_transaction(dep_task.uuid)
 
                 self.persistence_interface.set_task_status_text(task, 'SUCCESS')
 
@@ -316,21 +332,11 @@ class TransactionProcessor(object):
                'mined_date': mined_date
            })
 
-    def get_unsatisfied_prior_tasks(self, task):
-
-        unsatisfied = []
-        for prior in task.prior_tasks:
-            if prior.status != 'SUCCESS':
-                unsatisfied.append(prior)
-
-        return unsatisfied
-
-
     def attempt_transaction(self, task_uuid):
 
         task = self.persistence_interface.get_task_from_uuid(task_uuid)
 
-        unsatisfied_prior_tasks = self.get_unsatisfied_prior_tasks(task)
+        unsatisfied_prior_tasks = self.persistence_interface.get_unsatisfied_prior_tasks(task_uuid)
         if len(unsatisfied_prior_tasks) > 0:
             print('Skipping {}: prior tasks {} unsatisfied'.format(
                 task.id,
@@ -365,73 +371,55 @@ class TransactionProcessor(object):
             if have_lock:
                 lock.release()
 
-        task_object = self.persistence_interface.get_task_from_uuid(task_uuid)
-
-        number_of_attempts = len(task_object.transactions)
+        number_of_attempts = len(task.transactions)
 
         attempt_info = f'\nAttempt number: {number_of_attempts} ' \
-                       f' for invocation round: {task_object.previous_invocations + 1}'
+                       f' for invocation round: {task.previous_invocations + 1}'
 
-        if task_object.type == 'SEND_ETH':
+        if task.type == 'SEND_ETH':
 
-            transfer_amount = int(task_object.amount)
+            transfer_amount = int(task.amount)
 
             print(f'Starting Send Eth Transaction for {task_uuid}.' + attempt_info)
-            chain1 = signature(utils.eth_endpoint('_process_send_eth_transaction'),
-                          args=(transaction_obj.id,
-                                task_object.recipient_address,
-                                transfer_amount,
-                                task_object.id))
+            _process_send_eth_transaction.s
+            txn_sig = sig_process_send_eth_transaction(
+                transaction_obj.id,
+                task.recipient_address,
+                transfer_amount,
+                task.id
+            )
 
-        elif task_object.type == 'FUNCTION':
-            print(f'Starting {task_object.function} Transaction for {task_uuid}.' + attempt_info)
-            chain1 = signature(utils.eth_endpoint('_process_function_transaction'),
-                               args=(transaction_obj.id,
-                                     task_object.contract_address,
-                                     task_object.abi_type,
-                                     task_object.function,
-                                     task_object.args,
-                                     task_object.kwargs,
-                                     task_object.gas_limit,
-                                     task_object.id))
+        elif task.type == 'FUNCTION':
+            print(f'Starting {task.function} Transaction for {task_uuid}.' + attempt_info)
+            txn_sig = sig_process_function_transaction(
+                transaction_obj.id,
+                task.contract_address,
+                task.abi_type,
+                task.function,
+                task.args,
+                task.kwargs,
+                task.gas_limit,
+                task.id
+            )
 
-        elif task_object.type == 'DEPLOY_CONTRACT':
-            print(f'Starting Deploy {task_object.contract_name} Contract Transaction for {task_uuid}.' + attempt_info)
-            chain1 = signature(utils.eth_endpoint('_process_deploy_contract_transaction'),
-                               args=(transaction_obj.id,
-                                     task_object.contract_name,
-                                     task_object.args,
-                                     task_object.kwargs,
-                                     task_object.gas_limit,
-                                     task_object.id))
+        elif task.type == 'DEPLOY_CONTRACT':
+            print(f'Starting Deploy {task.contract_name} Contract Transaction for {task_uuid}.' + attempt_info)
+            txn_sig = sig_process_deploy_contract_transaction(
+                transaction_obj.id,
+                task.contract_name,
+                task.args,
+                task.kwargs,
+                task.gas_limit,
+                task.id
+            )
         else:
-            raise Exception(f"Task type {task_object.type} not recognised")
+            raise Exception(f"Task type {task.type} not recognised")
 
-        chain2 = signature(utils.eth_endpoint('_check_transaction_response'))
+        check_response_sig = sig_check_transaction_response()
 
         error_callback = signature(utils.eth_endpoint('_log_error'), args=(transaction_obj.id,))
 
-        return chain([chain1, chain2]).on_error(error_callback).delay()
-
-    def get_signing_wallet_object(self, signing_address, encrypted_private_key):
-        if signing_address:
-
-            signing_wallet_obj = self.persistence_interface.get_wallet_by_address(signing_address)
-
-            if signing_wallet_obj is None:
-                raise Exception('Address {} not found'.format(signing_address))
-
-        elif encrypted_private_key:
-
-            signing_wallet_obj = self.persistence_interface.get_wallet_by_encrypted_private_key(encrypted_private_key)
-
-            if not signing_wallet_obj:
-                signing_wallet_obj = self.persistence_interface.create_blockchain_wallet_from_encrypted_private_key(
-                    encrypted_private_key=encrypted_private_key)
-        else:
-            raise Exception("Must provide encrypted private key")
-
-        return signing_wallet_obj
+        return chain([txn_sig, check_response_sig]).on_error(error_callback).delay()
 
     def log_error(self, request, exc, traceback, transaction_id):
         data = {
@@ -459,193 +447,10 @@ class TransactionProcessor(object):
             raise TaskRetriesExceededError
 
         else:
-            signature(utils.eth_endpoint('_attempt_transaction'),
-                      args=(task.uuid,)).apply_async(
+            queue_attempt_transaction(
+                task.uuid,
                 countdown=RETRY_TRANSACTION_BASE_TIME * 4 ** number_of_attempts_this_round
             )
-
-
-    def get_serialised_task_from_uuid(self, uuid):
-        return self.persistence_interface.get_serialised_task_from_uuid(uuid)
-
-    def call_contract_function(self,
-                               contract_address: str, abi_type: str, function_name: str,
-                               args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-                               signing_address: Optional[str] = None) -> Any:
-        """
-        The main call entrypoint for the transaction. This task completes quickly,
-        so can be called synchronously.
-
-        :param contract_address: address of the contract for the function
-        :param abi_type: the type of ABI for the contract being called
-        :param function_name: name of the function
-        :param args: arguments for the function
-        :param kwargs: keyword arguments for the function
-        :return: the result of the contract call
-        """
-
-        args = args or tuple()
-        if not isinstance(args, (list, tuple)):
-            args = [args]
-
-        kwargs = kwargs or dict()
-
-        function_list = self.registry.get_contract_function(contract_address, function_name, abi_type)
-
-        function = function_list(*args, **kwargs)
-
-        txn_meta = {'gasPrice': self.get_gas_price()}
-
-        if signing_address:
-            txn_meta['from'] = signing_address
-
-        call_data = function.call(txn_meta)
-
-        if isinstance(call_data, bytes):
-            return call_data.rstrip(b'\x00').decode()
-
-        return call_data
-
-    def transact_with_contract_function(
-            self,
-            uuid: UUID,
-            contract_address: str, abi_type: str, function_name: str,
-            args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-            signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
-            gas_limit: Optional[int] = None,
-            prior_tasks: Optional[UUIDList] = None,
-            reserves_task: Optional[UUID] = None
-    ):
-        """
-        The main transaction entrypoint for the processor.
-        :param uuid: the celery generated uuid for the task
-        :param contract_address: the address of the contract for the function
-        :param abi_type: the type of ABI for the contract being called
-        :param function_name: name of the function
-        :param args: arguments for the function
-        :param kwargs: keyword arguments for the function
-        :param signing_address: address of the wallet signing the txn
-        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
-        :param gas_limit: limit on the amount of gas txn can use. Overrides system default
-        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted,
-        :param reserves_task: the uuid of a task that this task reverses. can only be a transferFrom
-        :return: task_id
-        """
-
-        signing_wallet_obj = self.get_signing_wallet_object(signing_address, encrypted_private_key)
-
-        task = self.persistence_interface.create_function_task(uuid,
-                                                               signing_wallet_obj,
-                                                               contract_address, abi_type,
-                                                               function_name, args, kwargs,
-                                                               gas_limit, prior_tasks, reserves_task)
-
-
-        # Attempt Create Async Transaction
-        signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
-
-    def send_eth(self,
-                 uuid: UUID,
-                 amount_wei: int,
-                 recipient_address: str,
-                 signing_address: Optional[str] = None, encrypted_private_key: Optional[str] = None,
-                 prior_tasks: Optional[UUIDList] = None,
-                 posterior_tasks: Optional[UUIDList] = None):
-        """
-        The main entrypoint sending eth.
-
-        :param uuid: the celery generated uuid for the task
-        :param amount_wei: the amount in WEI to send
-        :param recipient_address: the recipient address
-        :param signing_address: address of the wallet signing the txn
-        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
-        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted
-        :param posterior_tasks: a uuid list of tasks for which this task must succeed before they will be attempted
-        :return: task_id
-        """
-
-        signing_wallet_obj = self.get_signing_wallet_object(signing_address, encrypted_private_key)
-
-        task = self.persistence_interface.create_send_eth_task(uuid,
-                                                               signing_wallet_obj,
-                                                               recipient_address, amount_wei,
-                                                               prior_tasks,
-                                                               posterior_tasks)
-
-        # Attempt Create Async Transaction
-        signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
-
-    def deploy_contract(
-            self,
-            uuid: UUID,
-            contract_name: str,
-            args: Optional[tuple] = None, kwargs: Optional[dict] = None,
-            signing_address: Optional[str] = None, encrypted_private_key: Optional[str]=None,
-            gas_limit: Optional[int] = None,
-            prior_tasks: Optional[UUIDList] = None
-    ):
-        """
-        The main deploy contract entrypoint for the processor.
-
-        :param uuid: the celery generated uuid for the task
-        :param contract_name: System will attempt to fetched abi and bytecode from this
-        :param args: arguments for the constructor
-        :param kwargs: keyword arguments for the constructor
-        :param signing_address: address of the wallet signing the txn
-        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
-        :param gas_limit: limit on the amount of gas txn can use. Overrides system default
-        :param prior_tasks: a list of task uuid that must succeed before this task will be attempted
-        """
-
-        signing_wallet_obj = self.get_signing_wallet_object(signing_address, encrypted_private_key)
-
-        task = self.persistence_interface.create_deploy_contract_task(uuid,
-                                                                      signing_wallet_obj,
-                                                                      contract_name,
-                                                                      args, kwargs,
-                                                                      gas_limit,
-                                                                      prior_tasks)
-
-        # Attempt Create Async Transaction
-        signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
-
-    def retry_task(self, uuid: UUID):
-        task = self.persistence_interface.get_task_from_uuid(uuid)
-
-        self._retry_task(task)
-
-    def retry_failed(self, min_task_id, max_task_id, retry_unstarted=False):
-
-        print(f'Testings Task from {min_task_id} to {max_task_id}, retrying unstarted={retry_unstarted}')
-
-        needing_retry = self.persistence_interface.get_failed_tasks(min_task_id, max_task_id)
-        pending_tasks = self.persistence_interface.get_pending_tasks(min_task_id, max_task_id)
-
-        print(f"{len(needing_retry)} tasks currently with failed state")
-        print(f"{len(pending_tasks)} tasks currently pending")
-
-        unstarted_tasks = None
-        if retry_unstarted:
-            unstarted_tasks = self.persistence_interface.get_unstarted_tasks(min_task_id, max_task_id)
-            print(f"{len(unstarted_tasks)} tasks currently unstarted")
-
-            needing_retry = needing_retry + unstarted_tasks
-
-            needing_retry.sort(key=lambda t: t.id)
-
-        for task in needing_retry:
-            self._retry_task(task)
-
-        return {
-            'failed_count': len(needing_retry),
-            'pending_count': len(pending_tasks),
-            'unstarted_count': len(unstarted_tasks) if unstarted_tasks else 'Unknown'
-        }
-
-    def _retry_task(self, task):
-        self.persistence_interface.increment_task_invokations(task)
-        signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
-
 
     def __init__(self,
                  ethereum_chain_id,
@@ -672,4 +477,183 @@ class TransactionProcessor(object):
 
             self.task_max_retries = task_max_retries
 
+
+class ExternalEntrypoints(object):
+
+    def get_serialised_task_from_uuid(self, uuid):
+        return self.persistence_interface.get_serialised_task_from_uuid(uuid)
+
+    def call_contract_function(self,
+                               contract_address: str, abi_type: str, function_name: str,
+                               args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+                               signing_address: Optional[str] = None) -> Any:
+        """
+        The main call entrypoint for the transaction. This task completes quickly and doesn't mutate any state, so this
+        directly calls the corresponding processor method rather than going via the task queue.
+
+        :param contract_address: address of the contract for the function
+        :param abi_type: the type of ABI for the contract being called
+        :param function_name: name of the function
+        :param args: arguments for the function
+        :param kwargs: keyword arguments for the function
+        :return: the result of the contract call
+        """
+
+        return self.processor.call_contract_function(
+            contract_address,
+            abi_type,
+            function_name,
+            args,
+            kwargs,
+            signing_address
+        )
+
+    def transact_with_contract_function(
+            self,
+            uuid: UUID,
+            contract_address: str, abi_type: str, function_name: str,
+            args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+            signing_address: Optional[str] = None, encrypted_private_key: Optional[str] = None,
+            gas_limit: Optional[int] = None,
+            prior_tasks: Optional[UUIDList] = None,
+            reserves_task: Optional[UUID] = None
+    ):
+        """
+        The main transaction entrypoint for the processor.
+        :param uuid: the celery generated uuid for the task
+        :param contract_address: the address of the contract for the function
+        :param abi_type: the type of ABI for the contract being called
+        :param function_name: name of the function
+        :param args: arguments for the function
+        :param kwargs: keyword arguments for the function
+        :param signing_address: address of the wallet signing the txn
+        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
+        :param gas_limit: limit on the amount of gas txn can use. Overrides system default
+        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted,
+        :param reserves_task: the uuid of a task that this task reverses. can only be a transferFrom
+        :return: task_id
+        """
+
+        signing_wallet_obj = self.persistence_interface.get_signing_wallet_object(
+            signing_address,
+            encrypted_private_key
+        )
+
+        task = self.persistence_interface.create_function_task(uuid,
+                                                               signing_wallet_obj,
+                                                               contract_address, abi_type,
+                                                               function_name, args, kwargs,
+                                                               gas_limit, prior_tasks, reserves_task)
+
+        # Attempt Create Async Transaction
+        queue_attempt_transaction(task.uuid)
+
+    def send_eth(self,
+                 uuid: UUID,
+                 amount_wei: int,
+                 recipient_address: str,
+                 signing_address: Optional[str] = None, encrypted_private_key: Optional[str] = None,
+                 prior_tasks: Optional[UUIDList] = None,
+                 posterior_tasks: Optional[UUIDList] = None):
+        """
+        The main entrypoint sending eth.
+
+        :param uuid: the celery generated uuid for the task
+        :param amount_wei: the amount in WEI to send
+        :param recipient_address: the recipient address
+        :param signing_address: address of the wallet signing the txn
+        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
+        :param prior_tasks: a list of task uuids that must succeed before this task will be attempted
+        :param posterior_tasks: a uuid list of tasks for which this task must succeed before they will be attempted
+        :return: task_id
+        """
+
+        signing_wallet_obj = self.persistence_interface.get_signing_wallet_object(
+            signing_address,
+            encrypted_private_key
+        )
+
+        task = self.persistence_interface.create_send_eth_task(uuid,
+                                                               signing_wallet_obj,
+                                                               recipient_address, amount_wei,
+                                                               prior_tasks,
+                                                               posterior_tasks)
+
+        # Attempt Create Async Transaction
+        queue_attempt_transaction(task.uuid)
+
+    def deploy_contract(
+            self,
+            uuid: UUID,
+            contract_name: str,
+            args: Optional[tuple] = None, kwargs: Optional[dict] = None,
+            signing_address: Optional[str] = None, encrypted_private_key: Optional[str] = None,
+            gas_limit: Optional[int] = None,
+            prior_tasks: Optional[UUIDList] = None
+    ):
+        """
+        The main deploy contract entrypoint for the processor.
+
+        :param uuid: the celery generated uuid for the task
+        :param contract_name: System will attempt to fetched abi and bytecode from this
+        :param args: arguments for the constructor
+        :param kwargs: keyword arguments for the constructor
+        :param signing_address: address of the wallet signing the txn
+        :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
+        :param gas_limit: limit on the amount of gas txn can use. Overrides system default
+        :param prior_tasks: a list of task uuid that must succeed before this task will be attempted
+        """
+
+        signing_wallet_obj = self.persistence_interface.get_signing_wallet_object(
+            signing_address,
+            encrypted_private_key
+        )
+
+        task = self.persistence_interface.create_deploy_contract_task(uuid,
+                                                                      signing_wallet_obj,
+                                                                      contract_name,
+                                                                      args, kwargs,
+                                                                      gas_limit,
+                                                                      prior_tasks)
+
+        # Attempt Create Async Transaction
+        queue_attempt_transaction(task.uuid)
+
+    def retry_task(self, task_uuid: UUID):
+        self.persistence_interface.increment_task_invocations(task_uuid)
+        queue_attempt_transaction(task_uuid)
+
+    def retry_failed(self, min_task_id, max_task_id, retry_unstarted=False):
+
+        print(f'Testings Task from {min_task_id} to {max_task_id}, retrying unstarted={retry_unstarted}')
+
+        needing_retry = self.persistence_interface.get_failed_tasks(min_task_id, max_task_id)
+        pending_tasks = self.persistence_interface.get_pending_tasks(min_task_id, max_task_id)
+
+        print(f"{len(needing_retry)} tasks currently with failed state")
+        print(f"{len(pending_tasks)} tasks currently pending")
+
+        unstarted_tasks = None
+        if retry_unstarted:
+            unstarted_tasks = self.persistence_interface.get_unstarted_tasks(min_task_id, max_task_id)
+            print(f"{len(unstarted_tasks)} tasks currently unstarted")
+
+            needing_retry = needing_retry + unstarted_tasks
+
+            needing_retry.sort(key=lambda t: t.id)
+
+        for task in needing_retry:
+            self.retry_task(task.uuid)
+
+        return {
+            'failed_count': len(needing_retry),
+            'pending_count': len(pending_tasks),
+            'unstarted_count': len(unstarted_tasks) if unstarted_tasks else 'Unknown'
+        }
+
+
+    def __init__(self, peristence_module, processor: TransactionProcessor):
+
+            self.persistence_interface = peristence_module
+            self.processor = processor
 

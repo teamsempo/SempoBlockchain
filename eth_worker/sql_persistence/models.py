@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
@@ -11,7 +12,7 @@ from eth_utils import keccak
 from eth_keys import keys
 from web3 import Web3
 
-from sempo_types import UUID
+from sempo_types import UUID, UUIDList
 import config
 
 ALLOWED_TASK_TYPES = ['SEND_ETH', 'FUNCTION', 'DEPLOY_CONTRACT']
@@ -209,12 +210,43 @@ class BlockchainTask(ModelBase):
             )
         )
 
-    def __init__(self, uuid: UUID,  **kwargs):
+    def add_prior_tasks(self, prior_tasks: UUIDList):
+        self._add_dependency_relationships(prior_tasks, self.prior_tasks)
+
+    def add_posterior_tasks(self, posterior_tasks: UUIDList):
+        self._add_dependency_relationships(posterior_tasks, self.posterior_tasks)
+
+    def _add_dependency_relationships(self, tasks_uuids: UUIDList, dependency_relationship):
+        if tasks_uuids is None:
+            return
+
+        if isinstance(tasks_uuids, str):
+            tasks_uuids = [tasks_uuids]
+
+        for task_uuid in tasks_uuids:
+            # TODO: Make sure this can't be failed due to a race condition on tasks being added
+            task = self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+            if task:
+                dependency_relationship.append(task)
+
+    def __init__(
+            self,
+            uuid: UUID,
+            prior_tasks: Optional[UUIDList]=None,
+            posterior_tasks: Optional[UUIDList]=None, **kwargs
+    ):
         super(BlockchainTask, self).__init__(**kwargs)
 
         self.uuid = uuid
 
         self.previous_invocations = 0
+
+        if prior_tasks:
+            self.add_prior_tasks(prior_tasks)
+
+        if posterior_tasks:
+            self.add_posterior_tasks(posterior_tasks)
+
 
 class BlockchainTransaction(ModelBase):
     __tablename__ = 'blockchain_transaction'

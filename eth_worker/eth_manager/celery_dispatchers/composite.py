@@ -5,7 +5,7 @@ import datetime
 
 import config
 from eth_manager import persistence_module, utils, w3, red
-from eth_manager.task_interfaces.regular import (
+from eth_manager.celery_dispatchers.regular import (
     deploy_contract_task,
     transaction_task,
     send_eth_task,

@@ -4,7 +4,7 @@ import traceback
 from celery import signals
 
 import config
-import eth_manager.task_interfaces.composite
+import eth_manager.celery_dispatchers.composite
 from eth_manager import celery_app, blockchain_processor, persistence_module
 from exceptions import (
     LockedNotAcquired
@@ -75,12 +75,12 @@ processor_task_config = {
 
 @celery_app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):
-    return eth_manager.task_interfaces.composite.deploy_exchange_network(deploying_address)
+    return eth_manager.celery_dispatchers.composite.deploy_exchange_network(deploying_address)
 
 
 @celery_app.task(**base_task_config)
 def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
-    return eth_manager.task_interfaces.composite.deploy_and_fund_reserve_token(
+    return eth_manager.celery_dispatchers.composite.deploy_and_fund_reserve_token(
         deploying_address,
         name, symbol, fund_amount_wei)
 
@@ -94,7 +94,7 @@ def deploy_smart_token(self, deploying_address,
                        reserve_token_address,
                        reserve_ratio_ppm):
 
-    return eth_manager.task_interfaces.composite.deploy_smart_token(
+    return eth_manager.celery_dispatchers.composite.deploy_smart_token(
         deploying_address,
         name, symbol, decimals,
         reserve_deposit_wei,
@@ -114,12 +114,12 @@ def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold
 
 @celery_app.task(**low_priority_config)
 def topup_wallets(self):
-    return eth_manager.task_interfaces.composite.topup_wallets()
+    return eth_manager.celery_dispatchers.composite.topup_wallets()
 
 # Set retry attempts to zero since beat will retry shortly anyway
 @celery_app.task(**no_retry_config)
 def topup_wallet_if_required(self, address):
-    return eth_manager.task_interfaces.composite.topup_if_required(address)
+    return eth_manager.celery_dispatchers.composite.topup_if_required(address)
 
 
 @celery_app.task(**base_task_config)
@@ -178,9 +178,10 @@ def retry_task(self, task_uuid):
 def retry_failed(self, min_task_id=None, max_task_id=None, retry_unstarted=False):
     return blockchain_processor.retry_failed(min_task_id, max_task_id, retry_unstarted)
 
+
 @celery_app.task(**no_retry_config)
 def deduplicate(self, min_task_id, max_task_id):
-    return eth_manager.task_interfaces.composite.deduplicate(min_task_id, max_task_id)
+    return eth_manager.celery_dispatchers.composite.deduplicate(min_task_id, max_task_id)
 
 
 @celery_app.task(**base_task_config)

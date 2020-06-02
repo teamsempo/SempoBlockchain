@@ -121,3 +121,101 @@ def await_blockchain_success(task_uuid, timeout=None, poll_frequency=0.5):
     raise TimeoutError
 
 
+def queue_attempt_transaction(task_uuid, countdown=0):
+    sig = signature(
+        utils.eth_endpoint('_attempt_transaction'),
+        kwargs={'task_uuid': task_uuid}
+    ).apply_async(
+        countdown=countdown
+    )
+
+    return sig.id
+
+
+def queue_send_eth(
+        signing_address,
+        amount_wei,
+        recipient_address,
+        prior_tasks,
+        posterior_tasks,
+):
+    sig = signature(utils.eth_endpoint('send_eth'),
+                    kwargs={
+                        'signing_address': signing_address,
+                        'amount_wei': amount_wei,
+                        'recipient_address': recipient_address,
+                        'prior_tasks': prior_tasks,
+                        'posterior_tasks': posterior_tasks
+                    })
+
+    return utils.execute_task(sig)
+
+
+def sig_process_send_eth_transaction(
+        transaction_id,
+        recipient_address,
+        transfer_amount,
+        task_id
+):
+    return signature(
+        utils.eth_endpoint('_process_send_eth_transaction'),
+        args=(
+            transaction_id,
+            recipient_address,
+            transfer_amount,
+            task_id
+        )
+    )
+
+
+def sig_process_function_transaction(
+    transaction_id,
+    contract_address,
+    abi_type,
+    fn,
+    args,
+    kwargs,
+    gas_limit,
+    task_id
+):
+    return signature(
+        utils.eth_endpoint('_process_function_transaction'),
+        args=(
+            transaction_id,
+            contract_address,
+            abi_type,
+            fn,
+            args,
+            kwargs,
+            gas_limit,
+            task_id
+        )
+    )
+
+
+def sig_process_deploy_contract_transaction(
+    transaction_id,
+    contract_name,
+    args,
+    kwargs,
+    gas_limit,
+    task_id
+):
+    signature(
+        utils.eth_endpoint('_process_deploy_contract_transaction'),
+        args=(
+            transaction_id,
+            contract_name,
+            args,
+            kwargs,
+            gas_limit,
+            task_id
+        )
+    )
+
+
+def sig_check_transaction_response():
+    return signature(utils.eth_endpoint('_check_transaction_response'))
+
+def
+

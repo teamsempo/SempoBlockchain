@@ -175,32 +175,6 @@ class SQLPersistenceInterface(object):
 
         return transaction.signing_wallet
 
-    def add_prior_tasks(self, task: BlockchainTask, prior_tasks: UUIDList):
-        if prior_tasks is None:
-            prior_tasks = []
-
-        if isinstance(prior_tasks, str):
-            prior_tasks = [prior_tasks]
-
-        for task_uuid in prior_tasks:
-            # TODO: Make sure this can't be failed due to a race condition on tasks being added
-            prior_task = self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
-            if prior_task:
-                task.prior_tasks.append(prior_task)
-
-    def add_posterior_tasks(self, task: BlockchainTask, posterior_tasks: UUIDList):
-        if posterior_tasks is None:
-            posterior_tasks = []
-
-        if isinstance(posterior_tasks, str):
-            posterior_tasks = [posterior_tasks]
-
-        for task_uuid in posterior_tasks:
-            # TODO: Make sure this can't be failed due to a race condition on tasks being added
-            posterior = self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
-            if posterior:
-                task.posterior_tasks.append(posterior)
-
     def set_task_status_text(self, task, text):
         task.status_text = text
         self.session.commit()
@@ -217,13 +191,34 @@ class SQLPersistenceInterface(object):
                               type='SEND_ETH',
                               is_send_eth=True,
                               recipient_address=recipient_address,
-                              amount=amount)
+                              amount=amount,
+                              prior_tasks=prior_tasks,
+                              posterior_tasks=posterior_tasks)
 
         self.session.add(task)
+        self.session.commit()
 
-        self.add_prior_tasks(task, prior_tasks)
-        self.add_posterior_tasks(task, posterior_tasks)
+        return task
 
+    def create_deploy_contract_task(self,
+                                    uuid: UUID,
+                                    signing_wallet_obj,
+                                    contract_name,
+                                    args=None, kwargs=None,
+                                    gas_limit=None,
+                                    prior_tasks=None, posterior_tasks=None):
+
+        task = BlockchainTask(uuid,
+                              signing_wallet=signing_wallet_obj,
+                              type='DEPLOY_CONTRACT',
+                              contract_name=contract_name,
+                              args=args,
+                              kwargs=kwargs,
+                              gas_limit=gas_limit,
+                              prior_tasks=prior_tasks,
+                              posterior_tasks=posterior_tasks)
+
+        self.session.add(task)
         self.session.commit()
 
         return task
@@ -233,7 +228,10 @@ class SQLPersistenceInterface(object):
                              signing_wallet_obj,
                              contract_address, abi_type,
                              function, args=None, kwargs=None,
-                             gas_limit=None, prior_tasks=None, reverses_task=None):
+                             gas_limit=None,
+                             prior_tasks=None, posterior_tasks=None,
+                             reverses_task=None):
+
 
         task = BlockchainTask(uuid,
                               signing_wallet=signing_wallet_obj,
@@ -243,11 +241,11 @@ class SQLPersistenceInterface(object):
                               function=function,
                               args=args,
                               kwargs=kwargs,
-                              gas_limit=gas_limit)
+                              gas_limit=gas_limit,
+                              prior_tasks=prior_tasks,
+                              posterior_tasks=posterior_tasks)
 
         self.session.add(task)
-
-        self.add_prior_tasks(task, prior_tasks)
 
         if reverses_task:
             reverses_task_obj = self.get_task_from_uuid(reverses_task)
@@ -263,28 +261,12 @@ class SQLPersistenceInterface(object):
 
         return task
 
-    def create_deploy_contract_task(self,
-                                    uuid: UUID,
-                                    signing_wallet_obj,
-                                    contract_name,
-                                    args=None, kwargs=None,
-                                    gas_limit=None, prior_tasks=None):
+    def increment_task_invocations(self, task_uuid: UUID):
 
-        task = BlockchainTask(uuid,
-                              signing_wallet=signing_wallet_obj,
-                              type='DEPLOY_CONTRACT',
-                              contract_name=contract_name,
-                              args=args,
-                              kwargs=kwargs,
-                              gas_limit=gas_limit)
-
-        self.session.add(task)
-
-        self.add_prior_tasks(task, prior_tasks)
-
-        self.session.commit()
-
-        return task
+        task = self.get_task_from_uuid(task_uuid=task_uuid)
+        if task:
+            task.previous_invocations = (task.previous_invocations or 0) + 1
+            self.session.commit()
 
     def get_serialised_task_from_uuid(self, uuid):
         task = self.get_task_from_uuid(uuid)
@@ -341,11 +323,6 @@ class SQLPersistenceInterface(object):
         duplicated_tasks = [row for row in res]
         return duplicated_tasks
 
-    def increment_task_invokations(self, task):
-        task.previous_invocations = (task.previous_invocations or 0) + 1
-
-        self.session.commit()
-
     def get_task_from_uuid(self, task_uuid):
         return self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
 
@@ -377,10 +354,61 @@ class SQLPersistenceInterface(object):
     def get_unstarted_tasks(self, min_task_id=None, max_task_id=None):
         return self._get_tasks_by_status('UNSTARTED', min_task_id, max_task_id)
 
+    def get_unstarted_posteriors(self, task_uuid):
+
+        task = self.get_task_from_uuid(task_uuid=task_uuid)
+
+        if not task:
+            return None
+
+        if task:
+            unstarted_posteriors = []
+            for posterior in task.posterior_tasks:
+                if posterior.status == 'UNSTARTED':
+                    unstarted_posteriors.append(posterior)
+
+            return unstarted_posteriors
+
+    def get_unsatisfied_prior_tasks(self, task_uuid):
+
+        task = self.get_task_from_uuid(task_uuid=task_uuid)
+
+        if not task:
+            return None
+
+        unsatisfied = []
+        for prior in task.prior_tasks:
+            if prior.status != 'SUCCESS':
+                unsatisfied.append(prior)
+
+        return unsatisfied
+
+    def get_signing_wallet_object(self, signing_address, encrypted_private_key):
+        if signing_address:
+
+            signing_wallet_obj = self.get_wallet_by_address(signing_address)
+
+            if signing_wallet_obj is None:
+                raise Exception('Address {} not found'.format(signing_address))
+
+        elif encrypted_private_key:
+
+            signing_wallet_obj = self.get_wallet_by_encrypted_private_key(encrypted_private_key)
+
+            if not signing_wallet_obj:
+                signing_wallet_obj = self.create_blockchain_wallet_from_encrypted_private_key(
+                    encrypted_private_key=encrypted_private_key
+                )
+        else:
+            raise Exception("Must provide encrypted private key")
+
+        return signing_wallet_obj
+
+
     def create_blockchain_wallet_from_encrypted_private_key(self, encrypted_private_key):
 
         private_key = BlockchainWallet.decrypt_private_key(encrypted_private_key)
-        self.create_blockchain_wallet_from_private_key(private_key)
+        return self.create_blockchain_wallet_from_private_key(private_key)
 
     def create_blockchain_wallet_from_private_key(self, private_key,
                                                   allow_existing=False,
