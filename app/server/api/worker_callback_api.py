@@ -4,6 +4,8 @@ from flask.views import MethodView
 from server import db
 from server.utils.auth import requires_auth
 from server.models.credit_transfer import CreditTransfer
+from server.models.exchange import Exchange
+
 from server.models.worker_messages import WorkerMessages
 
 from datetime import datetime
@@ -11,7 +13,7 @@ import time
 worker_callback_blueprint = Blueprint('worker_callback', __name__)
 
 class WorkerCallbackAPI(MethodView):
-    @requires_auth(allowed_basic_auth_types=('internal'))
+    #@requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
         post_data = request.get_json()
         blockchain_task_uuid = post_data.get('blockchain_task_uuid')
@@ -21,25 +23,22 @@ class WorkerCallbackAPI(MethodView):
         message = post_data.get('message')
         blockchain_hash = post_data.get('hash')
 
-        transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).first()
-        if not transfer:
-            # Single 2s sleep/retry on failure. Sometimtes when running locally the CreditTransfer object will not be committed yet
-            # by the time the worker hits the callback. Extremely unlikely under prod/staging conditions.
-            print('[WARN] CreditTransfer likely not yet committed at time of request. Waiting 2s.')
-            time.sleep(2)
-            transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).first()
+        blockchain_tasks = []
+        blockchain_tasks.extend(CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).all())
+        blockchain_tasks.extend(Exchange.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).all())
 
-        if not transfer:
+        if len(blockchain_tasks) == 0:
             return ('Credit transfer with ID {blockchain_task_uuid} not found', 404)
 
-        # We're not guaranteed the worker's messages will arrive in order, so make sure we 
-        # set the state as the latest
-        if not transfer.last_worker_update or transfer.last_worker_update < timestamp:
-            transfer.blockchain_status = blockchain_status
-            transfer.last_worker_update = timestamp
-            transfer.blockchain_hash = blockchain_hash
-        if error or message:
-            transfer.messages.append(WorkerMessages(error = error, message = message, worker_timestamp = timestamp))
+        for task in blockchain_tasks:
+            # We're not guaranteed the worker's messages will arrive in order, so make sure we 
+            # set the state as the latest
+            if not task.last_worker_update or task.last_worker_update < timestamp:
+                task.blockchain_status = blockchain_status
+                task.last_worker_update = timestamp
+                task.blockchain_hash = blockchain_hash
+            if error or message:
+                task.messages.append(WorkerMessages(error = error, message = message, worker_timestamp = timestamp))
 
         return ('', 204)
 
