@@ -139,7 +139,7 @@ class TokenSchema(SchemaBase):
 
     # exchange_contracts  = fields.Nested("server.schemas.ExchangeContractSchema", many=True)
 
-class CreditTransferSchema(Schema):
+class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     id      = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
