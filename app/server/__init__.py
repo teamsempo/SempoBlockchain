@@ -105,6 +105,7 @@ def register_blueprints(app):
     def before_request():
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.celery_tasks = []
+        g.pending_transactions = []
 
         if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
@@ -119,10 +120,17 @@ def register_blueprints(app):
 
     @app.after_request
     def after_request(response):
-            # Execute any async celery tasks
-
+        from server.utils import pusher
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
+
+        for transaction, queue in g.pending_transactions:
+            transaction.send_blockchain_payload_to_worker(queue=queue)
+
+        # Push only credit transfers, not exchanges
+        from server.models.credit_transfer import CreditTransfer
+        transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
+        pusher.push_admin_credit_transfer(transactions)
 
         for task in g.celery_tasks:
             try:

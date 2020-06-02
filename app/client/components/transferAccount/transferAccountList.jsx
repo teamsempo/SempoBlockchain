@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import ReactTable from "react-table";
-import { browserHistory } from "../../app.jsx";
+import { browserHistory } from "../../createStore.js";
 
 import {
   ModuleBox,

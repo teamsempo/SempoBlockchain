@@ -48,6 +48,5 @@ def downgrade():
     op.drop_column('credit_transfer', 'blockchain_status')
     op.drop_column('credit_transfer', 'blockchain_hash')
     op.drop_table('worker_messages')
-    op.drop_index(op.f('ix_worker_messages_table_blockchain_task_uuid'), table_name='worker_messages')
     blockchain_status = postgresql.ENUM('PENDING', 'SUCCESS', 'FAILED', name='blockchainstatus')
     blockchain_status.drop(op.get_bind())

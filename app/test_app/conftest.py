@@ -433,7 +433,9 @@ def test_client():
 @pytest.fixture(scope='module')
 def init_database():
     # Create the database and the database table
-
+    from flask import g
+    g.pending_transactions = []
+    
     with current_app.app_context():
         db.create_all()
 

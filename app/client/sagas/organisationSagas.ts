@@ -4,7 +4,9 @@ import { normalize } from "normalizr";
 
 import {
   LoadOrganisationActionTypes,
-  EditOrganisationActionTypes
+  EditOrganisationActionTypes,
+  EditOrganisationPayload,
+  OrganisationData
 } from "../reducers/organisation/types";
 
 import {
@@ -16,12 +18,13 @@ import {
 import {
   loadOrganisationAPI,
   editOrganisationAPI
-} from "../api/organisationApi.js";
+} from "../api/organisationApi";
 
 import { organisationSchema } from "../schemas";
 import { MessageAction } from "../reducers/message/actions";
+import { ActionWithPayload } from "../reduxUtils";
 
-function* updateStateFromOrganisation(data) {
+function* updateStateFromOrganisation(data: OrganisationData) {
   //Schema expects a list of organisation objects
   let organisation_list;
   if (data.organisations) {
@@ -63,9 +66,14 @@ function* watchLoadOrganisation() {
   );
 }
 
-function* editOrganisation({ payload }) {
+function* editOrganisation(
+  action: ActionWithPayload<
+    EditOrganisationActionTypes.EDIT_ORGANISATION_REQUEST,
+    EditOrganisationPayload
+  >
+) {
   try {
-    const load_result = yield call(editOrganisationAPI, payload);
+    const load_result = yield call(editOrganisationAPI, action.payload);
 
     yield call(updateStateFromOrganisation, load_result.data);
 

@@ -1,16 +1,25 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 
 import { MetricAction, LoadMetricAction } from "../reducers/metric/actions";
-import { LoadMetricsActionType } from "../reducers/metric/types";
+import {
+  LoadMetricsActionType,
+  LoadMetricsPayload
+} from "../reducers/metric/types";
 
-import { loadCreditTransferStatsAPI } from "../api/creditTransferAPI.js";
+import { loadCreditTransferStatsAPI } from "../api/creditTransferAPI";
 import { handleError } from "../utils";
+import { ActionWithPayload } from "../reduxUtils";
 
-function* loadMetrics({ payload }) {
+function* loadMetrics(
+  action: ActionWithPayload<
+    LoadMetricsActionType.LOAD_METRICS_REQUEST,
+    LoadMetricsPayload
+  >
+) {
   try {
     const credit_stat_load_result = yield call(
       loadCreditTransferStatsAPI,
-      payload
+      action.payload
     );
     const metrics = credit_stat_load_result.data.transfer_stats;
 

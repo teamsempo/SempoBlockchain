@@ -50,7 +50,21 @@ import {
   EditAdminUserActionTypes,
   DeleteInviteActionTypes,
   InviteUserActionTypes,
-  ValidateTfaActionTypes
+  ValidateTfaActionTypes,
+  UpdateActiveOrgPayload,
+  LoginRequestPayload,
+  RegisterRequestPayload,
+  ActivatePayload,
+  ResetEmailPayload,
+  ResetPasswordPayload,
+  UpdateUserPayload,
+  DeleteInvitePayload,
+  InviteUserPayload,
+  ValidateTfaPayload,
+  TokenData,
+  OrganisationLoginData,
+  AdminData,
+  InviteByIDs
 } from "../reducers/auth/types";
 
 import {
@@ -68,11 +82,13 @@ import {
   ValidateTfaAction
 } from "../reducers/auth/actions";
 
-import { browserHistory } from "../app.jsx";
+import { browserHistory } from "../createStore";
 import { MessageAction } from "../reducers/message/actions";
 import { OrganisationAction } from "../reducers/organisation/actions";
+import { ActionWithPayload } from "../reduxUtils";
+import { ReduxState } from "../reducers/rootReducer";
 
-function* updateStateFromAdmin(data) {
+function* updateStateFromAdmin(data: AdminData) {
   //Schema expects a list of admin user objects
   let admin_list;
   let invite_list;
@@ -99,7 +115,9 @@ function* updateStateFromAdmin(data) {
   yield put(InviteUserListAction.deepUpdateInviteUsers(invites || []));
 }
 
-export function* updateOrganisationStateFromLoginData(data) {
+export function* updateOrganisationStateFromLoginData(
+  data: OrganisationLoginData
+) {
   //Schema expects a list of organisation objects
   let organisation_list;
   if (data.organisations) {
@@ -116,16 +134,23 @@ export function* updateOrganisationStateFromLoginData(data) {
   }
 }
 
-function* saveOrgId({ payload }) {
+function* saveOrgId(
+  action: ActionWithPayload<
+    LoginActionTypes.UPDATE_ACTIVE_ORG,
+    UpdateActiveOrgPayload
+  >
+) {
   try {
-    yield call(storeOrgid, payload.organisationId.toString());
+    yield call(storeOrgid, action.payload.organisationId.toString());
 
-    let query_params = parseQuery(window.location.search);
+    // window.location.search = "?org=2"
+    // query_params = {org: 2}
+    let query_params: any = parseQuery(window.location.search);
 
     // if query param and payload are matching then just reload to update navbar
     if (
       query_params["org"] &&
-      payload.organisationId === parseInt(query_params["org"])
+      action.payload.organisationId === parseInt(query_params["org"])
     ) {
       window.location.reload();
     } else {
@@ -144,7 +169,7 @@ export function* logout() {
   yield call(removeOrgId);
 }
 
-function createLoginSuccessObject(token) {
+function createLoginSuccessObject(token: TokenData) {
   return {
     token: token.auth_token,
     userId: token.user_id,
@@ -157,9 +182,11 @@ function createLoginSuccessObject(token) {
   };
 }
 
-function* requestToken({ payload }) {
+function* requestToken(
+  action: ActionWithPayload<LoginActionTypes.LOGIN_REQUEST, LoginRequestPayload>
+) {
   try {
-    const token_response = yield call(requestApiToken, payload);
+    const token_response = yield call(requestApiToken, action.payload);
 
     if (token_response.status === "success") {
       yield put(
@@ -239,10 +266,14 @@ function* watchLogoutRequest() {
   );
 }
 
-// Create Account Saga
-function* register({ payload }) {
+function* register(
+  action: ActionWithPayload<
+    RegisterActionTypes.REGISTER_REQUEST,
+    RegisterRequestPayload
+  >
+) {
   try {
-    const registered_account = yield call(registerAPI, payload);
+    const registered_account = yield call(registerAPI, action.payload);
 
     if (
       registered_account.status === "success" &&
@@ -301,9 +332,14 @@ function* watchRegisterRequest() {
   yield takeEvery(RegisterActionTypes.REGISTER_REQUEST, register);
 }
 
-function* activate({ payload }) {
+function* activate(
+  action: ActionWithPayload<
+    ActivateActionTypes.ACTIVATE_REQUEST,
+    ActivatePayload
+  >
+) {
   try {
-    const activated_account = yield call(activateAPI, payload);
+    const activated_account = yield call(activateAPI, action.payload);
 
     if (activated_account.auth_token && !activated_account.tfa_url) {
       yield put(ActivateAccountAction.activateAccountSuccess());
@@ -324,7 +360,7 @@ function* activate({ payload }) {
       );
     } else if (activated_account.tfa_failure) {
       yield call(removeTFAToken); // something failed on the TFA logic
-      yield call(storeSessionToken, registered_account.auth_token);
+      yield call(storeSessionToken, activated_account.auth_token);
       yield put(
         LoginAction.loginPartial({
           error: activated_account.message,
@@ -350,9 +386,14 @@ function* watchActivateRequest() {
   yield takeEvery(ActivateActionTypes.ACTIVATE_REQUEST, activate);
 }
 
-function* resetEmailRequest({ payload }) {
+function* resetEmailRequest(
+  action: ActionWithPayload<
+    ResetPasswordEmailActionTypes.REQUEST_RESET_REQUEST,
+    ResetEmailPayload
+  >
+) {
   try {
-    yield call(requestResetEmailAPI, payload);
+    yield call(requestResetEmailAPI, action.payload);
     yield put(ResetPasswordEmailAction.passwordResetEmailSuccess());
   } catch (error) {
     yield put(
@@ -368,9 +409,14 @@ function* watchResetEmailRequest() {
   );
 }
 
-function* resetPassword({ payload }) {
+function* resetPassword(
+  action: ActionWithPayload<
+    ResetPasswordActionTypes.RESET_PASSWORD_REQUEST,
+    ResetPasswordPayload
+  >
+) {
   try {
-    yield call(ResetPasswordAPI, payload);
+    yield call(ResetPasswordAPI, action.payload);
     yield put(ResetPasswordAction.resetPasswordSuccess());
     yield put(LoginAction.logout());
   } catch (error) {
@@ -406,9 +452,14 @@ function* watchLoadUserList() {
   );
 }
 
-function* updateUserRequest({ payload }) {
+function* updateUserRequest(
+  action: ActionWithPayload<
+    EditAdminUserActionTypes.EDIT_ADMIN_USER_REQUEST,
+    UpdateUserPayload
+  >
+) {
   try {
-    const result = yield call(updateUserAPI, payload);
+    const result = yield call(updateUserAPI, action.payload);
 
     if (result.data) {
       yield call(updateStateFromAdmin, result.data);
@@ -432,17 +483,23 @@ function* watchUpdateUserRequest() {
   );
 }
 
-const getInviteState = state => state.adminUsers.invitesById;
+const getInviteState = (state: ReduxState): InviteByIDs =>
+  state.adminUsers.invitesById;
 
-function* deleteInvite({ payload }) {
+function* deleteInvite(
+  action: ActionWithPayload<
+    DeleteInviteActionTypes.DELETE_INVITE_REQUEST,
+    DeleteInvitePayload
+  >
+) {
   try {
-    const result = yield call(deleteInviteAPI, payload);
+    const result = yield call(deleteInviteAPI, action.payload);
     yield put(DeleteInviteAction.deleteInviteSuccess());
 
     // delete item from local state
     let inviteState = yield select(getInviteState);
     let invites = { ...inviteState };
-    delete invites[payload.body.invite_id];
+    delete invites[action.payload.body.invite_id];
 
     yield put(InviteUserListAction.updateInviteUsers(invites));
     yield put(
@@ -458,9 +515,14 @@ function* watchDeleteInviteRequest() {
   yield takeEvery(DeleteInviteActionTypes.DELETE_INVITE_REQUEST, deleteInvite);
 }
 
-function* inviteUserRequest({ payload }) {
+function* inviteUserRequest(
+  action: ActionWithPayload<
+    InviteUserActionTypes.INVITE_USER_REQUEST,
+    InviteUserPayload
+  >
+) {
   try {
-    const result = yield call(inviteUserAPI, payload);
+    const result = yield call(inviteUserAPI, action.payload);
     yield put(InviteUserAction.inviteUserSuccess());
     yield put(
       MessageAction.addMessage({ error: false, message: result.message })
@@ -476,9 +538,14 @@ function* watchInviteUserRequest() {
   yield takeEvery(InviteUserActionTypes.INVITE_USER_REQUEST, inviteUserRequest);
 }
 
-function* validateTFA({ payload }) {
+function* validateTFA(
+  action: ActionWithPayload<
+    ValidateTfaActionTypes.VALIDATE_TFA_REQUEST,
+    ValidateTfaPayload
+  >
+) {
   try {
-    const validateTFAresponse = yield call(ValidateTFAAPI, payload);
+    const validateTFAresponse = yield call(ValidateTFAAPI, action.payload);
 
     yield put(ValidateTfaAction.validateTFASuccess());
     yield call(updateOrganisationStateFromLoginData, validateTFAresponse);

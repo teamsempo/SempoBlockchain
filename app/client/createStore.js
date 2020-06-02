@@ -1,14 +1,15 @@
 import { createStore, applyMiddleware, compose } from "redux";
 import createSagaMiddleware from "redux-saga";
 import { delayConfiguration } from "pusher-redux";
-import * as Sentry from "@sentry/browser";
 import { createBrowserHistory } from "history";
+import * as Sentry from "@sentry/browser";
 import { version } from "../package.json";
 
 import appReducer from "./reducers/rootReducer";
 import rootSaga from "./sagas/rootSaga";
 
 const sagaMiddleware = createSagaMiddleware();
+export const browserHistory = createBrowserHistory({});
 
 // Setup redux dev tools
 const composeSetup =
