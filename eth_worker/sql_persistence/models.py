@@ -278,8 +278,12 @@ class BlockchainTransaction(ModelBase):
 # When BlockchainTransaction is updated, let the api layer know about it
 @event.listens_for(BlockchainTransaction, 'after_update')
 def receive_after_update(mapper, connection, target):
+    if target.blockchain_task:
+        blockchain_task_uuid = target.blockchain_task.uuid
+    else:
+        blockchain_task_uuid = None
     post_data = {
-            'blockchain_task_uuid': target.blockchain_task.uuid,
+            'blockchain_task_uuid': blockchain_task_uuid,
             'timestamp': time.time(),
             'blockchain_status': target.status,
             'error': target.error,
