@@ -279,44 +279,41 @@ class BlockchainTransaction(ModelBase):
 @event.listens_for(BlockchainTransaction, 'after_update')
 def receive_after_update(mapper, connection, target):
     if target.blockchain_task:
-        blockchain_task_uuid = target.blockchain_task.uuid
-    else:
-        blockchain_task_uuid = None
-    post_data = {
-            'blockchain_task_uuid': blockchain_task_uuid,
-            'timestamp': time.time(),
-            'blockchain_status': target.status,
-            'error': target.error,
-            'message': target.message,
-            'hash': target.hash
-        }
-    callback_url = config.APP_HOST + '/api/v1/blockchain_taskable'
+        post_data = {
+                'blockchain_task_uuid': target.blockchain_task.uuid,
+                'timestamp': time.time(),
+                'blockchain_status': target.status,
+                'error': target.error,
+                'message': target.message,
+                'hash': target.hash
+            }
+        callback_url = config.APP_HOST + '/api/v1/blockchain_taskable'
 
-    try:
-        r = requests.post(
-            callback_url,
-            timeout=5,
-            json=post_data,
-            auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
-                               config.INTERNAL_AUTH_PASSWORD)
-        )
-    except:
-        r = None
+        try:
+            r = requests.post(
+                callback_url,
+                timeout=5,
+                json=post_data,
+                auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                   config.INTERNAL_AUTH_PASSWORD)
+            )
+        except:
+            r = None
 
-    if r and r.ok:
-        obj_table = BlockchainTransaction.__table__
-        connection.execute(
-            obj_table.update().
-            where(obj_table.c.id == target.id).
-            values(is_synchronized_with_app=True)
-        )
-    else:
-        # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
-        # where is_synchronized_with_app=False
-        config.logg.warn(f"Could not reach 'APP_HOST' URL: {callback_url}. Please check your config.ini'")
-        obj_table = BlockchainTransaction.__table__
-        connection.execute(
-            obj_table.update().
-            where(obj_table.c.id == target.id).
-            values(is_synchronized_with_app=False)
-        )
+        if r and r.ok:
+            obj_table = BlockchainTransaction.__table__
+            connection.execute(
+                obj_table.update().
+                where(obj_table.c.id == target.id).
+                values(is_synchronized_with_app=True)
+            )
+        else:
+            # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
+            # where is_synchronized_with_app=False
+            config.logg.warn(f"Could not reach 'APP_HOST' URL: {callback_url}. Please check your config.ini'")
+            obj_table = BlockchainTransaction.__table__
+            connection.execute(
+                obj_table.update().
+                where(obj_table.c.id == target.id).
+                values(is_synchronized_with_app=False)
+            )
