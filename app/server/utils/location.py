@@ -29,8 +29,6 @@ def _set_user_gps_from_location(user_id: int, location: str):
 
     lat, lng = gps_tuple
 
-    print(f"gps_tuple {gps_tuple}")
-
     user = User.query.get(user_id)
     if not user:
         capture_message(f'User not found for id {user_id}')

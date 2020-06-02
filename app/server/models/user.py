@@ -270,7 +270,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             db.session.flush()
             add_after_request_executor_job(
                 async_set_user_gps_from_location,
-                [self.id, location]
+                kwargs={'user_id': self.id, 'location': location}
             )
 
     @hybrid_property
