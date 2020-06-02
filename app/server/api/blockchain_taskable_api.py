@@ -13,7 +13,7 @@ import time
 blockchain_taskable_blueprint = Blueprint('blockchain_taskable', __name__)
 
 class WorkerCallbackAPI(MethodView):
-    #@requires_auth(allowed_basic_auth_types=('internal'))
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
         post_data = request.get_json()
         blockchain_task_uuid = post_data.get('blockchain_task_uuid')

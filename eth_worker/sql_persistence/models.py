@@ -8,7 +8,6 @@ from sqlalchemy import select, func, case, event
 
 import requests
 from requests.auth import HTTPBasicAuth
-import time
 import datetime, base64, os
 from cryptography.fernet import Fernet
 from eth_utils import keccak
