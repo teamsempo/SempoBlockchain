@@ -10,7 +10,7 @@ from server.models.worker_messages import WorkerMessages
 
 from datetime import datetime
 import time
-worker_callback_blueprint = Blueprint('worker_callback', __name__)
+blockchain_taskable_blueprint = Blueprint('blockchain_taskable', __name__)
 
 class WorkerCallbackAPI(MethodView):
     #@requires_auth(allowed_basic_auth_types=('internal'))
@@ -44,8 +44,8 @@ class WorkerCallbackAPI(MethodView):
 
 
 # add Rules for API Endpoints
-worker_callback_blueprint.add_url_rule(
-    '/worker_callback',
-    view_func=WorkerCallbackAPI.as_view('worker_callback_view'),
+blockchain_taskable_blueprint.add_url_rule(
+    '/blockchain_taskable',
+    view_func=WorkerCallbackAPI.as_view('blockchain_taskable_view'),
     methods=['POST']
 )

@@ -1,5 +1,5 @@
 """
-This file tests worker_callback_api.py.
+This file tests blockchain_taskable_api.py.
 """
 import pytest
 import config
@@ -8,7 +8,7 @@ import base64
 from requests.auth import HTTPBasicAuth
 from server.utils.transfer_enums import BlockchainStatus
 
-def test_worker_callback(create_credit_transfer, test_client):
+def test_blockchain_taskable(create_credit_transfer, test_client):
     """
     GIVEN a CreditTransfer model
     WHEN an callback is received
@@ -32,7 +32,7 @@ def test_worker_callback(create_credit_transfer, test_client):
             'message': 'Still Working!',
             'hash': fake_hash
         }
-    callback_url = '/api/v1/worker_callback'
+    callback_url = '/api/v1/blockchain_taskable'
     basic_auth = 'Basic ' + base64.b64encode(bytes(config.INTERNAL_AUTH_USERNAME + ":" + config.INTERNAL_AUTH_PASSWORD, 'ascii')).decode('ascii')
 
     test_client.post(callback_url,
