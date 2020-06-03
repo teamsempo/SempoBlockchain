@@ -66,6 +66,9 @@ class BlockchainTasker(object):
             kwargs=kwargs, queue=queue
         ).id
 
+    def force_third_party_transaction_sync(self):
+        return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions'), {}).id
+
     def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task

@@ -1,12 +1,13 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import db
+from server import db, bt, red
 from server.models.synchronization_filter import SynchronizationFilter
 from server.models.synchronized_block import SynchronizedBlock
 from server.utils.auth import requires_auth
 from server.schemas import synchronization_filter_schema
 
+import json
 
 synchronization_filter_blueprint = Blueprint('synchronization_filter', __name__)
 
@@ -21,8 +22,31 @@ class SynchronizationFilterAPI(MethodView):
         test_filter.blocks.append(test_block)
         test_filter.blocks.append(test_block)
         response_object = {"hi":"hello"}
-        print(test_filter.blocks)
+
+        sync_filters = SynchronizationFilter.query.all()
+        for f in sync_filters:
+            db.session.delete(f)
+        
         db.session.add(test_filter)
+
+        # Build object with all filters, and store it in redis for the worker to consume
+        cachable_sync_filters = []
+        for filter in sync_filters:
+            filter_cache_object = {
+                'id': filter.id,
+                'contract_address': filter.contract_address,
+                'contract_type': filter.contract_type,
+                'last_block_synchronized': filter.last_block_synchronized,
+                'filter_parameters': filter.filter_parameters,
+            }
+            cachable_sync_filters.append(filter_cache_object)
+
+        red.set('third_party_sync_filters', json.dumps(cachable_sync_filters))
+
+        # TODO: Make a function to request individaul transactions
+        bt.force_third_party_transaction_sync()
+
+
         return make_response(jsonify(response_object)), 201
 
     def get(self):

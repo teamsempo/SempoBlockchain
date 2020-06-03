@@ -614,7 +614,8 @@ class TransactionProcessor(object):
         #    fromBlock=10162000,
         #    toBlock='latest',
         #)
-
+        pass
+    
     def retry_task(self, uuid: UUID):
         task = self.persistence_interface.get_task_from_uuid(uuid)
 
