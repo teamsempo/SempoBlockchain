@@ -407,9 +407,17 @@ class OrganisationSchema(SchemaBase):
 
 class TransferUsageSchema(Schema):
     id                  = fields.Int(dump_only=True)
-
     name                = fields.Str()
     default             = fields.Boolean()
+
+class SynchronizationFilterSchema(Schema):
+    id                          = fields.Int(dump_only=True)
+    contract_address            = fields.Str()
+    contract_type               = fields.Str()
+    last_block_synchronized     = fields.Str()
+    filter_parameters           = fields.Str()
+    created                     = fields.DateTime(dump_only=True)
+    updated                     = fields.DateTime(dump_only=True)
 
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
@@ -454,6 +462,8 @@ view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credi
 
 credit_transfer_schema = CreditTransferSchema()
 credit_transfers_schema = CreditTransferSchema(many=True)
+
+synchronization_filter_schema = SynchronizationFilterSchema(many=True)
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
