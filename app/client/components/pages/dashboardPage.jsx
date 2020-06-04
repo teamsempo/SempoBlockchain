@@ -3,9 +3,9 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
-import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
+import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransfer/reducers";
 import { LoginAction } from "../../reducers/auth/actions";
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
+import { loadCreditTransferList } from "../../reducers/creditTransfer/reducers";
 import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
 
 import {

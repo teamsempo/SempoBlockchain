@@ -14,7 +14,7 @@ import {
   EDIT_TRANSFER_ACCOUNT_FAILURE
 } from "../reducers/transferAccountReducer.js";
 
-import { UPDATE_CREDIT_TRANSFER_LIST } from "../reducers/creditTransferReducer";
+import { updateCreditTransferListRequest } from "../reducers/creditTransfer/reducers";
 
 import {
   loadTransferAccountListAPI,
@@ -43,18 +43,12 @@ function* updateStateFromTransferAccount(data) {
 
   const credit_sends = normalizedData.entities.credit_sends;
   if (credit_sends) {
-    yield put({
-      type: UPDATE_CREDIT_TRANSFER_LIST,
-      credit_transfers: credit_sends
-    });
+    yield put(updateCreditTransferListRequest(credit_sends));
   }
 
   const credit_receives = normalizedData.entities.credit_receives;
   if (credit_receives) {
-    yield put({
-      type: UPDATE_CREDIT_TRANSFER_LIST,
-      credit_transfers: credit_receives
-    });
+    yield put(updateCreditTransferListRequest(credit_receives));
   }
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;

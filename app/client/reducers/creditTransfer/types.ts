@@ -1,0 +1,31 @@
+export enum CreditTransferActionTypes {
+  UPDATE_CREDIT_TRANSFER_LIST = "UPDATE_CREDIT_TRANSFER_LIST",
+  PUSHER_CREDIT_TRANSFER = "PUSHER_CREDIT_TRANSFER",
+  CREATE_TRANSFER_REQUEST = "CREATE_TRANSFER_REQUEST",
+  CREATE_TRANSFER_SUCCESS = "CREATE_TRANSFER_SUCCESS",
+  CREATE_TRANSFER_FAILURE = "CREATE_TRANSFER_FAILURE"
+}
+
+export enum LoadCreditTransferActionTypes {
+  LOAD_CREDIT_TRANSFER_LIST_REQUEST = "LOAD_CREDIT_TRANSFER_LIST_REQUEST",
+  LOAD_CREDIT_TRANSFER_LIST_SUCCESS = "LOAD_CREDIT_TRANSFER_LIST_SUCCESS",
+  LOAD_CREDIT_TRANSFER_LIST_FAILURE = "LOAD_CREDIT_TRANSFER_LIST_FAILURE"
+}
+
+export enum ModifyCreditTransferActionTypes {
+  MODIFY_TRANSFER_REQUEST = "MODIFY_TRANSFER_REQUEST",
+  MODIFY_TRANSFER_SUCCESS = "MODIFY_TRANSFER_SUCCESS",
+  MODIFY_TRANSFER_FAILURE = "MODIFY_TRANSFER_FAILURE"
+}
+
+// TODO verify this is the actual format
+export interface CreditTransfer {
+  transfer_subtype: string;
+  transfer_type: string;
+}
+
+// TODO we should only need one of these keys
+export interface CreditTransfers {
+  [key: number]: CreditTransfer;
+  [key: string]: CreditTransfer;
+}

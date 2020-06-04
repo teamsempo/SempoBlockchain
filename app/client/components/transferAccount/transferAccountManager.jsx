@@ -11,7 +11,7 @@ import NewTransferManager from "../management/newTransferManager.jsx";
 import DateTime from "../dateTime.jsx";
 
 import { editTransferAccount } from "../../reducers/transferAccountReducer";
-import { createTransferRequest } from "../../reducers/creditTransferReducer";
+import { createTransferRequest } from "../../reducers/creditTransfer/reducers";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
 

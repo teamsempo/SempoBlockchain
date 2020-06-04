@@ -8,7 +8,7 @@ import { LightTheme } from "../theme.js";
 import CreditTransferListWithFilterWrapper from "../creditTransfer/creditTransferListWithFilterWrapper.jsx";
 import UploadButton from "../uploader/uploadButton.jsx";
 
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
+import { loadCreditTransferList } from "../../reducers/creditTransfer/reducers";
 import organizationWrapper from "../organizationWrapper.jsx";
 
 const mapStateToProps = state => {

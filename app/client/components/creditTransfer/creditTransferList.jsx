@@ -5,7 +5,7 @@ import ReactTable from "react-table";
 
 import { TopRow, StyledSelect } from "../styledElements.js";
 
-import { modifyTransferRequest } from "../../reducers/creditTransferReducer";
+import { modifyTransferRequest } from "../../reducers/creditTransfer/reducers";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
 import DateTime from "../dateTime.jsx";

@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { StyledButton, StyledSelect, ModuleBox } from "../styledElements";
 import AsyncButton from "./../AsyncButton.jsx";
 
-import { createTransferRequest } from "../../reducers/creditTransferReducer";
+import { createTransferRequest } from "../../reducers/creditTransfer/reducers";
 
 const mapStateToProps = state => {
   return {

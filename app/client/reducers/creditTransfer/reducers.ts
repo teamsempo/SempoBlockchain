@@ -1,27 +1,20 @@
 import { combineReducers } from "redux";
-import { DEEEEEEP } from "../utils";
+import { DEEEEEEP } from "../../utils";
+import {
+  CreditTransferActionTypes,
+  LoadCreditTransferActionTypes,
+  ModifyCreditTransferActionTypes
+} from "./types";
 
-export const UPDATE_CREDIT_TRANSFER_LIST = "UPDATE_CREDIT_TRANSFER_LIST";
+import {
+  CreditTransferAction,
+  LoadCreditTransferAction,
+  ModifyCreditTransferAction
+} from "./actions";
 
-export const LOAD_CREDIT_TRANSFER_LIST_REQUEST =
-  "LOAD_CREDIT_TRANSFER_LIST_REQUEST";
-export const LOAD_CREDIT_TRANSFER_LIST_SUCCESS =
-  "LOAD_CREDIT_TRANSFER_LIST_SUCCESS";
-export const LOAD_CREDIT_TRANSFER_LIST_FAILURE =
-  "LOAD_CREDIT_TRANSFER_LIST_FAILURE";
-export const PUSHER_CREDIT_TRANSFER = "PUSHER_CREDIT_TRANSFER";
-
-export const MODIFY_TRANSFER_REQUEST = "MODIFY_TRANSFER_REQUEST";
-export const MODIFY_TRANSFER_SUCCESS = "MODIFY_TRANSFER_SUCCESS";
-export const MODIFY_TRANSFER_FAILURE = "MODIFY_TRANSFER_FAILURE";
-
-export const CREATE_TRANSFER_REQUEST = "CREATE_TRANSFER_REQUEST";
-export const CREATE_TRANSFER_SUCCESS = "CREATE_TRANSFER_SUCCESS";
-export const CREATE_TRANSFER_FAILURE = "CREATE_TRANSFER_FAILURE";
-
-const byId = (state = {}, action) => {
+export const byId = (state = {}, action: CreditTransferAction) => {
   switch (action.type) {
-    case UPDATE_CREDIT_TRANSFER_LIST:
+    case CreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST:
       Object.keys(action.credit_transfers).map(id => {
         let transfer = action.credit_transfers[id];
         if (
@@ -47,15 +40,18 @@ const initialLoadStatusState = {
   success: false
 };
 
-const loadStatus = (state = initialLoadStatusState, action) => {
+const loadStatus = (
+  state = initialLoadStatusState,
+  action: LoadCreditTransferAction
+) => {
   switch (action.type) {
-    case LOAD_CREDIT_TRANSFER_LIST_REQUEST:
+    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST:
       return { ...state, isRequesting: true };
 
-    case LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
+    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
       return { ...state, isRequesting: false, success: true };
 
-    case LOAD_CREDIT_TRANSFER_LIST_FAILURE:
+    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:
@@ -63,24 +59,34 @@ const loadStatus = (state = initialLoadStatusState, action) => {
   }
 };
 
-const initialModifyStatusState = {
+const initialModifyStatusState: ModifyStatusState = {
   isRequesting: false,
   error: null,
   success: null
 };
 
-export const modifyStatus = (state = initialModifyStatusState, action) => {
+interface ModifyStatusState {
+  isRequesting: boolean;
+  error?: string | null;
+  success: boolean | null;
+  data?: any;
+}
+
+export const modifyStatus = (
+  state = initialModifyStatusState,
+  action: ModifyCreditTransferAction
+): ModifyStatusState => {
   switch (action.type) {
-    case MODIFY_TRANSFER_REQUEST:
+    case ModifyCreditTransferActionTypes.MODIFY_TRANSFER_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case MODIFY_TRANSFER_SUCCESS:
+    case ModifyCreditTransferActionTypes.MODIFY_TRANSFER_SUCCESS:
       return {
         ...state,
         isRequesting: false,
         data: action.result.data,
         success: true
       };
-    case MODIFY_TRANSFER_FAILURE:
+    case ModifyCreditTransferActionTypes.MODIFY_TRANSFER_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
     default:
       return state;
@@ -93,13 +99,16 @@ const initialCreateStatusState = {
   success: false
 };
 
-export const createStatus = (state = initialCreateStatusState, action) => {
+export const createStatus = (
+  state = initialCreateStatusState,
+  action: CreditTransferAction
+) => {
   switch (action.type) {
-    case CREATE_TRANSFER_REQUEST:
+    case CreditTransferActionTypes.CREATE_TRANSFER_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case CREATE_TRANSFER_SUCCESS:
+    case CreditTransferActionTypes.CREATE_TRANSFER_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case CREATE_TRANSFER_FAILURE:
+    case CreditTransferActionTypes.CREATE_TRANSFER_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
     default:
       return state;
@@ -111,20 +120,4 @@ export const creditTransfers = combineReducers({
   loadStatus,
   createStatus,
   modifyStatus
-});
-
-// ACTIONS
-export const loadCreditTransferList = payload => ({
-  type: LOAD_CREDIT_TRANSFER_LIST_REQUEST,
-  payload
-});
-
-export const modifyTransferRequest = payload => ({
-  type: MODIFY_TRANSFER_REQUEST,
-  payload
-});
-
-export const createTransferRequest = payload => ({
-  type: CREATE_TRANSFER_REQUEST,
-  payload
 });

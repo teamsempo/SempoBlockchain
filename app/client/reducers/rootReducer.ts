@@ -17,7 +17,7 @@ import {
 } from "./spreadsheetReducer";
 import { ExportReducer } from "./export/reducers";
 import { message } from "./message/reducers";
-import { creditTransfers } from "./creditTransferReducer";
+import { creditTransfers } from "./creditTransfer/reducers";
 import { transferAccounts } from "./transferAccountReducer";
 import { users } from "./user/reducers";
 import { filters } from "./filter/reducers";
