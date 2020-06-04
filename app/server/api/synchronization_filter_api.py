@@ -16,7 +16,7 @@ class SynchronizationFilterAPI(MethodView):
 
     #@requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
-        test_filter = SynchronizationFilter(contract_address = 0, last_block_synchronized = 0)
+        test_filter = SynchronizationFilter(contract_address = '0x0fd6e8f2320c90e9d4b3a5bd888c4d556d20abd4', last_block_synchronized = 10265073)
         print(test_filter)
         test_block = SynchronizedBlock(block_number = 1)
         test_filter.blocks.append(test_block)

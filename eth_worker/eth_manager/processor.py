@@ -609,13 +609,13 @@ class TransactionProcessor(object):
         signature(utils.eth_endpoint('_attempt_transaction'), args=(task.uuid,)).delay()
 
     # Gets blockchain transaction history for given range
-    def get_blockchain_transaction_history(self, start_block, end_block = 'lastest')
+    def get_blockchain_transaction_history(self, start_block, end_block = 'lastest'):
         #erc20_contract.events.Transfer.createFilter(
         #    fromBlock=10162000,
         #    toBlock='latest',
         #)
         pass
-    
+
     def retry_task(self, uuid: UUID):
         task = self.persistence_interface.get_task_from_uuid(uuid)
 
