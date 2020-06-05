@@ -41,7 +41,7 @@ class SynchronizationFilterAPI(MethodView):
             }
             cachable_sync_filters.append(filter_cache_object)
 
-        red.set('third_party_sync_filters', json.dumps(cachable_sync_filters))
+        red.set('THIRD_PARTY_SYNC_FILTERS', json.dumps(cachable_sync_filters))
 
         # TODO: Make a function to request individaul transactions
         bt.force_third_party_transaction_sync()

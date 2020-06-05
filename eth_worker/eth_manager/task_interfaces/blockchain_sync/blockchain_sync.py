@@ -1,0 +1,84 @@
+import json
+from web3 import (
+    Web3,
+    WebsocketProvider,
+    HTTPProvider
+)
+import eth_manager.task_interfaces.blockchain_sync.blockchain_sync_constants as sync_const
+from eth_manager import red, w3
+
+# Hit the database to get the latest block number to which we're synced
+def get_latest_block_number():
+    return w3.eth.getBlock('latest').number
+
+# Call webhook
+def call_webhook():
+    pass
+
+def synchronize_third_party_transactions():
+    # Get list of filters from redis
+    filters = json.loads(red.get(sync_const.THIRD_PARTY_SYNC_FILTERS))
+    # Since the webook will timeout if we ask for too many blocks at once, we have to break 
+    # the range we want into chunks.
+    for f in filters:
+        # We prioritize MAX_ENQUEUED_BLOCK because a block could be enqueued on the worker-side
+        # which the app doesn't know about
+        max_enqueued_block = int(red.get(sync_const.MAX_ENQUEUED_BLOCK % str(f['id'])) or f['last_block_synchronized'])
+        latest_block = get_latest_block_number()
+        number_of_chunks_to_get = (latest_block - max_enqueued_block)
+        # integer division, then add a chunk if there's a remainder
+        number_of_chunks = int(number_of_chunks_to_get/sync_const.BLOCKS_PER_REQUEST) + (number_of_chunks_to_get % BLOCKS_PER_REQUEST > 0)
+        for chunk in range(number_of_chunks):
+            floor = max_enqueued_block + (chunk * sync_const.BLOCKS_PER_REQUEST)
+            ceiling = max_enqueued_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
+            # filter_job objects are just filter objects with floors/ceilings set
+            f['floor'] = floor
+            f['ceiling'] = ceiling
+            red.rpush(sync_const.THIRD_PARTY_SYNC_JOBS, json.dumps(f))
+            red.set(sync_const.MAX_ENQUEUED_BLOCK % str(f['id']), ceiling)
+        # With the jobs set, we can now start processing them
+        process_all_chunks()
+
+# Iterates through all jobs made by synchronize_third_party_transactions
+# Gets and processes them all!
+def process_all_chunks():
+    for filter_job in red.lrange(sync_const.THIRD_PARTY_SYNC_JOBS, 0, -1):
+        filter_job = json.loads(filter_job)
+        transaction_history = get_blockchain_transaction_history(filter_job['contract_address'], filter_job['floor'], filter_job['ceiling'], filter_job['filter_parameters'])
+        for transaction in transaction_history:
+            handle_transaction(transaction)
+        # Only pop the list (delete job from queue) after success
+        red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
+
+# Processes newly found transaction event
+# Creates database object for transaction
+# Calls webhook
+# Sets sync status (whether or not webhook was successful)
+def handle_transaction(transaction):
+    print(
+        f"""
+        Found transaction {transaction.transactionHash.hex()}
+        Block: {transaction.blockNumber}
+        From: {transaction.args['from']}
+        To: {transaction.args['to']}
+        Amount: {transaction.args['value']}""")
+
+# Gets blockchain transaction history for given range
+def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None):
+    print('GETTING TX HISTORY FOR')
+    print(start_block)
+    print(end_block)
+    erc20_contract = w3.eth.contract(
+        address = Web3.toChecksumAddress(contract_address),
+        abi = sync_const.ERC20_ABI
+    )
+
+    filter = erc20_contract.events.Transfer.createFilter(
+        fromBlock = start_block,
+        toBlock = end_block,
+        argument_filters = argument_filters
+    )
+
+    for event in filter.get_all_entries():
+        yield event
+    pass

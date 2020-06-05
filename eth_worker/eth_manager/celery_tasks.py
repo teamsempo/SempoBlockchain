@@ -5,7 +5,7 @@ from celery import signals
 
 import config
 import eth_manager.task_interfaces.composite
-import eth_manager.task_interfaces.blockchain_sync_utils
+from eth_manager.task_interfaces.blockchain_sync import blockchain_sync
 from eth_manager import celery_app, blockchain_processor, persistence_interface
 from eth_manager.exceptions import (
     LockedNotAcquired
@@ -76,14 +76,7 @@ processor_task_config = {
 
 @celery_app.task(**low_priority_config)
 def synchronize_third_party_transactions(self):
-    eth_manager.task_interfaces.blockchain_sync_utils.synchronize_third_party_transactions()
-    print('aaazzz')
-    print("synchronize_third_party_transactions")
-    print("synchronize_third_party_transactions")
-    print("synchronize_third_party_transactions")
-    print("synchronize_third_party_transactions")
-    print("synchronize_third_party_transactions")
-    return True
+    return blockchain_sync.synchronize_third_party_transactions()
 
 @celery_app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):
