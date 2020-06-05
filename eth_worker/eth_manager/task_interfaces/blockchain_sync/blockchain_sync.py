@@ -65,9 +65,6 @@ def handle_transaction(transaction):
 
 # Gets blockchain transaction history for given range
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None):
-    print('GETTING TX HISTORY FOR')
-    print(start_block)
-    print(end_block)
     erc20_contract = w3.eth.contract(
         address = Web3.toChecksumAddress(contract_address),
         abi = sync_const.ERC20_ABI
