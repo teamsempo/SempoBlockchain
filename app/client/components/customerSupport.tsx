@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import Intercom, { IntercomAPI } from "react-intercom";
 import { ReduxState } from "../reducers/rootReducer";
 
-export function CustomerSupport() {
+export default function CustomerSupport() {
   const login = useSelector((state: ReduxState) => state.login);
   const activeOrganisation = useSelector((state: ReduxState) => state.login.organisationId ? state.organisations.byId[state.login.organisationId] : null);
   function openChat() {
