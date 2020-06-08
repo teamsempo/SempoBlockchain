@@ -18,8 +18,26 @@ def get_latest_block_number():
     return w3.eth.getBlock('latest').number
 
 # Call webhook
-def call_webhook():
-    pass
+def call_webhook(transaction):
+    body = {
+        'sender_blockchain_address': transaction.sender_address,
+        'recipient_blockchain_address': transaction.recipient_address,
+        'blockchain_transaction_hash': transaction.hash,
+        'transfer_amount': float(transaction.amount), # Change this type later
+        'contract_address': transaction.contract_address
+    }
+    print(body)
+    print('APP HOST!')
+    print(config.APP_HOST)
+    print('RIGHT HERE')
+    import time
+    time.sleep(2)
+    r = requests.post(config.APP_HOST + '/api/v1/credit_transfer/internal/',
+                      json=body,
+                      auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                         config.INTERNAL_AUTH_PASSWORD)
+                    )
+    return r
 
 def synchronize_third_party_transactions():
     # Get list of filters from redis
@@ -71,13 +89,11 @@ def handle_transaction(transaction, filter_job):
     print("filter_job")
     print(filter_job)
     transaction_object = persistence_interface.create_external_transaction(
-        id = transaction.transactionHash.hex(),
         status = 'SUCCESS',
         block = transaction.blockNumber,
         hash = str(transaction.transactionHash),
         contract_address = transaction.address,
         is_synchronized_with_app = False,
-        blockchain_task_id = transaction.transactionHash.hex(),
         recipient_address = transaction.args['to'],
         sender_address = transaction.args['from'],
         amount = transaction.args['value']
@@ -85,28 +101,11 @@ def handle_transaction(transaction, filter_job):
 
     print(transaction_object)
     print('Adding tx')
-    body = {
-        'sender_blockchain_address': transaction_object.sender_address,
-        'recipient_blockchain_address': transaction_object.recipient_address,
-        'blockchain_transaction_hash': transaction.transactionHash.hex(),
-        'transfer_amount': transaction_object.amount,
-        'contract_address': filter_job['contract_address']
-    }
-    print(body)
-    print('APP HOST!')
-    print(config.APP_HOST)
-    print('RIGHT HERE')
-    import time
-    time.sleep(2)
-    r = requests.post(config.APP_HOST + '/api/v1/credit_transfer/internal/',
-                      json=body,
-                      auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
-                                         config.INTERNAL_AUTH_PASSWORD))
-
-    print(r)
-    print(r.text)
+    call_webhook(transaction_object)
+    # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
+    # in order to be retryable later
+    persistence_interface.mark_transaction_as_completed(transaction_object)
     # Only pop the list (delete job from queue) after success
-    transaction.is_synchronized_with_app = True
     red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
 
 
