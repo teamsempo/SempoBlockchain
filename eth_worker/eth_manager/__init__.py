@@ -59,15 +59,20 @@ celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
                     backend=config.REDIS_URL,
                     task_serializer='json')
+celery_app.conf.update(redbeat_redis_url=config.REDIS_URL)
 
 celery_app.conf.beat_schedule = {
+    'third-party-transaction-sync': {
+        'task': 'synchronize_third_party_transactions',
+        'schedule': 300, # Every 5 minutes (500s)
+    },
     "maintain_eth_balances": {
         "task": utils.eth_endpoint('topup_wallets'),
         "schedule": 600.0
     },
 }
 
-w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+w3 = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
 red = redis.Redis.from_url(config.REDIS_URL)
 

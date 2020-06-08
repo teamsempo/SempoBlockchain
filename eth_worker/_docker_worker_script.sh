@@ -8,7 +8,7 @@ if [ "$CONTAINER_MODE" = 'TEST' ]; then
   echo pass
 elif [ "$CONTAINER_TYPE" == 'BEAT' ]; then
   echo "Starting Beat Worker"
-  celery -A eth_manager beat --loglevel=WARNING
+  celery beat -S redbeat.RedBeatScheduler -A eth_manager --loglevel=WARNING
 elif [ "$CONTAINER_TYPE" == 'FILTER' ]; then
   python ethereum_filter_test.py
 elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then

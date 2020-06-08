@@ -2,6 +2,5 @@
 
 #echo cheese
 
-celery -A worker beat --loglevel=WARNING
-
+celery beat -S redbeat.RedBeatScheduler -A eth_manager --loglevel=WARNING
 #-A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet
