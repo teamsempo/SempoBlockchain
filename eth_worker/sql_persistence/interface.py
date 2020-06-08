@@ -387,6 +387,22 @@ class SQLPersistenceInterface(object):
 
         return wallet
 
+    def create_external_transaction(self, id, status, block, hash, contract_address, is_synchronized_with_app, blockchain_task_id, recipient_address, sender_address, amount):
+        transaction_object = BlockchainTransaction(
+            id = id,
+            _status = status,
+            block = block,
+            hash = hash,
+            contract_address = contract_address,
+            is_synchronized_with_app = is_synchronized_with_app,
+            blockchain_task_id = blockchain_task_id,
+            recipient_address = recipient_address,
+            sender_address = sender_address,
+            amount = amount
+        )   
+        self.session.add(transaction_object)
+        return transaction_object
+
     def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
 
         if private_key:

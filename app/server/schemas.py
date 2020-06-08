@@ -416,6 +416,7 @@ class SynchronizationFilterSchema(Schema):
     contract_type               = fields.Str()
     last_block_synchronized     = fields.Str()
     filter_parameters           = fields.Str()
+    filter_type                 = fields.Str()
     created                     = fields.DateTime(dump_only=True)
     updated                     = fields.DateTime(dump_only=True)
 

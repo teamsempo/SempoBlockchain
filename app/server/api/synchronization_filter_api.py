@@ -16,12 +16,10 @@ class SynchronizationFilterAPI(MethodView):
 
     #@requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
-        test_filter = SynchronizationFilter(contract_address = '0x0fd6e8f2320c90e9d4b3a5bd888c4d556d20abd4', last_block_synchronized = 10265073)
+        test_filter = SynchronizationFilter(contract_address = '0x0fd6e8f2320c90e9d4b3a5bd888c4d556d20abd4', last_block_synchronized = 10337162)
         print(test_filter)
         test_block = SynchronizedBlock(block_number = 1)
         test_filter.blocks.append(test_block)
-        test_filter.blocks.append(test_block)
-        response_object = {"hi":"hello"}
 
         sync_filters = SynchronizationFilter.query.all()
         for f in sync_filters:
@@ -38,6 +36,7 @@ class SynchronizationFilterAPI(MethodView):
                 'contract_type': filter.contract_type,
                 'last_block_synchronized': filter.last_block_synchronized,
                 'filter_parameters': filter.filter_parameters,
+                'filter_type': filter.filter_type
             }
             cachable_sync_filters.append(filter_cache_object)
 
@@ -46,8 +45,7 @@ class SynchronizationFilterAPI(MethodView):
         # TODO: Make a function to request individaul transactions
         bt.force_third_party_transaction_sync()
 
-
-        return make_response(jsonify(response_object)), 201
+        return make_response(jsonify(filter_cache_object)), 201
 
     def get(self):
         sync_filters = SynchronizationFilter.query.all()

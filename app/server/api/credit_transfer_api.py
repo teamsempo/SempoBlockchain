@@ -419,16 +419,17 @@ class ConfirmWithdrawalAPI(MethodView):
 
 
 class InternalCreditTransferAPI(MethodView):
-
-    @requires_auth
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
+        print('THIS WORKS AT LEAST!!!')
         post_data = request.get_json()
-
+        print(post_data)
         transfer_amount = abs(round(float(post_data.get('transfer_amount') or 0),6))
 
         sender_blockchain_address = post_data.get('sender_blockchain_address')
         recipient_blockchain_address = post_data.get('recipient_blockchain_address')
         blockchain_transaction_hash = post_data.get('blockchain_transaction_hash')
+        contract_address = post_data.get('contract_address')
 
         send_address_obj = (BlockchainAddress.query
                             .filter_by(address=sender_blockchain_address)
@@ -438,20 +439,21 @@ class InternalCreditTransferAPI(MethodView):
                             .filter_by(address=recipient_blockchain_address)
                             .first())
 
-        if not send_address_obj and not receive_address_obj:
-            response_object = {
-                'message': 'Neither sender nor receiver found for {} and {}'.format(sender_blockchain_address,
-                                                                                    recipient_blockchain_address),
-            }
-            return make_response(jsonify(response_object)), 404
+        token = Token.query.filter_by(address=contract_address)
 
-        # TODO: Handle inbounds to master wallet
-        transfer = make_blockchain_transfer(transfer_amount,
-                                            sender_blockchain_address,
-                                            recipient_blockchain_address,
-                                            existing_blockchain_txn=blockchain_transaction_hash,
-                                            require_sufficient_balance=False,
-                                            transfer_mode=TransferModeEnum.INTERNAL)
+        transfer = CreditTransfer(
+            transfer_amount,
+            token=token,
+            sender_user=send_user,
+            sender_transfer_account=send_transfer_account,
+            recipient_user=receive_user,
+            recipient_transfer_account=receive_transfer_account,
+            uuid=uuid,
+            transfer_type=TransferTypeEnum.PAYMENT,
+            transfer_subtype=transfer_subtype,
+            transfer_mode=transfer_mode,
+            is_ghost_transfer=is_ghost_transfer
+        )
 
         db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
