@@ -1,16 +1,17 @@
 import json
 from uuid import uuid4
+import config
+import requests
+from requests.auth import HTTPBasicAuth
 
 from web3 import (
     Web3,
     WebsocketProvider,
     HTTPProvider
 )
-
 from sql_persistence.models import BlockchainTransaction, BlockchainTask
-
 import eth_manager.task_interfaces.blockchain_sync.blockchain_sync_constants as sync_const
-from eth_manager import red, w3
+from eth_manager import red, w3, persistence_interface
 
 # Hit the database to get the latest block number to which we're synced
 def get_latest_block_number():
@@ -29,8 +30,12 @@ def synchronize_third_party_transactions():
         # We prioritize MAX_ENQUEUED_BLOCK because a block could be enqueued on the worker-side
         # which the app doesn't know about
         max_enqueued_block = int(red.get(sync_const.MAX_ENQUEUED_BLOCK % str(f['id'])) or f['last_block_synchronized'])
+        max_enqueued_block = int(red.get(sync_const.MAX_ENQUEUED_BLOCK % str(f['id'])) or f['last_block_synchronized'])
         latest_block = get_latest_block_number()
         number_of_chunks_to_get = (latest_block - max_enqueued_block)
+        print(max_enqueued_block)
+        print(latest_block)
+        print(number_of_chunks_to_get)
         # integer division, then add a chunk if there's a remainder
         number_of_chunks = int(number_of_chunks_to_get/sync_const.BLOCKS_PER_REQUEST) + (number_of_chunks_to_get % sync_const.BLOCKS_PER_REQUEST > 0)
         for chunk in range(number_of_chunks):
@@ -49,23 +54,25 @@ def synchronize_third_party_transactions():
 def process_all_chunks():
     for filter_job in red.lrange(sync_const.THIRD_PARTY_SYNC_JOBS, 0, -1):
         filter_job = json.loads(filter_job)
-        transaction_history = get_blockchain_transaction_history(filter_job['contract_address'], filter_job['floor'], filter_job['ceiling'], filter_job['filter_parameters'])
+        transaction_history = get_blockchain_transaction_history(
+            filter_job['contract_address'], 
+            filter_job['floor'], 
+            filter_job['ceiling'], 
+            filter_job['filter_parameters']
+        )
         for transaction in transaction_history:
-            handle_transaction(transaction)
-        # Only pop the list (delete job from queue) after success
-        red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
+            handle_transaction(transaction, filter_job)
 
 # Processes newly found transaction event
 # Creates database object for transaction
 # Calls webhook
 # Sets sync status (whether or not webhook was successful)
-def handle_transaction(transaction):
-    # Since the task and transaction are already done, make an arbitrary uuid to join them
-    uuid = str(uuid4())
-
-    transaction_object = BlockchainTransaction(
+def handle_transaction(transaction, filter_job):
+    print("filter_job")
+    print(filter_job)
+    transaction_object = persistence_interface.create_external_transaction(
         id = transaction.transactionHash.hex(),
-        _status = 'SUCCESS',
+        status = 'SUCCESS',
         block = transaction.blockNumber,
         hash = str(transaction.transactionHash),
         contract_address = transaction.address,
@@ -75,11 +82,39 @@ def handle_transaction(transaction):
         sender_address = transaction.args['from'],
         amount = transaction.args['value']
     )
+
     print(transaction_object)
     print('Adding tx')
+    body = {
+        'sender_blockchain_address': transaction_object.sender_address,
+        'recipient_blockchain_address': transaction_object.recipient_address,
+        'blockchain_transaction_hash': transaction.transactionHash.hex(),
+        'transfer_amount': transaction_object.amount,
+        'contract_address': filter_job['contract_address']
+    }
+    print(body)
+    print('APP HOST!')
+    print(config.APP_HOST)
+    print('RIGHT HERE')
+    import time
+    time.sleep(2)
+    r = requests.post(config.APP_HOST + '/api/v1/credit_transfer/internal/',
+                      json=body,
+                      auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                         config.INTERNAL_AUTH_PASSWORD))
+
+    print(r)
+    print(r.text)
+    # Only pop the list (delete job from queue) after success
+    transaction.is_synchronized_with_app = True
+    red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
+
 
 # Gets blockchain transaction history for given range
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None):
+    print(contract_address)
+    print(start_block)
+    print(end_block)
     erc20_contract = w3.eth.contract(
         address = Web3.toChecksumAddress(contract_address),
         abi = sync_const.ERC20_ABI
@@ -92,5 +127,6 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
     )
 
     for event in filter.get_all_entries():
+        print(event)
         yield event
     pass
