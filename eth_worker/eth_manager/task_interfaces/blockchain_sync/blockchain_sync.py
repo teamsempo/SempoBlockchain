@@ -85,6 +85,7 @@ def process_all_chunks():
 # Creates database object for transaction
 # Calls webhook
 # Sets sync status (whether or not webhook was successful)
+# Fallback if something goes wrong at this level: `is_synchronized_with_app` flag. Can batch unsynced stuff
 def handle_transaction(transaction, filter_job):
     print("filter_job")
     print(filter_job)
@@ -110,10 +111,8 @@ def handle_transaction(transaction, filter_job):
 
 
 # Gets blockchain transaction history for given range
+# Fallback if something goes wrong at this level: block-tracking table
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None):
-    print(contract_address)
-    print(start_block)
-    print(end_block)
     erc20_contract = w3.eth.contract(
         address = Web3.toChecksumAddress(contract_address),
         abi = sync_const.ERC20_ABI
