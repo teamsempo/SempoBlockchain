@@ -1,9 +1,14 @@
 import json
+from uuid import uuid4
+
 from web3 import (
     Web3,
     WebsocketProvider,
     HTTPProvider
 )
+
+from sql_persistence.models import BlockchainTransaction, BlockchainTask
+
 import eth_manager.task_interfaces.blockchain_sync.blockchain_sync_constants as sync_const
 from eth_manager import red, w3
 
@@ -27,7 +32,7 @@ def synchronize_third_party_transactions():
         latest_block = get_latest_block_number()
         number_of_chunks_to_get = (latest_block - max_enqueued_block)
         # integer division, then add a chunk if there's a remainder
-        number_of_chunks = int(number_of_chunks_to_get/sync_const.BLOCKS_PER_REQUEST) + (number_of_chunks_to_get % BLOCKS_PER_REQUEST > 0)
+        number_of_chunks = int(number_of_chunks_to_get/sync_const.BLOCKS_PER_REQUEST) + (number_of_chunks_to_get % sync_const.BLOCKS_PER_REQUEST > 0)
         for chunk in range(number_of_chunks):
             floor = max_enqueued_block + (chunk * sync_const.BLOCKS_PER_REQUEST)
             ceiling = max_enqueued_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
@@ -55,13 +60,23 @@ def process_all_chunks():
 # Calls webhook
 # Sets sync status (whether or not webhook was successful)
 def handle_transaction(transaction):
-    print(
-        f"""
-        Found transaction {transaction.transactionHash.hex()}
-        Block: {transaction.blockNumber}
-        From: {transaction.args['from']}
-        To: {transaction.args['to']}
-        Amount: {transaction.args['value']}""")
+    # Since the task and transaction are already done, make an arbitrary uuid to join them
+    uuid = str(uuid4())
+
+    transaction_object = BlockchainTransaction(
+        id = transaction.transactionHash.hex(),
+        _status = 'SUCCESS',
+        block = transaction.blockNumber,
+        hash = str(transaction.transactionHash),
+        contract_address = transaction.address,
+        is_synchronized_with_app = False,
+        blockchain_task_id = transaction.transactionHash.hex(),
+        recipient_address = transaction.args['to'],
+        sender_address = transaction.args['from'],
+        amount = transaction.args['value']
+    )
+    print(transaction_object)
+    print('Adding tx')
 
 # Gets blockchain transaction history for given range
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None):
