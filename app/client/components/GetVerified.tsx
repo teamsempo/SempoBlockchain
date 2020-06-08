@@ -1,59 +1,40 @@
-import React from "react";
-import { connect } from "react-redux";
+import React, {useEffect} from "react";
 import styled from "styled-components";
+import { useSelector, useDispatch } from "react-redux";
 
 import {
   loadBusinessProfile,
   RESET_ACTIVE_STEP_STATE,
-  RESET_BUSINESS_VERIFICATION_STATE,
-  UPDATE_ACTIVE_STEP
+  RESET_BUSINESS_VERIFICATION_STATE
 } from "../reducers/businessVerificationReducer";
 
-import LoadingSpinner from "./loadingSpinner.jsx";
+import LoadingSpinner from "./loadingSpinner.js";
 import { Link } from "react-router-dom";
+import { ReduxState } from "../reducers/rootReducer";
 
-const mapStateToProps = state => {
-  return {
-    adminTier: state.login.adminTier,
-    loadStatus: state.businessVerification.loadStatus,
-    businessProfile: state.businessVerification.businessVerificationState
-  };
-};
+interface Props {
+  userId: number
+}
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadBusinessProfile: query => dispatch(loadBusinessProfile({ query })),
-    clearUserId: () => dispatch({ type: RESET_ACTIVE_STEP_STATE }),
-    clearBusienssState: () =>
-      dispatch({ type: RESET_BUSINESS_VERIFICATION_STATE })
-  };
-};
+export default function GetVerified(props: Props) {
+  const adminTier = useSelector((state: ReduxState) => state.login.adminTier)
+  const loadStatus = useSelector((state: ReduxState) => state.businessVerification.loadStatus)
+  const businessProfile = useSelector((state: ReduxState) => state.businessVerification.businessVerificationState)
+  const dispatch = useDispatch();
+  const { userId } = props
 
-class GetVerified extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
-
-  componentWillMount() {
-    const { userId } = this.props;
-    this.props.clearUserId({ userId: userId });
-    this.props.clearBusienssState();
-  }
-
-  componentDidMount() {
-    const { userId } = this.props;
+  useEffect(() => {
+    dispatch({ type: RESET_ACTIVE_STEP_STATE })
+    dispatch({ type: RESET_BUSINESS_VERIFICATION_STATE })
     let query;
     if (userId) {
       query = { user_id: userId };
     }
-    this.props.loadBusinessProfile(query);
-  }
+    dispatch(loadBusinessProfile({ query }))
+  }, [])
 
-  render() {
-    let { loadStatus, businessProfile, adminTier, userId } = this.props;
     var iconColor = "#ff1705";
-    var text = "Please contact support.";
+    var text: React.ReactFragment = "Please contact support.";
     var addFunds = null;
 
     if (loadStatus.isRequesting) {
@@ -66,7 +47,7 @@ class GetVerified extends React.Component {
 
     if (
       businessProfile.kyc_status === "INCOMPLETE" ||
-      !Object.values(businessProfile).length > 0
+      !(Object.values(businessProfile).length > 0)
     ) {
       if (adminTier === "superadmin") {
         text = <Link to="settings/verification">Get Verified</Link>;
@@ -107,12 +88,7 @@ class GetVerified extends React.Component {
         </StyledAccountWrapper>
       </div>
     );
-  }
 }
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(GetVerified);
 
 const WrapperDiv = styled.div`
   display: flex;
