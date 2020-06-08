@@ -13,13 +13,4 @@ celery_app = Celery('tasks',
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
-# TODO: Beat the new sync task here
-#
-#    celery_app.conf.beat_schedule = {
-#        "test_task": {
-#            "task": "worker.celery_tasks.find_new_ouputs",
-#            "schedule": 24.0
-#        },
-#    }
-
 import worker.celery_tasks

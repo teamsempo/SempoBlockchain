@@ -401,7 +401,12 @@ class SQLPersistenceInterface(object):
             amount = amount
         )   
         self.session.add(transaction_object)
+        self.session.commit()
         return transaction_object
+
+    def mark_transaction_as_completed(self, transaction):
+        transaction.is_synchronized_with_app = True
+        return transaction
 
     def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
 
