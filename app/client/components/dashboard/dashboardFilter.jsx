@@ -7,7 +7,7 @@ import { StyledButton } from "../styledElements";
 import moment from "moment";
 import Filter from "../filter";
 import { processFiltersForQuery } from "../../utils";
-import { browserHistory } from "../../app";
+import { browserHistory } from "../../createStore.js";
 
 const mapStateToProps = state => {
   return {

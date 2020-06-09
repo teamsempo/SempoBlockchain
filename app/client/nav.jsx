@@ -57,7 +57,7 @@ import {
 } from "./components/styledElements";
 import { ThemeProvider } from "styled-components";
 import { DefaultTheme } from "./components/theme.js";
-import { browserHistory } from "./app.jsx";
+import { browserHistory } from "./createStore.js";
 import LoadingSpinner from "./components/loadingSpinner.jsx";
 import NavBar from "./components/navBar";
 

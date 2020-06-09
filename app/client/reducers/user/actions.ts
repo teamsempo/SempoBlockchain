@@ -5,7 +5,7 @@ import {
   EditUserActionTypes,
   LoadUserActionTypes,
   ResetPinActionTypes,
-  User,
+  UserByIDs,
   LoadUserRequestPayload,
   CreateUserPayload,
   ResetPinPayload,
@@ -16,9 +16,9 @@ import {
 import { createAction, ActionsUnion } from "../../reduxUtils";
 
 export const UserListAction = {
-  updateUserList: (users: User[]) =>
+  updateUserList: (users: UserByIDs) =>
     createAction(UserListActionTypes.UPDATE_USER_LIST, users),
-  deepUpdateUserList: (users: User[]) =>
+  deepUpdateUserList: (users: UserByIDs) =>
     createAction(UserListActionTypes.DEEP_UPDATE_USER_LIST, users)
 };
 export type UserListAction = ActionsUnion<typeof UserListAction>;

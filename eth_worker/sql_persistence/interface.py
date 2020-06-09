@@ -1,4 +1,5 @@
 import datetime
+from typing import Tuple
 from sqlalchemy import and_, or_
 
 from sempo_types import UUID, UUIDList
@@ -9,11 +10,10 @@ from sql_persistence.models import (
     BlockchainWallet
 )
 
-from eth_manager.exceptions import (
-    WalletExistsError,
-    LockedNotAcquired
+from exceptions import (
+    WalletExistsError
 )
-from sqlalchemy.orm import scoped_session
+
 class SQLPersistenceInterface(object):
 
     def _fail_expired_transactions(self):
@@ -87,33 +87,57 @@ class SQLPersistenceInterface(object):
 
         return next_nonce
 
-    def locked_claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
-        lock = self.red.lock(signing_wallet_obj.address, timeout=600)
+    def locked_claim_transaction_nonce(
+            self,
+            network_nonce,
+            signing_wallet_id: int,
+            transaction_id: int
+    ) -> Tuple[int, int]:
+        """
+        Claim a transaction a nonce for a particular transaction, using a lock to prevent another transaction
+        from accidentially claiming the same nonce.
+
+        :param network_nonce: the highest nonce that we know has been claimed on chain
+        :param signing_wallet_id: the wallet object that will be used to sign the transaction
+        :param transaction_id: the id of the transaction object
+        :return: a tuple of the claimed nonce, and the transaction_id (transaction_id is passed through for chaining)
+        """
+
+        signing_wallet = self.session.query(BlockchainWallet).get(signing_wallet_id)
+        transaction = self.session.query(BlockchainTransaction).get(transaction_id)
+
+        lock = self.red.lock(signing_wallet.address, timeout=600)
         print(f'Attempting lock for txn: {transaction_id} \n'
-              f'addr:{signing_wallet_obj.address}')
+              f'addr:{signing_wallet.address}')
         # Commits here are because the database would sometimes timeout during a long lock
         # and could not cleanly restart with uncommitted data in the session. Committing before
         # the lock, and then once it's reclaimed lets the session gracefully refresh if it has to.
         self.session.commit()
         with lock:
             self.session.commit()
-            self.session.refresh(signing_wallet_obj)
-            ct = self.claim_transaction_nonce(signing_wallet_obj, transaction_id)
+            self.session.refresh(signing_wallet)
+
+            ct = self._claim_transaction_nonce(network_nonce, signing_wallet, transaction)
             return ct
 
-    def claim_transaction_nonce(self, signing_wallet_obj, transaction_id):
-        network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
-        blockchain_transaction = self.session.query(BlockchainTransaction).get(transaction_id)
+    def _claim_transaction_nonce(
+            self,
+            network_nonce: int,
+            signing_wallet: BlockchainWallet,
+            transaction: BlockchainTransaction,
+    ) -> Tuple[int, int]:
 
-        if blockchain_transaction.nonce is not None:
-            return blockchain_transaction.nonce, blockchain_transaction.id
-        calculated_nonce = self._calculate_nonce(signing_wallet_obj, network_nonce)
-        blockchain_transaction.signing_wallet = signing_wallet_obj
-        blockchain_transaction.nonce = calculated_nonce
-        blockchain_transaction.status = 'PENDING'
+        if transaction.nonce is not None:
+            return transaction.nonce, transaction.id
+        calculated_nonce = self._calculate_nonce(signing_wallet, network_nonce)
+        transaction.signing_wallet = signing_wallet
+        transaction.nonce = calculated_nonce
+        transaction.status = 'PENDING'
+
+        # TODO: can we shift this commit out?
         self.session.commit()
 
-        return calculated_nonce, blockchain_transaction.id
+        return calculated_nonce, transaction.id
 
     def update_transaction_data(self, transaction_id, transaction_data):
 
@@ -336,9 +360,6 @@ class SQLPersistenceInterface(object):
 
         return query
 
-    def get_failed_tasks(self, min_task_id=None, max_task_id=None):
-        return self._get_tasks_by_status('FAILED', min_task_id, max_task_id)
-
     def _get_tasks_by_status(self, status, min_task_id, max_task_id):
         query = self.session.query(BlockchainTask) \
             .filter(BlockchainTask.status == status) \
@@ -443,16 +464,12 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def __init__(self, w3, red, session_factory, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
-
-        self.w3 = w3
+    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 
         self.red = red
 
-        self.session_factory = session_factory
-
-        self.session = scoped_session(session_factory)
+        self.session = session
         
-        self.first_block_hash = w3.eth.getBlock(0).hash.hex()
+        self.first_block_hash = first_block_hash
 
         self.PENDING_TRANSACTION_EXPIRY_SECONDS = PENDING_TRANSACTION_EXPIRY_SECONDS

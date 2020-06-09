@@ -4,31 +4,24 @@ from celery import Celery
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 import redis, requests
-from time import sleep
 
-from requests.exceptions import ConnectionError
 from requests.auth import HTTPBasicAuth
 from web3 import (
     Web3,
-    WebsocketProvider,
     HTTPProvider
 )
 
 from web3.exceptions import BadFunctionCallOutput
 
-from sqlalchemy.pool import NullPool
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.orm import scoped_session
-
 import os
 import sys
+
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(parent_dir)
 sys.path.append(os.getcwd())
 
 import config
+from sql_persistence import session
 from sql_persistence.interface import SQLPersistenceInterface
 
 from eth_manager.ABIs import (
@@ -40,7 +33,6 @@ from eth_manager.ABIs import (
 
 from eth_manager.processor import TransactionProcessor
 from eth_manager.contract_registry import ContractRegistry
-from eth_manager.exceptions import WalletExistsError
 from eth_manager import utils
 
 sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
@@ -76,24 +68,17 @@ w3 = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
-engine = create_engine(
-    config.ETH_DATABASE_URI,
-    poolclass=NullPool,
-    connect_args={'connect_timeout': 5},
-    pool_pre_ping=True,
-    echo=False,
-    echo_pool=False,
+first_block_hash = w3.eth.getBlock(0).hash.hex()
+
+persistence_module = SQLPersistenceInterface(
+    red=red, session=session, first_block_hash=first_block_hash
 )
-
-session_factory = sessionmaker(autocommit=False, autoflush=True, bind=engine)
-
-persistence_interface = SQLPersistenceInterface(w3=w3, red=red, session_factory=session_factory)
 
 blockchain_processor = TransactionProcessor(
     **eth_config,
     w3=w3,
     red=red,
-    persistence_interface=persistence_interface
+    peristence_module=persistence_module
 )
 
 import eth_manager.celery_tasks
@@ -107,7 +92,7 @@ import eth_manager.celery_tasks
 # Register the master wallet so we can use it for tasks
 
 if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
-    persistence_interface.create_blockchain_wallet_from_private_key(
+    persistence_module.create_blockchain_wallet_from_private_key(
         config.MASTER_WALLET_PRIVATE_KEY,
         allow_existing=True
     )

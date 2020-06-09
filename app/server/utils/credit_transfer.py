@@ -177,8 +177,6 @@ def make_blockchain_transfer(transfer_amount,
     if automatically_resolve_complete:
         transfer.resolve_as_completed(existing_blockchain_txn=existing_blockchain_txn)
 
-    pusher.push_admin_credit_transfer(transfer)
-
     return transfer
 
 
@@ -197,7 +195,6 @@ def make_payment_transfer(transfer_amount,
                           uuid=None,
                           transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
                           is_ghost_transfer=False,
-                          enable_pusher=True,
                           queue='high-priority'):
     """
     This is used for internal transfers between Sempo wallets.
@@ -287,8 +284,6 @@ def make_payment_transfer(transfer_amount,
 
     if automatically_resolve_complete:
         transfer.resolve_as_completed(queue=queue)
-        if enable_pusher:
-            pusher.push_admin_credit_transfer(transfer)
 
     if make_cashout_incentive_transaction:
         try:
@@ -346,7 +341,6 @@ def make_withdrawal_transfer(transfer_amount,
 
     if automatically_resolve_complete:
         transfer.resolve_as_completed()
-        pusher.push_admin_credit_transfer(transfer)
 
     return transfer
 
@@ -378,7 +372,6 @@ def make_deposit_transfer(transfer_amount,
 
     if automatically_resolve_complete:
         transfer.resolve_as_completed()
-        pusher.push_admin_credit_transfer(transfer)
 
     return transfer
 

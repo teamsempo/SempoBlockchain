@@ -17,6 +17,7 @@ jobs:
             cd config_files
             python generate_secrets.py -n docker_test
 
+      # First bring node modules up to date
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
@@ -24,9 +25,20 @@ jobs:
             - node-v1-{{ .Branch }}-
             - node-v1-
       - run:
+          name: Install Node
+          command: |
+            cd ./app
+            npm install
+      - save_cache:
+          paths:
+            - ~/project/app/node_modules
+          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+
+      # Then, if the src or packages have changed run a new build
+      - run:
           name: Generate Client Hash For This Build
           command: |
-            find ~/project/app/client/ -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/ThisClientHash.txt
+            find ~/project/app/client/ ~/project/app/package.json -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/ThisClientHash.txt
       - restore_cache:
           keys:
             - client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
@@ -35,32 +47,30 @@ jobs:
           # In general, we could just check for the presence of a bundle in the dist folder,
           # (if a cache is recovered, it'll match) but this prevents bad things from happening
           # if someone accidentally added a bundle to dist, or ClientHash.txt file in the git repo
-          name: Build Node
+          name: Build JS client
           command: |
             cd ./app
-            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm install & npm run build; fi
+            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm run build; fi
       - run:
           name: Generate New 'Previous Client Hash'
           command: |
-            find ~/project/app/client/ -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/PrevClientHash.txt
+            find ~/project/app/client/ ~/project/app/package.json -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/PrevClientHash.txt
       - save_cache:
           paths:
             - ~/project/app/server/static/javascript/dist/
             - ~/project/PrevClientHash.txt
           key: client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}
-      - save_cache:
-          paths:
-            - ~/project/app/node_modules
-          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-
       - run:
           name: Build application Docker images
           command: |
+            export GIT_HASH=$CIRCLE_SHA1
             docker-compose build --build-arg GIT_HASH=$CIRCLE_SHA1
       - persist_to_workspace:
           root: ~/project
           paths:
+            - config_files/secret
             - app/node_modules
+            - app/server/static/javascript/dist
   test:backend:
     working_directory: ~/project
     docker:
@@ -76,7 +86,25 @@ jobs:
       - run:
           name: Run Docker Tests
           command: |
+            export GIT_HASH=$CIRCLE_SHA1
             docker-compose up --exit-code-from app
+  test:worker:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+        environment:
+          CONTAINER_MODE: ETH_WORKER_TEST
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Run Docker Tests
+          command: |
+            export GIT_HASH=$CIRCLE_SHA1
+            docker-compose up --exit-code-from eth_worker
   test:frontend:
     working_directory: ~/project
     docker:
@@ -85,16 +113,8 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - attach_workspace:
           at: ~/project
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-            - node-v1-{{ .Branch }}-
-            - node-v1-
       - run:
           name: Run Frontend Tests
           command: |
@@ -120,6 +140,12 @@ jobs:
               echo "No AWS_ACCESS_KEY_ID is set! Failing..."
               exit 1;
             fi
+      - run:
+          name: Safety Build of Docker images
+          command: |
+            export GIT_HASH=$CIRCLE_SHA1
+            docker-compose build --build-arg GIT_HASH=$CIRCLE_SHA1
+
       - run:
           name: Prepare for pyth venv install
           command: |
@@ -160,13 +186,13 @@ jobs:
           command: |
 
             eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
-            docker tag server:latest ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker tag server:${CIRCLE_SHA1} ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
-            docker tag proxy:latest ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
+            docker tag proxy:${CIRCLE_SHA1} ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
-            docker tag eth_worker:latest ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+            docker tag eth_worker:${CIRCLE_SHA1} ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
-            docker tag pgbouncer:latest ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
+            docker tag pgbouncer:${CIRCLE_SHA1} ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
             docker push ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
       - run:
           name: Create Dockerrun config file
@@ -186,6 +212,9 @@ workflows:
       - test:backend:
           requires:
             - build
+      - test:worker:
+          requires:
+            - build
       - test:frontend:
           requires:
             - build
@@ -196,4 +225,5 @@ workflows:
                 - master
           requires:
             - test:backend
+            - test:worker
             - test:frontend

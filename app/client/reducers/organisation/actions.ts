@@ -2,13 +2,13 @@ import {
   EditOrganisationActionTypes,
   EditOrganisationPayload,
   LoadOrganisationActionTypes,
-  Organisation,
-  OrganisationActionTypes
+  OrganisationActionTypes,
+  OrganisationByIDs
 } from "./types";
 import { createAction, ActionsUnion } from "../../reduxUtils";
 
 export const OrganisationAction = {
-  updateOrganisationList: (organisations: Organisation[]) =>
+  updateOrganisationList: (organisations: OrganisationByIDs) =>
     createAction(
       OrganisationActionTypes.UPDATE_ORGANISATION_LIST,
       organisations

@@ -1,13 +1,13 @@
 import { MessageActionTypes } from "./types";
 import { MessageAction } from "./actions";
 
-interface MessageState {
+export interface MessageState {
   showMessage: boolean;
   messageList: string[];
   error: boolean;
 }
 
-const initialMessageState: MessageState = {
+export const initialMessageState: MessageState = {
   showMessage: false,
   messageList: [],
   error: false

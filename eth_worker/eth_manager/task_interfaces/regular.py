@@ -81,7 +81,7 @@ def get_wallet_balance(address, token_address):
     return balance_wei
 
 
-def await_task_success(task_uuid, timeout=None, poll_frequency=0.5):
+def await_blockchain_success_evil(task_uuid, timeout=None, poll_frequency=0.5):
     elapsed = 0
     print(f'Awaiting success for task uuid: {task_uuid}')
     while timeout is None or elapsed <= timeout:
@@ -99,3 +99,25 @@ def await_task_success(task_uuid, timeout=None, poll_frequency=0.5):
             elapsed += poll_frequency
 
     raise TimeoutError
+
+
+def await_blockchain_success(task_uuid, timeout=None, poll_frequency=0.5):
+    elapsed = 0
+    print(f'Awaiting success for task uuid: {task_uuid}')
+    while timeout is None or elapsed <= timeout:
+        sig = signature(
+            utils.eth_endpoint('get_task'),
+            kwargs={'task_uuid': task_uuid}
+        )
+
+        task = utils.execute_synchronous_celery(sig)
+
+        if task and task['status'] == 'SUCCESS':
+            return task
+        else:
+            sleep(poll_frequency)
+            elapsed += poll_frequency
+
+    raise TimeoutError
+
+

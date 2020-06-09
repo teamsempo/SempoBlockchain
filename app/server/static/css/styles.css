@@ -81,6 +81,20 @@ body {
   background-color: #34b0b3;
 }
 
+/* Override default phone number input */
+.react-tel-input .form-control {
+  border-width: 0 0 1px 0 !important;
+  width: unset !important;
+}
+
+.react-tel-input .flag-dropdown {
+  border: 0 !important;
+}
+
+.react-tel-input .country-list {
+  max-height: 150px !important;
+}
+
 /* REACT TABLE STYLING */
 
 .ReactTable {

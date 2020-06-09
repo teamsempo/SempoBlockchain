@@ -7,7 +7,6 @@ Create Date: 2020-04-17 17:11:42.886010
 from alembic import op
 import sqlalchemy as sa
 
-# Note: This is a dupe from first party tx, delete if that's merged first
 
 # revision identifiers, used by Alembic.
 revision = 'd087cd128e00'
