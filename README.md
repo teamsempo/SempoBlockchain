@@ -18,7 +18,12 @@ Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, A
 
 We use [postgres](https://www.postgresql.org/) for regular (non-blockchain) data persistance.
 
-If you plan on using the quick setup script, be sure to install the [PSQL](https://www.postgresql.org/docs/current/app-psql.html) terminal application as well
+If you plan on using the quick setup script, be sure to install the [PSQL](https://www.postgresql.org/docs/current/app-psql.html) terminal application as well.
+
+Sempo defaults to using postgres credentials of `username: postgres`, `password: password`. We recommend you create a new user with a fresh password and `CREATEDB` permissions. For example:
+`CREATE USER dev_sempo WITH PASSWORD 'superSecret' CREATEDB;`.
+
+Set these to the environment variables `PGUSER` and `PGPASSWORD`.
 
 **Redis**
 [Redis](https://redis.io/) is used for passing tasks to an asynchronous worker queue
@@ -65,7 +70,8 @@ The platform uses three kinds of config files:
 - common secrets: things that ARE sensitive, and can be the same between all deployments
 
 There's already a reasonable set of local configs in `config_files/local_config.ini`
-To create some suitable secrets quickly:
+To create some suitable secrets quickly use the following
+(note that if you're using the quick setup script below, this is done for you):
 
 ```
 cd config files
@@ -75,8 +81,9 @@ python generate_secrets.py
 ### Quick Setup Script
 
 (Requires PSQL to run)
+If you're using a custom postgres user, remember to set the environment variables `PGUSER` and `PGPASSWORD` first!
 
-For quick setup, run `./devtools/quick_setup_script.sh` with `MASTER_WALLET_PK` set as an environment variable to the master private key found in `/config_files/secret/local_secrets.ini/`.
+For quick setup, run `./devtools/quick_setup_script.sh`
 
 ```
 quick_setup_script.sh [activation path for your python env]
@@ -85,6 +92,7 @@ quick_setup_script.sh [activation path for your python env]
 The script will:
 
 - Reset your local Sempo state
+- Generate new secrets
 - Launch Ganache and Redis
 - Create an adminstrator account with email `admin@acme.org` and password `C0rrectH0rse`
 - Create a reserve token and bonded token
