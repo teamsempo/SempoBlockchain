@@ -124,7 +124,7 @@ sleep 10
 
 echo ~~~Creating Default Account
 curl 'http://localhost:9000/api/v1/auth/register/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
-psql app_db_uri -c 'UPDATE public."user" SET is_activated=TRUE'
+psql $app_db_uri -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
