@@ -837,5 +837,5 @@ def create_user_if_required(blockchain_address, token):
         user = transfer_account.primary_user
     else:
         user = create_transfer_account_user(blockchain_address=blockchain_address, token=token)
-    user.default_transfer_account # Deleting this line will break this  ¯\_(ツ)_/¯
+    user.default_transfer_account # Deleting this line will break everything  ¯\_(ツ)_/¯
     return user
