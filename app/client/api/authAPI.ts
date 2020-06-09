@@ -1,6 +1,17 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "./client/apiClient";
+import {
+  ActivatePayload,
+  DeleteInvitePayload,
+  InviteUserPayload,
+  LoginRequestPayload,
+  RegisterRequestPayload,
+  ResetEmailPayload,
+  ResetPasswordPayload,
+  UpdateUserPayload,
+  ValidateTfaPayload
+} from "../reducers/auth/types";
 
-export const requestApiToken = ({ body }) =>
+export const requestApiToken = ({ body }: LoginRequestPayload) =>
   apiClient({
     url: "/auth/request_api_token/",
     method: "POST",
@@ -13,7 +24,7 @@ export const requestApiToken = ({ body }) =>
 export const refreshApiToken = () =>
   apiClient({ url: "/auth/refresh_api_token/", method: "GET" });
 
-export const registerAPI = ({ body }) =>
+export const registerAPI = ({ body }: RegisterRequestPayload) =>
   apiClient({
     url: "/auth/register/",
     method: "POST",
@@ -22,7 +33,7 @@ export const registerAPI = ({ body }) =>
     errorHandling: false
   });
 
-export const activateAPI = ({ body }) =>
+export const activateAPI = ({ body }: ActivatePayload) =>
   apiClient({
     url: "/auth/activate/",
     method: "POST",
@@ -31,7 +42,7 @@ export const activateAPI = ({ body }) =>
     errorHandling: false
   });
 
-export const requestResetEmailAPI = ({ body }) =>
+export const requestResetEmailAPI = ({ body }: ResetEmailPayload) =>
   apiClient({
     url: "/auth/request_reset_email/",
     method: "POST",
@@ -41,16 +52,16 @@ export const requestResetEmailAPI = ({ body }) =>
 
 export const GetTFAAPI = () => apiClient({ url: "/auth/tfa/", method: "GET" });
 
-export const ValidateTFAAPI = ({ body }) =>
+export const ValidateTFAAPI = ({ body }: ValidateTfaPayload) =>
   apiClient({ url: "/auth/tfa/", method: "POST", body: body });
 
-export const ResetPasswordAPI = ({ body }) =>
+export const ResetPasswordAPI = ({ body }: ResetPasswordPayload) =>
   apiClient({ url: "/auth/reset_password/", method: "POST", body: body });
 
 export const getUserList = () =>
   apiClient({ url: "/auth/permissions/", method: "GET" });
 
-export const updateUserAPI = ({ body, query }) =>
+export const updateUserAPI = ({ body, query }: UpdateUserPayload) =>
   apiClient({
     url: "/auth/permissions/",
     method: "PUT",
@@ -58,8 +69,8 @@ export const updateUserAPI = ({ body, query }) =>
     query: query
   });
 
-export const deleteInviteAPI = ({ body }) =>
+export const deleteInviteAPI = ({ body }: DeleteInvitePayload) =>
   apiClient({ url: "/auth/permissions/", method: "DELETE", body: body });
 
-export const inviteUserAPI = ({ body }) =>
+export const inviteUserAPI = ({ body }: InviteUserPayload) =>
   apiClient({ url: "/auth/permissions/", method: "POST", body: body });

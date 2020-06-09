@@ -5,12 +5,13 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
+VERSION = '1.1.41'  # Remember to bump this in every PR
 
-VERSION = '1.1.38'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
-CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
+RELATIVE_CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'config_files/')
+CONFIG_DIR = os.path.abspath(RELATIVE_CONFIG_DIR)
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
@@ -80,9 +81,9 @@ else:
     # Load config from local
 
     # This occurs in local environments
-    folder_common_secrets_path = os.path.join(CONFIG_DIR, 'config_files/secret/' + COMMON_FILENAME)
-    folder_config_path = os.path.join(CONFIG_DIR, 'config_files/public/' + CONFIG_FILENAME)
-    folder_secrets_path = os.path.join(CONFIG_DIR, 'config_files/secret/' + SECRETS_FILENAME)
+    folder_common_secrets_path = os.path.join(CONFIG_DIR, 'secret/' + COMMON_FILENAME)
+    folder_config_path = os.path.join(CONFIG_DIR, 'public/' + CONFIG_FILENAME)
+    folder_secrets_path = os.path.join(CONFIG_DIR, 'secret/' + SECRETS_FILENAME)
 
     # This occurs in docker environments, where the config folder is copied and unpacked to the parent directory
     # We can't avoid unpacking the config folder due to docker stupidness around conditional file copying
