@@ -8,7 +8,8 @@ import redis, requests
 from requests.auth import HTTPBasicAuth
 from web3 import (
     Web3,
-    HTTPProvider
+    HTTPProvider,
+    WebsocketProvider
 )
 
 from web3.exceptions import BadFunctionCallOutput
@@ -65,6 +66,7 @@ celery_app.conf.beat_schedule = {
 }
 
 w3 = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
+w3 = Web3(HTTPProvider(config.ETH_WEBSOCKET_PROVIDER))
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
