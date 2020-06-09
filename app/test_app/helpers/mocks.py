@@ -42,6 +42,11 @@ class MockBlockchainTasker(object):
         time.sleep(random.random())
         return MockBlockchainTasker.get_blockchain_task()
 
+
+    @staticmethod
+    def force_third_party_transaction_sync(*args, **kwargs):
+        return MockBlockchainTasker._blockchain_address()
+
     @staticmethod
     def retry_task(*args, **kwargs):
         pass
