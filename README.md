@@ -40,18 +40,21 @@ npm install -g ganache-cli@6.4.1
 
 Download and install python 3.6 and its respective pip and virtualenv (**python 3.7 will break things**). Then:
 
+from devtools directory:
+
 ```
 python3 -m venv venv
 source venv/bin/activate
-./devtools/install_python_requirements.sh
+./install_python_requirements.sh
 ```
 
 **Front-End**
 
 Our frontend uses react.
 
+from app directory:
+
 ```
-cd app
 npm install
 ```
 
@@ -73,8 +76,9 @@ There's already a reasonable set of local configs in `config_files/local_config.
 To create some suitable secrets quickly use the following
 (note that if you're using the quick setup script below, this is done for you):
 
+from config_files directory
+
 ```
-cd config files
 python generate_secrets.py
 ```
 
@@ -83,11 +87,16 @@ python generate_secrets.py
 (Requires PSQL to run)
 If you're using a custom postgres user, remember to set the environment variables `PGUSER` and `PGPASSWORD` first!
 
-For quick setup, run `./devtools/quick_setup_script.sh`
+For quick setup, use the quick setup script in devtools
+
+From devtools directory
 
 ```
-quick_setup_script.sh [activation path for your python env]
+./quick_setup_script.sh [activation path for your python env]
 ```
+
+For example:
+`./quick_setup_script.sh /venvs/sempo/bin/activate`
 
 The script will:
 
@@ -102,8 +111,9 @@ When the script has finished running\*, you can start your own app and worker pr
 
 ### Run the app in a Virtual Env
 
+From app directory:
+
 ```
-cd app
 python ./run.py
 ```
 
@@ -111,8 +121,9 @@ python ./run.py
 
 Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue.
 
+From eth_worker directory:
+
 ```
-cd eth_worker
 celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
 ```
 
@@ -162,8 +173,9 @@ If you get some message about `Creating Server TCP listening socket *:6379: bind
 
 Start celery:
 
+From eth_worker directory
+
 ```
-cd eth_worker
 celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
 ```
 

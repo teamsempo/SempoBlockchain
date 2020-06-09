@@ -17,7 +17,6 @@ then
 echo "[WARN] PGPASSWORD environment variable not set, defaulting to postgres password 'password'"
 fi
 
-
 echo "This will wipe ALL local Sempo data"
 
 echo "Reset Local Secrets? y/N"
