@@ -1,7 +1,5 @@
-import uuid
 import pytest
 from sqlalchemy.exc import IntegrityError
-from typing import cast
 
 from web3 import (
     Web3
@@ -10,17 +8,8 @@ from eth_keys import keys
 
 from sql_persistence.interface import SQLPersistenceInterface
 from sql_persistence.models import BlockchainWallet, BlockchainTask, BlockchainTransaction
-from sempo_types import UUID
 
-
-def str_uuid() -> UUID:
-    return cast(UUID, str(uuid.uuid4()))
-
-
-# Just a randomly generated key. Needless to say, DON'T USE THIS FOR REAL FUNDS ANYWHERE
-pk = '0x2bd62cccd89e375b2c248eaa123dc24141f7a8c6e384e045c0698ebaa1d62922'
-address = '0x468F90c5a236130E5D51260A2A5Bfde834C694b6'
-
+from utils import pk, address, str_uuid
 
 class TestModels:
 
@@ -131,14 +120,14 @@ class TestModels:
 
 class TestInterface:
 
-    def test_claim_transaction_nonce(self, db_session, persistence_int: SQLPersistenceInterface):
+    def test_claim_transaction_nonce(self, db_session, persistence_module: SQLPersistenceInterface):
         def created_nonced_transaction():
-            t = BlockchainTransaction(first_block_hash=persistence_int.first_block_hash)
+            t = BlockchainTransaction(first_block_hash=persistence_module.first_block_hash)
             t.signing_wallet = wallet
             db_session.add(t)
             db_session.commit()
 
-            nonce, id = persistence_int.locked_claim_transaction_nonce(
+            nonce, id = persistence_module.locked_claim_transaction_nonce(
                 network_nonce=starting_nonce,
                 signing_wallet_id=wallet.id,
                 transaction_id=t.id
@@ -175,13 +164,13 @@ class TestInterface:
         # transactions.append(trans)
         # assert trans.nonce == starting_nonce + 1
 
-    def test_update_transaction_data(self, db_session, persistence_int: SQLPersistenceInterface):
+    def test_update_transaction_data(self, db_session, persistence_module: SQLPersistenceInterface):
         transaction = BlockchainTransaction()
         db_session.add(transaction)
 
         db_session.commit()
 
-        persistence_int.update_transaction_data(
+        persistence_module.update_transaction_data(
             transaction.id,
             {'status': 'SUCCESS', 'ignore': True}
         )
@@ -189,7 +178,7 @@ class TestInterface:
         assert transaction.status == 'SUCCESS'
         assert transaction.ignore is True
 
-    def test_create_blockchain_transaction(self, db_session, persistence_int: SQLPersistenceInterface):
+    def test_create_blockchain_transaction(self, db_session, persistence_module: SQLPersistenceInterface):
 
         wallet = BlockchainWallet()
         db_session.add(wallet)
@@ -198,12 +187,12 @@ class TestInterface:
         task.signing_wallet = wallet
         db_session.add(task)
 
-        trans = persistence_int.create_blockchain_transaction(task_uuid=task.uuid)
+        trans = persistence_module.create_blockchain_transaction(task_uuid=task.uuid)
 
         assert trans.task.uuid == task.uuid
 
     @pytest.mark.xfail(reason="SQL Testing Weirdness causes this to be problematic")
-    def test_add_prior_tasks(self, db_session, persistence_int: SQLPersistenceInterface):
+    def test_add_prior_tasks(self, db_session, persistence_module: SQLPersistenceInterface):
 
         prior_1 = BlockchainTask(uuid=str_uuid())
         prior_2 = BlockchainTask(uuid=str_uuid())
@@ -215,7 +204,7 @@ class TestInterface:
         db_session.add_all([prior_1, prior_2, posterior])
         db_session.commit()
 
-        persistence_int.add_prior_tasks(posterior, [uuid_1, uuid_2])
+        posterior.add_prior_tasks([uuid_1, uuid_2])
 
         assert prior_1 in posterior.prior_tasks
         assert prior_2 in posterior.prior_tasks

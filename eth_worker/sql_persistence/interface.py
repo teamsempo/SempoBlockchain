@@ -92,7 +92,7 @@ class SQLPersistenceInterface(object):
             network_nonce,
             signing_wallet_id: int,
             transaction_id: int
-    ) -> Tuple[int, int]:
+    ) -> int:
         """
         Claim a transaction a nonce for a particular transaction, using a lock to prevent another transaction
         from accidentially claiming the same nonce.
@@ -117,15 +117,15 @@ class SQLPersistenceInterface(object):
             self.session.commit()
             self.session.refresh(signing_wallet)
 
-            ct = self._claim_transaction_nonce(network_nonce, signing_wallet, transaction)
-            return ct
+            nonce = self._claim_transaction_nonce(network_nonce, signing_wallet, transaction)
+            return nonce
 
     def _claim_transaction_nonce(
             self,
             network_nonce: int,
             signing_wallet: BlockchainWallet,
             transaction: BlockchainTransaction,
-    ) -> Tuple[int, int]:
+    ) -> int:
 
         if transaction.nonce is not None:
             return transaction.nonce, transaction.id
@@ -137,7 +137,7 @@ class SQLPersistenceInterface(object):
         # TODO: can we shift this commit out?
         self.session.commit()
 
-        return calculated_nonce, transaction.id
+        return calculated_nonce
 
     def update_transaction_data(self, transaction_id, transaction_data):
 
@@ -160,6 +160,8 @@ class SQLPersistenceInterface(object):
         self.session.add(blockchain_transaction)
 
         if task:
+            # TODO: when is this ever not the case?
+            # We should just force signing walelt based off the task
             blockchain_transaction.task = task
 
         self.session.commit()

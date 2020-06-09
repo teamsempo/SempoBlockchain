@@ -2,7 +2,7 @@ from time import sleep
 
 from celery import signature
 
-from eth_manager import utils
+from eth_manager.celery_dispatchers import utils
 
 
 def deploy_contract_task(signing_address, contract_name, args=None, prior_tasks=None):
@@ -15,7 +15,7 @@ def deploy_contract_task(signing_address, contract_name, args=None, prior_tasks=
             'prior_tasks': prior_tasks
         })
 
-    return utils.execute_task(deploy_sig)
+    return utils.queue_sig(deploy_sig)
 
 
 def transaction_task(signing_address,
@@ -42,7 +42,7 @@ def transaction_task(signing_address,
         utils.eth_endpoint('transact_with_contract_function'),
         kwargs=kwargs)
 
-    return utils.execute_task(sig)
+    return utils.queue_sig(sig)
 
 
 def send_eth_task(signing_address, amount_wei, recipient_address):
@@ -54,7 +54,7 @@ def send_eth_task(signing_address, amount_wei, recipient_address):
             'recipient_address': recipient_address
         })
 
-    return utils.execute_task(sig)
+    return utils.queue_sig(sig)
 
 
 def synchronous_call(contract_address, contract_type, func, args=None):
@@ -125,11 +125,9 @@ def queue_attempt_transaction(task_uuid, countdown=0):
     sig = signature(
         utils.eth_endpoint('_attempt_transaction'),
         kwargs={'task_uuid': task_uuid}
-    ).apply_async(
-        countdown=countdown
     )
 
-    return sig.id
+    return utils.queue_sig(sig, countdown=countdown)
 
 
 def queue_send_eth(
@@ -148,7 +146,7 @@ def queue_send_eth(
                         'posterior_tasks': posterior_tasks
                     })
 
-    return utils.execute_task(sig)
+    return utils.queue_sig(sig)
 
 
 def sig_process_send_eth_transaction(
@@ -217,5 +215,6 @@ def sig_process_deploy_contract_transaction(
 def sig_check_transaction_response():
     return signature(utils.eth_endpoint('_check_transaction_response'))
 
-def
 
+def sig_log_error(transaction_id):
+    return signature(utils.eth_endpoint('_log_error'), args=(transaction_id,))

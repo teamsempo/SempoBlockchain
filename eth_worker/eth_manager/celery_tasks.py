@@ -205,6 +205,7 @@ def _process_function_transaction(self, transaction_id, contract_address, abi_ty
     return blockchain_processor.process_function_transaction(transaction_id, contract_address, abi_type,
                                                              function, args, kwargs, gas_limit, task_id)
 
+
 @celery_app.task(**processor_task_config)
 def _process_deploy_contract_transaction(self, transaction_id, contract_name,
                                          args=None, kwargs=None,  gas_limit=None, task_id=None):
