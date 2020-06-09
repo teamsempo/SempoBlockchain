@@ -30,7 +30,7 @@ class SchemaBase(Schema):
 class BlockchainTaskableSchemaBase(SchemaBase):
 
     blockchain_task_uuid  = fields.Str(dump_only=True)
-    blockchain_status   = fields.Function(lambda obj: obj.blockchain_status)
+    blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
 
 class UserSchema(SchemaBase):
     first_name              = fields.Str()
@@ -139,7 +139,7 @@ class TokenSchema(SchemaBase):
 
     # exchange_contracts  = fields.Nested("server.schemas.ExchangeContractSchema", many=True)
 
-class CreditTransferSchema(Schema):
+class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     id      = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
