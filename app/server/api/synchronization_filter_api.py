@@ -20,12 +20,12 @@ class SynchronizationFilterAPI(MethodView):
         print(test_filter)
         test_block = SynchronizedBlock(block_number = 1)
         test_filter.blocks.append(test_block)
+        
+        db.session.add(test_filter)
 
         sync_filters = SynchronizationFilter.query.all()
         for f in sync_filters:
-            db.session.delete(f)
-        
-        db.session.add(test_filter)
+            db.session.delete(f)        
 
         # Build object with all filters, and store it in redis for the worker to consume
         cachable_sync_filters = []
@@ -45,7 +45,7 @@ class SynchronizationFilterAPI(MethodView):
         # TODO: Make a function to request individaul transactions
         bt.force_third_party_transaction_sync()
 
-        return make_response(jsonify(filter_cache_object)), 201
+        return make_response(jsonify(cachable_sync_filters)), 201
 
     def get(self):
         sync_filters = SynchronizationFilter.query.all()

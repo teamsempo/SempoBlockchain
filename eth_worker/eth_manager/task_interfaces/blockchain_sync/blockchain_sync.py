@@ -11,7 +11,7 @@ from web3 import (
 )
 from sql_persistence.models import BlockchainTransaction, BlockchainTask
 import eth_manager.task_interfaces.blockchain_sync.blockchain_sync_constants as sync_const
-from eth_manager import red, w3, persistence_interface
+from eth_manager import red, w3, persistence_module
 
 # Hit the database to get the latest block number to which we're synced
 def get_latest_block_number():
@@ -89,7 +89,7 @@ def process_all_chunks():
 def handle_transaction(transaction, filter_job):
     print("filter_job")
     print(filter_job)
-    transaction_object = persistence_interface.create_external_transaction(
+    transaction_object = persistence_module.create_external_transaction(
         status = 'SUCCESS',
         block = transaction.blockNumber,
         hash = str(transaction.transactionHash),
@@ -105,7 +105,7 @@ def handle_transaction(transaction, filter_job):
     call_webhook(transaction_object)
     # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
     # in order to be retryable later
-    persistence_interface.mark_transaction_as_completed(transaction_object)
+    persistence_module.mark_transaction_as_completed(transaction_object)
     # Only pop the list (delete job from queue) after success
     red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
 
