@@ -16,7 +16,9 @@ RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
 
 
-COPY ./config.py ./config_files/* /src/
+COPY ./config.py /src/
+RUN mkdir /src/config_files
+COPY ./config_files/* /src/config_files/
 COPY ./app/server /src/server
 COPY ./app/migrations /src/migrations
 COPY ./app/manage.py /src

@@ -1,4 +1,4 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "./client/apiClient";
 
 export const loadExchangeRates = () =>
   apiClient({ url: "/wyre_rates/", method: "GET" });
