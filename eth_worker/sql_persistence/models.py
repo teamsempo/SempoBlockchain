@@ -278,15 +278,13 @@ class BlockchainTransaction(ModelBase):
     def __repr__(self):
         return ('<BlockchainTransaction ID:{} Nonce:{} Status: {}>'
                 .format(self.id, self.nonce, self.status))
-
-# One per filter
-class BlockchainFilter(ModelBase):
-    __tablename__ = 'blockchain_filter'
-
-# One each time the filter is hit
-class BlockchainFilterTask(ModelBase):
-    __tablename__ = 'blockchain_filter_task'
     
+class SynchronizedBlock(ModelBase):
+    __tablename__ = 'synchronized_block'
+    block_number = Column(Integer)
+    status = Column(String)
+    is_synchronized = Column(Boolean)
+
 # When BlockchainTransaction is updated, let the api layer know about it
 @event.listens_for(BlockchainTransaction, 'after_update')
 def receive_after_update(mapper, connection, target):

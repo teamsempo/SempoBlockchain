@@ -9,4 +9,3 @@ class SynchronizationFilter(ModelBase):
     last_block_synchronized = db.Column(db.Integer)
     filter_parameters = db.Column(db.String)
     filter_type = db.Column(db.String) # TRANSFER, EXCHANGE
-    blocks = relationship("SynchronizedBlock", back_populates="synchronization_filter")

@@ -3,7 +3,6 @@ from flask.views import MethodView
 
 from server import db, bt, red
 from server.models.synchronization_filter import SynchronizationFilter
-from server.models.synchronized_block import SynchronizedBlock
 from server.utils.auth import requires_auth
 from server.schemas import synchronization_filter_schema
 
@@ -17,9 +16,6 @@ class SynchronizationFilterAPI(MethodView):
     #@requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
         test_filter = SynchronizationFilter(contract_address = '0x0fd6e8f2320c90e9d4b3a5bd888c4d556d20abd4', last_block_synchronized = 10337162)
-        print(test_filter)
-        test_block = SynchronizedBlock(block_number = 1)
-        test_filter.blocks.append(test_block)
         
         db.session.add(test_filter)
 
