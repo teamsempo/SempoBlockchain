@@ -89,7 +89,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
         # Used in lieu of the test below working
         fn_inputs = mock_async_set_user_gps_from_location
         args, kwargs = fn_inputs[-1]
-        assert args == (data['user']['id'], 'Elwood')
+        assert kwargs == {'user_id': data['user']['id'], 'location': 'Elwood'}
 
         # TODO: Work out why the latlng remains none even though it definitely makes it into db
         # # Done async, so sleep to prevent race on this check
