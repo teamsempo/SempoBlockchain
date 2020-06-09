@@ -425,6 +425,10 @@ def test_client():
     ctx = flask_app.app_context()
     ctx.push()
 
+    from flask import g
+    g.pending_transactions = []
+    g.executor_jobs = []
+
     yield testing_client  # this is where the testing happens!
 
     ctx.pop()
@@ -433,9 +437,7 @@ def test_client():
 @pytest.fixture(scope='module')
 def init_database():
     # Create the database and the database table
-    from flask import g
-    g.pending_transactions = []
-    
+
     with current_app.app_context():
         db.create_all()
 
@@ -469,6 +471,33 @@ def mock_pusher(mocker):
     mocker.patch('server.pusher_client.trigger')
     mocker.patch('server.pusher_client.authenticate')
     mocker.patch('server.pusher_client.trigger_batch')
+
+@pytest.fixture(autouse=True)
+def mock_osm_search(mocker):
+    def mock_osm_api(query_string):
+        class Response:
+            def json(self):
+                return self.json_response
+
+            def __init__(self, query_string):
+                if query_string == 'not a real place':
+                    self.json_response = []
+                elif query_string == 'multiple matched place':
+                    self.json_response = [
+                        {'lat': '12.0', 'lon': '14.4'},
+                        {'lat': '-37.81', 'lon': '144.97'},
+                    ]
+                else:
+                    self.json_response = [
+                        {'lat': '-37.81', 'lon': '144.97'},
+                    ]
+
+                self.status_code = 200
+                self.text = 'Yeehaaaa'
+
+        return Response(query_string)
+
+    mocker.patch('server.utils.location._query_osm', mock_osm_api)
 
 
 @pytest.fixture(autouse=True)

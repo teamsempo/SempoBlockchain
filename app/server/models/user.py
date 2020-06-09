@@ -20,7 +20,7 @@ from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
-from server.utils import task_runner
+from server.utils.executor import add_after_request_executor_job
 
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
@@ -260,20 +260,18 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     @location.setter
     def location(self, location):
+        from server.utils.location import async_set_user_gps_from_location
 
         self._location = location
 
         if location is not None and location is not '':
-
-            if self.id is None:
-                raise AttributeError('User ID not set')
-
-            try:
-                task = {'user_id': self.id, 'address': location}
-                task_runner('worker.celery_tasks.geolocate_address', args=(task,))
-            except Exception as e:
-                sentry_sdk.capture_exception(e)
-                pass
+            # Delay execution until after request to avoid race condition with db
+            # We still need to flush to get user id though
+            db.session.flush()
+            add_after_request_executor_job(
+                async_set_user_gps_from_location,
+                kwargs={'user_id': self.id, 'location': location}
+            )
 
     @hybrid_property
     def roles(self):
