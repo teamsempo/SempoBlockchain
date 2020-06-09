@@ -68,18 +68,20 @@ echo If this section hangs, you might have a bunch of idle postgres connections.
 echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
 
 db_server=postgres://${PGUSER:-postgres}:${PGPASSWORD:-password}@localhost:5432
-app_db=$db_server/${APP_DB:-sempo_app}
-eth_worker_db=$db_server/${WORKER_DB:-eth_worker}
+maintainence_db_uri=$db_server/postgres
+app_db_uri=$db_server/${APP_DB:-sempo_app}
+eth_worker_db_uri=$db_server/${WORKER_DB:-eth_worker}
 
 set -e
-psql $db_server -c ''
+#Checks to ensure login credentials are valid
+psql $maintainence_db_uri -c ''
 
 set +e
 
-psql $db_server -c "DROP DATABASE IF EXISTS ${APP_DB:-sempo_app}"
-psql $db_server -c "DROP DATABASE IF EXISTS ${WORKER_DB:-sempo_eth_worker}"
-psql $db_server -c "CREATE DATABASE ${APP_DB:-sempo_app}"
-psql $db_server -c "CREATE DATABASE ${WORKER_DB:-sempo_eth_worker}"
+psql $maintainence_db_uri -c "DROP DATABASE IF EXISTS ${APP_DB:-sempo_app}"
+psql $maintainence_db_uri -c "DROP DATABASE IF EXISTS ${WORKER_DB:-sempo_eth_worker}"
+psql $maintainence_db_uri -c "CREATE DATABASE ${APP_DB:-sempo_app}"
+psql $maintainence_db_uri -c "CREATE DATABASE ${WORKER_DB:-sempo_eth_worker}"
 
 cd app
 python manage.py db upgrade
@@ -122,7 +124,7 @@ sleep 10
 
 echo ~~~Creating Default Account
 curl 'http://localhost:9000/api/v1/auth/register/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
-psql $app_db -c 'UPDATE public."user" SET is_activated=TRUE'
+psql app_db_uri -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
