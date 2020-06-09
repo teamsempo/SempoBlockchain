@@ -10,12 +10,14 @@ from server.models.blockchain_address import BlockchainAddress
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
+from server.utils.transfer_enums import BlockchainStatus
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
+from server.utils.user import create_user_if_required
 from server.utils.metrics import calculate_transfer_stats
 
 from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
@@ -414,43 +416,31 @@ class ConfirmWithdrawalAPI(MethodView):
 class InternalCreditTransferAPI(MethodView):
     @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
-        print('THIS WORKS AT LEAST!!!')
         post_data = request.get_json()
-        print(post_data)
-        transfer_amount = abs(round(float(post_data.get('transfer_amount') or 0),6))
 
+        transfer_amount = post_data.get('transfer_amount')
         sender_blockchain_address = post_data.get('sender_blockchain_address')
         recipient_blockchain_address = post_data.get('recipient_blockchain_address')
         blockchain_transaction_hash = post_data.get('blockchain_transaction_hash')
         contract_address = post_data.get('contract_address')
 
-        send_address_obj = (BlockchainAddress.query
-                            .filter_by(address=sender_blockchain_address)
-                            .first())
+        transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_hash=blockchain_transaction_hash).first()
+        if not transfer:
+            token = Token.query.filter_by(address=contract_address).first()
+            send_user = create_user_if_required(sender_blockchain_address, token)
+            receive_user = create_user_if_required(recipient_blockchain_address, token)
 
-        receive_address_obj = (BlockchainAddress.query
-                            .filter_by(address=recipient_blockchain_address)
-                            .first())
+            transfer = CreditTransfer(
+                transfer_amount,
+                token=token,
+                sender_transfer_account=send_user.default_transfer_account,
+                recipient_transfer_account=receive_user.default_transfer_account,
+                transfer_type='PAYMENT',
+            )
+            transfer.blockchain_status = BlockchainStatus.SUCCESS
+            transfer.blockchain_hash = blockchain_transaction_hash
 
-        token = Token.query.filter_by(address=contract_address)
-
-        transfer = CreditTransfer(
-            transfer_amount,
-            token=token,
-            sender_user=send_user,
-            sender_transfer_account=send_transfer_account,
-            recipient_user=receive_user,
-            recipient_transfer_account=receive_transfer_account,
-            uuid=uuid,
-            transfer_type=TransferTypeEnum.PAYMENT,
-            transfer_subtype=transfer_subtype,
-            transfer_mode=transfer_mode,
-            is_ghost_transfer=is_ghost_transfer
-        )
-
-        db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
-
         response_object = {
             'message': 'Transfer Successful',
             'data': {

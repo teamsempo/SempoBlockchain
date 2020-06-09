@@ -26,12 +26,6 @@ def call_webhook(transaction):
         'transfer_amount': float(transaction.amount), # Change this type later
         'contract_address': transaction.contract_address
     }
-    print(body)
-    print('APP HOST!')
-    print(config.APP_HOST)
-    print('RIGHT HERE')
-    import time
-    time.sleep(2)
     r = requests.post(config.APP_HOST + '/api/v1/credit_transfer/internal/',
                       json=body,
                       auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
@@ -51,9 +45,7 @@ def synchronize_third_party_transactions():
         max_enqueued_block = int(red.get(sync_const.MAX_ENQUEUED_BLOCK % str(f['id'])) or f['last_block_synchronized'])
         latest_block = get_latest_block_number()
         number_of_chunks_to_get = (latest_block - max_enqueued_block)
-        print(max_enqueued_block)
-        print(latest_block)
-        print(number_of_chunks_to_get)
+
         # integer division, then add a chunk if there's a remainder
         number_of_chunks = int(number_of_chunks_to_get/sync_const.BLOCKS_PER_REQUEST) + (number_of_chunks_to_get % sync_const.BLOCKS_PER_REQUEST > 0)
         for chunk in range(number_of_chunks):
@@ -79,20 +71,18 @@ def process_all_chunks():
             filter_job['filter_parameters']
         )
         for transaction in transaction_history:
-            handle_transaction(transaction, filter_job)
+            handle_transaction(transaction)
 
 # Processes newly found transaction event
 # Creates database object for transaction
 # Calls webhook
 # Sets sync status (whether or not webhook was successful)
 # Fallback if something goes wrong at this level: `is_synchronized_with_app` flag. Can batch unsynced stuff
-def handle_transaction(transaction, filter_job):
-    print("filter_job")
-    print(filter_job)
+def handle_transaction(transaction):
     transaction_object = persistence_module.create_external_transaction(
         status = 'SUCCESS',
         block = transaction.blockNumber,
-        hash = str(transaction.transactionHash),
+        hash = str(transaction.transactionHash.hex()),
         contract_address = transaction.address,
         is_synchronized_with_app = False,
         recipient_address = transaction.args['to'],
@@ -100,8 +90,6 @@ def handle_transaction(transaction, filter_job):
         amount = transaction.args['value']
     )
 
-    print(transaction_object)
-    print('Adding tx')
     call_webhook(transaction_object)
     # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
     # in order to be retryable later
@@ -125,6 +113,5 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
     )
 
     for event in filter.get_all_entries():
-        print(event)
         yield event
     pass
