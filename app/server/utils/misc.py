@@ -95,7 +95,6 @@ def encrypt_string(raw_string):
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
 
 
-
 class AttributeDictProccessor(object):
 
     def force_attribute_dict_keys_to_lowercase(self):

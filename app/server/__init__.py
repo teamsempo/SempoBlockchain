@@ -15,13 +15,13 @@ import messagebird
 import africastalking
 from datetime import datetime
 import redis
-import config
 import i18n
 from eth_utils import to_checksum_address
 import sys
 import os
 from web3 import Web3, HTTPProvider
 
+from server.sempo_types import ExecutorJobList
 
 # try:
 #     import uwsgi
@@ -104,25 +104,22 @@ def register_blueprints(app):
     @app.before_request
     def before_request():
         # Celery task list. Tasks are added here so that they can be completed after db commit
-        g.celery_tasks = []
         g.pending_transactions = []
+        g.executor_jobs: ExecutorJobList = []
 
         if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
             code = 301
             return redirect(url, code=code)
 
-        # if is_running_uwsgi:
-        #     print("uswgi connections status is:" + str(uwsgi.is_connected(uwsgi.connection_fd())))
-        #
-        #     if not uwsgi.is_connected(uwsgi.connection_fd()):
-        #         return make_response(jsonify({'message': 'Connection Aborted'})), 401
-
     @app.after_request
     def after_request(response):
         from server.utils import pusher
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
+
+        for job, args, kwargs in g.executor_jobs:
+            job.submit(*args, **kwargs)
 
         for transaction, queue in g.pending_transactions:
             transaction.send_blockchain_payload_to_worker(queue=queue)
@@ -131,13 +128,6 @@ def register_blueprints(app):
         from server.models.credit_transfer import CreditTransfer
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
         pusher.push_admin_credit_transfer(transactions)
-
-        for task in g.celery_tasks:
-            try:
-                # TODO: Standardize this task (pipe through execute_synchronous_celery)
-                task.delay()
-            except Exception as e:
-                sentry_sdk.capture_exception(e)
 
         return response
 
@@ -169,6 +159,7 @@ def register_blueprints(app):
     from server.api.ussd_api import ussd_blueprint
     from server.api.contract_api import contracts_blueprint
     from server.api.ge_migration_api import ge_migration_blueprint
+    from server.api.blockchain_taskable_api import blockchain_taskable_blueprint
 
     versioned_url = '/api/v1'
 
@@ -200,6 +191,7 @@ def register_blueprints(app):
     app.register_blueprint(ussd_blueprint, url_prefix=versioned_url)
     app.register_blueprint(contracts_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ge_migration_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(blockchain_taskable_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)

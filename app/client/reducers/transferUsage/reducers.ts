@@ -6,7 +6,7 @@ import {
 } from "./types";
 import { TransferUsageAction, LoadTransferUsagesAction } from "./actions";
 
-const transferUsages = (
+export const transferUsages = (
   state: TransferUsage[] = [],
   action: TransferUsageAction
 ): TransferUsage[] => {
