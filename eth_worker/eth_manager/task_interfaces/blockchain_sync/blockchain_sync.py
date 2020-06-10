@@ -33,8 +33,8 @@ def call_webhook(transaction):
                     )
     return r
 
+# Get list of filters from redis
 def synchronize_third_party_transactions():
-    # Get list of filters from redis
     filters = json.loads(red.get(sync_const.THIRD_PARTY_SYNC_FILTERS))
     # Since the webook will timeout if we ask for too many blocks at once, we have to break 
     # the range we want into chunks.
@@ -71,6 +71,7 @@ def process_all_chunks():
             filter_job['ceiling'], 
             filter_job['filter_parameters']
         )
+        print(f'Fetching third party transactions from blocks {filter_job["floor"]} to {filter_job["ceiling"]}')
         for transaction in transaction_history:
             handle_transaction(transaction)
         # Once a batch of chunks is completed, we can mark them completed
@@ -82,6 +83,10 @@ def process_all_chunks():
 # Sets sync status (whether or not webhook was successful)
 # Fallback if something goes wrong at this level: `is_synchronized_with_app` flag. Can batch unsynced stuff
 def handle_transaction(transaction):
+    # Check if transaction already exists (I.e. already synchronized, or first party transactions)
+    transaction_object = persistence_module.get_transaction(hash=transaction.transactionHash.hex())
+    if transaction_object:
+        return True
     transaction_object = persistence_module.create_external_transaction(
         status = 'SUCCESS',
         block = transaction.blockNumber,
