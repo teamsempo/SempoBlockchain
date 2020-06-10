@@ -98,7 +98,7 @@ def handle_transaction(transaction):
         amount = transaction.args['value']
     )
 
-    call_webhook(transaction_object)
+    #call_webhook(transaction_object)
     # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
     # in order to be retryable later
     persistence_module.mark_transaction_as_completed(transaction_object)
