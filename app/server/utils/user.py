@@ -831,11 +831,10 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
     return ordered_transfer_usages
 
 def create_user_if_required(blockchain_address, token):
-    #user = User.query.filter_by(primary_blockchain_address=blockchain_address).first()
     transfer_account = TransferAccount.query.execution_options(show_all=True).filter_by(blockchain_address=blockchain_address).first()
     if transfer_account:
         user = transfer_account.primary_user
     else:
-        user = create_transfer_account_user(blockchain_address=blockchain_address, token=token)
+        user = create_transfer_account_user(blockchain_address=blockchain_address, token=token, is_self_sign_up=True)
     user.default_transfer_account # Deleting this line will break everything  ¯\_(ツ)_/¯
     return user

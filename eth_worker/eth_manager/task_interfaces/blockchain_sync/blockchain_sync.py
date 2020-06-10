@@ -23,7 +23,7 @@ def call_webhook(transaction):
         'sender_blockchain_address': transaction.sender_address,
         'recipient_blockchain_address': transaction.recipient_address,
         'blockchain_transaction_hash': transaction.hash,
-        'transfer_amount': float(transaction.amount), # Change this type later
+        'transfer_amount': float(transaction.amount)/(10**18), # Note: Tweak this later
         'contract_address': transaction.contract_address
     }
     r = requests.post(config.APP_HOST + '/api/v1/credit_transfer/internal/',
@@ -59,6 +59,7 @@ def synchronize_third_party_transactions():
         # With the jobs set, we can now start processing them
         process_all_chunks()
 
+
 # Iterates through all jobs made by synchronize_third_party_transactions
 # Gets and processes them all!
 def process_all_chunks():
@@ -72,6 +73,8 @@ def process_all_chunks():
         )
         for transaction in transaction_history:
             handle_transaction(transaction)
+        # Once a batch of chunks is completed, we can mark them completed
+        persistence_module.set_block_range_status(filter_job['floor'], filter_job['ceiling'], 'SUCCESS')
 
 # Processes newly found transaction event
 # Creates database object for transaction
@@ -101,17 +104,22 @@ def handle_transaction(transaction):
 # Gets blockchain transaction history for given range
 # Fallback if something goes wrong at this level: block-tracking table
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None):
+    # Creates DB objects for every block to monitor status
+    persistence_module.add_block_range(start_block, end_block)
     erc20_contract = w3.eth.contract(
         address = Web3.toChecksumAddress(contract_address),
         abi = sync_const.ERC20_ABI
     )
+    try:
+        filter = erc20_contract.events.Transfer.createFilter(
+            fromBlock = start_block,
+            toBlock = end_block,
+            argument_filters = argument_filters
+        )
 
-    filter = erc20_contract.events.Transfer.createFilter(
-        fromBlock = start_block,
-        toBlock = end_block,
-        argument_filters = argument_filters
-    )
+        for event in filter.get_all_entries():
+            yield event
+    except:
+        print(f'Failed fetching block range {start_block} to {end_block}')
+        persistence_module.set_block_range_status(start_block, end_block, 'FAILED FETCHING BLOCKS')
 
-    for event in filter.get_all_entries():
-        yield event
-    pass

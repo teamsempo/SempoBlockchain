@@ -7,7 +7,8 @@ from sempo_types import UUID, UUIDList
 from sql_persistence.models import (
     BlockchainTransaction,
     BlockchainTask,
-    BlockchainWallet
+    BlockchainWallet,
+    SynchronizedBlock
 )
 
 from exceptions import (
@@ -463,6 +464,19 @@ class SQLPersistenceInterface(object):
         wallet.last_topup_task_uuid = task_uuid
 
         self.session.commit()
+
+    def add_block_range(self, start, end):
+        for n in range(start, end):
+            block = SynchronizedBlock(block_number = n , status = 'PENDING', is_synchronized = False)
+            self.session.add(block)
+        self.session.commit()
+
+    def set_block_range_status(self, start, end, status):
+        for n in range(start, end):
+            block  = self.session.query(SynchronizedBlock).filter(SynchronizedBlock.block_number == n).first()
+            block.status = status
+        self.session.commit()
+
 
     def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 
