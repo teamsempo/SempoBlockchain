@@ -15,13 +15,12 @@ class SynchronizationFilterAPI(MethodView):
 
     #@requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
+        # TODO: Read this from POST data
         test_filter = SynchronizationFilter(contract_address = '0x0fd6e8f2320c90e9d4b3a5bd888c4d556d20abd4', last_block_synchronized = 10337162)
         
         db.session.add(test_filter)
 
         sync_filters = SynchronizationFilter.query.all()
-        for f in sync_filters:
-            db.session.delete(f)        
 
         # Build object with all filters, and store it in redis for the worker to consume
         cachable_sync_filters = []
@@ -38,7 +37,6 @@ class SynchronizationFilterAPI(MethodView):
 
         red.set('THIRD_PARTY_SYNC_FILTERS', json.dumps(cachable_sync_filters))
 
-        # TODO: Make a function to request individaul transactions
         bt.force_third_party_transaction_sync()
 
         return make_response(jsonify(cachable_sync_filters)), 201
