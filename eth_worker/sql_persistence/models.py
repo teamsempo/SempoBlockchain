@@ -297,7 +297,7 @@ def receive_after_update(mapper, connection, target):
                 'message': target.message,
                 'hash': target.hash
             }
-        callback_url = config.APP_HOST + '/api/v1/blockchain_taskable'
+        #allback_url = config.APP_HOST + '/api/v1/blockchain_taskable'
 
         try:
             r = requests.post(
