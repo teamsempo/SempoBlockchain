@@ -225,7 +225,34 @@ class TestInterface:
                 function_name, args, kwargs,
                 gas_limit, prior_tasks, reserves_task)
 
-        assert trans.task.uuid == uuid
+        assert trans.uuid == uuid
+        assert trans.type == 'FUNCTION'
+
+    def test_deploy_contract_test(self, db_session, persistence_int: SQLPersistenceInterface):
+        signing_wallet_obj = BlockchainWallet()
+        db_session.add(signing_wallet_obj)
+
+        uuid = str_uuid()
+        contract_name = 'ERC20'
+        args = []
+        kwargs = None
+        gas_limit = None
+        prior_tasks = None
+
+        trans = persistence_int.create_deploy_contract_task(
+                uuid,
+                signing_wallet_obj,
+                contract_name,
+                args, kwargs,
+                gas_limit, prior_tasks)
+
+        assert trans.uuid == uuid
+        assert trans.type == 'DEPLOY_CONTRACT'
+
+    def test_create_blockchain_wallet_from_private_key(self, db_session, persistence_int: SQLPersistenceInterface):
+        trans = persistence_int.create_blockchain_wallet_from_private_key(pk)
+
+        assert trans.address == address
 
 
     @pytest.mark.xfail(reason="SQL Testing Weirdness causes this to be problematic")
