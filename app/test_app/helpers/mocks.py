@@ -44,6 +44,10 @@ class MockBlockchainTasker(object):
 
 
     @staticmethod
+    def add_transaction_sync_filter(*args, **kwargs):
+        return MockBlockchainTasker._blockchain_address()
+
+    @staticmethod
     def force_third_party_transaction_sync(*args, **kwargs):
         return MockBlockchainTasker._blockchain_address()
 

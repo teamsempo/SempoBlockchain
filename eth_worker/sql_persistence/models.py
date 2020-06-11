@@ -284,6 +284,17 @@ class SynchronizedBlock(ModelBase):
     block_number = Column(Integer)
     status = Column(String)
     is_synchronized = Column(Boolean)
+    synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'))
+    synchronization_filter = relationship("SynchronizationFilter", back_populates="blocks", lazy=True)
+
+class SynchronizationFilter(ModelBase):
+    __tablename__ = 'synchronization_filter'
+    contract_address = Column(String)
+    contract_type = Column(String)
+    filter_parameters = Column(String)
+    filter_type = Column(String) # TRANSFER, EXCHANGE
+    max_block = Column(Integer)
+    blocks = relationship("SynchronizedBlock", back_populates="synchronization_filter", lazy=True)
 
 # When BlockchainTransaction is updated, let the api layer know about it
 @event.listens_for(BlockchainTransaction, 'after_update')

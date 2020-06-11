@@ -8,7 +8,8 @@ from sql_persistence.models import (
     BlockchainTransaction,
     BlockchainTask,
     BlockchainWallet,
-    SynchronizedBlock
+    SynchronizedBlock,
+    SynchronizationFilter
 )
 
 from exceptions import (
@@ -468,9 +469,32 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def add_block_range(self, start, end):
+    def check_if_filter_exists(self, contract_address, contract_type):
+        filter = self.session.query(SynchronizationFilter).filter(
+            SynchronizationFilter.contract_address == contract_address, SynchronizationFilter.contract_type == contract_type).first()
+        if filter == None:
+            return False
+        return True
+
+    def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type):
+        filter = SynchronizationFilter(contract_address=contract_address, contract_type=contract_type, filter_parameters=filter_parameters, max_block=0, filter_type=filter_type)
+        self.session.add(filter)
+        self.session.commit()
+
+    def set_filter_max_block(self, filter_id, block):
+        filter = self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
+        filter.max_block = block
+        self.session.commit()
+
+    def get_filter(self, filter_id):
+        return self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
+
+    def get_all_filters(self):
+        return self.session.query(SynchronizationFilter).all()
+
+    def add_block_range(self, start, end, filter_id):
         for n in range(start, end):
-            block = SynchronizedBlock(block_number = n , status = 'PENDING', is_synchronized = False)
+            block = SynchronizedBlock(block_number = n , status = 'PENDING', is_synchronized = False, synchronization_filter_id = filter_id)
             self.session.add(block)
         self.session.commit()
 
