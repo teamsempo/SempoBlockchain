@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
-import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransfer/reducers";
+import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoginAction } from "../../reducers/auth/actions";
 import { loadCreditTransferList } from "../../reducers/creditTransfer/reducers";
 import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
@@ -98,7 +98,7 @@ class DashboardPage extends React.Component {
     subscribe(
       pusher_channel,
       "credit_transfer",
-      PUSHER_CREDIT_TRANSFER,
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER,
       additionalParams
     );
 
@@ -112,7 +112,11 @@ class DashboardPage extends React.Component {
   }
 
   unsubscribe() {
-    unsubscribe("MainChannel", "credit_transfer", PUSHER_CREDIT_TRANSFER);
+    unsubscribe(
+      "MainChannel",
+      "credit_transfer",
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER
+    );
   }
 
   render() {

@@ -2,10 +2,6 @@ import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
 
 import {
-  PUSHER_CREDIT_TRANSFER // TODO UNUSED?
-} from "../reducers/creditTransfer/reducers";
-
-import {
   LoadCreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
   CreditTransferActionTypes
@@ -133,7 +129,10 @@ function* loadPusherCreditTransfer(pusher_data) {
 }
 
 function* watchPusherCreditTransfer() {
-  yield takeEvery(PUSHER_CREDIT_TRANSFER, loadPusherCreditTransfer);
+  yield takeEvery(
+    CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER,
+    loadPusherCreditTransfer
+  );
 }
 
 function* modifyTransfer({ payload }) {
