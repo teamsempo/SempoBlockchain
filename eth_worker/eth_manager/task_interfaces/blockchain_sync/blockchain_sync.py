@@ -12,6 +12,7 @@ from web3 import (
 from sql_persistence.models import BlockchainTransaction, BlockchainTask
 import eth_manager.task_interfaces.blockchain_sync.blockchain_sync_constants as sync_const
 from eth_manager import red, w3, persistence_module
+from eth_manager.ABIs import erc20_abi
 
 # Hit the database to get the latest block number to which we're synced
 def get_latest_block_number():
@@ -39,8 +40,6 @@ def synchronize_third_party_transactions():
     # Since the webook will timeout if we ask for too many blocks at once, we have to break 
     # the range we want into chunks.
     for f in filters:
-        # We prioritize MAX_ENQUEUED_BLOCK because a block could be enqueued on the worker-side
-        # which the app doesn't know about
         max_enqueued_block = f.max_block or 0
         max_enqueued_block = max_enqueued_block - 100000
         latest_block = get_latest_block_number()
@@ -119,7 +118,7 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
     persistence_module.add_block_range(start_block, end_block, filter_id)
     erc20_contract = w3.eth.contract(
         address = Web3.toChecksumAddress(contract_address),
-        abi = sync_const.ERC20_ABI
+        abi = erc20_abi.abi
     )
     try:
         filter = erc20_contract.events.Transfer.createFilter(
