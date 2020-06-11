@@ -102,7 +102,6 @@ def handle_transaction(transaction):
         sender_address = transaction.args['from'],
         amount = transaction.args['value']
     )
-    print('NOT A DUPE!')
     print(transaction.transactionHash.hex())
     call_webhook(transaction_object)
     # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
@@ -116,6 +115,8 @@ def handle_transaction(transaction):
 # Fallback if something goes wrong at this level: block-tracking table
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None, filter_id = None):
     # Creates DB objects for every block to monitor status
+    print(f'Fetching block range {start_block} to {end_block}')
+
     persistence_module.add_block_range(start_block, end_block, filter_id)
     erc20_contract = w3.eth.contract(
         address = Web3.toChecksumAddress(contract_address),

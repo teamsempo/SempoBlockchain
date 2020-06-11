@@ -238,6 +238,7 @@ class BlockchainTransaction(ModelBase):
     recipient_address = Column(String)
     amount = Column(Numeric(27))
     is_synchronized_with_app = Column(Boolean, default=False)
+    is_third_party_transaction = Column(Boolean, default=False)
 
     ignore = Column(Boolean, default=False)
 
@@ -298,7 +299,7 @@ class SynchronizationFilter(ModelBase):
 # When BlockchainTransaction is updated, let the api layer know about it
 @event.listens_for(BlockchainTransaction, 'after_update')
 def receive_after_update(mapper, connection, target):
-    if target.blockchain_task:
+    if target.blockchain_task and not target.is_third_party_transaction:
         post_data = {
                 'blockchain_task_uuid': target.blockchain_task.uuid,
                 'timestamp': time.time(),

@@ -422,7 +422,8 @@ class SQLPersistenceInterface(object):
             is_synchronized_with_app = is_synchronized_with_app,
             recipient_address = recipient_address,
             sender_address = sender_address,
-            amount = amount
+            amount = amount,
+            is_third_party_transaction = True # External transaction will always be third party
         )   
         self.session.add(transaction_object)
         self.session.commit()
