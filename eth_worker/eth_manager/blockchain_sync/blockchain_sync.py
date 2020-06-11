@@ -9,8 +9,8 @@ from web3 import (
     WebsocketProvider,
     HTTPProvider
 )
-from sql_persistence.models import BlockchainTransaction, BlockchainTask
-import eth_manager.task_interfaces.blockchain_sync.blockchain_sync_constants as sync_const
+
+import eth_manager.blockchain_sync.blockchain_sync_constants as sync_const
 from eth_manager import red, w3, persistence_module
 from eth_manager.ABIs import erc20_abi
 
@@ -90,7 +90,7 @@ def process_all_chunks():
 def handle_transaction(transaction):
     # Check if transaction already exists (I.e. already synchronized, or first party transactions)
     transaction_object = persistence_module.get_transaction(hash=transaction.transactionHash.hex())
-    if transaction_object:
+    if transaction_object and transaction_object.is_synchronized_with_app:
         return True
     transaction_object = persistence_module.create_external_transaction(
         status = 'SUCCESS',
@@ -102,7 +102,8 @@ def handle_transaction(transaction):
         sender_address = transaction.args['from'],
         amount = transaction.args['value']
     )
-
+    print('NOT A DUPE!')
+    print(transaction.transactionHash.hex())
     call_webhook(transaction_object)
     # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
     # in order to be retryable later

@@ -233,7 +233,6 @@ class BlockchainTransaction(ModelBase):
     contract_address = Column(String)
     nonce = Column(Integer)
     nonce_consumed = Column(Boolean, default=False)
-    is_synchronized_with_app = Column(Boolean, default=False)
 
     sender_address = Column(String)
     recipient_address = Column(String)

@@ -5,7 +5,7 @@ from celery import signals
 
 import config
 import eth_manager.task_interfaces.composite
-from eth_manager.task_interfaces.blockchain_sync import blockchain_sync
+from eth_manager.blockchain_sync import blockchain_sync
 from eth_manager import celery_app, blockchain_processor, persistence_module
 from exceptions import (
     LockedNotAcquired
