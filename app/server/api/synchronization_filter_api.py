@@ -20,7 +20,7 @@ class SynchronizationFilterAPI(MethodView):
         filter_type = post_data.get('filter_type')      
 
         transaction_filter = add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type)
-        bt.force_third_party_transaction_sync()
+        # bt.force_third_party_transaction_sync()
         return make_response(jsonify(synchronization_filter_schema.dump(transaction_filter).data)), 201
 
 synchronization_filter_blueprint.add_url_rule(
