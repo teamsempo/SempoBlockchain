@@ -29,7 +29,14 @@ import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
 import { MetricAction } from "../reducers/metric/actions";
 
-function* updateStateFromCreditTransfer(result) {
+interface CreditLoadApiResult {
+  is_create: boolean;
+  data: any;
+  message: string;
+  bulk_responses: any[];
+}
+
+function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
   //Schema expects a list of credit transfer objects
   let credit_transfer_list = [];
   if (result.data.credit_transfers) {
@@ -86,7 +93,12 @@ function* updateStateFromCreditTransfer(result) {
   }
 }
 
-function* loadCreditTransferList({ payload }) {
+interface CreditTransferListAPIResult {
+  type: typeof LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST;
+  payload: any;
+}
+
+function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
   try {
     const credit_load_result = yield call(loadCreditTransferListAPI, payload);
 
@@ -111,7 +123,7 @@ function* watchLoadCreditTransferList() {
   );
 }
 
-function* loadPusherCreditTransfer(pusher_data) {
+function* loadPusherCreditTransfer(pusher_data: any) {
   try {
     yield call(updateStateFromCreditTransfer, pusher_data);
 
@@ -130,13 +142,18 @@ function* watchPusherCreditTransfer() {
   );
 }
 
-function* modifyTransfer({ payload }) {
+function* modifyTransfer({
+  payload
+}: {
+  type: typeof ModifyCreditTransferActionTypes.MODIFY_TRANSFER_REQUEST;
+  payload: any;
+}) {
   try {
     const result = yield call(modifyTransferAPI, payload);
 
     yield call(updateStateFromCreditTransfer, result);
 
-    yield put(ModifyCreditTransferAction.modifyTransferSuccess());
+    yield put(ModifyCreditTransferAction.modifyTransferSuccess(result));
 
     yield put(
       MessageAction.addMessage({ error: false, message: result.message })
@@ -159,7 +176,16 @@ function* watchModifyTransfer() {
   );
 }
 
-function* createTransfer({ payload }) {
+interface CreditTransferAPIResult {
+  payload: any;
+}
+
+function* createTransfer({
+  payload
+}: {
+  type: typeof CreditTransferActionTypes.CREATE_TRANSFER_REQUEST;
+  payload: any;
+}) {
   try {
     const result = yield call(newTransferAPI, payload);
 

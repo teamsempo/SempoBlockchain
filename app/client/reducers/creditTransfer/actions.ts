@@ -12,11 +12,8 @@ export const loadCreditTransferListRequest = () => ({
   type: LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST as typeof LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST
 });
 
-export const loadCreditTransferListSuccess = (
-  credit_transfers: CreditTransfers
-) => ({
-  type: LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS as typeof LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
-  credit_transfers
+export const loadCreditTransferListSuccess = () => ({
+  type: LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS as typeof LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS
 });
 
 export const loadCreditTransferListFailure = (err: any) => ({
@@ -63,9 +60,8 @@ export const createTransferRequest = (payload: any) => ({
   payload
 });
 
-export const createTransferSuccess = (payload: any) => ({
-  type: CreditTransferActionTypes.CREATE_TRANSFER_SUCCESS as typeof CreditTransferActionTypes.CREATE_TRANSFER_SUCCESS,
-  payload
+export const createTransferSuccess = () => ({
+  type: CreditTransferActionTypes.CREATE_TRANSFER_SUCCESS as typeof CreditTransferActionTypes.CREATE_TRANSFER_SUCCESS
 });
 
 export const createTransferFailure = (error: any) => ({
