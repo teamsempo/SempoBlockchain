@@ -128,7 +128,7 @@ class SQLPersistenceInterface(object):
     ) -> int:
 
         if transaction.nonce is not None:
-            return transaction.nonce, transaction.id
+            return transaction.nonce
         calculated_nonce = self._calculate_nonce(signing_wallet, network_nonce)
         transaction.signing_wallet = signing_wallet
         transaction.nonce = calculated_nonce

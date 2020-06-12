@@ -40,7 +40,7 @@ class MockNonce(object):
     def increment_counter(self, address):
 
         if address not in self.addresses:
-            self.addresses[address] = 0
+            self.addresses[address] = 1
         else:
             self.addresses[address] += 1
 

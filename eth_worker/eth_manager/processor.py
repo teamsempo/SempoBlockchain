@@ -171,11 +171,15 @@ class TransactionProcessor(object):
                 gas_price
             )
 
-            signed_transaction = self._sign_transaction(
-                signing_wallet_obj.private_key,
+            built_txn = self._construct_full_txn_dict(
                 metadata,
-                unbuilt_transaction,
-                partial_txn_dict
+                partial_txn_dict,
+                unbuilt_transaction
+            )
+
+            signed_transaction = self.w3.eth.account.sign_transaction(
+                built_txn,
+                private_key=signing_wallet_obj.private_key
             )
 
             self._send_signed_transaction(signed_transaction, transaction_id)
@@ -249,22 +253,20 @@ class TransactionProcessor(object):
 
         return metadata
 
+    def _construct_full_txn_dict(self, metadata, partial_txn_dict=None, unbuilt_transaction=None):
 
-    def _sign_transaction(
-            self,
-            private_key,
-            metadata,
-            txn_data,
-            unbuilt_transaction=None,
-            partial_txn_dict=None
-    ):
+        if not partial_txn_dict and not unbuilt_transaction:
+            raise Exception("Must provide partial_txn_dict and/or unbuilt_transaction data")
+
+        if not partial_txn_dict:
+            partial_txn_dict = {}
+
+        txn_dict = {**metadata, **partial_txn_dict}
 
         if unbuilt_transaction:
-            txn = unbuilt_transaction.buildTransaction(metadata)
-        else:
-            txn = {**metadata, **partial_txn_dict}
+            txn_dict =  unbuilt_transaction.buildTransaction(txn_dict)
 
-        return self.w3.eth.account.signTransaction(txn, private_key=private_key)
+        return txn_dict
 
     def _send_signed_transaction(self, signed_transaction, transaction_id):
         try:

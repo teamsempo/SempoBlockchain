@@ -42,18 +42,24 @@ def persistence_module(db_session):
         red=red, session=db_session, first_block_hash='deadbeef01'
     )
 
+@pytest.fixture(scope='function')
+def noncer():
+    return MockNonce()
 
 @pytest.fixture(scope='function')
-def processor(persistence_module, monkeypatch):
+def processor(persistence_module, noncer, monkeypatch):
     w3 = Web3()
     red = MockRedis()
 
     monkeypatch.setattr(w3.eth, "sendRawTransaction", lambda x: None)
 
-    noncer = MockNonce()
     monkeypatch.setattr(w3.eth, "getTransactionCount", noncer.get_transaction_count)
 
-    return TransactionProcessor(
+    monkeypatch.setattr(w3.eth, "estimateGas", lambda x: 40000)
+
+
+
+    p = TransactionProcessor(
         ethereum_chain_id=1,
         w3=w3,
         red=red,
@@ -61,6 +67,14 @@ def processor(persistence_module, monkeypatch):
         gas_limit=400000,
         persistence_module=persistence_module
     )
+
+    from eth_manager.ABIs import (
+        erc20_abi,
+    )
+
+    p.registry.register_abi('ERC20', erc20_abi.abi)
+
+    return p
 
 
 @pytest.fixture(scope='function')
@@ -92,6 +106,21 @@ def dummy_task(db_session, dummy_wallet):
 
 @pytest.fixture(scope='function')
 def dummy_transaction(db_session, dummy_task, dummy_wallet):
+    from sql_persistence.models import BlockchainTransaction
+
+    txn = BlockchainTransaction(
+        signing_wallet=dummy_wallet
+    )
+
+    txn.task = dummy_task
+
+    db_session.add(txn)
+    db_session.commit()
+
+    return txn
+
+@pytest.fixture(scope='function')
+def second_dummy_transaction(db_session, dummy_task, dummy_wallet):
     from sql_persistence.models import BlockchainTransaction
 
     txn = BlockchainTransaction(

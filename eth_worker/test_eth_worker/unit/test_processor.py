@@ -11,30 +11,65 @@ def test_get_gas_price(processor):
 #     processor.call_contract_function()
 
 # More of a functional test
-def test_process_send_eth_transaction(processor, dummy_transaction, monkeypatch):
+def test_process_send_eth_transaction(processor, dummy_transaction):
 
-    ttt = processor.process_send_eth_transaction(
+    processor.process_send_eth_transaction(
         dummy_transaction.id, address, 123
 
     )
 
-#     test data in persisten to see if updated
 
+def test_proccess_deploy_contract_transaction(processor, dummy_transaction):
 
-@pytest.mark.parametrize("unbuilt_transaction, gas_limit, gas_price, should_error", [
-    (MockUnbuiltTransaction(), None, 123456, False),
-])
-def test_compile_transaction_metadata(dummy_transaction, processor, unbuilt_transaction, gas_limit, gas_price, should_error):
-
-    metadata = processor._compile_transaction_metadata(
-        dummy_transaction.signing_wallet,
-        dummy_transaction.id,
-        unbuilt_transaction=unbuilt_transaction,
-        gas_limit=gas_limit,
-        gas_price=gas_price
+    processor.process_deploy_contract_transaction(
+        dummy_transaction.id, 'ERC20Token', args=('FooToken', 'FTK', 18)
     )
 
-    tt = 4
+def test_calculate_nonce(dummy_transaction, second_dummy_transaction, noncer, processor):
+    wallet = dummy_transaction.signing_wallet
+
+    noncer.increment_counter(dummy_transaction.signing_wallet.address)
+    assert processor._calculate_nonce(wallet, dummy_transaction.id) == 1
+
+    # Shouldn't change since it's the same transaction
+    noncer.increment_counter(dummy_transaction.signing_wallet.address)
+    assert processor._calculate_nonce(wallet, dummy_transaction.id) == 1
+
+    noncer.increment_counter(dummy_transaction.signing_wallet.address)
+    assert processor._calculate_nonce(wallet, second_dummy_transaction.id) == 3
+
+
+@pytest.mark.parametrize("unbuilt_transaction, gas_limit, gas_price, expected", [
+    (MockUnbuiltTransaction(), None, 123456, {'gas': 100000, 'gasPrice': 123456, 'nonce': 0, 'chainId': 1}),
+    (MockUnbuiltTransaction(), 654321, None, {'gas': 654321, 'gasPrice': 100, 'nonce': 0, 'chainId': 1}),
+    (MockUnbuiltTransaction(), 654321, 123456, {'gas': 654321, 'gasPrice': 123456, 'nonce': 0, 'chainId': 1}),
+    (None, 654321, 123456, {'gas': 654321, 'gasPrice': 123456, 'nonce': 0, 'chainId': 1}),
+    (None, None, 123456, None),
+    (None, None, None, None),
+
+])
+def test_compile_transaction_metadata(dummy_transaction, processor, unbuilt_transaction, gas_limit, gas_price, expected):
+
+    if expected:
+        metadata = processor._compile_transaction_metadata(
+            dummy_transaction.signing_wallet,
+            dummy_transaction.id,
+            unbuilt_transaction=unbuilt_transaction,
+            gas_limit=gas_limit,
+            gas_price=gas_price
+        )
+
+        assert metadata == expected
+
+    else:
+        with pytest.raises(Exception):
+            processor._compile_transaction_metadata(
+                dummy_transaction.signing_wallet,
+                dummy_transaction.id,
+                unbuilt_transaction=unbuilt_transaction,
+                gas_limit=gas_limit,
+                gas_price=gas_price
+            )
 
 # def test_process_send_eth_transaction(processor, dummy_transaction, monkeypatch):
 #
