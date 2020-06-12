@@ -80,7 +80,6 @@ def synchronize_third_party_transactions(self):
 
 @celery_app.task(**low_priority_config)
 def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type):
-    print((contract_address, contract_type, filter_parameters, filter_type))
     return blockchain_sync.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type)
 
 @celery_app.task(**base_task_config)
