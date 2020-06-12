@@ -11,12 +11,12 @@ from web3 import (
 )
 
 import eth_manager.blockchain_sync.blockchain_sync_constants as sync_const
-from eth_manager import red, w3, persistence_module
+from eth_manager import red, w3_websocket, persistence_module
 from eth_manager.ABIs import erc20_abi
 
 # Hit the database to get the latest block number to which we're synced
 def get_latest_block_number():
-    return w3.eth.getBlock('latest').number
+    return w3_websocket.eth.getBlock('latest').number
 
 # Call webhook
 def call_webhook(transaction):
@@ -118,7 +118,7 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
     print(f'Fetching block range {start_block} to {end_block} for contract {contract_address}')
 
     persistence_module.add_block_range(start_block, end_block, filter_id)
-    erc20_contract = w3.eth.contract(
+    erc20_contract = w3_websocket.eth.contract(
         address = Web3.toChecksumAddress(contract_address),
         abi = erc20_abi.abi
     )
