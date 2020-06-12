@@ -1,8 +1,8 @@
-"""Transaction Callback Migration Alteration
+"""empty message
 
-Revision ID: 49e8a333d285
+Revision ID: 13040d945d12
 Revises: d7b89a614ae9
-Create Date: 2020-06-02 10:37:49.647260
+Create Date: 2020-06-12 16:31:52.099008
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '49e8a333d285'
+revision = '13040d945d12'
 down_revision = 'd7b89a614ae9'
 branch_labels = None
 depends_on = None
