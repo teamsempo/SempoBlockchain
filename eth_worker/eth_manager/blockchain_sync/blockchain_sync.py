@@ -44,12 +44,13 @@ def synchronize_third_party_transactions():
         max_enqueued_block = f.max_block or 0
         latest_block = get_latest_block_number()
         number_of_blocks_to_get = (latest_block - max_enqueued_block)
-
         # integer division, then add a chunk if there's a remainder
         number_of_chunks = int(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST) + (number_of_blocks_to_get % sync_const.BLOCKS_PER_REQUEST > 0)
         for chunk in range(number_of_chunks):
             floor = max_enqueued_block + (chunk * sync_const.BLOCKS_PER_REQUEST)
             ceiling = max_enqueued_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
+            if ceiling > latest_block:
+                ceiling = latest_block
             # filter_job objects are just filter objects with floors/ceilings set
             job = {
                 'filter_id': f.id,
