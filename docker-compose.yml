@@ -74,7 +74,7 @@ services:
     image: "redis:alpine"
 
   ganache:
-    image: "trufflesuite/ganache-cli:latest"
+    image: "trufflesuite/ganache-cli:v6.7.0"
     command: "-l 80000000 -i 42"
 #  beat:
 #    build:
