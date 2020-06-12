@@ -106,11 +106,13 @@ def register_blueprints(app):
         # On app start, we send token addresses to the worker
         from server.utils.synchronization_filter import add_transaction_filter
         from server.models.token import Token
-        tokens = db.session.query(Token)
-        for t in tokens:
-            if t.address:
-                add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER')
-
+        try:
+            tokens = db.session.query(Token)
+            for t in tokens:
+                if t.address:
+                    add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER')
+        except:
+            pass
     @app.before_request
     def before_request():
         # Celery task list. Tasks are added here so that they can be completed after db commit
