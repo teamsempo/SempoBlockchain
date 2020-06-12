@@ -82,6 +82,8 @@ def process_all_chunks():
             handle_transaction(transaction)
         # Once a batch of chunks is completed, we can mark them completed
         persistence_module.set_block_range_status(task['floor'], task['ceiling'], 'SUCCESS')
+        # Only pop the list (delete job from queue) after success
+        red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
 
 # Processes newly found transaction event
 # Creates database object for transaction
@@ -103,14 +105,11 @@ def handle_transaction(transaction):
         sender_address = transaction.args['from'],
         amount = transaction.args['value']
     )
-    print(transaction.transactionHash.hex())
+
     call_webhook(transaction_object)
     # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
     # in order to be retryable later
     persistence_module.mark_transaction_as_completed(transaction_object)
-    # Only pop the list (delete job from queue) after success
-    red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
-
 
 # Gets blockchain transaction history for given range
 # Fallback if something goes wrong at this level: block-tracking table
