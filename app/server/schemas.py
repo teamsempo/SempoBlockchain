@@ -463,7 +463,7 @@ view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credi
 credit_transfer_schema = CreditTransferSchema()
 credit_transfers_schema = CreditTransferSchema(many=True)
 
-synchronization_filter_schema = SynchronizationFilterSchema(many=True)
+synchronization_filter_schema = SynchronizationFilterSchema()
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
