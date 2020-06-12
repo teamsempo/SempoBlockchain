@@ -72,7 +72,7 @@ class BlockchainTasker(object):
         return task_runner.delay_task(self._eth_endpoint('add_transaction_filter'), kwargs = kwargs).id
 
     def force_third_party_transaction_sync(self):
-        return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions')).id
+        return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions'), queue='low-priority').id
 
     def get_blockchain_task(self, task_uuid):
         """
