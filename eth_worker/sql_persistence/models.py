@@ -289,7 +289,7 @@ class SynchronizedBlock(ModelBase):
 
 class SynchronizationFilter(ModelBase):
     __tablename__ = 'synchronization_filter'
-    contract_address = Column(String)
+    contract_address = Column(String, unique=True)
     contract_type = Column(String)
     filter_parameters = Column(String)
     filter_type = Column(String) # TRANSFER, EXCHANGE

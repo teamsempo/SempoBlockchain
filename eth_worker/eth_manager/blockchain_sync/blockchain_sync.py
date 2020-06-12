@@ -40,8 +40,8 @@ def synchronize_third_party_transactions():
     # Since the webook will timeout if we ask for too many blocks at once, we have to break 
     # the range we want into chunks.
     for f in filters:
+        ceiling = 0
         max_enqueued_block = f.max_block or 0
-        max_enqueued_block = max_enqueued_block
         latest_block = get_latest_block_number()
         number_of_blocks_to_get = (latest_block - max_enqueued_block)
 
