@@ -112,6 +112,7 @@ def register_blueprints(app):
                 if t.address:
                     add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER')
         except:
+            print('Could not load transactions')
             pass
     @app.before_request
     def before_request():
