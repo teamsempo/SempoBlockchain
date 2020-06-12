@@ -64,6 +64,7 @@ jobs:
           name: Build application Docker images
           command: |
             export GIT_HASH=$CIRCLE_SHA1
+            export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --build-arg GIT_HASH=${CIRCLE_SHA1}
       - persist_to_workspace:
           root: ~/project
@@ -87,6 +88,7 @@ jobs:
           name: Run Docker Tests
           command: |
             export GIT_HASH=$CIRCLE_SHA1
+            export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from app
   test:worker:
     working_directory: ~/project
@@ -104,6 +106,7 @@ jobs:
           name: Run Docker Tests
           command: |
             export GIT_HASH=$CIRCLE_SHA1
+            export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from eth_worker
   test:frontend:
     working_directory: ~/project
@@ -144,6 +147,7 @@ jobs:
           name: Safety Build of Docker images
           command: |
             export GIT_HASH=$CIRCLE_SHA1
+            export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --build-arg GIT_HASH=$CIRCLE_SHA1
 
       - run:

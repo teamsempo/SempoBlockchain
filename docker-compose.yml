@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: app/Dockerfile
-    image: server
+    image: "server:${IMAGE_TAG}"
     environment:
       CONTAINER_TYPE: "APP"
     depends_on:
@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${IMAGE_TAG}"
     environment:
       CONTAINER_TYPE: "PRIMARY"
       PYTHONUNBUFFERED: 0
@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${IMAGE_TAG}"
     environment:
       CONTAINER_TYPE: "PROCESSOR"
       PYTHONUNBUFFERED: 0
@@ -44,16 +44,15 @@ services:
     build:
       context: .
       dockerfile: pgbouncer/Dockerfile
-    image: pgbouncer
+    image: "pgbouncer:${IMAGE_TAG}"
 
   proxy:
     build: proxy
-    image: proxy
-    environment:
-      ports:
-        - "80:80"
-      depends_on:
-        - app
+    image: "proxy:${IMAGE_TAG}"
+    ports:
+      - "80:80"
+    depends_on:
+      - app
 
   postgres:
     image: "postgres"
