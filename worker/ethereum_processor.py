@@ -301,7 +301,7 @@ class BaseERC20Processor(ABC):
             self.contract_address = utils.checksum_encode(contract_address)
             self.ethereum_chain_id = int(ethereum_chain_id)
 
-            self.w3 = Web3(WebsocketProvider(websocket_provider))
+            self.w3 = Web3(HTTPProvider(http_provider))
 
             self.contract = self.w3.eth.contract(address=self.contract_address, abi=self.abi_dict)
             self.decimals = self.get_decimals()
