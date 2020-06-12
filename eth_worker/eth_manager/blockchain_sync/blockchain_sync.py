@@ -41,7 +41,7 @@ def synchronize_third_party_transactions():
     # the range we want into chunks.
     for f in filters:
         max_enqueued_block = f.max_block or 0
-        max_enqueued_block = max_enqueued_block - 100000
+        max_enqueued_block = max_enqueued_block
         latest_block = get_latest_block_number()
         number_of_blocks_to_get = (latest_block - max_enqueued_block)
 
@@ -115,7 +115,7 @@ def handle_transaction(transaction):
 # Fallback if something goes wrong at this level: block-tracking table
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None, filter_id = None):
     # Creates DB objects for every block to monitor status
-    print(f'Fetching block range {start_block} to {end_block}')
+    print(f'Fetching block range {start_block} to {end_block} for contract {contract_address}')
 
     persistence_module.add_block_range(start_block, end_block, filter_id)
     erc20_contract = w3.eth.contract(
@@ -132,7 +132,7 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
         for event in filter.get_all_entries():
             yield event
     except:
-        print(f'Failed fetching block range {start_block} to {end_block}')
+        print(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
         persistence_module.set_block_range_status(start_block, end_block, 'FAILED FETCHING BLOCKS')
 
 # Adds transaction filter to database if it doesn't already exist
