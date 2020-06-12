@@ -139,5 +139,7 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
 def add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type):
     # See if there's already a filter with the same contract address AND type. If there is, do nothing
     # This lets you always add all filters at app-launch, without running an entire filter every time
+    if not contract_address:
+        raise Exception('No contract_address found for new contract filter')
     if not persistence_module.check_if_filter_exists(contract_address, contract_type):
         persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type)

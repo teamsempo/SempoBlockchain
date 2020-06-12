@@ -17,7 +17,7 @@ from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
-from server.utils.user import create_user_if_required
+from server.utils.user import create_transfer_account_if_required
 from server.utils.metrics import calculate_transfer_stats
 
 from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
@@ -427,14 +427,13 @@ class InternalCreditTransferAPI(MethodView):
         transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_hash=blockchain_transaction_hash).first()
         if not transfer:
             token = Token.query.filter_by(address=contract_address).first()
-            send_user = create_user_if_required(sender_blockchain_address, token)
-            receive_user = create_user_if_required(recipient_blockchain_address, token)
-
+            send_transfer_account = create_transfer_account_if_required(sender_blockchain_address, token)
+            receive_transfer_account = create_transfer_account_if_required(recipient_blockchain_address, token)
             transfer = CreditTransfer(
                 transfer_amount,
                 token=token,
-                sender_transfer_account=send_user.default_transfer_account,
-                recipient_transfer_account=receive_user.default_transfer_account,
+                sender_transfer_account=send_transfer_account,
+                recipient_transfer_account=receive_transfer_account,
                 transfer_type='PAYMENT',
             )
             transfer.blockchain_status = BlockchainStatus.SUCCESS
