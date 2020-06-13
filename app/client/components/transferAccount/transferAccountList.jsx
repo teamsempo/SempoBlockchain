@@ -18,10 +18,10 @@ import NewTransferManager from "../management/newTransferManager.jsx";
 
 import { formatMoney } from "../../utils";
 import {
-  editTransferAccount,
-  setSelected,
-  loadTransferAccounts
-} from "../../reducers/transferAccount/reducers";
+  EditTransferAccountAction,
+  SetTransferAccountAction,
+  LoadTransferAccountAction
+} from "../../reducers/transferAccount/actions";
 import { TransferAccountTypes } from "../transferAccount/types";
 
 const mapStateToProps = state => {
@@ -34,10 +34,14 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    editTransferAccountRequest: body => dispatch(editTransferAccount({ body })),
-    setSelected: selected => dispatch(setSelected(selected)),
+    editTransferAccountRequest: body =>
+      dispatch(EditTransferAccountAction.editTransferAccountRequest({ body })),
+    setSelected: selected =>
+      dispatch(SetTransferAccountAction.setSelected(selected)),
     loadTransferAccounts: (query, path) =>
-      dispatch(loadTransferAccounts({ query, path }))
+      dispatch(
+        LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
+      )
   };
 };
 

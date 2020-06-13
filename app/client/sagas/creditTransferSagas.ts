@@ -13,10 +13,7 @@ import {
   ModifyCreditTransferAction
 } from "../reducers/creditTransfer/actions";
 
-import {
-  DEEP_UPDATE_TRANSFER_ACCOUNTS,
-  UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
-} from "../reducers/transferAccount/reducers";
+import { TransferAccountActionTypes } from "../reducers/transferAccount/types";
 
 import {
   loadCreditTransferListAPI,
@@ -49,7 +46,10 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
-    yield put({ type: DEEP_UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
+    yield put({
+      type: TransferAccountActionTypes.DEEP_UPDATE_TRANSFER_ACCOUNTS,
+      transfer_accounts
+    });
   }
 
   const users = normalizedData.entities.users;
@@ -62,7 +62,8 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     // we need to add the newly created credit_transfer id
     // to the associated transfer_account object credit_transfer array
     yield put({
-      type: UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS,
+      type:
+        TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS,
       credit_transfer_list
     });
     yield put(

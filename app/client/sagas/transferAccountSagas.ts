@@ -5,19 +5,16 @@ import { handleError } from "../utils";
 import { transferAccountSchema } from "../schemas";
 
 import {
-  LOAD_TRANSFER_ACCOUNTS_REQUEST,
-  LOAD_TRANSFER_ACCOUNTS_SUCCESS,
-  LOAD_TRANSFER_ACCOUNTS_FAILURE,
-  DEEP_UPDATE_TRANSFER_ACCOUNTS,
-  EDIT_TRANSFER_ACCOUNT_REQUEST,
-  EDIT_TRANSFER_ACCOUNT_SUCCESS,
-  EDIT_TRANSFER_ACCOUNT_FAILURE
-} from "../reducers/transferAccount/reducers";
+  LoadTransferAccountAction,
+  TransferAccountAction,
+  EditTransferAccountAction
+} from "../reducers/transferAccount/actions";
 
 import {
-  TransferAccountData,
-  SingularTransferAccountData,
-  MultipleTransferAccountData
+  LoadTransferAccountActionTypes,
+  EditTransferAccountActionTypes,
+  TransferAccountEditApiResult,
+  TransferAccountLoadApiResult
 } from "../reducers/transferAccount/types";
 
 import { CreditTransferAction } from "../reducers/creditTransfer/actions";
@@ -29,6 +26,12 @@ import {
 
 import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
+
+import {
+  TransferAccountData,
+  SingularTransferAccountData,
+  MultipleTransferAccountData
+} from "../reducers/transferAccount/types";
 
 function* updateStateFromTransferAccount(data: TransferAccountData) {
   //Schema expects a list of transfer account objects
@@ -66,13 +69,10 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
-    yield put({ type: DEEP_UPDATE_TRANSFER_ACCOUNTS, transfer_accounts });
+    yield put(
+      TransferAccountAction.deepUpdateTransferAccounts(transfer_accounts)
+    );
   }
-}
-
-interface TransferAccountLoadApiResult {
-  type: typeof LOAD_TRANSFER_ACCOUNTS_REQUEST;
-  payload: any;
 }
 
 // Load Transfer Account List Saga
@@ -82,14 +82,15 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
 
     yield call(updateStateFromTransferAccount, load_result.data);
 
-    yield put({
-      type: LOAD_TRANSFER_ACCOUNTS_SUCCESS,
-      lastQueried: load_result.query_time
-    });
+    yield put(
+      LoadTransferAccountAction.loadTransferAccountsSuccess(
+        load_result.query_time
+      )
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_TRANSFER_ACCOUNTS_FAILURE, error: error });
+    yield put(LoadTransferAccountAction.loadTransferAccountsFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -98,12 +99,10 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
 }
 
 function* watchLoadTransferAccounts() {
-  yield takeEvery(LOAD_TRANSFER_ACCOUNTS_REQUEST, loadTransferAccounts);
-}
-
-interface TransferAccountEditApiResult {
-  type: typeof EDIT_TRANSFER_ACCOUNT_REQUEST;
-  payload: any;
+  yield takeEvery(
+    LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_REQUEST,
+    loadTransferAccounts
+  );
 }
 
 // Edit Transfer Account Saga
@@ -113,7 +112,7 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
 
     yield call(updateStateFromTransferAccount, edit_response.data);
 
-    yield put({ type: EDIT_TRANSFER_ACCOUNT_SUCCESS });
+    yield put(EditTransferAccountAction.editTransferAccountSuccess());
 
     yield put(
       MessageAction.addMessage({ error: false, message: edit_response.message })
@@ -121,7 +120,7 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: EDIT_TRANSFER_ACCOUNT_FAILURE, error: error });
+    yield put(EditTransferAccountAction.editTransferAccountFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -130,7 +129,10 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
 }
 
 function* watchEditTransferAccount() {
-  yield takeEvery(EDIT_TRANSFER_ACCOUNT_REQUEST, editTransferAccount);
+  yield takeEvery(
+    EditTransferAccountActionTypes.EDIT_TRANSFER_ACCOUNT_REQUEST,
+    editTransferAccount
+  );
 }
 
 export default function* transferAccountSagas() {
