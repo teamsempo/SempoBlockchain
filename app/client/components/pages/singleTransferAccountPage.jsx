@@ -11,7 +11,7 @@ import LoadingSpinner from "../loadingSpinner.jsx";
 import { LightTheme } from "../theme.js";
 import SingleTransferAccountManagement from "../transferAccount/singleTransferAccountWrapper.jsx";
 
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import { loadTransferAccounts } from "../../reducers/transferAccount/reducers";
 import organizationWrapper from "../organizationWrapper";
 
 const mapStateToProps = state => {

@@ -12,7 +12,7 @@ import {
   resetPinAPI
 } from "../api/userAPI";
 
-import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccountReducer";
+import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccount/reducers";
 import { browserHistory } from "../createStore";
 import { MessageAction } from "../reducers/message/actions";
 

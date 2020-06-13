@@ -16,7 +16,7 @@ import {
 import {
   DEEP_UPDATE_TRANSFER_ACCOUNTS,
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
-} from "../reducers/transferAccountReducer";
+} from "../reducers/transferAccount/reducers";
 
 import {
   loadCreditTransferListAPI,

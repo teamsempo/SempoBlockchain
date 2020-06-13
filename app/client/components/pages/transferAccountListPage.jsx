@@ -14,7 +14,7 @@ import { LightTheme } from "../theme.js";
 import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
 import UploadButton from "../uploader/uploadButton.jsx";
 
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import { loadTransferAccounts } from "../../reducers/transferAccount/reducers";
 import organizationWrapper from "../organizationWrapper.jsx";
 
 const mapStateToProps = state => {

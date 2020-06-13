@@ -12,7 +12,7 @@ import {
   EDIT_TRANSFER_ACCOUNT_REQUEST,
   EDIT_TRANSFER_ACCOUNT_SUCCESS,
   EDIT_TRANSFER_ACCOUNT_FAILURE
-} from "../reducers/transferAccountReducer.js";
+} from "../reducers/transferAccount/reducers";
 
 import {
   TransferAccountData,

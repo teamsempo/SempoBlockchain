@@ -1,5 +1,5 @@
 import { combineReducers } from "redux";
-import { DEEEEEEP, addCreditTransferIdsToTransferAccount } from "../utils";
+import { DEEEEEEP, addCreditTransferIdsToTransferAccount } from "../../utils";
 
 export const DEEP_UPDATE_TRANSFER_ACCOUNTS = "DEEP_UPDATE_TRANSFER_ACCOUNTS";
 export const UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS =

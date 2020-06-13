@@ -21,7 +21,7 @@ import {
   editTransferAccount,
   setSelected,
   loadTransferAccounts
-} from "../../reducers/transferAccountReducer";
+} from "../../reducers/transferAccount/reducers";
 import { TransferAccountTypes } from "../transferAccount/types";
 
 const mapStateToProps = state => {
