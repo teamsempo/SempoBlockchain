@@ -1,41 +1,49 @@
 import { combineReducers } from "redux";
 import { DEEEEEEP, addCreditTransferIdsToTransferAccount } from "../../utils";
 
-export const DEEP_UPDATE_TRANSFER_ACCOUNTS = "DEEP_UPDATE_TRANSFER_ACCOUNTS";
-export const UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS =
-  "UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS";
-export const UPDATE_TRANSFER_ACCOUNTS = "UPDATE_TRANSFER_ACCOUNTS";
+import {
+  TransferAccountActionTypes,
+  LoadTransferAccountActionTypes,
+  EditTransferAccountActionTypes,
+  SetTransferAccountActionTypes,
+  TransfersByUserId
+} from "./types";
+import {
+  TransferAccountAction,
+  LoadTransferAccountAction,
+  EditTransferAccountAction,
+  SetTransferAccountAction
+} from "./actions";
 
-export const LOAD_TRANSFER_ACCOUNTS_REQUEST = "LOAD_TRANSFER_ACCOUNTS_REQUEST";
-export const LOAD_TRANSFER_ACCOUNTS_SUCCESS = "LOAD_TRANSFER_ACCOUNTS_SUCCESS";
-export const LOAD_TRANSFER_ACCOUNTS_FAILURE = "LOAD_TRANSFER_ACCOUNTS_FAILURE";
+import {
+  CreditTransfer,
+  DisbursementCreditTransfer,
+  ReclamationCreditTransfer
+} from "../creditTransfer/types";
 
-export const EDIT_TRANSFER_ACCOUNT_REQUEST = "EDIT_TRANSFER_ACCOUNT_REQUEST";
-export const EDIT_TRANSFER_ACCOUNT_SUCCESS = "EDIT_TRANSFER_ACCOUNT_SUCCESS";
-export const EDIT_TRANSFER_ACCOUNT_FAILURE = "EDIT_TRANSFER_ACCOUNT_FAILURE";
+const initialByIdState: TransfersByUserId = {};
 
-export const SET_SELECTED = "SET_SELECTED";
-export const RESET_SELECTED = "RESET_SELECTED";
-
-const byId = (state = {}, action) => {
+const byId = (state = initialByIdState, action: TransferAccountAction) => {
   switch (action.type) {
-    case DEEP_UPDATE_TRANSFER_ACCOUNTS:
-      return DEEEEEEP(state, action.transfer_accounts);
+    case TransferAccountActionTypes.DEEP_UPDATE_TRANSFER_ACCOUNTS:
+      return DEEEEEEP(state, action.payload);
 
-    case UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS:
+    case TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS:
       var newState = {};
 
-      action.credit_transfer_list.map(transfer => {
+      action.payload.map((transfer: CreditTransfer) => {
         if (transfer.transfer_subtype === "DISBURSEMENT") {
           let updatedTransferAccount = {
-            [transfer.recipient_transfer_account.id]: {
+            [(transfer as DisbursementCreditTransfer).recipient_transfer_account
+              .id]: {
               credit_receives: [transfer.id]
             }
           };
           newState = { ...newState, ...updatedTransferAccount };
         } else if (transfer.transfer_subtype === "RECLAMATION") {
           let updatedTransferAccount = {
-            [transfer.sender_transfer_account.id]: {
+            [(transfer as ReclamationCreditTransfer).sender_transfer_account
+              .id]: {
               credit_sends: [transfer.id]
             }
           };
@@ -45,35 +53,45 @@ const byId = (state = {}, action) => {
 
       return addCreditTransferIdsToTransferAccount(state, newState);
 
-    case UPDATE_TRANSFER_ACCOUNTS:
-      return action.transfer_accounts;
+    case TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNTS:
+      return action.payload;
 
     default:
       return state;
   }
 };
 
-const initialLoadStatusState = {
+interface LoadStatusState {
+  isRequesting: boolean;
+  error?: Error | null;
+  success: Boolean;
+  lastQueried?: Date | null;
+}
+
+const initialLoadStatusState: LoadStatusState = {
   isRequesting: false,
   error: null,
   success: false,
   lastQueried: null
 };
 
-const loadStatus = (state = initialLoadStatusState, action) => {
+const loadStatus = (
+  state = initialLoadStatusState,
+  action: LoadTransferAccountAction
+) => {
   switch (action.type) {
-    case LOAD_TRANSFER_ACCOUNTS_REQUEST:
+    case LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_REQUEST:
       return { ...state, isRequesting: true };
 
-    case LOAD_TRANSFER_ACCOUNTS_SUCCESS:
+    case LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_SUCCESS:
       return {
         ...state,
         isRequesting: false,
         success: true,
-        lastQueried: action.lastQueried || state.lastQueried
+        lastQueried: action.payload || state.lastQueried
       };
 
-    case LOAD_TRANSFER_ACCOUNTS_FAILURE:
+    case LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:
@@ -87,15 +105,18 @@ const initialEditStatusState = {
   success: false
 };
 
-const editStatus = (state = initialEditStatusState, action) => {
+const editStatus = (
+  state = initialEditStatusState,
+  action: EditTransferAccountAction
+) => {
   switch (action.type) {
-    case EDIT_TRANSFER_ACCOUNT_REQUEST:
+    case EditTransferAccountActionTypes.EDIT_TRANSFER_ACCOUNT_REQUEST:
       return { ...state, isRequesting: true };
 
-    case EDIT_TRANSFER_ACCOUNT_SUCCESS:
+    case EditTransferAccountActionTypes.EDIT_TRANSFER_ACCOUNT_SUCCESS:
       return { ...state, isRequesting: false, success: true };
 
-    case EDIT_TRANSFER_ACCOUNT_FAILURE:
+    case EditTransferAccountActionTypes.EDIT_TRANSFER_ACCOUNT_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:
@@ -103,13 +124,16 @@ const editStatus = (state = initialEditStatusState, action) => {
   }
 };
 
-const initialSelectedState = [];
+const initialSelectedState: any[] = [];
 
-const selected = (state = initialSelectedState, action) => {
+const selected = (
+  state = initialSelectedState,
+  action: SetTransferAccountAction
+) => {
   switch (action.type) {
-    case SET_SELECTED:
-      return action.selected;
-    case RESET_SELECTED:
+    case SetTransferAccountActionTypes.SET_SELECTED:
+      return action.payload;
+    case SetTransferAccountActionTypes.RESET_SELECTED:
       return initialSelectedState;
 
     default:
@@ -121,21 +145,5 @@ export const transferAccounts = combineReducers({
   byId,
   loadStatus,
   editStatus,
-  selected
-});
-
-// ACTIONS
-export const loadTransferAccounts = payload => ({
-  type: LOAD_TRANSFER_ACCOUNTS_REQUEST,
-  payload
-});
-
-export const editTransferAccount = payload => ({
-  type: EDIT_TRANSFER_ACCOUNT_REQUEST,
-  payload
-});
-
-export const setSelected = selected => ({
-  type: SET_SELECTED,
   selected
 });

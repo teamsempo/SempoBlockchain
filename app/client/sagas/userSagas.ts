@@ -12,7 +12,7 @@ import {
   resetPinAPI
 } from "../api/userAPI";
 
-import { UPDATE_TRANSFER_ACCOUNTS } from "../reducers/transferAccount/reducers";
+import { TransferAccountAction } from "../reducers/transferAccount/actions";
 import { browserHistory } from "../createStore";
 import { MessageAction } from "../reducers/message/actions";
 
@@ -140,10 +140,7 @@ function* deleteUser(
     delete users[action.payload.path];
 
     yield put(UserListAction.updateUserList(users));
-    yield put({
-      type: UPDATE_TRANSFER_ACCOUNTS,
-      transfer_accounts: transferAccounts
-    });
+    yield put(TransferAccountAction.updateTransferAccounts(transferAccounts));
 
     yield put(
       MessageAction.addMessage({
