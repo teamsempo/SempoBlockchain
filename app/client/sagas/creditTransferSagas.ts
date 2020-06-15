@@ -2,36 +2,41 @@ import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
 
 import {
-  PUSHER_CREDIT_TRANSFER,
-  UPDATE_CREDIT_TRANSFER_LIST,
-  LOAD_CREDIT_TRANSFER_LIST_REQUEST,
-  LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
-  LOAD_CREDIT_TRANSFER_LIST_FAILURE,
-  MODIFY_TRANSFER_FAILURE,
-  MODIFY_TRANSFER_REQUEST,
-  MODIFY_TRANSFER_SUCCESS,
-  CREATE_TRANSFER_REQUEST,
-  CREATE_TRANSFER_SUCCESS,
-  CREATE_TRANSFER_FAILURE
-} from "../reducers/creditTransferReducer.js";
+  LoadCreditTransferActionTypes,
+  ModifyCreditTransferActionTypes,
+  CreditTransferActionTypes
+} from "../reducers/creditTransfer/types";
+
+import {
+  CreditTransferAction,
+  LoadCreditTransferAction,
+  ModifyCreditTransferAction
+} from "../reducers/creditTransfer/actions";
 
 import {
   DEEP_UPDATE_TRANSFER_ACCOUNTS,
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
-} from "../reducers/transferAccountReducer.js";
+} from "../reducers/transferAccountReducer";
 
 import {
   loadCreditTransferListAPI,
   modifyTransferAPI,
   newTransferAPI
-} from "../api/creditTransferAPI.js";
+} from "../api/creditTransferAPI";
 import { creditTransferSchema } from "../schemas";
 import { handleError } from "../utils";
 import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
 import { MetricAction } from "../reducers/metric/actions";
 
-function* updateStateFromCreditTransfer(result) {
+interface CreditLoadApiResult {
+  is_create: boolean;
+  data: any;
+  message: string;
+  bulk_responses: any[];
+}
+
+function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
   //Schema expects a list of credit transfer objects
   let credit_transfer_list = [];
   if (result.data.credit_transfers) {
@@ -82,21 +87,28 @@ function* updateStateFromCreditTransfer(result) {
   const credit_transfers = normalizedData.entities.credit_transfers;
 
   if (credit_transfers) {
-    yield put({ type: UPDATE_CREDIT_TRANSFER_LIST, credit_transfers });
+    yield put(
+      CreditTransferAction.updateCreditTransferListRequest(credit_transfers)
+    );
   }
 }
 
-function* loadCreditTransferList({ payload }) {
+interface CreditTransferListAPIResult {
+  type: typeof LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST;
+  payload: any;
+}
+
+function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
   try {
     const credit_load_result = yield call(loadCreditTransferListAPI, payload);
 
     yield call(updateStateFromCreditTransfer, credit_load_result);
 
-    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_SUCCESS });
+    yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error: error });
+    yield put(LoadCreditTransferAction.loadCreditTransferListFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -105,32 +117,43 @@ function* loadCreditTransferList({ payload }) {
 }
 
 function* watchLoadCreditTransferList() {
-  yield takeEvery(LOAD_CREDIT_TRANSFER_LIST_REQUEST, loadCreditTransferList);
+  yield takeEvery(
+    LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,
+    loadCreditTransferList
+  );
 }
 
-function* loadPusherCreditTransfer(pusher_data) {
+function* loadPusherCreditTransfer(pusher_data: any) {
   try {
     yield call(updateStateFromCreditTransfer, pusher_data);
 
-    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_SUCCESS });
+    yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_CREDIT_TRANSFER_LIST_FAILURE, error: error });
+    yield put(LoadCreditTransferAction.loadCreditTransferListFailure(error));
   }
 }
 
 function* watchPusherCreditTransfer() {
-  yield takeEvery(PUSHER_CREDIT_TRANSFER, loadPusherCreditTransfer);
+  yield takeEvery(
+    CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER,
+    loadPusherCreditTransfer
+  );
 }
 
-function* modifyTransfer({ payload }) {
+function* modifyTransfer({
+  payload
+}: {
+  type: typeof ModifyCreditTransferActionTypes.MODIFY_TRANSFER_REQUEST;
+  payload: any;
+}) {
   try {
     const result = yield call(modifyTransferAPI, payload);
 
     yield call(updateStateFromCreditTransfer, result);
 
-    yield put({ type: MODIFY_TRANSFER_SUCCESS });
+    yield put(ModifyCreditTransferAction.modifyTransferSuccess(result));
 
     yield put(
       MessageAction.addMessage({ error: false, message: result.message })
@@ -138,7 +161,7 @@ function* modifyTransfer({ payload }) {
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: MODIFY_TRANSFER_FAILURE, error: error });
+    yield put(ModifyCreditTransferAction.modifyTransferFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -147,20 +170,32 @@ function* modifyTransfer({ payload }) {
 }
 
 function* watchModifyTransfer() {
-  yield takeEvery(MODIFY_TRANSFER_REQUEST, modifyTransfer);
+  yield takeEvery(
+    ModifyCreditTransferActionTypes.MODIFY_TRANSFER_REQUEST,
+    modifyTransfer
+  );
 }
 
-function* createTransfer({ payload }) {
+interface CreditTransferAPIResult {
+  payload: any;
+}
+
+function* createTransfer({
+  payload
+}: {
+  type: typeof CreditTransferActionTypes.CREATE_TRANSFER_REQUEST;
+  payload: any;
+}) {
   try {
     const result = yield call(newTransferAPI, payload);
 
     yield call(updateStateFromCreditTransfer, result);
 
-    yield put({ type: CREATE_TRANSFER_SUCCESS });
+    yield put(CreditTransferAction.createTransferSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_TRANSFER_FAILURE, error: error });
+    yield put(CreditTransferAction.createTransferFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -169,7 +204,10 @@ function* createTransfer({ payload }) {
 }
 
 function* watchCreateTransfer() {
-  yield takeEvery(CREATE_TRANSFER_REQUEST, createTransfer);
+  yield takeEvery(
+    CreditTransferActionTypes.CREATE_TRANSFER_REQUEST,
+    createTransfer
+  );
 }
 
 export default function* credit_transferSagas() {
