@@ -7,15 +7,16 @@ COPY ./test_requirements.txt /
 
 RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
-COPY ./eth_worker /eth_worker
-COPY ./config.py /
-RUN mkdir /config_files
-COPY ./config_files/* /config_files/
-
 WORKDIR /eth_worker
+
+COPY ./eth_worker ./
+COPY ./config.py ./
+RUN mkdir ./config_files
+COPY ./config_files/* ./config_files/
+
 
 EXPOSE 80
 
-RUN chmod +x /_docker_worker_script.sh
+RUN chmod +x ./_docker_worker_script.sh
 
-CMD ["/_docker_worker_script.sh"]
+CMD ["./_docker_worker_script.sh"]
