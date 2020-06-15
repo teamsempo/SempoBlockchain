@@ -3,7 +3,9 @@ import {
   getTFAToken,
   getToken,
   handleResponse
-} from "../utils";
+} from "../../utils";
+
+import { ApiClientType } from "./types";
 
 /**
  * Sempo apiClient
@@ -17,11 +19,11 @@ import {
  * @param body, OBJECT, body data to send to server
  * @param path, INTEGER, used for calling specific object ID i.e. /1/
  * @param errorHandling, BOOLEAN, only use FALSE for special use case for TFA/auth
- * @returns {Promise<Response>}
+ * @returns {Promise<T>}
  */
-export const apiClient = ({
+export function apiClient<T>({
   url,
-  method = method.toUpperCase(),
+  method,
   isAuthed = true,
   isTFA = false,
   isForm = false,
@@ -29,21 +31,24 @@ export const apiClient = ({
   body = null,
   path = null,
   errorHandling = true
-}) => {
-  if (["PUT", "POST", "GET", "DELETE"].indexOf(method) === -1) {
+}: ApiClientType): Promise<T> {
+  if (["PUT", "POST", "GET", "DELETE"].indexOf(method.toUpperCase()) === -1) {
     throw new Error("Method provided is not supported");
   }
 
-  let formData;
-  let headers = {};
-  let request = {
+  let formData: FormData;
+  let headers: HeadersInit = {};
+  let request: RequestInit = {
     headers: headers,
     method: method
   };
 
   if (isForm) {
+    if (body === null) {
+      throw new Error("Body cannot be null when apiClient isForm is true");
+    }
     formData = new FormData();
-    Object.keys(body).map(key => {
+    Object.keys(body).map((key: string) => {
       formData.append(key.toString(), body[key]);
     });
     method !== "GET" ? (request["body"] = formData) : null;
@@ -52,14 +57,33 @@ export const apiClient = ({
     headers["Content-Type"] = "application/json";
     method !== "GET" ? (request["body"] = JSON.stringify(body)) : null;
   }
-  isAuthed ? (headers["Authorization"] = getToken()) : null;
-  isTFA ? (body["tfa_token"] = getTFAToken()) : null;
+
+  let authToken = getToken();
+  authToken = authToken === null ? "" : authToken;
+  isAuthed ? (headers["Authorization"] = authToken) : null;
+
+  if (isAuthed) {
+    let authToken = getToken();
+    authToken = authToken === null ? "" : authToken;
+    headers["Authorization"] = authToken;
+  }
+
+  if (isTFA) {
+    if (body === null) {
+      throw new Error("Body cannot be null when apiClient isTFA is true");
+    }
+    let tfaToken = getTFAToken();
+    tfaToken = tfaToken === null ? "" : tfaToken;
+    body["tfa_token"] = tfaToken;
+  }
 
   return fetch(generateFormattedURL(url, query, path), request)
     .then(response => {
-      return errorHandling ? handleResponse(response) : response.json();
+      return errorHandling
+        ? handleResponse(response)
+        : (response.json() as Promise<T>);
     })
     .catch(error => {
       throw error;
     });
-};
+}

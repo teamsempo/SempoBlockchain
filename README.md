@@ -273,3 +273,13 @@ This will extract all keys into the config_files folder. To encrypt them again f
 Not that SOPS doesn't handle merge conflicts currently - if you try and merge an encrypted file, it will break in a bad way!
 
 Instead, if you need to merge in two config files, you need to save the old config, load the new one and merge them by hand.
+
+## To Run with Docker
+
+To run with docker first you must generate local secrets that will be read by the `config.py` script that is copied into the `app`, `worker` and `pgbouncer`
+
+```
+cd config files
+python generate_secrets.py -n docker_test
+docker-compose up
+```

@@ -310,7 +310,6 @@ class TransactionProcessor(object):
 
             print(f'Status for transaction {transaction_object.id} of task UUID {task.uuid} is:'
             f'\n {status}')
-
             if status == 'SUCCESS':
 
                 unstarted_posteriors = self.persistence_interface.get_unstarted_posteriors(task.uuid)

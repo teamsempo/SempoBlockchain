@@ -40,7 +40,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode       = db.Column(db.Enum(TransferModeEnum))
     transfer_use        = db.Column(JSON)
-
     transfer_metadata = db.Column(JSONB)
 
     exclude_from_limit_calcs = db.Column(db.Boolean, default=False)
