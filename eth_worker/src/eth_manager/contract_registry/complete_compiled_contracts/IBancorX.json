@@ -1,0 +1,624 @@
+{
+  "contractName": "IBancorX",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_toBlockchain",
+          "type": "bytes32"
+        },
+        {
+          "name": "_to",
+          "type": "bytes32"
+        },
+        {
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "xTransfer",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_xTransferId",
+          "type": "uint256"
+        },
+        {
+          "name": "_for",
+          "type": "address"
+        }
+      ],
+      "name": "getXTransferAmount",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "pragma solidity ^0.4.24;\n\ncontract IBancorX {\n    function xTransfer(bytes32 _toBlockchain, bytes32 _to, uint256 _amount, uint256 _id) public;\n    function getXTransferAmount(uint256 _xTransferId, address _for) public view returns (uint256);\n}\n",
+  "sourcePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/interfaces/IBancorX.sol",
+  "ast": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/interfaces/IBancorX.sol",
+    "exportedSymbols": {
+      "IBancorX": [2914]
+    },
+    "id": 2915,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2893,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:7"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 2914,
+        "linearizedBaseContracts": [2914],
+        "name": "IBancorX",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 2904,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "xTransfer",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2902,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2895,
+                  "name": "_toBlockchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "69:21:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 2894,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "69:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2897,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "92:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 2896,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "92:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2899,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "105:15:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2898,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "105:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2901,
+                  "name": "_id",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "122:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2900,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "122:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "68:66:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 2903,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "141:0:7"
+            },
+            "scope": 2914,
+            "src": "50:92:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 2913,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getXTransferAmount",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2909,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2906,
+                  "name": "_xTransferId",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2913,
+                  "src": "175:20:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2905,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "175:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2908,
+                  "name": "_for",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2913,
+                  "src": "197:12:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2907,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "197:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "174:36:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 2912,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2911,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2913,
+                  "src": "232:7:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2910,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "232:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "231:9:7"
+            },
+            "scope": 2914,
+            "src": "147:94:7",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 2915,
+        "src": "26:217:7"
+      }
+    ],
+    "src": "0:244:7"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/interfaces/IBancorX.sol",
+    "exportedSymbols": {
+      "IBancorX": [2914]
+    },
+    "id": 2915,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2893,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:7"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 2914,
+        "linearizedBaseContracts": [2914],
+        "name": "IBancorX",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 2904,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "xTransfer",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2902,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2895,
+                  "name": "_toBlockchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "69:21:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 2894,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "69:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2897,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "92:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 2896,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "92:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2899,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "105:15:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2898,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "105:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2901,
+                  "name": "_id",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2904,
+                  "src": "122:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2900,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "122:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "68:66:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 2903,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "141:0:7"
+            },
+            "scope": 2914,
+            "src": "50:92:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 2913,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getXTransferAmount",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2909,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2906,
+                  "name": "_xTransferId",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2913,
+                  "src": "175:20:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2905,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "175:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2908,
+                  "name": "_for",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2913,
+                  "src": "197:12:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 2907,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "197:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "174:36:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 2912,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2911,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2913,
+                  "src": "232:7:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 2910,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "232:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "231:9:7"
+            },
+            "scope": 2914,
+            "src": "147:94:7",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 2915,
+        "src": "26:217:7"
+      }
+    ],
+    "src": "0:244:7"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.26+commit.4563c3fc.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.0.16",
+  "updatedAt": "2019-12-03T23:39:21.037Z",
+  "devdoc": {
+    "methods": {}
+  },
+  "userdoc": {
+    "methods": {}
+  }
+}

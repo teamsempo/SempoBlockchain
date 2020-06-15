@@ -1,0 +1,1644 @@
+{
+  "contractName": "XTransferRerouter",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "acceptOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "newOwner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "reroutingEnabled",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_reroutingEnabled",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "_txId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "_toBlockchain",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "name": "_to",
+          "type": "bytes32"
+        }
+      ],
+      "name": "TxReroute",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "_prevOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerUpdate",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_enable",
+          "type": "bool"
+        }
+      ],
+      "name": "enableRerouting",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_txId",
+          "type": "uint256"
+        },
+        {
+          "name": "_blockchain",
+          "type": "bytes32"
+        },
+        {
+          "name": "_to",
+          "type": "bytes32"
+        }
+      ],
+      "name": "rerouteTx",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.4.24+commit.e67f0147\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[],\"name\":\"acceptOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_enable\",\"type\":\"bool\"}],\"name\":\"enableRerouting\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"newOwner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_txId\",\"type\":\"uint256\"},{\"name\":\"_blockchain\",\"type\":\"bytes32\"},{\"name\":\"_to\",\"type\":\"bytes32\"}],\"name\":\"rerouteTx\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"reroutingEnabled\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_reroutingEnabled\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_txId\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"_toBlockchain\",\"type\":\"bytes32\"},{\"indexed\":false,\"name\":\"_to\",\"type\":\"bytes32\"}],\"name\":\"TxReroute\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"_prevOwner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"OwnerUpdate\",\"type\":\"event\"}],\"devdoc\":{\"methods\":{\"acceptOwnership()\":{\"details\":\"used by a new owner to accept an ownership transfer\"},\"enableRerouting(bool)\":{\"details\":\"allows the owner to disable/enable rerouting\",\"params\":{\"_enable\":\"true to enable, false to disable\"}},\"rerouteTx(uint256,bytes32,bytes32)\":{\"details\":\"allows a user to reroute a transaction to a new blockchain/target address\",\"params\":{\"_blockchain\":\"the new blockchain name\",\"_to\":\"the new target address/account\",\"_txId\":\"the original transaction id\"}},\"transferOwnership(address)\":{\"details\":\"allows transferring the contract ownership the new owner still needs to accept the transfer can only be called by the contract owner\",\"params\":{\"_newOwner\":\"new contract owner\"}}}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/XTransferRerouter.sol\":\"XTransferRerouter\"},\"evmVersion\":\"byzantium\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/XTransferRerouter.sol\":{\"keccak256\":\"0x87ef0e3414cf9942298d48850c697ff969586a4e72a4800847c96ae38c9963da\",\"urls\":[\"bzzr://b273a934cec7d602563a70e34c1518d41e60dc56e359e0bf85c72b046882064b\"]},\"/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/utility/Owned.sol\":{\"keccak256\":\"0x420234d13d5a10debece92f5264fe4e548d38e4ddba4bb0fae67f121efb5cfb8\",\"urls\":[\"bzzr://6a0a7136d5633bc5e94e7b5f7fd84df2949ec87061ef16d4cb5ec869ebc6de3d\"]},\"/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/utility/interfaces/IOwned.sol\":{\"keccak256\":\"0x3bfadfd06a9f37a8687474694252513f00d84ff9074c9d3c69c311d62686e588\",\"urls\":[\"bzzr://b168ba3d91c3119b53b54679bec05592fe124e42f2345e785a4fd08c8225b39e\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506040516020806103ec833981016040525160008054600160a060020a0319163317905560018054911515740100000000000000000000000000000000000000000260a060020a60ff0219909216919091179055610379806100736000396000f3006080604052600436106100825763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166379ba509781146100875780638da5cb5b1461009e578063a3ebe71c146100cf578063d4ee1d90146100e9578063e3db16f7146100fe578063edd63c351461011c578063f2fde38b14610145575b600080fd5b34801561009357600080fd5b5061009c610166565b005b3480156100aa57600080fd5b506100b36101ee565b60408051600160a060020a039092168252519081900360200190f35b3480156100db57600080fd5b5061009c60043515156101fd565b3480156100f557600080fd5b506100b3610254565b34801561010a57600080fd5b5061009c600435602435604435610263565b34801561012857600080fd5b506101316102cb565b604080519115158252519081900360200190f35b34801561015157600080fd5b5061009c600160a060020a03600435166102ec565b600154600160a060020a0316331461017d57600080fd5b60015460008054604051600160a060020a0393841693909116917f343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a91a3600180546000805473ffffffffffffffffffffffffffffffffffffffff19908116600160a060020a03841617909155169055565b600054600160a060020a031681565b600054600160a060020a0316331461021457600080fd5b60018054911515740100000000000000000000000000000000000000000274ff000000000000000000000000000000000000000019909216919091179055565b600154600160a060020a031681565b60015474010000000000000000000000000000000000000000900460ff16151561028c57600080fd5b6040805183815260208101839052815185927fb5c80f971fb729e469ffa874c60425659ce82cb4adcfba9731af35ef87b6e619928290030190a2505050565b60015474010000000000000000000000000000000000000000900460ff1681565b600054600160a060020a0316331461030357600080fd5b600054600160a060020a038281169116141561031e57600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790555600a165627a7a72305820e2caa3216523891b1f8cb0bc20cb3c5a0658c493a5de44d41491269eb66bcf870029",
+  "deployedBytecode": "0x6080604052600436106100825763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166379ba509781146100875780638da5cb5b1461009e578063a3ebe71c146100cf578063d4ee1d90146100e9578063e3db16f7146100fe578063edd63c351461011c578063f2fde38b14610145575b600080fd5b34801561009357600080fd5b5061009c610166565b005b3480156100aa57600080fd5b506100b36101ee565b60408051600160a060020a039092168252519081900360200190f35b3480156100db57600080fd5b5061009c60043515156101fd565b3480156100f557600080fd5b506100b3610254565b34801561010a57600080fd5b5061009c600435602435604435610263565b34801561012857600080fd5b506101316102cb565b604080519115158252519081900360200190f35b34801561015157600080fd5b5061009c600160a060020a03600435166102ec565b600154600160a060020a0316331461017d57600080fd5b60015460008054604051600160a060020a0393841693909116917f343765429aea5a34b3ff6a3785a98a5abb2597aca87bfbb58632c173d585373a91a3600180546000805473ffffffffffffffffffffffffffffffffffffffff19908116600160a060020a03841617909155169055565b600054600160a060020a031681565b600054600160a060020a0316331461021457600080fd5b60018054911515740100000000000000000000000000000000000000000274ff000000000000000000000000000000000000000019909216919091179055565b600154600160a060020a031681565b60015474010000000000000000000000000000000000000000900460ff16151561028c57600080fd5b6040805183815260208101839052815185927fb5c80f971fb729e469ffa874c60425659ce82cb4adcfba9731af35ef87b6e619928290030190a2505050565b60015474010000000000000000000000000000000000000000900460ff1681565b600054600160a060020a0316331461030357600080fd5b600054600160a060020a038281169116141561031e57600080fd5b6001805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a03929092169190911790555600a165627a7a72305820e2caa3216523891b1f8cb0bc20cb3c5a0658c493a5de44d41491269eb66bcf870029",
+  "sourceMap": "58:1327:7:-;;;423:96;8:9:-1;5:2;;;30:1;27;20:12;5:2;423:96:7;;;;;;;;;;;;;361:5:45;:18;;-1:-1:-1;;;;;;361:18:45;369:10;361:18;;;;476:36:7;;;;;;;-1:-1:-1;;;;;;476:36:7;;;;;;;;;58:1327;;;;;;",
+  "deployedSourceMap": "58:1327:7:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;963:182:45;;8:9:-1;5:2;;;30:1;27;20:12;5:2;963:182:45;;;;;;155:20;;8:9:-1;5:2;;;30:1;27;20:12;5:2;155:20:45;;;;;;;;-1:-1:-1;;;;;155:20:45;;;;;;;;;;;;;;659:99:7;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;659:99:7;;;;;;;181:23:45;;8:9:-1;5:2;;;30:1;27;20:12;5:2;181:23:45;;;;1179:203:7;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;1179:203:7;;;;;;;;;100:28;;8:9:-1;5:2;;;30:1;27;20:12;5:2;100:28:7;;;;;;;;;;;;;;;;;;;;;;740:137:45;;8:9:-1;5:2;;;30:1;27;20:12;5:2;-1:-1;740:137:45;-1:-1:-1;;;;;740:137:45;;;;;963:182;1029:8;;-1:-1:-1;;;;;1029:8:45;1015:10;:22;1007:31;;;;;;1072:8;;;1065:5;;1053:28;;-1:-1:-1;;;;;1072:8:45;;;;1065:5;;;;1053:28;;;1099:8;;;;1091:16;;-1:-1:-1;;1091:16:45;;;-1:-1:-1;;;;;1099:8:45;;1091:16;;;;1117:21;;;963:182::o;155:20::-;;;-1:-1:-1;;;;;155:20:45;;:::o;659:99:7:-;485:5:45;;-1:-1:-1;;;;;485:5:45;471:10;:19;463:28;;;;;;725:16:7;:26;;;;;;;-1:-1:-1;;725:26:7;;;;;;;;;659:99::o;181:23:45:-;;;-1:-1:-1;;;;;181:23:45;;:::o;1179:203:7:-;864:16;;;;;;;856:25;;;;;;;;1341:34;;;;;;;;;;;;;;1351:5;;1341:34;;;;;;;;1179:203;;;:::o;100:28::-;;;;;;;;;:::o;740:137:45:-;485:5;;-1:-1:-1;;;;;485:5:45;471:10;:19;463:28;;;;;;834:5;;-1:-1:-1;;;;;821:18:45;;;834:5;;821:18;;813:27;;;;;;850:8;:20;;-1:-1:-1;;850:20:45;-1:-1:-1;;;;;850:20:45;;;;;;;;;;740:137::o",
+  "source": "pragma solidity ^0.4.24;\n\nimport \"../utility/Owned.sol\";\n\ncontract XTransferRerouter is Owned {\n    bool public reroutingEnabled;\n\n    // triggered when a rerouteTx is called\n    event TxReroute(\n        uint256 indexed _txId,\n        bytes32 _toBlockchain,\n        bytes32 _to\n    );\n\n    /**\n        @dev constructor\n\n        @param _reroutingEnabled    intializes transactions routing to enabled/disabled   \n     */\n    constructor(bool _reroutingEnabled) public {\n        reroutingEnabled = _reroutingEnabled;\n    }\n    /**\n        @dev allows the owner to disable/enable rerouting\n\n        @param _enable     true to enable, false to disable\n     */\n    function enableRerouting(bool _enable) public ownerOnly {\n        reroutingEnabled = _enable;\n    }\n\n    // allows execution only when rerouting enabled\n    modifier whenReroutingEnabled {\n        require(reroutingEnabled);\n        _;\n    }\n\n    /**\n        @dev    allows a user to reroute a transaction to a new blockchain/target address\n\n        @param _txId        the original transaction id\n        @param _blockchain  the new blockchain name\n        @param _to          the new target address/account\n     */\n    function rerouteTx(\n        uint256 _txId,\n        bytes32 _blockchain,\n        bytes32 _to\n    )\n        public\n        whenReroutingEnabled \n    {\n        emit TxReroute(_txId, _blockchain, _to);\n    }\n\n}",
+  "sourcePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/XTransferRerouter.sol",
+  "ast": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/XTransferRerouter.sol",
+    "exportedSymbols": {
+      "XTransferRerouter": [3091]
+    },
+    "id": 3092,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3029,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:7"
+      },
+      {
+        "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/utility/Owned.sol",
+        "file": "../utility/Owned.sol",
+        "id": 3030,
+        "nodeType": "ImportDirective",
+        "scope": 3092,
+        "sourceUnit": 11810,
+        "src": "26:30:7",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 3031,
+              "name": "Owned",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 11809,
+              "src": "88:5:7",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Owned_$11809",
+                "typeString": "contract Owned"
+              }
+            },
+            "id": 3032,
+            "nodeType": "InheritanceSpecifier",
+            "src": "88:5:7"
+          }
+        ],
+        "contractDependencies": [11809, 12208],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 3091,
+        "linearizedBaseContracts": [3091, 11809, 12208],
+        "name": "XTransferRerouter",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 3034,
+            "name": "reroutingEnabled",
+            "nodeType": "VariableDeclaration",
+            "scope": 3091,
+            "src": "100:28:7",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bool",
+              "typeString": "bool"
+            },
+            "typeName": {
+              "id": 3033,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "100:4:7",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 3042,
+            "name": "TxReroute",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 3041,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3036,
+                  "indexed": true,
+                  "name": "_txId",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3042,
+                  "src": "204:21:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 3035,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "204:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3038,
+                  "indexed": false,
+                  "name": "_toBlockchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3042,
+                  "src": "235:21:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3037,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "235:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3040,
+                  "indexed": false,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3042,
+                  "src": "266:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3039,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "266:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "194:89:7"
+            },
+            "src": "179:105:7"
+          },
+          {
+            "body": {
+              "id": 3051,
+              "nodeType": "Block",
+              "src": "466:53:7",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 3049,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 3047,
+                      "name": "reroutingEnabled",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3034,
+                      "src": "476:16:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 3048,
+                      "name": "_reroutingEnabled",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3044,
+                      "src": "495:17:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "476:36:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 3050,
+                  "nodeType": "ExpressionStatement",
+                  "src": "476:36:7"
+                }
+              ]
+            },
+            "documentation": "@dev constructor\n@param _reroutingEnabled    intializes transactions routing to enabled/disabled   ",
+            "id": 3052,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3045,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3044,
+                  "name": "_reroutingEnabled",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3052,
+                  "src": "435:22:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 3043,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "435:4:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "434:24:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 3046,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "466:0:7"
+            },
+            "scope": 3091,
+            "src": "423:96:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 3063,
+              "nodeType": "Block",
+              "src": "715:43:7",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 3061,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 3059,
+                      "name": "reroutingEnabled",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3034,
+                      "src": "725:16:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 3060,
+                      "name": "_enable",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3054,
+                      "src": "744:7:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "725:26:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 3062,
+                  "nodeType": "ExpressionStatement",
+                  "src": "725:26:7"
+                }
+              ]
+            },
+            "documentation": "@dev allows the owner to disable/enable rerouting\n@param _enable     true to enable, false to disable",
+            "id": 3064,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 3057,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 3056,
+                  "name": "ownerOnly",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 11764,
+                  "src": "705:9:7",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "705:9:7"
+              }
+            ],
+            "name": "enableRerouting",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3055,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3054,
+                  "name": "_enable",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3064,
+                  "src": "684:12:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 3053,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "684:4:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "683:14:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 3058,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "715:0:7"
+            },
+            "scope": 3091,
+            "src": "659:99:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 3071,
+              "nodeType": "Block",
+              "src": "846:53:7",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 3067,
+                        "name": "reroutingEnabled",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3034,
+                        "src": "864:16:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "id": 3066,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [12252, 12253],
+                      "referencedDeclaration": 12252,
+                      "src": "856:7:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
+                        "typeString": "function (bool) pure"
+                      }
+                    },
+                    "id": 3068,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "856:25:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 3069,
+                  "nodeType": "ExpressionStatement",
+                  "src": "856:25:7"
+                },
+                {
+                  "id": 3070,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "891:1:7"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 3072,
+            "name": "whenReroutingEnabled",
+            "nodeType": "ModifierDefinition",
+            "parameters": {
+              "id": 3065,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "846:0:7"
+            },
+            "src": "816:83:7",
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 3089,
+              "nodeType": "Block",
+              "src": "1326:56:7",
+              "statements": [
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 3084,
+                        "name": "_txId",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3074,
+                        "src": "1351:5:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 3085,
+                        "name": "_blockchain",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3076,
+                        "src": "1358:11:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 3086,
+                        "name": "_to",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3078,
+                        "src": "1371:3:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        },
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        },
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      ],
+                      "id": 3083,
+                      "name": "TxReroute",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3042,
+                      "src": "1341:9:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_uint256_$_t_bytes32_$_t_bytes32_$returns$__$",
+                        "typeString": "function (uint256,bytes32,bytes32)"
+                      }
+                    },
+                    "id": 3087,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1341:34:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 3088,
+                  "nodeType": "EmitStatement",
+                  "src": "1336:39:7"
+                }
+              ]
+            },
+            "documentation": "@dev    allows a user to reroute a transaction to a new blockchain/target address\n@param _txId        the original transaction id\n@param _blockchain  the new blockchain name\n@param _to          the new target address/account",
+            "id": 3090,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 3081,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 3080,
+                  "name": "whenReroutingEnabled",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 3072,
+                  "src": "1300:20:7",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "1300:20:7"
+              }
+            ],
+            "name": "rerouteTx",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3079,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3074,
+                  "name": "_txId",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3090,
+                  "src": "1207:13:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 3073,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1207:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3076,
+                  "name": "_blockchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3090,
+                  "src": "1230:19:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3075,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1230:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3078,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3090,
+                  "src": "1259:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3077,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1259:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1197:79:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 3082,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1326:0:7"
+            },
+            "scope": 3091,
+            "src": "1179:203:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 3092,
+        "src": "58:1327:7"
+      }
+    ],
+    "src": "0:1385:7"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/XTransferRerouter.sol",
+    "exportedSymbols": {
+      "XTransferRerouter": [3091]
+    },
+    "id": 3092,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3029,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:7"
+      },
+      {
+        "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/utility/Owned.sol",
+        "file": "../utility/Owned.sol",
+        "id": 3030,
+        "nodeType": "ImportDirective",
+        "scope": 3092,
+        "sourceUnit": 11810,
+        "src": "26:30:7",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 3031,
+              "name": "Owned",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 11809,
+              "src": "88:5:7",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Owned_$11809",
+                "typeString": "contract Owned"
+              }
+            },
+            "id": 3032,
+            "nodeType": "InheritanceSpecifier",
+            "src": "88:5:7"
+          }
+        ],
+        "contractDependencies": [11809, 12208],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 3091,
+        "linearizedBaseContracts": [3091, 11809, 12208],
+        "name": "XTransferRerouter",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 3034,
+            "name": "reroutingEnabled",
+            "nodeType": "VariableDeclaration",
+            "scope": 3091,
+            "src": "100:28:7",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bool",
+              "typeString": "bool"
+            },
+            "typeName": {
+              "id": 3033,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "100:4:7",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 3042,
+            "name": "TxReroute",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 3041,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3036,
+                  "indexed": true,
+                  "name": "_txId",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3042,
+                  "src": "204:21:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 3035,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "204:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3038,
+                  "indexed": false,
+                  "name": "_toBlockchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3042,
+                  "src": "235:21:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3037,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "235:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3040,
+                  "indexed": false,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3042,
+                  "src": "266:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3039,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "266:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "194:89:7"
+            },
+            "src": "179:105:7"
+          },
+          {
+            "body": {
+              "id": 3051,
+              "nodeType": "Block",
+              "src": "466:53:7",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 3049,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 3047,
+                      "name": "reroutingEnabled",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3034,
+                      "src": "476:16:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 3048,
+                      "name": "_reroutingEnabled",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3044,
+                      "src": "495:17:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "476:36:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 3050,
+                  "nodeType": "ExpressionStatement",
+                  "src": "476:36:7"
+                }
+              ]
+            },
+            "documentation": "@dev constructor\n@param _reroutingEnabled    intializes transactions routing to enabled/disabled   ",
+            "id": 3052,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3045,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3044,
+                  "name": "_reroutingEnabled",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3052,
+                  "src": "435:22:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 3043,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "435:4:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "434:24:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 3046,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "466:0:7"
+            },
+            "scope": 3091,
+            "src": "423:96:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 3063,
+              "nodeType": "Block",
+              "src": "715:43:7",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 3061,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 3059,
+                      "name": "reroutingEnabled",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3034,
+                      "src": "725:16:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 3060,
+                      "name": "_enable",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3054,
+                      "src": "744:7:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "725:26:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 3062,
+                  "nodeType": "ExpressionStatement",
+                  "src": "725:26:7"
+                }
+              ]
+            },
+            "documentation": "@dev allows the owner to disable/enable rerouting\n@param _enable     true to enable, false to disable",
+            "id": 3064,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 3057,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 3056,
+                  "name": "ownerOnly",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 11764,
+                  "src": "705:9:7",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "705:9:7"
+              }
+            ],
+            "name": "enableRerouting",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3055,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3054,
+                  "name": "_enable",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3064,
+                  "src": "684:12:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 3053,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "684:4:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "683:14:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 3058,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "715:0:7"
+            },
+            "scope": 3091,
+            "src": "659:99:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 3071,
+              "nodeType": "Block",
+              "src": "846:53:7",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 3067,
+                        "name": "reroutingEnabled",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3034,
+                        "src": "864:16:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "id": 3066,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [12252, 12253],
+                      "referencedDeclaration": 12252,
+                      "src": "856:7:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
+                        "typeString": "function (bool) pure"
+                      }
+                    },
+                    "id": 3068,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "856:25:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 3069,
+                  "nodeType": "ExpressionStatement",
+                  "src": "856:25:7"
+                },
+                {
+                  "id": 3070,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "891:1:7"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 3072,
+            "name": "whenReroutingEnabled",
+            "nodeType": "ModifierDefinition",
+            "parameters": {
+              "id": 3065,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "846:0:7"
+            },
+            "src": "816:83:7",
+            "visibility": "internal"
+          },
+          {
+            "body": {
+              "id": 3089,
+              "nodeType": "Block",
+              "src": "1326:56:7",
+              "statements": [
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 3084,
+                        "name": "_txId",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3074,
+                        "src": "1351:5:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 3085,
+                        "name": "_blockchain",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3076,
+                        "src": "1358:11:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 3086,
+                        "name": "_to",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 3078,
+                        "src": "1371:3:7",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        },
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        },
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      ],
+                      "id": 3083,
+                      "name": "TxReroute",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 3042,
+                      "src": "1341:9:7",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_uint256_$_t_bytes32_$_t_bytes32_$returns$__$",
+                        "typeString": "function (uint256,bytes32,bytes32)"
+                      }
+                    },
+                    "id": 3087,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1341:34:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 3088,
+                  "nodeType": "EmitStatement",
+                  "src": "1336:39:7"
+                }
+              ]
+            },
+            "documentation": "@dev    allows a user to reroute a transaction to a new blockchain/target address\n@param _txId        the original transaction id\n@param _blockchain  the new blockchain name\n@param _to          the new target address/account",
+            "id": 3090,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 3081,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 3080,
+                  "name": "whenReroutingEnabled",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 3072,
+                  "src": "1300:20:7",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "1300:20:7"
+              }
+            ],
+            "name": "rerouteTx",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3079,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3074,
+                  "name": "_txId",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3090,
+                  "src": "1207:13:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 3073,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1207:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3076,
+                  "name": "_blockchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3090,
+                  "src": "1230:19:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3075,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1230:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 3078,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 3090,
+                  "src": "1259:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 3077,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1259:7:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1197:79:7"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 3082,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1326:0:7"
+            },
+            "scope": 3091,
+            "src": "1179:203:7",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 3092,
+        "src": "58:1327:7"
+      }
+    ],
+    "src": "0:1385:7"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.0.16",
+  "updatedAt": "2019-12-04T00:14:08.159Z",
+  "devdoc": {
+    "methods": {
+      "acceptOwnership()": {
+        "details": "used by a new owner to accept an ownership transfer"
+      },
+      "enableRerouting(bool)": {
+        "details": "allows the owner to disable/enable rerouting",
+        "params": {
+          "_enable": "true to enable, false to disable"
+        }
+      },
+      "rerouteTx(uint256,bytes32,bytes32)": {
+        "details": "allows a user to reroute a transaction to a new blockchain/target address",
+        "params": {
+          "_blockchain": "the new blockchain name",
+          "_to": "the new target address/account",
+          "_txId": "the original transaction id"
+        }
+      },
+      "transferOwnership(address)": {
+        "details": "allows transferring the contract ownership the new owner still needs to accept the transfer can only be called by the contract owner",
+        "params": {
+          "_newOwner": "new contract owner"
+        }
+      }
+    }
+  },
+  "userdoc": {
+    "methods": {}
+  }
+}

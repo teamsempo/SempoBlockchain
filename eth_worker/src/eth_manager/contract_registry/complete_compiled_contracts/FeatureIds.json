@@ -1,0 +1,263 @@
+{
+  "contractName": "FeatureIds",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "CONVERTER_CONVERSION_WHITELIST",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.4.24+commit.e67f0147\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":true,\"inputs\":[],\"name\":\"CONVERTER_CONVERSION_WHITELIST\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/FeatureIds.sol\":\"FeatureIds\"},\"evmVersion\":\"byzantium\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/FeatureIds.sol\":{\"keccak256\":\"0x23a2281d958edbf84b1fc22540f3937e280f88da34da1d9fe2f2c3530896506e\",\"urls\":[\"bzzr://d422d034b140b4edae0d7dba138f9d8975e15a069f761595ab7853ba2e2d0982\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b5060988061001e6000396000f300608060405260043610603e5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166392d1abb781146043575b600080fd5b348015604e57600080fd5b5060556067565b60408051918252519081900360200190f35b6001815600a165627a7a723058207ad38ac4b34ea9e2077eea489d6f253d7a3cf4a79a28414674626dd0b398ea860029",
+  "deployedBytecode": "0x608060405260043610603e5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166392d1abb781146043575b600080fd5b348015604e57600080fd5b5060556067565b60408051918252519081900360200190f35b6001815600a165627a7a723058207ad38ac4b34ea9e2077eea489d6f253d7a3cf4a79a28414674626dd0b398ea860029",
+  "sourceMap": "199:118:4:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;199:118:4;;;;;;;",
+  "deployedSourceMap": "199:118:4:-;;;;;;;;;;;;;;;;;;;;;;;251:63;;8:9:-1;5:2;;;30:1;27;20:12;5:2;251:63:4;;;;;;;;;;;;;;;;;;;;;308:6;251:63;:::o",
+  "source": "pragma solidity ^0.4.24;\n\n/**\n    Id definitions for bancor contract features\n\n    Can be used to query the ContractFeatures contract to check whether a certain feature is supported by a contract\n*/\ncontract FeatureIds {\n    // converter features\n    uint256 public constant CONVERTER_CONVERSION_WHITELIST = 1 << 0;\n}\n",
+  "sourcePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/FeatureIds.sol",
+  "ast": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/FeatureIds.sol",
+    "exportedSymbols": {
+      "FeatureIds": [2035]
+    },
+    "id": 2036,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2029,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:4"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": "Id definitions for bancor contract features\nCan be used to query the ContractFeatures contract to check whether a certain feature is supported by a contract",
+        "fullyImplemented": true,
+        "id": 2035,
+        "linearizedBaseContracts": [2035],
+        "name": "FeatureIds",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": true,
+            "id": 2034,
+            "name": "CONVERTER_CONVERSION_WHITELIST",
+            "nodeType": "VariableDeclaration",
+            "scope": 2035,
+            "src": "251:63:4",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            },
+            "typeName": {
+              "id": 2030,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "251:7:4",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "commonType": {
+                "typeIdentifier": "t_rational_1_by_1",
+                "typeString": "int_const 1"
+              },
+              "id": 2033,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "lValueRequested": false,
+              "leftExpression": {
+                "argumentTypes": null,
+                "hexValue": "31",
+                "id": 2031,
+                "isConstant": false,
+                "isLValue": false,
+                "isPure": true,
+                "kind": "number",
+                "lValueRequested": false,
+                "nodeType": "Literal",
+                "src": "308:1:4",
+                "subdenomination": null,
+                "typeDescriptions": {
+                  "typeIdentifier": "t_rational_1_by_1",
+                  "typeString": "int_const 1"
+                },
+                "value": "1"
+              },
+              "nodeType": "BinaryOperation",
+              "operator": "<<",
+              "rightExpression": {
+                "argumentTypes": null,
+                "hexValue": "30",
+                "id": 2032,
+                "isConstant": false,
+                "isLValue": false,
+                "isPure": true,
+                "kind": "number",
+                "lValueRequested": false,
+                "nodeType": "Literal",
+                "src": "313:1:4",
+                "subdenomination": null,
+                "typeDescriptions": {
+                  "typeIdentifier": "t_rational_0_by_1",
+                  "typeString": "int_const 0"
+                },
+                "value": "0"
+              },
+              "src": "308:6:4",
+              "typeDescriptions": {
+                "typeIdentifier": "t_rational_1_by_1",
+                "typeString": "int_const 1"
+              }
+            },
+            "visibility": "public"
+          }
+        ],
+        "scope": 2036,
+        "src": "199:118:4"
+      }
+    ],
+    "src": "0:318:4"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/FeatureIds.sol",
+    "exportedSymbols": {
+      "FeatureIds": [2035]
+    },
+    "id": 2036,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2029,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:4"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": "Id definitions for bancor contract features\nCan be used to query the ContractFeatures contract to check whether a certain feature is supported by a contract",
+        "fullyImplemented": true,
+        "id": 2035,
+        "linearizedBaseContracts": [2035],
+        "name": "FeatureIds",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": true,
+            "id": 2034,
+            "name": "CONVERTER_CONVERSION_WHITELIST",
+            "nodeType": "VariableDeclaration",
+            "scope": 2035,
+            "src": "251:63:4",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            },
+            "typeName": {
+              "id": 2030,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "251:7:4",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "commonType": {
+                "typeIdentifier": "t_rational_1_by_1",
+                "typeString": "int_const 1"
+              },
+              "id": 2033,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "lValueRequested": false,
+              "leftExpression": {
+                "argumentTypes": null,
+                "hexValue": "31",
+                "id": 2031,
+                "isConstant": false,
+                "isLValue": false,
+                "isPure": true,
+                "kind": "number",
+                "lValueRequested": false,
+                "nodeType": "Literal",
+                "src": "308:1:4",
+                "subdenomination": null,
+                "typeDescriptions": {
+                  "typeIdentifier": "t_rational_1_by_1",
+                  "typeString": "int_const 1"
+                },
+                "value": "1"
+              },
+              "nodeType": "BinaryOperation",
+              "operator": "<<",
+              "rightExpression": {
+                "argumentTypes": null,
+                "hexValue": "30",
+                "id": 2032,
+                "isConstant": false,
+                "isLValue": false,
+                "isPure": true,
+                "kind": "number",
+                "lValueRequested": false,
+                "nodeType": "Literal",
+                "src": "313:1:4",
+                "subdenomination": null,
+                "typeDescriptions": {
+                  "typeIdentifier": "t_rational_0_by_1",
+                  "typeString": "int_const 0"
+                },
+                "value": "0"
+              },
+              "src": "308:6:4",
+              "typeDescriptions": {
+                "typeIdentifier": "t_rational_1_by_1",
+                "typeString": "int_const 1"
+              }
+            },
+            "visibility": "public"
+          }
+        ],
+        "scope": 2036,
+        "src": "199:118:4"
+      }
+    ],
+    "src": "0:318:4"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.0.16",
+  "updatedAt": "2019-12-04T00:14:08.140Z",
+  "devdoc": {
+    "methods": {}
+  },
+  "userdoc": {
+    "methods": {}
+  }
+}

@@ -1,0 +1,291 @@
+{
+  "contractName": "IBancorXUpgrader",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_version",
+          "type": "uint16"
+        },
+        {
+          "name": "_reporters",
+          "type": "address[]"
+        }
+      ],
+      "name": "upgrade",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "pragma solidity ^0.4.24;\n\n/*\n    Bancor X Upgrader interface\n*/\ncontract IBancorXUpgrader {\n    function upgrade(uint16 _version, address[] _reporters) public;\n}\n",
+  "sourcePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/interfaces/IBancorXUpgrader.sol",
+  "ast": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/interfaces/IBancorXUpgrader.sol",
+    "exportedSymbols": {
+      "IBancorXUpgrader": [2925]
+    },
+    "id": 2926,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2916,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:8"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 2925,
+        "linearizedBaseContracts": [2925],
+        "name": "IBancorXUpgrader",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 2924,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "upgrade",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2922,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2918,
+                  "name": "_version",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2924,
+                  "src": "113:15:8",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
+                  },
+                  "typeName": {
+                    "id": 2917,
+                    "name": "uint16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "113:6:8",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2921,
+                  "name": "_reporters",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2924,
+                  "src": "130:20:8",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 2919,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "130:7:8",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 2920,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "130:9:8",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "112:39:8"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 2923,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "158:0:8"
+            },
+            "scope": 2925,
+            "src": "96:63:8",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 2926,
+        "src": "64:97:8"
+      }
+    ],
+    "src": "0:162:8"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/Nick/WebstormProjects/BancorOriginal/solidity/contracts/bancorx/interfaces/IBancorXUpgrader.sol",
+    "exportedSymbols": {
+      "IBancorXUpgrader": [2925]
+    },
+    "id": 2926,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 2916,
+        "literals": ["solidity", "^", "0.4", ".24"],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:8"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 2925,
+        "linearizedBaseContracts": [2925],
+        "name": "IBancorXUpgrader",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": null,
+            "documentation": null,
+            "id": 2924,
+            "implemented": false,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "upgrade",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 2922,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 2918,
+                  "name": "_version",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2924,
+                  "src": "113:15:8",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
+                  },
+                  "typeName": {
+                    "id": 2917,
+                    "name": "uint16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "113:6:8",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 2921,
+                  "name": "_reporters",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 2924,
+                  "src": "130:20:8",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 2919,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "130:7:8",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 2920,
+                    "length": null,
+                    "nodeType": "ArrayTypeName",
+                    "src": "130:9:8",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "112:39:8"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 2923,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "158:0:8"
+            },
+            "scope": 2925,
+            "src": "96:63:8",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 2926,
+        "src": "64:97:8"
+      }
+    ],
+    "src": "0:162:8"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.26+commit.4563c3fc.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.0.16",
+  "updatedAt": "2019-12-03T23:39:21.038Z",
+  "devdoc": {
+    "methods": {}
+  },
+  "userdoc": {
+    "methods": {}
+  }
+}

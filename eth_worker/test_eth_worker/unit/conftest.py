@@ -18,7 +18,7 @@ def mock_queue_sig(mocker):
     def mock_response(sig, countdown):
         return str_uuid()
 
-    mocker.patch('eth_manager.celery_dispatchers.utils.queue_sig', mock_response)
+    mocker.patch('celery_dispatchers.utils.queue_sig', mock_response)
 
 @pytest.fixture(scope='function')
 def db_session():
@@ -68,7 +68,7 @@ def processor(persistence_module, noncer, monkeypatch):
         persistence_module=persistence_module
     )
 
-    from eth_manager.ABIs import (
+    from eth_manager.contract_registry.ABIs import (
         erc20_abi,
     )
 

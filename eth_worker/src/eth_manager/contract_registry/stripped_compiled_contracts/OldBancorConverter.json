@@ -1,0 +1,24 @@
+{
+  "abi": [
+    {
+      "inputs": [{ "name": "_amount", "type": "uint256" }],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        { "name": "_fromToken", "type": "address" },
+        { "name": "_toToken", "type": "address" },
+        { "name": "_amount", "type": "uint256" }
+      ],
+      "name": "getReturn",
+      "outputs": [{ "name": "", "type": "uint256" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516020806100f2833981016040525160005560bf806100336000396000f300608060405260043610603e5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416631e1401f881146043575b600080fd5b348015604e57600080fd5b50607773ffffffffffffffffffffffffffffffffffffffff600435811690602435166044356089565b60408051918252519081900360200190f35b60005493925050505600a165627a7a723058208542203480f3d6279d2f1f7e466b5b65b31b96cfc1785de5e91886141923bdb10029"
+}
