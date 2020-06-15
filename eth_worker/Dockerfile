@@ -12,7 +12,7 @@ COPY ./config.py /
 RUN mkdir /config_files
 COPY ./config_files/* /config_files/
 
-WORKDIR /
+WORKDIR /eth_worker
 
 EXPOSE 80
 
