@@ -1,45 +1,45 @@
 version: "3"
 services:
-  #  app:
-  #    build:
-  #      context: .
-  #      dockerfile: app/Dockerfile
-  #    image: "server:${GIT_HASH:-latest}"
-  #    environment:
-  #      DEPLOYMENT_NAME: "DOCKER_TEST"
-  #      CONTAINER_TYPE: "APP"
-  #      CONTAINER_MODE: ${CONTAINER_MODE}
-  #      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
-  #      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-  #      CODECOV_ENV: ${CODECOV_ENV}
-  #      CODECOV_TOKEN: ${CODECOV_TOKEN}
-  #      CODECOV_URL: ${CODECOV_URL}
-  #      CODECOV_SLUG: ${CODECOV_SLUG}
-  #      VCS_COMMIT_ID: ${VCS_COMMIT_ID}
-  #      VCS_BRANCH_NAME: ${VCS_BRANCH_NAME}
-  #      VCS_PULL_REQUEST: ${VCS_PULL_REQUEST}
-  #      VCS_SLUG: ${VCS_SLUG}
-  #      VCS_TAG: ${VCS_TAG}
-  #      CI_BUILD_URL: ${CI_BUILD_URL}
-  #      CI_BUILD_ID: ${CI_BUILD_ID}
-  #      CI_JOB_ID: ${CI_JOB_ID}
-  #      CI: ${CI}
-  #      CIRCLECI: ${CIRCLECI}
-  #      CIRCLE_BRANCH: ${CIRCLE_BRANCH}
-  #      CIRCLE_BUILD_NUM: ${CIRCLE_BUILD_NUM}
-  #      CIRCLE_NODE_INDEX: ${CIRCLE_NODE_INDEX}
-  #      CIRCLE_PROJECT_USERNAME: ${CIRCLE_PROJECT_USERNAME}
-  #      CIRCLE_PROJECT_REPONAME: ${CIRCLE_PROJECT_REPONAME}
-  #      CIRCLE_REPOSITORY_URL: ${CIRCLE_REPOSITORY_URL}
-  #      CIRCLE_PR_NUMBER: ${CIRCLE_PR_NUMBER}
-  #      CIRCLE_SHA1: ${CIRCLE_SHA1}
-  #      CIRCLE_ARTIFACTS: ${CIRCLE_ARTIFACTS}
-  #      CIRCLE_TEST_REPORTS: ${CIRCLE_TEST_REPORTS}
-  #    depends_on:
-  #      - postgres
-  #      - eth_worker
-  #    ports:
-  #      - "3031:3031"
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: "server:${GIT_HASH:-latest}"
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+      CONTAINER_TYPE: "APP"
+      CONTAINER_MODE: ${CONTAINER_MODE}
+      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      CODECOV_ENV: ${CODECOV_ENV}
+      CODECOV_TOKEN: ${CODECOV_TOKEN}
+      CODECOV_URL: ${CODECOV_URL}
+      CODECOV_SLUG: ${CODECOV_SLUG}
+      VCS_COMMIT_ID: ${VCS_COMMIT_ID}
+      VCS_BRANCH_NAME: ${VCS_BRANCH_NAME}
+      VCS_PULL_REQUEST: ${VCS_PULL_REQUEST}
+      VCS_SLUG: ${VCS_SLUG}
+      VCS_TAG: ${VCS_TAG}
+      CI_BUILD_URL: ${CI_BUILD_URL}
+      CI_BUILD_ID: ${CI_BUILD_ID}
+      CI_JOB_ID: ${CI_JOB_ID}
+      CI: ${CI}
+      CIRCLECI: ${CIRCLECI}
+      CIRCLE_BRANCH: ${CIRCLE_BRANCH}
+      CIRCLE_BUILD_NUM: ${CIRCLE_BUILD_NUM}
+      CIRCLE_NODE_INDEX: ${CIRCLE_NODE_INDEX}
+      CIRCLE_PROJECT_USERNAME: ${CIRCLE_PROJECT_USERNAME}
+      CIRCLE_PROJECT_REPONAME: ${CIRCLE_PROJECT_REPONAME}
+      CIRCLE_REPOSITORY_URL: ${CIRCLE_REPOSITORY_URL}
+      CIRCLE_PR_NUMBER: ${CIRCLE_PR_NUMBER}
+      CIRCLE_SHA1: ${CIRCLE_SHA1}
+      CIRCLE_ARTIFACTS: ${CIRCLE_ARTIFACTS}
+      CIRCLE_TEST_REPORTS: ${CIRCLE_TEST_REPORTS}
+    depends_on:
+      - postgres
+      - eth_worker
+    ports:
+      - "3031:3031"
 
   eth_worker:
     build:
@@ -82,49 +82,49 @@ services:
       - ganache
       - eth_postgres
 
-  #  eth_worker_processor:
-  #    build:
-  #      context: .
-  #      dockerfile: eth_worker/Dockerfile
-  #    image: "eth_worker:${GIT_HASH:-latest}"
-  #    environment:
-  #      DEPLOYMENT_NAME: "DOCKER_TEST"
-  #      CONTAINER_TYPE: "PROCESSOR"
-  #      CONTAINER_MODE: ${CONTAINER_MODE}
-  #      PYTHONUNBUFFERED: 0
-  #      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
-  #      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-  #    depends_on:
-  #      - redis
-  #      - ganache
-  #      - eth_postgres
+  eth_worker_processor:
+    build:
+      context: .
+      dockerfile: eth_worker/Dockerfile
+    image: "eth_worker:${GIT_HASH:-latest}"
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+      CONTAINER_TYPE: "PROCESSOR"
+      CONTAINER_MODE: ${CONTAINER_MODE}
+      PYTHONUNBUFFERED: 0
+      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - redis
+      - ganache
+      - eth_postgres
 
-  #  pgbouncer:
-  #    build:
-  #      context: .
-  #      dockerfile: pgbouncer/Dockerfile
-  #    image: "pgbouncer:${GIT_HASH:-latest}"
-  #    environment:
-  #      DEPLOYMENT_NAME: "DOCKER_TEST"
-  #
-  #  proxy:
-  #    build: proxy
-  #    image: "proxy:${GIT_HASH:-latest}"
-  #    environment:
-  #      DEPLOYMENT_NAME: "DOCKER_TEST"
-  #    ports:
-  #      - "80:80"
-  #    depends_on:
-  #      - app
-  #
-  #  postgres:
-  #    image: "postgres"
-  #    restart: always
-  #    environment:
-  #      DEPLOYMENT_NAME: "DOCKER_TEST"
-  #      POSTGRES_DB: "sempo_docker"
-  #      POSTGRES_USER: "postgres"
-  #      POSTGRES_PASSWORD: "password"
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: pgbouncer/Dockerfile
+    image: "pgbouncer:${GIT_HASH:-latest}"
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+
+  proxy:
+    build: proxy
+    image: "proxy:${GIT_HASH-latest}"
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+
+  postgres:
+    image: "postgres"
+    restart: always
+    environment:
+      DEPLOYMENT_NAME: "DOCKER_TEST"
+      POSTGRES_DB: "sempo_docker"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
 
   eth_postgres:
     image: "postgres"
