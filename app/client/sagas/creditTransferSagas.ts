@@ -16,13 +16,13 @@ import {
 import {
   DEEP_UPDATE_TRANSFER_ACCOUNTS,
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS
-} from "../reducers/transferAccountReducer.js";
+} from "../reducers/transferAccountReducer";
 
 import {
   loadCreditTransferListAPI,
   modifyTransferAPI,
   newTransferAPI
-} from "../api/creditTransferAPI.js";
+} from "../api/creditTransferAPI";
 import { creditTransferSchema } from "../schemas";
 import { handleError } from "../utils";
 import { MessageAction } from "../reducers/message/actions";

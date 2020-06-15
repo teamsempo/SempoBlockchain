@@ -15,8 +15,8 @@ import {
 export const byId = (state = {}, action: CreditTransferAction) => {
   switch (action.type) {
     case CreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST:
-      Object.keys(action.credit_transfers).map(id => {
-        let transfer = action.credit_transfers[id];
+      Object.keys(action.payload).map(id => {
+        let transfer = action.payload[id];
         if (
           transfer.transfer_subtype !== null &&
           typeof transfer.transfer_subtype !== "undefined"
@@ -28,22 +28,25 @@ export const byId = (state = {}, action: CreditTransferAction) => {
           }
         }
       });
-      return DEEEEEEP(state, action.credit_transfers);
+      return DEEEEEEP(state, action.payload);
     default:
       return state;
   }
 };
 
-const initialLoadStatusState = {
+interface RequestingState {
+  isRequesting: boolean;
+  success: boolean;
+  error: null | string;
+}
+
+const initialState: RequestingState = {
   isRequesting: false,
-  error: null,
-  success: false
+  success: false,
+  error: null
 };
 
-const loadStatus = (
-  state = initialLoadStatusState,
-  action: LoadCreditTransferAction
-) => {
+const loadStatus = (state = initialState, action: LoadCreditTransferAction) => {
   switch (action.type) {
     case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST:
       return { ...state, isRequesting: true };
@@ -83,7 +86,7 @@ export const modifyStatus = (
       return {
         ...state,
         isRequesting: false,
-        data: action.result.data,
+        data: action.payload.data,
         success: true
       };
     case ModifyCreditTransferActionTypes.MODIFY_TRANSFER_FAILURE:
@@ -93,16 +96,10 @@ export const modifyStatus = (
   }
 };
 
-const initialCreateStatusState = {
-  isRequesting: false,
-  error: null,
-  success: false
-};
-
 export const createStatus = (
-  state = initialCreateStatusState,
+  state = initialState,
   action: CreditTransferAction
-) => {
+): RequestingState => {
   switch (action.type) {
     case CreditTransferActionTypes.CREATE_TRANSFER_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };

@@ -1,6 +1,6 @@
 import "../../../setup/setupTests.js";
 import { CreditTransfers } from "../../../../reducers/creditTransfer/types";
-import { updateCreditTransferListRequest } from "../../../../reducers/creditTransfer/actions";
+import { CreditTransferAction } from "../../../../reducers/creditTransfer/actions";
 import { byId } from "../../../../reducers/creditTransfer/reducers";
 import {
   CreditTransferData,
@@ -13,7 +13,9 @@ describe("byId reducer", () => {
   beforeEach(() => {
     updatedState = byId(
       {},
-      updateCreditTransferListRequest({ "0x1234": CreditTransferData })
+      CreditTransferAction.updateCreditTransferListRequest({
+        "0x1234": CreditTransferData
+      })
     );
   });
 
@@ -25,7 +27,7 @@ describe("byId reducer", () => {
   it("add multiple creditTransfers", () => {
     updatedState = byId(
       {},
-      updateCreditTransferListRequest({
+      CreditTransferAction.updateCreditTransferListRequest({
         "0x1234": CreditTransferData,
         "0x2345": AnotherCreditTransferData
       })

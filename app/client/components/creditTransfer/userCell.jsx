@@ -2,19 +2,11 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { Link } from "react-router-dom";
-import { modifyTransferRequest } from "../../reducers/creditTransfer/reducers";
 
 const mapStateToProps = state => {
   return {
     creditTransfers: state.creditTransfers,
     users: state.users
-  };
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    modifyTransferRequest: (body, path) =>
-      dispatch(modifyTransferRequest({ body, path }))
   };
 };
 
@@ -47,5 +39,5 @@ class userCell extends React.Component {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  null
 )(userCell);

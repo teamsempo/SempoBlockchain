@@ -5,7 +5,7 @@ import ReactTable from "react-table";
 
 import { TopRow, StyledSelect } from "../styledElements.js";
 
-import { modifyTransferRequest } from "../../reducers/creditTransfer/reducers";
+import { ModifyCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
 import DateTime from "../dateTime.jsx";
@@ -24,8 +24,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    modifyTransferRequest: (body, path) =>
-      dispatch(modifyTransferRequest({ body, path }))
+    modifyTransferRequest: payload =>
+      dispatch(ModifyCreditTransferAction.modifyTransferRequest(payload))
   };
 };
 
@@ -145,7 +145,10 @@ class CreditTransferList extends React.Component {
 
   onNext() {
     this.get_selected_ids_array(this.state.credit_transfer_ids).map(id =>
-      this.props.modifyTransferRequest({ action: this.state.action }, id)
+      this.props.modifyTransferRequest({
+        body: { action: this.state.action },
+        path: id
+      })
     );
   }
 

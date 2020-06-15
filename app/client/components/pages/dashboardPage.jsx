@@ -4,8 +4,8 @@ import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoginAction } from "../../reducers/auth/actions";
-import { loadCreditTransferList } from "../../reducers/creditTransfer/reducers";
 import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
 
 import {
@@ -39,8 +39,10 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     logout: () => dispatch(LoginAction.logout()),
-    loadCreditTransferList: (query, path) =>
-      dispatch(loadCreditTransferList({ query, path })),
+    loadCreditTransferList: query =>
+      dispatch(
+        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
+      ),
     loadCreditTransferFilters: (query, path) =>
       dispatch(loadCreditTransferFilters({ query, path })),
     activateAccount: payload =>

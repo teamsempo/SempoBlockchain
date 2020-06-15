@@ -8,7 +8,7 @@ import { LightTheme } from "../theme.js";
 import CreditTransferListWithFilterWrapper from "../creditTransfer/creditTransferListWithFilterWrapper.jsx";
 import UploadButton from "../uploader/uploadButton.jsx";
 
-import { loadCreditTransferList } from "../../reducers/creditTransfer/reducers";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 
 const mapStateToProps = state => {
@@ -23,7 +23,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: (query, path) =>
-      dispatch(loadCreditTransferList({ query, path }))
+      dispatch(
+        LoadCreditTransferAction.loadCreditTransferListRequest({ query, path })
+      )
   };
 };
 
