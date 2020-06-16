@@ -425,6 +425,7 @@ class InternalCreditTransferAPI(MethodView):
         contract_address = post_data.get('contract_address')
 
         transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_hash=blockchain_transaction_hash).first()
+
         if not transfer:
             token = Token.query.filter_by(address=contract_address).first()
             send_transfer_account = create_transfer_account_if_required(sender_blockchain_address, token)
@@ -438,14 +439,16 @@ class InternalCreditTransferAPI(MethodView):
             )
             transfer.blockchain_status = BlockchainStatus.SUCCESS
             transfer.blockchain_hash = blockchain_transaction_hash
-
+        db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
+
         response_object = {
             'message': 'Transfer Successful',
             'data': {
                 'credit_transfer': credit_transfer,
             }
         }
+
         return make_response(jsonify(response_object)), 201
 
 
