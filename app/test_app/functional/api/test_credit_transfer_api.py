@@ -164,9 +164,10 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     assert resp.json['data']['credit_transfer']['sender_transfer_account']['id'] == existing_user_a.default_transfer_account.id
     assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] == existing_user_b.default_transfer_account.id
     
-    transfer_id = resp.json['data']['credit_transfer']['id']
-    transfer = CreditTransfer.query.filter_by(id=transfer_id).first()
 
+    transfer_id = resp.json['data']['credit_transfer']['id']
+
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account == existing_user_b.default_transfer_account
 
@@ -182,7 +183,7 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     stranger_a_id = resp.json['data']['credit_transfer']['recipient_transfer_account']['id']
 
     transfer_id = resp.json['data']['credit_transfer']['id']
-    transfer = CreditTransfer.query.filter_by(id=transfer_id).first()
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
 
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
@@ -195,7 +196,7 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] == stranger_a_id 
     
     transfer_id = resp.json['data']['credit_transfer']['id']
-    transfer = CreditTransfer.query.filter_by(id=transfer_id).first()
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
 
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
@@ -210,7 +211,7 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     stranger_a_id = resp.json['data']['credit_transfer']['recipient_transfer_account']['id']
 
     transfer_id = resp.json['data']['credit_transfer']['id']
-    transfer = CreditTransfer.query.filter_by(id=transfer_id).first()
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
 
     assert transfer.recipient_transfer_account == existing_user_a.default_transfer_account
     assert transfer.sender_transfer_account.blockchain_address == fake_user_b_address

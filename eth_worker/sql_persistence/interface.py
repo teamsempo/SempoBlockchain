@@ -168,6 +168,7 @@ class SQLPersistenceInterface(object):
 
         return blockchain_transaction
 
+    # Gets transaction using transaction_id or hash
     def get_transaction(self, transaction_id = None, hash = None):
         if transaction_id:
             return self.session.query(BlockchainTransaction).get(transaction_id)
