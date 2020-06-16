@@ -471,9 +471,9 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def get_synchronization_filter(self, contract_address, contract_type):
+    def get_synchronization_filter(self, contract_address, filter_parameters):
         filter = self.session.query(SynchronizationFilter).filter(
-            SynchronizationFilter.contract_address == contract_address, SynchronizationFilter.contract_type == contract_type).first()
+            SynchronizationFilter.contract_address == contract_address, SynchronizationFilter.filter_parameters == filter_parameters).first()
         if filter == None:
             return False
         return filter
