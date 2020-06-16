@@ -10,8 +10,7 @@ from server.schemas import synchronization_filter_schema
 synchronization_filter_blueprint = Blueprint('synchronization_filter', __name__)
 
 class SynchronizationFilterAPI(MethodView):
-
-    @requires_auth(allowed_basic_auth_types=('internal'))
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
         contract_address = post_data.get('contract_address')
