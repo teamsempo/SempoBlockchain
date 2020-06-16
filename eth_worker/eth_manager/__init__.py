@@ -57,7 +57,7 @@ celery_app.conf.update(redbeat_redis_url=config.REDIS_URL)
 celery_app.conf.beat_schedule = {
     'third-party-transaction-sync': {
         'task': utils.eth_endpoint('synchronize_third_party_transactions'),
-        'schedule': 500, # Every 5 minutes (500s)
+        'schedule': 30, # Every 30 seconds
     },
     "maintain_eth_balances": {
         "task": utils.eth_endpoint('topup_wallets'),

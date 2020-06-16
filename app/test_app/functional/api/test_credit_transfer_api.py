@@ -114,7 +114,7 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
         assert isinstance(response.json['data']['credit_transfers'], list)
 
 
-def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user, create_credit_transfer, create_organisation):
+def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user, create_organisation):
     # For this, we want to test 5 permutations of third-party transactions to add:
     # 1. Existing User A -> Existing User B
     # 2. Existing User A -> Stranger A
@@ -139,7 +139,6 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
                 contract_address=contract_address,
             )),
             content_type='application/json', follow_redirects=True)
-
 
     org = create_organisation
     token = org.token
