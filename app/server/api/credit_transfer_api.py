@@ -439,6 +439,8 @@ class InternalCreditTransferAPI(MethodView):
             )
             transfer.blockchain_status = BlockchainStatus.SUCCESS
             transfer.blockchain_hash = blockchain_transaction_hash
+            send_transfer_account.decrement_balance(transfer_amount)
+            receive_transfer_account.increment_balance(transfer_amount)
         db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
 
