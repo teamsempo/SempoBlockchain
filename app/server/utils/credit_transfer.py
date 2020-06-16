@@ -123,6 +123,7 @@ def create_address_object_if_required(address):
     if not address_obj:
         address_obj = BlockchainAddress(type="EXTERNAL")
         address_obj.address = address
+
         db.session.add(address_obj)
 
     return address_obj

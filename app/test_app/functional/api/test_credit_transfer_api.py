@@ -219,4 +219,3 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     # 5. Idempotency check (repeat step 4's request, ensure only one transfer is created)
     resp_two = post_to_credit_transfer_internal(fake_user_b_address, existing_user_a.default_transfer_account.blockchain_address, made_up_hash, 100, token.address)
     assert resp.json['data']['credit_transfer']['id'] == resp_two.json['data']['credit_transfer']['id']
-    #assert resp.json == resp_two.json

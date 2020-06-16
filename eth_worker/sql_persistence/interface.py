@@ -471,7 +471,7 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def get_synchronization_filter(self, contract_address, filter_parameters):
+    def check_if_synchronization_filter_exists(self, contract_address, filter_parameters):
         filter = self.session.query(SynchronizationFilter).filter(
             SynchronizationFilter.contract_address == contract_address, SynchronizationFilter.filter_parameters == filter_parameters).first()
         if filter == None:
@@ -488,10 +488,10 @@ class SQLPersistenceInterface(object):
         filter.max_block = block
         self.session.commit()
 
-    def get_filter(self, filter_id):
+    def get_synchronization_filter(self, filter_id):
         return self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
 
-    def get_all_filters(self):
+    def get_all_synchronization_filters(self):
         return self.session.query(SynchronizationFilter).all()
 
     def add_block_range(self, start, end, filter_id):

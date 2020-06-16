@@ -37,7 +37,7 @@ def call_webhook(transaction):
 
 # Get list of filters from redis. This is the starting point of the synchronization process
 def synchronize_third_party_transactions():
-    filters = persistence_module.get_all_filters()
+    filters = persistence_module.get_all_synchronization_filters()
     # Since the webook will timeout if we ask for too many blocks at once, we have to break 
     # the range we want into chunks. Once all the chunk-jobs are formed and loaded into redis,
     # then trigger process_all_chunks, which will consume those jobs from redis
@@ -76,7 +76,7 @@ def synchronize_third_party_transactions():
 def process_all_chunks():
     for filter_job in red.lrange(sync_const.THIRD_PARTY_SYNC_JOBS, 0, -1):
         task = json.loads(filter_job)
-        filter = persistence_module.get_filter(task['filter_id'])
+        filter = persistence_module.get_synchronization_filter(task['filter_id'])
         transaction_history = get_blockchain_transaction_history(
             filter.contract_address, 
             task['floor'], 
@@ -150,7 +150,7 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
     # This lets you always add all filters at app-launch, without running an entire filter every time
     if not contract_address:
         raise Exception('No contract_address found for new contract filter')
-    if not persistence_module.get_synchronization_filter(contract_address, filter_parameters):
+    if not persistence_module.check_if_synchronization_filter_exists(contract_address, filter_parameters):
         # Set max_block to block_epoch to act as a de-factor zero-point
         config.logg.error(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
         persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
