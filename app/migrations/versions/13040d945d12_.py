@@ -1,4 +1,4 @@
-"""empty message
+"""Transaction Callback Migration Alteration
 
 Revision ID: 13040d945d12
 Revises: d7b89a614ae9
