@@ -1,8 +1,8 @@
-"""Create synchronization_filter and synchronized_block for 3rd party sync
+"""empty message
 
-Revision ID: a51f8a70fbc8
-Revises: 00c29bd2df26
-Create Date: 2020-06-12 16:35:23.543772
+Revision ID: c81dbf171b47
+Revises: 4e492f7dba64
+Create Date: 2020-06-16 16:04:09.384728
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a51f8a70fbc8'
-down_revision = '00c29bd2df26'
+revision = 'c81dbf171b47'
+down_revision = '4e492f7dba64'
 branch_labels = None
 depends_on = None
 
@@ -27,7 +27,9 @@ def upgrade():
     sa.Column('filter_parameters', sa.String(), nullable=True),
     sa.Column('filter_type', sa.String(), nullable=True),
     sa.Column('max_block', sa.Integer(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('decimals', sa.Integer(), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('contract_address')
     )
     op.create_table('synchronized_block',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -37,6 +39,7 @@ def upgrade():
     sa.Column('status', sa.String(), nullable=True),
     sa.Column('is_synchronized', sa.Boolean(), nullable=True),
     sa.Column('synchronization_filter_id', sa.Integer(), nullable=True),
+    sa.Column('decimals', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['synchronization_filter_id'], ['synchronization_filter.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
