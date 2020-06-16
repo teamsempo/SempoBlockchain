@@ -470,15 +470,15 @@ class SQLPersistenceInterface(object):
 
         self.session.commit()
 
-    def check_if_filter_exists(self, contract_address, contract_type):
+    def get_synchronization_filter(self, contract_address, contract_type):
         filter = self.session.query(SynchronizationFilter).filter(
             SynchronizationFilter.contract_address == contract_address, SynchronizationFilter.contract_type == contract_type).first()
         if filter == None:
             return False
-        return True
+        return filter
 
-    def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type):
-        filter = SynchronizationFilter(contract_address=contract_address, contract_type=contract_type, filter_parameters=filter_parameters, max_block=0, filter_type=filter_type)
+    def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch):
+        filter = SynchronizationFilter(contract_address=contract_address, contract_type=contract_type, filter_parameters=filter_parameters, max_block=block_epoch, filter_type=filter_type, decimals=decimals)
         self.session.add(filter)
         self.session.commit()
 

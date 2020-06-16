@@ -17,9 +17,11 @@ class SynchronizationFilterAPI(MethodView):
         contract_type = post_data.get('contract_type')
         filter_parameters = post_data.get('filter_parameters') 
         filter_type = post_data.get('filter_type')      
+        decimals = post_data.get('decimals', 18)      
+        block_epoch = post_data.get('block_epoch', None)      
 
-        transaction_filter = add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type)
-        # bt.force_third_party_transaction_sync()
+        transaction_filter = add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals = decimals, block_epoch = block_epoch)
+        bt.force_third_party_transaction_sync()
         return make_response(jsonify(synchronization_filter_schema.dump(transaction_filter).data)), 201
 
 synchronization_filter_blueprint.add_url_rule(

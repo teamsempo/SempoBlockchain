@@ -286,6 +286,7 @@ class SynchronizedBlock(ModelBase):
     is_synchronized = Column(Boolean)
     synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'))
     synchronization_filter = relationship("SynchronizationFilter", back_populates="blocks", lazy=True)
+    decimals = Column(Integer)
 
 class SynchronizationFilter(ModelBase):
     __tablename__ = 'synchronization_filter'
@@ -294,6 +295,7 @@ class SynchronizationFilter(ModelBase):
     filter_parameters = Column(String)
     filter_type = Column(String) # TRANSFER, EXCHANGE
     max_block = Column(Integer)
+    decimals = Column(Integer)
     blocks = relationship("SynchronizedBlock", back_populates="synchronization_filter", lazy=True)
 
 # When BlockchainTransaction is updated, let the api layer know about it
