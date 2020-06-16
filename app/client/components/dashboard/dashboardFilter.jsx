@@ -1,13 +1,13 @@
 import React from "react";
 import { DateRangePicker } from "react-dates";
-import { loadMetrics } from "../../reducers/metricReducer";
+import { LoadMetricAction } from "../../reducers/metric/actions";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import { StyledButton } from "../styledElements";
 import moment from "moment";
 import Filter from "../filter";
 import { processFiltersForQuery } from "../../utils";
-import { browserHistory } from "../../app";
+import { browserHistory } from "../../createStore.js";
 
 const mapStateToProps = state => {
   return {
@@ -18,7 +18,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadMetrics: (query, path) => dispatch(loadMetrics({ query, path }))
+    loadMetrics: (query, path) =>
+      dispatch(LoadMetricAction.loadMetricRequest({ query, path }))
   };
 };
 

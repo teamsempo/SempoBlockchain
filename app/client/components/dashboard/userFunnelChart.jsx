@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
-import { creditTransferList } from "../../reducers/creditTransferReducer";
+import { creditTransferList } from "../../reducers/creditTransfer/reducers";
 import { ModuleHeader } from "../styledElements.js";
 
 const mapStateToProps = state => {

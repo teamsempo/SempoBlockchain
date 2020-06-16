@@ -22,9 +22,9 @@ import {
   LoginActionTypes,
   LoginPartialPayload,
   UPDATE_ADMIN_USER_LIST,
-  AdminUser,
+  AdminUserByIDs,
   InviteUserListActionTypes,
-  Invite
+  InviteByIDs
 } from "./types";
 
 import { createAction, ActionsUnion } from "../../reduxUtils";
@@ -89,18 +89,18 @@ export const ResetPasswordAction = {
 export type ResetPasswordAction = ActionsUnion<typeof ResetPasswordAction>;
 
 export const AdminUserListAction = {
-  updateAdminUserList: (admins: AdminUser) =>
+  updateAdminUserList: (admins: AdminUserByIDs) =>
     createAction(UPDATE_ADMIN_USER_LIST, admins)
 };
 export type AdminUserListAction = ActionsUnion<typeof AdminUserListAction>;
 
 export const InviteUserListAction = {
-  deepUpdateInviteUsers: (invites: Invite[]) =>
+  deepUpdateInviteUsers: (invites: InviteByIDs) =>
     createAction(
       InviteUserListActionTypes.DEEP_UPDATE_INVITE_USER_LIST,
       invites
     ),
-  updateInviteUsers: (invites: Invite[]) =>
+  updateInviteUsers: (invites: InviteByIDs) =>
     createAction(InviteUserListActionTypes.UPDATE_INVITE_USER_LIST, invites)
 };
 export type InviteUserListAction = ActionsUnion<typeof InviteUserListAction>;
