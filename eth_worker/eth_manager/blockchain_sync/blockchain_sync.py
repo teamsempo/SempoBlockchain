@@ -119,7 +119,7 @@ def handle_transaction(transaction, filter):
 # Fallback if something goes wrong at this level: block-tracking table
 def get_blockchain_transaction_history(contract_address, start_block, end_block = 'lastest', argument_filters = None, filter_id = None):
     # Creates DB objects for every block to monitor status
-    print(f'Fetching block range {start_block} to {end_block} for contract {contract_address}')
+    config.logg.info(f'Fetching block range {start_block} to {end_block} for contract {contract_address}')
 
     persistence_module.add_block_range(start_block, end_block, filter_id)
     erc20_contract = w3_websocket.eth.contract(
@@ -137,11 +137,11 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
             yield event
 
         # Once a batch of chunks is completed, we can mark them completed
-        persistence_module.set_block_range_status(task['floor'], task['ceiling'], 'SUCCESS')
+        persistence_module.set_block_range_status(start_block, end_block, 'SUCCESS')
 
     except:
         # Setting block status as a range since individual blocks can't fail at this stage (as we are getting a range of blocks)
-        print(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
+        config.logg.error(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
         persistence_module.set_block_range_status(start_block, end_block, 'FAILED FETCHING BLOCKS')
 
 # Adds transaction filter to database if it doesn't already exist
@@ -152,5 +152,5 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
         raise Exception('No contract_address found for new contract filter')
     if not persistence_module.get_synchronization_filter(contract_address, filter_parameters):
         # Set max_block to block_epoch to act as a de-factor zero-point
-        print(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
+        config.logg.error(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
         persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
