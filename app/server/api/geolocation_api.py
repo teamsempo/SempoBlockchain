@@ -9,7 +9,7 @@ geolocation_blueprint = Blueprint('geolocation', __name__)
 
 class AddAddressLatLng(MethodView):
 
-    @requires_auth(allowed_basic_auth_types=('internal'))
+    @requires_auth(allowed_basic_auth_types=('internal',))
     def post(self):
         post_data = request.get_json()
 

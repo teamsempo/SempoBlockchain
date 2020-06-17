@@ -44,6 +44,11 @@ def requires_auth(f=None,
     allowed_roles = allowed_roles or dict()
     allowed_basic_auth_types = allowed_basic_auth_types or tuple()
 
+    if not isinstance(allowed_basic_auth_types, tuple):
+        # Because 'tern' in ('internal') >> True
+        # Where as 'tern' in ('internal',) >> False
+        raise RuntimeError('allowed_basic_auth_types must be a tuple')
+
     if f is None:
         return partial(requires_auth,
                        allowed_roles=allowed_roles,
@@ -93,6 +98,7 @@ def requires_auth(f=None,
 
         # If username as password attempt basic auth
         if username and password:
+
 
             # Make sure basic auth is allowed
             if len(allowed_basic_auth_types) == 0:
