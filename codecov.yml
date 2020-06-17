@@ -25,9 +25,12 @@ coverage:
         threshold: 100%
 fixes:
   - "server/::app/server/"
+  - "client/::app/client/"
+  - "test_app/::app/test_app/"
   - "manage.py::app/manage.py"
   - "migrations/seed.py::app/migrations/seed.py"
   - "sql_persistence/::eth_worker/sql_persistence/"
+  - "test_eth_worker/::eth_worker/test_eth_worker/"
   - "eth_manager/::eth_worker/eth_manager/"
   - "exceptions.py::eth_worker/exceptions.py"
   - "sempo_types.py::eth_worker/sempo_types.py"
