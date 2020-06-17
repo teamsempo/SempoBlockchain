@@ -41,8 +41,8 @@ def requires_auth(f=None,
                   ignore_tfa_requirement: bool=False,
                   allow_query_string_auth: bool=False):
 
-    allowed_roles = allowed_roles or {}
-    allowed_basic_auth_types = allowed_basic_auth_types or []
+    allowed_roles = allowed_roles or dict()
+    allowed_basic_auth_types = allowed_basic_auth_types or tuple()
 
     if f is None:
         return partial(requires_auth,
@@ -93,27 +93,37 @@ def requires_auth(f=None,
 
         # If username as password attempt basic auth
         if username and password:
-            # Check if username belongs to an org
-            org = Organisation.query.filter_by(external_auth_username = username).first()
-            if org:
-                auth_type = 'external'
-                required_password = org.external_auth_password
-            # Otherwise, check if it is one of the configured BASIC_AUTH_CREDENTIALS
-            else:
-                (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
-            if required_password is None or required_password != password:
-                response_object = {
-                    'message': 'invalid basic auth username or password'
-                }
-                return make_response(jsonify(response_object)), 401
 
+            # Make sure basic auth is allowed
             if len(allowed_basic_auth_types) == 0:
                 response_object = {
                     'message': 'basic auth not allowed'
                 }
                 return make_response(jsonify(response_object)), 401
 
-            if auth_type not in allowed_basic_auth_types:
+
+            # Try to find a matching password and auth type for the username, checking orgs first and then config
+            # Check if username belongs to an org
+            org = Organisation.query.filter_by(external_auth_username = username).first()
+            if org:
+                auth_type = 'external'
+                required_password = org.external_auth_password
+
+            # Otherwise, check if it is one of the allowed BASIC_AUTH_CREDENTIALS
+            else:
+                try:
+                    (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'][username]
+                except KeyError:
+                    required_password = None
+                    auth_type = None
+
+            if required_password is None or required_password != password:
+                response_object = {
+                    'message': 'invalid basic auth username or password'
+                }
+                return make_response(jsonify(response_object)), 401
+
+            if (auth_type not in allowed_basic_auth_types) or (auth_type is None):
                 response_object = {
                     'message': 'Basic Auth type is {}. Must be: {}'.format(auth_type, allowed_basic_auth_types)
                 }
