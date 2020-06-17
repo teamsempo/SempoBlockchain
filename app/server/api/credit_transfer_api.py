@@ -201,8 +201,8 @@ class CreditTransferAPI(MethodView):
         recipient_transfer_accounts_ids = post_data.get('recipient_transfer_accounts_ids')
         
         # invert_recipient_list will send to everyone _except_ for the users in recipient_transfer_accounts_ids 
-        invert_recipient_list = post_data.get('invert_recipient_list', 'false').lower()
-        invert_recipient_list = False if invert_recipient_list == 'false' else True
+        invert_recipient_list = post_data.get('invert_recipient_list', False)
+        invert_recipient_list = False if invert_recipient_list == False else True
 
         credit_transfers = []
         response_list = []
