@@ -67,7 +67,7 @@ class OrganisationFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
     name = 'Francines Company'
     external_auth_username = 'FranCoBossKitty'
-    _external_auth_password = 'IHeartT00na'
+    external_auth_password = 'IHeartT00na'
 
 
 class UssdMenuFactory(SQLAlchemyModelFactory):
