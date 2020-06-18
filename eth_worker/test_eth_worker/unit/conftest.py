@@ -4,21 +4,22 @@ import redis
 from web3 import Web3
 
 import config
-from eth_manager.processor import TransactionProcessor
-from mocks import MockRedis
-from sql_persistence import engine, session_factory
-from sql_persistence.interface import SQLPersistenceInterface
-from sql_persistence.models import Base
-from test_eth_worker.helpers.mocks import MockNonce
+from src.eth_manager.processor import TransactionProcessor
+from src.sql_persistence import engine, session_factory
+from src.sql_persistence.interface import SQLPersistenceInterface
+from src.sql_persistence.models import Base
+from test_eth_worker.helpers.mocks import MockNonce, MockRedis
 
-from utils import str_uuid
+from helpers.utils import str_uuid
+
+
 
 @pytest.fixture(autouse=True)
 def mock_queue_sig(mocker):
     def mock_response(sig, countdown):
         return str_uuid()
 
-    mocker.patch('celery_dispatchers.utils.queue_sig', mock_response)
+    mocker.patch('src.celery_dispatchers.utils.queue_sig', mock_response)
 
 @pytest.fixture(scope='function')
 def db_session():

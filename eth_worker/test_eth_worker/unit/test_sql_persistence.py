@@ -9,7 +9,7 @@ from eth_keys import keys
 from sql_persistence.interface import SQLPersistenceInterface
 from sql_persistence.models import BlockchainWallet, BlockchainTask, BlockchainTransaction
 
-from utils import pk, address, str_uuid
+from helpers.utils import pk, address, str_uuid
 
 class TestModels:
 
@@ -127,7 +127,7 @@ class TestInterface:
             db_session.add(t)
             db_session.commit()
 
-            nonce, id = persistence_module.locked_claim_transaction_nonce(
+            nonce = persistence_module.locked_claim_transaction_nonce(
                 network_nonce=starting_nonce,
                 signing_wallet_id=wallet.id,
                 transaction_id=t.id

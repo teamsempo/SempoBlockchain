@@ -1,6 +1,6 @@
 import pytest
 
-from utils import address
+from helpers.utils import address
 from test_eth_worker.helpers.mocks import MockUnbuiltTransaction
 
 
@@ -17,7 +17,6 @@ def test_process_send_eth_transaction(processor, dummy_transaction):
         dummy_transaction.id, address, 123
 
     )
-
 
 def test_proccess_deploy_contract_transaction(processor, dummy_transaction):
 
