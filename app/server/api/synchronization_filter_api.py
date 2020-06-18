@@ -21,7 +21,7 @@ class SynchronizationFilterAPI(MethodView):
         block_epoch = post_data.get('block_epoch', None)      
 
         transaction_filter = add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals = decimals, block_epoch = block_epoch)
-        #bt.force_third_party_transaction_sync()
+
         return make_response(jsonify(synchronization_filter_schema.dump(transaction_filter).data)), 201
 
 synchronization_filter_blueprint.add_url_rule(

@@ -3,6 +3,7 @@ from uuid import uuid4
 import config
 import requests
 from requests.auth import HTTPBasicAuth
+from math import ceil
 
 from web3 import (
     Web3,
@@ -42,52 +43,34 @@ def synchronize_third_party_transactions():
     # the range we want into chunks. Once all the chunk-jobs are formed and loaded into redis,
     # then trigger process_all_chunks, which will consume those jobs from redis
     for f in filters:
-        ceiling = 0
         latest_block = get_latest_block_number()
         # If there's no filter.max_block (which is the default for auto-generated filters)
         # start tracking third party transactions by looking at the lastest_block
-        max_enqueued_block = f.max_block or latest_block
-        number_of_blocks_to_get = (latest_block - max_enqueued_block)
-        # integer division, then add a chunk if there's a remainder
-        number_of_chunks = int(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST) + (number_of_blocks_to_get % sync_const.BLOCKS_PER_REQUEST > 0)
-
+        max_fetched_block = f.max_block or 0
+        number_of_blocks_to_get = (latest_block - max_fetched_block)
+        number_of_chunks = ceil(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST)
         for chunk in range(number_of_chunks):
-            floor = max_enqueued_block + (chunk * sync_const.BLOCKS_PER_REQUEST)
-            ceiling = max_enqueued_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
+            floor = max_fetched_block + (chunk * sync_const.BLOCKS_PER_REQUEST) + 1
+            ceiling = max_fetched_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
             if ceiling > latest_block:
                 ceiling = latest_block
-            # filter_job objects are just filter objects with floors/ceilings set
-            job = {
-                'filter_id': f.id,
-                'floor': floor,
-                'ceiling': ceiling
-            }
-            red.rpush(sync_const.THIRD_PARTY_SYNC_JOBS, json.dumps(job))
-        if ceiling:
-            # Sometimes there won't be a ceiling, if there's no new chunks since the last time it ran
+            process_chunk(f, floor, ceiling)
             persistence_module.set_filter_max_block(f.id, ceiling)
-        # With the jobs set, we can now start processing them
-        process_all_chunks()
 
+        persistence_module.set_filter_max_block(f.id, max_fetched_block)
 
-# Iterates through all jobs made by synchronize_third_party_transactions
-# Gets and processes them all!
+# Gets history for given range, and runs handle_transaction on all of them
 # This is the second stage in the third party transaction processing pipeline!
-def process_all_chunks():
-    for filter_job in red.lrange(sync_const.THIRD_PARTY_SYNC_JOBS, 0, -1):
-        task = json.loads(filter_job)
-        filter = persistence_module.get_synchronization_filter(task['filter_id'])
-        transaction_history = get_blockchain_transaction_history(
+def process_chunk(filter, floor, ceiling):
+    transaction_history = get_blockchain_transaction_history(
             filter.contract_address, 
-            task['floor'], 
-            task['ceiling'], 
+            floor, 
+            ceiling, 
             filter.filter_parameters,
             filter.id
         )
-        for transaction in transaction_history:
-            handle_transaction(transaction, filter)
-        # Only pop the list (delete job from queue) after success
-        red.lpop(sync_const.THIRD_PARTY_SYNC_JOBS)
+    for transaction in transaction_history:
+        handle_transaction(transaction, filter)
 
 # Processes newly found transaction event
 # Creates database object for transaction
@@ -152,5 +135,5 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
         raise Exception('No contract_address found for new contract filter')
     if not persistence_module.check_if_synchronization_filter_exists(contract_address, filter_parameters):
         # Set max_block to block_epoch to act as a de-factor zero-point
-        config.logg.error(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
+        config.logg.info(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
         persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
