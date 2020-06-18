@@ -3,6 +3,8 @@ from server.utils.auth import get_complete_auth_token
 from test_app.helpers.utils import assert_resp_status_code
 from server.utils.user import create_transfer_account_user
 from server.models.credit_transfer import CreditTransfer
+from helpers.utils import will_func_test_blockchain
+from server import bt
 
 @pytest.mark.parametrize("transfer_amount, target_balance, credit_transfer_uuid_selector_func, "
                          "recipient_transfer_accounts_ids_accessor, sender_user_id_accessor,"
@@ -218,3 +220,8 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     # 5. Idempotency check (repeat step 4's request, ensure only one transfer is created)
     resp_two = post_to_credit_transfer_internal(fake_user_b_address, existing_user_a.default_transfer_account.blockchain_address, made_up_hash, 100, token.address)
     assert resp.json['data']['credit_transfer']['id'] == resp_two.json['data']['credit_transfer']['id']
+
+def test_force_third_party_transaction_sync():
+    if will_func_test_blockchain():
+        task_uuid = bt.force_third_party_transaction_sync()
+        bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
