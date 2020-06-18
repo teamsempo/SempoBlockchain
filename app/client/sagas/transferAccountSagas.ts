@@ -1,5 +1,5 @@
 import { put, takeEvery, call, all, delay } from "redux-saga/effects";
-import { arrayOf, normalize } from "normalizr";
+import { normalize } from "normalizr";
 import { handleError } from "../utils";
 
 import { transferAccountSchema } from "../schemas";
@@ -14,7 +14,13 @@ import {
   EDIT_TRANSFER_ACCOUNT_FAILURE
 } from "../reducers/transferAccountReducer.js";
 
-import { UPDATE_CREDIT_TRANSFER_LIST } from "../reducers/creditTransferReducer";
+import {
+  TransferAccountData,
+  SingularTransferAccountData,
+  MultipleTransferAccountData
+} from "../reducers/transferAccount/types";
+
+import { CreditTransferAction } from "../reducers/creditTransfer/actions";
 
 import {
   loadTransferAccountListAPI,
@@ -24,12 +30,15 @@ import {
 import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
 
-function* updateStateFromTransferAccount(data) {
+function* updateStateFromTransferAccount(data: TransferAccountData) {
   //Schema expects a list of transfer account objects
-  if (data.transfer_accounts) {
-    var transfer_account_list = data.transfer_accounts;
+  if ((data as MultipleTransferAccountData).transfer_accounts) {
+    var transfer_account_list = (data as MultipleTransferAccountData)
+      .transfer_accounts;
   } else {
-    transfer_account_list = [data.transfer_account];
+    transfer_account_list = [
+      (data as SingularTransferAccountData).transfer_account
+    ];
   }
   const normalizedData = normalize(
     transfer_account_list,
@@ -43,18 +52,16 @@ function* updateStateFromTransferAccount(data) {
 
   const credit_sends = normalizedData.entities.credit_sends;
   if (credit_sends) {
-    yield put({
-      type: UPDATE_CREDIT_TRANSFER_LIST,
-      credit_transfers: credit_sends
-    });
+    yield put(
+      CreditTransferAction.updateCreditTransferListRequest(credit_sends)
+    );
   }
 
   const credit_receives = normalizedData.entities.credit_receives;
   if (credit_receives) {
-    yield put({
-      type: UPDATE_CREDIT_TRANSFER_LIST,
-      credit_transfers: credit_receives
-    });
+    yield put(
+      CreditTransferAction.updateCreditTransferListRequest(credit_receives)
+    );
   }
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
@@ -63,8 +70,13 @@ function* updateStateFromTransferAccount(data) {
   }
 }
 
+interface TransferAccountLoadApiResult {
+  type: typeof LOAD_TRANSFER_ACCOUNTS_REQUEST;
+  payload: any;
+}
+
 // Load Transfer Account List Saga
-function* loadTransferAccounts({ payload }) {
+function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
   try {
     const load_result = yield call(loadTransferAccountListAPI, payload);
 
@@ -89,8 +101,13 @@ function* watchLoadTransferAccounts() {
   yield takeEvery(LOAD_TRANSFER_ACCOUNTS_REQUEST, loadTransferAccounts);
 }
 
+interface TransferAccountEditApiResult {
+  type: typeof EDIT_TRANSFER_ACCOUNT_REQUEST;
+  payload: any;
+}
+
 // Edit Transfer Account Saga
-function* editTransferAccount({ payload }) {
+function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
   try {
     const edit_response = yield call(editTransferAccountAPI, payload);
 
