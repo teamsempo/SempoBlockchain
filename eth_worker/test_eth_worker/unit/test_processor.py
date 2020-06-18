@@ -1,7 +1,7 @@
 import pytest
 
-from helpers.utils import address
-from test_eth_worker.helpers.mocks import MockUnbuiltTransaction
+from utils import address
+from mocks import MockUnbuiltTransaction
 
 
 def test_get_gas_price(processor):

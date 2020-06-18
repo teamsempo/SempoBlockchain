@@ -9,7 +9,7 @@ from eth_keys import keys
 from sql_persistence.interface import SQLPersistenceInterface
 from sql_persistence.models import BlockchainWallet, BlockchainTask, BlockchainTransaction
 
-from helpers.utils import pk, address, str_uuid
+from utils import pk, address, str_uuid
 
 class TestModels:
 

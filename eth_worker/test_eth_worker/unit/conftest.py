@@ -8,9 +8,9 @@ from src.eth_manager.processor import TransactionProcessor
 from src.sql_persistence import engine, session_factory
 from src.sql_persistence.interface import SQLPersistenceInterface
 from src.sql_persistence.models import Base
-from test_eth_worker.helpers.mocks import MockNonce, MockRedis
+from mocks import MockNonce, MockRedis
 
-from helpers.utils import str_uuid
+from utils import str_uuid
 
 
 
