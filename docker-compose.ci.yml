@@ -3,7 +3,7 @@
 version: "3"
 services:
   app:
-    image: "server:${GIT_HASH}"
+    image: "server:${IMAGE_TAG:-latest}"
     environment: &CI_ENV
       DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "APP"
@@ -40,16 +40,16 @@ services:
       <<: *CI_ENV
       CONTAINER_TYPE: "PRIMARY"
       PYTHONUNBUFFERED: 0
-    image: "eth_worker:${GIT_HASH}"
+    image: "eth_worker:${IMAGE_TAG:-latest}"
   eth_worker_processor:
     environment:
       <<: *CI_ENV
       CONTAINER_TYPE: "PROCESSOR"
       PYTHONUNBUFFERED: 0
-    image: "eth_worker_process:${GIT_HASH}"
+    image: "eth_worker_process:${IMAGE_TAG:-latest}"
   pgbouncer:
     environment:
       <<: *CI_ENV
-    image: "pgbouncer:${GIT_HASH}"
+    image: "pgbouncer:${IMAGE_TAG:-latest}"
   ganache:
     command: "-l 80000000 -i 42 -s GANACHE_SEED_DETERMINISTIC"
