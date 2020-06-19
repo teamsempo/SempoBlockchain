@@ -280,6 +280,14 @@ To run with docker first you must generate local secrets that will be read by th
 
 ```
 cd config files
+python generate_secrets.py -n local_docker
 python generate_secrets.py -n docker_test
-docker-compose up
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+You may find it useful to add an alias to your `.bashrc` (or `.zshrc` etc) that aliases the docker-compose command
+
+```
+alias sempo='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.dev.yml'
+alias sempoci='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.ci.yml'
 ```
