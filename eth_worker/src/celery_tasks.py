@@ -9,6 +9,8 @@ from exceptions import (
     LockedNotAcquired
 )
 
+import composite_tasks as composite
+
 
 class SqlAlchemyTask(celery.Task):
     """An abstract Celery Task that ensures that the connection the the
@@ -76,12 +78,12 @@ processor_task_config = {
 
 @app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):
-    return eth_manager.celery_dispatchers.composite.deploy_exchange_network(deploying_address)
+    return composite.deploy_exchange_network(deploying_address)
 
 
 @app.task(**base_task_config)
 def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
-    return eth_manager.celery_dispatchers.composite.deploy_and_fund_reserve_token(
+    return composite.deploy_and_fund_reserve_token(
         deploying_address,
         name, symbol, fund_amount_wei)
 
@@ -95,7 +97,7 @@ def deploy_smart_token(self, deploying_address,
                        reserve_token_address,
                        reserve_ratio_ppm):
 
-    return eth_manager.celery_dispatchers.composite.deploy_smart_token(
+    return composite.deploy_smart_token(
         deploying_address,
         name, symbol, decimals,
         reserve_deposit_wei,
@@ -115,12 +117,12 @@ def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold
 
 @app.task(**low_priority_config)
 def topup_wallets(self):
-    return eth_manager.celery_dispatchers.composite.topup_wallets()
+    return composite.topup_wallets()
 
 # Set retry attempts to zero since beat will retry shortly anyway
 @app.task(**no_retry_config)
 def topup_wallet_if_required(self, address):
-    return eth_manager.celery_dispatchers.composite.topup_if_required(address)
+    return composite.topup_if_required(address)
 
 
 @app.task(**base_task_config)
@@ -182,7 +184,7 @@ def retry_failed(self, min_task_id=None, max_task_id=None, retry_unstarted=False
 
 @app.task(**no_retry_config)
 def deduplicate(self, min_task_id, max_task_id):
-    return eth_manager.celery_dispatchers.composite.deduplicate(min_task_id, max_task_id)
+    return composite.deduplicate(min_task_id, max_task_id)
 
 
 @app.task(**base_task_config)

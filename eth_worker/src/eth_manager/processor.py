@@ -67,7 +67,7 @@ class TransactionProcessor(object):
 
         return None
 
-    def call_contract_function(self,
+    def _call_contract_function(self,
                                contract_address: str, abi_type: str, function_name: str,
                                args: Optional[tuple] = None, kwargs: Optional[dict] = None,
                                signing_address: Optional[str] = None) -> Any:
@@ -494,34 +494,6 @@ class TransactionProcessor(object):
                 countdown=RETRY_TRANSACTION_BASE_TIME * 4 ** number_of_attempts_this_round
             )
 
-    def __init__(self,
-                 ethereum_chain_id,
-                 w3,
-                 red,
-                 gas_price_wei,
-                 gas_limit,
-                 persistence_module,
-                 task_max_retries=3):
-
-            self.registry = ContractRegistry(w3)
-
-            self.ethereum_chain_id = int(ethereum_chain_id) if ethereum_chain_id else None
-
-            self.red = red
-
-            self.w3 = w3
-
-            self.gas_price_wei = gas_price_wei
-            self.gas_limit = gas_limit
-            self.transaction_max_value = self.gas_price_wei * self.gas_limit
-
-            self.persistence_interface = persistence_module
-
-            self.task_max_retries = task_max_retries
-
-
-class ExternalEntrypoints(object):
-
     def get_serialised_task_from_uuid(self, uuid):
         return self.persistence_interface.get_serialised_task_from_uuid(uuid)
 
@@ -541,7 +513,7 @@ class ExternalEntrypoints(object):
         :return: the result of the contract call
         """
 
-        return self.processor.call_contract_function(
+        return self._call_contract_function(
             contract_address,
             abi_type,
             function_name,
@@ -692,6 +664,34 @@ class ExternalEntrypoints(object):
             'pending_count': len(pending_tasks),
             'unstarted_count': len(unstarted_tasks) if unstarted_tasks else 'Unknown'
         }
+
+    def __init__(self,
+                 ethereum_chain_id,
+                 w3,
+                 red,
+                 gas_price_wei,
+                 gas_limit,
+                 persistence_module,
+                 task_max_retries=3):
+
+            self.registry = ContractRegistry(w3)
+
+            self.ethereum_chain_id = int(ethereum_chain_id) if ethereum_chain_id else None
+
+            self.red = red
+
+            self.w3 = w3
+
+            self.gas_price_wei = gas_price_wei
+            self.gas_limit = gas_limit
+            self.transaction_max_value = self.gas_price_wei * self.gas_limit
+
+            self.persistence_interface = persistence_module
+
+            self.task_max_retries = task_max_retries
+
+
+class ExternalEntrypoints(object):
 
     def __init__(self, persistence_module, processor: TransactionProcessor):
 

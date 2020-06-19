@@ -198,7 +198,7 @@ def sig_process_deploy_contract_transaction(
     gas_limit,
     task_id
 ):
-    signature(
+    return signature(
         utils.eth_endpoint('_process_deploy_contract_transaction'),
         args=(
             transaction_id,

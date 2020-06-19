@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship, backref
+from sqlalchemy.orm import sessionmaker, relationship, backref, object_session
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON, Numeric
 from sqlalchemy.orm import scoped_session
@@ -229,7 +229,7 @@ class BlockchainTask(ModelBase):
 
         for task_uuid in tasks_uuids:
             # TODO: Make sure this can't be failed due to a race condition on tasks being added
-            task = self.session.query(BlockchainTask).filter_by(uuid=task_uuid).first()
+            task = object_session(self).query(BlockchainTask).filter_by(uuid=task_uuid).first()
             if task:
                 dependency_relationship.append(task)
 

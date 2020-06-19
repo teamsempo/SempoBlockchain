@@ -1,8 +1,6 @@
-eth_worker_name = 'eth_manager'
 celery_tasks_name = 'celery_tasks'
-eth_endpoint = lambda endpoint: f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+eth_endpoint = lambda endpoint: f'{celery_tasks_name}.{endpoint}'
 import config
-
 
 def execute_synchronous_celery(signature):
     async_result = signature.delay()
@@ -19,6 +17,9 @@ def execute_synchronous_celery(signature):
 
     return response
 
+def execute_task(signature):
+    ar = signature.delay()
+    return ar.id
 
 def queue_sig(signature, countdown=0):
     ar = signature.apply_async(
