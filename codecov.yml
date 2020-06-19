@@ -17,12 +17,12 @@ coverage:
         paths:
           - "eth_worker/eth_manager"
           - "eth_worker/sql_persistence"
-      tests:
-        paths:
-          - "app/test_app"
-          - "app/client/__tests__"
-          - "eth_worker/test_eth_worker"
-        threshold: 100%
+      #tests:
+      #paths:
+      #- "app/test_app"
+      #- "app/client/__tests__"
+      #- "eth_worker/test_eth_worker"
+      #threshold: 100%
 fixes:
   - "server/::app/server/"
   - "client/::app/client/"
