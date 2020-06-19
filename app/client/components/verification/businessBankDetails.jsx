@@ -11,7 +11,7 @@ import {
   editBankAccount,
   createBankAccount,
   UPDATE_ACTIVE_STEP
-} from "../../reducers/businessVerificationReducer";
+} from "../../reducers/businessVerification/reducers";
 
 const ErrorMessage = function(props) {
   var error = props.input + "_val";

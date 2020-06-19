@@ -11,7 +11,7 @@ import AsyncButton from "../AsyncButton.jsx";
 import {
   UPDATE_ACTIVE_STEP,
   UPDATE_BUSINESS_VERIFICATION_STATE
-} from "../../reducers/businessVerificationReducer";
+} from "../../reducers/businessVerification/reducers";
 
 const ErrorMessage = function(props) {
   var error = props.input + "_val";

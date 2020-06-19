@@ -15,7 +15,7 @@ import { LightTheme } from "../theme.js";
 import {
   loadBusinessProfile,
   UPDATE_ACTIVE_STEP
-} from "../../reducers/businessVerificationReducer";
+} from "../../reducers/businessVerification/reducers";
 
 import BusinessDetails from "../verification/businessDetails.jsx";
 import BusinessDocuments from "../verification/businessDocuments.jsx";

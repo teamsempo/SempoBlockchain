@@ -9,7 +9,7 @@ import {
   editBusinessProfile,
   createBusinessProfile,
   UPDATE_ACTIVE_STEP
-} from "../../reducers/businessVerificationReducer";
+} from "../../reducers/businessVerification/reducers";
 import AsyncButton from "../AsyncButton.jsx";
 import { DefaultTheme } from "../theme.js";
 

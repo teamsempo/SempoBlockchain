@@ -7,7 +7,7 @@ import {
   RESET_ACTIVE_STEP_STATE,
   RESET_BUSINESS_VERIFICATION_STATE,
   UPDATE_ACTIVE_STEP
-} from "../reducers/businessVerificationReducer";
+} from "../reducers/businessVerification/reducers";
 
 import LoadingSpinner from "./loadingSpinner.jsx";
 import { Link } from "react-router-dom";

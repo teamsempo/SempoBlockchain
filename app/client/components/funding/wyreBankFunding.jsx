@@ -9,7 +9,7 @@ import {
 } from "../../reducers/wyreReducer";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import AsyncButton from "../AsyncButton.jsx";
-import { loadBusinessProfile } from "../../reducers/businessVerificationReducer";
+import { loadBusinessProfile } from "../../reducers/businessVerification/reducers";
 
 const mapStateToProps = state => {
   return {

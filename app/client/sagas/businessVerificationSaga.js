@@ -21,7 +21,7 @@ import {
   EDIT_BANK_ACCOUNT_REQUEST,
   EDIT_BANK_ACCOUNT_SUCCESS,
   EDIT_BANK_ACCOUNT_FAILURE
-} from "../reducers/businessVerificationReducer";
+} from "../reducers/businessVerification/reducers";
 
 import {
   editBusinessVerificationAPI,

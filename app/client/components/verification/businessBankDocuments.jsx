@@ -8,7 +8,7 @@ import {
   editStatus,
   UPDATE_ACTIVE_STEP,
   uploadDocument
-} from "../../reducers/businessVerificationReducer";
+} from "../../reducers/businessVerification/reducers";
 import { DefaultTheme } from "../theme";
 import AsyncButton from "../AsyncButton.jsx";
 import LoadingSpinner from "../loadingSpinner.jsx";

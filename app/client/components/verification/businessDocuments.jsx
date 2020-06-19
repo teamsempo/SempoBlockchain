@@ -6,7 +6,7 @@ import {
   editBusinessProfile,
   UPDATE_ACTIVE_STEP,
   uploadDocument
-} from "../../reducers/businessVerificationReducer";
+} from "../../reducers/businessVerification/reducers";
 import DateTime from "../dateTime.jsx";
 
 import { DefaultTheme } from "../theme";
