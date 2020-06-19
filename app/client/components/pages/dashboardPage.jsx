@@ -6,7 +6,7 @@ import { subscribe, unsubscribe } from "pusher-redux";
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoginAction } from "../../reducers/auth/actions";
-import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
+import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
 
 import {
   VolumeChart,
@@ -43,8 +43,8 @@ const mapDispatchToProps = dispatch => {
       dispatch(
         LoadCreditTransferAction.loadCreditTransferListRequest({ query })
       ),
-    loadCreditTransferFilters: (query, path) =>
-      dispatch(loadCreditTransferFilters({ query, path })),
+    loadCreditTransferFilters: () =>
+      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))
   };
