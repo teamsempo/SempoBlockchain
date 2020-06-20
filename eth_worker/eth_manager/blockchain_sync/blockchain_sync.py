@@ -4,12 +4,7 @@ import config
 import requests
 from requests.auth import HTTPBasicAuth
 from math import ceil
-
-from web3 import (
-    Web3,
-    WebsocketProvider,
-    HTTPProvider
-)
+from web3 import Web3
 
 import eth_manager.blockchain_sync.blockchain_sync_constants as sync_const
 from eth_manager import red, w3_websocket, persistence_module
@@ -58,6 +53,7 @@ def synchronize_third_party_transactions():
             persistence_module.set_filter_max_block(f.id, ceiling)
 
         persistence_module.set_filter_max_block(f.id, max_fetched_block)
+    return True
 
 # Gets history for given range, and runs handle_transaction on all of them
 # This is the second stage in the third party transaction processing pipeline!
@@ -97,6 +93,7 @@ def handle_transaction(transaction, filter):
     # in order to be retryable later
     if webook_resp.ok:
         persistence_module.mark_transaction_as_completed(transaction_object)
+    return True
 
 # Gets blockchain transaction history for given range
 # Fallback if something goes wrong at this level: block-tracking table
@@ -115,7 +112,6 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
             toBlock = end_block,
             argument_filters = argument_filters
         )
-
         for event in filter.get_all_entries():
             yield event
 
@@ -136,4 +132,4 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
     if not persistence_module.check_if_synchronization_filter_exists(contract_address, filter_parameters):
         # Set max_block to block_epoch to act as a de-factor zero-point
         config.logg.info(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
-        persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
+        return persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)

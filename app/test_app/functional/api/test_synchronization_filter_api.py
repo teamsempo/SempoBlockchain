@@ -2,8 +2,6 @@ import pytest, json, config, base64
 
 from server import bt
 
-from helpers.utils import will_func_test_blockchain
-
 @pytest.mark.parametrize("contract_address, contract_type, filter_type, filter_parameters, status_code", [
     (config.ETH_CONTRACT_ADDRESS, "ERC20", 'TRANSFER', None, 201),
 ])

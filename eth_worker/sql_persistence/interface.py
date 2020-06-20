@@ -482,6 +482,7 @@ class SQLPersistenceInterface(object):
         filter = SynchronizationFilter(contract_address=contract_address, contract_type=contract_type, filter_parameters=filter_parameters, max_block=block_epoch, filter_type=filter_type, decimals=decimals)
         self.session.add(filter)
         self.session.commit()
+        return filter
 
     def set_filter_max_block(self, filter_id, block):
         filter = self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
