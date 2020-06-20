@@ -19,7 +19,7 @@ class TestModels:
     filter_parameters = None
     filter_type = 'TRANSFER'
     decimals = 18
-    block_epoch = None
+    block_epoch = 1
     
     # Resembles a w3 transaction object to the extend we need it to
     class Transaction():
@@ -108,7 +108,7 @@ class TestModels:
         mocker.patch.object(blockchain_sync, 'process_chunk', lambda filter, floor, ceiling: ranges.append((filter.id, floor, ceiling)))
         
         synchronize_third_party_transactions()
-        assert ranges == [(tf1_id, 1, 5000), (tf1_id, 5001, 10000), (tf1_id, 10001, 12000), (tf2_id, 1, 5000), (tf2_id, 5001, 10000), (tf2_id, 10001, 12000)]
+        assert ranges == [(1, 2, 5001), (1, 5002, 10001), (1, 10002, 12000), (2, 2, 5001), (2, 5002, 10001), (2, 10002, 12000)]
 
     def test_handle_transaction(self, mocker, processor, persistence_module: SQLPersistenceInterface):
         # Create dummy objects for this functions to consume (handle_transaction only uses decimals)
