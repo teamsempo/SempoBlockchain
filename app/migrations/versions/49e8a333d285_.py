@@ -1,6 +1,6 @@
 """Transaction Callback Migration Alteration
 
-Revision ID: 13040d945d12
+Revision ID: 49e8a333d285
 Revises: d7b89a614ae9
 Create Date: 2020-06-12 16:31:52.099008
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '13040d945d12'
+revision = '49e8a333d285'
 down_revision = 'd7b89a614ae9'
 branch_labels = None
 depends_on = None
