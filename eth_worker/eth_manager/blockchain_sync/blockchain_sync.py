@@ -41,9 +41,10 @@ def synchronize_third_party_transactions():
         latest_block = get_latest_block_number()
         # If there's no filter.max_block (which is the default for auto-generated filters)
         # start tracking third party transactions by looking at the lastest_block
-        max_fetched_block = f.max_block or 0
+        max_fetched_block = f.max_block or latest_block
         number_of_blocks_to_get = (latest_block - max_fetched_block)
         number_of_chunks = ceil(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST)
+
         for chunk in range(number_of_chunks):
             floor = max_fetched_block + (chunk * sync_const.BLOCKS_PER_REQUEST) + 1
             ceiling = max_fetched_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
