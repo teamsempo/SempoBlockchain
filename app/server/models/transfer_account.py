@@ -193,6 +193,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         primary_user_default_org = getattr(self.primary_user, 'default_organisation')
         active_org = getattr(g, 'active_organisation', primary_user_default_org)
         if not active_org:
+            print('User or session do not have an active organization, falling back to master organization')
             active_org = Organisation.master_organisation()
         admin = getattr(g, 'user', None)
         auto_resolve = initial_disbursement == active_org.default_disbursement
