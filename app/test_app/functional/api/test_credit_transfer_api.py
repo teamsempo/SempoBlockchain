@@ -225,8 +225,8 @@ def test_force_third_party_transaction_sync():
         bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
 
 @pytest.mark.parametrize("is_bulk, invert_recipient_list, transfer_amount, transfer_type, status_code", [
-    [True, False, 10, 'DISBURSEMENT', 201],
-    [True, True, 20, 'DISBURSEMENT', 201]
+    [True, False, 1000, 'DISBURSEMENT', 201],
+    [True, True, 2000, 'DISBURSEMENT', 201]
 ])
 def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, create_transfer_account_user,
                                 create_credit_transfer, is_bulk, invert_recipient_list, transfer_amount, 
@@ -247,8 +247,8 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
         user_ids.append(user.id)
 
     # Create set subset of created users to disburse to (first 5 users)
-    recipients = user_ids[:5]
-
+    recipients = [10, 11, 12, 13]
+    
     response = test_client.post(
         '/api/v1/credit_transfer/',
         headers=dict(
@@ -263,6 +263,7 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
             transfer_type=transfer_type,
         )),
         content_type='application/json', follow_redirects=True)
+    db.session.commit()
 
     # Get IDs for every user disbursed to, then check that the list matches up
     # with the list of recipients (or the inverse if invert_recipient_list)
