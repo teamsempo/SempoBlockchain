@@ -1,17 +1,8 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 
-import {
-  UPDATE_WYRE_STATE,
-  LOAD_WYRE_EXCHANGE_RATES_REQUEST,
-  LOAD_WYRE_EXCHANGE_RATES_SUCCESS,
-  LOAD_WYRE_EXCHANGE_RATES_FAILURE,
-  LOAD_WYRE_ACCOUNT_REQUEST,
-  LOAD_WYRE_ACCOUNT_SUCCESS,
-  LOAD_WYRE_ACCOUNT_FAILURE,
-  CREATE_WYRE_TRANSFER_REQUEST,
-  CREATE_WYRE_TRANSFER_SUCCESS,
-  CREATE_WYRE_TRANSFER_FAILURE
-} from "../reducers/wyreReducer";
+import { WyreAction } from "../reducers/wyre/actions";
+
+import { WyreActionTypes } from "../reducers/wyre/types";
 
 import {
   loadExchangeRates,
@@ -24,7 +15,7 @@ import { MessageAction } from "../reducers/message/actions";
 function* updateStateFromWyreDetails(data) {
   let payload = data;
   if (payload) {
-    yield put({ type: UPDATE_WYRE_STATE, payload });
+    yield put(WyreAction.updateWyreState(payload));
   }
 }
 
@@ -34,11 +25,11 @@ function* loadWyreExchangeRates({ payload }) {
 
     yield call(updateStateFromWyreDetails, load_result.data);
 
-    yield put({ type: LOAD_WYRE_EXCHANGE_RATES_SUCCESS });
+    yield put(WyreAction.loadExchangeRatesSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_WYRE_EXCHANGE_RATES_FAILURE, error: error });
+    yield put(WyreAction.loadExchangeRatesFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -47,7 +38,10 @@ function* loadWyreExchangeRates({ payload }) {
 }
 
 function* watchLoadWyreExchangeRates() {
-  yield takeEvery(LOAD_WYRE_EXCHANGE_RATES_REQUEST, loadWyreExchangeRates);
+  yield takeEvery(
+    WyreActionTypes.LOAD_WYRE_EXCHANGE_RATES_REQUEST,
+    loadWyreExchangeRates
+  );
 }
 
 function* loadWyreAccount({ payload }) {
@@ -56,11 +50,11 @@ function* loadWyreAccount({ payload }) {
 
     yield call(updateStateFromWyreDetails, load_result.data);
 
-    yield put({ type: LOAD_WYRE_ACCOUNT_SUCCESS });
+    yield put(WyreAction.loadWyreAccountSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: LOAD_WYRE_ACCOUNT_FAILURE, error: error });
+    yield put(WyreAction.loadWyreAccountFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -69,7 +63,7 @@ function* loadWyreAccount({ payload }) {
 }
 
 function* watchLoadWyreAccount() {
-  yield takeEvery(LOAD_WYRE_ACCOUNT_REQUEST, loadWyreAccount);
+  yield takeEvery(WyreActionTypes.LOAD_WYRE_ACCOUNT_REQUEST, loadWyreAccount);
 }
 
 function* createWyreTransfer({ payload }) {
@@ -87,11 +81,11 @@ function* createWyreTransfer({ payload }) {
       );
     }
 
-    yield put({ type: CREATE_WYRE_TRANSFER_SUCCESS });
+    yield put(WyreAction.createWyreTransferSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put({ type: CREATE_WYRE_TRANSFER_FAILURE, error: error });
+    yield put(WyreAction.createWyreTransferFailure(error));
 
     yield put(
       MessageAction.addMessage({ error: true, message: error.message })
@@ -100,7 +94,10 @@ function* createWyreTransfer({ payload }) {
 }
 
 function* watchCreateWyreTransfer() {
-  yield takeEvery(CREATE_WYRE_TRANSFER_REQUEST, createWyreTransfer);
+  yield takeEvery(
+    WyreActionTypes.CREATE_WYRE_TRANSFER_REQUEST,
+    createWyreTransfer
+  );
 }
 
 export default function* wyreSaga() {

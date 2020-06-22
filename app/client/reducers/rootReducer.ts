@@ -22,7 +22,7 @@ import { transferAccounts } from "./transferAccountReducer";
 import { users } from "./user/reducers";
 import { filters } from "./filter/reducers";
 import { businessVerification } from "./businessVerificationReducer";
-import { wyre } from "./wyreReducer";
+import { wyre } from "./wyre/reducers";
 import { TransferUsageReducer } from "./transferUsage/reducers";
 import { OrganisationReducer } from "./organisation/reducers";
 import { metrics } from "./metric/reducers";
