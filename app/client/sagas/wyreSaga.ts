@@ -2,7 +2,7 @@ import { put, takeEvery, call, all } from "redux-saga/effects";
 
 import { WyreAction } from "../reducers/wyre/actions";
 
-import { WyreActionTypes } from "../reducers/wyre/types";
+import { WyreActionTypes, WyreState } from "../reducers/wyre/types";
 
 import {
   loadExchangeRates,
@@ -12,16 +12,16 @@ import {
 import { handleError } from "../utils";
 import { MessageAction } from "../reducers/message/actions";
 
-function* updateStateFromWyreDetails(data) {
+function* updateStateFromWyreDetails(data: WyreState) {
   let payload = data;
   if (payload) {
     yield put(WyreAction.updateWyreState(payload));
   }
 }
 
-function* loadWyreExchangeRates({ payload }) {
+function* loadWyreExchangeRates() {
   try {
-    const load_result = yield call(loadExchangeRates, payload);
+    const load_result = yield call(loadExchangeRates);
 
     yield call(updateStateFromWyreDetails, load_result.data);
 
@@ -44,9 +44,13 @@ function* watchLoadWyreExchangeRates() {
   );
 }
 
-function* loadWyreAccount({ payload }) {
+interface WyreAccountRequest {
+  type: typeof WyreActionTypes.LOAD_WYRE_ACCOUNT_REQUEST;
+}
+
+function* loadWyreAccount() {
   try {
-    const load_result = yield call(loadWyreAccountBalance, payload);
+    const load_result = yield call(loadWyreAccountBalance);
 
     yield call(updateStateFromWyreDetails, load_result.data);
 
@@ -66,7 +70,12 @@ function* watchLoadWyreAccount() {
   yield takeEvery(WyreActionTypes.LOAD_WYRE_ACCOUNT_REQUEST, loadWyreAccount);
 }
 
-function* createWyreTransfer({ payload }) {
+interface WyreTransferResult {
+  type: typeof WyreActionTypes.CREATE_WYRE_TRANSFER_REQUEST;
+  payload: any;
+}
+
+function* createWyreTransfer({ payload }: WyreTransferResult) {
   try {
     const create_result = yield call(createWyreTransferRequest, payload);
 
