@@ -21,7 +21,9 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
         if [ "$ret" -ne 0 ]; then
           exit $ret
         fi
-        bash <(curl -s https://codecov.io/bash) -cF python
+        if [ ! -z "$CODECOV_TOKEN" ]; then # only report if CODECOV_TOKEN is set
+          bash <(curl -s https://codecov.io/bash) -cF python
+        fi
     else
         echo pass
         sleep infinity

@@ -3,10 +3,10 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
-import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
+import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoginAction } from "../../reducers/auth/actions";
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
+import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
 
 import {
   VolumeChart,
@@ -39,10 +39,12 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     logout: () => dispatch(LoginAction.logout()),
-    loadCreditTransferList: (query, path) =>
-      dispatch(loadCreditTransferList({ query, path })),
-    loadCreditTransferFilters: (query, path) =>
-      dispatch(loadCreditTransferFilters({ query, path })),
+    loadCreditTransferList: query =>
+      dispatch(
+        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
+      ),
+    loadCreditTransferFilters: () =>
+      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))
   };
@@ -98,7 +100,7 @@ class DashboardPage extends React.Component {
     subscribe(
       pusher_channel,
       "credit_transfer",
-      PUSHER_CREDIT_TRANSFER,
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER,
       additionalParams
     );
 
@@ -112,7 +114,11 @@ class DashboardPage extends React.Component {
   }
 
   unsubscribe() {
-    unsubscribe("MainChannel", "credit_transfer", PUSHER_CREDIT_TRANSFER);
+    unsubscribe(
+      "MainChannel",
+      "credit_transfer",
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER
+    );
   }
 
   render() {
