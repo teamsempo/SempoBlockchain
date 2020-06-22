@@ -232,11 +232,12 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
                                 create_credit_transfer, is_bulk, invert_recipient_list, transfer_amount, 
                                 transfer_type, status_code):
     from server.utils.user import create_transfer_account_user
+    from flask import g
 
     # Create admin user and auth
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
-
+    g.active_organisation = authed_sempo_admin_user.default_organisation
     # Create 15 users to test against
     users = []
     user_ids = []
