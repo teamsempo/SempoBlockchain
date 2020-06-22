@@ -31,7 +31,6 @@ class MockEth(object):
     def getBalance(self, address):
         return 1000000000000000000000
 
-
 class MockNonce(object):
 
     def get_transaction_count(self, address, block_identifier=None):
@@ -46,6 +45,15 @@ class MockNonce(object):
 
     def __init__(self):
         self.addresses = {}
+
+class MockSendRawTxn(object):
+
+    def send(self, txn):
+        self.sent_txns.append(txn)
+
+    def __init__(self):
+        self.sent_txns = []
+
 
 class MockUnbuiltTransaction(object):
 

@@ -1,28 +1,10 @@
 import pytest
 
-from utils import address
 from mocks import MockUnbuiltTransaction
 
 
 def test_get_gas_price(processor):
-    assert processor.get_gas_price() == 100
-
-# def test_call_contract_function(processor):
-#     processor.call_contract_function()
-
-# More of a functional test
-def test_process_send_eth_transaction(processor, dummy_transaction):
-
-    processor.process_send_eth_transaction(
-        dummy_transaction.id, address, 123
-
-    )
-
-def test_proccess_deploy_contract_transaction(processor, dummy_transaction):
-
-    processor.process_deploy_contract_transaction(
-        dummy_transaction.id, 'ERC20Token', args=('FooToken', 'FTK', 18)
-    )
+    assert processor._get_gas_price() == 100
 
 def test_calculate_nonce(dummy_transaction, second_dummy_transaction, noncer, processor):
     wallet = dummy_transaction.signing_wallet
