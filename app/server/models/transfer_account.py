@@ -190,7 +190,9 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     def approve_and_disburse(self, initial_disbursement=None):
         from server.utils.access_control import AccessControl
+
         active_org = getattr(g, 'active_organisation', self.primary_user.default_organisation)
+        admin = getattr(g, 'user', None)
         auto_resolve = initial_disbursement == active_org.default_disbursement
 
         if not self.is_approved and admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
