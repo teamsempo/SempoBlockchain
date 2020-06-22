@@ -1,56 +1,27 @@
-import { DEEEEEEP } from "../utils";
+import { DEEEEEEP } from "../../utils";
 import { combineReducers } from "redux";
+import { BusinessVerificationActionTypes } from "./types";
+import { BusinessVerificationAction } from "./actions";
 
-export const UPDATE_ACTIVE_STEP = "UPDATE_ACTIVE_STEP";
-export const RESET_ACTIVE_STEP_STATE = "RESET_ACTIVE_STEP_STATE";
-export const UPDATE_BUSINESS_VERIFICATION_STATE =
-  "UPDATE_BUSINESS_VERIFICATION_STATE";
-export const RESET_BUSINESS_VERIFICATION_STATE =
-  "RESET_BUSINESS_VERIFICATION_STATE";
+interface StepState {
+  activeStep: number;
+  userId?: number | null;
+}
 
-export const EDIT_BUSINESS_VERIFICATION_REQUEST =
-  "EDIT_BUSINESS_VERIFICATION_REQUEST";
-export const EDIT_BUSINESS_VERIFICATION_SUCCESS =
-  "EDIT_BUSINESS_VERIFICATION_SUCCESS";
-export const EDIT_BUSINESS_VERIFICATION_FAILURE =
-  "EDIT_BUSINESS_VERIFICATION_FAILURE";
+const initialStepState: StepState = { activeStep: -1, userId: null };
 
-export const CREATE_BUSINESS_VERIFICATION_REQUEST =
-  "CREATE_BUSINESS_VERIFICATION_REQUEST";
-export const CREATE_BUSINESS_VERIFICATION_SUCCESS =
-  "CREATE_BUSINESS_VERIFICATION_SUCCESS";
-export const CREATE_BUSINESS_VERIFICATION_FAILURE =
-  "CREATE_BUSINESS_VERIFICATION_FAILURE";
-
-export const LOAD_BUSINESS_VERIFICATION_REQUEST =
-  "LOAD_BUSINESS_VERIFICATION_REQUEST";
-export const LOAD_BUSINESS_VERIFICATION_SUCCESS =
-  "LOAD_BUSINESS_VERIFICATION_SUCCESS";
-export const LOAD_BUSINESS_VERIFICATION_FAILURE =
-  "LOAD_BUSINESS_VERIFICATION_FAILURE";
-
-export const UPLOAD_DOCUMENT_REQUEST = "UPLOAD_DOCUMENT_REQUEST";
-export const UPLOAD_DOCUMENT_SUCCESS = "UPLOAD_DOCUMENT_SUCCESS";
-export const UPLOAD_DOCUMENT_FAILURE = "UPLOAD_DOCUMENT_FAILURE";
-
-export const CREATE_BANK_ACCOUNT_REQUEST = "CREATE_BANK_ACCOUNT_REQUEST";
-export const CREATE_BANK_ACCOUNT_SUCCESS = "CREATE_BANK_ACCOUNT_SUCCESS";
-export const CREATE_BANK_ACCOUNT_FAILURE = "CREATE_BANK_ACCOUNT_FAILURE";
-
-export const EDIT_BANK_ACCOUNT_REQUEST = "EDIT_BANK_ACCOUNT_REQUEST";
-export const EDIT_BANK_ACCOUNT_SUCCESS = "EDIT_BANK_ACCOUNT_SUCCESS";
-export const EDIT_BANK_ACCOUNT_FAILURE = "EDIT_BANK_ACCOUNT_FAILURE";
-
-const initialStepState = { activeStep: -1, userId: null };
-export const stepState = (state = initialStepState, action) => {
+export const stepState = (
+  state = initialStepState,
+  action: BusinessVerificationAction
+) => {
   switch (action.type) {
-    case UPDATE_ACTIVE_STEP:
+    case BusinessVerificationActionTypes.UPDATE_ACTIVE_STEP:
       return {
         ...state,
-        activeStep: action.activeStep,
-        userId: action.userId || state.userId
+        activeStep: action.payload.activeStep,
+        userId: action.payload.userId || state.userId
       };
-    case RESET_ACTIVE_STEP_STATE:
+    case BusinessVerificationActionTypes.RESET_ACTIVE_STEP_STATE:
       return initialStepState;
     default:
       return state;
@@ -60,12 +31,12 @@ export const stepState = (state = initialStepState, action) => {
 const initialBusinessVerificationState = {};
 const businessVerificationState = (
   state = initialBusinessVerificationState,
-  action
+  action: BusinessVerificationAction
 ) => {
   switch (action.type) {
-    case UPDATE_BUSINESS_VERIFICATION_STATE:
-      return DEEEEEEP(state, action.kyc_application);
-    case RESET_BUSINESS_VERIFICATION_STATE:
+    case BusinessVerificationActionTypes.UPDATE_BUSINESS_VERIFICATION_STATE:
+      return DEEEEEEP(state, action.payload.kyc_application);
+    case BusinessVerificationActionTypes.RESET_BUSINESS_VERIFICATION_STATE:
       return initialBusinessVerificationState;
     default:
       return state;
@@ -78,14 +49,17 @@ const initialCreateStatusState = {
   success: false
 };
 
-export const createStatus = (state = initialCreateStatusState, action) => {
+export const createStatus = (
+  state = initialCreateStatusState,
+  action: BusinessVerificationAction
+) => {
   switch (action.type) {
-    case CREATE_BUSINESS_VERIFICATION_REQUEST:
+    case BusinessVerificationActionTypes.CREATE_BUSINESS_VERIFICATION_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case CREATE_BUSINESS_VERIFICATION_SUCCESS:
+    case BusinessVerificationActionTypes.CREATE_BUSINESS_VERIFICATION_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case CREATE_BUSINESS_VERIFICATION_FAILURE:
-      return { ...state, isRequesting: false, error: action.error };
+    case BusinessVerificationActionTypes.CREATE_BUSINESS_VERIFICATION_FAILURE:
+      return { ...state, isRequesting: false, error: action.payload.error };
     default:
       return state;
   }
@@ -97,16 +71,19 @@ const initialLoadStatusState = {
   success: false
 };
 
-const loadStatus = (state = initialLoadStatusState, action) => {
+const loadStatus = (
+  state = initialLoadStatusState,
+  action: BusinessVerificationAction
+) => {
   switch (action.type) {
-    case LOAD_BUSINESS_VERIFICATION_REQUEST:
+    case BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_REQUEST:
       return { ...state, isRequesting: true };
 
-    case LOAD_BUSINESS_VERIFICATION_SUCCESS:
+    case BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_SUCCESS:
       return { ...state, isRequesting: false, success: true };
 
-    case LOAD_BUSINESS_VERIFICATION_FAILURE:
-      return { ...state, isRequesting: false, error: action.error };
+    case BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_FAILURE:
+      return { ...state, isRequesting: false, error: action.payload.error };
 
     default:
       return state;
@@ -119,14 +96,17 @@ export const initialEditStatusState = {
   success: false
 };
 
-export const editStatus = (state = initialEditStatusState, action) => {
+export const editStatus = (
+  state = initialEditStatusState,
+  action: BusinessVerificationAction
+) => {
   switch (action.type) {
-    case EDIT_BUSINESS_VERIFICATION_REQUEST:
+    case BusinessVerificationActionTypes.EDIT_BUSINESS_VERIFICATION_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case EDIT_BUSINESS_VERIFICATION_SUCCESS:
+    case BusinessVerificationActionTypes.EDIT_BUSINESS_VERIFICATION_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case EDIT_BUSINESS_VERIFICATION_FAILURE:
-      return { ...state, isRequesting: false, error: action.error };
+    case BusinessVerificationActionTypes.EDIT_BUSINESS_VERIFICATION_FAILURE:
+      return { ...state, isRequesting: false, error: action.payload.error };
     default:
       return state;
   }
@@ -138,16 +118,19 @@ const initialUploadDocumentStatus = {
   success: false
 };
 
-const uploadDocumentStatus = (state = initialUploadDocumentStatus, action) => {
+const uploadDocumentStatus = (
+  state = initialUploadDocumentStatus,
+  action: BusinessVerificationAction
+) => {
   switch (action.type) {
-    case UPLOAD_DOCUMENT_REQUEST:
+    case BusinessVerificationActionTypes.UPLOAD_DOCUMENT_REQUEST:
       return { ...state, isUploading: true };
 
-    case UPLOAD_DOCUMENT_SUCCESS:
+    case BusinessVerificationActionTypes.UPLOAD_DOCUMENT_SUCCESS:
       return { ...state, isUploading: false, success: true };
 
-    case UPLOAD_DOCUMENT_FAILURE:
-      return { ...state, isUploading: false, error: action.error };
+    case BusinessVerificationActionTypes.UPLOAD_DOCUMENT_FAILURE:
+      return { ...state, isUploading: false, error: action.payload.error };
 
     default:
       return state;
@@ -162,15 +145,15 @@ export const initialCreateBankAccountStatus = {
 
 export const createBankAccountStatus = (
   state = initialCreateBankAccountStatus,
-  action
+  action: BusinessVerificationAction
 ) => {
   switch (action.type) {
-    case CREATE_BANK_ACCOUNT_REQUEST:
+    case BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case CREATE_BANK_ACCOUNT_SUCCESS:
+    case BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case CREATE_BANK_ACCOUNT_FAILURE:
-      return { ...state, isRequesting: false, error: action.error };
+    case BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_FAILURE:
+      return { ...state, isRequesting: false, error: action.payload.error };
     default:
       return state;
   }
@@ -184,15 +167,15 @@ export const initialEditBankAccountStatus = {
 
 export const editBankAccountStatus = (
   state = initialEditBankAccountStatus,
-  action
+  action: BusinessVerificationAction
 ) => {
   switch (action.type) {
-    case EDIT_BANK_ACCOUNT_REQUEST:
+    case BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_REQUEST:
       return { ...state, isRequesting: true, error: null, success: false };
-    case EDIT_BANK_ACCOUNT_SUCCESS:
+    case BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case EDIT_BANK_ACCOUNT_FAILURE:
-      return { ...state, isRequesting: false, error: action.error };
+    case BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_FAILURE:
+      return { ...state, isRequesting: false, error: action.payload.error };
     default:
       return state;
   }
@@ -207,35 +190,4 @@ export const businessVerification = combineReducers({
   createStatus,
   loadStatus,
   editStatus
-});
-
-// Actions
-export const editBusinessProfile = payload => ({
-  type: EDIT_BUSINESS_VERIFICATION_REQUEST,
-  payload
-});
-
-export const loadBusinessProfile = payload => ({
-  type: LOAD_BUSINESS_VERIFICATION_REQUEST,
-  payload
-});
-
-export const createBusinessProfile = payload => ({
-  type: CREATE_BUSINESS_VERIFICATION_REQUEST,
-  payload
-});
-
-export const uploadDocument = payload => ({
-  type: UPLOAD_DOCUMENT_REQUEST,
-  payload
-});
-
-export const createBankAccount = payload => ({
-  type: CREATE_BANK_ACCOUNT_REQUEST,
-  payload
-});
-
-export const editBankAccount = payload => ({
-  type: EDIT_BANK_ACCOUNT_REQUEST,
-  payload
 });

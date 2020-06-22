@@ -1,13 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
-
-import {
-  loadBusinessProfile,
-  RESET_ACTIVE_STEP_STATE,
-  RESET_BUSINESS_VERIFICATION_STATE,
-  UPDATE_ACTIVE_STEP
-} from "../reducers/businessVerification/reducers";
+import { BusinessVerificationAction } from "../reducers/businessVerification/actions";
 
 import LoadingSpinner from "./loadingSpinner.jsx";
 import { Link } from "react-router-dom";
@@ -22,10 +16,11 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadBusinessProfile: query => dispatch(loadBusinessProfile({ query })),
-    clearUserId: () => dispatch({ type: RESET_ACTIVE_STEP_STATE }),
+    loadBusinessProfile: query =>
+      dispatch(BusinessVerificationAction.loadBusinessProfile({ query })),
+    clearUserId: () => dispatch(BusinessVerificationAction.resetActiveStep()),
     clearBusienssState: () =>
-      dispatch({ type: RESET_BUSINESS_VERIFICATION_STATE })
+      dispatch(BusinessVerificationAction.resetBusinessVerificationState())
   };
 };
 

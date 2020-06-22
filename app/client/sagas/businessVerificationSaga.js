@@ -1,5 +1,7 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 
+import { BusinessVerificationAction } from "../reducers/businessVerification/actions";
+
 import {
   EDIT_BUSINESS_VERIFICATION_REQUEST,
   EDIT_BUSINESS_VERIFICATION_SUCCESS,
@@ -37,7 +39,11 @@ import { handleError } from "../utils";
 function* updateStateFromBusinessVerificationStep(data) {
   let kyc_application = data.kyc_application;
   if (kyc_application) {
-    yield put({ type: UPDATE_BUSINESS_VERIFICATION_STATE, kyc_application });
+    yield put(
+      BusinessVerificationAction.updateBusinessVerificationState(
+        kyc_application
+      )
+    );
   }
 }
 
