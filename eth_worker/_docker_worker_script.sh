@@ -29,7 +29,7 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
         sleep infinity
     fi
 else
-    cd src
+    cd eth_src
     if [ "$CONTAINER_TYPE" == 'BEAT' ]; then
         echo "Starting Beat Worker"
         celery -A celery_app beat --loglevel=WARNING
@@ -57,7 +57,7 @@ else
         if [ "$ret" -ne 0 ]; then
             exit $ret
         fi
-        cd src
+        cd eth_src
         echo "Starting Generic Worker (Default)"
         celery -A celery_app worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority --without-gossip --without-mingle
     fi

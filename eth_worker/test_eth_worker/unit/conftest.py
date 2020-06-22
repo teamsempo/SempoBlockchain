@@ -4,10 +4,10 @@ import redis
 from web3 import Web3
 
 import config
-from src.eth_manager.processor import TransactionProcessor
-from src.sql_persistence import engine, session_factory
-from src.sql_persistence.interface import SQLPersistenceInterface
-from src.sql_persistence.models import Base
+from eth_src.eth_manager.processor import TransactionProcessor
+from eth_src.sql_persistence import engine, session_factory
+from eth_src.sql_persistence.interface import SQLPersistenceInterface
+from eth_src.sql_persistence.models import Base
 from mocks import MockNonce, MockRedis
 
 from utils import str_uuid
