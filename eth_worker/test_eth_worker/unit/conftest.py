@@ -19,7 +19,7 @@ def mock_queue_sig(mocker):
     def mock_response(sig, countdown):
         return str_uuid()
 
-    mocker.patch('src.celery_dispatchers.utils.queue_sig', mock_response)
+    mocker.patch('eth_src.celery_dispatchers.utils.queue_sig', mock_response)
 
 @pytest.fixture(scope='function')
 def db_session():
