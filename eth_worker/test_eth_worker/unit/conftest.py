@@ -33,8 +33,6 @@ def persistence_module(db_session):
 @pytest.fixture(scope='function')
 def processor(persistence_module, monkeypatch):
     w3 = Web3()
-    
-    monkeypatch.setattr(w3.eth, "sendRawTransaction", lambda x: None)
     monkeypatch.setattr(w3.eth, "sendRawTransaction", lambda x: None)
 
 @pytest.fixture(scope='function')

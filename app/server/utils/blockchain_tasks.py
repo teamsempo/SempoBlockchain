@@ -69,7 +69,7 @@ class BlockchainTasker(object):
         ).id
 
     def add_transaction_sync_filter(self, kwargs):
-        task_runner.delay_task(self._eth_endpoint('add_transaction_filter'), kwargs = kwargs).id
+        task_runner.delay_task(self._eth_endpoint('add_transaction_filter'), kwargs = kwargs)
         return True
 
     def force_third_party_transaction_sync(self):

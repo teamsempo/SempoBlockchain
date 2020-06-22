@@ -21,7 +21,7 @@ class TestModels:
     decimals = 18
     block_epoch = 1
     
-    # Resembles a w3 transaction object to the extend we need it to
+    # Resembles a w3 transaction object to the extent we need it to
     class Transaction():
         class Hash():
             hash = None

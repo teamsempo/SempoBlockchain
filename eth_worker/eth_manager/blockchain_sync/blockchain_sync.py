@@ -52,8 +52,6 @@ def synchronize_third_party_transactions():
                 ceiling = latest_block
             process_chunk(f, floor, ceiling)
             persistence_module.set_filter_max_block(f.id, ceiling)
-
-        persistence_module.set_filter_max_block(f.id, max_fetched_block)
     return True
 
 # Gets history for given range, and runs handle_transaction on all of them
