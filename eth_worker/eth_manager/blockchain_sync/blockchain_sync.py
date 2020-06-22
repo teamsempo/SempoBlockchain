@@ -119,8 +119,8 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
 
     except:
         # Setting block status as a range since individual blocks can't fail at this stage (as we are getting a range of blocks)
-        config.logg.error(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
         persistence_module.set_block_range_status(start_block, end_block, 'FAILED FETCHING BLOCKS')
+        raise Exception(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
 
 # Adds transaction filter to database if it doesn't already exist
 def add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals = 18, block_epoch=None):
