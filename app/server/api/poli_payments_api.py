@@ -1,10 +1,12 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from server import db
-from server.utils.poli_payments import PoliPaymentsError, get_poli_link_status, get_poli_link_url_token_from_transaction_token, generate_poli_link_from_url_token
+from server.utils.poli_payments import PoliPaymentsError, get_poli_link_status, \
+    get_poli_link_url_token_from_transaction_token
 from server.models.fiat_ramp import FiatRamp, FiatRampStatusEnum
 from server.models.user import User
-from server.utils.credit_transfer import make_deposit_transfer, find_user_with_transfer_account_from_identifiers
+from server.utils.credit_transfer import make_deposit_transfer
+from server.utils.transfer_enums import TransferModeEnum
 
 poli_payments_blueprint = Blueprint('poli_payments_blueprint', __name__)
 
@@ -55,6 +57,7 @@ class PoliPaymentWebhookAPI(MethodView):
                         transfer_amount=int(fiat_ramp.payment_amount),
                         token=fiat_ramp.token,
                         receive_account=individual_recipient_user,
+                        transfer_mode=TransferModeEnum.MOBILE,
                         fiat_ramp=fiat_ramp)
 
                     deposit.resolve_as_completed()

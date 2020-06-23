@@ -6,11 +6,20 @@ from flask import current_app, request
 from eth_utils import keccak
 from cryptography.fernet import Fernet
 from server.models.settings import Settings
+import itertools
 
 last_marker = datetime.datetime.utcnow()
 
 from eth_keys import keys
 
+# Breaks list into chunks of arbitraty size (I.e. [1,2,3,4,5,6,7] -> [[1,2,3],[4,5,6],[7])
+# Taken from https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
+def chunk_list(iterable, size):
+    it = iter(iterable)
+    item = list(itertools.islice(it, size))
+    while item:
+        yield item
+        item = list(itertools.islice(it, size))
 
 def get_parsed_arg_list(arg_name: str, to_lower=False) -> list:
     list_string = request.args.get(arg_name)
@@ -84,7 +93,6 @@ def encrypt_string(raw_string):
     cipher_suite = Fernet(fernet_encryption_key)
 
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
-
 
 
 class AttributeDictProccessor(object):

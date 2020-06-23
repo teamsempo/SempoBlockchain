@@ -5,7 +5,7 @@ import ReactTable from "react-table";
 
 import { TopRow, StyledSelect } from "../styledElements.js";
 
-import { modifyTransferRequest } from "../../reducers/creditTransferReducer";
+import { ModifyCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
 import DateTime from "../dateTime.jsx";
@@ -24,8 +24,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    modifyTransferRequest: (body, path) =>
-      dispatch(modifyTransferRequest({ body, path }))
+    modifyTransferRequest: payload =>
+      dispatch(ModifyCreditTransferAction.modifyTransferRequest(payload))
   };
 };
 
@@ -145,7 +145,10 @@ class CreditTransferList extends React.Component {
 
   onNext() {
     this.get_selected_ids_array(this.state.credit_transfer_ids).map(id =>
-      this.props.modifyTransferRequest({ action: this.state.action }, id)
+      this.props.modifyTransferRequest({
+        body: { action: this.state.action },
+        path: id
+      })
     );
   }
 
@@ -202,7 +205,7 @@ class CreditTransferList extends React.Component {
 
     if (this.props.login.adminTier === "view") {
       return blockchainAddress;
-    } else if (sender && firstName) {
+    } else if (sender && (firstName || lastName)) {
       return (
         <a
           style={{ cursor: "pointer" }}
@@ -210,7 +213,9 @@ class CreditTransferList extends React.Component {
             this.navigateToAccount(creditTransfer.sender_transfer_account_id)
           }
         >
-          {firstName + " " + lastName}
+          {(firstName === null ? "" : firstName) +
+            " " +
+            (lastName === null ? "" : lastName)}
         </a>
       );
     } else if (creditTransfer.transfer_type === "DISBURSEMENT" && email) {
@@ -236,7 +241,7 @@ class CreditTransferList extends React.Component {
 
     if (this.props.login.adminTier === "view") {
       return blockchainAddress;
-    } else if (recipient && firstName) {
+    } else if (recipient && (firstName || lastName)) {
       return (
         <a
           style={{ cursor: "pointer" }}
@@ -244,7 +249,9 @@ class CreditTransferList extends React.Component {
             this.navigateToAccount(creditTransfer.recipient_transfer_account_id)
           }
         >
-          {firstName + " " + lastName}
+          {(firstName === null ? "" : firstName) +
+            " " +
+            (lastName === null ? "" : lastName)}
         </a>
       );
     } else if (creditTransfer.transfer_type === "RECLAMATION" && email) {

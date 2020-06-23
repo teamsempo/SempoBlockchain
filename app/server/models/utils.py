@@ -10,8 +10,9 @@ from sqlalchemy.orm import Query
 from sqlalchemy import or_
 
 import server
-from server import db, bt
+from server import db, bt, AppQuery
 from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
+from server.utils.transfer_enums import BlockchainStatus
 
 
 @contextmanager
@@ -94,8 +95,8 @@ def no_expire():
     s.expire_on_commit = True
 
 
-@event.listens_for(Query, "before_compile", retval=True)
-def before_compile(query):
+@event.listens_for(AppQuery, "before_compile", retval=True)
+def filter_by_org(query):
     """A query compilation rule that will add limiting criteria for every
     subclass of OrgBase"""
     show_deleted = query._execution_options.get("show_deleted", False)
@@ -170,17 +171,17 @@ def before_compile(query):
 user_transfer_account_association_table = db.Table(
     'user_transfer_account_association_table',
     db.Model.metadata,
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'))
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
+    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'), index=True)
 )
 
 organisation_association_table = db.Table(
     'organisation_association_table',
     db.Model.metadata,
-    db.Column('organisation_id', db.Integer, db.ForeignKey('organisation.id')),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id')),
-    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id')),
+    db.Column('organisation_id', db.Integer, db.ForeignKey('organisation.id'), index=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
+    db.Column('transfer_account_id', db.Integer, db.ForeignKey('transfer_account.id'), index=True),
+    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id'), index=True),
 )
 
 exchange_contract_token_association_table = db.Table(
@@ -200,19 +201,21 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
+from server.models.worker_messages import WorkerMessages
 class BlockchainTaskableBase(ModelBase):
+
     __abstract__ = True
 
     blockchain_task_uuid = db.Column(db.String)
 
-    @hybrid_property
-    def blockchain_status(self):
-        if self.blockchain_task_uuid:
-            task = bt.get_blockchain_task(self.blockchain_task_uuid)
-
-            return task.get('status', 'ERROR')
-        else:
-            return 'UNKNOWN'
+    # Present status, and time of last update (according to worker) to ensure the present blockchain_status 
+    # is the newest (since order of ack's is not guaranteed)
+    blockchain_status   = db.Column(db.Enum(BlockchainStatus), default=BlockchainStatus.PENDING)
+    blockchain_hash = db.Column(db.String)
+    last_worker_update = db.Column(db.DateTime)
+    @declared_attr
+    def messages(cls):
+        return db.relationship('WorkerMessages', primaryjoin=lambda: db.foreign(WorkerMessages.blockchain_task_uuid)==cls.blockchain_task_uuid, lazy=True)
 
 
 class SoftDelete(object):

@@ -6,7 +6,7 @@ import ReactTable from "react-table";
 import { TopRow, ModuleBox, ModuleHeader } from "../styledElements.js";
 
 import { LoadAdminUserListAction } from "../../reducers/auth/actions";
-import { browserHistory } from "../../app.jsx";
+import { browserHistory } from "../../createStore.js";
 
 const mapStateToProps = (state, props) => {
   return {
@@ -106,10 +106,22 @@ class UserList extends React.Component {
               showPageSizeOptions={false}
               className="react-table"
               resizable={false}
+              getTrProps={(state, rowInfo, instance) => {
+                if (rowInfo) {
+                  return {
+                    style: {
+                      cursor: rowInfo.row ? "pointer" : null
+                    }
+                  };
+                }
+                return {};
+              }}
               getTdProps={(state, rowInfo) => {
                 return {
                   onClick: (e, handleOriginal) => {
-                    browserHistory.push("/users/" + rowInfo.row.id);
+                    if (rowInfo && rowInfo.row) {
+                      browserHistory.push("/users/" + rowInfo.row.id);
+                    }
                     if (handleOriginal) {
                       handleOriginal();
                     }

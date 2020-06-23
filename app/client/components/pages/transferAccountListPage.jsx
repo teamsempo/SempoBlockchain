@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled, { ThemeProvider } from "styled-components";
 
-import { browserHistory } from "../../app.jsx";
+import { browserHistory } from "../../createStore.js";
 import {
   PageWrapper,
   WrapperDiv,
@@ -15,6 +15,7 @@ import TransferAccountListWithFilterWrapper from "../transferAccount/transferAcc
 import UploadButton from "../uploader/uploadButton.jsx";
 
 import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import organizationWrapper from "../organizationWrapper.jsx";
 
 const mapStateToProps = state => {
   return {
@@ -128,7 +129,7 @@ class TransferAccountListPage extends React.Component {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(TransferAccountListPage);
+)(organizationWrapper(TransferAccountListPage));
 
 const IconSVG = styled.img`
   width: 35px;

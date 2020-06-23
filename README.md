@@ -89,7 +89,7 @@ The script will:
 - Create an adminstrator account with email `admin@acme.org` and password `C0rrectH0rse`
 - Create a reserve token and bonded token
 
-When the script has finished running*, you can start your own app and worker processes (see next section) and continue on.
+When the script has finished running\*, you can start your own app and worker processes (see next section) and continue on.
 \*This can be a little hard to identify because ganache continues to run, but a good indicator is if `Bringing Ganache to foreground` is echo'd in the console
 
 ### Run the app in a Virtual Env
@@ -112,7 +112,7 @@ celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=
 
 ### Enable the Blockchain Simulator
 
-If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth_worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. _Be warned, this will make your database fall out of sync with any ganache instance you have set up so use this with care_, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `contract_setup_script.py` without additional dependencies.
+If you wish to forego installing ganache and redis, you can enable a simulator mode. What this does is bypass the eth*worker and any queued jobs, and instead returns dummy responses to any functions relying on eth_worker. \_Be warned, this will make your database fall out of sync with any ganache instance you have set up so use this with care*, but it is very useful in eliminating dependencies when working on any features in the API or frontend. It also allows you to run `contract_setup_script.py` without additional dependencies.
 
 To enable simulator mode, open `/config_files/local_config.ini` and add the line `enable_simulator_mode = true` under the `[APP]` heading.
 
@@ -273,3 +273,21 @@ This will extract all keys into the config_files folder. To encrypt them again f
 Not that SOPS doesn't handle merge conflicts currently - if you try and merge an encrypted file, it will break in a bad way!
 
 Instead, if you need to merge in two config files, you need to save the old config, load the new one and merge them by hand.
+
+## To Run with Docker
+
+To run with docker first you must generate local secrets that will be read by the `config.py` script that is copied into the `app`, `worker` and `pgbouncer`
+
+```
+cd config files
+python generate_secrets.py -n local_docker
+python generate_secrets.py -n docker_test
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+You may find it useful to add an alias to your `.bashrc` (or `.zshrc` etc) that aliases the docker-compose command
+
+```
+alias sempo='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.dev.yml'
+alias sempoci='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.ci.yml'
+```

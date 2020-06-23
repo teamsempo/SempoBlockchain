@@ -154,17 +154,15 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   };
 };
 
-const mapDispatchToProps = (dispatch: any) => {
+const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
     createUser: (payload: CreateUserPayload) =>
       dispatch(CreateUserAction.createUserRequest(payload)),
     resetCreateUser: () => dispatch(CreateUserAction.resetCreateUser()),
-    loadTransferUsages: () => {
-      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({}));
-    },
-    loadOrganisation: () => {
-      dispatch(LoadOrganisationAction.loadOrganisationRequest());
-    }
+    loadTransferUsages: () =>
+      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({})),
+    loadOrganisation: () =>
+      dispatch(LoadOrganisationAction.loadOrganisationRequest())
   };
 };
 

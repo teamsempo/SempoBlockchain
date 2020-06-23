@@ -2,9 +2,7 @@ import { combineReducers } from "redux";
 import { DEEEEEEP } from "../../utils";
 
 import {
-  Invite,
   UPDATE_ADMIN_USER_LIST,
-  AdminUser,
   RegisterActionTypes,
   ActivateActionTypes,
   ResetPasswordEmailActionTypes,
@@ -14,7 +12,9 @@ import {
   EditAdminUserActionTypes,
   InviteUserActionTypes,
   DeleteInviteActionTypes,
-  ValidateTfaActionTypes
+  ValidateTfaActionTypes,
+  InviteByIDs,
+  AdminUserByIDs
 } from "./types";
 
 import {
@@ -127,9 +127,9 @@ export const resetPasswordState = (
 };
 
 const adminsById = (
-  state: AdminUser[] = [] || {},
+  state: AdminUserByIDs = {},
   action: AdminUserListAction
-): AdminUser[] => {
+): AdminUserByIDs => {
   switch (action.type) {
     case UPDATE_ADMIN_USER_LIST:
       return DEEEEEEP(state, action.payload);
@@ -139,9 +139,9 @@ const adminsById = (
 };
 
 const invitesById = (
-  state: Invite[] = [] || {},
+  state: InviteByIDs = {},
   action: InviteUserListAction
-): Invite[] => {
+): InviteByIDs => {
   switch (action.type) {
     case InviteUserListActionTypes.DEEP_UPDATE_INVITE_USER_LIST:
       return DEEEEEEP(state, action.payload);

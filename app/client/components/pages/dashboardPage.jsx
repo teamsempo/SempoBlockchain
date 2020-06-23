@@ -3,11 +3,10 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
-import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
+import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoginAction } from "../../reducers/auth/actions";
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
-import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
+import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
 
 import {
   VolumeChart,
@@ -33,7 +32,6 @@ const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
 const mapStateToProps = state => {
   return {
     creditTransfers: state.creditTransfers,
-    transferAccounts: state.transferAccounts,
     login: state.login
   };
 };
@@ -41,12 +39,12 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     logout: () => dispatch(LoginAction.logout()),
-    loadTransferAccountList: (query, path) =>
-      dispatch(loadTransferAccounts({ query, path })),
-    loadCreditTransferList: (query, path) =>
-      dispatch(loadCreditTransferList({ query, path })),
-    loadCreditTransferFilters: (query, path) =>
-      dispatch(loadCreditTransferFilters({ query, path })),
+    loadCreditTransferList: query =>
+      dispatch(
+        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
+      ),
+    loadCreditTransferFilters: () =>
+      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))
   };
@@ -77,7 +75,6 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
-    this.buildFilterForAPI();
 
     const parsed = parseQuery(location.search);
 
@@ -87,17 +84,6 @@ class DashboardPage extends React.Component {
     }
 
     this.props.loadCreditTransferFilters();
-  }
-
-  buildFilterForAPI() {
-    let query = {};
-
-    if (this.props.transferAccounts.loadStatus.lastQueried) {
-      query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
-    }
-
-    const path = null;
-    this.props.loadTransferAccountList(query, path);
   }
 
   componentWillUnmount() {
@@ -114,7 +100,7 @@ class DashboardPage extends React.Component {
     subscribe(
       pusher_channel,
       "credit_transfer",
-      PUSHER_CREDIT_TRANSFER,
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER,
       additionalParams
     );
 
@@ -128,14 +114,15 @@ class DashboardPage extends React.Component {
   }
 
   unsubscribe() {
-    unsubscribe("MainChannel", "credit_transfer", PUSHER_CREDIT_TRANSFER);
+    unsubscribe(
+      "MainChannel",
+      "credit_transfer",
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER
+    );
   }
 
   render() {
-    if (
-      this.props.creditTransfers.loadStatus.isRequesting === true ||
-      this.props.transferAccounts.loadStatus.isRequesting === true
-    ) {
+    if (this.props.creditTransfers.loadStatus.isRequesting === true) {
       return (
         <WrapperDiv>
           <CenterLoadingSideBarActive>
@@ -156,10 +143,7 @@ class DashboardPage extends React.Component {
           </PageWrapper>
         </WrapperDiv>
       );
-    } else if (
-      this.props.creditTransfers.loadStatus.success === true &&
-      this.props.transferAccounts.loadStatus.success === true
-    ) {
+    } else if (this.props.creditTransfers.loadStatus.success === true) {
       return (
         <WrapperDiv>
           <PageWrapper>

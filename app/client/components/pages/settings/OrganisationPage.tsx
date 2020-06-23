@@ -114,18 +114,17 @@ class OrganisationPage extends React.Component<IProps, IState> {
   }
 }
 
-const mapStateToProps = (state: any) => {
+const mapStateToProps = (state: any): StateProps => {
   return {
     organisations: state.organisations,
     activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
 
-const mapDispatchToProps = (dispatch: any) => {
+const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
-    editOrganisation: (body: any, path: number) => {
-      dispatch(EditOrganisationAction.editOrganisationRequest({ body, path }));
-    }
+    editOrganisation: (body: any, path: number) =>
+      dispatch(EditOrganisationAction.editOrganisationRequest({ body, path }))
   };
 };
 export default connect(

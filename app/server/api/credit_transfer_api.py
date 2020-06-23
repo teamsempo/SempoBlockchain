@@ -1,20 +1,19 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
-from sqlalchemy import or_
-from functools import partial
+from sqlalchemy import or_, not_
 import json
-import sentry_sdk
-import base64
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
 from server.models.credit_transfer import CreditTransfer
 from server.models.blockchain_address import BlockchainAddress
+from server.models.transfer_account import TransferAccount, TransferAccountType
+
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
@@ -27,6 +26,7 @@ from server.exceptions import NoTransferAccountError, UserNotFoundError, Insuffi
     InvalidTargetBalanceError, BlockchainError
 
 credit_transfer_blueprint = Blueprint('credit_transfer', __name__)
+
 
 class CreditTransferAPI(MethodView):
 
@@ -199,6 +199,11 @@ class CreditTransferAPI(MethodView):
         recipient_transfer_account_id = post_data.get('recipient_transfer_account_id')
 
         recipient_transfer_accounts_ids = post_data.get('recipient_transfer_accounts_ids')
+        
+        # invert_recipient_list will send to everyone _except_ for the users in recipient_transfer_accounts_ids 
+        invert_recipient_list = post_data.get('invert_recipient_list', False)
+        invert_recipient_list = False if invert_recipient_list == False else True
+
         credit_transfers = []
         response_list = []
         is_bulk = False
@@ -232,16 +237,24 @@ class CreditTransferAPI(MethodView):
                 return make_response(jsonify(response_object)), 400
 
             transfer_user_list = []
-            for transfer_account_id in recipient_transfer_accounts_ids:
-                try:
-                    individual_sender_user = None
-                    individual_recipient_user = find_user_with_transfer_account_from_identifiers(
-                        None, None, transfer_account_id)
+            individual_sender_user = None
 
-                    transfer_user_list.append((individual_sender_user, individual_recipient_user))
+            if invert_recipient_list:
+                all_accounts_query = TransferAccount.query.filter(TransferAccount.is_ghost != True).filter_by(organisation_id=g.active_organisation.id)
+                all_user_accounts_query = (all_accounts_query.filter(TransferAccount.account_type == TransferAccountType.USER))
+                all_accounts_except_selected_query = all_user_accounts_query.filter(not_(TransferAccount.id.in_(recipient_transfer_accounts_ids)))
+                for individual_recipient_user in all_accounts_except_selected_query.all():
+                    transfer_user_list.append((individual_sender_user, individual_recipient_user.primary_user))
+            else:
+                for transfer_account_id in recipient_transfer_accounts_ids:
+                    try:
+                        individual_recipient_user = find_user_with_transfer_account_from_identifiers(
+                            None, None, transfer_account_id)
 
-                except (NoTransferAccountError, UserNotFoundError) as e:
-                    response_list.append({'status': 400, 'message': str(e)})
+                        transfer_user_list.append((individual_sender_user, individual_recipient_user))
+
+                    except (NoTransferAccountError, UserNotFoundError) as e:
+                        response_list.append({'status': 400, 'message': str(e)})
 
         else:
             try:
@@ -290,9 +303,11 @@ class CreditTransferAPI(MethodView):
                         send_user=sender_user,
                         receive_user=recipient_user,
                         transfer_use=transfer_use,
+                        transfer_mode=TransferModeEnum.WEB,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue)
+                        queue=queue
+                    )
 
                 elif transfer_type == 'RECLAMATION':
                     transfer = make_payment_transfer(
@@ -301,9 +316,10 @@ class CreditTransferAPI(MethodView):
                         send_user=sender_user,
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.RECLAMATION,
+                        transfer_mode=TransferModeEnum.WEB,
                         require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        queue=queue,
                     )
 
                 elif transfer_type == 'DISBURSEMENT':
@@ -314,8 +330,10 @@ class CreditTransferAPI(MethodView):
                         receive_user=recipient_user,
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+                        transfer_mode=TransferModeEnum.WEB,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue)
+                        queue=queue
+                    )
 
                 elif transfer_type == 'BALANCE':
                     transfer = make_target_balance_transfer(
@@ -323,7 +341,10 @@ class CreditTransferAPI(MethodView):
                         recipient_user,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue)
+                        transfer_mode=TransferModeEnum.WEB,
+                        queue=queue,
+                        enable_pusher=not is_bulk
+                    )
 
             except (InsufficientBalanceError,
                     AccountNotApprovedError,
@@ -343,12 +364,10 @@ class CreditTransferAPI(MethodView):
                 message = 'Transfer Successful' if auto_resolve else 'Transfer Pending. Must be approved.'
                 if is_bulk:
                     credit_transfers.append(transfer)
-
                     response_list.append({'status': 201, 'message': message})
 
                 else:
                     db.session.flush()
-
                     credit_transfer = credit_transfer_schema.dump(transfer).data
 
                     response_object = {
@@ -362,6 +381,7 @@ class CreditTransferAPI(MethodView):
                     return make_response(jsonify(response_object)), 201
 
         db.session.flush()
+
         message = 'Bulk Transfer Creation Successful' if auto_resolve else 'Bulk Transfer Pending. Must be approved.'
         response_object = {
             'message': message,
@@ -405,6 +425,7 @@ class ConfirmWithdrawalAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
+
 class InternalCreditTransferAPI(MethodView):
 
     @requires_auth
@@ -437,7 +458,8 @@ class InternalCreditTransferAPI(MethodView):
                                             sender_blockchain_address,
                                             recipient_blockchain_address,
                                             existing_blockchain_txn=blockchain_transaction_hash,
-                                            require_sufficient_balance=False)
+                                            require_sufficient_balance=False,
+                                            transfer_mode=TransferModeEnum.INTERNAL)
 
         db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
@@ -449,6 +471,7 @@ class InternalCreditTransferAPI(MethodView):
             }
         }
         return make_response(jsonify(response_object)), 201
+
 
 class CreditTransferStatsApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
@@ -470,6 +493,7 @@ class CreditTransferStatsApi(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
+
 class CreditTransferFiltersApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
@@ -481,6 +505,7 @@ class CreditTransferFiltersApi(MethodView):
             }
         }
         return make_response(jsonify(response_object)), 200
+
 
 # add Rules for API Endpoints
 credit_transfer_blueprint.add_url_rule(

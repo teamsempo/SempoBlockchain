@@ -17,16 +17,16 @@ import {
 } from "./spreadsheetReducer";
 import { ExportReducer } from "./export/reducers";
 import { message } from "./message/reducers";
-import { creditTransfers } from "./creditTransferReducer";
+import { creditTransfers } from "./creditTransfer/reducers";
 import { transferAccounts } from "./transferAccountReducer";
 import { users } from "./user/reducers";
-import { filters } from "./filterReducer";
+import { filters } from "./filter/reducers";
 import { businessVerification } from "./businessVerificationReducer";
 import { wyre } from "./wyreReducer";
 import { TransferUsageReducer } from "./transferUsage/reducers";
 import { OrganisationReducer } from "./organisation/reducers";
-import { metrics } from "./metricReducer";
-import { creditTransferFilters } from "./creditTransferFilterReducer";
+import { metrics } from "./metric/reducers";
+import { creditTransferFilters } from "./creditTransferFilter/reducers";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;

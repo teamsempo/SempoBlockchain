@@ -2,7 +2,8 @@ from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm.attributes import flag_modified
 
 from functools import partial
-from flask import current_app
+from flask import current_app, g
+from uuid import uuid4
 
 from server import db, bt
 
@@ -157,20 +158,22 @@ class Exchange(BlockchainTaskableBase):
         return to_amount/from_amount
 
     def exchange_from_amount(
-            self, user, from_token, to_token, from_amount, calculated_to_amount=None, prior_task_uuids=None
+            self, user, from_token, to_token, from_amount, calculated_to_amount=None, prior_task_uuids=None,
+            transfer_mode=None, queue='high-priority'
     ):
         self.user = user
         self.from_token = from_token
         self.to_token = to_token
+        self.from_amount = from_amount
 
-        exchange_contract = self._find_exchange_contract(from_token, to_token)
+        self.exchange_contract = self._find_exchange_contract(from_token, to_token)
 
         self.from_transfer = server.models.credit_transfer.CreditTransfer(
             from_amount,
             from_token,
             sender_user=user,
-            recipient_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, from_token),
-            transfer_type=TransferTypeEnum.EXCHANGE
+            recipient_transfer_account=find_transfer_accounts_with_matching_token(self.exchange_contract, from_token),
+            transfer_type=TransferTypeEnum.EXCHANGE, transfer_mode=transfer_mode
         )
 
         if not self.from_transfer.check_sender_has_sufficient_balance():
@@ -187,26 +190,26 @@ class Exchange(BlockchainTaskableBase):
 
         # TODO: set these so they either only fire on the first use of the exchange, or entirely asyn
         # We need to approve all the tokens involved for spend by the exchange contract
-        to_approval_uuid = bt.make_approval(
+        self.to_approval_uuid = bt.make_approval(
             signing_address=signing_address,
             token=to_token,
-            spender=exchange_contract.blockchain_address,
+            spender=self.exchange_contract.blockchain_address,
             amount=from_amount * 100000,
             prior_tasks=prior
         )
 
-        reserve_approval_uuid = bt.make_approval(
+        self.reserve_approval_uuid = bt.make_approval(
             signing_address=signing_address,
-            token=exchange_contract.reserve_token,
-            spender=exchange_contract.blockchain_address,
+            token=self.exchange_contract.reserve_token,
+            spender=self.exchange_contract.blockchain_address,
             amount=from_amount * 100000,
             prior_tasks=prior
         )
 
-        from_approval_uuid = bt.make_approval(
+        self.from_approval_uuid = bt.make_approval(
             signing_address=signing_address,
             token=from_token,
-            spender=exchange_contract.blockchain_address,
+            spender=self.exchange_contract.blockchain_address,
             amount=from_amount*100000,
             prior_tasks=prior
         )
@@ -214,7 +217,7 @@ class Exchange(BlockchainTaskableBase):
         if calculated_to_amount:
             to_amount = calculated_to_amount
         else:
-            to_amount = bt.get_conversion_amount(exchange_contract=exchange_contract,
+            to_amount = bt.get_conversion_amount(exchange_contract=self.exchange_contract,
                                               from_token=from_token,
                                               to_token=to_token,
                                               from_amount=from_amount,
@@ -222,41 +225,45 @@ class Exchange(BlockchainTaskableBase):
 
         self.exchange_rate = to_amount/from_amount
 
-        task_uuid = bt.make_liquid_token_exchange(
-            signing_address=signing_address,
-            exchange_contract=exchange_contract,
-            from_token=from_token,
-            to_token=to_token,
-            reserve_token=exchange_contract.reserve_token,
-            from_amount=from_amount,
-            prior_tasks=[to_approval_uuid, reserve_approval_uuid, from_approval_uuid] + (prior_task_uuids or [])
-        )
+        self.blockchain_task_uuid = str(uuid4())
+        g.pending_transactions.append((self, queue))
 
         self.to_transfer = server.models.credit_transfer.CreditTransfer(
             to_amount,
             to_token,
-            sender_transfer_account=find_transfer_accounts_with_matching_token(exchange_contract, to_token),
+            sender_transfer_account=find_transfer_accounts_with_matching_token(self.exchange_contract, to_token),
             recipient_user=user,
-            transfer_type=TransferTypeEnum.EXCHANGE
+            transfer_type=TransferTypeEnum.EXCHANGE, transfer_mode=transfer_mode
         )
 
         db.session.add(self.to_transfer)
 
-        self.blockchain_task_uuid = task_uuid
-        self.from_transfer.blockchain_task_uuid = task_uuid
-        self.to_transfer.blockchain_task_uuid = task_uuid
+        self.from_transfer.blockchain_task_uuid = self.blockchain_task_uuid
+        self.to_transfer.blockchain_task_uuid = self.blockchain_task_uuid
 
         self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
         self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)
 
-    def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount):
+    def send_blockchain_payload_to_worker(self, queue='high-priority'):
+        return bt.make_liquid_token_exchange(
+            signing_address=self.from_transfer.sender_transfer_account.blockchain_address,
+            exchange_contract=self.exchange_contract,
+            from_token=self.from_token,
+            to_token=self.to_token,
+            reserve_token=self.exchange_contract.reserve_token,
+            from_amount=self.from_amount,
+            prior_tasks=[self.to_approval_uuid, self.reserve_approval_uuid, self.from_approval_uuid],
+            task_uuid=self.blockchain_task_uuid
+        )
+
+    def exchange_to_desired_amount(self, user, from_token, to_token, to_desired_amount, transfer_mode):
         """
         This is 'to_desired_amount' rather than just 'to_amount'
         because we can't actually guarantee how much of the 'to' token the user will receive through the exchange
         """
         from_amount, calculated_to_amount = self._estimate_from_amount(from_token, to_token, to_desired_amount)
 
-        self.exchange_from_amount(user, from_token, to_token, from_amount, calculated_to_amount)
+        self.exchange_from_amount(user, from_token, to_token, from_amount, calculated_to_amount, transfer_mode)
 
     @staticmethod
     def _find_exchange_contract(from_token, to_token):

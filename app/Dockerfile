@@ -1,7 +1,7 @@
 FROM python:3.6-slim-stretch
 
 RUN apt update \
-  && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
+  && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev curl
 
 # GE MIGRATION
 # For local OSX try:
@@ -9,26 +9,25 @@ RUN apt update \
 RUN apt -y install mysql-server default-libmysqlclient-dev
 
 COPY ./app/requirements.txt /
-COPY ./test/requirements.txt /test_requirements.txt
+COPY ./test_requirements.txt /
 
 RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
 
 
-COPY ./config.py ./config_files/* /src/
-ADD ./app/server /src/server
-ADD ./app/migrations /src/migrations
-ADD ./app/manage.py /src
-ADD ./app/RedisQueue.py /src
-ADD ./app/_docker_app_script.sh /
-ADD ./test /src/test
-ADD ./invoke_tests.py /src
-ADD .coveragerc /src
+COPY ./config.py /src/
+RUN mkdir /src/config_files
+COPY ./config_files/* /src/config_files/
+COPY ./app/server /src/server
+COPY ./app/migrations /src/migrations
+COPY ./app/manage.py /src
+COPY ./app/RedisQueue.py /src
+COPY ./app/_docker_app_script.sh /
+COPY ./app/test_app /src/test_app
+COPY ./app/.coveragerc /src
 
 WORKDIR /
-
-RUN apt -y install curl
 
 RUN chmod +x /_docker_app_script.sh
 

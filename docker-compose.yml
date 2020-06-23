@@ -1,55 +1,28 @@
 version: "3"
 services:
   app:
-    build: app/server
-    image: server
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: "server:${IMAGE_TAG:-latest}"
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "APP"
-      CONTAINER_MODE: ${CONTAINER_MODE}
-      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      CODECOV_ENV: ${CODECOV_ENV}
-      CODECOV_TOKEN: ${CODECOV_TOKEN}
-      CODECOV_URL: ${CODECOV_URL}
-      CODECOV_SLUG: ${CODECOV_SLUG}
-      VCS_COMMIT_ID: ${VCS_COMMIT_ID}
-      VCS_BRANCH_NAME: ${VCS_BRANCH_NAME}
-      VCS_PULL_REQUEST: ${VCS_PULL_REQUEST}
-      VCS_SLUG: ${VCS_SLUG}
-      VCS_TAG: ${VCS_TAG}
-      CI_BUILD_URL: ${CI_BUILD_URL}
-      CI_BUILD_ID: ${CI_BUILD_ID}
-      CI_JOB_ID: ${CI_JOB_ID}
-      CI: ${CI}
-      CIRCLECI: ${CIRCLECI}
-      CIRCLE_BRANCH: ${CIRCLE_BRANCH}
-      CIRCLE_BUILD_NUM: ${CIRCLE_BUILD_NUM}
-      CIRCLE_NODE_INDEX: ${CIRCLE_NODE_INDEX}
-      CIRCLE_PROJECT_USERNAME: ${CIRCLE_PROJECT_USERNAME}
-      CIRCLE_PROJECT_REPONAME: ${CIRCLE_PROJECT_REPONAME}
-      CIRCLE_REPOSITORY_URL: ${CIRCLE_REPOSITORY_URL}
-      CIRCLE_PR_NUMBER: ${CIRCLE_PR_NUMBER}
-      CIRCLE_SHA1: ${CIRCLE_SHA1}
-      CIRCLE_ARTIFACTS: ${CIRCLE_ARTIFACTS}
-      CIRCLE_TEST_REPORTS: ${CIRCLE_TEST_REPORTS}
     depends_on:
       - postgres
       - eth_worker
     ports:
       - "3031:3031"
+      - "9000:9000"
 
   eth_worker:
     build:
-      context: app/server
+      context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${IMAGE_TAG:-latest}"
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "PRIMARY"
       PYTHONUNBUFFERED: 0
-      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      CI: "false"
     depends_on:
       - redis
       - ganache
@@ -57,24 +30,26 @@ services:
 
   eth_worker_processor:
     build:
-      context: app/server
+      context: .
       dockerfile: eth_worker/Dockerfile
-    image: eth_worker
+    image: "eth_worker:${IMAGE_TAG:-latest}"
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
       CONTAINER_TYPE: "PROCESSOR"
       PYTHONUNBUFFERED: 0
-      AWS_ACCESS_KEY_IDs: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
       - redis
       - ganache
       - eth_postgres
 
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: pgbouncer/Dockerfile
+    image: "pgbouncer:${IMAGE_TAG:-latest}"
+
   proxy:
     build: proxy
-    environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
+    image: "proxy:${IMAGE_TAG:-latest}"
     ports:
       - "80:80"
     depends_on:
@@ -84,7 +59,6 @@ services:
     image: "postgres"
     restart: always
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
       POSTGRES_DB: "sempo_docker"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
@@ -93,15 +67,12 @@ services:
     image: "postgres"
     restart: always
     environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
       POSTGRES_DB: "sempo_docker_eth"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
 
   redis:
     image: "redis:alpine"
-    environment:
-      DEPLOYMENT_NAME: "DOCKER_TEST"
 
   ganache:
     image: "trufflesuite/ganache-cli:v6.7.0"
@@ -112,7 +83,6 @@ services:
 #      dockerfile: worker/Dockerfile
 #    image: worker
 #    environment:
-#      DEPLOYMENT_NAME: "LOCAL_DOCKER"
 #      LOCATION: "LOCAL_DOCKER"
 #      CONTAINER_TYPE: "BEAT"
 #      PYTHONUNBUFFERED: 0
@@ -126,7 +96,6 @@ services:
 #      dockerfile: worker/Dockerfile
 #    image: worker
 #    environment:
-#      DEPLOYMENT_NAME: "LOCAL_DOCKER"
 #      LOCATION: "LOCAL_DOCKER"
 #      CONTAINER_TYPE: "FILTER"
 #      PYTHONUNBUFFERED: 0
@@ -137,7 +106,6 @@ services:
 #  flower:
 #    build: flower
 #    environment:
-#      DEPLOYMENT_NAME: "LOCAL_DOCKER"
 #      LOCATION: "LOCAL_DOCKER"
 #    env_file:
 #      - ~/ebkeys.env
