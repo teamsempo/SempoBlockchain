@@ -14,7 +14,7 @@ import {
   spreadsheetUpload,
   datasetSave,
   datasetList
-} from "./spreadsheetReducer";
+} from "./spreadsheet/reducers";
 import { ExportReducer } from "./export/reducers";
 import { message } from "./message/reducers";
 import { creditTransfers } from "./creditTransfer/reducers";

@@ -5,10 +5,7 @@ import ReactTable from "react-table";
 
 import { StyledButton, Input, ErrorMessage } from "../styledElements";
 
-import {
-  saveDataset,
-  resetUploadState
-} from "../../reducers/spreadsheetReducer";
+import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 
 const mapStateToProps = state => {
   return {
@@ -18,8 +15,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    saveDataset: body => dispatch(saveDataset({ body })),
-    resetUploadState: () => dispatch(resetUploadState())
+    saveDataset: body => dispatch(SpreadsheetAction.saveDataset({ body })),
+    resetUploadState: () => dispatch(SpreadsheetAction.resetUploadState())
   };
 };
 
