@@ -13,8 +13,6 @@ import {
   ModifyCreditTransferAction
 } from "../reducers/creditTransfer/actions";
 
-import { TransferAccountActionTypes } from "../reducers/transferAccount/types";
-
 import {
   loadCreditTransferListAPI,
   modifyTransferAPI,
@@ -25,6 +23,7 @@ import { handleError } from "../utils";
 import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
 import { MetricAction } from "../reducers/metric/actions";
+import { TransferAccountAction } from "../reducers/transferAccount/actions";
 
 interface CreditLoadApiResult {
   is_create: boolean;
@@ -46,10 +45,9 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
-    yield put({
-      type: TransferAccountActionTypes.DEEP_UPDATE_TRANSFER_ACCOUNTS,
-      transfer_accounts
-    });
+    yield put(
+      TransferAccountAction.deepUpdateTransferAccounts(transfer_accounts)
+    );
   }
 
   const users = normalizedData.entities.users;
@@ -61,11 +59,11 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     // a single transfer was just created!
     // we need to add the newly created credit_transfer id
     // to the associated transfer_account object credit_transfer array
-    yield put({
-      type:
-        TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS,
-      credit_transfer_list
-    });
+    yield put(
+      TransferAccountAction.updateTransferAccountsCreditTransfers(
+        credit_transfer_list
+      )
+    );
     yield put(
       MessageAction.addMessage({ error: false, message: result.message })
     );

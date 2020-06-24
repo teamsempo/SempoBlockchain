@@ -1,4 +1,4 @@
-import { put, takeEvery, call, all, delay } from "redux-saga/effects";
+import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
 import { handleError } from "../utils";
 
@@ -22,7 +22,7 @@ import { CreditTransferAction } from "../reducers/creditTransfer/actions";
 import {
   loadTransferAccountListAPI,
   editTransferAccountAPI
-} from "../api/transferAccountAPI.js";
+} from "../api/transferAccountAPI";
 
 import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
@@ -75,7 +75,6 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
   }
 }
 
-// Load Transfer Account List Saga
 function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
   try {
     const load_result = yield call(loadTransferAccountListAPI, payload);
@@ -105,7 +104,6 @@ function* watchLoadTransferAccounts() {
   );
 }
 
-// Edit Transfer Account Saga
 function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
   try {
     const edit_response = yield call(editTransferAccountAPI, payload);
