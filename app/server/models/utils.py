@@ -104,8 +104,10 @@ def filter_by_org(query):
 
     if show_all and show_deleted:
         return query
-
+    print('AAAAA')
+    print(query.column_descriptions)
     for ent in query.column_descriptions:
+        print(ent)
         entity = ent['entity']
         if entity is None:
             continue
@@ -128,8 +130,16 @@ def filter_by_org(query):
                     active_organisation = getattr(g, "active_organisation", None)
                     active_organisation_id = getattr(active_organisation, "id", None)
                     member_organisation_ids = [active_organisation_id] if active_organisation_id else []
-
+                    member_organisation_ids = [1, 2]
+                    print(g)
+                    print(active_organisation)
+                    print(active_organisation_id)
+                    print(member_organisation_ids)
                     if issubclass(mapper.class_, ManyOrgBase):
+                        print('MANY ORG BASE!')
+                        print('MANY ORG BASE!')
+                        print('MANY ORG BASE!')
+                        print('MANY ORG BASE!')
                         # filters many-to-many
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisations.any(
@@ -137,6 +147,8 @@ def filter_by_org(query):
                             ent['entity'].is_public == True,
                         ))
                     else:
+                        print('NOT MANY ORG BASE!')
+
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisation_id == active_organisation_id,
                             ent['entity'].is_public == True,

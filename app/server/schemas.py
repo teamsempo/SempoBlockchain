@@ -30,7 +30,7 @@ class SchemaBase(Schema):
 class BlockchainTaskableSchemaBase(SchemaBase):
 
     blockchain_task_uuid  = fields.Str(dump_only=True)
-    blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
+    #blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
 
 class UserSchema(SchemaBase):
     first_name              = fields.Str()
@@ -142,61 +142,59 @@ class TokenSchema(SchemaBase):
 class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     id      = fields.Int(dump_only=True)
-    created = fields.DateTime(dump_only=True)
-    authorising_user_email  = fields.Method('get_authorising_user_email')
+#    created = fields.DateTime(dump_only=True)
+#    authorising_user_email  = fields.Method('get_authorising_user_email')
+#
+#    uuid = fields.String()
+#
+#    @post_dump(pass_many=True)
+#    def filter_rejected(self, data, many):
+#        if not self.context.get('filter_rejected'):
+#            return data
+#        if many:
+#            return list(filter(lambda x: x['transfer_status'] != 'REJECTED', data))
+#        elif ['transfer_status'] == 'REJECTED':
+#            return None
+#
+#    resolved                = fields.DateTime(attribute='resolved_date')
+#    transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
+#    transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
+#    transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
+#    transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
+#    transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
+#
+  #  transfer_use            = fields.Function(lambda obj: obj.transfer_use)
+#
+  #  transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
+    #token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
+#
+  #  sender_transfer_account_id      = fields.Int()
+  #  recipient_transfer_account_id   = fields.Int()
+#
+  #  sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
+  #  recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
+#
+  #  sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
+  #  recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
 
-    uuid = fields.String()
+    #from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
-    @post_dump(pass_many=True)
-    def filter_rejected(self, data, many):
-        if not self.context.get('filter_rejected'):
-            return data
-        if many:
-            return list(filter(lambda x: x['transfer_status'] != 'REJECTED', data))
-        elif ['transfer_status'] == 'REJECTED':
-            return None
+    #attached_images         = fields.Nested(UploadedResourceSchema, many=True)
 
-    resolved                = fields.DateTime(attribute='resolved_date')
-    transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
-    transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
-    transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
-    transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
-    transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
-
-    transfer_use            = fields.Function(lambda obj: obj.transfer_use)
-
-    transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
-
-    token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
-
-    sender_transfer_account_id      = fields.Int()
-    recipient_transfer_account_id   = fields.Int()
-
-    sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
-    recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
-
-    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
-    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
-
-    from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
-
-    attached_images         = fields.Nested(UploadedResourceSchema, many=True)
-
-    lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
-    lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
-
-    is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
-
-    def get_authorising_user_email(self, obj):
-        authorising_user_id = obj.authorising_user_id
-        if authorising_user_id is None:
-            return None
-
-        authorising_user = User.query.get(obj.authorising_user_id)
-        if authorising_user is None:
-            return None
-
-        return authorising_user.email
+    lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.is_approved)
+    lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.is_approved)
+   # is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
+#
+    #def get_authorising_user_email(self, obj):
+    #    authorising_user_id = obj.authorising_user_id
+    #    if authorising_user_id is None:
+    #        return None
+#
+    #    authorising_user = User.query.get(obj.authorising_user_id)
+    #    if authorising_user is None:
+    #        return None
+#
+    #    return authorising_user.email
 
 
 class ExchangeContractSchema(SchemaBase):

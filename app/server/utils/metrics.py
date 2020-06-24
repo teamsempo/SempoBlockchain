@@ -22,6 +22,7 @@ import datetime, json
 
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
                              user_filter={}):
+    print('METRIC STUFF')
     date_filter = []
     filter_active = False
     if start_date is not None and end_date is not None:
@@ -143,7 +144,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         disbursement_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
 
     try:
-        master_wallet_balance = cached_funds_available()
+        master_wallet_balance = cached_funds_available() # SINGLE ORG (rest is multi-org base)
     except:
         master_wallet_balance = 0
 
@@ -162,6 +163,8 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
         'filter_active': filter_active
     }
+    print('METRIC STUFF===')
+
     return data
 
 def apply_filters(query, filters, query_table):
