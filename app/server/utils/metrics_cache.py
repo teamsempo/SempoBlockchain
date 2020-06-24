@@ -33,9 +33,13 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
         return _handle_combinatory_strategy(query, None, strategy)
 
     # Redis object names
-    CURRENT_MAX_ID = f'{g.active_organisation.id}_{object_model.__table__.name}_max_id'
-    HIGHEST_ID_CACHED = f'{g.active_organisation.id}_{metric_name}_max_cached_id'
-    CACHE_RESULT = f'{g.active_organisation.id}_{metric_name}'
+    if getattr(g, 'query_organisations'):
+        ORG_STRING = str(g.query_organisations)
+    else:
+        ORG_STRING = str(g.active_organisation.id)
+    CURRENT_MAX_ID = f'{ORG_STRING}_{object_model.__table__.name}_max_id'
+    HIGHEST_ID_CACHED = f'{ORG_STRING}_{metric_name}_max_cached_id'
+    CACHE_RESULT = f'{ORG_STRING}_{metric_name}'
 
     # Checks if provided combinatry strategy is valid
     if strategy not in valid_strategies:

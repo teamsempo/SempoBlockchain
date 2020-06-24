@@ -186,6 +186,20 @@ def requires_auth(f=None,
                         if g.active_organisation is None:
                             g.active_organisation = user.fallback_active_organisation()
 
+                        # Check for query_orgs as well. These are stored in g and used for operations which
+                        # are allowed to be run against multiple orgs. Submitted as a CSV
+                        # E.g. GET metrics, user list, transfer list should be gettable with ?orgs=1,2,3
+                        query_organisations = request.args.get('orgs', None)
+                        if query_organisations:
+                            g.query_organisations = []
+                            try:
+                                query_organisations = [int(q) for q in query_organisations.split(',')]
+                                if set(query_organisations).issubset(set(g.member_organisations)):
+                                    g.query_organisations = query_organisations
+                            except ValueError:
+                                pass
+
+
                     except NotImplementedError:
                         g.active_organisation = None
 

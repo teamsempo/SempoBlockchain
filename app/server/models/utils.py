@@ -101,6 +101,9 @@ def filter_by_org(query):
     subclass of OrgBase"""
     show_deleted = query._execution_options.get("show_deleted", False)
     show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
+    # We want to support multiple active organizations, but only for select GET requets.
+    # This is done through a multi_org flag, very similar to the show_all flag
+    multi_org = getattr(g, "multi_org", False) or query._execution_options.get("multi_org", False)
 
     if show_all and show_deleted:
         return query
@@ -127,13 +130,18 @@ def filter_by_org(query):
                     # member_organisations = getattr(g, "member_organisations", [])
                     active_organisation = getattr(g, "active_organisation", None)
                     active_organisation_id = getattr(active_organisation, "id", None)
-                    member_organisation_ids = [active_organisation_id] if active_organisation_id else []
+                    # If we're operating on a query supporting multi_org, AND the application
+                    # context has query_organisations set from the HTTP request, use those  
+                    # organizations. Otherwise, use a singleton of the current active org 
+                    query_organisations = [active_organisation_id] if active_organisation_id else []
+                    if multi_org and getattr(g, 'query_organisations', None):
+                        query_organisations = g.query_organisations
 
                     if issubclass(mapper.class_, ManyOrgBase):
                         # filters many-to-many
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisations.any(
-                                server.models.organisation.Organisation.id.in_(member_organisation_ids)),
+                                server.models.organisation.Organisation.id.in_(query_organisations)),
                             ent['entity'].is_public == True,
                         ))
                     else:

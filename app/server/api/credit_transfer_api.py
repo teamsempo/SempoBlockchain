@@ -35,7 +35,6 @@ class CreditTransferAPI(MethodView):
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
         get_transfer_stats = request.args.get('get_stats', False)
-
         transfer_list = None
 
         if transfer_type:
@@ -43,7 +42,7 @@ class CreditTransferAPI(MethodView):
 
         if credit_transfer_id:
 
-            credit_transfer = CreditTransfer.query.get(credit_transfer_id)
+            credit_transfer = CreditTransfer.query.get(credit_transfer_id).execution_options(multi_org=True)
 
             if credit_transfer is None:
                 return make_response(jsonify({'message': 'Credit transfer not found'})), 404
@@ -74,7 +73,7 @@ class CreditTransferAPI(MethodView):
             if transfer_type != 'ALL':
                 try:
                     transfer_type_enum = TransferTypeEnum[transfer_type]
-                    query = query.filter(CreditTransfer.transfer_type == transfer_type_enum)
+                    query = query.filter(CreditTransfer.transfer_type == transfer_type_enum).execution_options(multi_org=True)
                 except KeyError:
                     response_object = {
                         'message': 'Invalid Filter: Transfer Type ',
@@ -97,7 +96,7 @@ class CreditTransferAPI(MethodView):
 
                     query = query.filter(
                         or_(CreditTransfer.recipient_transfer_account_id.in_(parsed_transfer_account_ids),
-                            CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
+                            CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids))).execution_options(multi_org=True)
 
             transfers, total_items, total_pages = paginate_query(query, CreditTransfer)
 

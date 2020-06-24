@@ -25,7 +25,7 @@ class UserAPI(MethodView):
 
             if public_serial_number:
                 user = User.query.filter_by(
-                    public_serial_number=public_serial_number.strip()).first()
+                    public_serial_number=public_serial_number.strip()).first().execution_options(multi_org=True)
 
                 if user:
 
@@ -62,7 +62,7 @@ class UserAPI(MethodView):
             account_type_filter = account_type_filter.lower()
 
         if user_id:
-            user = User.query.get(user_id)
+            user = User.query.get(user_id).execution_options(multi_org=True)
             #
             # user.cashout_authorised()
 
@@ -85,14 +85,14 @@ class UserAPI(MethodView):
 
         else:
             if account_type_filter == 'beneficiary':
-                user_query = User.query.filter(User.has_beneficiary_role)
+                user_query = User.query.filter(User.has_beneficiary_role).execution_options(multi_org=True)
 
             elif account_type_filter == 'vendor':
-                user_query = User.query.filter(User.has_vendor_role)
+                user_query = User.query.filter(User.has_vendor_role).execution_options(multi_org=True)
 
             elif account_type_filter == 'admin':
                 user_query = User.query.filter(
-                    User.has_admin_role).order_by(User.created.desc())
+                    User.has_admin_role).order_by(User.created.desc()).execution_options(multi_org=True)
 
             else:
                 user_query = User.query
