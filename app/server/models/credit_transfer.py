@@ -49,9 +49,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
     sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
-    sender_transfer_account          = db.relationship('TransferAccount', foreign_keys=[sender_transfer_account_id])
+    sender_transfer_account          = db.relationship('TransferAccount', foreign_keys=[sender_transfer_account_id], lazy='joined')
 
     recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
+    recipient_transfer_account          = db.relationship('TransferAccount', foreign_keys=[recipient_transfer_account_id], lazy='joined')
 
     sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
     recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
@@ -59,13 +60,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
-    attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy=True)
+    attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy='joined')
 
     fiat_ramp = db.relationship('FiatRamp', backref='credit_transfer', lazy=True, uselist=False)
 
     __table_args__ = (Index('updated_index', "updated"), )
 
-    from_exchange = db.relationship('Exchange', backref='from_transfer', lazy=True, uselist=False,
+    from_exchange = db.relationship('Exchange', backref='from_transfer', lazy='joined', uselist=False,
                                      foreign_keys='Exchange.from_transfer_id')
 
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
