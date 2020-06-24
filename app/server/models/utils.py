@@ -12,7 +12,6 @@ from sqlalchemy import or_
 import server
 from server import db, bt, AppQuery
 from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
-from server.utils.transfer_enums import BlockchainStatus
 
 
 @contextmanager
@@ -104,10 +103,8 @@ def filter_by_org(query):
 
     if show_all and show_deleted:
         return query
-    print('AAAAA')
-    print(query.column_descriptions)
+
     for ent in query.column_descriptions:
-        print(ent)
         entity = ent['entity']
         if entity is None:
             continue
@@ -130,16 +127,8 @@ def filter_by_org(query):
                     active_organisation = getattr(g, "active_organisation", None)
                     active_organisation_id = getattr(active_organisation, "id", None)
                     member_organisation_ids = [active_organisation_id] if active_organisation_id else []
-                    member_organisation_ids = [1, 2]
-                    print(g)
-                    print(active_organisation)
-                    print(active_organisation_id)
-                    print(member_organisation_ids)
+
                     if issubclass(mapper.class_, ManyOrgBase):
-                        print('MANY ORG BASE!')
-                        print('MANY ORG BASE!')
-                        print('MANY ORG BASE!')
-                        print('MANY ORG BASE!')
                         # filters many-to-many
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisations.any(
@@ -147,8 +136,6 @@ def filter_by_org(query):
                             ent['entity'].is_public == True,
                         ))
                     else:
-                        print('NOT MANY ORG BASE!')
-
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisation_id == active_organisation_id,
                             ent['entity'].is_public == True,
@@ -213,21 +200,19 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
-from server.models.worker_messages import WorkerMessages
 class BlockchainTaskableBase(ModelBase):
-
     __abstract__ = True
 
     blockchain_task_uuid = db.Column(db.String)
 
-    # Present status, and time of last update (according to worker) to ensure the present blockchain_status 
-    # is the newest (since order of ack's is not guaranteed)
-    blockchain_status   = db.Column(db.Enum(BlockchainStatus), default=BlockchainStatus.PENDING)
-    blockchain_hash = db.Column(db.String)
-    last_worker_update = db.Column(db.DateTime)
-    @declared_attr
-    def messages(cls):
-        return db.relationship('WorkerMessages', primaryjoin=lambda: db.foreign(WorkerMessages.blockchain_task_uuid)==cls.blockchain_task_uuid, lazy=True)
+    @hybrid_property
+    def blockchain_status(self):
+        if self.blockchain_task_uuid:
+            task = bt.get_blockchain_task(self.blockchain_task_uuid)
+
+            return task.get('status', 'ERROR')
+        else:
+            return 'UNKNOWN'
 
 
 class SoftDelete(object):

@@ -193,7 +193,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  transfer_subtype: TransferSubTypeEnum=None,
                  transfer_mode: TransferModeEnum = None,
                  is_ghost_transfer=False):
-        print("INNIT!!!")
+
         if amount < 0:
             raise Exception("Negative amount provided")
         self.transfer_amount = amount
