@@ -69,7 +69,7 @@ export const loadTransferAccountsSuccess = (lastQueried: Date) =>
     lastQueried
   );
 
-export const loadTransferAccountsFailure = (error: string) =>
+export const loadTransferAccountsFailure = (error: any) =>
   createAction(
     LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_FAILURE,
     error
@@ -96,7 +96,7 @@ export const editTransferAccountRequest = (
 export const editTransferAccountSuccess = () =>
   createAction(EditTransferAccountActionTypes.EDIT_TRANSFER_ACCOUNT_SUCCESS);
 
-export const editTransferAccountFailure = (error: string) =>
+export const editTransferAccountFailure = (error: any) =>
   createAction(
     EditTransferAccountActionTypes.EDIT_TRANSFER_ACCOUNT_FAILURE,
     error
