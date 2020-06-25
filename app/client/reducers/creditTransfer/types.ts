@@ -21,7 +21,7 @@ export enum ModifyCreditTransferActionTypes {
   MODIFY_TRANSFER_FAILURE = "MODIFY_TRANSFER_FAILURE"
 }
 
-export interface CreditTransfer {
+export interface BaseCreditTransfer {
   attached_images?: object;
   authorising_user_email?: string;
   blockchain_status?: string;
@@ -34,7 +34,6 @@ export interface CreditTransfer {
   recipient_transfer_account?: TransferAccount;
   recipient_user?: User;
   resolved?: string;
-  sender_transfer_account?: TransferAccount;
   sender_transfer_account_id?: number;
   sender_user?: User;
   token?: {
@@ -50,6 +49,18 @@ export interface CreditTransfer {
   updated?: string;
   uuid?: null | string;
 }
+
+export interface DisbursementCreditTransfer extends BaseCreditTransfer {
+  recipient_transfer_account: TransferAccount;
+}
+
+export interface ReclamationCreditTransfer extends BaseCreditTransfer {
+  sender_transfer_account: TransferAccount;
+}
+
+export type CreditTransfer =
+  | DisbursementCreditTransfer
+  | ReclamationCreditTransfer;
 
 // TODO we should only need one of these keys
 export interface CreditTransfers {

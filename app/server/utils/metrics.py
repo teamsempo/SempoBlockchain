@@ -162,6 +162,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
         'filter_active': filter_active
     }
+
     return data
 
 def apply_filters(query, filters, query_table):
