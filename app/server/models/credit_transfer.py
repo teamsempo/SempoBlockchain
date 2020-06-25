@@ -49,10 +49,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
     sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
-    sender_transfer_account          = db.relationship('TransferAccount', foreign_keys=[sender_transfer_account_id], lazy='joined')
+    sender_transfer_account          = db.relationship('TransferAccount', foreign_keys=[sender_transfer_account_id], back_populates='credit_sends', lazy='joined')
 
     recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
-    recipient_transfer_account          = db.relationship('TransferAccount', foreign_keys=[recipient_transfer_account_id], lazy='joined')
+    recipient_transfer_account          = db.relationship('TransferAccount', foreign_keys=[recipient_transfer_account_id], back_populates='credit_receives', lazy='joined')
 
     sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
     recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
