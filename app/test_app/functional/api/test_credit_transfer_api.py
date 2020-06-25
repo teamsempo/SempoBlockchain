@@ -168,8 +168,9 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
     ('2', 200, 58),
     ('1, 2', 200, 61)
 ])
-def test_credit_transfer_org_filters(test_client, authed_sempo_admin_user, complete_admin_auth_token, create_credit_transfer,
+def test_credit_transfer_organisation_filters(test_client, authed_sempo_admin_user, complete_admin_auth_token, create_credit_transfer,
 orgs, status_code, result_count):
+    # Checks that the credit_transfer endpoint supports multiple organisations
     url = f'/api/v1/credit_transfer/?orgs={orgs}'
     
     from server.models.organisation import Organisation

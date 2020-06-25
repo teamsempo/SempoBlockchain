@@ -95,7 +95,7 @@ class UserAPI(MethodView):
                     User.has_admin_role).order_by(User.created.desc()).execution_options(multi_org=True)
 
             else:
-                user_query = User.query
+                user_query = User.query.execution_options(multi_org=True)
 
             users, total_items, total_pages = paginate_query(user_query, User)
 
