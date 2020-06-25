@@ -14,7 +14,7 @@ import { LightTheme } from "../theme.js";
 import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
 import UploadButton from "../uploader/uploadButton.jsx";
 
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 
 const mapStateToProps = state => {
@@ -39,7 +39,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     loadTransferAccountList: (query, path) =>
-      dispatch(loadTransferAccounts({ query, path }))
+      dispatch(
+        LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
+      )
   };
 };
 
