@@ -1,4 +1,3 @@
-//todo: complete when transfer account reducer converted to typescript
 export interface TransferAccount {
   id: string;
 }
@@ -59,4 +58,22 @@ interface TransfersForUser {
 
 export interface TransfersByUserId {
   [userId: number]: TransfersForUser;
+}
+
+export interface LoadTransferAccountListPayload {
+  query?: {};
+  path?: number;
+}
+
+export interface EditTransferAccountPayload {
+  body: {
+    approve: boolean;
+    balance: number;
+    nfc_card_id?: string;
+    payable_period_length: number;
+    payable_period_type: string;
+    phone?: string;
+    qr_code?: string;
+  };
+  path: number;
 }
