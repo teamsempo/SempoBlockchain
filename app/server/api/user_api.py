@@ -62,7 +62,7 @@ class UserAPI(MethodView):
             account_type_filter = account_type_filter.lower()
 
         if user_id:
-            user = User.query.get(user_id).execution_options(multi_org=True)
+            user = User.query.execution_options(multi_org=True).get(user_id)
             #
             # user.cashout_authorised()
 
