@@ -93,12 +93,10 @@ def mock_w3(monkeypatch, noncer, mock_txn_send):
 
 @pytest.fixture(scope='function')
 def processor(persistence_module, mock_w3):
-    red = MockRedis()
 
     p = TransactionProcessor(
         ethereum_chain_id=1,
         w3=mock_w3,
-        red=red,
         gas_price_wei=100,
         gas_limit=400000,
         persistence_module=persistence_module

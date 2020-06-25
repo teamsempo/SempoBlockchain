@@ -4,7 +4,7 @@ import traceback
 from celery import signals
 
 import config
-from celery_app import app, blockchain_processor, persistence_module
+from celery_app import app, blockchain_processor, task_manager, persistence_module
 from exceptions import (
     LockedNotAcquired
 )
@@ -144,7 +144,7 @@ def transact_with_contract_function(self, contract_address, function,  abi_type=
                                     signing_address=None, encrypted_private_key=None,
                                     gas_limit=None, prior_tasks=None, reverses_task=None):
 
-    return blockchain_processor.transact_with_contract_function(self.request.id,
+    return task_manager.transact_with_contract_function(self.request.id,
                                                                 contract_address, abi_type, function, args, kwargs,
                                                                 signing_address, encrypted_private_key,
                                                                 gas_limit, prior_tasks, reverses_task)
@@ -155,7 +155,7 @@ def deploy_contract(self, contract_name, args=None, kwargs=None,
                     signing_address=None, encrypted_private_key=None,
                     gas_limit=None, prior_tasks=None):
 
-    return blockchain_processor.deploy_contract(self.request.id,
+    return task_manager.deploy_contract(self.request.id,
                                                 contract_name, args, kwargs,
                                                 signing_address, encrypted_private_key,
                                                 gas_limit, prior_tasks)
@@ -166,7 +166,7 @@ def send_eth(self, amount_wei, recipient_address,
              signing_address=None, encrypted_private_key=None,
              prior_tasks=None, posterior_tasks=None):
 
-    return blockchain_processor.send_eth(self.request.id,
+    return task_manager.send_eth(self.request.id,
                                          amount_wei, recipient_address,
                                          signing_address, encrypted_private_key,
                                          prior_tasks, posterior_tasks)
@@ -174,12 +174,12 @@ def send_eth(self, amount_wei, recipient_address,
 
 @app.task(**no_retry_config)
 def retry_task(self, task_uuid):
-    return blockchain_processor.retry_task(task_uuid)
+    return task_manager.retry_task(task_uuid)
 
 
 @app.task(**no_retry_config)
 def retry_failed(self, min_task_id=None, max_task_id=None, retry_unstarted=False):
-    return blockchain_processor.retry_failed(min_task_id, max_task_id, retry_unstarted)
+    return task_manager.retry_failed(min_task_id, max_task_id, retry_unstarted)
 
 
 @app.task(**no_retry_config)

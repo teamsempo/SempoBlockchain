@@ -1,5 +1,6 @@
-from utils import keypair, deterministic_address_1, deterministic_address_2
+import pytest
 
+from utils import keypair, deterministic_address_1, deterministic_address_2
 
 def test_process_send_eth_transaction(processor, dummy_transaction, mock_txn_send):
 
@@ -60,3 +61,12 @@ def test_proccess_deploy_contract_transaction(processor, dummy_transaction, mock
         'to': b''
     }
 
+
+@pytest.mark.xfail(reason="Mocking out 'call' is a pain, so not working yet")
+def test_call_contract_function(processor, mock_txn_send):
+    call_data = processor.call_contract_function(
+        deterministic_address_1,
+        'ERC20',
+        'transfer',
+        args=(deterministic_address_2, 987654)
+    )

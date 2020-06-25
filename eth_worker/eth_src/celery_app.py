@@ -32,6 +32,7 @@ from eth_manager.contract_registry.ABIs import (
 )
 
 from eth_manager.transaction_processor import TransactionProcessor
+from eth_manager.task_manager import TaskManager
 from celery_dispatchers import utils
 
 sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
@@ -72,15 +73,9 @@ blockchain_processor = TransactionProcessor(
     persistence_module=persistence_module
 )
 
-import celery_tasks
-#
-# blockchain_processor.registry.register_contract(
-#     config.ETH_CONTRACT_ADDRESS,
-#     dai_abi.abi,
-#     contract_name='Dai Stablecoin v1.0'
-# )
+task_manager = TaskManager(persistence_module=persistence_module)
 
-# Register the master wallet so we can use it for tasks
+import celery_tasks
 
 if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
     persistence_module.create_blockchain_wallet_from_private_key(
