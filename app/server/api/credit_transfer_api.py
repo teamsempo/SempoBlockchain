@@ -42,7 +42,7 @@ class CreditTransferAPI(MethodView):
 
         if credit_transfer_id:
 
-            credit_transfer = CreditTransfer.query.get(credit_transfer_id).execution_options(multi_org=True)
+            credit_transfer = CreditTransfer.query.execution_options(multi_org=True).get(credit_transfer_id)
 
             if credit_transfer is None:
                 return make_response(jsonify({'message': 'Credit transfer not found'})), 404
