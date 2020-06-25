@@ -111,7 +111,6 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
     if not credit_transfer_selector_func(create_credit_transfer):
         assert isinstance(response.json['data']['credit_transfers'], list)
 
-
 @pytest.mark.parametrize("is_bulk, invert_recipient_list, transfer_amount, transfer_type, status_code", [
     [True, False, 10, 'DISBURSEMENT', 201],
     [True, True, 20, 'DISBURSEMENT', 201]
@@ -162,3 +161,42 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
             assert id not in recipients
     else: 
         assert rx_ids == recipients
+
+@pytest.mark.parametrize("orgs, status_code, result_count", [
+    ('', 200, 58),
+    ('1', 200, 1),
+    ('2', 200, 58),
+    ('1, 2', 200, 61)
+])
+def test_credit_transfer_org_filters(test_client, authed_sempo_admin_user, complete_admin_auth_token, create_credit_transfer,
+orgs, status_code, result_count):
+    url = f'/api/v1/credit_transfer/?orgs={orgs}'
+    
+    from server.models.organisation import Organisation
+    # master_organisation is organisation 1
+    master_organisation = Organisation.master_organisation()
+    create_credit_transfer.sender_user.organisation = master_organisation
+    create_credit_transfer.recipient_user.organisation = master_organisation
+    create_credit_transfer.sender_transfer_account.organisation = master_organisation
+    create_credit_transfer.recipient_transfer_account.organisation = master_organisation
+    db.session.commit()
+
+    # Add master_organisation (organisation 1) to our user's organisations. admin_user already 
+    # is a member of organisation 2
+    authed_sempo_admin_user.organisations.append(master_organisation)
+
+    response = test_client.get(
+        url,
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ))
+
+    assert response.status_code == status_code
+    if status_code == 200:
+        response_ids = []
+        for r in response.json['data'].get('credit_transfers', []):
+            response_ids.append(r['id'])
+        if '1' in orgs:
+            assert create_credit_transfer.id in response_ids
+        assert len(response_ids) == result_count

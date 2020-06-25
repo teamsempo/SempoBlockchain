@@ -33,7 +33,7 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
         return _handle_combinatory_strategy(query, None, strategy)
 
     # Redis object names
-    if getattr(g, 'query_organisations'):
+    if g.get('query_organisations'):
         ORG_STRING = str(g.query_organisations)
     else:
         ORG_STRING = str(g.active_organisation.id)
