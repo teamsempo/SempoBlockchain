@@ -9,7 +9,7 @@ from eth_keys import keys
 from sql_persistence.interface import SQLPersistenceInterface
 from sql_persistence.models import BlockchainWallet, BlockchainTask, BlockchainTransaction
 
-from utils import pk, address, str_uuid
+from utils import str_uuid, keypair
 
 class TestModels:
 
@@ -24,9 +24,11 @@ class TestModels:
 
     def test_create_wallet_from_pk(self):
 
-        wallet = BlockchainWallet(pk)
+        pair = keypair()
 
-        assert wallet.address == address
+        wallet = BlockchainWallet(pair['pk'])
+
+        assert wallet.address == pair['address']
 
     def test_wallets_are_random(self):
         wallet_1 = BlockchainWallet()
@@ -35,8 +37,10 @@ class TestModels:
 
     def test_duplicate_wallets_cant_be_added(self, db_session):
 
-        wallet_1 = BlockchainWallet(pk)
-        wallet_2 = BlockchainWallet(pk)
+        common_pk = keypair()['pk']
+
+        wallet_1 = BlockchainWallet(common_pk)
+        wallet_2 = BlockchainWallet(common_pk)
 
         with pytest.raises(IntegrityError):
             db_session.add(wallet_1)

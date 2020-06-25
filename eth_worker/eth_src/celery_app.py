@@ -31,7 +31,7 @@ from eth_manager.contract_registry.ABIs import (
     bancor_network_abi
 )
 
-from eth_manager.processor import TransactionProcessor
+from eth_manager.transaction_processor import TransactionProcessor
 from celery_dispatchers import utils
 
 sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])

@@ -342,7 +342,7 @@ def receive_after_update(mapper, connection, target):
         else:
             # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
             # where is_synchronized_with_app=False
-            config.logg.warn(f"Could not reach 'APP_HOST' URL: {callback_url}. Please check your config.ini'")
+            config.logg.warning(f"Could not reach 'APP_HOST' URL: {callback_url}. Please check your config.ini'")
             obj_table = BlockchainTransaction.__table__
             connection.execute(
                 obj_table.update().

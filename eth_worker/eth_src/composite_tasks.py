@@ -1,7 +1,7 @@
-from celery import signature
 from functools import partial
 from toolz import pipe
 import datetime
+import celery
 
 import config
 from celery_app import persistence_module, w3, red

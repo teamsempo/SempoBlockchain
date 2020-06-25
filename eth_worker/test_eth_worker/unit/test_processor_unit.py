@@ -6,6 +6,11 @@ from mocks import MockUnbuiltTransaction
 def test_get_gas_price(processor):
     assert processor._get_gas_price() == 100
 
+# def test_call_contract_function(processor):
+#     processor.call_contract_function()
+
+
+# Actually
 def test_calculate_nonce(dummy_transaction, second_dummy_transaction, noncer, processor):
     wallet = dummy_transaction.signing_wallet
 

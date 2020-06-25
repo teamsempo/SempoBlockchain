@@ -11,9 +11,9 @@ sys.path.append(source_path)
 source_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "./helpers"))
 sys.path.append(source_path)
 
-
 import pytest
 from sqlalchemy.orm import scoped_session
+import redis
 from web3 import Web3
 
 import config
@@ -25,14 +25,14 @@ from mocks import MockNonce, MockRedis, MockSendRawTxn
 
 from utils import str_uuid
 
-@pytest.fixture(scope='session', autouse=True)
-def mock_queue_sig(mocker):
+
+@pytest.fixture(autouse=True)
+def mock_queue_sig(monkeypatch):
     def mock_response(sig, countdown):
         return str_uuid()
 
-    print("Mocked!")
-
-    mocker.patch('eth_src.celery_dispatchers.utils.queue_sig', mock_response)
+    import celery_dispatchers.utils
+    monkeypatch.setattr(celery_dispatchers.utils, 'queue_sig', mock_response)
 
 @pytest.fixture(scope='function')
 def db_session():
@@ -61,24 +61,43 @@ def noncer():
     return MockNonce()
 
 @pytest.fixture(scope='function')
-def txn_sender():
+def mock_txn_send():
     return MockSendRawTxn()
 
-@pytest.fixture(scope='function')
-def processor(persistence_module, noncer, monkeypatch):
+@pytest.fixture()
+def mock_w3(monkeypatch, noncer, mock_txn_send):
     w3 = Web3()
-    red = MockRedis()
 
-    monkeypatch.setattr(w3.eth, "sendRawTransaction", lambda txn: True)
+    def txn_signer(transaction_dict, private_key):
+        from eth_account.datastructures import AttributeDict
+        from hexbytes import (
+            HexBytes
+        )
+
+        return AttributeDict({
+            # Allows us to snoop on the txn data without dealing with hard-to-reason-with encoded data
+            'rawTransaction': transaction_dict,
+            'hash':  HexBytes(b'0xdeadbeef1'),
+            'r': 1,
+            's': 2,
+            'v': 3,
+        })
+
     monkeypatch.setattr(w3.eth, "getTransactionCount", noncer.get_transaction_count)
     monkeypatch.setattr(w3.eth, "estimateGas", lambda x: 40000)
-    monkeypatch.setattr(w3.eth.account, "sign_transaction", lambda x: 40000)
+    monkeypatch.setattr(w3.eth.account, "sign_transaction", txn_signer)
+    monkeypatch.setattr(w3.eth, "sendRawTransaction", lambda x: mock_txn_send.send(x))
 
 
+    return w3
+
+@pytest.fixture(scope='function')
+def processor(persistence_module, mock_w3):
+    red = MockRedis()
 
     p = TransactionProcessor(
         ethereum_chain_id=1,
-        w3=w3,
+        w3=mock_w3,
         red=red,
         gas_price_wei=100,
         gas_limit=400000,
@@ -92,6 +111,8 @@ def processor(persistence_module, noncer, monkeypatch):
     p.registry.register_abi('ERC20', erc20_abi.abi)
 
     return p
+
+
 
 
 @pytest.fixture(scope='function')
