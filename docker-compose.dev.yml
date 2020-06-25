@@ -2,11 +2,19 @@
 
 version: "3"
 services:
+  bootstrap:
+    image: "server:${IMAGE_TAG:-latest}"
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "APP"
+      CONTAINER_MODE: "BOOTSTRAP" # sets up sample data
+    depends_on:
+      - postgres
   app:
     environment:
       DEPLOYMENT_NAME: "LOCAL_DOCKER"
       CONTAINER_TYPE: "APP"
-      CONTAINER_MODE: "" # sets up sample data
+      CONTAINER_MODE: ""
   eth_worker:
     environment:
       DEPLOYMENT_NAME: "LOCAL_DOCKER"

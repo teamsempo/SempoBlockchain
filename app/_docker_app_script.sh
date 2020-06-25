@@ -2,9 +2,6 @@
 echo Container mode: $CONTAINER_MODE
 
 cd src
-echo upgrading database
-python manage.py db upgrade
-
 ret=$?
 if [ "$ret" -ne 0 ]; then
   exit $ret
@@ -27,12 +24,12 @@ if [ "$CONTAINER_MODE" == 'TEST' ]; then
 elif [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
    echo pass
    sleep infinity
-else
-
-  echo upgrading dataset
-
+elif [ "$CONTAINER_MODE" == 'BOOTSTRAP' ]; then
+  echo upgrading database
+  echo bootstrapping dataset
+  python manage.py db upgrade
   python manage.py update_data
-
+else
   uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app --stats :3031 --stats-http
 fi
 
