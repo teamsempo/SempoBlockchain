@@ -64,64 +64,87 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     if user_filter or date_filter:
         disable_cache = True
 
-    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
-    total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter)
-    total_distributed = metrics_cache.execute_with_partial_history_cache('total_distributed', total_distributed, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
+    def calculate_total_distributed(disable_cache=disable_cache):
+        total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
+        total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter)
+        return metrics_cache.execute_with_partial_history_cache('total_distributed', total_distributed, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
-    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
-    total_spent = total_spent.filter(*standard_payment_filters).filter(*date_filter)
-    total_spent = metrics_cache.execute_with_partial_history_cache('total_spent', total_spent, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
+    def calculate_total_spent(disable_cache=disable_cache):
+        total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
+        total_spent = total_spent.filter(*standard_payment_filters).filter(*date_filter)
+        return metrics_cache.execute_with_partial_history_cache('total_spent', total_spent, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
-    total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
-    total_exchanged = total_exchanged.filter(*exchanged_filters).filter(*date_filter)
-    total_exchanged = metrics_cache.execute_with_partial_history_cache('total_exchanged', total_exchanged, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
+    def calculate_total_exchanged(disable_cache=disable_cache):
+        total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
+        total_exchanged = total_exchanged.filter(*exchanged_filters).filter(*date_filter)
+        return metrics_cache.execute_with_partial_history_cache('total_exchanged', total_exchanged, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
-    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
-    total_beneficiaries = metrics_cache.execute_with_partial_history_cache('total_beneficiaries', total_beneficiaries, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
+    def calculate_total_beneficiaries(disable_cache=disable_cache):
+        total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
+        return metrics_cache.execute_with_partial_history_cache('total_beneficiaries', total_beneficiaries, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
 
-    total_vendors = db.session.query(User).filter(*vendor_filters)
-    total_vendors = metrics_cache.execute_with_partial_history_cache('total_vendors', total_vendors, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
+    def calculate_total_vendors(disable_cache=disable_cache):
+        total_vendors = db.session.query(User).filter(*vendor_filters)
+        return metrics_cache.execute_with_partial_history_cache('total_vendors', total_vendors, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
 
-    total_users = total_beneficiaries + total_vendors
+    def calculate_total_users():
+        return calculate_total_beneficiaries() + calculate_total_vendors()
 
-    has_transferred_count = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
-        .label('transfer_count'))\
-        .filter(*standard_payment_filters) \
-        .filter(*date_filter) \
-            .first().transfer_count
+    def calculate_has_transferred_count():
+        return db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
+            .label('transfer_count'))\
+            .filter(*standard_payment_filters) \
+            .filter(*date_filter) \
+                .first().transfer_count
 
-    exhausted_balance_count = db.session.query(func.count(func.distinct(
+    def calculate_exhausted_balance_count():
+        return db.session.query(func.count(func.distinct(
         CreditTransfer.sender_transfer_account_id))
-        .label('transfer_count')) \
-        .join(CreditTransfer.sender_transfer_account)\
-        .filter(*exhaused_balance_filters) \
-        .filter(*date_filter) \
-            .first().transfer_count
+            .label('transfer_count')) \
+            .join(CreditTransfer.sender_transfer_account)\
+            .filter(*exhaused_balance_filters) \
+            .filter(*date_filter) \
+                .first().transfer_count
 
-    daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+    def calculate_daily_transaction_volume(disable_cache=disable_cache):
+        daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
+            func.date_trunc('day', CreditTransfer.created).label('date'))
+        daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
+        daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
+            .filter(*standard_payment_filters) \
+            .filter(*date_filter)
+        return metrics_cache.execute_with_partial_history_cache('daily_transaction_volume', daily_transaction_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
+
+    def calculate_daily_disbursement_volume(disable_cache=disable_cache):
+        daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                 func.date_trunc('day', CreditTransfer.created).label('date'))
-    daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
-    daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
-        .filter(*standard_payment_filters) \
-        .filter(*date_filter)
-    daily_transaction_volume = metrics_cache.execute_with_partial_history_cache('daily_transaction_volume', daily_transaction_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
+        daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
+        daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
+            .filter(*disbursement_filters) \
+            .filter(*date_filter)
+        return metrics_cache.execute_with_partial_history_cache('daily_disbursement_volume', daily_disbursement_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
 
-    daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', CreditTransfer.created).label('date'))
-    daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
-    daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
-        .filter(*disbursement_filters) \
-        .filter(*date_filter)
-    daily_disbursement_volume = metrics_cache.execute_with_partial_history_cache('daily_disbursement_volume', daily_disbursement_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
-
-    transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
-    transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
-    transfer_use_breakdown = transfer_use_breakdown.filter(*transfer_use_filters) \
-        .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
-            .all()
+    def calculate_transfer_use_breakdown():
+        transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
+        transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
+        return transfer_use_breakdown.filter(*transfer_use_filters) \
+            .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
+                .all()
+                
+    total_distributed = calculate_total_distributed()
+    total_spent = calculate_total_spent()
+    total_exchanged = calculate_total_exchanged()
+    total_beneficiaries = calculate_total_beneficiaries()
+    total_vendors = calculate_total_vendors()
+    total_users = calculate_total_users()
+    has_transferred_count = calculate_has_transferred_count()
+    exhausted_balance_count = calculate_exhausted_balance_count()
+    daily_transaction_volume = calculate_daily_transaction_volume()
+    daily_disbursement_volume = calculate_daily_disbursement_volume()
+    transfer_use_breakdown = calculate_transfer_use_breakdown()
 
     try:
         last_day = daily_transaction_volume[0][1]
