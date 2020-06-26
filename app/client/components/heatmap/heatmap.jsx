@@ -41,7 +41,6 @@ class HeatMap extends Component {
   }
 
   componentDidMount() {
-    console.log("list", this.props.creditTransferLocationList);
     window.addEventListener("resize", this._resize.bind(this));
     this._resize();
   }
