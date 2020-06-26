@@ -1,14 +1,16 @@
 from typing import Optional
+from celery import signature
 
-from celery_dispatchers.regular import queue_attempt_transaction
+from celery_utils import queue_sig, eth_endpoint
 from sempo_types import UUID, UUIDList
 
+from eth_manager.transaction_supervisor import TransactionSupervisor
 
 class TaskManager(object):
     """
     Creates tasks, which represent an action that must be completed on the blockchain.
     These are then picked up by the TransactionSupervisor which will in turn instruct
-    the TransactionProcessor on making transaction attempts.
+    the EthTransactionProcessor on making transaction attempts.
     """
 
     def transact_with_contract_function(
@@ -37,19 +39,19 @@ class TaskManager(object):
         :return: task_id
         """
 
-        signing_wallet_obj = self.persistence_module.get_signing_wallet_object(
+        signing_wallet_obj = self.persistence.get_signing_wallet_object(
             signing_address,
             encrypted_private_key
         )
 
-        task = self.persistence_module.create_function_task(uuid,
-                                                            signing_wallet_obj,
-                                                            contract_address, abi_type,
-                                                            function_name, args, kwargs,
-                                                            gas_limit, prior_tasks, reserves_task)
+        task = self.persistence.create_function_task(uuid,
+                                                     signing_wallet_obj,
+                                                     contract_address, abi_type,
+                                                     function_name, args, kwargs,
+                                                     gas_limit, prior_tasks, reserves_task)
 
         # Attempt Create Async Transaction
-        queue_attempt_transaction(task.uuid)
+        self._queue_attempt_transaction(task.uuid)
 
     def send_eth(self,
                  uuid: UUID,
@@ -71,19 +73,19 @@ class TaskManager(object):
         :return: task_id
         """
 
-        signing_wallet_obj = self.persistence_module.get_signing_wallet_object(
+        signing_wallet_obj = self.persistence.get_signing_wallet_object(
             signing_address,
             encrypted_private_key
         )
 
-        task = self.persistence_module.create_send_eth_task(uuid,
-                                                            signing_wallet_obj,
-                                                            recipient_address, amount_wei,
-                                                            prior_tasks,
-                                                            posterior_tasks)
+        task = self.persistence.create_send_eth_task(uuid,
+                                                     signing_wallet_obj,
+                                                     recipient_address, amount_wei,
+                                                     prior_tasks,
+                                                     posterior_tasks)
 
         # Attempt Create Async Transaction
-        queue_attempt_transaction(task.uuid)
+        self._queue_attempt_transaction(task.uuid)
 
     def deploy_contract(
             self,
@@ -107,38 +109,38 @@ class TaskManager(object):
         :param prior_tasks: a list of task uuid that must succeed before this task will be attempted
         """
 
-        signing_wallet_obj = self.persistence_module.get_signing_wallet_object(
+        signing_wallet_obj = self.persistence.get_signing_wallet_object(
             signing_address,
             encrypted_private_key
         )
 
-        task = self.persistence_module.create_deploy_contract_task(uuid,
-                                                                   signing_wallet_obj,
-                                                                   contract_name,
-                                                                   args, kwargs,
-                                                                   gas_limit,
-                                                                   prior_tasks)
+        task = self.persistence.create_deploy_contract_task(uuid,
+                                                            signing_wallet_obj,
+                                                            contract_name,
+                                                            args, kwargs,
+                                                            gas_limit,
+                                                            prior_tasks)
 
         # Attempt Create Async Transaction
-        queue_attempt_transaction(task.uuid)
+        self._queue_attempt_transaction(task.uuid)
 
     def retry_task(self, task_uuid: UUID):
-        self.persistence_module.increment_task_invocations(task_uuid)
-        queue_attempt_transaction(task_uuid)
+        self.persistence.increment_task_invocations(task_uuid)
+        self._queue_attempt_transaction(task_uuid)
 
     def retry_failed(self, min_task_id, max_task_id, retry_unstarted=False):
 
         print(f'Testings Task from {min_task_id} to {max_task_id}, retrying unstarted={retry_unstarted}')
 
-        needing_retry = self.persistence_module.get_failed_tasks(min_task_id, max_task_id)
-        pending_tasks = self.persistence_module.get_pending_tasks(min_task_id, max_task_id)
+        needing_retry = self.persistence.get_failed_tasks(min_task_id, max_task_id)
+        pending_tasks = self.persistence.get_pending_tasks(min_task_id, max_task_id)
 
         print(f"{len(needing_retry)} tasks currently with failed state")
         print(f"{len(pending_tasks)} tasks currently pending")
 
         unstarted_tasks = None
         if retry_unstarted:
-            unstarted_tasks = self.persistence_module.get_unstarted_tasks(min_task_id, max_task_id)
+            unstarted_tasks = self.persistence.get_unstarted_tasks(min_task_id, max_task_id)
             print(f"{len(unstarted_tasks)} tasks currently unstarted")
 
             needing_retry = needing_retry + unstarted_tasks
@@ -154,7 +156,77 @@ class TaskManager(object):
             'unstarted_count': len(unstarted_tasks) if unstarted_tasks else 'Unknown'
         }
 
-    def __init__(self, persistence_module):
+    def _queue_attempt_transaction(self, task_uuid):
+        queue_sig(
+            self.transaction_supervisor.sigs.attempt_transaction(task_uuid)
+        )
 
-            self.persistence_module = persistence_module
+    def __init__(self, persistence, transaction_supervisor: TransactionSupervisor):
 
+        self.persistence = persistence
+
+        self.transaction_supervisor = transaction_supervisor
+
+        self.sigs = SigGenerators()
+
+
+class SigGenerators(object):
+
+    def deploy_contract_task(
+            self,
+            signing_address,
+            contract_name,
+            args=None,
+            prior_tasks=None
+    ):
+
+        return signature(
+            eth_endpoint('deploy_contract'),
+            kwargs={
+                'signing_address': signing_address,
+                'contract_name': contract_name,
+                'args': args,
+                'prior_tasks': prior_tasks
+            })
+
+    def transact_with_function_task(
+            self,
+            signing_address,
+            contract_address,
+            contract_type,
+            func,
+            args=None,
+            gas_limit=None,
+            prior_tasks=None,
+            reverses_task=None
+    ):
+
+        kwargs = {
+            'signing_address': signing_address,
+            'contract_address': contract_address,
+            'abi_type': contract_type,
+            'function': func,
+            'args': args,
+            'prior_tasks': prior_tasks,
+            'reverses_task': reverses_task
+        }
+
+        if gas_limit:
+            kwargs['gas_limit'] = gas_limit
+
+        return signature(eth_endpoint('transact_with_contract_function'), kwargs=kwargs)
+
+    def send_eth_task(
+            self,
+            signing_address,
+            amount_wei,
+            recipient_address
+    ):
+        return signature(
+            eth_endpoint('send_eth'),
+            kwargs={
+                'signing_address': signing_address,
+                'amount_wei': amount_wei,
+                'recipient_address': recipient_address
+            }
+        )

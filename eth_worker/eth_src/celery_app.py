@@ -32,7 +32,7 @@ from eth_manager.contract_registry.ABIs import (
     bancor_network_abi
 )
 
-from eth_manager.transaction_processor import TransactionProcessor
+from eth_manager.eth_transaction_processor import EthTransactionProcessor
 from eth_manager.transaction_supervisor import TransactionSupervisor
 from eth_manager.task_manager import TaskManager
 
@@ -67,21 +67,21 @@ persistence_module = SQLPersistenceInterface(
     red=red, session=session, first_block_hash=first_block_hash
 )
 
-processor = TransactionProcessor(
+processor = EthTransactionProcessor(
     ethereum_chain_id=config.ETH_CHAIN_ID,
     gas_price_wei=w3.toWei(config.ETH_GAS_PRICE, 'gwei'),
     gas_limit=config.ETH_GAS_LIMIT,
     w3=w3,
-    persistence_module=persistence_module
+    persistence=persistence_module
 )
 
 supervisor = TransactionSupervisor(
-    w3=w3,
     red=red,
-    persistence_module=persistence_module
+    persistence=persistence_module,
+    processor=processor
 )
 
-task_manager = TaskManager(persistence_module=persistence_module)
+task_manager = TaskManager(persistence=persistence_module, transaction_supervisor=supervisor)
 
 
 if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':

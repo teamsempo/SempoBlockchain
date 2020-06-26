@@ -16,7 +16,7 @@ import redis
 from web3 import Web3
 
 import config
-from eth_src.eth_manager.transaction_processor import TransactionProcessor
+from eth_src.eth_manager.eth_transaction_processor import EthTransactionProcessor
 from eth_src.sql_persistence import engine, session_factory
 from eth_src.sql_persistence.interface import SQLPersistenceInterface
 from eth_src.sql_persistence.models import Base
@@ -24,14 +24,13 @@ from mocks import MockNonce, MockRedis, MockSendRawTxn
 
 from utils import str_uuid
 
-
 @pytest.fixture(autouse=True)
 def mock_queue_sig(monkeypatch):
     def mock_response(sig, countdown):
         return str_uuid()
 
-    import celery_dispatchers.utils
-    monkeypatch.setattr(celery_dispatchers.utils, 'queue_sig', mock_response)
+    import celery_utils
+    monkeypatch.setattr(celery_utils, 'queue_sig', mock_response)
 
 @pytest.fixture(scope='function')
 def db_session():
@@ -93,12 +92,12 @@ def mock_w3(monkeypatch, noncer, mock_txn_send):
 @pytest.fixture(scope='function')
 def processor(persistence_module, mock_w3):
 
-    p = TransactionProcessor(
+    p = EthTransactionProcessor(
         ethereum_chain_id=1,
         w3=mock_w3,
         gas_price_wei=100,
         gas_limit=400000,
-        persistence_module=persistence_module
+        persistence=persistence_module
     )
 
     from eth_manager.contract_registry.ABIs import (

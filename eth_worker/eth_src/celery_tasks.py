@@ -9,7 +9,7 @@ from exceptions import (
     LockedNotAcquired
 )
 
-import composite_tasks as composite
+import higher_order_tasks as composite
 
 
 class SqlAlchemyTask(celery.Task):
@@ -126,20 +126,6 @@ def topup_wallet_if_required(self, address):
 
 
 @app.task(**base_task_config)
-def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
-    return processor.registry.register_contract(
-        contract_address, abi, contract_name, require_name_matches
-    )
-
-
-@app.task(**base_task_config)
-def call_contract_function(self, contract_address, function, abi_type=None, args=None, kwargs=None,
-                           signing_address=None):
-    return processor.call_contract_function(contract_address, abi_type, function, args, kwargs,
-                                            signing_address)
-
-
-@app.task(**base_task_config)
 def transact_with_contract_function(self, contract_address, function,  abi_type=None, args=None, kwargs=None,
                                     signing_address=None, encrypted_private_key=None,
                                     gas_limit=None, prior_tasks=None, reverses_task=None):
@@ -174,17 +160,17 @@ def send_eth(self, amount_wei, recipient_address,
 
 @app.task(**no_retry_config)
 def retry_task(self, task_uuid):
-    return supervisor.retry_task(task_uuid)
+    return task_manager.retry_task(task_uuid)
 
 
 @app.task(**no_retry_config)
 def retry_failed(self, min_task_id=None, max_task_id=None, retry_unstarted=False):
-    return supervisor.retry_failed(min_task_id, max_task_id, retry_unstarted)
+    return task_manager.retry_failed(min_task_id, max_task_id, retry_unstarted)
 
 
 @app.task(**base_task_config)
 def get_task(self, task_uuid):
-    return supervisor.get_serialised_task_from_uuid(task_uuid)
+    return persistence_module.get_serialised_task_from_uuid(task_uuid)
 
 
 @app.task(base=SqlAlchemyTask)
@@ -198,7 +184,7 @@ def _check_transaction_response(self, transaction_id):
 
 
 @app.task(**base_task_config)
-def _attempt_transaction(self, task_uuid):
+def attempt_transaction(self, task_uuid):
     return supervisor.attempt_transaction(task_uuid)
 
 
@@ -219,3 +205,16 @@ def _process_deploy_contract_transaction(self, transaction_id, contract_name,
                                          args=None, kwargs=None,  gas_limit=None, task_id=None):
     return processor.process_deploy_contract_transaction(transaction_id, contract_name,
                                                          args, kwargs, gas_limit, task_id)
+
+@app.task(**base_task_config)
+def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
+    return processor.registry.register_contract(
+        contract_address, abi, contract_name, require_name_matches
+    )
+
+
+@app.task(**base_task_config)
+def call_contract_function(self, contract_address, function, abi_type=None, args=None, kwargs=None,
+                           signing_address=None):
+    return processor.call_contract_function(contract_address, abi_type, function, args, kwargs,
+                                            signing_address)

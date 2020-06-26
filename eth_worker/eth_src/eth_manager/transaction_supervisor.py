@@ -1,33 +1,35 @@
 import datetime
 
-from celery import chain
+from celery import chain, signature
+from celery_utils import eth_endpoint, queue_sig
 
 import config
-from celery_dispatchers.regular import queue_attempt_transaction, sig_process_send_eth_transaction, \
-    sig_process_function_transaction, sig_process_deploy_contract_transaction, sig_check_transaction_response, \
-    sig_handle_error, queue_send_eth
+
 from exceptions import TaskRetriesExceededError
+from eth_manager.eth_transaction_processor import EthTransactionProcessor
 
 RETRY_TRANSACTION_BASE_TIME = 2
-ETH_CHECK_TRANSACTION_BASE_TIME = 2
-ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
+CHECK_TRANSACTION_BASE_TIME = 2
+CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
 
 class TransactionSupervisor(object):
     """
         Takes tasks from the task manager.
-        Is in charge of telling the TransactionProcessor what transactions to attempt.
-        Also checks the results from the TransactionProcessor (via check_transaction_response) and tells
+        Is in charge of telling the EthTransactionProcessor what transactions to attempt.
+        Also checks the results from the EthTransactionProcessor (via check_transaction_response) and tells
         the processor to try again as appropriate. #MiddleManagement
+        Doesn't know about any eth specific concepts, so in theory EthTransactionProcessor should be somewhat easy
+        to swap out for a different type of processor by changing the where the processor tasks are sent
     """
 
     def check_transaction_response(self, celery_task, transaction_id):
         def transaction_response_countdown():
-            t = lambda retries: ETH_CHECK_TRANSACTION_BASE_TIME * 2 ** retries
+            t = lambda retries: CHECK_TRANSACTION_BASE_TIME * 2 ** retries
 
             # If the system has been longer than the max retry period
             # if previous_result:
             #     submitted_at = datetime.strptime(previous_result['submitted_date'], "%Y-%m-%d %H:%M:%S.%f")
-            #     if (datetime.utcnow() - submitted_at).total_seconds() > ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT:
+            #     if (datetime.utcnow() - submitted_at).total_seconds() > CHECK_TRANSACTION_RETRIES_TIME_LIMIT:
             #         if self.request.retries != self.max_retries:
             #             self.request.retries = self.max_retries - 1
             #
@@ -36,15 +38,14 @@ class TransactionSupervisor(object):
             return t(celery_task.request.retries)
 
         try:
-            transaction_object = self.persistence_module.get_transaction(transaction_id)
+
+            result = self.processor.get_transaction_status(transaction_id)
+
+            self.persistence.update_transaction_data(transaction_id, result)
+
+            transaction_object = self.persistence.get_transaction(transaction_id)
 
             task = transaction_object.task
-
-            transaction_hash = transaction_object.hash
-
-            result = self.check_transaction_hash(transaction_hash)
-
-            self.persistence_module.update_transaction_data(transaction_id, result)
 
             status = result.get('status')
 
@@ -52,13 +53,13 @@ class TransactionSupervisor(object):
             f'\n {status}')
             if status == 'SUCCESS':
 
-                unstarted_posteriors = self.persistence_module.get_unstarted_posteriors(task.uuid)
+                unstarted_posteriors = self.persistence.get_unstarted_posteriors(task.uuid)
 
                 for dep_task in unstarted_posteriors:
                     print('Starting posterior task: {}'.format(dep_task.uuid))
-                    queue_attempt_transaction(dep_task.uuid)
+                    self.queue_attempt_transaction(dep_task.uuid)
 
-                self.persistence_module.set_task_status_text(task, 'SUCCESS')
+                self.persistence.set_task_status_text(task, 'SUCCESS')
 
             if status == 'PENDING':
                 celery_task.request.retries = 0
@@ -74,42 +75,11 @@ class TransactionSupervisor(object):
             print(e)
             celery_task.retry(countdown=transaction_response_countdown())
 
-    def check_transaction_hash(self, tx_hash):
-
-        print('watching txn: {} at {}'.format(tx_hash, datetime.datetime.utcnow()))
-
-        tx_receipt = self.w3.eth.getTransactionReceipt(tx_hash)
-
-        if tx_receipt is None:
-            return {'status': 'PENDING'}
-
-        mined_date = str(datetime.datetime.utcnow())
-
-        if tx_receipt.blockNumber is None:
-            return {'status': 'PENDING', 'message': 'Next Block'}
-
-        if tx_receipt.status == 1:
-
-            return {
-                'status': 'SUCCESS',
-                'block': tx_receipt.blockNumber,
-                'contract_address': tx_receipt.contractAddress,
-                'mined_date': mined_date
-            }
-
-        else:
-           return {
-               'status': 'FAILED',
-               'error': 'Blockchain Error',
-               'block': tx_receipt.blockNumber,
-               'mined_date': mined_date
-           }
-
     def attempt_transaction(self, task_uuid):
 
-        task = self.persistence_module.get_task_from_uuid(task_uuid)
+        task = self.persistence.get_task_from_uuid(task_uuid)
 
-        unsatisfied_prior_tasks = self.persistence_module.get_unsatisfied_prior_tasks(task_uuid)
+        unsatisfied_prior_tasks = self.persistence.get_unsatisfied_prior_tasks(task_uuid)
         if len(unsatisfied_prior_tasks) > 0:
             print('Skipping {}: prior tasks {} unsatisfied'.format(
                 task.id,
@@ -143,7 +113,7 @@ class TransactionSupervisor(object):
                 if current_status in ['SUCCESS', 'PENDING']:
                     print(f'Skipping {task.id}: task status is currently {current_status}')
                     return None
-                return self.persistence_module.create_blockchain_transaction(task.uuid)
+                return self.persistence.create_blockchain_transaction(task.uuid)
             else:
                 print(f'Skipping {task.id}: Failed to aquire lock')
                 return None
@@ -164,7 +134,7 @@ class TransactionSupervisor(object):
             transfer_amount = int(task.amount)
 
             print(f'Starting Send Eth Transaction for {task.uuid}.' + attempt_info)
-            txn_sig = sig_process_send_eth_transaction(
+            txn_sig = self.processor.sigs.process_send_eth_transaction(
                 transaction_id,
                 task.recipient_address,
                 transfer_amount,
@@ -173,7 +143,7 @@ class TransactionSupervisor(object):
 
         elif task.type == 'FUNCTION':
             print(f'Starting {task.function} Transaction for {task.uuid}.' + attempt_info)
-            txn_sig = sig_process_function_transaction(
+            txn_sig = self.processor.sigs.process_function_transaction(
                 transaction_id,
                 task.contract_address,
                 task.abi_type,
@@ -186,7 +156,7 @@ class TransactionSupervisor(object):
 
         elif task.type == 'DEPLOY_CONTRACT':
             print(f'Starting Deploy {task.contract_name} Contract Transaction for {task.uuid}.' + attempt_info)
-            txn_sig = sig_process_deploy_contract_transaction(
+            txn_sig = self.processor.sigs.process_deploy_contract_transaction(
                 transaction_id,
                 task.contract_name,
                 task.args,
@@ -197,20 +167,20 @@ class TransactionSupervisor(object):
         else:
             raise Exception(f"Task type {task.type} not recognised")
 
-        check_response_sig = sig_check_transaction_response()
-
-        error_callback_sig = sig_handle_error(transaction_id)
+        check_response_sig = self.sigs.check_transaction_response()
+        error_callback_sig = self.sigs.handle_error(transaction_id)
 
         return chain([txn_sig, check_response_sig]).on_error(error_callback_sig)
 
     def _topup_if_required(self, wallet, posterior_task_uuid):
-        balance = self.w3.eth.getBalance(wallet.address)
+
+        balance = self.processor.get_wallet_balance(wallet)
 
         wei_topup_threshold = wallet.wei_topup_threshold
         wei_target_balance = wallet.wei_target_balance or 0
 
         if balance <= wei_topup_threshold and wei_target_balance > balance:
-            task_uuid = queue_send_eth(
+            task_uuid = self.queue_send_eth(
                 signing_address=config.MASTER_WALLET_ADDRESS,
                 amount_wei=wei_target_balance - balance,
                 recipient_address=wallet.address,
@@ -218,7 +188,7 @@ class TransactionSupervisor(object):
                 posterior_tasks=[posterior_task_uuid]
             )
 
-            self.persistence_module.set_wallet_last_topup_task_uuid(wallet.address, task_uuid)
+            self.persistence.set_wallet_last_topup_task_uuid(wallet.address, task_uuid)
 
             return task_uuid
 
@@ -227,7 +197,7 @@ class TransactionSupervisor(object):
     def handle_error(self, request, exc, traceback, transaction_id):
         self.log_error(request, exc, traceback, transaction_id)
 
-        transaction = self.persistence_module.get_transaction(transaction_id)
+        transaction = self.persistence.get_transaction(transaction_id)
         task = transaction.task
 
         try:
@@ -242,7 +212,7 @@ class TransactionSupervisor(object):
             'status': 'FAILED'
         }
 
-        self.persistence_module.update_transaction_data(transaction_id, data)
+        self.persistence.update_transaction_data(transaction_id, data)
 
     def new_transaction_attempt(self, task):
         number_of_attempts_this_round = abs(
@@ -252,26 +222,63 @@ class TransactionSupervisor(object):
             print(f"Maximum retries exceeded for task {task.uuid}")
 
             if task.status_text != 'SUCCESS':
-                self.persistence_module.set_task_status_text(task, 'FAILED')
+                self.persistence.set_task_status_text(task, 'FAILED')
 
             raise TaskRetriesExceededError
 
         else:
-            queue_attempt_transaction(
+            self.queue_attempt_transaction(
                 task.uuid,
                 countdown=RETRY_TRANSACTION_BASE_TIME * 4 ** number_of_attempts_this_round
             )
 
-    def get_serialised_task_from_uuid(self, uuid):
-        return self.persistence_module.get_serialised_task_from_uuid(uuid)
+    def queue_attempt_transaction(self, task_uuid, countdown=0):
+        return queue_sig(self.sigs.attempt_transaction(task_uuid), countdown)
 
-    def __init__(self,
-                 w3,
-                 red,
-                 persistence_module,
-                 task_max_retries=3):
+    def queue_send_eth(
+            self,
+            signing_address,
+            amount_wei,
+            recipient_address,
+            prior_tasks,
+            posterior_tasks,
+    ):
+        """
+        This is a slightly smelly special case where the transaction supervisor needs to call the higher-level
+        task manager to get a send_eth task created for topup purposes.
+        """
+        sig = signature(eth_endpoint('send_eth'),
+                        kwargs={
+                            'signing_address': signing_address,
+                            'amount_wei': amount_wei,
+                            'recipient_address': recipient_address,
+                            'prior_tasks': prior_tasks,
+                            'posterior_tasks': posterior_tasks
+                        })
 
-            self.w3 = w3
-            self.red = red
-            self.persistence_module = persistence_module
-            self.task_max_retries = task_max_retries
+        return queue_sig(sig)
+
+    def __init__(
+            self,
+            red,
+            persistence,
+            processor: EthTransactionProcessor,
+            task_max_retries=3
+    ):
+
+        self.red = red
+        self.persistence = persistence
+        self.processor = processor
+        self.task_max_retries = task_max_retries
+        self.sigs = SigGenerators()
+
+class SigGenerators(object):
+
+    def attempt_transaction(self, task_uuid):
+        return signature(eth_endpoint('_attempt_transaction'), kwargs={'task_uuid': task_uuid})
+
+    def check_transaction_response(self):
+        return signature(eth_endpoint('_check_transaction_response'))
+
+    def handle_error(self, transaction_id):
+        return signature(eth_endpoint('_handle_error'), args=(transaction_id,))

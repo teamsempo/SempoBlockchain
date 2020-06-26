@@ -1,5 +1,5 @@
 from typing import Optional, Any
-
+from celery import signature
 import datetime
 
 import requests
@@ -7,13 +7,15 @@ import requests
 import config
 from exceptions import PreBlockchainError
 from eth_manager.contract_registry.contract_registry import ContractRegistry
+from celery_utils import eth_endpoint
 
 
-class TransactionProcessor(object):
+class EthTransactionProcessor(object):
     """
-    Does the grunt work of trying to get a transaction onto the blockchain.
-    Doesn't know about celery, but just reports errors if it doesn't succeed.
-    Also includes call_contract_function as a method because of the large overlap in code
+    Does the grunt work of trying to get a transaction onto an ethereum chain.
+    Doesn't care about task ordering, but just reports errors if it doesn't succeed.
+    Also includes call_contract_function and get wallet balance as methods due to code overlap and to keep eth
+    concepts from leaking into other objects
     """
 
     def call_contract_function(self,
@@ -105,7 +107,7 @@ class TransactionProcessor(object):
                              gas_limit=None,
                              gas_price=None):
 
-        signing_wallet_obj = self.persistence_interface.get_transaction_signing_wallet(transaction_id)
+        signing_wallet_obj = self.persistence.get_transaction_signing_wallet(transaction_id)
 
         metadata = self._compile_transaction_metadata(
             signing_wallet_obj,
@@ -136,14 +138,14 @@ class TransactionProcessor(object):
             'nonce_consumed': True
         }
 
-        self.persistence_interface.update_transaction_data(transaction_id, transaction_data)
+        self.persistence.update_transaction_data(transaction_id, transaction_data)
 
         return transaction_id
 
     def _calculate_nonce(self, signing_wallet_obj, transaction_id):
         network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
 
-        return self.persistence_interface.locked_claim_transaction_nonce(
+        return self.persistence.locked_claim_transaction_nonce(
             network_nonce, signing_wallet_obj.id, transaction_id
         )
 
@@ -228,6 +230,45 @@ class TransactionProcessor(object):
 
         return gas_price
 
+    def get_transaction_status(self, transaction_id):
+        transaction_object = self.persistence.get_transaction(transaction_id)
+        transaction_hash = transaction_object.hash
+
+        return self._status_from_hash(transaction_hash)
+
+    def _status_from_hash(self, transaction_hash):
+
+        print('watching txn: {} at {}'.format(transaction_hash, datetime.datetime.utcnow()))
+
+        tx_receipt = self.w3.eth.getTransactionReceipt(transaction_hash)
+
+        if tx_receipt is None:
+            return {'status': 'PENDING'}
+
+        mined_date = str(datetime.datetime.utcnow())
+
+        if tx_receipt.blockNumber is None:
+            return {'status': 'PENDING', 'message': 'Next Block'}
+
+        if tx_receipt.status == 1:
+
+            return {
+                'status': 'SUCCESS',
+                'block': tx_receipt.blockNumber,
+                'contract_address': tx_receipt.contractAddress,
+                'mined_date': mined_date
+            }
+
+        else:
+
+           return {
+               'status': 'FAILED',
+               'error': 'Blockchain Error',
+               'block': tx_receipt.blockNumber,
+               'mined_date': mined_date
+           }
+
+
     def _shape_args(self, args):
         args = args or tuple()
         if not isinstance(args, (list, tuple)):
@@ -243,22 +284,102 @@ class TransactionProcessor(object):
             return argument.get('data').encode()
         return argument
 
-    def __init__(self,
-                 ethereum_chain_id,
-                 w3,
-                 gas_price_wei,
-                 gas_limit,
-                 persistence_module):
+    def get_wallet_balance(self, wallet):
+        return self.w3.eth.getBalance(wallet.address)
 
-            self.registry = ContractRegistry(w3)
+    def __init__(
+            self,
+            ethereum_chain_id,
+            w3,
+            gas_price_wei,
+            gas_limit,
+            persistence
+    ):
 
-            self.ethereum_chain_id = int(ethereum_chain_id) if ethereum_chain_id else None
+        self.registry = ContractRegistry(w3)
+        self.ethereum_chain_id = int(ethereum_chain_id) if ethereum_chain_id else None
+        self.w3 = w3
+        self.gas_price_wei = gas_price_wei
+        self.gas_limit = gas_limit
+        self.persistence = persistence
+        self.sigs = SigGenerators()
 
-            self.w3 = w3
 
-            self.gas_price_wei = gas_price_wei
-            self.gas_limit = gas_limit
+class SigGenerators(object):
 
-            self.persistence_interface = persistence_module
+    def process_send_eth_transaction(
+            self,
+            transaction_id,
+            recipient_address,
+            transfer_amount,
+            task_id
+    ):
+        return signature(
+            eth_endpoint('_process_send_eth_transaction'),
+            args=(
+                transaction_id,
+                recipient_address,
+                transfer_amount,
+                task_id
+            )
+        )
+
+    def process_function_transaction(
+            self,
+            transaction_id,
+            contract_address,
+            abi_type,
+            fn,
+            args,
+            kwargs,
+            gas_limit,
+            task_id
+    ):
+        return signature(
+            eth_endpoint('_process_function_transaction'),
+            args=(
+                transaction_id,
+                contract_address,
+                abi_type,
+                fn,
+                args,
+                kwargs,
+                gas_limit,
+                task_id
+            )
+        )
+
+    def process_deploy_contract_transaction(
+            self,
+            transaction_id,
+            contract_name,
+            args,
+            kwargs,
+            gas_limit,
+            task_id
+    ):
+        return signature(
+            eth_endpoint('_process_deploy_contract_transaction'),
+            args=(
+                transaction_id,
+                contract_name,
+                args,
+                kwargs,
+                gas_limit,
+                task_id
+            )
+        )
+
+    def call_contract_function(self, contract_address, contract_type, func, args=None):
+        return signature(
+            eth_endpoint('call_contract_function'),
+            kwargs={
+                'contract_address': contract_address,
+                'abi_type': contract_type,
+                'function': func,
+                'args': args,
+            }
+        )
+
 
 

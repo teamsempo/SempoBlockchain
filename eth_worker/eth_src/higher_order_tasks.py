@@ -4,21 +4,57 @@ import datetime
 from celery import signature
 
 import config
-from celery_app import persistence_module, w3, red
-from celery_dispatchers import utils
-from celery_dispatchers.regular import (
-    deploy_contract_task,
-    transaction_task,
-    send_eth_task,
-    synchronous_call,
-    await_blockchain_success_evil,
-    get_wallet_balance
-)
+from celery_app import persistence_module, w3, red, task_manager, processor
+from eth_src import celery_utils
 
 timeout = config.SYNCRONOUS_TASK_TIMEOUT
 
+def call_contract_function(contract_address, contract_type, func, args=None):
+    sig = processor.sigs.call_contract_function(contract_address, contract_type, func, args)
+    return celery_utils.execute_synchronous_celery(sig)
+
+
+def deploy_contract_task(signing_address, contract_name, args=None, prior_tasks=None):
+    sig = task_manager.sigs.deploy_contract_task(signing_address, contract_name, args, prior_tasks)
+    return celery_utils.queue_sig(sig)
+
+def transact_with_function_task(
+        signing_address,
+        contract_address, contract_type,
+        func, args=None,
+        gas_limit=None,
+        prior_tasks=None,
+        reverses_task=None
+):
+    sig = task_manager.sigs.transact_with_function_task(
+        signing_address,
+        contract_address,
+        contract_type,
+        func,
+        args,
+        gas_limit,
+        prior_tasks,
+        reverses_task
+    )
+    return celery_utils.queue_sig(sig)
+
+def send_eth_task(signing_address, amount_wei, recipient_address):
+    sig = task_manager.sigs.send_eth_task(signing_address, amount_wei, recipient_address)
+    return celery_utils.queue_sig(sig)
+
+def get_wallet_balance(address, token_address):
+
+    balance_wei = call_contract_function(
+        contract_address=token_address,
+        contract_type='ERC20',
+        func='balanceOf',
+        args=[address])
+
+    return balance_wei
+
+
 def get_contract_address(task_uuid):
-    await_tr = partial(await_blockchain_success_evil, timeout=timeout)
+    await_tr = partial(celery_utils.await_blockchain_success_evil, timeout=timeout)
     return pipe(task_uuid, await_tr, lambda r: r.get('contract_address'))
 
 
@@ -36,7 +72,7 @@ def topup_wallets(queue='low-priority'):
                 if task and task.status in ['PENDING', 'UNSTARTED']:
                     return
 
-            signature(utils.eth_endpoint('topup_wallet_if_required'),
+            signature(celery_utils.eth_endpoint('topup_wallet_if_required'),
                       kwargs={
                           'address': wallet.address
                       }).delay()
@@ -50,7 +86,7 @@ def topup_if_required(address):
     wei_target_balance = wallet.wei_target_balance or 0
 
     if balance <= wei_topup_threshold and wei_target_balance > balance:
-        sig = signature(utils.eth_endpoint('send_eth'),
+        sig = signature(celery_utils.eth_endpoint('send_eth'),
                         kwargs={
                             'signing_address': config.MASTER_WALLET_ADDRESS,
                             'amount_wei': wei_target_balance - balance,
@@ -58,7 +94,7 @@ def topup_if_required(address):
                             'prior_tasks': []
                         })
 
-        task_uuid = utils.execute_task(sig)
+        task_uuid = celery_utils.queue_sig(sig)
 
         persistence_module.set_wallet_last_topup_task_uuid(address, task_uuid)
 
@@ -75,16 +111,16 @@ def deploy_exchange_network(deploying_address):
 
     def register_contract(task_uuid, name):
 
-        contract_to_be_registered_id = synchronous_call(
+        contract_to_be_registered_id = call_contract_function(
             contract_address=id_contract_address,
             contract_type='ContractIds',
             func=name
         )
 
-        task = await_blockchain_success_evil(task_uuid, timeout=timeout)
+        task = celery_utils.await_blockchain_success_evil(task_uuid, timeout=timeout)
         contract_address = task['contract_address']
 
-        return transaction_task(
+        return transact_with_function_task(
             signing_address=deploying_address,
             contract_address=registry_contract_address,
             contract_type='ContractRegistry',
@@ -129,7 +165,7 @@ def deploy_exchange_network(deploying_address):
 
     network_address = get_contract_address(network_deploy)
 
-    set_signer_task = transaction_task(
+    set_signer_task = transact_with_function_task(
         signing_address=deploying_address,
         contract_address=network_address,
         contract_type='BancorNetwork',
@@ -138,7 +174,7 @@ def deploy_exchange_network(deploying_address):
         gas_limit=8000000
     )
 
-    res = await_blockchain_success_evil(set_signer_task, timeout=timeout)
+    res = celery_utils.await_blockchain_success_evil(set_signer_task, timeout=timeout)
 
     return registry_contract_address
 
@@ -155,9 +191,9 @@ def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_w
 
     send_eth_task_id = send_eth_task(deploying_address, fund_amount_wei, reserve_token_address)
 
-    res = await_blockchain_success_evil(send_eth_task_id, timeout=timeout)
+    res = celery_utils.await_blockchain_success_evil(send_eth_task_id, timeout=timeout)
 
-    balance = synchronous_call(
+    balance = call_contract_function(
         contract_address=reserve_token_address,
         contract_type='WrappedDai',
         func='balanceOf',
@@ -194,7 +230,7 @@ def deploy_smart_token(
 
     with_log(
         'Issuing smart token bal',
-        transaction_task(
+        transact_with_function_task(
             signing_address=deploying_address,
             contract_address=smart_token_address,
             contract_type='SmartToken',
@@ -224,7 +260,7 @@ def deploy_smart_token(
 
     with_log(
         'Transfering reserve deposit',
-        transaction_task(
+        transact_with_function_task(
             signing_address=deploying_address,
             contract_address=reserve_token_address,
             contract_type='EtherToken',
@@ -235,7 +271,7 @@ def deploy_smart_token(
 
     with_log(
         'Approving converter for ethertoken',
-        transaction_task(
+        transact_with_function_task(
             signing_address=deploying_address,
             contract_address=reserve_token_address,
             contract_type='EtherToken',
@@ -246,7 +282,7 @@ def deploy_smart_token(
 
     with_log(
         'Approving converter for smart token',
-        transaction_task(
+        transact_with_function_task(
             signing_address=deploying_address,
             contract_address=smart_token_address,
             contract_type='SmartToken',
@@ -258,7 +294,7 @@ def deploy_smart_token(
 
     transfer_ownership_id = with_log(
         'Transfering ownership of smart token',
-        transaction_task(
+        transact_with_function_task(
             signing_address=deploying_address,
             contract_address=smart_token_address,
             contract_type='SmartToken',
@@ -269,7 +305,7 @@ def deploy_smart_token(
 
     with_log(
         'Accepting Ownership',
-        transaction_task(
+        transact_with_function_task(
             signing_address=deploying_address,
             contract_address=subexchange_address,
             contract_type='BancorConverter',
@@ -347,7 +383,7 @@ def deduplicate(min_task_id, max_task_id):
         print(f'Reversing task ({task_id}) {task.uuid} with {txns} duplicates')
 
         for tx in range(0, reversals_required):
-            new_task = transaction_task(
+            new_task = transact_with_function_task(
                 signing_address=task.signing_wallet.address,
                 contract_address=task.contract_address,
                 contract_type='ERC20',
