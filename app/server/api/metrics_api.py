@@ -16,7 +16,7 @@ class CreditTransferStatsApi(MethodView):
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
         filters = process_transfer_filters(encoded_filters)
-        transfer_stats = calculate_transfer_stats(total_time_series=True, start_date=start_date, end_date=end_date, user_filter=filters)
+        transfer_stats = calculate_transfer_stats(start_date=start_date, end_date=end_date, user_filter=filters)
 
         response_object = {
             'status': 'success',

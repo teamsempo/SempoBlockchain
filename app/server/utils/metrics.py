@@ -20,8 +20,8 @@ from sqlalchemy import case, or_
 import sqlalchemy
 import datetime, json
 
-def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
-                             user_filter={}):
+def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}):
+    # TODO: Add token filter here!
     date_filter = []
     filter_active = False
     if start_date is not None and end_date is not None:
@@ -133,7 +133,13 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         return transfer_use_breakdown.filter(*transfer_use_filters) \
             .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
                 .all()
-                
+
+    # Register metrics by how they're filterable.
+    # Metrics can be called individually, in bulk (if there's no filter), or in aggregate as defined here 
+    filterable_by_user = {}
+    filterable_by_transfer = {}
+
+
     total_distributed = calculate_total_distributed()
     total_spent = calculate_total_spent()
     total_exchanged = calculate_total_exchanged()
