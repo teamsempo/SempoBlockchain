@@ -19,6 +19,7 @@ import {
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 import {
+  WrapperDiv,
   ModuleBox,
   PageWrapper,
   CenterLoadingSideBarActive
@@ -199,16 +200,6 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(DashboardPage);
-
-const WrapperDiv = styled.div`
-  //width: 100vw;
-  //min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  position: relative;
-`;
 
 const Main = styled.div`
   display: flex;
