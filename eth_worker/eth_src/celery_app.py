@@ -36,7 +36,7 @@ from eth_manager.eth_transaction_processor import EthTransactionProcessor
 from eth_manager.transaction_supervisor import TransactionSupervisor
 from eth_manager.task_manager import TaskManager
 
-from celery_dispatchers import utils
+import celery_utils
 
 sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
 
@@ -52,7 +52,7 @@ app = Celery('tasks',
 
 app.conf.beat_schedule = {
     "maintain_eth_balances": {
-        "task": utils.eth_endpoint('topup_wallets'),
+        "task": celery_utils.eth_endpoint('topup_wallets'),
         "schedule": 600.0
     },
 }

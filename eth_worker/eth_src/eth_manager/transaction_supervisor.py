@@ -275,7 +275,7 @@ class TransactionSupervisor(object):
 class SigGenerators(object):
 
     def attempt_transaction(self, task_uuid):
-        return signature(eth_endpoint('_attempt_transaction'), kwargs={'task_uuid': task_uuid})
+        return signature(eth_endpoint('attempt_transaction'), kwargs={'task_uuid': task_uuid})
 
     def check_transaction_response(self):
         return signature(eth_endpoint('_check_transaction_response'))
