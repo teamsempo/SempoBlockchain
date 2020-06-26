@@ -160,6 +160,7 @@ def register_blueprints(app):
     from server.api.contract_api import contracts_blueprint
     from server.api.ge_migration_api import ge_migration_blueprint
     from server.api.blockchain_taskable_api import blockchain_taskable_blueprint
+    from server.api.metrics_api import metrics_blueprint
 
     versioned_url = '/api/v1'
 
@@ -192,6 +193,7 @@ def register_blueprints(app):
     app.register_blueprint(contracts_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ge_migration_blueprint, url_prefix=versioned_url)
     app.register_blueprint(blockchain_taskable_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(metrics_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)

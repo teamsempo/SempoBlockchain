@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
+import { LoadMetricAction } from "../../reducers/metric/actions";
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoginAction } from "../../reducers/auth/actions";
@@ -46,7 +47,9 @@ const mapDispatchToProps = dispatch => {
     loadCreditTransferFilters: () =>
       dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
     activateAccount: payload =>
-      dispatch(ActivateAccountAction.activateAccountRequest(payload))
+      dispatch(ActivateAccountAction.activateAccountRequest(payload)),
+    loadMetrics: (query, path) =>
+      dispatch(LoadMetricAction.loadMetricRequest({ query }))
   };
 };
 
@@ -70,11 +73,12 @@ class DashboardPage extends React.Component {
     let per_page = 50;
     let page = 1;
     this.props.loadCreditTransferList({
-      get_stats: true,
       transfer_type: transfer_type,
       per_page: per_page,
       page: page
     });
+
+    this.props.loadMetrics();
 
     const parsed = parseQuery(location.search);
 

@@ -71,7 +71,6 @@ export interface CreditTransfers {
 
 export interface LoadCreditTransferPayload {
   query: {
-    get_stats: boolean;
     transfer_type: string;
     per_page: number;
     page: number;

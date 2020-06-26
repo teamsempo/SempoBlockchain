@@ -18,9 +18,6 @@ from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
-from server.utils.metrics import calculate_transfer_stats
-
-from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
 
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
@@ -34,7 +31,6 @@ class CreditTransferAPI(MethodView):
     def get(self, credit_transfer_id):
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
-        get_transfer_stats = request.args.get('get_stats', False)
 
         transfer_list = None
 
@@ -101,11 +97,6 @@ class CreditTransferAPI(MethodView):
 
             transfers, total_items, total_pages = paginate_query(query, CreditTransfer)
 
-            if get_transfer_stats:
-                transfer_stats = calculate_transfer_stats(total_time_series=True)
-            else:
-                transfer_stats = None
-
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump(transfers).data
             elif AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'view'):
@@ -118,7 +109,6 @@ class CreditTransferAPI(MethodView):
                 'pages': total_pages,
                 'data': {
                     'credit_transfers': transfer_list,
-                    'transfer_stats': transfer_stats
                 }
             }
 
@@ -472,41 +462,6 @@ class InternalCreditTransferAPI(MethodView):
         }
         return make_response(jsonify(response_object)), 201
 
-
-class CreditTransferStatsApi(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'any'})
-    def get(self):
-
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        encoded_filters = request.args.get('params')
-        filters = process_transfer_filters(encoded_filters)
-        transfer_stats = calculate_transfer_stats(total_time_series=True, start_date=start_date, end_date=end_date, user_filter=filters)
-
-        response_object = {
-            'status': 'success',
-            'message': 'Successfully Loaded.',
-            'data': {
-                'transfer_stats': transfer_stats
-            }
-        }
-
-        return make_response(jsonify(response_object)), 200
-
-
-class CreditTransferFiltersApi(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'any'})
-    def get(self):
-        response_object = {
-            'status' : 'success',
-            'message': 'Successfully Loaded.',
-            'data': {
-                'filters': json.dumps(TRANSFER_FILTERS)
-            }
-        }
-        return make_response(jsonify(response_object)), 200
-
-
 # add Rules for API Endpoints
 credit_transfer_blueprint.add_url_rule(
     '/credit_transfer/',
@@ -525,16 +480,4 @@ credit_transfer_blueprint.add_url_rule(
     '/credit_transfer/internal/',
     view_func=InternalCreditTransferAPI.as_view('internal_credit_transfer_view'),
     methods=['POST']
-)
-
-credit_transfer_blueprint.add_url_rule(
-    '/credit_transfer/stats/',
-    view_func=CreditTransferStatsApi.as_view('credit_transfer_stats_view'),
-    methods=['GET']
-)
-
-credit_transfer_blueprint.add_url_rule(
-    '/credit_transfer/filters/',
-    view_func=CreditTransferFiltersApi.as_view('credit_transfer_filters_view'),
-    methods=['GET']
 )
