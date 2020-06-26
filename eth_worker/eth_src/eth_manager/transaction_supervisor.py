@@ -1,5 +1,6 @@
 import datetime
 
+import celery_utils
 from celery import chain, signature
 from celery_utils import eth_endpoint
 
@@ -233,7 +234,7 @@ class TransactionSupervisor(object):
             )
 
     def queue_attempt_transaction(self, task_uuid, countdown=0):
-        return queue_sig(self.sigs.attempt_transaction(task_uuid), countdown)
+        return celery_utils.queue_sig(self.sigs.attempt_transaction(task_uuid), countdown)
 
     def queue_send_eth(
             self,
@@ -256,7 +257,7 @@ class TransactionSupervisor(object):
                             'posterior_tasks': posterior_tasks
                         })
 
-        return queue_sig(sig)
+        return celery_utils.queue_sig(sig)
 
     def __init__(
             self,

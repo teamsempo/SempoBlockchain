@@ -229,7 +229,7 @@ class SQLPersistenceInterface(object):
                              uuid: UUID,
                              signing_wallet_obj,
                              contract_address, abi_type,
-                             function, args=None, kwargs=None,
+                             function_name, args=None, kwargs=None,
                              gas_limit=None,
                              prior_tasks=None, posterior_tasks=None,
                              reverses_task=None):
@@ -240,7 +240,7 @@ class SQLPersistenceInterface(object):
                               type='FUNCTION',
                               contract_address=contract_address,
                               abi_type=abi_type,
-                              function=function,
+                              function=function_name,
                               args=args,
                               kwargs=kwargs,
                               gas_limit=gas_limit,
