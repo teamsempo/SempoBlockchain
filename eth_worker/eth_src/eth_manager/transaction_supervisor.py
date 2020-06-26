@@ -1,7 +1,7 @@
 import datetime
 
 from celery import chain, signature
-from celery_utils import eth_endpoint, queue_sig
+from celery_utils import eth_endpoint
 
 import config
 

@@ -22,8 +22,8 @@ def execute_synchronous_celery(signature):
     return response
 
 
-def queue_sig(signature, countdown=0):
-    ar = signature.apply_async(
+def queue_sig(sig, countdown=0):
+    ar = sig.apply_async(
         countdown=countdown
     )
 

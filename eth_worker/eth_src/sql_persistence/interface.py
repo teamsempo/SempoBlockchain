@@ -184,7 +184,7 @@ class SQLPersistenceInterface(object):
     def create_send_eth_task(self,
                              uuid: UUID,
                              signing_wallet_obj,
-                             recipient_address, amount,
+                             recipient_address, amount_wei,
                              prior_tasks=None,
                              posterior_tasks=None):
 
@@ -193,7 +193,7 @@ class SQLPersistenceInterface(object):
                               type='SEND_ETH',
                               is_send_eth=True,
                               recipient_address=recipient_address,
-                              amount=amount,
+                              amount=amount_wei,
                               prior_tasks=prior_tasks,
                               posterior_tasks=posterior_tasks)
 

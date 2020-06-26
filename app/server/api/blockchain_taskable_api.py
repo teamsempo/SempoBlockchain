@@ -28,7 +28,9 @@ class WorkerCallbackAPI(MethodView):
         blockchain_tasks.extend(Exchange.query.execution_options(show_all=True).filter_by(blockchain_task_uuid = blockchain_task_uuid).all())
 
         if len(blockchain_tasks) == 0:
-            return ('Credit transfer with ID {blockchain_task_uuid} not found', 404)
+            return make_response(jsonify({
+                'message': f'Blockchain Task with ID {blockchain_task_uuid} not found'
+            })), 404
 
         for task in blockchain_tasks:
             # We're not guaranteed the worker's messages will arrive in order, so make sure we 

@@ -1,14 +1,15 @@
 from typing import Optional
 from celery import signature
 
-from celery_utils import queue_sig, eth_endpoint
+import celery_utils
+from celery_utils import eth_endpoint
 from sempo_types import UUID, UUIDList
 
 from eth_manager.transaction_supervisor import TransactionSupervisor
 
 class TaskManager(object):
     """
-    Creates tasks, which represent an action that must be completed on the blockchain.
+    A factory for creating tasks, which represent an action that must be completed on the blockchain.
     These are then picked up by the TransactionSupervisor which will in turn instruct
     the EthTransactionProcessor on making transaction attempts.
     """
@@ -21,6 +22,7 @@ class TaskManager(object):
             signing_address: Optional[str] = None, encrypted_private_key: Optional[str] = None,
             gas_limit: Optional[int] = None,
             prior_tasks: Optional[UUIDList] = None,
+            posterior_tasks: Optional[UUIDList] = None,
             reserves_task: Optional[UUID] = None
     ):
         """
@@ -35,23 +37,29 @@ class TaskManager(object):
         :param encrypted_private_key: private key of the wallet making the transaction, encrypted using key from settings
         :param gas_limit: limit on the amount of gas txn can use. Overrides system default
         :param prior_tasks: a list of task uuids that must succeed before this task will be attempted,
-        :param reserves_task: the uuid of a task that this task reverses. can only be a transferFrom
+        :param posterior_tasks: a uuid list of tasks for which this task must succeed before they will be attempted
+        :param reserves_task: DEPRECATED - reverses an old task
         :return: task_id
         """
 
-        signing_wallet_obj = self.persistence.get_signing_wallet_object(
+        create_kwargs = {
+            'uuid': uuid,
+            'contract_address': contract_address,
+            'abi_type': abi_type,
+            'function_name': function_name,
+            'args': args,
+            'kwargs': kwargs,
+            'gas_limit': gas_limit,
+            'prior_tasks': prior_tasks,
+            'posterior_tasks': posterior_tasks,
+        }
+
+        return self._create_task(
             signing_address,
-            encrypted_private_key
+            encrypted_private_key,
+            self.persistence.create_function_task,
+            create_kwargs
         )
-
-        task = self.persistence.create_function_task(uuid,
-                                                     signing_wallet_obj,
-                                                     contract_address, abi_type,
-                                                     function_name, args, kwargs,
-                                                     gas_limit, prior_tasks, reserves_task)
-
-        # Attempt Create Async Transaction
-        self._queue_attempt_transaction(task.uuid)
 
     def send_eth(self,
                  uuid: UUID,
@@ -73,19 +81,20 @@ class TaskManager(object):
         :return: task_id
         """
 
-        signing_wallet_obj = self.persistence.get_signing_wallet_object(
+        create_kwargs = {
+            'uuid': uuid,
+            'recipient_address': recipient_address,
+            'amount_wei': amount_wei,
+            'prior_tasks': prior_tasks,
+            'posterior_tasks': posterior_tasks,
+        }
+
+        return self._create_task(
             signing_address,
-            encrypted_private_key
+            encrypted_private_key,
+            self.persistence.create_send_eth_task,
+            create_kwargs
         )
-
-        task = self.persistence.create_send_eth_task(uuid,
-                                                     signing_wallet_obj,
-                                                     recipient_address, amount_wei,
-                                                     prior_tasks,
-                                                     posterior_tasks)
-
-        # Attempt Create Async Transaction
-        self._queue_attempt_transaction(task.uuid)
 
     def deploy_contract(
             self,
@@ -109,20 +118,44 @@ class TaskManager(object):
         :param prior_tasks: a list of task uuid that must succeed before this task will be attempted
         """
 
+        create_kwargs = {
+            'uuid': uuid,
+            'contract_name': contract_name,
+            'args': args,
+            'kwargs': kwargs,
+            'gas_limit': gas_limit,
+            'prior_tasks': prior_tasks
+        }
+
+        return self._create_task(
+            signing_address,
+            encrypted_private_key,
+            self.persistence.create_deploy_contract_task,
+            create_kwargs
+        )
+
+    def _create_task(self, signing_address, encrypted_private_key, create_method, create_kwargs):
+
+        uuid = create_kwargs['uuid']
+
+        existing_task = self.persistence.get_task_from_uuid(uuid)
+
+        if existing_task:
+            return existing_task.id
+
         signing_wallet_obj = self.persistence.get_signing_wallet_object(
             signing_address,
             encrypted_private_key
         )
 
-        task = self.persistence.create_deploy_contract_task(uuid,
-                                                            signing_wallet_obj,
-                                                            contract_name,
-                                                            args, kwargs,
-                                                            gas_limit,
-                                                            prior_tasks)
+        create_kwargs['signing_wallet_obj'] = signing_wallet_obj
 
-        # Attempt Create Async Transaction
+        task = create_method(**create_kwargs)
+
         self._queue_attempt_transaction(task.uuid)
+
+        return task.id
+
 
     def retry_task(self, task_uuid: UUID):
         self.persistence.increment_task_invocations(task_uuid)
@@ -157,7 +190,7 @@ class TaskManager(object):
         }
 
     def _queue_attempt_transaction(self, task_uuid):
-        queue_sig(
+        celery_utils.queue_sig(
             self.transaction_supervisor.sigs.attempt_transaction(task_uuid)
         )
 

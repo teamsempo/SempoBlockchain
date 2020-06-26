@@ -329,7 +329,7 @@ def receive_after_update(mapper, connection, target):
                 auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                                    config.INTERNAL_AUTH_PASSWORD)
             )
-        except:
+        except Exception:
             r = None
 
         if r and r.ok:
@@ -342,7 +342,11 @@ def receive_after_update(mapper, connection, target):
         else:
             # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
             # where is_synchronized_with_app=False
-            config.logg.warning(f"Could not reach 'APP_HOST' URL: {callback_url}. Please check your config.ini'")
+
+            if r is not None and r.json().get('message') is not None:
+                config.logg.warning(f"App side sync error: {r.json().get('message')}")
+            else:
+                config.logg.warning(f"Could not reach 'APP_HOST' URL: {callback_url}. Please check your config.ini'")
             obj_table = BlockchainTransaction.__table__
             connection.execute(
                 obj_table.update().

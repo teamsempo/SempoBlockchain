@@ -17,6 +17,8 @@ from web3 import Web3
 
 import config
 from eth_src.eth_manager.eth_transaction_processor import EthTransactionProcessor
+from eth_src.eth_manager.transaction_supervisor import TransactionSupervisor
+from eth_src.eth_manager.task_manager import TaskManager
 from eth_src.sql_persistence import engine, session_factory
 from eth_src.sql_persistence.interface import SQLPersistenceInterface
 from eth_src.sql_persistence.models import Base
@@ -26,7 +28,7 @@ from utils import str_uuid
 
 @pytest.fixture(autouse=True)
 def mock_queue_sig(monkeypatch):
-    def mock_response(sig, countdown):
+    def mock_response(sig, countdown=0):
         return str_uuid()
 
     import celery_utils
@@ -109,7 +111,21 @@ def processor(persistence_module, mock_w3):
     return p
 
 
+@pytest.fixture(scope='function')
+def supervisor(persistence_module, processor):
 
+    red = MockRedis()
+
+    return TransactionSupervisor(red, persistence_module, processor)
+
+
+@pytest.fixture(scope='function')
+def manager(persistence_module, supervisor):
+
+    return TaskManager(
+        persistence_module,
+        supervisor
+    )
 
 @pytest.fixture(scope='function')
 def dummy_wallet(db_session):
