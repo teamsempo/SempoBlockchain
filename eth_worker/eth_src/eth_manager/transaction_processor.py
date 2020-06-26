@@ -8,10 +8,6 @@ import config
 from exceptions import PreBlockchainError
 from eth_manager.contract_registry.contract_registry import ContractRegistry
 
-RETRY_TRANSACTION_BASE_TIME = 2
-ETH_CHECK_TRANSACTION_BASE_TIME = 2
-ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
-
 
 class TransactionProcessor(object):
     """
@@ -144,17 +140,6 @@ class TransactionProcessor(object):
 
         return transaction_id
 
-        # except Exception as e:
-        #
-        #     # Attempt a new transaction if there's any error, but still raise
-        #     transaction_object = self.persistence_interface.get_transaction(transaction_id)
-        #     try:
-        #         self.new_transaction_attempt(transaction_object.task)
-        #     except TaskRetriesExceededError:
-        #         pass
-        #
-        #     raise e
-
     def _calculate_nonce(self, signing_wallet_obj, transaction_id):
         network_nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
 
@@ -223,7 +208,7 @@ class TransactionProcessor(object):
 
         except ValueError as e:
             message = f'Transaction {transaction_id}: {str(e)}'
-            raise PreBlockchainError(message, False)
+            raise PreBlockchainError(message)
 
     def _get_gas_price(self, target_transaction_time=None):
 

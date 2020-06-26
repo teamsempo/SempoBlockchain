@@ -7,9 +7,10 @@ from alembic import context
 
 import os, sys
 
-parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
-sys.path.append(parent_dir)
-sys.path.append(os.getcwd())
+source_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../eth_src"))
+sys.path.append(source_path)
+grandparent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(grandparent_dir)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -26,7 +27,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from eth_src.sql_persistence import models
+from sql_persistence import models
 target_metadata = models.Base.metadata
 
 # other values from the config, defined by the needs of env.py,

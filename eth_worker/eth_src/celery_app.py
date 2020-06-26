@@ -16,9 +16,10 @@ from web3.exceptions import BadFunctionCallOutput
 import os
 import sys
 
-parent_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
-sys.path.append(os.getcwd())
+grandparent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(grandparent_dir)
 
 import config
 from sql_persistence import session
@@ -32,7 +33,9 @@ from eth_manager.contract_registry.ABIs import (
 )
 
 from eth_manager.transaction_processor import TransactionProcessor
+from eth_manager.transaction_supervisor import TransactionSupervisor
 from eth_manager.task_manager import TaskManager
+
 from celery_dispatchers import utils
 
 sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
@@ -64,10 +67,15 @@ persistence_module = SQLPersistenceInterface(
     red=red, session=session, first_block_hash=first_block_hash
 )
 
-blockchain_processor = TransactionProcessor(
+processor = TransactionProcessor(
     ethereum_chain_id=config.ETH_CHAIN_ID,
     gas_price_wei=w3.toWei(config.ETH_GAS_PRICE, 'gwei'),
     gas_limit=config.ETH_GAS_LIMIT,
+    w3=w3,
+    persistence_module=persistence_module
+)
+
+supervisor = TransactionSupervisor(
     w3=w3,
     red=red,
     persistence_module=persistence_module
@@ -75,7 +83,6 @@ blockchain_processor = TransactionProcessor(
 
 task_manager = TaskManager(persistence_module=persistence_module)
 
-import celery_tasks
 
 if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
     persistence_module.create_blockchain_wallet_from_private_key(
@@ -83,28 +90,8 @@ if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
         allow_existing=True
     )
 
+processor.registry.register_abi('ERC20', erc20_abi.abi)
+processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
+processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
 
-def register_tokens_from_app(host_address, auth_username, auth_password):
-    token_req = requests.get(host_address + '/api/token', auth=HTTPBasicAuth(auth_username, auth_password))
-
-    if token_req.status_code == 200:
-
-        for token in token_req.json()['data']['tokens']:
-            try:
-                blockchain_processor.registry.register_contract(token['address'], dai_abi.abi)
-            except BadFunctionCallOutput as e:
-                # It's probably a contract on a different chain
-                if not config.IS_PRODUCTION:
-                    pass
-                else:
-                    raise e
-
-        return True
-
-    else:
-        return False
-
-
-blockchain_processor.registry.register_abi('ERC20', erc20_abi.abi)
-blockchain_processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
-blockchain_processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
+import celery_tasks

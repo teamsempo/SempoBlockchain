@@ -5,10 +5,12 @@ from celery import chain
 import config
 from celery_dispatchers.regular import queue_attempt_transaction, sig_process_send_eth_transaction, \
     sig_process_function_transaction, sig_process_deploy_contract_transaction, sig_check_transaction_response, \
-    sig_log_error, queue_send_eth
-from eth_manager.transaction_processor import ETH_CHECK_TRANSACTION_BASE_TIME, RETRY_TRANSACTION_BASE_TIME
+    sig_handle_error, queue_send_eth
 from exceptions import TaskRetriesExceededError
 
+RETRY_TRANSACTION_BASE_TIME = 2
+ETH_CHECK_TRANSACTION_BASE_TIME = 2
+ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = 4
 
 class TransactionSupervisor(object):
     """
@@ -34,7 +36,7 @@ class TransactionSupervisor(object):
             return t(celery_task.request.retries)
 
         try:
-            transaction_object = self.persistence_interface.get_transaction(transaction_id)
+            transaction_object = self.persistence_module.get_transaction(transaction_id)
 
             task = transaction_object.task
 
@@ -42,7 +44,7 @@ class TransactionSupervisor(object):
 
             result = self.check_transaction_hash(transaction_hash)
 
-            self.persistence_interface.update_transaction_data(transaction_id, result)
+            self.persistence_module.update_transaction_data(transaction_id, result)
 
             status = result.get('status')
 
@@ -50,13 +52,13 @@ class TransactionSupervisor(object):
             f'\n {status}')
             if status == 'SUCCESS':
 
-                unstarted_posteriors = self.persistence_interface.get_unstarted_posteriors(task.uuid)
+                unstarted_posteriors = self.persistence_module.get_unstarted_posteriors(task.uuid)
 
                 for dep_task in unstarted_posteriors:
                     print('Starting posterior task: {}'.format(dep_task.uuid))
                     queue_attempt_transaction(dep_task.uuid)
 
-                self.persistence_interface.set_task_status_text(task, 'SUCCESS')
+                self.persistence_module.set_task_status_text(task, 'SUCCESS')
 
             if status == 'PENDING':
                 celery_task.request.retries = 0
@@ -105,9 +107,9 @@ class TransactionSupervisor(object):
 
     def attempt_transaction(self, task_uuid):
 
-        task = self.persistence_interface.get_task_from_uuid(task_uuid)
+        task = self.persistence_module.get_task_from_uuid(task_uuid)
 
-        unsatisfied_prior_tasks = self.persistence_interface.get_unsatisfied_prior_tasks(task_uuid)
+        unsatisfied_prior_tasks = self.persistence_module.get_unsatisfied_prior_tasks(task_uuid)
         if len(unsatisfied_prior_tasks) > 0:
             print('Skipping {}: prior tasks {} unsatisfied'.format(
                 task.id,
@@ -141,7 +143,7 @@ class TransactionSupervisor(object):
                 if current_status in ['SUCCESS', 'PENDING']:
                     print(f'Skipping {task.id}: task status is currently {current_status}')
                     return None
-                return self.persistence_interface.create_blockchain_transaction(task.uuid)
+                return self.persistence_module.create_blockchain_transaction(task.uuid)
             else:
                 print(f'Skipping {task.id}: Failed to aquire lock')
                 return None
@@ -197,7 +199,7 @@ class TransactionSupervisor(object):
 
         check_response_sig = sig_check_transaction_response()
 
-        error_callback_sig = sig_log_error(transaction_id)
+        error_callback_sig = sig_handle_error(transaction_id)
 
         return chain([txn_sig, check_response_sig]).on_error(error_callback_sig)
 
@@ -216,11 +218,22 @@ class TransactionSupervisor(object):
                 posterior_tasks=[posterior_task_uuid]
             )
 
-            self.persistence_interface.set_wallet_last_topup_task_uuid(wallet.address, task_uuid)
+            self.persistence_module.set_wallet_last_topup_task_uuid(wallet.address, task_uuid)
 
             return task_uuid
 
         return None
+
+    def handle_error(self, request, exc, traceback, transaction_id):
+        self.log_error(request, exc, traceback, transaction_id)
+
+        transaction = self.persistence_module.get_transaction(transaction_id)
+        task = transaction.task
+
+        try:
+            self.new_transaction_attempt(task)
+        except:
+            pass
 
     def log_error(self, request, exc, traceback, transaction_id):
         data = {
@@ -229,11 +242,7 @@ class TransactionSupervisor(object):
             'status': 'FAILED'
         }
 
-        if not getattr(exc, 'is_logged', False):
-            print("LOGGING")
-            self.persistence_interface.update_transaction_data(transaction_id, data)
-        else:
-            print("NOT LOGGING")
+        self.persistence_module.update_transaction_data(transaction_id, data)
 
     def new_transaction_attempt(self, task):
         number_of_attempts_this_round = abs(
@@ -243,7 +252,7 @@ class TransactionSupervisor(object):
             print(f"Maximum retries exceeded for task {task.uuid}")
 
             if task.status_text != 'SUCCESS':
-                self.persistence_interface.set_task_status_text(task, 'FAILED')
+                self.persistence_module.set_task_status_text(task, 'FAILED')
 
             raise TaskRetriesExceededError
 
@@ -254,7 +263,7 @@ class TransactionSupervisor(object):
             )
 
     def get_serialised_task_from_uuid(self, uuid):
-        return self.persistence_interface.get_serialised_task_from_uuid(uuid)
+        return self.persistence_module.get_serialised_task_from_uuid(uuid)
 
     def __init__(self,
                  w3,
@@ -264,5 +273,5 @@ class TransactionSupervisor(object):
 
             self.w3 = w3
             self.red = red
-            self.persistence_interface = persistence_module
+            self.persistence_module = persistence_module
             self.task_max_retries = task_max_retries

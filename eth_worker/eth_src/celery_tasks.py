@@ -4,7 +4,7 @@ import traceback
 from celery import signals
 
 import config
-from celery_app import app, blockchain_processor, task_manager, persistence_module
+from celery_app import app, processor, supervisor, task_manager, persistence_module
 from exceptions import (
     LockedNotAcquired
 )
@@ -127,7 +127,7 @@ def topup_wallet_if_required(self, address):
 
 @app.task(**base_task_config)
 def register_contract(self, contract_address, abi, contract_name=None, require_name_matches=False):
-    return blockchain_processor.registry.register_contract(
+    return processor.registry.register_contract(
         contract_address, abi, contract_name, require_name_matches
     )
 
@@ -135,8 +135,8 @@ def register_contract(self, contract_address, abi, contract_name=None, require_n
 @app.task(**base_task_config)
 def call_contract_function(self, contract_address, function, abi_type=None, args=None, kwargs=None,
                            signing_address=None):
-    return blockchain_processor.call_contract_function(contract_address, abi_type, function, args, kwargs,
-                                                       signing_address)
+    return processor.call_contract_function(contract_address, abi_type, function, args, kwargs,
+                                            signing_address)
 
 
 @app.task(**base_task_config)
@@ -174,53 +174,48 @@ def send_eth(self, amount_wei, recipient_address,
 
 @app.task(**no_retry_config)
 def retry_task(self, task_uuid):
-    return task_manager.retry_task(task_uuid)
+    return supervisor.retry_task(task_uuid)
 
 
 @app.task(**no_retry_config)
 def retry_failed(self, min_task_id=None, max_task_id=None, retry_unstarted=False):
-    return task_manager.retry_failed(min_task_id, max_task_id, retry_unstarted)
-
-
-@app.task(**no_retry_config)
-def deduplicate(self, min_task_id, max_task_id):
-    return composite.deduplicate(min_task_id, max_task_id)
+    return supervisor.retry_failed(min_task_id, max_task_id, retry_unstarted)
 
 
 @app.task(**base_task_config)
 def get_task(self, task_uuid):
-    return blockchain_processor.get_serialised_task_from_uuid(task_uuid)
+    return supervisor.get_serialised_task_from_uuid(task_uuid)
+
+
+@app.task(base=SqlAlchemyTask)
+def _handle_error(request, exc, traceback, transaction_id):
+    return supervisor.handle_error(request, exc, traceback, transaction_id)
+
+
+@app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
+def _check_transaction_response(self, transaction_id):
+    return supervisor.check_transaction_response(self, transaction_id)
 
 
 @app.task(**base_task_config)
 def _attempt_transaction(self, task_uuid):
-    return blockchain_processor.attempt_transaction(task_uuid)
+    return supervisor.attempt_transaction(task_uuid)
 
 
 @app.task(**processor_task_config)
 def _process_send_eth_transaction(self, transaction_id, recipient_address, amount, task_id=None):
-    return blockchain_processor.process_send_eth_transaction(transaction_id, recipient_address, amount, task_id)
+    return processor.process_send_eth_transaction(transaction_id, recipient_address, amount, task_id)
 
 
 @app.task(**processor_task_config)
 def _process_function_transaction(self, transaction_id, contract_address, abi_type,
                                   function, args=None, kwargs=None,  gas_limit=None, task_id=None):
-    return blockchain_processor.process_function_transaction(transaction_id, contract_address, abi_type,
-                                                             function, args, kwargs, gas_limit, task_id)
+    return processor.process_function_transaction(transaction_id, contract_address, abi_type,
+                                                  function, args, kwargs, gas_limit, task_id)
 
 
 @app.task(**processor_task_config)
 def _process_deploy_contract_transaction(self, transaction_id, contract_name,
                                          args=None, kwargs=None,  gas_limit=None, task_id=None):
-    return blockchain_processor.process_deploy_contract_transaction(transaction_id, contract_name,
-                                                                    args, kwargs, gas_limit, task_id)
-
-
-@app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
-def _check_transaction_response(self, transaction_id):
-    return blockchain_processor.check_transaction_response(self, transaction_id)
-
-
-@app.task(base=SqlAlchemyTask)
-def _log_error(request, exc, traceback, transaction_id):
-    return blockchain_processor.log_error(request, exc, traceback, transaction_id)
+    return processor.process_deploy_contract_transaction(transaction_id, contract_name,
+                                                         args, kwargs, gas_limit, task_id)

@@ -215,5 +215,5 @@ def sig_check_transaction_response():
     return signature(utils.eth_endpoint('_check_transaction_response'))
 
 
-def sig_log_error(transaction_id):
-    return signature(utils.eth_endpoint('_log_error'), args=(transaction_id,))
+def sig_handle_error(transaction_id):
+    return signature(utils.eth_endpoint('_handle_error'), args=(transaction_id,))

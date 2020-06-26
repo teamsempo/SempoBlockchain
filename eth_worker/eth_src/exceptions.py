@@ -1,10 +1,8 @@
 
 class PreBlockchainError(Exception):
     """Error before transaction sent to blockchain"""
-    def __init__(self, message, is_logged):
+    def __init__(self, message):
         super().__init__(message)
-
-        self.is_logged = is_logged
 
 class WrongContractNameError(Exception):
     """Unexpected contract name"""
