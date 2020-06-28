@@ -1,21 +1,16 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import { ThemeProvider } from "styled-components";
 
 import { browserHistory } from "../../createStore.js";
-import {
-  PageWrapper,
-  WrapperDiv,
-  ModuleBox,
-  StyledButton
-} from "../styledElements.js";
+import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
 import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
-import UploadButton from "../uploader/uploadButton.jsx";
 
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
+import NoDataMessage from "../NoDataMessage";
 
 const mapStateToProps = state => {
   return {
@@ -78,24 +73,13 @@ class TransferAccountListPage extends React.Component {
 
     let isNoData = Object.keys(transferAccountList).length === 0;
 
-    let uploadButtonText = (
-      <NoDataMessageWrapper>
-        <IconSVG src="/static/media/no_data_icon.svg" />
-        <p>There is no data available. Please upload a spreadsheet.</p>
-      </NoDataMessageWrapper>
-    );
-
     if (
       isNoData &&
       this.props.transferAccounts.loadStatus.isRequesting !== true
     ) {
       return (
         <PageWrapper>
-          <ModuleBox>
-            <NoDataMessageWrapper>
-              <UploadButton uploadButtonText={uploadButtonText} />
-            </NoDataMessageWrapper>
-          </ModuleBox>
+          <NoDataMessage />
 
           <p style={{ textAlign: "center" }}>or</p>
 
@@ -132,17 +116,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(organizationWrapper(TransferAccountListPage));
-
-const IconSVG = styled.img`
-  width: 35px;
-  padding: 1em 0 0.5em;
-  display: flex;
-`;
-
-const NoDataMessageWrapper = styled.div`
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-`;

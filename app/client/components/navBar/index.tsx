@@ -127,6 +127,9 @@ class NavBar extends React.Component<Props, State> {
                     <StyledLink to="/" exact onClick={this.closeMobileMenu}>
                       Dashboard
                     </StyledLink>
+                    <StyledLink to="/map" exact onClick={this.closeMobileMenu}>
+                      Map
+                    </StyledLink>
                     <StyledLink to="/accounts" onClick={this.closeMobileMenu}>
                       Accounts
                     </StyledLink>
