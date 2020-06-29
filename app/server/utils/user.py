@@ -434,6 +434,9 @@ def proccess_create_or_modify_user_request(
         except Exception:
             pass
 
+    active_org = g.get('active_organisation', False)
+    if not active_org:
+        g.active_organisation = Organisation.master_organisation()
     require_transfer_card_exists = attribute_dict.get(
         'require_transfer_card_exists', g.active_organisation.require_transfer_card)
 
