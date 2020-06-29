@@ -36,3 +36,8 @@ services:
   pgbouncer:
     environment:
       DEPLOYMENT_NAME: "LOCAL_DOCKER"
+  metabase:
+    image: metabase/metabase:latest
+    restart: always
+    ports:
+      - "3000:3000"
