@@ -1,7 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify
-import json
 
-from server.utils.metrics import calculate_transfer_stats
+from server.utils.metrics.metrics import calculate_transfer_stats
 from flask.views import MethodView
 from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
 from server.utils.auth import requires_auth
