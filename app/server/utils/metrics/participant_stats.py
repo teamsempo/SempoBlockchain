@@ -1,17 +1,33 @@
-def calculate_total_beneficiaries(disable_cache=disable_cache):
-    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
-    return metrics_cache.execute_with_partial_history_cache('total_beneficiaries', total_beneficiaries, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
+from server.models.credit_transfer import CreditTransfer
+from server.models.transfer_account import TransferAccount
+from server.models.user import User
 
-def calculate_total_vendors(disable_cache=disable_cache):
-    total_vendors = db.session.query(User).filter(*vendor_filters)
-    return metrics_cache.execute_with_partial_history_cache('total_vendors', total_vendors, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
+from sqlalchemy.sql import func
+from server.utils.metrics import filters, metrics_cache, metric
+from server import db, red, bt
+from sqlalchemy.dialects.postgresql import JSONB
 
-def calculate_total_users():
-    return calculate_total_beneficiaries() + calculate_total_vendors()
 
-def calculate_has_transferred_count():
-    return db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id))
-        .label('transfer_count'))\
-        .filter(*standard_payment_filters) \
-        .filter(*date_filter) \
-            .first().transfer_count
+total_beneficiaries_query = db.session.query(User)
+total_beneficiaries = metric.Metric(
+    metric_name='total_beneficiaries', 
+    query=total_beneficiaries_query, 
+    object_model=User, 
+    stock_filters=[filters.beneficiary_filters], 
+    caching_combinatory_strategy=metrics_cache.COUNT)
+
+total_vendors_query = db.session.query(User)
+total_vendors = metric.Metric(
+    metric_name='total_vendors', 
+    query=total_vendors_query, 
+    object_model=User, 
+    stock_filters=[filters.vendor_filters], 
+    caching_combinatory_strategy=metrics_cache.COUNT)
+
+has_transferred_count_query = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id)).label('count'))
+has_transferred_count = metric.Metric(
+    metric_name='has_transferred_count', 
+    query=has_transferred_count_query, 
+    object_model=CreditTransfer, 
+    stock_filters=[filters.standard_payment_filters], 
+    caching_combinatory_strategy=metrics_cache.FIRST_COUNT)

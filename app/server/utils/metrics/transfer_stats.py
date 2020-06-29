@@ -65,13 +65,3 @@ transfer_use_breakdown = metric.Metric(
     object_model=CreditTransfer, 
     stock_filters=[filters.transfer_use_filters], 
     caching_combinatory_strategy=metrics_cache.QUERY_ALL)
-
-
-
-#
-#def calculate_transfer_use_breakdown():
-#    transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
-#    transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
-#    return transfer_use_breakdown.filter(*transfer_use_filters) \
-#        .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
-#            .all()

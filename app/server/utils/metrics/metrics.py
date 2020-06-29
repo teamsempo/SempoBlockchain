@@ -27,35 +27,31 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}):
 
     # Disable cache if any filters are being used
     from server.utils.metrics import transfer_stats
+    from server.utils.metrics import participant_stats
 
-    date_filter = []
+    date_filters = []
 
     disable_cache = False
-    if user_filter or date_filter:
+    if user_filter or date_filters:
         disable_cache = True
 
     filter_active = False
     if start_date is not None and end_date is not None:
-        date_filter.append(CreditTransfer.created >= start_date)
-        date_filter.append(CreditTransfer.created <= end_date)
+        date_filters.append(CreditTransfer.created >= start_date)
+        date_filters.append(CreditTransfer.created <= end_date)
         filter_active = True
 
-    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_distributed = filters.apply_filters(total_distributed, user_filter, CreditTransfer)
-    total_distributed = total_distributed.filter(*filters.disbursement_filters).filter(*date_filter)
-    
-    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-    total_distributed = metric.Metric(metric_name='total_distributed', query=total_distributed, object_model=CreditTransfer, stock_filters=[filters.disbursement_filters], caching_combinatory_strategy=metrics_cache.SUM)
     data = None
 
     print(transfer_stats.total_distributed.execute_query())
     print(transfer_stats.total_spent.execute_query())
     print(transfer_stats.total_exchanged.execute_query())
     print(transfer_stats.daily_transaction_volume.execute_query())
-    print(transfer_stats.total_exchanged.execute_query())
     print(transfer_stats.daily_disbursement_volume.execute_query())
     print(transfer_stats.transfer_use_breakdown.execute_query())
-
+    print(participant_stats.total_vendors.execute_query())
+    print(participant_stats.total_beneficiaries.execute_query())
+    print(participant_stats.has_transferred_count.execute_query())
     # Register metrics by how they're filterable.
     # Metrics can be called individually, in bulk (if there's no filter), or in aggregate as defined here 
 #    transfer_stats = {
