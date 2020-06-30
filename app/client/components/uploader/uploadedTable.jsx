@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import ReactTable from "react-table";
 
-import { StyledButton, Input, ErrorMessage } from "../styledElements";
+import { StyledButton, Input } from "../styledElements";
 
 import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 
@@ -15,7 +15,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    saveDataset: body => dispatch(SpreadsheetAction.saveDataset({ body })),
+    saveDataset: body =>
+      dispatch(SpreadsheetAction.saveDatasetRequest({ body })),
     resetUploadState: () => dispatch(SpreadsheetAction.resetUploadState())
   };
 };

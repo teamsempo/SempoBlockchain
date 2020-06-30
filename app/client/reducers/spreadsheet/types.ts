@@ -13,3 +13,42 @@ export enum SpreadsheetActionTypes {
   LOAD_DATASET_LIST_SUCCESS = "LOAD_DATASET_LIST_SUCCESS",
   LOAD_DATASET_LIST_FAILURE = "LOAD_DATASET_LIST_FAILURE"
 }
+
+export interface SaveDatasetSuccessPayload {
+  diagnostics: object;
+  message: string;
+  status?: string;
+}
+
+export interface SaveDatasetPayload {
+  body: {
+    country: string;
+    data: object;
+    headerPositions: object;
+    isVendor: boolean;
+    saveName: string;
+  };
+}
+
+export interface SaveDatasetAPIRequest {
+  type: typeof SpreadsheetActionTypes.SAVE_DATASET_REQUEST;
+  payload: SaveDatasetPayload;
+}
+
+export interface SpreadsheetUploadSuccessPayload {
+  column_firstrows?: object;
+  requested_attributes?: object;
+  table_data?: object;
+}
+
+export interface SpreadsheetUploadPayload {
+  body: {
+    preview_id: number;
+    spreadsheet: File;
+  };
+}
+
+export interface SpreadsheetUploadAPIRequest {
+  type: typeof SpreadsheetActionTypes.SPREADSHEET_UPLOAD_REQUEST;
+  payload: SpreadsheetUploadPayload;
+}

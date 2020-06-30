@@ -1,25 +1,27 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
-import { browserHistory } from "../createStore.js";
+import { browserHistory } from "../createStore";
 
 import { SpreadsheetAction } from "../reducers/spreadsheet/actions";
-import { SpreadsheetActionTypes } from "../reducers/spreadsheet/types";
+import {
+  SpreadsheetActionTypes,
+  SaveDatasetAPIRequest,
+  SpreadsheetUploadAPIRequest
+} from "../reducers/spreadsheet/types";
 
 import {
   uploadSpreadsheetAPI,
   saveDatasetAPI,
   loadDatasetListAPI
-} from "../api/spreadsheetAPI.js";
+} from "../api/spreadsheetAPI";
 import { handleError } from "../utils";
 import { MessageAction } from "../reducers/message/actions";
 
-interface SpreadsheetUploadAPIRequest {
-  type: typeof SpreadsheetActionTypes.SPREADSHEET_UPLOAD_REQUEST;
-  payload: any;
-}
-
 function* spreadsheetUpload({ payload }: SpreadsheetUploadAPIRequest) {
+  console.log("spreadsheetUpload", payload);
   try {
     const upload_result = yield call(uploadSpreadsheetAPI, payload);
+    console.log("uploadSpreadsheetSuccess", upload_result);
+
     yield put(SpreadsheetAction.uploadSpreadsheetSuccess(upload_result));
     //todo: this needs to be updated as account type no longer handled via URL
     // browserHistory.push('/upload?type=' + transfer_account_type)
@@ -42,15 +44,13 @@ function* watchSpreadsheetUpload() {
   );
 }
 
-interface SaveDatasetAPIRequest {
-  type: typeof SpreadsheetActionTypes.SAVE_DATASET_REQUEST;
-  payload: any;
-}
-
 function* saveDataset({ payload }: SaveDatasetAPIRequest) {
   try {
+    console.log("saveDataset", payload);
+
     const save_result = yield call(saveDatasetAPI, payload);
     yield put(SpreadsheetAction.saveDatasetSuccess(save_result));
+    console.log("saveDatasetSuccess", save_result);
   } catch (error) {
     yield put(SpreadsheetAction.saveDatasetFailure(error.statusText));
   }

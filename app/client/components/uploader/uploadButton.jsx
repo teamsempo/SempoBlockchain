@@ -7,7 +7,7 @@ import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 const mapDispatchToProps = dispatch => {
   return {
     uploadSpreadsheet: payload =>
-      dispatch(SpreadsheetAction.uploadSpreadsheet(payload))
+      dispatch(SpreadsheetAction.uploadSpreadsheetRequest(payload))
   };
 };
 

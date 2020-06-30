@@ -19,7 +19,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadDatasetList: payload => dispatch(SpreadsheetAction.loadDatasetList())
+    loadDatasetList: payload =>
+      dispatch(SpreadsheetAction.loadDatasetListRequest())
   };
 };
 
