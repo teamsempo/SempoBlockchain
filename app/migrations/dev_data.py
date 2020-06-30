@@ -157,6 +157,7 @@ def get_or_create_transfer_user(email, business_usage, organisation):
         first_name = random.choice(['Magnificent', 'Questionable', 'Bold', 'Hungry', 'Trustworthy', 'Valued', 'Free',
                                     'Obtuse', 'Frequentist', 'Long', 'Sinister', 'Happy', 'Safe', 'Open', 'Cool'])
         last_name = random.choice(['Panda', 'Birb', 'Doggo', 'Otter', 'Swearwolf', 'Kitty', 'Lion', 'Chimp', 'Cthulhu'])
+        geo = random.choice([[-9.4438, 147.1803], [-9, 147]])
         is_beneficiary = random.choice([True, False])
 
         phone = '+1' + ''.join([str(random.randint(0,10)) for i in range(0, 10)])
@@ -168,7 +169,9 @@ def get_or_create_transfer_user(email, business_usage, organisation):
             phone=phone,
             organisation=organisation,
             is_beneficiary=is_beneficiary,
-            is_vendor=not is_beneficiary
+            is_vendor=not is_beneficiary,
+            lat=geo[0],
+            lng=geo[1]
         )
 
         user.business_usage = business_usage

@@ -159,12 +159,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     createUser: (payload: CreateUserPayload) =>
       dispatch(CreateUserAction.createUserRequest(payload)),
     resetCreateUser: () => dispatch(CreateUserAction.resetCreateUser()),
-    loadTransferUsages: () => 
-      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({}))
-    ,
-    loadOrganisation: () => 
+    loadTransferUsages: () =>
+      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({})),
+    loadOrganisation: () =>
       dispatch(LoadOrganisationAction.loadOrganisationRequest())
-    
   };
 };
 
