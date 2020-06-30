@@ -26,7 +26,7 @@ total_exchanged = metric.Metric(
     metric_name='total_exchanged', 
     query=total_exchanged_query, 
     object_model=CreditTransfer, 
-    stock_filters=[filters.standard_payment_filters], 
+    stock_filters=[filters.exchanged_filters], 
     caching_combinatory_strategy=metrics_cache.SUM)
 
 daily_transaction_volume_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
