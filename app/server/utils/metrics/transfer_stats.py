@@ -42,7 +42,7 @@ exhausted_balance_count_query = db.session.query(func.count(func.distinct(
     CreditTransfer.sender_transfer_account_id))
         .label('count')) \
         .join(CreditTransfer.sender_transfer_account)
-total_exchanged = metric.Metric(
+exhausted_balance_count = metric.Metric(
     metric_name='exhausted_balance', 
     query=exhausted_balance_count_query, 
     object_model=CreditTransfer, 

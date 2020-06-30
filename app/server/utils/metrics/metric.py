@@ -8,12 +8,13 @@ class Metric(object):
     caching_combinatory_strategy = None
     object_model = None
 
-    def execute_query(self, user_filters=None, date_filter=None, enable_caching=True):
+    def execute_query(self, user_filters=None, date_filters=None, enable_caching=True):
         # Handle stock filters
         filtered_query = self.query
         for f in self.stock_filters:
-            filtered_query = self.query.filter(*f)
+            filtered_query = filtered_query.filter(*f)
 
+        filtered_query = filtered_query.filter(*date_filters)
         # Determine if caching is allowed
         return metrics_cache.execute_with_partial_history_cache(self.metric_name, filtered_query, self.object_model, self.caching_combinatory_strategy, enable_caching) 
 
