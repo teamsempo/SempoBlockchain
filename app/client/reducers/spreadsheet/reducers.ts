@@ -1,19 +1,25 @@
 import { SpreadsheetActionTypes } from "./types";
 import { SpreadsheetAction } from "./actions";
 
-const initialuploadState = {
+interface InitialStateType {
+  isRequesting: boolean;
+  error?: Error | null;
+  data: object | null;
+}
+
+const initialState: InitialStateType = {
   isRequesting: false,
   error: null,
   data: null
 };
 
 export const spreadsheetUpload = (
-  state = initialuploadState,
+  state = initialState,
   action: SpreadsheetAction
 ) => {
   switch (action.type) {
     case SpreadsheetActionTypes.RESET_UPLOAD_STATE:
-      return initialuploadState;
+      return initialState;
 
     case SpreadsheetActionTypes.SPREADSHEET_UPLOAD_REQUEST:
       return { ...state, isRequesting: true };
@@ -39,7 +45,15 @@ export const spreadsheetUpload = (
   }
 };
 
-const intialSaveDatasetState = {
+interface SaveDatasetState {
+  isRequesting: boolean;
+  error?: Error | null;
+  saved?: boolean;
+  message?: string;
+  diagnostics: object | null;
+}
+
+const intialSaveDatasetState: SaveDatasetState = {
   isRequesting: false,
   error: null,
   saved: false,
@@ -81,14 +95,8 @@ export const datasetSave = (
   }
 };
 
-const intialDatasetListState = {
-  isRequesting: false,
-  error: null,
-  data: {}
-};
-
 export const datasetList = (
-  state = intialDatasetListState,
+  state = initialState,
   action: SpreadsheetAction
 ) => {
   switch (action.type) {
