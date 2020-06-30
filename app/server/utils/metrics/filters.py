@@ -15,34 +15,34 @@ def apply_filters(query, filters, query_table):
     if filters is None:
         return query
 
-    user_join_attribute, account_join_attribute = determine_join_conditions(query_table)
+    user_join_attribute, account_join_attribute = _determine_join_conditions(query_table)
 
     for filter_table_name, _filts in filters.items():
         if filter_table_name == TransferAccount.__tablename__:
                 # only join transfer account if table is not transfer account
                 if query_table.__tablename__ == filter_table_name: 
-                    query = apply_single_column_filter(query, _filts, TransferAccount, None, None) 
+                    query = _apply_single_column_filter(query, _filts, TransferAccount, None, None) 
                 else:
-                    query = apply_single_column_filter(query, _filts, TransferAccount, account_join_attribute, None)
+                    query = _apply_single_column_filter(query, _filts, TransferAccount, account_join_attribute, None)
 
         elif filter_table_name == User.__tablename__:
                 # only join user account if table is not user 
                 if query_table.__tablename__ == filter_table_name:
-                    query = apply_single_column_filter(query, _filts, User, None, None)
+                    query = _apply_single_column_filter(query, _filts, User, None, None)
                 else:
-                    query = apply_single_column_filter(query, _filts, User, None, user_join_attribute)
+                    query = _apply_single_column_filter(query, _filts, User, None, user_join_attribute)
 
         elif filter_table_name == CustomAttributeUserStorage.__tablename__ and user_join_attribute is not None:
-            query = apply_ca_filters(query, _filts, user_join_attribute)
+            query = _apply_ca_filters(query, _filts, user_join_attribute)
     return query
 
-def determine_join_conditions(table):
-    if table == CreditTransfer:
+def _determine_join_conditions(query_table):
+    if query_table == CreditTransfer:
         return CreditTransfer.sender_user_id, CreditTransfer.sender_transfer_account_id
-    if table == User:
+    if query_table == User:
         return User.id, None
 
-def apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None):
+def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None):
     if target_table.__tablename__ == TransferAccount.__tablename__ and account_join_attribute is not None:
         query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
     elif target_table.__tablename__ == User.__tablename__ and user_join_attribute is not None:
@@ -65,7 +65,7 @@ def apply_single_column_filter(query, filters, target_table, account_join_attrib
         query = query.filter(or_(*to_batch))
     return query
 
-def apply_ca_filters(query, filters, user_join_condition):
+def _apply_ca_filters(query, filters, user_join_condition):
 
     # get all custom attributes and create pivot table
     new_cs = [CustomAttributeUserStorage.user_id]

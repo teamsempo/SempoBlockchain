@@ -76,7 +76,7 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}):
     daily_transaction_volume = transfer_stats.daily_transaction_volume.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
     daily_disbursement_volume = transfer_stats.daily_disbursement_volume.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
     transfer_use_breakdown = transfer_stats.transfer_use_breakdown.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-#
+
     try:
         last_day = daily_transaction_volume[0][1]
         last_day_volume = daily_transaction_volume[0][0]
@@ -88,14 +88,15 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}):
         last_day_volume = 0
         has_transferred_count = 0
         transaction_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-#
-#    try:
-#        disbursement_vol_list = [
-#            {'date': item[1].isoformat(), 'volume': item[0]} for item in daily_disbursement_volume
-#        ]
-#    except IndexError:
-#        disbursement_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-#
+
+    try:
+        disbursement_vol_list = [
+            {'date': item[1].isoformat(), 'volume': item[0]} for item in daily_disbursement_volume
+        ]
+    except IndexError:
+        disbursement_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
+
+
     try:
         master_wallet_balance = cached_funds_available()
     except:
@@ -111,8 +112,8 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}):
         'total_vendors': total_vendors,
         'total_users': total_users,
         'master_wallet_balance': master_wallet_balance,
-        'daily_transaction_volume': daily_transaction_volume,
-        'daily_disbursement_volume': daily_disbursement_volume,
+        'daily_transaction_volume': transaction_vol_list,
+        'daily_disbursement_volume': disbursement_vol_list,
         'transfer_use_breakdown': transfer_use_breakdown,
         'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
         'filter_active': filter_active

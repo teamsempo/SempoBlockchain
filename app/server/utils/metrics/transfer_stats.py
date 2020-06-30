@@ -47,7 +47,8 @@ exhausted_balance_count = metric.Metric(
     query=exhausted_balance_count_query, 
     object_model=CreditTransfer, 
     stock_filters=[filters.exhaused_balance_filters], 
-    caching_combinatory_strategy=metrics_cache.FIRST_COUNT)
+    caching_combinatory_strategy=metrics_cache.FIRST_COUNT,
+    is_filterable_by_date=False)
 
 daily_disbursement_volume_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
         func.date_trunc('day', CreditTransfer.created).label('date')).group_by(func.date_trunc('day', CreditTransfer.created))
