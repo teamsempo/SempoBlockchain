@@ -227,7 +227,6 @@ workflows:
             branches:
               only:
                 - master
-                - mobile-login-bug-fix
           requires:
             - test:backend
             - test:worker
