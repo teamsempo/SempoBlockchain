@@ -195,6 +195,59 @@ class TestInterface:
 
         assert trans.task.uuid == task.uuid
 
+    def test_create_function_task(self, db_session, persistence_int: SQLPersistenceInterface):
+
+        signing_wallet_obj = BlockchainWallet()
+        db_session.add(signing_wallet_obj)
+
+        uuid = str_uuid()
+        contract_address = '0x1234'
+        abi_type = "ERC20" # aka contract_type
+        function_name = "transferFrom"
+        args = ['0x1234', '0x2345', int(1e36)]
+        kwargs = None
+        signing_address = None
+        encrypted_private_key = None
+        gas_limit = None
+        prior_tasks = None
+        reserves_task = None
+
+        trans = persistence_int.create_function_task(uuid,
+                signing_wallet_obj,
+                contract_address, abi_type,
+                function_name, args, kwargs,
+                gas_limit, prior_tasks, reserves_task)
+
+        assert trans.uuid == uuid
+        assert trans.type == 'FUNCTION'
+
+    def test_deploy_contract_test(self, db_session, persistence_int: SQLPersistenceInterface):
+        signing_wallet_obj = BlockchainWallet()
+        db_session.add(signing_wallet_obj)
+
+        uuid = str_uuid()
+        contract_name = 'ERC20'
+        args = []
+        kwargs = None
+        gas_limit = None
+        prior_tasks = None
+
+        trans = persistence_int.create_deploy_contract_task(
+                uuid,
+                signing_wallet_obj,
+                contract_name,
+                args, kwargs,
+                gas_limit, prior_tasks)
+
+        assert trans.uuid == uuid
+        assert trans.type == 'DEPLOY_CONTRACT'
+
+    def test_create_blockchain_wallet_from_private_key(self, db_session, persistence_int: SQLPersistenceInterface):
+        trans = persistence_int.create_blockchain_wallet_from_private_key(pk)
+
+        assert trans.address == address
+
+
     @pytest.mark.xfail(reason="SQL Testing Weirdness causes this to be problematic")
     def test_add_prior_tasks(self, db_session, persistence_module: SQLPersistenceInterface):
 

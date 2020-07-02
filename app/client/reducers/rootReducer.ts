@@ -14,11 +14,11 @@ import {
   spreadsheetUpload,
   datasetSave,
   datasetList
-} from "./spreadsheetReducer";
+} from "./spreadsheet/reducers";
 import { ExportReducer } from "./export/reducers";
 import { message } from "./message/reducers";
 import { creditTransfers } from "./creditTransfer/reducers";
-import { transferAccounts } from "./transferAccountReducer";
+import { transferAccounts } from "./transferAccount/reducers";
 import { users } from "./user/reducers";
 import { filters } from "./filter/reducers";
 import { businessVerification } from "./businessVerificationReducer";

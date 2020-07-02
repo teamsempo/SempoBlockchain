@@ -123,7 +123,7 @@ const mapStateToProps = (state: any): StateProps => {
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
-    editOrganisation: (body: any, path: number) => 
+    editOrganisation: (body: any, path: number) =>
       dispatch(EditOrganisationAction.editOrganisationRequest({ body, path }))
   };
 };

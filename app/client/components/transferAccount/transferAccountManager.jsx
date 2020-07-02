@@ -10,7 +10,7 @@ const SingleDatePickerWrapper = lazy(() =>
 import NewTransferManager from "../management/newTransferManager.jsx";
 import DateTime from "../dateTime.jsx";
 
-import { editTransferAccount } from "../../reducers/transferAccountReducer";
+import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
 
@@ -28,7 +28,9 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => {
   return {
     editTransferAccountRequest: (body, path) =>
-      dispatch(editTransferAccount({ body, path }))
+      dispatch(
+        EditTransferAccountAction.editTransferAccountRequest({ body, path })
+      )
   };
 };
 

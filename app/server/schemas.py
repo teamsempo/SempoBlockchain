@@ -166,7 +166,6 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
     transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
-
     token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
     sender_transfer_account_id      = fields.Int()
@@ -184,7 +183,6 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
-
     is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
     def get_authorising_user_email(self, obj):
