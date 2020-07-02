@@ -9,6 +9,7 @@ import { Switch, Route, Router, Redirect } from "react-router-dom";
 const dashboardPage = lazy(() =>
   import("./components/pages/dashboardPage.jsx")
 );
+const mapPage = lazy(() => import("./components/pages/mapPage.jsx"));
 const uploadPage = lazy(() => import("./components/pages/uploadPage.jsx"));
 const transferAccountListPage = lazy(() =>
   import("./components/pages/transferAccountListPage.jsx")
@@ -72,7 +73,6 @@ class Nav extends React.Component {
   render() {
     const isLoggedIn = this.props.loggedIn;
     const isReAuthing = this.props.login.isLoggingIn;
-    const beneficiaryURL = "/" + window.BENEFICIARY_TERM_PLURAL.toLowerCase();
 
     return (
       <Router history={browserHistory}>
@@ -83,6 +83,13 @@ class Nav extends React.Component {
               exact
               path="/"
               component={dashboardPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+            />
+            <PrivateRoute
+              exact
+              path="/map"
+              component={mapPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
             />
