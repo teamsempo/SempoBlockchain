@@ -18,22 +18,22 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/auth/permissions/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "permissions", ""]
+                  "raw": "{{HOST}}/api/v1/auth/permissions/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "permissions", ""]
                 },
                 "description": "Returns a list of `admins` and `invites`."
               },
               "response": [
                 {
-                  "name": "Get Admins",
+                  "name": "200 OK",
                   "originalRequest": {
                     "method": "GET",
                     "header": [],
                     "url": {
-                      "raw": "{{URL}}/auth/permissions/",
-                      "host": ["{{URL}}"],
-                      "path": ["auth", "permissions", ""]
+                      "raw": "{{HOST}}/api/v1/auth/permissions/",
+                      "host": ["{{HOST}}"],
+                      "path": ["api", "v1", "auth", "permissions", ""]
                     }
                   },
                   "status": "OK",
@@ -85,9 +85,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/permissions/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "permissions", ""]
+                  "raw": "{{HOST}}/api/v1/auth/permissions/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "permissions", ""]
                 },
                 "description": "Sends an email invite to an admin user."
               },
@@ -108,9 +108,9 @@
                       "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"tier\": \"admin\"\n}"
                     },
                     "url": {
-                      "raw": "{{URL}}/auth/permissions/",
-                      "host": ["{{URL}}"],
-                      "path": ["auth", "permissions", ""]
+                      "raw": "{{HOST}}/api/v1/auth/permissions/",
+                      "host": ["{{HOST}}"],
+                      "path": ["api", "v1", "auth", "permissions", ""]
                     }
                   },
                   "status": "BAD REQUEST",
@@ -157,9 +157,9 @@
                       "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"tier\": \"admin\"\n}"
                     },
                     "url": {
-                      "raw": "{{URL}}/auth/permissions/",
-                      "host": ["{{URL}}"],
-                      "path": ["auth", "permissions", ""]
+                      "raw": "{{HOST}}/api/v1/auth/permissions/",
+                      "host": ["{{HOST}}"],
+                      "path": ["api", "v1", "auth", "permissions", ""]
                     }
                   },
                   "status": "CREATED",
@@ -211,15 +211,15 @@
                   }
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/permissions/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "permissions", ""]
+                  "raw": "{{HOST}}/api/v1/auth/permissions/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "permissions", ""]
                 },
                 "description": "Returns edited Admin object"
               },
               "response": [
                 {
-                  "name": "Edit Admins",
+                  "name": "200 OK",
                   "originalRequest": {
                     "method": "PUT",
                     "header": [
@@ -234,9 +234,9 @@
                       "raw": "{\n    \"user_id\": 1,\n    \"admin_tier\": \"superadmin\",\n    \"deactivated\": false\n}"
                     },
                     "url": {
-                      "raw": "{{URL}}/auth/permissions/",
-                      "host": ["{{URL}}"],
-                      "path": ["auth", "permissions", ""]
+                      "raw": "{{HOST}}/api/v1/auth/permissions/",
+                      "host": ["{{HOST}}"],
+                      "path": ["api", "v1", "auth", "permissions", ""]
                     }
                   },
                   "status": "OK",
@@ -285,9 +285,9 @@
                   "raw": "{\n    \"invite_id\": 1\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/permissions/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "permissions", ""]
+                  "raw": "{{HOST}}/api/v1/auth/permissions/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "permissions", ""]
                 }
               },
               "response": [
@@ -307,9 +307,9 @@
                       "raw": "{\n    \"invite_id\": 1\n}"
                     },
                     "url": {
-                      "raw": "{{URL}}/auth/permissions/",
-                      "host": ["{{URL}}"],
-                      "path": ["auth", "permissions", ""]
+                      "raw": "{{HOST}}/api/v1/auth/permissions/",
+                      "host": ["{{HOST}}"],
+                      "path": ["api", "v1", "auth", "permissions", ""]
                     }
                   },
                   "status": "NOT FOUND",
@@ -356,9 +356,9 @@
                       "raw": "{\n    \"invite_id\": 1\n}"
                     },
                     "url": {
-                      "raw": "{{URL}}/auth/permissions/",
-                      "host": ["{{URL}}"],
-                      "path": ["auth", "permissions", ""]
+                      "raw": "{{HOST}}/api/v1/auth/permissions/",
+                      "host": ["{{HOST}}"],
+                      "path": ["api", "v1", "auth", "permissions", ""]
                     }
                   },
                   "status": "ACCEPTED",
@@ -415,9 +415,9 @@
               }
             },
             "url": {
-              "raw": "{{URL}}/auth/register/",
-              "host": ["{{URL}}"],
-              "path": ["auth", "register", ""]
+              "raw": "{{HOST}}/api/v1/auth/register/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "auth", "register", ""]
             },
             "description": "This is the register endpoint for both web and mobile.\n\nFor web, you must sign up using a unique email. The account must be activated by clicking the link sent."
           },
@@ -438,9 +438,9 @@
                   "raw": "{\n    \"email\": \"tristan@withsempo.com\",\n    \"password\": \"C0rrectH0rse\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/register/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "register", ""]
+                  "raw": "{{HOST}}/api/v1/auth/register/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "register", ""]
                 }
               },
               "status": "FORBIDDEN",
@@ -487,9 +487,9 @@
                   "raw": "{\n    \"email\": \"admin+1@acme.org\",\n    \"password\": \"C0rrectH0rse\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/register/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "register", ""]
+                  "raw": "{{HOST}}/api/v1/auth/register/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "register", ""]
                 }
               },
               "status": "CREATED",
@@ -541,9 +541,9 @@
               }
             },
             "url": {
-              "raw": "{{URL}}/auth/activate/",
-              "host": ["{{URL}}"],
-              "path": ["auth", "activate", ""]
+              "raw": "{{HOST}}/api/v1/auth/activate/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "auth", "activate", ""]
             },
             "description": "This is the endpoint to activate a user account. Returns a login object"
           },
@@ -564,9 +564,9 @@
                   "raw": "{\n    \"activation_token\": \"eyJhbGciOiJIUzUxMiIsImlhdCI6MTU5Mjg4MzY5NywiZXhwIjoxNTkyOTcwMDk3fQ.eyJpZCI6MywidHlwZSI6IkEifQ.eUqrsH6hZJmTVfWiPmmJHTzD-b6lVH8avdVG74nU3OoiLi8HlmeHaMl-iJovY58-Ud2UCLJg7j34Xvy-u8oGjQ\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/activate/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "activate", ""]
+                  "raw": "{{HOST}}/api/v1/auth/activate/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "activate", ""]
                 }
               },
               "status": "UNAUTHORIZED",
@@ -613,9 +613,9 @@
                   "raw": "{\n    \"activation_token\": \"eyJhbGciOiJIUzUxMiIsImlhdCI6MTU5Mjg4MzY5NywiZXhwIjoxNTkyOTcwMDk3fQ.eyJpZCI6MywidHlwZSI6IkEifQ.eUqrsH6hZJmTVfWiPmmJHTzD-b6lVH8avdVG74nU3OoiLi8HlmeHaMl-iJovY58-Ud2UCLJg7j34Xvy-u8oGjQ\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/activate/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "activate", ""]
+                  "raw": "{{HOST}}/api/v1/auth/activate/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "activate", ""]
                 }
               },
               "status": "CREATED",
@@ -644,7 +644,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"active_organisation_id\": 1,\n    \"admin_tier\": \"sempoadmin\",\n    \"android_intercom_hash\": \"227fa1ebda980464373fdb95041ec9cf9b27b8e5ba24f791d6e5e51228ce1026\",\n    \"auth_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1OTM0ODg1MjUsImlhdCI6MTU5Mjg4MzcyNSwiaWQiOjMsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.Jmow5zeRkWxt-ErlaMFH3gx6TvyMz4HtGsFaN3MoQoc\",\n    \"currency_conversion_rate\": 1,\n    \"currency_decimals\": 2,\n    \"currency_name\": \"USD\",\n    \"default_feedback_questions\": [\n        \"assistance_satisfaction\",\n        \"assistance_delivery_preference\"\n    ],\n    \"denominations\": {},\n    \"deployment_name\": \"local\",\n    \"ecdsa_public\": \"046fdc83753d60962b99b1c8a8df527094d126fc93b59a13c297cdd68c6eb10cd8b01fcec2a4be1a09e369ad5bba320770\",\n    \"email\": \"admin@acme.org\",\n    \"first_name\": null,\n    \"is_supervendor\": false,\n    \"is_vendor\": false,\n    \"kyc_active\": true,\n    \"last_name\": null,\n    \"message\": \"Successfully activated.\",\n    \"name\": null,\n    \"organisations\": [\n        {\n            \"country_code\": \"AU\",\n            \"created\": \"2020-06-23T00:07:21.021119+00:00\",\n            \"default_disbursement\": 0,\n            \"default_lat\": null,\n            \"default_lng\": null,\n            \"id\": 1,\n            \"name\": \"Reserve\",\n            \"primary_blockchain_address\": \"0xB86685De7b087f01349968e76F27fD0516642568\",\n            \"require_transfer_card\": false,\n            \"token\": {\n                \"address\": \"0x6d59300ac7911A430E277f39d9379DC3dE861B05\",\n                \"created\": \"2020-06-23T00:07:33.098390+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 1,\n                \"name\": \"Reserve Currency\",\n                \"symbol\": \"RCU\",\n                \"updated\": \"2020-06-23T00:07:38.504545+00:00\"\n            },\n            \"updated\": \"2020-06-23T00:07:33.132707+00:00\"\n        }\n    ],\n    \"pusher_key\": \"01739afbf5c2c62aaac1\",\n    \"request_feedback_questions\": [],\n    \"secret\": \"WHS8vVduKh8xo2lp\",\n    \"server_time\": 1592883725357,\n    \"status\": \"success\",\n    \"terms_accepted\": true,\n    \"transfer_account_Id\": [\n        2\n    ],\n    \"transfer_usages\": [\n        {\n            \"icon\": \"message\",\n            \"id\": 1,\n            \"name\": \"Food/Water\",\n            \"priority\": 1,\n            \"translations\": {\n                \"en\": \"Food/Water\",\n                \"sw\": \"Chakula/Maji\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 2,\n            \"name\": \"Fuel/Energy\",\n            \"priority\": 2,\n            \"translations\": {\n                \"en\": \"Fuel/Energy\",\n                \"sw\": \"Kuni/Makaa/Mafuta\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 3,\n            \"name\": \"Education\",\n            \"priority\": 3,\n            \"translations\": {\n                \"en\": \"Education\",\n                \"sw\": \"Elimu\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 4,\n            \"name\": \"Health\",\n            \"priority\": 4,\n            \"translations\": {\n                \"en\": \"Health\",\n                \"sw\": \"Afya\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 5,\n            \"name\": \"Shop\",\n            \"priority\": 5,\n            \"translations\": {\n                \"en\": \"Shop\",\n                \"sw\": \"Duka\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 6,\n            \"name\": \"Environment\",\n            \"priority\": 6,\n            \"translations\": {\n                \"en\": \"Environment\",\n                \"sw\": \"Mazingira\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 7,\n            \"name\": \"Transport\",\n            \"priority\": 7,\n            \"translations\": {\n                \"en\": \"Transport\",\n                \"sw\": \"Usafiri\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 8,\n            \"name\": \"Farming/Labour\",\n            \"priority\": 8,\n            \"translations\": {\n                \"en\": \"Farming/Labour\",\n                \"sw\": \"Mkulima/Mfanyikazi\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 9,\n            \"name\": \"Savings Group\",\n            \"priority\": 9,\n            \"translations\": {\n                \"en\": \"Savings Group\",\n                \"sw\": \"Chama\"\n            }\n        }\n    ],\n    \"usd_to_satoshi_rate\": null,\n    \"user_id\": 3,\n    \"web_api_version\": \"1\",\n    \"web_intercom_hash\": \"e03830309822fb929eea0183a0fc7a546d11b3fd2888233150ed41a5c37bc94b\"\n}"
+              "body": "{\n    \"active_organisation_id\": 1,\n    \"admin_tier\": \"sempoadmin\",\n    \"android_intercom_hash\": \"2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\",\n    \"auth_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1OTM0ODg1MjUsImlhdCI6MTU5Mjg4MzcyNSwiaWQiOjMsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.Jmow5zeRkWxt-ErlaMFH3gx6TvyMz4HtGsFaN3MoQoc\",\n    \"currency_conversion_rate\": 1,\n    \"currency_decimals\": 2,\n    \"currency_name\": \"USD\",\n    \"default_feedback_questions\": [\n        \"assistance_satisfaction\",\n        \"assistance_delivery_preference\"\n    ],\n    \"denominations\": {},\n    \"deployment_name\": \"local\",\n    \"ecdsa_public\": \"046fdc83753d60962b99b1c8a8df527094d126fc93b59a13c297cdd68c6eb10cd8b01fcec2a4be1a09e369ad5bba320770\",\n    \"email\": \"admin@acme.org\",\n    \"first_name\": null,\n    \"is_supervendor\": false,\n    \"is_vendor\": false,\n    \"kyc_active\": true,\n    \"last_name\": null,\n    \"message\": \"Successfully activated.\",\n    \"name\": null,\n    \"organisations\": [\n        {\n            \"country_code\": \"AU\",\n            \"created\": \"2020-06-23T00:07:21.021119+00:00\",\n            \"default_disbursement\": 0,\n            \"default_lat\": null,\n            \"default_lng\": null,\n            \"id\": 1,\n            \"name\": \"Reserve\",\n            \"primary_blockchain_address\": \"0xB86685De7b087f01349968e76F27fD0516642568\",\n            \"require_transfer_card\": false,\n            \"token\": {\n                \"address\": \"0x6d59300ac7911A430E277f39d9379DC3dE861B05\",\n                \"created\": \"2020-06-23T00:07:33.098390+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 1,\n                \"name\": \"Reserve Currency\",\n                \"symbol\": \"RCU\",\n                \"updated\": \"2020-06-23T00:07:38.504545+00:00\"\n            },\n            \"updated\": \"2020-06-23T00:07:33.132707+00:00\"\n        }\n    ],\n    \"pusher_key\": \"01739afbf5c2c62aaac1\",\n    \"request_feedback_questions\": [],\n    \"secret\": \"WHS8vVduKh8xo2lp\",\n    \"server_time\": 1592883725357,\n    \"status\": \"success\",\n    \"terms_accepted\": true,\n    \"transfer_account_Id\": [\n        2\n    ],\n    \"transfer_usages\": [\n        {\n            \"icon\": \"message\",\n            \"id\": 1,\n            \"name\": \"Food/Water\",\n            \"priority\": 1,\n            \"translations\": {\n                \"en\": \"Food/Water\",\n                \"sw\": \"Chakula/Maji\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 2,\n            \"name\": \"Fuel/Energy\",\n            \"priority\": 2,\n            \"translations\": {\n                \"en\": \"Fuel/Energy\",\n                \"sw\": \"Kuni/Makaa/Mafuta\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 3,\n            \"name\": \"Education\",\n            \"priority\": 3,\n            \"translations\": {\n                \"en\": \"Education\",\n                \"sw\": \"Elimu\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 4,\n            \"name\": \"Health\",\n            \"priority\": 4,\n            \"translations\": {\n                \"en\": \"Health\",\n                \"sw\": \"Afya\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 5,\n            \"name\": \"Shop\",\n            \"priority\": 5,\n            \"translations\": {\n                \"en\": \"Shop\",\n                \"sw\": \"Duka\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 6,\n            \"name\": \"Environment\",\n            \"priority\": 6,\n            \"translations\": {\n                \"en\": \"Environment\",\n                \"sw\": \"Mazingira\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 7,\n            \"name\": \"Transport\",\n            \"priority\": 7,\n            \"translations\": {\n                \"en\": \"Transport\",\n                \"sw\": \"Usafiri\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 8,\n            \"name\": \"Farming/Labour\",\n            \"priority\": 8,\n            \"translations\": {\n                \"en\": \"Farming/Labour\",\n                \"sw\": \"Mkulima/Mfanyikazi\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 9,\n            \"name\": \"Savings Group\",\n            \"priority\": 9,\n            \"translations\": {\n                \"en\": \"Savings Group\",\n                \"sw\": \"Chama\"\n            }\n        }\n    ],\n    \"usd_to_satoshi_rate\": null,\n    \"user_id\": 3,\n    \"web_api_version\": \"1\",\n    \"web_intercom_hash\": \"2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\"\n}"
             }
           ]
         },
@@ -667,9 +667,9 @@
               }
             },
             "url": {
-              "raw": "{{URL}}/auth/request_api_token/",
-              "host": ["{{URL}}"],
-              "path": ["auth", "request_api_token", ""]
+              "raw": "{{HOST}}/api/v1/auth/request_api_token/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "auth", "request_api_token", ""]
             },
             "description": "Returns standard login object\n"
           },
@@ -690,9 +690,9 @@
                   "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"password\": \"C0rrectH0rse\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/request_api_token/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "request_api_token", ""]
+                  "raw": "{{HOST}}/api/v1/auth/request_api_token/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "request_api_token", ""]
                 }
               },
               "status": "UNAUTHORIZED",
@@ -739,9 +739,9 @@
                   "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"password\": \"C0rrectH0rse\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/request_api_token/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "request_api_token", ""]
+                  "raw": "{{HOST}}/api/v1/auth/request_api_token/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "request_api_token", ""]
                 }
               },
               "status": "OK",
@@ -770,7 +770,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"active_organisation_id\": 1,\n    \"admin_tier\": \"sempoadmin\",\n    \"android_intercom_hash\": \"9d589db623ae73d4f6bfb8dbc597f976af404938961f92a4036625c1dfbbff86\",\n    \"auth_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1OTM0ODI5MDUsImlhdCI6MTU5Mjg3ODEwNSwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.8XAhi3pwKG4-w4ftnPNoOWRlg7pxv5CivJTwNKoiKks\",\n    \"currency_conversion_rate\": 1,\n    \"currency_decimals\": 2,\n    \"currency_name\": \"USD\",\n    \"default_feedback_questions\": [\n        \"assistance_satisfaction\",\n        \"assistance_delivery_preference\"\n    ],\n    \"denominations\": {},\n    \"deployment_name\": \"local\",\n    \"ecdsa_public\": \"046fdc83753d60962b99b1c8a8df527094d126fc93b59a13c297cdd68c6eb10cd8b01fcec2a4be1a09e369ad5bba320770\",\n    \"email\": \"admin@acme.org\",\n    \"first_name\": null,\n    \"is_supervendor\": false,\n    \"is_vendor\": false,\n    \"kyc_active\": true,\n    \"last_name\": null,\n    \"message\": \"Successfully logged in.\",\n    \"name\": null,\n    \"organisations\": [\n        {\n            \"country_code\": \"AU\",\n            \"created\": \"2020-06-23T00:07:21.021119+00:00\",\n            \"default_disbursement\": 0,\n            \"default_lat\": null,\n            \"default_lng\": null,\n            \"id\": 1,\n            \"name\": \"Reserve\",\n            \"primary_blockchain_address\": \"0xB86685De7b087f01349968e76F27fD0516642568\",\n            \"require_transfer_card\": false,\n            \"token\": {\n                \"address\": \"0x6d59300ac7911A430E277f39d9379DC3dE861B05\",\n                \"created\": \"2020-06-23T00:07:33.098390+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 1,\n                \"name\": \"Reserve Currency\",\n                \"symbol\": \"RCU\",\n                \"updated\": \"2020-06-23T00:07:38.504545+00:00\"\n            },\n            \"updated\": \"2020-06-23T00:07:33.132707+00:00\"\n        },\n        {\n            \"country_code\": \"AU\",\n            \"created\": \"2020-06-23T00:07:38.391687+00:00\",\n            \"default_disbursement\": 0,\n            \"default_lat\": null,\n            \"default_lng\": null,\n            \"id\": 2,\n            \"name\": \"ACME Org\",\n            \"primary_blockchain_address\": \"0x57D603e21E8384C1D82F221901C9bC38CC646995\",\n            \"require_transfer_card\": false,\n            \"token\": {\n                \"address\": \"0xbD4c6C1857F376872fA1D225861BEBBFF79f1F8A\",\n                \"created\": \"2020-06-23T00:07:38.505287+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 2,\n                \"name\": \"ACME\",\n                \"symbol\": \"ACME\",\n                \"updated\": \"2020-06-23T00:07:38.515969+00:00\"\n            },\n            \"updated\": \"2020-06-23T00:07:38.585143+00:00\"\n        }\n    ],\n    \"pusher_key\": \"01739afbf5c2c62aaac1\",\n    \"request_feedback_questions\": [],\n    \"secret\": \"LmcF2RgYgvzMpCD2\",\n    \"server_time\": 1592878105545,\n    \"status\": \"success\",\n    \"terms_accepted\": true,\n    \"transfer_account_Id\": [\n        2,\n        5\n    ],\n    \"transfer_usages\": [\n        {\n            \"icon\": \"message\",\n            \"id\": 1,\n            \"name\": \"Food/Water\",\n            \"priority\": 1,\n            \"translations\": {\n                \"en\": \"Food/Water\",\n                \"sw\": \"Chakula/Maji\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 2,\n            \"name\": \"Fuel/Energy\",\n            \"priority\": 2,\n            \"translations\": {\n                \"en\": \"Fuel/Energy\",\n                \"sw\": \"Kuni/Makaa/Mafuta\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 3,\n            \"name\": \"Education\",\n            \"priority\": 3,\n            \"translations\": {\n                \"en\": \"Education\",\n                \"sw\": \"Elimu\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 4,\n            \"name\": \"Health\",\n            \"priority\": 4,\n            \"translations\": {\n                \"en\": \"Health\",\n                \"sw\": \"Afya\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 5,\n            \"name\": \"Shop\",\n            \"priority\": 5,\n            \"translations\": {\n                \"en\": \"Shop\",\n                \"sw\": \"Duka\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 6,\n            \"name\": \"Environment\",\n            \"priority\": 6,\n            \"translations\": {\n                \"en\": \"Environment\",\n                \"sw\": \"Mazingira\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 7,\n            \"name\": \"Transport\",\n            \"priority\": 7,\n            \"translations\": {\n                \"en\": \"Transport\",\n                \"sw\": \"Usafiri\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 8,\n            \"name\": \"Farming/Labour\",\n            \"priority\": 8,\n            \"translations\": {\n                \"en\": \"Farming/Labour\",\n                \"sw\": \"Mkulima/Mfanyikazi\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 9,\n            \"name\": \"Savings Group\",\n            \"priority\": 9,\n            \"translations\": {\n                \"en\": \"Savings Group\",\n                \"sw\": \"Chama\"\n            }\n        }\n    ],\n    \"usd_to_satoshi_rate\": null,\n    \"user_id\": 1,\n    \"web_api_version\": \"1\",\n    \"web_intercom_hash\": \"9caecbfca155f3b25dc445399d31f647082f68fcfe3878816a760e42c73a82eb\"\n}"
+              "body": "{\n    \"active_organisation_id\": 1,\n    \"admin_tier\": \"sempoadmin\",\n    \"android_intercom_hash\": \"2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\",\n    \"auth_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1OTM0ODI5MDUsImlhdCI6MTU5Mjg3ODEwNSwiaWQiOjEsInJvbGVzIjp7IkFETUlOIjoic2VtcG9hZG1pbiJ9fQ.8XAhi3pwKG4-w4ftnPNoOWRlg7pxv5CivJTwNKoiKks\",\n    \"currency_conversion_rate\": 1,\n    \"currency_decimals\": 2,\n    \"currency_name\": \"USD\",\n    \"default_feedback_questions\": [\n        \"assistance_satisfaction\",\n        \"assistance_delivery_preference\"\n    ],\n    \"denominations\": {},\n    \"deployment_name\": \"local\",\n    \"ecdsa_public\": \"046fdc83753d60962b99b1c8a8df527094d126fc93b59a13c297cdd68c6eb10cd8b01fcec2a4be1a09e369ad5bba320770\",\n    \"email\": \"admin@acme.org\",\n    \"first_name\": null,\n    \"is_supervendor\": false,\n    \"is_vendor\": false,\n    \"kyc_active\": true,\n    \"last_name\": null,\n    \"message\": \"Successfully logged in.\",\n    \"name\": null,\n    \"organisations\": [\n        {\n            \"country_code\": \"AU\",\n            \"created\": \"2020-06-23T00:07:21.021119+00:00\",\n            \"default_disbursement\": 0,\n            \"default_lat\": null,\n            \"default_lng\": null,\n            \"id\": 1,\n            \"name\": \"Reserve\",\n            \"primary_blockchain_address\": \"0xB86685De7b087f01349968e76F27fD0516642568\",\n            \"require_transfer_card\": false,\n            \"token\": {\n                \"address\": \"0x6d59300ac7911A430E277f39d9379DC3dE861B05\",\n                \"created\": \"2020-06-23T00:07:33.098390+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 1,\n                \"name\": \"Reserve Currency\",\n                \"symbol\": \"RCU\",\n                \"updated\": \"2020-06-23T00:07:38.504545+00:00\"\n            },\n            \"updated\": \"2020-06-23T00:07:33.132707+00:00\"\n        },\n        {\n            \"country_code\": \"AU\",\n            \"created\": \"2020-06-23T00:07:38.391687+00:00\",\n            \"default_disbursement\": 0,\n            \"default_lat\": null,\n            \"default_lng\": null,\n            \"id\": 2,\n            \"name\": \"ACME Org\",\n            \"primary_blockchain_address\": \"0x57D603e21E8384C1D82F221901C9bC38CC646995\",\n            \"require_transfer_card\": false,\n            \"token\": {\n                \"address\": \"0xbD4c6C1857F376872fA1D225861BEBBFF79f1F8A\",\n                \"created\": \"2020-06-23T00:07:38.505287+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 2,\n                \"name\": \"ACME\",\n                \"symbol\": \"ACME\",\n                \"updated\": \"2020-06-23T00:07:38.515969+00:00\"\n            },\n            \"updated\": \"2020-06-23T00:07:38.585143+00:00\"\n        }\n    ],\n    \"pusher_key\": \"01739afbf5c2c62aaac1\",\n    \"request_feedback_questions\": [],\n    \"secret\": \"LmcF2RgYgvzMpCD2\",\n    \"server_time\": 1592878105545,\n    \"status\": \"success\",\n    \"terms_accepted\": true,\n    \"transfer_account_Id\": [\n        2,\n        5\n    ],\n    \"transfer_usages\": [\n        {\n            \"icon\": \"message\",\n            \"id\": 1,\n            \"name\": \"Food/Water\",\n            \"priority\": 1,\n            \"translations\": {\n                \"en\": \"Food/Water\",\n                \"sw\": \"Chakula/Maji\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 2,\n            \"name\": \"Fuel/Energy\",\n            \"priority\": 2,\n            \"translations\": {\n                \"en\": \"Fuel/Energy\",\n                \"sw\": \"Kuni/Makaa/Mafuta\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 3,\n            \"name\": \"Education\",\n            \"priority\": 3,\n            \"translations\": {\n                \"en\": \"Education\",\n                \"sw\": \"Elimu\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 4,\n            \"name\": \"Health\",\n            \"priority\": 4,\n            \"translations\": {\n                \"en\": \"Health\",\n                \"sw\": \"Afya\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 5,\n            \"name\": \"Shop\",\n            \"priority\": 5,\n            \"translations\": {\n                \"en\": \"Shop\",\n                \"sw\": \"Duka\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 6,\n            \"name\": \"Environment\",\n            \"priority\": 6,\n            \"translations\": {\n                \"en\": \"Environment\",\n                \"sw\": \"Mazingira\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 7,\n            \"name\": \"Transport\",\n            \"priority\": 7,\n            \"translations\": {\n                \"en\": \"Transport\",\n                \"sw\": \"Usafiri\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 8,\n            \"name\": \"Farming/Labour\",\n            \"priority\": 8,\n            \"translations\": {\n                \"en\": \"Farming/Labour\",\n                \"sw\": \"Mkulima/Mfanyikazi\"\n            }\n        },\n        {\n            \"icon\": \"message\",\n            \"id\": 9,\n            \"name\": \"Savings Group\",\n            \"priority\": 9,\n            \"translations\": {\n                \"en\": \"Savings Group\",\n                \"sw\": \"Chama\"\n            }\n        }\n    ],\n    \"usd_to_satoshi_rate\": null,\n    \"user_id\": 1,\n    \"web_api_version\": \"1\",\n    \"web_intercom_hash\": \"2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\"\n}"
             },
             {
               "name": "401 UNAUTHORIZED (Invalid Password)",
@@ -788,9 +788,9 @@
                   "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"password\": \"d\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/request_api_token/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "request_api_token", ""]
+                  "raw": "{{HOST}}/api/v1/auth/request_api_token/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "request_api_token", ""]
                 }
               },
               "status": "UNAUTHORIZED",
@@ -842,9 +842,9 @@
               }
             },
             "url": {
-              "raw": "{{URL}}/auth/request_reset_email/",
-              "host": ["{{URL}}"],
-              "path": ["auth", "request_reset_email", ""]
+              "raw": "{{HOST}}/api/v1/auth/request_reset_email/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "auth", "request_reset_email", ""]
             },
             "description": "Request a password reset to the given email address"
           },
@@ -865,9 +865,9 @@
                   "raw": "{\n    \"email\": \"admin@acme.org\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/request_reset_email/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "request_reset_email", ""]
+                  "raw": "{{HOST}}/api/v1/auth/request_reset_email/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "request_reset_email", ""]
                 }
               },
               "status": "OK",
@@ -914,9 +914,9 @@
                   "raw": "{\n    \"email\": \"\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/request_reset_email/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "request_reset_email", ""]
+                  "raw": "{{HOST}}/api/v1/auth/request_reset_email/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "request_reset_email", ""]
                 }
               },
               "status": "UNAUTHORIZED",
@@ -965,9 +965,9 @@
               "raw": "{\n    \"old_password\": \"oldPassword\",\n    \"new_password\": \"newPassword\"\n}"
             },
             "url": {
-              "raw": "{{URL}}/auth/reset_password/",
-              "host": ["{{URL}}"],
-              "path": ["auth", "reset_password", ""]
+              "raw": "{{HOST}}/api/v1/auth/reset_password/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "auth", "reset_password", ""]
             }
           },
           "response": [
@@ -987,9 +987,9 @@
                   "raw": "{\n    \"old_password\": \"oldPassword\",\n    \"new_password\": \"newPassword\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/auth/reset_password/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "reset_password", ""]
+                  "raw": "{{HOST}}/api/v1/auth/reset_password/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "reset_password", ""]
                 }
               },
               "status": "UNAUTHORIZED",
@@ -1028,22 +1028,22 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/auth/external/",
-              "host": ["{{URL}}"],
-              "path": ["auth", "external", ""]
+              "raw": "{{HOST}}/api/v1/auth/external/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "auth", "external", ""]
             },
             "description": "External credentials endpoint for submitting data to the platform from KoboToolbox or other apps"
           },
           "response": [
             {
-              "name": "External Credentials",
+              "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/auth/external/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "external", ""]
+                  "raw": "{{HOST}}/api/v1/auth/external/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "external", ""]
                 }
               },
               "status": "OK",
@@ -1082,22 +1082,22 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/auth/blockchain/",
-              "host": ["{{URL}}"],
-              "path": ["auth", "blockchain", ""]
+              "raw": "{{HOST}}/api/v1/auth/blockchain/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "auth", "blockchain", ""]
             },
             "description": "Returns the platform private keys"
           },
           "response": [
             {
-              "name": "Blockchain Key",
+              "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/auth/blockchain/",
-                  "host": ["{{URL}}"],
-                  "path": ["auth", "blockchain", ""]
+                  "raw": "{{HOST}}/api/v1/auth/blockchain/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "auth", "blockchain", ""]
                 }
               },
               "status": "OK",
@@ -1153,9 +1153,9 @@
               "raw": "{\n\t\"organisation_name\": \"ACME Organisation\",\n\t\"country_code\": \"AU\",\n\t\"token_id\": 1,\n\t\"timezone\": \"Australia/Melbourne\",\n\t\"default_disbursement\": 100,\n\t\"require_transfer_card\": false,\n\t\"default_lat\": 37.8136,\n\t\"default_lng\": 144.9631\n}"
             },
             "url": {
-              "raw": "{{URL}}/organisation/",
-              "host": ["{{URL}}"],
-              "path": ["organisation", ""]
+              "raw": "{{HOST}}/api/v1/organisation/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "organisation", ""]
             }
           },
           "response": [
@@ -1175,9 +1175,9 @@
                   "raw": "{\n\t\"organisation_name\": \"ACME Organisation\",\n\t\"country_code\": \"AU\",\n\t\"token_id\": 1,\n\t\"timezone\": \"Australia/Melbourne\",\n\t\"default_disbursement\": 100,\n\t\"require_transfer_card\": false,\n\t\"default_lat\": 37.8136,\n\t\"default_lng\": 144.9631\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/organisation/",
-                  "host": ["{{URL}}"],
-                  "path": ["organisation", ""]
+                  "raw": "{{HOST}}/api/v1/organisation/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "organisation", ""]
                 }
               },
               "status": "CREATED",
@@ -1224,9 +1224,9 @@
                   "raw": "{\n\t\"organisation_name\": \"ACME Organisation\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/organisation/",
-                  "host": ["{{URL}}"],
-                  "path": ["organisation", ""]
+                  "raw": "{{HOST}}/api/v1/organisation/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "organisation", ""]
                 }
               },
               "status": "BAD REQUEST",
@@ -1275,9 +1275,9 @@
               "raw": "{\n\t\"country_code\": \"AU\",\n\t\"default_disbursement\": 100,\n\t\"require_transfer_card\": false,\n\t\"default_lat\": 37.8136,\n\t\"default_lng\": 144.9631\n}"
             },
             "url": {
-              "raw": "{{URL}}/organisation/2/",
-              "host": ["{{URL}}"],
-              "path": ["organisation", "2", ""]
+              "raw": "{{HOST}}/api/v1/organisation/2/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "organisation", "2", ""]
             }
           },
           "response": [
@@ -1297,9 +1297,9 @@
                   "raw": "{\n\t\"country_code\": \"AU\",\n\t\"default_disbursement\": 100,\n\t\"require_transfer_card\": false,\n\t\"default_lat\": 37.8136,\n\t\"default_lng\": 144.9631\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/organisation/",
-                  "host": ["{{URL}}"],
-                  "path": ["organisation", ""]
+                  "raw": "{{HOST}}/api/v1/organisation/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "organisation", ""]
                 }
               },
               "status": "BAD REQUEST",
@@ -1346,9 +1346,9 @@
                   "raw": "{\n\t\"country_code\": \"AU\",\n\t\"default_disbursement\": 100,\n\t\"require_transfer_card\": false,\n\t\"default_lat\": 37.8136,\n\t\"default_lng\": 144.9631\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/organisation/2/",
-                  "host": ["{{URL}}"],
-                  "path": ["organisation", "2", ""]
+                  "raw": "{{HOST}}/api/v1/organisation/2/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "organisation", "2", ""]
                 }
               },
               "status": "OK",
@@ -1395,9 +1395,9 @@
                   "raw": "{\n\t\"country_code\": \"AU\",\n\t\"default_disbursement\": 100,\n\t\"require_transfer_card\": false,\n\t\"default_lat\": 37.8136,\n\t\"default_lng\": 144.9631\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/organisation/123/",
-                  "host": ["{{URL}}"],
-                  "path": ["organisation", "123", ""]
+                  "raw": "{{HOST}}/api/v1/organisation/123/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "organisation", "123", ""]
                 }
               },
               "status": "NOT FOUND",
@@ -1443,9 +1443,9 @@
               }
             ],
             "url": {
-              "raw": "{{URL}}/organisation/",
-              "host": ["{{URL}}"],
-              "path": ["organisation", ""]
+              "raw": "{{HOST}}/api/v1/organisation/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "organisation", ""]
             }
           },
           "response": [
@@ -1462,9 +1462,9 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{URL}}/organisation/",
-                  "host": ["{{URL}}"],
-                  "path": ["organisation", ""]
+                  "raw": "{{HOST}}/api/v1/organisation/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "organisation", ""]
                 }
               },
               "status": "OK",
@@ -1509,9 +1509,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/user/",
-              "host": ["{{URL}}"],
-              "path": ["user", ""]
+              "raw": "{{HOST}}/api/v1/user/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "user", ""]
             }
           },
           "response": [
@@ -1521,9 +1521,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/user/",
-                  "host": ["{{URL}}"],
-                  "path": ["user", ""]
+                  "raw": "{{HOST}}/api/v1/user/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "user", ""]
                 }
               },
               "status": "OK",
@@ -1572,9 +1572,9 @@
               "raw": "{\n    \"first_name\": \"test\",\n    \"gender\": \"female\",\n    \"initial_disbursement\": 0,\n    \"is_groupaccount\": false,\n    \"is_tokenagent\": false,\n    \"is_vendor\": false,\n    \"phone\": \"+61 (40) 1391 419\",\n    \"require_transfer_card_exists\": false\n}"
             },
             "url": {
-              "raw": "{{URL}}/user/",
-              "host": ["{{URL}}"],
-              "path": ["user", ""]
+              "raw": "{{HOST}}/api/v1/user/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "user", ""]
             }
           },
           "response": [
@@ -1594,9 +1594,9 @@
                   "raw": "{\n    \"first_name\": \"test\",\n    \"gender\": \"female\",\n    \"initial_disbursement\": 0,\n    \"is_groupaccount\": false,\n    \"is_tokenagent\": false,\n    \"is_vendor\": false\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/user/",
-                  "host": ["{{URL}}"],
-                  "path": ["user", ""]
+                  "raw": "{{HOST}}/api/v1/user/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "user", ""]
                 }
               },
               "status": "BAD REQUEST",
@@ -1643,9 +1643,9 @@
                   "raw": "{\n    \"first_name\": \"test\",\n    \"gender\": \"female\",\n    \"initial_disbursement\": 0,\n    \"is_groupaccount\": false,\n    \"is_tokenagent\": false,\n    \"is_vendor\": false,\n    \"phone\": \"+61 (40) 1391 419\",\n    \"require_transfer_card_exists\": false\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/user/",
-                  "host": ["{{URL}}"],
-                  "path": ["user", ""]
+                  "raw": "{{HOST}}/api/v1/user/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "user", ""]
                 }
               },
               "status": "OK",
@@ -1699,9 +1699,9 @@
               }
             },
             "url": {
-              "raw": "{{URL}}/user/4/",
-              "host": ["{{URL}}"],
-              "path": ["user", "4", ""]
+              "raw": "{{HOST}}/api/v1/user/4/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "user", "4", ""]
             }
           },
           "response": [
@@ -1726,9 +1726,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{URL}}/user/4/",
-                  "host": ["{{URL}}"],
-                  "path": ["user", "4", ""]
+                  "raw": "{{HOST}}/api/v1/user/4/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "user", "4", ""]
                 }
               },
               "status": "OK",
@@ -1780,9 +1780,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{URL}}/user/400/",
-                  "host": ["{{URL}}"],
-                  "path": ["user", "400", ""]
+                  "raw": "{{HOST}}/api/v1/user/400/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "user", "400", ""]
                 }
               },
               "status": "NOT FOUND",
@@ -1821,9 +1821,9 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{URL}}/user/4/",
-              "host": ["{{URL}}"],
-              "path": ["user", "4", ""]
+              "raw": "{{HOST}}/api/v1/user/4/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "user", "4", ""]
             }
           },
           "response": [
@@ -1833,9 +1833,9 @@
                 "method": "DELETE",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/user/4/",
-                  "host": ["{{URL}}"],
-                  "path": ["user", "4", ""]
+                  "raw": "{{HOST}}/api/v1/user/4/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "user", "4", ""]
                 }
               },
               "status": "OK",
@@ -1880,9 +1880,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/transfer_account/",
-              "host": ["{{URL}}"],
-              "path": ["transfer_account", ""]
+              "raw": "{{HOST}}/api/v1/transfer_account/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "transfer_account", ""]
             }
           },
           "response": [
@@ -1892,9 +1892,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/transfer_account/",
-                  "host": ["{{URL}}"],
-                  "path": ["transfer_account", ""]
+                  "raw": "{{HOST}}/api/v1/transfer_account/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_account", ""]
                 }
               },
               "status": "OK",
@@ -1943,9 +1943,9 @@
               "raw": "{\n    \"approve\": true,\n    \"transfer_account_name\": \"Test\"\n}"
             },
             "url": {
-              "raw": "{{URL}}/transfer_account/1/",
-              "host": ["{{URL}}"],
-              "path": ["transfer_account", "1", ""]
+              "raw": "{{HOST}}/api/v1/transfer_account/1/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "transfer_account", "1", ""]
             }
           },
           "response": [
@@ -1965,9 +1965,9 @@
                   "raw": "{\n    \"approve\": true,\n    \"transfer_account_name\": \"Test\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/transfer_account/1/",
-                  "host": ["{{URL}}"],
-                  "path": ["transfer_account", "1", ""]
+                  "raw": "{{HOST}}/api/v1/transfer_account/1/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_account", "1", ""]
                 }
               },
               "status": "CREATED",
@@ -2016,9 +2016,9 @@
               "raw": "{\n    \"transfer_account_id_list\": [1,2],\n    \"approve\": true\n}"
             },
             "url": {
-              "raw": "{{URL}}/transfer_account/",
-              "host": ["{{URL}}"],
-              "path": ["transfer_account", ""]
+              "raw": "{{HOST}}/api/v1/transfer_account/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "transfer_account", ""]
             }
           },
           "response": [
@@ -2038,9 +2038,9 @@
                   "raw": "{\n    \"transfer_account_id_list\": [1,2],\n    \"approve\": true\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/transfer_account/",
-                  "host": ["{{URL}}"],
-                  "path": ["transfer_account", ""]
+                  "raw": "{{HOST}}/api/v1/transfer_account/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_account", ""]
                 }
               },
               "status": "CREATED",
@@ -2085,9 +2085,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/credit_transfer/",
-              "host": ["{{URL}}"],
-              "path": ["credit_transfer", ""]
+              "raw": "{{HOST}}/api/v1/credit_transfer/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "credit_transfer", ""]
             }
           },
           "response": [
@@ -2097,9 +2097,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/credit_transfer/",
-                  "host": ["{{URL}}"],
-                  "path": ["credit_transfer", ""]
+                  "raw": "{{HOST}}/api/v1/credit_transfer/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "credit_transfer", ""]
                 }
               },
               "status": "OK",
@@ -2148,9 +2148,9 @@
               "raw": "{\n    \"action\": \"COMPLETE\"\n}"
             },
             "url": {
-              "raw": "{{URL}}/credit_transfer/1/",
-              "host": ["{{URL}}"],
-              "path": ["credit_transfer", "1", ""]
+              "raw": "{{HOST}}/api/v1/credit_transfer/1/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "credit_transfer", "1", ""]
             }
           },
           "response": [
@@ -2170,9 +2170,9 @@
                   "raw": "{\n    \"action\": \"COMPLETE\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/credit_transfer/1/",
-                  "host": ["{{URL}}"],
-                  "path": ["credit_transfer", "1", ""]
+                  "raw": "{{HOST}}/api/v1/credit_transfer/1/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "credit_transfer", "1", ""]
                 }
               },
               "status": "CREATED",
@@ -2221,9 +2221,9 @@
               "raw": "{\n    \"recipient_transfer_account_id\": \"2\",\n    \"sender_transfer_account_id\": null,\n    \"target_balance\": null,\n    \"transfer_amount\": 100,\n    \"transfer_type\": \"DISBURSEMENT\"\n}"
             },
             "url": {
-              "raw": "{{URL}}/credit_transfer/",
-              "host": ["{{URL}}"],
-              "path": ["credit_transfer", ""]
+              "raw": "{{HOST}}/api/v1/credit_transfer/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "credit_transfer", ""]
             }
           },
           "response": [
@@ -2243,9 +2243,9 @@
                   "raw": "{\n    \"recipient_transfer_account_id\": \"2\",\n    \"sender_transfer_account_id\": null,\n    \"target_balance\": null,\n    \"transfer_amount\": 100,\n    \"transfer_type\": \"DISBURSEMENT\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/credit_transfer/",
-                  "host": ["{{URL}}"],
-                  "path": ["credit_transfer", ""]
+                  "raw": "{{HOST}}/api/v1/credit_transfer/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "credit_transfer", ""]
                 }
               },
               "status": "CREATED",
@@ -2284,9 +2284,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/credit_transfer/stats",
-              "host": ["{{URL}}"],
-              "path": ["credit_transfer", "stats"]
+              "raw": "{{HOST}}/api/v1/credit_transfer/stats",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "credit_transfer", "stats"]
             }
           },
           "response": [
@@ -2296,9 +2296,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/credit_transfer/stats",
-                  "host": ["{{URL}}"],
-                  "path": ["credit_transfer", "stats"]
+                  "raw": "{{HOST}}/api/v1/credit_transfer/stats",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "credit_transfer", "stats"]
                 }
               },
               "status": "OK",
@@ -2337,9 +2337,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/credit_transfer/filters",
-              "host": ["{{URL}}"],
-              "path": ["credit_transfer", "filters"]
+              "raw": "{{HOST}}/api/v1/credit_transfer/filters",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "credit_transfer", "filters"]
             }
           },
           "response": [
@@ -2349,9 +2349,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/credit_transfer/filters",
-                  "host": ["{{URL}}"],
-                  "path": ["credit_transfer", "filters"]
+                  "raw": "{{HOST}}/api/v1/credit_transfer/filters",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "credit_transfer", "filters"]
                 }
               },
               "status": "OK",
@@ -2396,9 +2396,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/search/?search_string=test&search_type=transfer_accounts&order=ASC&sort_by=first_name",
-              "host": ["{{URL}}"],
-              "path": ["search", ""],
+              "raw": "{{HOST}}/api/v1/search/?search_string=test&search_type=transfer_accounts&order=ASC&sort_by=first_name",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "search", ""],
               "query": [
                 {
                   "key": "search_string",
@@ -2426,9 +2426,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/search/?search_string=test&search_type=credit_transfers&order=ASC&sort_by=first_name",
-                  "host": ["{{URL}}"],
-                  "path": ["search", ""],
+                  "raw": "{{HOST}}/api/v1/search/?search_string=test&search_type=credit_transfers&order=ASC&sort_by=first_name",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "search", ""],
                   "query": [
                     {
                       "key": "search_string",
@@ -2483,9 +2483,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/search/?search_string=test&search_type=transfer_accounts&order=ASC&sort_by=first_name",
-                  "host": ["{{URL}}"],
-                  "path": ["search", ""],
+                  "raw": "{{HOST}}/api/v1/search/?search_string=test&search_type=transfer_accounts&order=ASC&sort_by=first_name",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "search", ""],
                   "query": [
                     {
                       "key": "search_string",
@@ -2548,9 +2548,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/transfer_usage/",
-              "host": ["{{URL}}"],
-              "path": ["transfer_usage", ""]
+              "raw": "{{HOST}}/api/v1/transfer_usage/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "transfer_usage", ""]
             }
           },
           "response": [
@@ -2560,9 +2560,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/transfer_usage/",
-                  "host": ["{{URL}}"],
-                  "path": ["transfer_usage", ""]
+                  "raw": "{{HOST}}/api/v1/transfer_usage/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_usage", ""]
                 }
               },
               "status": "OK",
@@ -2611,9 +2611,9 @@
               "raw": "{\n    \"name\": \"Fruit\",\n    \"icon\": \"food-apple\",\n    \"priority\": 1,\n    \"translations\": {\"fr\": \"le fruit\"}\n}"
             },
             "url": {
-              "raw": "{{URL}}/transfer_usage/",
-              "host": ["{{URL}}"],
-              "path": ["transfer_usage", ""]
+              "raw": "{{HOST}}/api/v1/transfer_usage/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "transfer_usage", ""]
             }
           },
           "response": [
@@ -2633,9 +2633,9 @@
                   "raw": "{\n    \"name\": \"Fruit\",\n    \"icon\": \"food-apple\",\n    \"priority\": 1,\n    \"translations\": {\"fr\": \"le fruit\"}\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/transfer_usage/",
-                  "host": ["{{URL}}"],
-                  "path": ["transfer_usage", ""]
+                  "raw": "{{HOST}}/api/v1/transfer_usage/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_usage", ""]
                 }
               },
               "status": "CREATED",
@@ -2680,21 +2680,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/filters/",
-              "host": ["{{URL}}"],
-              "path": ["filters", ""]
+              "raw": "{{HOST}}/api/v1/filters/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "filters", ""]
             }
           },
           "response": [
             {
-              "name": "Get Filters",
+              "name": "200 OK",
               "originalRequest": {
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/filters/",
-                  "host": ["{{URL}}"],
-                  "path": ["filters", ""]
+                  "raw": "{{HOST}}/api/v1/filters/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "filters", ""]
                 }
               },
               "status": "OK",
@@ -2743,14 +2743,14 @@
               "raw": "{\n    \"filter_name\": \"Acme filter\",\n    \"filter_attributes\": {\"id\": 1, \"type\": \"discrete\", \"keyName\": \"bio\", \"allowedValues\": [\"dd\"]}\n}"
             },
             "url": {
-              "raw": "{{URL}}/filters/",
-              "host": ["{{URL}}"],
-              "path": ["filters", ""]
+              "raw": "{{HOST}}/api/v1/filters/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "filters", ""]
             }
           },
           "response": [
             {
-              "name": "Create Filter",
+              "name": "201 CREATED",
               "originalRequest": {
                 "method": "POST",
                 "header": [
@@ -2765,9 +2765,9 @@
                   "raw": "{\n    \"filter_name\": \"Acme filter\",\n    \"filter_attributes\": {\"id\": 1, \"type\": \"discrete\", \"keyName\": \"bio\", \"allowedValues\": [\"dd\"]}\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/filters/",
-                  "host": ["{{URL}}"],
-                  "path": ["filters", ""]
+                  "raw": "{{HOST}}/api/v1/filters/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "filters", ""]
                 }
               },
               "status": "CREATED",
@@ -2812,9 +2812,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{URL}}/transfer_cards/",
-              "host": ["{{URL}}"],
-              "path": ["transfer_cards", ""]
+              "raw": "{{HOST}}/api/v1/transfer_cards/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "transfer_cards", ""]
             }
           },
           "response": [
@@ -2824,9 +2824,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{URL}}/transfer_cards/",
-                  "host": ["{{URL}}"],
-                  "path": ["transfer_cards", ""]
+                  "raw": "{{HOST}}/api/v1/transfer_cards/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_cards", ""]
                 }
               },
               "status": "OK",
@@ -2875,9 +2875,9 @@
               "raw": "{\n    \"public_serial_number\": \"0x123nf\",\n    \"nfc_serial_number\": \"nfc123\"\n}"
             },
             "url": {
-              "raw": "{{URL}}/transfer_cards/",
-              "host": ["{{URL}}"],
-              "path": ["transfer_cards", ""]
+              "raw": "{{HOST}}/api/v1/transfer_cards/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "transfer_cards", ""]
             }
           },
           "response": [
@@ -2897,9 +2897,9 @@
                   "raw": "{\n    \"public_serial_number\": \"0x123nf\",\n    \"nfc_serial_number\": \"nfc123\"\n}"
                 },
                 "url": {
-                  "raw": "{{URL}}/transfer_cards/",
-                  "host": ["{{URL}}"],
-                  "path": ["transfer_cards", ""]
+                  "raw": "{{HOST}}/api/v1/transfer_cards/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_cards", ""]
                 }
               },
               "status": "CREATED",
@@ -2954,9 +2954,9 @@
               "raw": "{\n    \"date_range\": \"all\",\n    \"export_type\": \"\",\n    \"include_transfers\": false,\n    \"payable_period_end_date\": null,\n    \"payable_period_start_date\": null,\n    \"selected\": [],\n    \"user_type\": \"all\"\n}"
             },
             "url": {
-              "raw": "{{URL}}/export/",
-              "host": ["{{URL}}"],
-              "path": ["export", ""]
+              "raw": "{{HOST}}/api/v1/export/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "export", ""]
             }
           },
           "response": []
