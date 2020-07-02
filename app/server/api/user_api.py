@@ -118,7 +118,7 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external',))
     def post(self, user_id):
 
         post_data = request.get_json()
@@ -172,7 +172,7 @@ class UserAPI(MethodView):
 
 
 class ResetPinAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'admin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'admin'}, allowed_basic_auth_types=('external',))
     def post(self, user_id):
 
         post_data = request.get_json()
