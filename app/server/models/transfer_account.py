@@ -112,17 +112,11 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     @balance.setter
     def balance(self, val):
         self._balance_wei = val * int(1e16)
-
-    def decrement_balance(self, val):
-        self.increment_balance(-1 * val)
-
-    def increment_balance(self, val):
-        # self.balance += val
-        val_wei = val * int(1e16)
-        if isinstance(val_wei, float):
-            val_wei = Decimal(val_wei).quantize(Decimal('1'))
-
-        self._balance_wei = (self._balance_wei or 0) + val_wei
+        
+    def calculate_balance(self):
+        new_balance = self.total_received - self.total_sent
+        self.balance = new_balance
+        return new_balance
 
     @hybrid_property
     def total_sent(self):
