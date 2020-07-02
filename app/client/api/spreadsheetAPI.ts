@@ -1,6 +1,10 @@
 import { apiClient } from "./client/apiClient";
+import {
+  SaveDatasetPayload,
+  SpreadsheetUploadPayload
+} from "../reducers/spreadsheet/types";
 
-export const uploadSpreadsheetAPI = ({ body }) =>
+export const uploadSpreadsheetAPI = ({ body }: SpreadsheetUploadPayload) =>
   apiClient({
     url: "/spreadsheet/upload/",
     method: "POST",
@@ -8,7 +12,7 @@ export const uploadSpreadsheetAPI = ({ body }) =>
     body: body
   });
 
-export const saveDatasetAPI = ({ body }) =>
+export const saveDatasetAPI = ({ body }: SaveDatasetPayload) =>
   apiClient({ url: "/dataset/", method: "POST", body: body });
 
 export const loadDatasetListAPI = () =>

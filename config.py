@@ -7,7 +7,6 @@ logg = logging.getLogger(__name__)
 
 VERSION = '1.2.0'  # Remember to bump this in every PR
 
-
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
 RELATIVE_CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'config_files/')
