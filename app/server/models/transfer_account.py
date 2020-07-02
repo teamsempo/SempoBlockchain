@@ -109,6 +109,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # rounded to whole value of balance
         return float((self._balance_wei or 0) / int(1e16))
 
+# Problem
     @balance.setter
     def balance(self, val):
         self._balance_wei = val * int(1e16)
