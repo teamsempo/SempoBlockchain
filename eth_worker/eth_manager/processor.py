@@ -259,6 +259,8 @@ class TransactionProcessor(object):
 
                 unstarted_posteriors = self.get_unstarted_posteriors(task)
 
+                self.persistence_interface.set_task_status_text(task, 'SUCCESS')
+
                 for dep_task in unstarted_posteriors:
                     print('Starting posterior task: {}'.format(dep_task.uuid))
                     signature(utils.eth_endpoint('_attempt_transaction'), args=(dep_task.uuid,)).delay()
