@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "2e487cd5-258b-40ff-8d9f-cf9374b96f5e",
     "name": "SempoBlockchain",
-    "description": "API Documentation for the [Sempo Platform](https://github.com/teamsempo/SempoBlockchain).\n\nFor local testing, run the `quick_setup_script.sh` and set the `AUTH_TOKEN` and `URL` parameters. Alternatively, you can play with a production version of the platform on dev.withsempo.com.\n\nNOTE: Not all APIs are currently documented\n\n\n**Environment Variables**\n\n`AUTH_TOKEN` = {{AUTH_TOKEN}}\n\n`URL` = {{URL}}",
+    "description": "API Documentation for the [Sempo Platform](https://github.com/teamsempo/SempoBlockchain).\n\nFor local testing, run the `quick_setup_script.sh` and set the `AUTH_TOKEN` and `HOST` parameters. Alternatively, you can play with a production version of the platform on dev.withsempo.com.\n\nNOTE: Not all APIs are currently documented\n\n\n**Environment Variables**\n\n`AUTH_TOKEN` = {{AUTH_TOKEN}}\n\n`HOST` = {{HOST}}",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
