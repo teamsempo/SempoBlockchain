@@ -12,7 +12,7 @@ user_kobo_blueprint = Blueprint('user_kobo', __name__)
 
 
 class UserKoboAPI(MethodView):
-    @requires_auth(allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_basic_auth_types=('external',))
     def post(self, user_id):
         post_data = request.get_json()
 
