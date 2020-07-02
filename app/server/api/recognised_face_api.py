@@ -19,7 +19,7 @@ def get_user_from_image_id(image_id):
 
 class RecognisedFaceAPI(MethodView):
 
-    @requires_auth(allowed_basic_auth_types=('internal'))
+    @requires_auth(allowed_basic_auth_types=('internal',))
     def post(self):
 
         post_data = request.get_json()
@@ -45,7 +45,7 @@ class RecognisedFaceAPI(MethodView):
 
         return make_response(jsonify({'message': 'user not found'})), 400
 
-    @requires_auth(allowed_basic_auth_types=('internal'))
+    @requires_auth(allowed_basic_auth_types=('internal',))
     def put(self):
 
         put_data = request.get_json()
