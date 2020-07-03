@@ -197,12 +197,16 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
             disbursement = self._make_initial_disbursement(initial_disbursement)
             return disbursement
 
-    def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
+    def _make_initial_disbursement(self, initial_disbursement=None, auto_resolve=False):
         from server.utils.credit_transfer import make_payment_transfer
 
         active_org = getattr(g, 'active_organisation', Organisation.master_organisation())
-        initial_disbursement = initial_disbursement or active_org.default_disbursement
+        if initial_disbursement is None:
+            # initial disbursement defaults to None. If initial_disbursement is set then skip this section.
+            # If none, then we want to see if the active_org has a default disbursement amount
+            initial_disbursement = active_org.default_disbursement
         if not initial_disbursement:
+            # if initial_disbursement is still none, then we don't want to create a transfer.
             return None
 
         if initial_disbursement == active_org.default_disbursement:
