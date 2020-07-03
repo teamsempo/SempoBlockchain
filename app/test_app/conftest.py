@@ -106,6 +106,17 @@ def create_transfer_account_user(test_client, init_database, create_organisation
     return user
 
 
+@pytest.fixture(scope='function')
+def create_transfer_account_user_function(test_client, init_database, create_organisation):
+    from server.utils.user import create_transfer_account_user
+    user = create_transfer_account_user(first_name='Transfer',
+                                        last_name='User 2',
+                                        phone=fake.msisdn(),
+                                        organisation=create_organisation)
+    db.session.commit()
+    return user
+
+
 @pytest.fixture(scope='module')
 def create_user_with_existing_transfer_account(test_client, init_database, create_transfer_account):
     from server.utils.user import create_transfer_account_user
