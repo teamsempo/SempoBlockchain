@@ -8,6 +8,8 @@ from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
+from server.utils.auth import multi_org
+
 from server.exceptions import ResourceAlreadyDeletedError, TransferAccountDeletionError
 
 user_blueprint = Blueprint('user', __name__)
@@ -15,6 +17,7 @@ user_blueprint = Blueprint('user', __name__)
 
 class UserAPI(MethodView):
     @requires_auth
+    @multi_org
     def get(self, user_id):
 
         can_see_full_details = AccessControl.has_suffient_role(
@@ -25,7 +28,7 @@ class UserAPI(MethodView):
 
             if public_serial_number:
                 user = User.query.filter_by(
-                    public_serial_number=public_serial_number.strip()).first().execution_options(multi_org=True)
+                    public_serial_number=public_serial_number.strip()).first()
 
                 if user:
 
@@ -62,7 +65,7 @@ class UserAPI(MethodView):
             account_type_filter = account_type_filter.lower()
 
         if user_id:
-            user = User.query.execution_options(multi_org=True).get(user_id)
+            user = User.query.get(user_id)
             #
             # user.cashout_authorised()
 
@@ -85,17 +88,17 @@ class UserAPI(MethodView):
 
         else:
             if account_type_filter == 'beneficiary':
-                user_query = User.query.filter(User.has_beneficiary_role).execution_options(multi_org=True)
+                user_query = User.query.filter(User.has_beneficiary_role)
 
             elif account_type_filter == 'vendor':
-                user_query = User.query.filter(User.has_vendor_role).execution_options(multi_org=True)
+                user_query = User.query.filter(User.has_vendor_role)
 
             elif account_type_filter == 'admin':
                 user_query = User.query.filter(
-                    User.has_admin_role).order_by(User.created.desc()).execution_options(multi_org=True)
+                    User.has_admin_role).order_by(User.created.desc())
 
             else:
-                user_query = User.query.execution_options(multi_org=True)
+                user_query = User.query
 
             users, total_items, total_pages = paginate_query(user_query, User)
 

@@ -10,6 +10,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 
+from server.utils.auth import multi_org
 from server.utils import metrics_cache
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 from sqlalchemy.orm import aliased
@@ -20,6 +21,7 @@ from sqlalchemy import case, or_
 import sqlalchemy
 import datetime, json
 
+@multi_org
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
                              user_filter={}):
     date_filter = []
@@ -64,25 +66,25 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     if user_filter or date_filter:
         disable_cache = True
 
-    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(multi_org=True)
+    total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
     total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter)
     total_distributed = metrics_cache.execute_with_partial_history_cache('total_distributed', total_distributed, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
-    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(multi_org=True)
+    total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
     total_spent = total_spent.filter(*standard_payment_filters).filter(*date_filter)
     total_spent = metrics_cache.execute_with_partial_history_cache('total_spent', total_spent, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
-    total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total')).execution_options(multi_org=True)
+    total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
     total_exchanged = total_exchanged.filter(*exchanged_filters).filter(*date_filter)
     total_exchanged = metrics_cache.execute_with_partial_history_cache('total_exchanged', total_exchanged, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
-    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters).execution_options(multi_org=True)
+    total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
     total_beneficiaries = metrics_cache.execute_with_partial_history_cache('total_beneficiaries', total_beneficiaries, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
 
-    total_vendors = db.session.query(User).filter(*vendor_filters).execution_options(multi_org=True)
+    total_vendors = db.session.query(User).filter(*vendor_filters)
     total_vendors = metrics_cache.execute_with_partial_history_cache('total_vendors', total_vendors, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
 
     total_users = total_beneficiaries + total_vendors
@@ -91,7 +93,7 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         .label('transfer_count'))\
         .filter(*standard_payment_filters) \
         .filter(*date_filter) \
-            .execution_options(multi_org=True).first().transfer_count
+            .first().transfer_count
 
     exhausted_balance_count = db.session.query(func.count(func.distinct(
         CreditTransfer.sender_transfer_account_id))
@@ -99,10 +101,10 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         .join(CreditTransfer.sender_transfer_account)\
         .filter(*exhaused_balance_filters) \
         .filter(*date_filter) \
-            .execution_options(multi_org=True).first().transfer_count
+            .first().transfer_count
 
     daily_transaction_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', CreditTransfer.created).label('date')).execution_options(multi_org=True)
+                                                func.date_trunc('day', CreditTransfer.created).label('date'))
     daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
     daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
         .filter(*standard_payment_filters) \
@@ -110,14 +112,14 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     daily_transaction_volume = metrics_cache.execute_with_partial_history_cache('daily_transaction_volume', daily_transaction_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
 
     daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
-                                                func.date_trunc('day', CreditTransfer.created).label('date')).execution_options(multi_org=True)
+                                                func.date_trunc('day', CreditTransfer.created).label('date'))
     daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
     daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
         .filter(*disbursement_filters) \
         .filter(*date_filter)
     daily_disbursement_volume = metrics_cache.execute_with_partial_history_cache('daily_disbursement_volume', daily_disbursement_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
 
-    transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use)).execution_options(multi_org=True)
+    transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
     transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
     transfer_use_breakdown = transfer_use_breakdown.filter(*transfer_use_filters) \
         .group_by(CreditTransfer.transfer_use.cast(JSONB)) \
@@ -201,7 +203,7 @@ def apply_ca_filters(query, filters, user_join_condition):
 
     # get all custom attributes and create pivot table
     new_cs = [CustomAttributeUserStorage.user_id]
-    for value in db.session.query(CustomAttributeUserStorage.name).execution_options(multi_org=True).distinct():
+    for value in db.session.query(CustomAttributeUserStorage.name).distinct():
         value = value[0]
         new_cs.append(
              func.max(case(
@@ -229,7 +231,7 @@ def apply_ca_filters(query, filters, user_join_condition):
                to_batch.append(pivot.c[column] > val)
             elif comparator == "LT":
                 to_batch.append(pivot.c[column] < val)
-        query = query.filter(or_(*to_batch)).execution_options(multi_org=True)
+        query = query.filter(or_(*to_batch))
 
     return query
 
@@ -315,7 +317,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
                             .filter(CreditTransfer.id > highest_transfer_id_checked)
                             .filter(CreditTransfer.created >
                                     datetime.datetime.utcnow() - datetime.timedelta(hours=36))
-                            .execution_options(multi_org=True)
+                            
                             .all())
 
 
@@ -334,7 +336,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
         if len(new_dibursements) > 0:
             highest_transfer_id_checked = new_dibursements[-1].id
         else:
-            all_transfers = CreditTransfer.query.execution_options(multi_org=True).all()
+            all_transfers = CreditTransfer.query.all()
             if len(all_transfers) > 0:
                 highest_transfer_id_checked = all_transfers[-1].id
             else:

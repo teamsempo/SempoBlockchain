@@ -134,7 +134,9 @@ def filter_by_org(query):
                     # context has query_organisations set from the HTTP request, use those  
                     # organizations. Otherwise, use a singleton of the current active org 
                     query_organisations = [active_organisation_id] if active_organisation_id else []
-                    if multi_org and getattr(g, 'query_organisations', None):
+                    if getattr(g, 'query_organisations', None):
+                        if not multi_org:
+                            raise Exception('Multiple organizations not supported for this operation')
                         query_organisations = g.query_organisations
 
                     if issubclass(mapper.class_, ManyOrgBase):
