@@ -107,7 +107,6 @@ def deploy_cic_token(post_data, creating_org=None):
 
             _creating_org = Organisation.query.get(_creating_org_id)
             _creating_org.bind_token(_token)
-            # Problem
             _creating_org.org_level_transfer_account.balance = int(_deploy_data['issue_amount_wei'] / 1e16)
 
             bal = bt.get_wallet_balance(_creating_org.primary_blockchain_address, _token)
