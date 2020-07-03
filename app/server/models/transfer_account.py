@@ -29,6 +29,12 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     name            = db.Column(db.String())
     _balance_wei    = db.Column(db.Numeric(27), default=0)
+    # The purpose of the balance offset is to allow the master wallet to be seeded at
+    # initial deploy time. Since balance is calculated by subtracting total credits from 
+    # total debits, without a balance offset we'd be stuck in a zero-sum system with no 
+    # mechanism to have initial funds. It's essentially an app-level analogy to minting 
+    # which happens on the chain. 
+    _balance_offset    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -112,10 +118,10 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 # Problem
     @balance.setter
     def balance(self, val):
-        self._balance_wei = val * int(1e16)
+        self._balance_offset = val * int(1e16)
         
     def calculate_balance(self):
-        new_balance = self.total_received - self.total_sent
+        new_balance = self.total_received - self.total_sent + self._balance_offset
         self.balance = new_balance
         return new_balance
 
