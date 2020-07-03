@@ -5,13 +5,15 @@ These tests use GETs and POSTs to different URLs to check for the proper behavio
 of the auth blueprint.
 """
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt
 import pytest, json, config, base64
 import pyotp
 from cryptography.fernet import Fernet
 
 from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
+from flask import current_app
 
 
 def interal_auth_username():
@@ -505,3 +507,45 @@ def test_token_auth(test_client, authed_sempo_admin_user, role, tier, status_cod
                                ),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
+
+
+@pytest.mark.parametrize("user, is_activated, is_disabled, message", [
+    (False, None, None, 'user not found'),
+    (True, False, None, 'user not activated'),
+    (True, True, True, 'user has been disabled'),
+])
+def test_token_auth_errors(test_client, authed_sempo_admin_user, user, is_activated, is_disabled, message):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/check/token/' api is requested (GET)
+    THEN check the response is only returned for superadmin
+    """
+
+    if user:
+        authed_sempo_admin_user.is_activated = is_activated
+        authed_sempo_admin_user.is_disabled = is_disabled
+        authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
+        auth = get_complete_auth_token(authed_sempo_admin_user)
+    else:
+        # build a fake auth token with incorrect user id
+        payload = {
+            'exp': datetime.utcnow() + timedelta(days=7, seconds=0),
+            'iat': datetime.utcnow(),
+            'id': 12,
+            'roles': 'ADMIN'
+        }
+
+        auth = jwt.encode(
+            payload,
+            current_app.config['SECRET_KEY'],
+            algorithm='HS256'
+        )
+
+    response = test_client.get('/api/v1/auth/check/token/',
+                               headers=dict(
+                                   Authorization=auth,
+                                   Accept='application/json'
+                               ),
+                               content_type='application/json', follow_redirects=True)
+    assert response.status_code == 401
+    assert response.json['message'] == message
