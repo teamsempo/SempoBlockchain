@@ -7,6 +7,7 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
@@ -280,7 +281,7 @@ def user_with_reserve_balance(create_transfer_account_user, external_reserve_tok
     bt.make_token_transfer(loaded_master_wallet_address,
                         transfer_account.token,
                         loaded_master_wallet_address, transfer_account.blockchain_address,
-                        amount)
+                        amount * int(1e16))
 
     transfer_account.balance = amount
     create_transfer_account_user.is_activated = True
