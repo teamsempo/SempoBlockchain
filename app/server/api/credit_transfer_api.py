@@ -19,7 +19,7 @@ from server.utils.credit_transfer import (
     make_target_balance_transfer,
     make_blockchain_transfer)
 from server.utils.metrics import calculate_transfer_stats
-
+from server.utils.auth import multi_org
 from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
 
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
@@ -29,10 +29,9 @@ credit_transfer_blueprint = Blueprint('credit_transfer', __name__)
 
 
 class CreditTransferAPI(MethodView):
-
+    @multi_org
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, credit_transfer_id):
-        g.multi_org = True
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
         get_transfer_stats = request.args.get('get_stats', False)

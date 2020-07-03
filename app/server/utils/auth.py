@@ -34,6 +34,16 @@ def show_all(f):
         return f(*args, **kwargs)
     return wrapper
 
+def multi_org(f):
+    """
+    Decorator for endpoints to tell SQLAlchemy that it's dealing with a multi-org friendly endpoint
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        g.multi_org = True
+        return f(*args, **kwargs)
+    return wrapper
+
 
 def requires_auth(f=None,
                   allowed_roles: Optional[Dict]=None,
