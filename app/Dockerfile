@@ -39,4 +39,6 @@ ENV GIT_HASH=$GIT_HASH
 
 EXPOSE 9000
 
+USER nobody
+
 CMD ["/_docker_app_script.sh"]
