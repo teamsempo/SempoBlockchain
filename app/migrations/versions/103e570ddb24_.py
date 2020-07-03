@@ -1,4 +1,4 @@
-"""empty message
+"""Adds balance offset to transfer_account
 
 Revision ID: 103e570ddb24
 Revises: 49e8a333d285
