@@ -8,10 +8,7 @@ services:
       CONTAINER_TYPE: "APP"
       CONTAINER_MODE: "" # sets up sample data
   eth_worker:
-    environment:
-      DEPLOYMENT_NAME: "LOCAL_DOCKER"
-      CONTAINER_TYPE: "PRIMARY"
-      CONTAINER_MODE: "" # sets up sample data
+    command: ["echo", "unused"]
   eth_worker_high_priority:
     build:
       context: .

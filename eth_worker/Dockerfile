@@ -18,4 +18,6 @@ EXPOSE 80
 
 RUN chmod +x /_docker_worker_script.sh
 
+USER nobody
+
 CMD ["/_docker_worker_script.sh"]
