@@ -23,6 +23,7 @@ def test_tfa_logic_error(test_client, init_database, authed_sempo_admin_user, no
         tfa_token = tfa_token + 'foo'
 
     if invalid_user_id:
+        # build a fake tfa token with incorrect user ID
         payload = {
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=30),
             'iat': datetime.datetime.utcnow(),
