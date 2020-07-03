@@ -115,14 +115,14 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # rounded to whole value of balance
         return float((self._balance_wei or 0) / int(1e16))
 
-# Problem
     @balance.setter
     def balance(self, val):
         self._balance_offset = val * int(1e16)
-        
+        self.calculate_balance()
+
     def calculate_balance(self):
-        new_balance = self.total_received - self.total_sent + self._balance_offset
-        self.balance = new_balance
+        new_balance = self.total_received * int(1e16) - self.total_sent * int(1e16) + self._balance_offset
+        self._balance_wei = new_balance
         return new_balance
 
     @hybrid_property

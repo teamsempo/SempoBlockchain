@@ -101,42 +101,42 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
     messages = mock_sms_apis
     assert messages == [{'phone': user.phone, 'message': 'Dial *384*96# Safaricom or *483*46# Airtel to change your PIN'}]
 
-@pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms", [
+@pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms, phone", [
 
     (None, None,
      'Hello Magoo, you have been registered on Sempo! Your balance is 100.00 Sarafu.',
-     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.'),
+     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.', '123456789'),
 
     (None, "grassroots",
      'Hello Magoo you have been registered on Sarafu Network! Your balance is 100.00 Sarafu. To use dial *384*96# Safaricom or *483*46# Airtel. For help 0757628885',
-     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.'),
+     'By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.', '223456789'),
 
     ('sw', None,
      'Habari Magoo, umesajiliwa kwa Sempo! Salio yako ni 100.00 Sarafu.',
-     'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.'),
+     'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.', '323456789'),
 
     ('sw', 'grassroots',
      'Habari Magoo, umesajiliwa kwa huduma ya sarafu! Salio lako ni Sarafu 100.00. Kutumia bonyeza *384*96# kwa Safaricom au *483*46# Airtel. Kwa Usaidizi 0757628885',
-     'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.'),
+     'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.', '423456789'),
 
 ])
 def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
-                          preferred_language, org_key, expected_welcome, expected_terms):
+                          preferred_language, org_key, expected_welcome, expected_terms, phone):
     from flask import g
+    from server import db
 
     token = TokenFactory(name='Sarafu', symbol='SARAFU')
     organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token, country_code='AU')
     g.active_organisation = organisation
     transfer_account = TransferAccountFactory(balance=10000, token=token, organisation=organisation)
     user = UserFactory(first_name='Magoo',
-                       phone='123456789',
+                       phone=phone,
                        preferred_language=preferred_language,
                        organisations=[organisation],
                        default_organisation=organisation,
                        transfer_accounts=[transfer_account])
-
     send_onboarding_sms_messages(user)
 
     messages = mock_sms_apis
-    assert messages == [{'phone': '+61123456789', 'message': expected_welcome},
-                        {'phone': '+61123456789', 'message': expected_terms},]
+    assert messages == [{'phone': f'+61{phone}', 'message': expected_welcome},
+                        {'phone': f'+61{phone}', 'message': expected_terms},]
