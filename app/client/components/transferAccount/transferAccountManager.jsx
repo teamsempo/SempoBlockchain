@@ -10,8 +10,7 @@ const SingleDatePickerWrapper = lazy(() =>
 import NewTransferManager from "../management/newTransferManager.jsx";
 import DateTime from "../dateTime.jsx";
 
-import { editTransferAccount } from "../../reducers/transferAccountReducer";
-import { createTransferRequest } from "../../reducers/creditTransferReducer";
+import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
 
@@ -28,9 +27,10 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    createTransferRequest: payload => dispatch(createTransferRequest(payload)),
     editTransferAccountRequest: (body, path) =>
-      dispatch(editTransferAccount({ body, path }))
+      dispatch(
+        EditTransferAccountAction.editTransferAccountRequest({ body, path })
+      )
   };
 };
 
@@ -55,7 +55,6 @@ class TransferAccountManager extends React.Component {
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
-    this.createNewTransfer = this.createNewTransfer.bind(this);
     this.onSave = this.onSave.bind(this);
     this.onNewTransfer = this.onNewTransfer.bind(this);
   }
@@ -157,29 +156,6 @@ class TransferAccountManager extends React.Component {
 
   onNewTransfer() {
     this.handleClick();
-  }
-
-  createNewTransfer() {
-    if (this.state.transfer_amount > 0) {
-      var transfer_account_ids = this.props.transfer_account_id;
-      var transfer_amount = this.state.transfer_amount * 100;
-      var transfer_type = this.state.create_transfer_type;
-      var credit_transfer_type_filter = this.state.transfer_type;
-      const transfer_account_filter = this.props.vendors
-        ? "?account_type=vendor"
-        : "?account_type=beneficiary";
-      const credit_transfer_filter = `?transfer_account_ids=${transfer_account_ids}&transfer_type=${credit_transfer_type_filter}`;
-      var id = null;
-
-      this.props.createTransferRequest({
-        transfer_account_ids,
-        transfer_amount,
-        transfer_type,
-        credit_transfer_filter,
-        transfer_account_filter,
-        id
-      });
-    }
   }
 
   render() {

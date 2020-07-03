@@ -16,6 +16,7 @@ from server.models.user import User
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
+from server.utils.transfer_enums import TransferModeEnum
 from server.models.utils import paginate_query
 from server.schemas import me_credit_transfers_schema, me_credit_transfer_schema
 from server.utils.auth import requires_auth, show_all
@@ -74,6 +75,7 @@ class MeCreditTransferAPI(MethodView):
         created = post_data.get('created')
 
         transfer_use = post_data.get('transfer_use')
+        transfer_mode = post_data.get('transfer_mode')
 
         transfer_amount = round(float(post_data.get('transfer_amount', 0)),6)
 
@@ -201,6 +203,7 @@ class MeCreditTransferAPI(MethodView):
                                                              g.user,
                                                              public_identifier.strip('ethereum:'),
                                                              transfer_use,
+                                                             transfer_mode=TransferModeEnum.EXTERNAL,
                                                              uuid=uuid)
 
             if not counterparty_user:
@@ -271,6 +274,7 @@ class MeCreditTransferAPI(MethodView):
                                              receive_user=receive_user,
                                              receive_transfer_account=receive_transfer_account,
                                              transfer_use=transfer_use,
+                                             transfer_mode=transfer_mode,
                                              uuid=uuid)
 
         except AccountNotApprovedError as e:
@@ -338,7 +342,7 @@ class RequestWithdrawalAPI(MethodView):
 
         withdrawal_amount = abs(round(float(post_data.get('withdrawal_amount', transfer_account.balance)),6))
 
-        transfer_account.initialise_withdrawal(withdrawal_amount)
+        transfer_account.initialise_withdrawal(withdrawal_amount, transfer_mode=TransferModeEnum.MOBILE)
 
         db.session.commit()
 

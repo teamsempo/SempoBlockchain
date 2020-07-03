@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import ReactTable from "react-table";
-import { browserHistory } from "../../app.jsx";
+import { browserHistory } from "../../createStore.js";
 
 import {
   ModuleBox,
@@ -18,12 +18,11 @@ import NewTransferManager from "../management/newTransferManager.jsx";
 
 import { formatMoney } from "../../utils";
 import {
-  editTransferAccount,
-  setSelected,
-  loadTransferAccounts
-} from "../../reducers/transferAccountReducer";
+  EditTransferAccountAction,
+  SetTransferAccountAction,
+  LoadTransferAccountAction
+} from "../../reducers/transferAccount/actions";
 import { TransferAccountTypes } from "../transferAccount/types";
-import organizationWrapper from "../organizationWrapper";
 
 const mapStateToProps = state => {
   return {
@@ -35,10 +34,14 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    editTransferAccountRequest: body => dispatch(editTransferAccount({ body })),
-    setSelected: selected => dispatch(setSelected(selected)),
+    editTransferAccountRequest: body =>
+      dispatch(EditTransferAccountAction.editTransferAccountRequest({ body })),
+    setSelected: selected =>
+      dispatch(SetTransferAccountAction.setSelected(selected)),
     loadTransferAccounts: (query, path) =>
-      dispatch(loadTransferAccounts({ query, path }))
+      dispatch(
+        LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
+      )
   };
 };
 
@@ -487,7 +490,7 @@ class TransferAccountList extends React.Component {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(organizationWrapper(TransferAccountList));
+)(TransferAccountList);
 
 const UserSVG = styled.img`
   cursor: pointer;

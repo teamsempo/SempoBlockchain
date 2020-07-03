@@ -30,7 +30,7 @@ class SchemaBase(Schema):
 class BlockchainTaskableSchemaBase(SchemaBase):
 
     blockchain_task_uuid  = fields.Str(dump_only=True)
-    blockchain_status   = fields.Function(lambda obj: obj.blockchain_status)
+    blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
 
 class UserSchema(SchemaBase):
     first_name              = fields.Str()
@@ -139,7 +139,7 @@ class TokenSchema(SchemaBase):
 
     # exchange_contracts  = fields.Nested("server.schemas.ExchangeContractSchema", many=True)
 
-class CreditTransferSchema(Schema):
+class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     id      = fields.Int(dump_only=True)
     created = fields.DateTime(dump_only=True)
@@ -166,7 +166,6 @@ class CreditTransferSchema(Schema):
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
     transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
-
     token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
     sender_transfer_account_id      = fields.Int()
@@ -184,7 +183,6 @@ class CreditTransferSchema(Schema):
 
     lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
-
     is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
     def get_authorising_user_email(self, obj):

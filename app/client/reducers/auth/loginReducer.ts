@@ -1,16 +1,11 @@
 import { LoginAction } from "./actions";
-
 import { LoginActionTypes } from "./types";
 
-interface LoginState {
+export interface LoginState {
   isLoggingIn: boolean;
-  //TODO(refactor): what is token actually? seems to only be used in checking it's not null
   token: null | string;
-  //TODO(refactor): is it number or string?
   userId: null | number;
   email: null | string;
-  //TODO(refactor): is it number or string?
-  vendorId: null | number;
   intercomHash: null | string;
   webApiVersion: null | string;
   organisationId: null | number;
@@ -26,7 +21,6 @@ const initialLoginState: LoginState = {
   token: null,
   userId: null,
   email: null,
-  vendorId: null,
   intercomHash: null,
   webApiVersion: null,
   organisationId: null,
@@ -52,7 +46,6 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         isLoggingIn: false,
         token: action.payload.token,
         userId: action.payload.userId,
-        vendorId: action.payload.vendorId,
         intercomHash: action.payload.intercomHash,
         webApiVersion: action.payload.webApiVersion,
         organisationId: action.payload.organisationId,

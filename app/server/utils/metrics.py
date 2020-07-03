@@ -10,8 +10,8 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 
+from server.utils import metrics_cache
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
-
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql import func, text
@@ -22,7 +22,6 @@ import datetime, json
 
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
                              user_filter={}):
-
     date_filter = []
     filter_active = False
     if start_date is not None and end_date is not None:
@@ -60,24 +59,31 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         CreditTransfer.transfer_use.isnot(None),
     ]
 
+    # Disable cache if any filters are being used
+    disable_cache = False
+    if user_filter or date_filter:
+        disable_cache = True
+
     total_distributed = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_distributed = apply_filters(total_distributed, user_filter, CreditTransfer)
-    total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter).first().total or 0
+    total_distributed = total_distributed.filter(*disbursement_filters).filter(*date_filter)
+    total_distributed = metrics_cache.execute_with_partial_history_cache('total_distributed', total_distributed, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
     total_spent = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_spent = apply_filters(total_spent, user_filter, CreditTransfer)
-    total_spent = (total_spent.filter(*standard_payment_filters).filter(*date_filter).first().total) or 0
-
+    total_spent = total_spent.filter(*standard_payment_filters).filter(*date_filter)
+    total_spent = metrics_cache.execute_with_partial_history_cache('total_spent', total_spent, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
     total_exchanged = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
     total_exchanged = apply_filters(total_exchanged, user_filter, CreditTransfer)
-    total_exchanged = (total_exchanged.filter(*exchanged_filters).filter(*date_filter).first().total) or 0
+    total_exchanged = total_exchanged.filter(*exchanged_filters).filter(*date_filter)
+    total_exchanged = metrics_cache.execute_with_partial_history_cache('total_exchanged', total_exchanged, CreditTransfer, metrics_cache.SUM, disable_cache=disable_cache)
 
     total_beneficiaries = db.session.query(User).filter(*beneficiary_filters)
-    total_beneficiaries = total_beneficiaries.count()
+    total_beneficiaries = metrics_cache.execute_with_partial_history_cache('total_beneficiaries', total_beneficiaries, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
 
     total_vendors = db.session.query(User).filter(*vendor_filters)
-    total_vendors = total_vendors.count()
+    total_vendors = metrics_cache.execute_with_partial_history_cache('total_vendors', total_vendors, CreditTransfer, metrics_cache.COUNT, disable_cache=disable_cache)
 
     total_users = total_beneficiaries + total_vendors
 
@@ -100,16 +106,16 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
     daily_transaction_volume = apply_filters(daily_transaction_volume, user_filter,  CreditTransfer)
     daily_transaction_volume = daily_transaction_volume.group_by(func.date_trunc('day', CreditTransfer.created))\
         .filter(*standard_payment_filters) \
-        .filter(*date_filter) \
-            .all()
+        .filter(*date_filter)
+    daily_transaction_volume = metrics_cache.execute_with_partial_history_cache('daily_transaction_volume', daily_transaction_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
 
     daily_disbursement_volume = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                                                 func.date_trunc('day', CreditTransfer.created).label('date'))
     daily_disbursement_volume = apply_filters(daily_disbursement_volume, user_filter, CreditTransfer)
     daily_disbursement_volume = daily_disbursement_volume.group_by(func.date_trunc('day', CreditTransfer.created)) \
         .filter(*disbursement_filters) \
-        .filter(*date_filter) \
-            .all()
+        .filter(*date_filter)
+    daily_disbursement_volume = metrics_cache.execute_with_partial_history_cache('daily_disbursement_volume', daily_disbursement_volume, CreditTransfer, metrics_cache.SUM_OBJECTS, disable_cache=disable_cache)
 
     transfer_use_breakdown = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use))
     transfer_use_breakdown = apply_filters(transfer_use_breakdown, user_filter, CreditTransfer)
@@ -118,10 +124,10 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
             .all()
 
     try:
-        last_day = daily_transaction_volume[0].date
-        last_day_volume = daily_transaction_volume[0].volume
+        last_day = daily_transaction_volume[0][1]
+        last_day_volume = daily_transaction_volume[0][0]
         transaction_vol_list = [
-            {'date': item.date.isoformat(), 'volume': item.volume} for item in daily_transaction_volume
+            {'date': item[1].isoformat(), 'volume': item[0]} for item in daily_transaction_volume
         ]
     except IndexError:  # No transactions
         last_day = datetime.datetime.utcnow()
@@ -130,12 +136,10 @@ def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=
         transaction_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
 
     try:
-        last_day_disbursement_volume = daily_disbursement_volume[0].volume
         disbursement_vol_list = [
-            {'date': item.date.isoformat(), 'volume': item.volume} for item in daily_disbursement_volume
+            {'date': item[1].isoformat(), 'volume': item[0]} for item in daily_disbursement_volume
         ]
     except IndexError:
-        last_day_disbursement_volume = 0
         disbursement_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
 
     try:

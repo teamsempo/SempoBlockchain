@@ -9,6 +9,7 @@ import { Switch, Route, Router, Redirect } from "react-router-dom";
 const dashboardPage = lazy(() =>
   import("./components/pages/dashboardPage.jsx")
 );
+const mapPage = lazy(() => import("./components/pages/mapPage.jsx"));
 const uploadPage = lazy(() => import("./components/pages/uploadPage.jsx"));
 const transferAccountListPage = lazy(() =>
   import("./components/pages/transferAccountListPage.jsx")
@@ -57,9 +58,9 @@ import {
 } from "./components/styledElements";
 import { ThemeProvider } from "styled-components";
 import { DefaultTheme } from "./components/theme.js";
-import { browserHistory } from "./app.jsx";
+import { browserHistory } from "./createStore.js";
 import LoadingSpinner from "./components/loadingSpinner.jsx";
-import NavBar from "./components/navBar.jsx";
+import NavBar from "./components/navBar";
 
 const mapStateToProps = state => {
   return {
@@ -72,7 +73,6 @@ class Nav extends React.Component {
   render() {
     const isLoggedIn = this.props.loggedIn;
     const isReAuthing = this.props.login.isLoggingIn;
-    const beneficiaryURL = "/" + window.BENEFICIARY_TERM_PLURAL.toLowerCase();
 
     return (
       <Router history={browserHistory}>
@@ -83,6 +83,13 @@ class Nav extends React.Component {
               exact
               path="/"
               component={dashboardPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+            />
+            <PrivateRoute
+              exact
+              path="/map"
+              component={mapPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
             />
@@ -232,7 +239,7 @@ const LoadingSpinnerWrapperSideBarActive = () => {
 const PageWrapper = ({ noNav, component: Component, ...props }) => {
   return (
     <ErrorBoundary>
-      {noNav ? null : <NavBar location={props.location} />}
+      {noNav ? null : <NavBar />}
 
       <MessageBar />
 

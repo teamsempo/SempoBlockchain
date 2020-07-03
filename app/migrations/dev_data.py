@@ -157,6 +157,7 @@ def get_or_create_transfer_user(email, business_usage, organisation):
         first_name = random.choice(['Magnificent', 'Questionable', 'Bold', 'Hungry', 'Trustworthy', 'Valued', 'Free',
                                     'Obtuse', 'Frequentist', 'Long', 'Sinister', 'Happy', 'Safe', 'Open', 'Cool'])
         last_name = random.choice(['Panda', 'Birb', 'Doggo', 'Otter', 'Swearwolf', 'Kitty', 'Lion', 'Chimp', 'Cthulhu'])
+        geo = random.choice([[-9.4438, 147.1803], [-9, 147]])
         is_beneficiary = random.choice([True, False])
 
         phone = '+1' + ''.join([str(random.randint(0,10)) for i in range(0, 10)])
@@ -168,7 +169,9 @@ def get_or_create_transfer_user(email, business_usage, organisation):
             phone=phone,
             organisation=organisation,
             is_beneficiary=is_beneficiary,
-            is_vendor=not is_beneficiary
+            is_vendor=not is_beneficiary,
+            lat=geo[0],
+            lng=geo[1]
         )
 
         user.business_usage = business_usage
@@ -228,8 +231,14 @@ def create_transfer(amount, sender_user, recipient_user, token, subtype=None):
         uuid=str(uuid4()))
 
     db.session.add(transfer)
+    # Mimics before_request hook
+    g.pending_transactions = []
 
     transfer.resolve_as_completed()
+    
+    # Mimics after_request hook
+    for transaction, queue in g.pending_transactions:
+        transaction.send_blockchain_payload_to_worker(queue=queue)
 
     transfer.transfer_type = TransferTypeEnum.PAYMENT
     transfer.transfer_subtype = subtype

@@ -127,8 +127,7 @@ en:
       2. Exchange
       0. Back
     exchange_rate_pin_authorization:
-      first:
-        CON Please enter your PIN.
+      first: CON Please enter your PIN.
         0. Back
       retry:
         CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
@@ -141,8 +140,7 @@ en:
       CON Enter Amount (40 or more)
       0. Back
     exchange_token_pin_authorization:
-      first:
-        CON Please enter your PIN.
+      first: CON Please enter your PIN.
         0. Back
       retry:
         CON Please enter your PIN. You have %{remaining_attempts} attempts remaining.
@@ -190,6 +188,7 @@ en:
     exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
     exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
     exchange_amount_error_sms: Sorry you have exceeded your %{token} transfer amount limit. You are allowed up to %{amount} %{token} per %{limit_period} days
+    maximum_per_transaction_error_sms: You can only exchange a maximum of %{amount} at a time.
     transfer_amount_error_sms: You have reached your trade limit. Please contact 0757628885 to increase your limit.
     insufficient_balance_sms: |
       Payment of %{amount} %{token_name} to %{recipient} has failed due to insufficent balance.

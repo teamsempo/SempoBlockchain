@@ -21,9 +21,13 @@ class TransferSubTypeEnum(enum.Enum):
 
 class TransferModeEnum(enum.Enum):
     NFC = "NFC"
+    USSD = "USSD"
     SMS = "SMS"
     QR  = "QR"
+    WEB = "WEB"
+    MOBILE = "MOBILE"
     INTERNAL = "INTERNAL"
+    EXTERNAL = "EXTERNAL"
     OTHER    = "OTHER"
 
 
@@ -37,4 +41,7 @@ class TransferStatusEnum(enum.Enum):
     # BLOCKCHAIN_REJECTED = -2
     # BLOCKCHAIN_COMPLETE = 2
 
-#TODO add an enum for blockchain status
+class BlockchainStatus(enum.Enum):
+    PENDING = 'PENDING'
+    SUCCESS = 'SUCCESS'
+    FAILED = 'FAILED'

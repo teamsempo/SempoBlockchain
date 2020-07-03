@@ -1,7 +1,7 @@
 import { combineReducers } from "redux";
 
 import {
-  User,
+  UserByIDs,
   UserListActionTypes,
   CreateUserActionTypes,
   LoadUserActionTypes,
@@ -20,7 +20,7 @@ import {
 
 import { DEEEEEEP } from "../../utils";
 
-const byId = (state: User[] = [] || {}, action: UserListAction): User[] => {
+const byId = (state: UserByIDs = {}, action: UserListAction) => {
   switch (action.type) {
     case UserListActionTypes.DEEP_UPDATE_USER_LIST:
       return DEEEEEEP(state, action.payload);
