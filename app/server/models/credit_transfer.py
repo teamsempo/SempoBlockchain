@@ -31,6 +31,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     __tablename__ = 'credit_transfer'
 
     uuid            = db.Column(db.String, unique=True)
+    batch_uuid            = db.Column(db.String)
 
     resolved_date   = db.Column(db.DateTime)
     _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
@@ -84,23 +85,63 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def send_blockchain_payload_to_worker(self, is_retry=False, queue='high-priority'):
         sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
+
+        approval_priors = list(
+            filter(lambda x: x is not None,
+                   [
+                       sender_approval.eth_send_task_uuid, sender_approval.approval_task_uuid,
+                       recipient_approval.eth_send_task_uuid, recipient_approval.approval_task_uuid
+                   ]))
+
+        other_priors = [t.blockchain_task_uuid for t in self._get_required_prior_tasks()]
+
+        all_priors = approval_priors + other_priors
+
         return bt.make_token_transfer(
             signing_address=self.sender_transfer_account.organisation.system_blockchain_address,
             token=self.token,
             from_address=self.sender_transfer_account.blockchain_address,
             to_address=self.recipient_transfer_account.blockchain_address,
             amount=self.transfer_amount,
-            prior_tasks=
-            list(filter(lambda x: x is not None,
-                        [
-                            sender_approval.eth_send_task_uuid, sender_approval.approval_task_uuid,
-                            recipient_approval.eth_send_task_uuid, recipient_approval.approval_task_uuid
-                        ])),
+            prior_tasks=all_priors,
             queue=queue,
             task_uuid=self.blockchain_task_uuid
         )
 
-    def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority'):
+    def _get_required_prior_tasks(self):
+
+        base_oob_query = (
+            CreditTransfer.query
+                .order_by(CreditTransfer.id.desc())
+                .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+                .filter(CreditTransfer.sender_transfer_account == self.sender_transfer_account)
+                .filter(CreditTransfer.id != self.id)
+
+        )
+
+        if self.batch_uuid:
+            most_recent_out_of_batch_send = base_oob_query.filter(CreditTransfer.batch_uuid != self.batch_uuid).first()
+        else:
+            most_recent_out_of_batch_send = base_oob_query.first()
+
+        base_pr_query = (
+            CreditTransfer.query
+                .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+                .filter(CreditTransfer.recipient_transfer_account == self.sender_transfer_account)
+        )
+
+        if most_recent_out_of_batch_send:
+            more_recent_receives = base_pr_query.filter(CreditTransfer.id > most_recent_out_of_batch_send.id).all()
+
+            required_priors = more_recent_receives + [most_recent_out_of_batch_send]
+        else:
+            required_priors = base_pr_query.all()
+
+        return required_priors
+
+
+
+    def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority', batch_uuid=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
             raise Exception(f'Transfer resolve function called multiple times for transaciton {self.id}')
         self.check_sender_transfer_limits()
@@ -112,6 +153,9 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
+
+        if batch_uuid:
+            self.batch_uuid = batch_uuid
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_completed()
