@@ -248,9 +248,10 @@ basic_auth = BasicAuth()
 executor = Executor()
 
 # limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
-
-s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
-                  aws_secret_access_key=config.AWS_SES_SECRET)
+s3 = None
+if (config.AWS_SES_KEY_ID):
+    s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
+            aws_secret_access_key=config.AWS_SES_SECRET)
 
 celery_app = Celery('tasks',
                     broker=config.REDIS_URL,
