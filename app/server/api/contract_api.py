@@ -174,7 +174,6 @@ class ReserveTokenAPI(MethodView):
 
             master_org = Organisation.query.filter_by(is_master=True).execution_options(show_all=True).first()
             master_org.bind_token(_token)
-            # Problem
             master_org.org_level_transfer_account.balance = int(_deploy_data['fund_amount_wei'] / 1e16)
             db.session.commit()
 
