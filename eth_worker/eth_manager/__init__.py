@@ -35,7 +35,8 @@ from eth_manager.processor import TransactionProcessor
 from eth_manager.contract_registry import ContractRegistry
 from eth_manager import utils
 
-sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
+if not config.IS_TEST:
+    sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
 
 eth_config = dict()
 eth_config['ethereum_chain_id'] = config.ETH_CHAIN_ID
