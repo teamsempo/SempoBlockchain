@@ -29,6 +29,8 @@ class TransferFilterEnum:
     DISCRETE        = "discrete"
     BOOLEAN_MAPPING = "boolean_mapping"
 
+
+# TODO: Split TRANSFER_FILTERS into two objects-- TRANSFER and PARTICIPANT
 TRANSFER_FILTERS = {
     'transfer_amount': {
         'name': 'Transfer Amount',
