@@ -192,16 +192,6 @@ class BlockchainTasker(object):
         :return: task uuid for the transfer
         """
         raw_amount = token.system_amount_to_token(amount, queue=queue)
-        print('zzzz')
-        print('zzzz')
-        print('zzzz')
-        print('zzzz')
-        print('zzzzzzzzzzzzzzzz')
-        print(raw_amount)
-        print(raw_amount)
-        print(raw_amount)
-        print(raw_amount)
-        print(raw_amount)
         if signing_address == from_address:
             return self._transaction_task(
                 signing_address=signing_address,
