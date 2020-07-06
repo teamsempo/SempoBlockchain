@@ -21,7 +21,7 @@ import sqlalchemy
 import datetime, json
 
 def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, metric_type=metrics_const.ALL):
-    # TODO: Add token filter here!
+    # TODO (next PR): Add token filter here!
     # - Check orgs being queried (dependant on multi-org PR)
     # - Create 'manditory filter' field which is returned in the response
 
