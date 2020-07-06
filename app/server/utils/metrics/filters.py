@@ -32,6 +32,9 @@ def apply_filters(query, filters, query_table):
                 else:
                     query = _apply_single_column_filter(query, _filts, User, None, user_join_attribute)
 
+        elif filter_table_name == CreditTransfer.__tablename__:
+                # No join needed for CreditTransfer, since it's only availible to be filtered on when directly queried 
+                query = _apply_single_column_filter(query, _filts, CreditTransfer, None, None, None)
         elif filter_table_name == CustomAttributeUserStorage.__tablename__ and user_join_attribute is not None:
             query = _apply_ca_filters(query, _filts, user_join_attribute)
     return query
@@ -42,7 +45,7 @@ def _determine_join_conditions(query_table):
     if query_table == User:
         return User.id, None
 
-def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None):
+def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None, transfer_join_attribute=None):
     if target_table.__tablename__ == TransferAccount.__tablename__ and account_join_attribute is not None:
         query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
     elif target_table.__tablename__ == User.__tablename__ and user_join_attribute is not None:

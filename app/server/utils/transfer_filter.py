@@ -4,6 +4,7 @@ from sqlalchemy import or_, Column, String, Float
 from server import db
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_account import TransferAccount
+from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from sqlalchemy.sql.expression import cast
 
@@ -29,6 +30,11 @@ class TransferFilterEnum:
     BOOLEAN_MAPPING = "boolean_mapping"
 
 TRANSFER_FILTERS = {
+    'transfer_amount': {
+        'name': 'Transfer Amount',
+        'table': CreditTransfer.__tablename__,
+        'type': TransferFilterEnum.INT_RANGE
+    },
     'created': {
         'name': "Created",
         'table': User.__tablename__,

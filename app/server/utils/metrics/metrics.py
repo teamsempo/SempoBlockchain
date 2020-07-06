@@ -3,7 +3,7 @@ from server import db, red, bt
 
 from flask import g
 
-from server.utils.metrics import filters, metrics_cache, metric
+from server.utils.metrics import filters, metrics_cache, metric, metrics_const
 
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 import sqlalchemy
 import datetime, json
 
-def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}):
+def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, metric_type=metrics_const.ALL):
     # TODO: Add token filter here!
     # - Check orgs being queried (dependant on multi-org PR)
     # - Create 'manditory filter' field which is returned in the response
@@ -28,99 +28,77 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}):
     from server.utils.metrics import transfer_stats
     from server.utils.metrics import participant_stats
 
-
     date_filters = []
-    filter_active = False
-
     if start_date is not None and end_date is not None:
         date_filters.append(CreditTransfer.created >= start_date)
         date_filters.append(CreditTransfer.created <= end_date)
-        filter_active = True
 
     # Disable cache if any filters are being used
     enable_cache = True
     if user_filter or date_filters:
         enable_cache = False
-    enable_cache = False
 
+    # Metrics taxonomy, used to determine which metrics to display when which 
+    # metric_type is queried
+    transfer_stats = [
+        transfer_stats.total_distributed, 
+        transfer_stats.total_spent, 
+        transfer_stats.total_exchanged, 
+        transfer_stats.exhausted_balance_count, 
+        transfer_stats.has_transferred_count,
+        transfer_stats.daily_transaction_volume, 
+        transfer_stats.daily_disbursement_volume, 
+        transfer_stats.transfer_use_breakdown
+    ]
 
-    # Register metrics by how they're filterable.
-    # Metrics can be called individually, in bulk (if there's no filter), or in aggregate as defined here 
-#    transfer_stats = {
-#        'total_distributed': calculate_total_distributed,
-#        'total_spent': calculate_total_spent,
-#        'total_exchanged': calculate_total_exchanged,
-#        'exhausted_balance_count': calculate_exhausted_balance_count,
-#        'daily_transaction_volume': calculate_daily_transaction_volume,
-#        'daily_disbursement_volume': calculate_daily_disbursement_volume,
-#        'transfer_use_breakdown': calculate_transfer_use_breakdown,
-#    }
-#
-#    participant_stats = {
-#        'total_beneficiaries': calculate_total_beneficiaries,
-#        'total_vendors': calculate_total_vendors,
-#        'total_users': calculate_total_users,
-#        'has_transferred_count': calculate_has_transferred_count,
-#
-#    }
-#
-    total_beneficiaries = participant_stats.total_beneficiaries.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    total_vendors = participant_stats.total_vendors.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    has_transferred_count = participant_stats.has_transferred_count.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
+    participant_stats = [
+        participant_stats.total_beneficiaries,
+        participant_stats.total_vendors,
+    ]
+    all_stats = transfer_stats + participant_stats
 
-    total_distributed = transfer_stats.total_distributed.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    total_spent = transfer_stats.total_spent.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    total_exchanged = transfer_stats.total_exchanged.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    total_users = total_vendors + total_beneficiaries
-    exhausted_balance_count = transfer_stats.exhausted_balance_count.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    daily_transaction_volume = transfer_stats.daily_transaction_volume.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    daily_disbursement_volume = transfer_stats.daily_disbursement_volume.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-    transfer_use_breakdown = transfer_stats.transfer_use_breakdown.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
-
-    try:
-        last_day = daily_transaction_volume[0][1]
-        last_day_volume = daily_transaction_volume[0][0]
-        transaction_vol_list = [
-            {'date': item[1].isoformat(), 'volume': item[0]} for item in daily_transaction_volume
-        ]
-    except IndexError:  # No transactions
-        last_day = datetime.datetime.utcnow()
-        last_day_volume = 0
-        has_transferred_count = 0
-        transaction_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-
-    try:
-        disbursement_vol_list = [
-            {'date': item[1].isoformat(), 'volume': item[0]} for item in daily_disbursement_volume
-        ]
-    except IndexError:
-        disbursement_vol_list = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-
-
-    try:
-        master_wallet_balance = cached_funds_available()
-    except:
-        master_wallet_balance = 0
-
-    data = {
-        'total_distributed': total_distributed,
-        'total_spent': total_spent,
-        'total_exchanged': total_exchanged,
-        'has_transferred_count': has_transferred_count,
-        'zero_balance_count': exhausted_balance_count,
-        'total_beneficiaries': total_beneficiaries,
-        'total_vendors': total_vendors,
-        'total_users': total_users,
-        'master_wallet_balance': master_wallet_balance,
-        'daily_transaction_volume': transaction_vol_list,
-        'daily_disbursement_volume': disbursement_vol_list,
-        'transfer_use_breakdown': transfer_use_breakdown,
-        'last_day_volume': {'date': last_day.isoformat(), 'volume': last_day_volume},
-        'filter_active': filter_active
+    metric_sets_by_type = {
+        metrics_const.ALL: all_stats,
+        metrics_const.TRANSFER: transfer_stats,
+        metrics_const.PARTICIPANT: participant_stats
     }
-#
-    return data
 
+    data = {}
+    for metric in metric_sets_by_type[metric_type]:
+        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
+
+    # Legacy and aggregate metrics which don't fit the modular pattern
+    if metric_type in [metrics_const.ALL, metrics_const.PARTICIPANT]:
+        data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
+
+    if metric_type in [metrics_const.ALL, metrics_const.TRANSFER]:
+        try:
+            last_day = data['daily_transaction_volume'][0][1]
+            data['last_day_volume'] = data['daily_transaction_volume'][0][0]
+            data['daily_transaction_volume'] = [
+                {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_transaction_volume']
+            ]
+        except IndexError:  # No transactions
+            last_day = datetime.datetime.utcnow()
+            last_day_volume = 0
+            data['has_transferred_count'] = 0
+            data['daily_transaction_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
+        
+        data['last_day_volume']: {'date': last_day.isoformat(), 'volume': last_day_volume}
+
+        try:
+            data['daily_disbursement_volume'] = [
+                {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_disbursement_volume']
+            ]
+        except IndexError:
+            data['daily_disbursement_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
+
+        try:
+            data['master_wallet_balance'] = cached_funds_available()
+        except:
+            data['master_wallet_balance'] = 0
+
+    return data
 
 
 def cached_funds_available(allowed_cache_age_seconds=60):
