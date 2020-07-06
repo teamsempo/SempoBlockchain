@@ -50,6 +50,7 @@ def test_exchange(test_client, user_with_reserve_balance, initialised_blockchain
             'to_token_id': to_token_obj.id,
             'from_amount': from_amount
         })
+    print(response.json)
     assert response.status_code == status_code
     if status_code == 200 and will_func_test_blockchain():
         task_uuid = response.json['data']['exchange']['blockchain_task_uuid']
