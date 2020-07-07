@@ -48,6 +48,7 @@ base_all = {'data':
         'daily_transaction_volume': [{'date': '', 'volume': 0}], 
         'exhausted_balance': 0, 
         'has_transferred_count': 0, 
+        'master_wallet_balance': 0, 
         'total_beneficiaries': 0, 
         'total_distributed': 0.0, 
         'total_exchanged': 0.0, 
@@ -67,6 +68,7 @@ base_transfer ={'data':
         'daily_transaction_volume': [{'date': '', 'volume': 0}], 
         'exhausted_balance': 0, 
         'has_transferred_count': 0, 
+        'master_wallet_balance': 0, 
         'total_distributed': 0.0, 
         'total_exchanged': 0.0, 
         'total_spent': 0.0, 
@@ -98,7 +100,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
 
     if metric_type == 'transfer' or metric_type == 'all':
         response.json['data']['transfer_stats']['daily_transaction_volume'][0]['date'] = ''
-
+        response.json['data']['transfer_stats']['master_wallet_balance'] = 0
     if metric_type == 'transfer':
         assert response.json == base_transfer
     elif metric_type == 'all':
@@ -196,7 +198,6 @@ def test_get_summed_metrics(test_client, complete_admin_auth_token, external_res
         assert response.json['data']['transfer_stats']['total_exchanged'] == 0
         assert response.json['data']['transfer_stats']['total_spent'] == 150
         assert response.json['data']['transfer_stats']['transfer_use_breakdown'] == [[['Burger'], 1], [['HotDog'], 1], [['Pizza'], 2]]
-    
     elif metric_type == 'participant' or metric_type == 'all':
         assert response.json['data']['transfer_stats']['total_beneficiaries'] == 1
         assert response.json['data']['transfer_stats']['total_users'] == 1
