@@ -30,8 +30,7 @@ class TransferFilterEnum:
     BOOLEAN_MAPPING = "boolean_mapping"
 
 
-# TODO: Split TRANSFER_FILTERS into two objects-- TRANSFER and PARTICIPANT
-TRANSFER_FILTERS = {
+ALL_FILTERS = {
     'transfer_amount': {
         'name': 'Transfer Amount',
         'table': CreditTransfer.__tablename__,
@@ -61,6 +60,14 @@ TRANSFER_FILTERS = {
     }
 }
 
+TRANSFER_FILTERS = ALL_FILTERS
+PARTICIPANT_FILTERS = {
+    'created': ALL_FILTERS['created'],
+    'user_type': ALL_FILTERS['user_type'],
+    'gender': ALL_FILTERS['gender'],
+    'rounded_account_balance': ALL_FILTERS['rounded_account_balance']
+}
+
 # will return a dictionary with table names as keys
 # values will be a dictionary of array of tuples
 # values on the outer array should be AND'd together
@@ -85,7 +92,7 @@ def process_transfer_filters(encoded_filters):
                 filters = handle_filters_per_keyname(to_handle, curr_keyName, filters)
 
                 curr_keyName = None
-                if subject in TRANSFER_FILTERS:
+                if subject in ALL_FILTERS:
                     to_handle = []
                     curr_keyName = subject
             if (symbol == "=" or symbol == "<" or symbol == ">"):
@@ -100,16 +107,16 @@ def process_transfer_filters(encoded_filters):
 
 def handle_filters_per_keyname(to_handle, key_name, filters):
     if len(to_handle) > 0 and (key_name is not None):
-        curr_table = TRANSFER_FILTERS[key_name]['table']
+        curr_table = ALL_FILTERS[key_name]['table']
         _filters = filters[curr_table] if curr_table in filters and isinstance(filters[curr_table], list) else []
         _filters.append(handle_filter(key_name, to_handle))
         filters[curr_table] = _filters
     return filters
 
 def handle_filter(keyname, filters):
-    if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
+    if ALL_FILTERS[keyname]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
         return handle_boolean_mapping(keyname, filters)
-    elif TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DISCRETE:
+    elif ALL_FILTERS[keyname]['type'] == TransferFilterEnum.DISCRETE:
         return handle_discrete(keyname, filters)
     else:
         return handle_other_types(keyname, filters)
@@ -139,9 +146,9 @@ def handle_other_types(keyname, filters):
         val = _filt['value']
 
         if comparator == '>':
-            formatted_filters.append((keyname, "GT", val if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
+            formatted_filters.append((keyname, "GT", val if ALL_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
         elif comparator == '<':
-            formatted_filters.append((keyname, "LT", val if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
+            formatted_filters.append((keyname, "LT", val if ALL_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
         else:
             return
 

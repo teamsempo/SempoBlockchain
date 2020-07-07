@@ -1,10 +1,10 @@
-from flask import Blueprint, request, make_response, jsonify
+from flask import Blueprint, request, make_response, jsonify, g
 import json
 
 from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const
 from flask.views import MethodView
-from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
+from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, PARTICIPANT_FILTERS, process_transfer_filters
 from server.utils.auth import requires_auth
 
 metrics_blueprint = Blueprint('metrics', __name__)
@@ -12,7 +12,6 @@ metrics_blueprint = Blueprint('metrics', __name__)
 class CreditTransferStatsApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
-
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
@@ -36,11 +35,20 @@ class CreditTransferStatsApi(MethodView):
 class CreditTransferFiltersApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
+        metric_type = request.args.get('metric_type', metrics_const.ALL)
+        if metric_type not in metrics_const.METRIC_TYPES:
+            raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
+        METRIC_TYPES_FILTERS = {
+            metrics_const.ALL: ALL_FILTERS,
+            metrics_const.PARTICIPANT: PARTICIPANT_FILTERS,
+            metrics_const.TRANSFER: TRANSFER_FILTERS,
+        }
+
         response_object = {
             'status' : 'success',
             'message': 'Successfully Loaded.',
             'data': {
-                'filters': json.dumps(TRANSFER_FILTERS)
+                'filters': json.dumps(METRIC_TYPES_FILTERS[metric_type])
             }
         }
         return make_response(jsonify(response_object)), 200
