@@ -12,15 +12,32 @@ metrics_blueprint = Blueprint('metrics', __name__)
 class CreditTransferStatsApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
+        """
+        This endpoint generates metrics for both transfers and participants.
+        By default, it returns all metric types, but can provide a certian type of metric with the metric_type 
+        parameter. When requesting `transfer` metric types, all `encoded_filters` are applicable, but only
+        a subset are applicable to `participant` metrics. To see which metrics are applicable to which metric type,
+        see documentation for the `/metrics/filters/` endpoint.
+        Parameters:
+            - start_date: (Default: None) Start date string of range to query. Format: "2020-01-01T15:00:00.000Z"
+            - end_date: (Default: None) End date string of range to query. Format: "2020-01-01T15:00:00.000Z"
+            - encoded_filters: (Default: None) Set of filters to apply to the metrics query. 
+                Additional documentation for filters can be found in /utils/transfer_filter.py
+            - disable_cache: (Default: False) Force-disables cache
+            - metric_type: (Default: ALL) Allows the user to swtich between `transfer`, `participant`, and `all`
+        """
+
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
+        disable_cache = request.args.get('disable_cache', False)
         metric_type = request.args.get('metric_type', metrics_const.ALL)
+
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
 
         filters = process_transfer_filters(encoded_filters)
-        transfer_stats = calculate_transfer_stats(start_date=start_date, end_date=end_date, user_filter=filters, metric_type=metric_type)
+        transfer_stats = calculate_transfer_stats(start_date=start_date, end_date=end_date, user_filter=filters, metric_type=metric_type, disable_cache=disable_cache)
 
         response_object = {
             'status': 'success',
@@ -35,6 +52,12 @@ class CreditTransferStatsApi(MethodView):
 class CreditTransferFiltersApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
+        """
+        This endpoint provides JSON documentation as to which filters are applicable to which metric types
+        Parameters:
+            - metric_type: (Default: ALL) Allows the user to request filters for `transfer`, `participant`, and `all`
+        """
+
         metric_type = request.args.get('metric_type', metrics_const.ALL)
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')

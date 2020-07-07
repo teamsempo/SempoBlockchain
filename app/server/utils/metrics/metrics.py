@@ -4,6 +4,7 @@ from server import db, red, bt
 from flask import g
 
 from server.utils.metrics import filters, metrics_cache, metric, metrics_const
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
@@ -12,7 +13,6 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql import func, text
@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 import sqlalchemy
 import datetime, json
 
-def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, metric_type=metrics_const.ALL):
+def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, metric_type=metrics_const.ALL, disable_cache = False):
     # TODO (next PR): Add token filter here!
     # - Check orgs being queried (dependant on multi-org PR)
     # - Create 'manditory filter' field which is returned in the response
@@ -33,9 +33,9 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         date_filters.append(CreditTransfer.created >= start_date)
         date_filters.append(CreditTransfer.created <= end_date)
 
-    # Disable cache if any filters are being used
+    # Disable cache if any filters are being used, or explicitly requested
     enable_cache = True
-    if user_filter or date_filters:
+    if user_filter or date_filters or disable_cache:
         enable_cache = False
 
     # Metrics taxonomy, used to determine which metrics to display when which 
