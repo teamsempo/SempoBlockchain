@@ -45,7 +45,7 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
     recipient_user_id = recipient_user_id_accessor(create_transfer_account_user)
 
     if transfer_type == 'PAYMENT' and sender_user_id:
-        create_transfer_account_user.transfer_account.balance = 10000
+        create_transfer_account_user.transfer_account.set_balance_offset(10000)
         create_transfer_account_user.transfer_account.is_approved = True
 
     if tier:

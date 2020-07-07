@@ -258,8 +258,7 @@ def admin_with_org_reserve_balance(authed_sempo_admin_user, external_reserve_tok
     amount = 100
 
     org_transfer_account = authed_sempo_admin_user.default_organisation.org_level_transfer_account
-
-    org_transfer_account.balance = amount
+    org_transfer_account.set_balance_offset(amount)
 
     bt.make_token_transfer(
         loaded_master_wallet_address,
@@ -282,8 +281,7 @@ def user_with_reserve_balance(create_transfer_account_user, external_reserve_tok
                         transfer_account.token,
                         loaded_master_wallet_address, transfer_account.blockchain_address,
                         amount * int(1e16))
-
-    transfer_account.balance = amount
+    transfer_account.set_balance_offset(amount)
     create_transfer_account_user.is_activated = True
 
     return create_transfer_account_user

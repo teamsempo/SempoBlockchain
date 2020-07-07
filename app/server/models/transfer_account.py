@@ -34,7 +34,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     # total debits, without a balance offset we'd be stuck in a zero-sum system with no 
     # mechanism to have initial funds. It's essentially an app-level analogy to minting 
     # which happens on the chain. 
-    _balance_offset    = db.Column(db.Numeric(27), default=0)
+    _balance_offset_wei    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -115,13 +115,12 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # rounded to whole value of balance
         return float((self._balance_wei or 0) / int(1e16))
 
-    @balance.setter
-    def balance(self, val):
-        self._balance_offset = val * int(1e16)
+    def set_balance_offset(self, val):
+        self._balance_offset_wei = val * int(1e16)
         self.calculate_balance()
 
     def calculate_balance(self):
-        new_balance = self.total_received * int(1e16) - self.total_sent * int(1e16) + self._balance_offset
+        new_balance = self.total_received * int(1e16) - self.total_sent * int(1e16) + self._balance_offset_wei
         self._balance_wei = new_balance
         return new_balance
 
