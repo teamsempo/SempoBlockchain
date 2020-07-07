@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
@@ -6,7 +6,6 @@ import { subscribe, unsubscribe } from "pusher-redux";
 import { LoadMetricAction } from "../../reducers/metric/actions";
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
-import { LoginAction } from "../../reducers/auth/actions";
 import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
 
 import {
@@ -20,15 +19,14 @@ import {
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 import {
+  WrapperDiv,
   ModuleBox,
   PageWrapper,
   CenterLoadingSideBarActive
 } from "../styledElements";
-import { parseQuery } from "../../utils";
 
 import { ActivateAccountAction } from "../../reducers/auth/actions";
-
-const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
+import NoDataMessage from "../NoDataMessage";
 
 const mapStateToProps = state => {
   return {
@@ -39,7 +37,6 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    logout: () => dispatch(LoginAction.logout()),
     loadCreditTransferList: query =>
       dispatch(
         LoadCreditTransferAction.loadCreditTransferListRequest({ query })
@@ -79,14 +76,6 @@ class DashboardPage extends React.Component {
     });
 
     this.props.loadMetrics();
-
-    const parsed = parseQuery(location.search);
-
-    if (parsed.actok) {
-      console.log("actok", parsed.actok);
-      this.props.activateAccount({ body: { activation_token: parsed.actok } });
-    }
-
     this.props.loadCreditTransferFilters();
   }
 
@@ -135,18 +124,7 @@ class DashboardPage extends React.Component {
         </WrapperDiv>
       );
     } else if (Object.values(this.props.creditTransfers.byId).length === 0) {
-      return (
-        <WrapperDiv>
-          <PageWrapper>
-            <ModuleBox>
-              <NoDataMessageWrapper>
-                <IconSVG src="/static/media/no_data_icon.svg" />
-                <p>There is no data available. Please upload a spreadsheet.</p>
-              </NoDataMessageWrapper>
-            </ModuleBox>
-          </PageWrapper>
-        </WrapperDiv>
-      );
+      return <NoDataMessage />;
     } else if (this.props.creditTransfers.loadStatus.success === true) {
       return (
         <WrapperDiv>
@@ -177,14 +155,6 @@ class DashboardPage extends React.Component {
                   </ModuleBox>
                 </LiveFeedColumn>
               </Main>
-
-              <Main style={{ marginTop: 0, maxHeight: "80vh" }}>
-                <ModuleBox>
-                  <Suspense fallback={<div>Loading Map...</div>}>
-                    <HeatMap />
-                  </Suspense>
-                </ModuleBox>
-              </Main>
             </DashboardFilter>
           </PageWrapper>
         </WrapperDiv>
@@ -204,16 +174,6 @@ export default connect(
   mapDispatchToProps
 )(DashboardPage);
 
-const WrapperDiv = styled.div`
-  //width: 100vw;
-  //min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  position: relative;
-`;
-
 const Main = styled.div`
   display: flex;
   @media (max-width: 767px) {
@@ -230,18 +190,4 @@ const GraphMetricColumn = styled.div`
 const LiveFeedColumn = styled.div`
   display: flex;
   flex-direction: column;
-`;
-
-const IconSVG = styled.img`
-  width: 35px;
-  padding: 1em 0 0.5em;
-  display: flex;
-`;
-
-const NoDataMessageWrapper = styled.div`
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
 `;

@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 
-import { loadDatasetList } from "../../reducers/spreadsheetReducer";
+import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 
 import { Input, StyledButton, ErrorMessage } from "./../styledElements";
 
@@ -19,7 +19,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadDatasetList: payload => dispatch(loadDatasetList())
+    loadDatasetList: payload =>
+      dispatch(SpreadsheetAction.loadDatasetListRequest())
   };
 };
 

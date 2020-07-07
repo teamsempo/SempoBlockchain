@@ -1,15 +1,15 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import { ThemeProvider } from "styled-components";
 
-import { PageWrapper, WrapperDiv, ModuleBox } from "../styledElements.js";
+import { PageWrapper, WrapperDiv } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
 import CreditTransferListWithFilterWrapper from "../creditTransfer/creditTransferListWithFilterWrapper.jsx";
-import UploadButton from "../uploader/uploadButton.jsx";
 
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
+import NoDataMessage from "../NoDataMessage";
 
 const mapStateToProps = state => {
   return {
@@ -38,24 +38,13 @@ class CreditTransferListPage extends React.Component {
     const { creditTransferList } = this.props;
     let isNoData = Object.keys(creditTransferList).length === 0;
 
-    let uploadButtonText = (
-      <NoDataMessageWrapper>
-        <IconSVG src="/static/media/no_data_icon.svg" />
-        <p>There is no data available. Please upload a spreadsheet.</p>
-      </NoDataMessageWrapper>
-    );
-
     if (
       isNoData &&
       this.props.creditTransfers.loadStatus.isRequesting !== true
     ) {
       return (
         <PageWrapper>
-          <ModuleBox>
-            <NoDataMessageWrapper>
-              <UploadButton uploadButtonText={uploadButtonText} />
-            </NoDataMessageWrapper>
-          </ModuleBox>
+          <NoDataMessage />
         </PageWrapper>
       );
     }
@@ -78,17 +67,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(organizationWrapper(CreditTransferListPage));
-
-const IconSVG = styled.img`
-  width: 35px;
-  padding: 1em 0 0.5em;
-  display: flex;
-`;
-
-const NoDataMessageWrapper = styled.div`
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-`;
