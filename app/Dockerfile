@@ -22,7 +22,6 @@ COPY ./config_files/* /src/config_files/
 COPY ./app/server /src/server
 COPY ./app/migrations /src/migrations
 COPY ./app/manage.py /src
-COPY ./app/RedisQueue.py /src
 COPY ./app/_docker_app_script.sh /
 COPY ./app/test_app /src/test_app
 COPY ./app/.coveragerc /src
