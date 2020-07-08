@@ -12,12 +12,14 @@ from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
+from server.utils.transfer_enums import BlockchainStatus
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
+from server.utils.user import create_transfer_account_if_required
 from server.utils.metrics import calculate_transfer_stats
 
 from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
@@ -427,40 +429,33 @@ class ConfirmWithdrawalAPI(MethodView):
 
 
 class InternalCreditTransferAPI(MethodView):
-
-    @requires_auth
+    @requires_auth(allowed_basic_auth_types=('internal'))
     def post(self):
         post_data = request.get_json()
 
-        transfer_amount = abs(round(float(post_data.get('transfer_amount') or 0),6))
-
+        transfer_amount = post_data.get('transfer_amount')
         sender_blockchain_address = post_data.get('sender_blockchain_address')
         recipient_blockchain_address = post_data.get('recipient_blockchain_address')
         blockchain_transaction_hash = post_data.get('blockchain_transaction_hash')
+        contract_address = post_data.get('contract_address')
 
-        send_address_obj = (BlockchainAddress.query
-                            .filter_by(address=sender_blockchain_address)
-                            .first())
+        transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_hash=blockchain_transaction_hash).first()
 
-        receive_address_obj = (BlockchainAddress.query
-                            .filter_by(address=recipient_blockchain_address)
-                            .first())
-
-        if not send_address_obj and not receive_address_obj:
-            response_object = {
-                'message': 'Neither sender nor receiver found for {} and {}'.format(sender_blockchain_address,
-                                                                                    recipient_blockchain_address),
-            }
-            return make_response(jsonify(response_object)), 404
-
-        # TODO: Handle inbounds to master wallet
-        transfer = make_blockchain_transfer(transfer_amount,
-                                            sender_blockchain_address,
-                                            recipient_blockchain_address,
-                                            existing_blockchain_txn=blockchain_transaction_hash,
-                                            require_sufficient_balance=False,
-                                            transfer_mode=TransferModeEnum.INTERNAL)
-
+        if not transfer:
+            token = Token.query.filter_by(address=contract_address).first()
+            send_transfer_account = create_transfer_account_if_required(sender_blockchain_address, token)
+            receive_transfer_account = create_transfer_account_if_required(recipient_blockchain_address, token)
+            transfer = CreditTransfer(
+                transfer_amount,
+                token=token,
+                sender_transfer_account=send_transfer_account,
+                recipient_transfer_account=receive_transfer_account,
+                transfer_type='PAYMENT',
+            )
+            transfer.blockchain_status = BlockchainStatus.SUCCESS
+            transfer.blockchain_hash = blockchain_transaction_hash
+            send_transfer_account.decrement_balance(transfer_amount)
+            receive_transfer_account.increment_balance(transfer_amount)
         db.session.flush()
         credit_transfer = credit_transfer_schema.dump(transfer).data
 
@@ -470,6 +465,7 @@ class InternalCreditTransferAPI(MethodView):
                 'credit_transfer': credit_transfer,
             }
         }
+
         return make_response(jsonify(response_object)), 201
 
 

@@ -197,11 +197,11 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_self_sign_up=False,
                                  business_usage=None,
                                  initial_disbursement=None):
-
     user = User(first_name=first_name,
                 last_name=last_name,
                 lat=lat, lng=lng,
                 preferred_language=preferred_language,
+                blockchain_address=blockchain_address,
                 phone=phone,
                 email=email,
                 public_serial_number=public_serial_number,
@@ -279,7 +279,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
     user.default_transfer_account = transfer_account
 
     return user
-
 
 def save_device_info(device_info, user):
     add_device = False
@@ -830,3 +829,13 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
 
     ordered_transfer_usages = sorted(TransferUsage.query.all(), key=cmp_to_key(usage_sort))
     return ordered_transfer_usages
+
+def create_transfer_account_if_required(blockchain_address, token):
+    transfer_account = TransferAccount.query.execution_options(show_all=True).filter_by(blockchain_address=blockchain_address).first()
+    if transfer_account:
+        return transfer_account
+    else:
+        return TransferAccount(
+            blockchain_address=blockchain_address,
+            token=token
+        )
