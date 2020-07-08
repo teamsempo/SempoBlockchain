@@ -488,6 +488,7 @@ class SQLPersistenceInterface(object):
         filter = self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
         filter.max_block = block
         self.session.commit()
+        return True
 
     def get_synchronization_filter(self, filter_id):
         return self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
@@ -503,8 +504,9 @@ class SQLPersistenceInterface(object):
 
     def set_block_range_status(self, start, end, status):
         for n in range(start, end):
-            block  = self.session.query(SynchronizedBlock).filter(SynchronizedBlock.block_number == n).first()
-            block.status = status
+            blocks  = self.session.query(SynchronizedBlock).filter(SynchronizedBlock.block_number == n).all()
+            for block in blocks:
+                block.status = status
         self.session.commit()
 
 

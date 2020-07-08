@@ -38,13 +38,20 @@ def synchronize_third_party_transactions():
     # the range we want into chunks. Once all the chunk-jobs are formed and loaded into redis,
     # then trigger process_all_chunks, which will consume those jobs from redis
     for f in filters:
+        # Make sure a filter is only being executed once at a time
+        have_lock = False
+        lock = red.lock(f'third-party-sync-lock-{f.id}', timeout=sync_const.LOCK_TIMEOUT)
+        have_lock = lock.acquire(blocking=False)
+        if not have_lock:
+            print(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
+            continue
         latest_block = get_latest_block_number()
+
         # If there's no filter.max_block (which is the default for auto-generated filters)
         # start tracking third party transactions by looking at the lastest_block
         max_fetched_block = f.max_block or latest_block
         number_of_blocks_to_get = (latest_block - max_fetched_block)
         number_of_chunks = ceil(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST)
-
         for chunk in range(number_of_chunks):
             floor = max_fetched_block + (chunk * sync_const.BLOCKS_PER_REQUEST) + 1
             ceiling = max_fetched_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
@@ -52,6 +59,10 @@ def synchronize_third_party_transactions():
                 ceiling = latest_block
             process_chunk(f, floor, ceiling)
             persistence_module.set_filter_max_block(f.id, ceiling)
+        if number_of_chunks == 0:
+            persistence_module.set_filter_max_block(f.id, latest_block)
+        if have_lock:
+            lock.release()
     return True
 
 # Gets history for given range, and runs handle_transaction on all of them
@@ -133,4 +144,5 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
     if not persistence_module.check_if_synchronization_filter_exists(contract_address, filter_parameters):
         # Set max_block to block_epoch to act as a de-factor zero-point
         config.logg.info(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
-        return persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
+        persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
+        return True
