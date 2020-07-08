@@ -144,5 +144,4 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
     if not persistence_module.check_if_synchronization_filter_exists(contract_address, filter_parameters):
         # Set max_block to block_epoch to act as a de-factor zero-point
         config.logg.info(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
-        persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
-        return True
+        return persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
