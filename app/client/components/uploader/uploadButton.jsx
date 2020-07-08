@@ -2,11 +2,12 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 
-import { uploadSpreadsheet } from "../../reducers/spreadsheetReducer";
+import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 
 const mapDispatchToProps = dispatch => {
   return {
-    uploadSpreadsheet: payload => dispatch(uploadSpreadsheet(payload))
+    uploadSpreadsheet: payload =>
+      dispatch(SpreadsheetAction.uploadSpreadsheetRequest(payload))
   };
 };
 
