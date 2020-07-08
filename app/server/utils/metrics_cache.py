@@ -45,7 +45,12 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     # get it from the DB many times in the same request
     current_max_id = red.get(CURRENT_MAX_ID)
     if not current_max_id:
-        current_max_id = db.session.query(db.func.max(object_model.id)).first()[0] or 0
+        query_max = db.session.query(db.func.max(object_model.id)).first()
+        try:
+            current_max_id = query_max[0]
+        except IndexError:
+            current_max_id = 0
+
         red.set(CURRENT_MAX_ID, current_max_id, 10)
 
     # Gets cache results since the last time the metrics were fetched

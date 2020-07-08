@@ -54,7 +54,7 @@ def get_wallet_balance(address, token_address):
 
 
 def get_contract_address(task_uuid):
-    await_tr = partial(celery_utils.await_blockchain_success_evil, timeout=timeout)
+    await_tr = partial(celery_utils.await_blockchain_success, timeout=timeout)
     return pipe(task_uuid, await_tr, lambda r: r.get('contract_address'))
 
 
@@ -117,7 +117,7 @@ def deploy_exchange_network(deploying_address):
             func=name
         )
 
-        task = celery_utils.await_blockchain_success_evil(task_uuid, timeout=timeout)
+        task = celery_utils.await_blockchain_success(task_uuid, timeout=timeout)
         contract_address = task['contract_address']
 
         return transact_with_function_task(
@@ -174,7 +174,7 @@ def deploy_exchange_network(deploying_address):
         gas_limit=8000000
     )
 
-    res = celery_utils.await_blockchain_success_evil(set_signer_task, timeout=timeout)
+    res = celery_utils.await_blockchain_success(set_signer_task, timeout=timeout)
 
     return registry_contract_address
 
@@ -191,7 +191,7 @@ def deploy_and_fund_reserve_token(deploying_address, name, symbol, fund_amount_w
 
     send_eth_task_id = send_eth_task(deploying_address, fund_amount_wei, reserve_token_address)
 
-    res = celery_utils.await_blockchain_success_evil(send_eth_task_id, timeout=timeout)
+    res = celery_utils.await_blockchain_success(send_eth_task_id, timeout=timeout)
 
     balance = call_contract_function(
         contract_address=reserve_token_address,
