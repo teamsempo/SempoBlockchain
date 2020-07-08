@@ -77,16 +77,18 @@ def handle_transaction(transaction, filter):
     transaction_object = persistence_module.get_transaction(hash=transaction.transactionHash.hex())
     if transaction_object and transaction_object.is_synchronized_with_app:
         return True
-    transaction_object = persistence_module.create_external_transaction(
-        status = 'SUCCESS',
-        block = transaction.blockNumber,
-        hash = str(transaction.transactionHash.hex()),
-        contract_address = transaction.address,
-        is_synchronized_with_app = False,
-        recipient_address = transaction.args['to'],
-        sender_address = transaction.args['from'],
-        amount = float(transaction.args['value'])/(10**filter.decimals)
-    )
+    if not transaction_object:
+        transaction_object = persistence_module.create_external_transaction(
+            status = 'SUCCESS',
+            block = transaction.blockNumber,
+            hash = str(transaction.transactionHash.hex()),
+            contract_address = transaction.address,
+            is_synchronized_with_app = False,
+            recipient_address = transaction.args['to'],
+            sender_address = transaction.args['from'],
+            amount = float(transaction.args['value'])/(10**filter.decimals)
+        )
+
     webook_resp = call_webhook(transaction_object)
     # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
     # in order to be retryable later
