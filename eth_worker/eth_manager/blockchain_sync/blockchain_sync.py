@@ -43,10 +43,9 @@ def synchronize_third_party_transactions():
         lock = red.lock(f'third-party-sync-lock-{f.id}', timeout=sync_const.LOCK_TIMEOUT)
         have_lock = lock.acquire(blocking=False)
         if not have_lock:
-            print(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
+            config.logg.info(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
             continue
         latest_block = get_latest_block_number()
-
         # If there's no filter.max_block (which is the default for auto-generated filters)
         # start tracking third party transactions by looking at the lastest_block
         max_fetched_block = f.max_block or latest_block
@@ -59,6 +58,8 @@ def synchronize_third_party_transactions():
                 ceiling = latest_block
             process_chunk(f, floor, ceiling)
             persistence_module.set_filter_max_block(f.id, ceiling)
+            lock.reacquire()
+
         if number_of_chunks == 0:
             persistence_module.set_filter_max_block(f.id, latest_block)
         if have_lock:
