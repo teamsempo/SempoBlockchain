@@ -196,9 +196,9 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
 
-    def get_user_endpoint(orgs):
+    def get_user_endpoint(query_organisations):
         return test_client.get(
-            f"/api/v1/user/?orgs={orgs}",
+            f"/api/v1/user/?query_organisations={query_organisations}",
             headers=dict(
                 Authorization=auth,
                 Accept='application/json'

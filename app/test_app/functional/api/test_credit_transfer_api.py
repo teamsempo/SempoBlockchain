@@ -162,16 +162,16 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
     else: 
         assert rx_ids == recipients
 
-@pytest.mark.parametrize("orgs, status_code, result_count", [
+@pytest.mark.parametrize("query_organisations, status_code, result_count", [
     ('', 200, 58),
     ('1', 200, 1),
     ('2', 200, 58),
     ('1, 2', 200, 61)
 ])
 def test_credit_transfer_organisation_filters(test_client, authed_sempo_admin_user, complete_admin_auth_token, create_credit_transfer,
-orgs, status_code, result_count):
+query_organisations, status_code, result_count):
     # Checks that the credit_transfer endpoint supports multiple organisations
-    url = f'/api/v1/credit_transfer/?orgs={orgs}'
+    url = f'/api/v1/credit_transfer/?query_organisations={query_organisations}'
     
     from server.models.organisation import Organisation
     # master_organisation is organisation 1
@@ -198,6 +198,6 @@ orgs, status_code, result_count):
         response_ids = []
         for r in response.json['data'].get('credit_transfers', []):
             response_ids.append(r['id'])
-        if '1' in orgs:
+        if '1' in query_organisations:
             assert create_credit_transfer.id in response_ids
         assert len(response_ids) == result_count
