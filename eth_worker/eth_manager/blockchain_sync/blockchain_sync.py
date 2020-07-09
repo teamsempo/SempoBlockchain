@@ -128,11 +128,11 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
             yield event
 
         # Once a batch of chunks is completed, we can mark them completed
-        persistence_module.set_block_range_status(start_block, end_block, 'SUCCESS')
+        persistence_module.set_block_range_status(start_block, end_block, 'SUCCESS', filter_id)
 
     except:
         # Setting block status as a range since individual blocks can't fail at this stage (as we are getting a range of blocks)
-        persistence_module.set_block_range_status(start_block, end_block, 'FAILED FETCHING BLOCKS')
+        persistence_module.set_block_range_status(start_block, end_block, 'FAILED', filter_id)
         raise Exception(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
 
 # Adds transaction filter to database if it doesn't already exist
