@@ -1,6 +1,6 @@
 import pytest
 from server.models.transfer_usage import TransferUsage
-from server.utils.transfer_filter import ALL_FILTERS, PARTICIPANT_FILTERS
+from server.utils.transfer_filter import ALL_FILTERS, USER_FILTERS
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user
 from server import db
@@ -27,7 +27,7 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
 
     if status_code == 200:
         if metric_type == 'participant':
-            assert response.json['data']['filters'] == json.dumps(PARTICIPANT_FILTERS)
+            assert response.json['data']['filters'] == json.dumps(USER_FILTERS)
         else:
             assert response.json['data']['filters'] == json.dumps(ALL_FILTERS)
 

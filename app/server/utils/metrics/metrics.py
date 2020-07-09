@@ -60,7 +60,7 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
     metric_sets_by_type = {
         metrics_const.ALL: all_stats,
         metrics_const.TRANSFER: transfer_stats,
-        metrics_const.PARTICIPANT: participant_stats
+        metrics_const.USER: participant_stats
     }
 
     data = {}
@@ -68,7 +68,7 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
 
     # Legacy and aggregate metrics which don't fit the modular pattern
-    if metric_type in [metrics_const.ALL, metrics_const.PARTICIPANT]:
+    if metric_type in [metrics_const.ALL, metrics_const.USER]:
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
 
     if metric_type in [metrics_const.ALL, metrics_const.TRANSFER]:

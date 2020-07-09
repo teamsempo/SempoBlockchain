@@ -4,7 +4,7 @@ import json
 from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const
 from flask.views import MethodView
-from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, PARTICIPANT_FILTERS, process_transfer_filters
+from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, USER_FILTERS, process_transfer_filters
 from server.utils.auth import requires_auth
 
 metrics_blueprint = Blueprint('metrics', __name__)
@@ -49,7 +49,7 @@ class CreditTransferStatsApi(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
-class CreditTransferFiltersApi(MethodView):
+class FiltersApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
         """
@@ -63,7 +63,7 @@ class CreditTransferFiltersApi(MethodView):
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
         METRIC_TYPES_FILTERS = {
             metrics_const.ALL: ALL_FILTERS,
-            metrics_const.PARTICIPANT: PARTICIPANT_FILTERS,
+            metrics_const.USER: USER_FILTERS,
             metrics_const.TRANSFER: TRANSFER_FILTERS,
         }
 
@@ -84,6 +84,6 @@ metrics_blueprint.add_url_rule(
 
 metrics_blueprint.add_url_rule(
     '/metrics/filters/',
-    view_func=CreditTransferFiltersApi.as_view('metrics_filters_view'),
+    view_func=FiltersApi.as_view('metrics_filters_view'),
     methods=['GET']
 )

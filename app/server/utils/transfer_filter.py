@@ -61,7 +61,7 @@ ALL_FILTERS = {
 }
 
 TRANSFER_FILTERS = ALL_FILTERS
-PARTICIPANT_FILTERS = {
+USER_FILTERS = {
     'created': ALL_FILTERS['created'],
     'user_type': ALL_FILTERS['user_type'],
     'gender': ALL_FILTERS['gender'],
