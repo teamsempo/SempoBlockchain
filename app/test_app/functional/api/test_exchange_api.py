@@ -18,7 +18,12 @@ def test_exchange(test_client, user_with_reserve_balance, initialised_blockchain
                   from_token, to_token, from_amount, status_code):
     from_token_obj = initialised_blockchain_network[from_token]
     to_token_obj = initialised_blockchain_network[to_token]
-
+    print('RRRRRRRRRRRR')
+    print({
+            'from_token_id': from_token_obj.id,
+            'to_token_id': to_token_obj.id,
+            'from_amount': from_amount
+        })
     response = test_client.post(
         '/api/v1/me/exchange/',
         headers=dict(
