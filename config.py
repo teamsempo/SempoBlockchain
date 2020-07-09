@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.1.45'  # Remember to bump this in every PR
+VERSION = '1.2.6'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -144,12 +144,8 @@ ECDSA_SECRET        = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].encod
 INTERNAL_AUTH_USERNAME = secrets_parser['APP']['BASIC_AUTH_USERNAME'] + '_' + DEPLOYMENT_NAME
 INTERNAL_AUTH_PASSWORD = secrets_parser['APP']['BASIC_AUTH_PASSWORD']
 
-EXTERNAL_AUTH_USERNAME = 'admin_auth_' + DEPLOYMENT_NAME
-EXTERNAL_AUTH_PASSWORD = hashlib.sha256(SECRET_KEY.encode()).hexdigest()[0:8]
-
 BASIC_AUTH_CREDENTIALS = {
-    INTERNAL_AUTH_USERNAME: (INTERNAL_AUTH_PASSWORD, 'internal'),
-    EXTERNAL_AUTH_USERNAME: (EXTERNAL_AUTH_PASSWORD, 'external')
+    INTERNAL_AUTH_USERNAME: (INTERNAL_AUTH_PASSWORD, 'internal')
 }
 
 REDIS_URL = 'redis://' + config_parser['REDIS']['URI']
