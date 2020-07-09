@@ -40,6 +40,10 @@ def deploy_cic_token(post_data, creating_org=None):
         return response_object, 400
 
     balance_wei = bt.get_wallet_balance(deploying_address, exchange_contract.reserve_token)
+    print('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
+    print(balance_wei)
+    print(reserve_deposit_wei)
+    print('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
 
     if balance_wei < reserve_deposit_wei:
         response_object = {
