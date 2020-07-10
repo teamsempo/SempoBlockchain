@@ -1,10 +1,12 @@
 import { createAction, ActionsUnion } from "../../reduxUtils";
 import { BusinessVerificationActionTypes } from "./types";
-
-interface EditBusinessProfilePayload {
-  body: any;
-  path: string;
-}
+import {
+  EditBusinessProfilePayload,
+  CreateBankAccountPayload,
+  LoadBusinessProfilePayload,
+  CreateBusinessProfilePayload,
+  EditBankAccountPayload
+} from "./types";
 
 // Actions
 export const editBusinessProfile = (payload: EditBusinessProfilePayload) =>
@@ -13,19 +15,11 @@ export const editBusinessProfile = (payload: EditBusinessProfilePayload) =>
     payload
   );
 
-interface LoadBusinessProfilePayload {
-  query: any;
-}
-
 export const loadBusinessProfile = (payload: LoadBusinessProfilePayload) =>
   createAction(
     BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_REQUEST,
     payload
   );
-
-interface CreateBusinessProfilePayload {
-  body: any;
-}
 
 export const createBusinessProfile = (payload: CreateBusinessProfilePayload) =>
   createAction(
@@ -33,30 +27,11 @@ export const createBusinessProfile = (payload: CreateBusinessProfilePayload) =>
     payload
   );
 
-interface DocumentDetails {
-  document: any;
-  reference: any;
-  kyc_application: any;
-}
-
-interface UploadDocumentPayload {
-  body: DocumentDetails;
-}
-
-interface CreateBankAccountPayload {
-  body: any;
-}
-
 export const createBankAccount = (payload: CreateBankAccountPayload) =>
   createAction(
     BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_REQUEST,
     payload
   );
-
-interface EditBankAccountPayload {
-  body: any;
-  path: string;
-}
 
 export const editBankAccount = (payload: EditBankAccountPayload) =>
   createAction(
@@ -165,6 +140,7 @@ export const editBankAccountFailure = (error: any) =>
     error
   });
 
+//todo: delete dupes
 export const BusinessVerificationAction = {
   editBusinessProfile,
   loadBusinessProfile,

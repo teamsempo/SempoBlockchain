@@ -28,3 +28,65 @@ export enum BusinessVerificationActionTypes {
   EDIT_BANK_ACCOUNT_SUCCESS = "EDIT_BANK_ACCOUNT_SUCCESS",
   EDIT_BANK_ACCOUNT_FAILURE = "EDIT_BANK_ACCOUNT_FAILURE"
 }
+
+export interface EditBusinessProfilePayload {
+  body: any;
+  path: string;
+}
+
+export interface EditBusinessSagaPayload {
+  type: typeof BusinessVerificationActionTypes.EDIT_BUSINESS_VERIFICATION_REQUEST;
+  payload: EditBusinessProfilePayload;
+}
+
+export interface LoadBusinessProfilePayload {
+  query: any;
+}
+
+export interface LoadBusinessProfileSagaPayload {
+  type: typeof BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_REQUEST;
+  payload: LoadBusinessProfilePayload;
+}
+
+export interface CreateBusinessProfilePayload {
+  body: any;
+}
+
+export interface CreateBusinessProfileSagaPayload {
+  type: typeof BusinessVerificationActionTypes.CREATE_BUSINESS_VERIFICATION_REQUEST;
+  payload: CreateBusinessProfilePayload;
+}
+
+export interface DocumentDetails {
+  document: any;
+  reference: any;
+  kyc_application: any;
+}
+
+export interface UploadDocumentPayload {
+  body: DocumentDetails;
+}
+
+export interface UploadDocumentSagaPayload {
+  type: typeof BusinessVerificationActionTypes.UPLOAD_DOCUMENT_REQUEST;
+  payload: UploadDocumentPayload;
+}
+
+export interface CreateBankAccountPayload {
+  body: any;
+}
+
+export interface CreateBankAccountSagaPayload {
+  type: typeof BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_REQUEST;
+  payload: CreateBankAccountPayload;
+}
+
+export interface EditBankAccountPayload {
+  body: any;
+  path: string;
+}
+
+export interface EditBankAccountSagaPayload {
+  type: typeof BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_REQUEST;
+  payload: EditBankAccountPayload;
+}
