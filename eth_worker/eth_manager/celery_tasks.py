@@ -80,8 +80,19 @@ def synchronize_third_party_transactions(self):
 
 @celery_app.task(**low_priority_config)
 def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type, decimals = 18, block_epoch = None):
-    blockchain_sync.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch)
-    return True
+    f = blockchain_sync.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch)
+    if f:
+        return {
+            "contract_address": f.contract_address,
+            "contract_type": f.contract_address,
+            "filter_parameters": f.contract_address,
+            "filter_type": f.contract_address,
+            "max_block": f.contract_address,
+            "decimals": f.contract_address,
+            "blocks": f.contract_address,
+        }
+    else:
+        return True
 
 @celery_app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):
