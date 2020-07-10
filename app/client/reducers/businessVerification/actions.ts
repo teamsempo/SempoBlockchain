@@ -5,7 +5,8 @@ import {
   CreateBankAccountPayload,
   LoadBusinessProfilePayload,
   CreateBusinessProfilePayload,
-  EditBankAccountPayload
+  EditBankAccountPayload,
+  UploadDocumentPayload
 } from "./types";
 
 export const updateActiveStep = (activeStep: number, userId?: number) =>
@@ -85,8 +86,11 @@ export const editBusinessVerificationFailure = (error: any) =>
     { error }
   );
 
-export const uploadDocumentRequest = () =>
-  createAction(BusinessVerificationActionTypes.UPLOAD_DOCUMENT_REQUEST);
+export const uploadDocumentRequest = (payload: UploadDocumentPayload) =>
+  createAction(
+    BusinessVerificationActionTypes.UPLOAD_DOCUMENT_REQUEST,
+    payload
+  );
 
 export const uploadDocumentSuccess = () =>
   createAction(BusinessVerificationActionTypes.UPLOAD_DOCUMENT_SUCCESS);
