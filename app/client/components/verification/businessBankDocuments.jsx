@@ -42,7 +42,12 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     editBusinessProfile: (body, path) =>
-      dispatch(editBusinessProfile({ body, path })),
+      dispatch(
+        BusinessVerificationAction.editBusinessVerificationRequest({
+          body,
+          path
+        })
+      ),
     uploadDocument: body =>
       dispatch(BusinessVerificationAction.uploadDocumentRequest({ body })),
     backStep: () => dispatch(BusinessVerificationAction.updateActiveStep(3)),

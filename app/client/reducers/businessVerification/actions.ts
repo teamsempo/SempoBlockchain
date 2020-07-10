@@ -8,37 +8,6 @@ import {
   EditBankAccountPayload
 } from "./types";
 
-// Actions
-export const editBusinessProfile = (payload: EditBusinessProfilePayload) =>
-  createAction(
-    BusinessVerificationActionTypes.EDIT_BUSINESS_VERIFICATION_REQUEST,
-    payload
-  );
-
-export const loadBusinessProfile = (payload: LoadBusinessProfilePayload) =>
-  createAction(
-    BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_REQUEST,
-    payload
-  );
-
-export const createBusinessProfile = (payload: CreateBusinessProfilePayload) =>
-  createAction(
-    BusinessVerificationActionTypes.CREATE_BUSINESS_VERIFICATION_REQUEST,
-    payload
-  );
-
-export const createBankAccount = (payload: CreateBankAccountPayload) =>
-  createAction(
-    BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_REQUEST,
-    payload
-  );
-
-export const editBankAccount = (payload: EditBankAccountPayload) =>
-  createAction(
-    BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_REQUEST,
-    payload
-  );
-
 export const updateActiveStep = (activeStep: number, userId?: number) =>
   createAction(BusinessVerificationActionTypes.UPDATE_ACTIVE_STEP, {
     activeStep,
@@ -59,9 +28,12 @@ export const resetBusinessVerificationState = () =>
     BusinessVerificationActionTypes.RESET_BUSINESS_VERIFICATION_STATE
   );
 
-export const createBusinessVerificationRequest = () =>
+export const createBusinessVerificationRequest = (
+  payload: CreateBusinessProfilePayload
+) =>
   createAction(
-    BusinessVerificationActionTypes.CREATE_BUSINESS_VERIFICATION_REQUEST
+    BusinessVerificationActionTypes.CREATE_BUSINESS_VERIFICATION_REQUEST,
+    payload
   );
 
 export const createBusinessVerificationSuccess = () =>
@@ -75,9 +47,12 @@ export const createBusinessVerificationFailure = (error: any) =>
     { error }
   );
 
-export const loadBusinessVerificationRequest = () =>
+export const loadBusinessVerificationRequest = (
+  payload: LoadBusinessProfilePayload
+) =>
   createAction(
-    BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_REQUEST
+    BusinessVerificationActionTypes.LOAD_BUSINESS_VERIFICATION_REQUEST,
+    payload
   );
 
 export const loadBusinessVerificationSuccess = () =>
@@ -91,9 +66,12 @@ export const loadBusinessVerificationFailure = (error: any) =>
     { error }
   );
 
-export const editBusinessVerificationRequest = () =>
+export const editBusinessVerificationRequest = (
+  payload: EditBusinessProfilePayload
+) =>
   createAction(
-    BusinessVerificationActionTypes.EDIT_BUSINESS_VERIFICATION_REQUEST
+    BusinessVerificationActionTypes.EDIT_BUSINESS_VERIFICATION_REQUEST,
+    payload
   );
 
 export const editBusinessVerificationSuccess = () =>
@@ -118,8 +96,11 @@ export const uploadDocumentFailure = (error: any) =>
     error
   });
 
-export const createBankAccountRequest = () =>
-  createAction(BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_REQUEST);
+export const createBankAccountRequest = (payload: CreateBankAccountPayload) =>
+  createAction(
+    BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_REQUEST,
+    payload
+  );
 
 export const createBankAccountSuccess = () =>
   createAction(BusinessVerificationActionTypes.CREATE_BANK_ACCOUNT_SUCCESS);
@@ -129,8 +110,11 @@ export const createBankAccountFailure = (error: any) =>
     error
   });
 
-export const editBankAccountRequest = () =>
-  createAction(BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_REQUEST);
+export const editBankAccountRequest = (payload: EditBankAccountPayload) =>
+  createAction(
+    BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_REQUEST,
+    payload
+  );
 
 export const editBankAccountSuccess = () =>
   createAction(BusinessVerificationActionTypes.EDIT_BANK_ACCOUNT_SUCCESS);
@@ -140,11 +124,7 @@ export const editBankAccountFailure = (error: any) =>
     error
   });
 
-//todo: delete dupes
 export const BusinessVerificationAction = {
-  editBusinessProfile,
-  loadBusinessProfile,
-  createBusinessProfile,
   updateBusinessVerificationState,
   resetBusinessVerificationState,
   createBusinessVerificationRequest,
@@ -166,9 +146,7 @@ export const BusinessVerificationAction = {
   editBankAccountSuccess,
   editBankAccountFailure,
   updateActiveStep,
-  resetActiveStep,
-  createBankAccount,
-  editBankAccount
+  resetActiveStep
 };
 
 export type BusinessVerificationAction = ActionsUnion<

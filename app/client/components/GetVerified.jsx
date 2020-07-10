@@ -17,7 +17,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     loadBusinessProfile: query =>
-      dispatch(BusinessVerificationAction.loadBusinessProfile({ query })),
+      dispatch(
+        BusinessVerificationAction.loadBusinessVerificationRequest({ query })
+      ),
     clearUserId: () => dispatch(BusinessVerificationAction.resetActiveStep()),
     clearBusienssState: () =>
       dispatch(BusinessVerificationAction.resetBusinessVerificationState())

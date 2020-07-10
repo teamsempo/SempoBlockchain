@@ -33,9 +33,11 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     createBankAccount: body =>
-      dispatch(BusinessVerificationAction.createBankAccount({ body })),
+      dispatch(BusinessVerificationAction.createBankAccountRequest({ body })),
     editBankAccount: (body, path) =>
-      dispatch(BusinessVerificationAction.editBankAccount({ body, path })),
+      dispatch(
+        BusinessVerificationAction.editBankAccountRequest({ body, path })
+      ),
     backStep: () => dispatch(BusinessVerificationAction.updateActiveStep(2))
   };
 };
