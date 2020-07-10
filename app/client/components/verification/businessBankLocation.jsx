@@ -8,10 +8,7 @@ import { CountryDropdown } from "react-country-region-selector";
 import { DefaultTheme } from "../theme";
 import AsyncButton from "../AsyncButton.jsx";
 
-import {
-  UPDATE_ACTIVE_STEP,
-  UPDATE_BUSINESS_VERIFICATION_STATE
-} from "../../reducers/businessVerification/reducers";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 
 const ErrorMessage = function(props) {
   var error = props.input + "_val";
@@ -35,9 +32,13 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     updateBusinessState: kyc_application =>
-      dispatch({ type: UPDATE_BUSINESS_VERIFICATION_STATE, kyc_application }),
-    nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 3 }),
-    backStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 1 })
+      dispatch(
+        BusinessVerificationAction.updateBusinessVerificationState(
+          kyc_application
+        )
+      ),
+    nextStep: () => dispatch(BusinessVerificationAction.updateActiveStep(3)),
+    backStep: () => dispatch(BusinessVerificationAction.updateActiveStep(1))
   };
 };
 

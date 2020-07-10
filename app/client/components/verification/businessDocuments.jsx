@@ -2,11 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import styled, { ThemeProvider } from "styled-components";
-import {
-  editBusinessProfile,
-  UPDATE_ACTIVE_STEP,
-  uploadDocument
-} from "../../reducers/businessVerification/reducers";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 import DateTime from "../dateTime.jsx";
 
 import { DefaultTheme } from "../theme";
@@ -46,10 +42,16 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     editBusinessProfile: (body, path) =>
-      dispatch(editBusinessProfile({ body, path })),
-    uploadDocument: body => dispatch(uploadDocument({ body })),
-    nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 2 }),
-    backStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 0 })
+      dispatch(
+        BusinessVerificationAction.editBusinessVerificationRequest({
+          body,
+          path
+        })
+      ),
+    uploadDocument: body =>
+      dispatch(BusinessVerificationAction.uploadDocumentRequest({ body })),
+    nextStep: () => dispatch(BusinessVerificationAction.updateActiveStep(2)),
+    backStep: () => dispatch(BusinessVerificationAction.updateActiveStep(0))
   };
 };
 

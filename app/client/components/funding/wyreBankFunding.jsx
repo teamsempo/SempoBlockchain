@@ -9,7 +9,7 @@ import {
 } from "../../reducers/wyreReducer";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import AsyncButton from "../AsyncButton.jsx";
-import { loadBusinessProfile } from "../../reducers/businessVerification/reducers";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 
 const mapStateToProps = state => {
   return {
@@ -23,7 +23,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadBusinessProfile: () => dispatch(loadBusinessProfile()),
+    loadBusinessProfile: () =>
+      dispatch(BusinessVerificationAction.loadBusinessVerificationRequest()),
     createWyreTransfer: body => dispatch(createWyreTransfer({ body }))
   };
 };
