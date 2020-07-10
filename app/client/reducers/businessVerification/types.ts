@@ -31,7 +31,7 @@ export enum BusinessVerificationActionTypes {
 
 export interface EditBusinessProfilePayload {
   body: any;
-  path: string;
+  path: number;
 }
 
 export interface EditBusinessSagaPayload {
@@ -83,7 +83,7 @@ export interface CreateBankAccountSagaPayload {
 
 export interface EditBankAccountPayload {
   body: any;
-  path: string;
+  path: number;
 }
 
 export interface EditBankAccountSagaPayload {
