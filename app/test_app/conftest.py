@@ -301,7 +301,7 @@ def initialised_blockchain_network(
         smart_token_result = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=18,
-            reserve_deposit_wei=10,
+            reserve_deposit_wei=1e18,
             issue_amount_wei=1e18,
             contract_registry_address=registry_address,
             reserve_token_address=reserve_token.address,
@@ -391,7 +391,7 @@ def external_reserve_token(test_client, init_database, loaded_master_wallet_addr
         deploying_address=loaded_master_wallet_address,
         name=name,
         symbol=symbol,
-        fund_amount_wei=4 * 10 ** 18
+        fund_amount_wei=4 * 100 ** 18
     )
 
     reserve_token = Token(address=reserve_token_address, name=name, symbol=symbol, token_type=TokenType.RESERVE)
