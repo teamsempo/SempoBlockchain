@@ -21,7 +21,7 @@ import { creditTransfers } from "./creditTransfer/reducers";
 import { transferAccounts } from "./transferAccount/reducers";
 import { users } from "./user/reducers";
 import { filters } from "./filter/reducers";
-import { businessVerification } from "./businessVerificationReducer";
+import { businessVerification } from "./businessVerification/reducers";
 import { wyre } from "./wyreReducer";
 import { TransferUsageReducer } from "./transferUsage/reducers";
 import { OrganisationReducer } from "./organisation/reducers";
