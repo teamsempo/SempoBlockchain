@@ -29,4 +29,34 @@ total_vendors = metric.Metric(
     caching_combinatory_strategy=metrics_cache.COUNT,
     filterable_by=filterable_attributes)
 
+daily_users_created_query = db.session.query(func.count(User.id).label('volume'),
+        func.date_trunc('day', User.created).label('date')).group_by(func.date_trunc('day', User.created))
+daily_users_created = metric.Metric(
+    metric_name='daily_users_created', 
+    query=daily_users_created_query, 
+    object_model=User, 
+    stock_filters=[], 
+    caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+    filterable_by=filterable_attributes)
 
+total_users_per_day_query = db.session.query(func.count(User.id).label('volume'),
+        func.date_trunc('day', User.created).label('date')).group_by(func.date_trunc('day', User.created))
+total_users_per_day = metric.Metric(
+    metric_name='total_users_per_day', 
+    query=total_users_per_day_query, 
+    object_model=User, 
+    stock_filters=[], 
+    caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+    filterable_by=filterable_attributes)
+
+#total_users_per_day_query = db.session.query(func.count(User.id).label('volume'),
+#        func.date_trunc('day', User.created).label('date')).group_by(func.date_trunc('day', User.created))
+#print(total_users_per_day_query.all())
+#print(total_users_per_day_query.all())
+#print(total_users_per_day_query.all())
+#print(total_users_per_day_query.all())
+#print(total_users_per_day_query.all())
+#
+#user_query = db.session.query(func.count(User.id)).
+#print(user_query.all())
+#

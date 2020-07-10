@@ -48,13 +48,19 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         transfer_stats.has_transferred_count,
         transfer_stats.daily_transaction_volume, 
         transfer_stats.daily_disbursement_volume, 
-        transfer_stats.transfer_use_breakdown
+        transfer_stats.transfer_use_breakdown,
+        transfer_stats.daily_transaction_volume,
+        transfer_stats.daily_average_dollar_amount_of_trades,
+        transfer_stats.daily_number_of_trades,
     ]
 
     participant_stats = [
         participant_stats.total_beneficiaries,
         participant_stats.total_vendors,
+        participant_stats.daily_users_created,
+        participant_stats.total_users_per_day
     ]
+
     all_stats = transfer_stats + participant_stats
 
     metric_sets_by_type = {
@@ -62,7 +68,6 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         metrics_const.TRANSFER: transfer_stats,
         metrics_const.PARTICIPANT: participant_stats
     }
-
     data = {}
     for metric in metric_sets_by_type[metric_type]:
         data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
