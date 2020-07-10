@@ -10,7 +10,7 @@ from helpers.utils import will_func_test_blockchain
 
 @pytest.mark.parametrize("from_token, to_token, from_amount, status_code", [
     ("smart_token_2", "smart_token_1", 1e5, 400),
-    ("reserve_token", "smart_token_1", 1e2, 200),
+    ("reserve_token", "smart_token_1", 100, 200),
     ("smart_token_1", "reserve_token", 1e-10, 200),
     ("smart_token_1", "smart_token_2", 1e-10, 200),
 ])
@@ -36,6 +36,10 @@ def test_exchange(test_client, user_with_reserve_balance, initialised_blockchain
             'from_amount': from_amount
         })
 
+    print(response.json)
+    print(response.json)
+    print(response.json)
+    print(response.json)
     assert response.status_code == status_code
     if status_code == 200 and will_func_test_blockchain():
         task_uuid = response.json['data']['exchange']['blockchain_task_uuid']
