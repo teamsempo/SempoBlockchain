@@ -11,7 +11,7 @@ import LoadingSpinner from "../loadingSpinner.jsx";
 import { LightTheme } from "../theme.js";
 import SingleTransferAccountManagement from "../transferAccount/singleTransferAccountWrapper.jsx";
 
-import { loadTransferAccounts } from "../../reducers/transferAccountReducer";
+import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper";
 
 const mapStateToProps = state => {
@@ -24,7 +24,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadTransferAccountList: path => dispatch(loadTransferAccounts({ path }))
+    loadTransferAccountList: path =>
+      dispatch(LoadTransferAccountAction.loadTransferAccountsRequest({ path }))
   };
 };
 

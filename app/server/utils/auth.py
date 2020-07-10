@@ -34,6 +34,16 @@ def show_all(f):
         return f(*args, **kwargs)
     return wrapper
 
+def multi_org(f):
+    """
+    Decorator for endpoints to tell SQLAlchemy that it's dealing with a multi-org friendly endpoint
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        g.multi_org = True
+        return f(*args, **kwargs)
+    return wrapper
+
 
 def requires_auth(f=None,
                   allowed_roles: Optional[Dict]=None,
@@ -41,8 +51,13 @@ def requires_auth(f=None,
                   ignore_tfa_requirement: bool=False,
                   allow_query_string_auth: bool=False):
 
-    allowed_roles = allowed_roles or {}
-    allowed_basic_auth_types = allowed_basic_auth_types or []
+    allowed_roles = allowed_roles or dict()
+    allowed_basic_auth_types = allowed_basic_auth_types or tuple()
+
+    if not isinstance(allowed_basic_auth_types, tuple):
+        # Because 'tern' in ('internal') >> True
+        # Where as 'tern' in ('internal',) >> False
+        raise RuntimeError('allowed_basic_auth_types must be a tuple')
 
     if f is None:
         return partial(requires_auth,
@@ -93,27 +108,38 @@ def requires_auth(f=None,
 
         # If username as password attempt basic auth
         if username and password:
-            # Check if username belongs to an org
-            org = Organisation.query.filter_by(external_auth_username = username).first()
-            if org:
-                auth_type = 'external'
-                required_password = org.external_auth_password
-            # Otherwise, check if it is one of the configured BASIC_AUTH_CREDENTIALS
-            else:
-                (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'].get(username, (None, None))
-            if required_password is None or required_password != password:
-                response_object = {
-                    'message': 'invalid basic auth username or password'
-                }
-                return make_response(jsonify(response_object)), 401
 
+
+            # Make sure basic auth is allowed
             if len(allowed_basic_auth_types) == 0:
                 response_object = {
                     'message': 'basic auth not allowed'
                 }
                 return make_response(jsonify(response_object)), 401
 
-            if auth_type not in allowed_basic_auth_types:
+
+            # Try to find a matching password and auth type for the username, checking orgs first and then config
+            # Check if username belongs to an org
+            org = Organisation.query.filter_by(external_auth_username = username).first()
+            if org:
+                auth_type = 'external'
+                required_password = org.external_auth_password
+
+            # Otherwise, check if it is one of the allowed BASIC_AUTH_CREDENTIALS
+            else:
+                try:
+                    (required_password, auth_type) = current_app.config['BASIC_AUTH_CREDENTIALS'][username]
+                except KeyError:
+                    required_password = None
+                    auth_type = None
+
+            if required_password is None or required_password != password:
+                response_object = {
+                    'message': 'invalid basic auth username or password'
+                }
+                return make_response(jsonify(response_object)), 401
+
+            if (auth_type not in allowed_basic_auth_types) or (auth_type is None):
                 response_object = {
                     'message': 'Basic Auth type is {}. Must be: {}'.format(auth_type, allowed_basic_auth_types)
                 }
@@ -185,6 +211,20 @@ def requires_auth(f=None,
                         # Then get the fallback organisation
                         if g.active_organisation is None:
                             g.active_organisation = user.fallback_active_organisation()
+
+                        # Check for query_organisations as well. These are stored in g and used for operations which
+                        # are allowed to be run against multiple orgs. Submitted as a CSV
+                        # E.g. GET metrics, user list, transfer list should be gettable with ?query_organisations=1,2,3
+                        query_organisations = request.args.get('query_organisations', None)
+                        if query_organisations:
+                            g.query_organisations = []
+                            try:
+                                query_organisations = [int(q) for q in query_organisations.split(',')]
+                                if set(query_organisations).issubset(set(g.member_organisations)):
+                                    g.query_organisations = query_organisations
+                            except ValueError:
+                                pass
+
 
                     except NotImplementedError:
                         g.active_organisation = None
