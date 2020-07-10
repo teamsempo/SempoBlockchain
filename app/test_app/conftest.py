@@ -302,7 +302,7 @@ def initialised_blockchain_network(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=18,
             reserve_deposit_wei=10,
-            issue_amount_wei=1000,
+            issue_amount_wei=1e18,
             contract_registry_address=registry_address,
             reserve_token_address=reserve_token.address,
             reserve_ratio_ppm=reserve_ratio_ppm
