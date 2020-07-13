@@ -163,6 +163,10 @@ def remove_prior_task_dependency(self, task_uuid, prior_task_uuid):
     return task_manager.remove_prior_task_dependency(task_uuid, prior_task_uuid)
 
 @app.task(**no_retry_config)
+def remove_all_posterior_dependencies(self, prior_task_uuid):
+    return task_manager.remove_all_posterior_dependencies(prior_task_uuid)
+
+@app.task(**no_retry_config)
 def retry_task(self, task_uuid):
     return task_manager.retry_task(task_uuid)
 
