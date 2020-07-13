@@ -3,13 +3,10 @@ import { connect } from "react-redux";
 import styled, { ThemeProvider } from "styled-components";
 import { Input } from "../styledElements";
 
-import {
-  loadExchangeRates,
-  createWyreTransfer
-} from "../../reducers/wyreReducer";
+import { WyreAction } from "../../reducers/wyre/actions";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import AsyncButton from "../AsyncButton.jsx";
-import { loadBusinessProfile } from "../../reducers/businessVerificationReducer";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 
 const mapStateToProps = state => {
   return {
@@ -23,8 +20,10 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadBusinessProfile: () => dispatch(loadBusinessProfile()),
-    createWyreTransfer: body => dispatch(createWyreTransfer({ body }))
+    loadBusinessProfile: () =>
+      dispatch(BusinessVerificationAction.loadBusinessVerificationRequest()),
+    createWyreTransfer: body =>
+      dispatch(WyreAction.createWyreTransferRequest({ body }))
   };
 };
 
