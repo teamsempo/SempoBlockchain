@@ -34,9 +34,11 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         date_filters.append(CreditTransfer.created <= end_date)
 
     # Disable cache if any filters are being used, or explicitly requested
-    enable_cache = True
     if user_filter or date_filters or disable_cache:
         enable_cache = False
+    enable_cache = False
+
+    total_users = participant_stats.total_users_per_day.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
 
     # Metrics taxonomy, used to determine which metrics to display when which 
     # metric_type is queried
@@ -68,9 +70,10 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         metrics_const.TRANSFER: transfer_stats,
         metrics_const.PARTICIPANT: participant_stats
     }
+
     data = {}
     for metric in metric_sets_by_type[metric_type]:
-        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
+        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
 
     # Legacy and aggregate metrics which don't fit the modular pattern
     if metric_type in [metrics_const.ALL, metrics_const.PARTICIPANT]:

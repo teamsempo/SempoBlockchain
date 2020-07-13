@@ -2,7 +2,7 @@ from sqlalchemy.sql import func, distinct
 
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
-from server.utils.metrics import filters, metrics_cache, metric
+from server.utils.metrics import filters, metrics_cache, metric, process_timeseries
 from server.utils.metrics.metrics_const import *
 
 from server import db, red, bt
@@ -112,5 +112,15 @@ daily_number_of_trades = metric.Metric(
     object_model=CreditTransfer, 
     stock_filters=[filters.standard_payment_filters], 
     caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-    filterable_by=filterable_attributes)
+    filterable_by=filterable_attributes,
+    timeseries_actions=[CALCULATE_PER_USER])
 
+from server.models.user import User
+
+total_users_per_day_query = db.session.query(func.count(User.id).label('volume'),
+        func.date_trunc('day', User.created).label('date')).group_by(func.date_trunc('day', User.created))
+md = process_timeseries.add_missing_days(total_users_per_day_query.all())
+at = process_timeseries.accumulate_timeseries(md)
+
+nt = daily_average_dollar_amount_of_trades_query.all()
+print(process_timeseries.calculate_per_user(nt, at))

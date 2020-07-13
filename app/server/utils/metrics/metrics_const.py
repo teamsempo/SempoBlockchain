@@ -11,3 +11,10 @@ TRANSFER = 'transfer'
 PARTICIPANT = 'participant'
 ALL='all'
 METRIC_TYPES = [TRANSFER, PARTICIPANT, ALL]
+
+# Calculate timeseries per user
+ADD_MISSING_DAYS = 'add_missing_days'
+ACCUMULATE_TIMESERIES = 'accumulate_timeseries'
+CALCULATE_PER_USER = 'calculate_per_user'
+TIMESERIES_ACTIONS = [ADD_MISSING_DAYS, ACCUMULATE_TIMESERIES, CALCULATE_PER_USER]
+
