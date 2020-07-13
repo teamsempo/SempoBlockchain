@@ -24,6 +24,6 @@ def catch_all(path):
 
 
 @index_view.route('/whatsapp-sync/')
-@requires_auth(allowed_basic_auth_types=('internal'))
+@requires_auth(allowed_basic_auth_types=('internal',))
 def WhatsApp_sync():
     return render_template('WhatsAppQR.html', qr_code = whatsapp_q.get_info('whatsApp_qr_code').get('data'), status = whatsapp_q.get_info('whatsApp_status'))

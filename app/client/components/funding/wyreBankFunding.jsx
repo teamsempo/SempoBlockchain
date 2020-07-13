@@ -6,7 +6,7 @@ import { Input } from "../styledElements";
 import { WyreAction } from "../../reducers/wyre/actions";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import AsyncButton from "../AsyncButton.jsx";
-import { loadBusinessProfile } from "../../reducers/businessVerificationReducer";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 
 const mapStateToProps = state => {
   return {
@@ -20,7 +20,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadBusinessProfile: () => dispatch(loadBusinessProfile()),
+    loadBusinessProfile: () =>
+      dispatch(BusinessVerificationAction.loadBusinessVerificationRequest()),
     createWyreTransfer: body =>
       dispatch(WyreAction.createWyreTransferRequest({ body }))
   };

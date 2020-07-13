@@ -12,10 +12,7 @@ import {
 } from "../styledElements";
 import { LightTheme } from "../theme.js";
 
-import {
-  loadBusinessProfile,
-  UPDATE_ACTIVE_STEP
-} from "../../reducers/businessVerificationReducer";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 
 import BusinessDetails from "../verification/businessDetails.jsx";
 import BusinessDocuments from "../verification/businessDocuments.jsx";
@@ -39,8 +36,11 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadBusinessProfile: query => dispatch(loadBusinessProfile({ query })),
-    nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 0 })
+    loadBusinessProfile: query =>
+      dispatch(
+        BusinessVerificationAction.loadBusinessVerificationRequest({ query })
+      ),
+    nextStep: () => dispatch(BusinessVerificationAction.updateActiveStep(0))
   };
 };
 

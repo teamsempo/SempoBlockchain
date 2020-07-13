@@ -8,6 +8,8 @@ from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
+from server.utils.auth import multi_org
+
 from server.exceptions import ResourceAlreadyDeletedError, TransferAccountDeletionError
 
 user_blueprint = Blueprint('user', __name__)
@@ -15,6 +17,7 @@ user_blueprint = Blueprint('user', __name__)
 
 class UserAPI(MethodView):
     @requires_auth
+    @multi_org
     def get(self, user_id):
 
         can_see_full_details = AccessControl.has_suffient_role(
@@ -118,7 +121,7 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external',))
     def post(self, user_id):
 
         post_data = request.get_json()
@@ -172,7 +175,7 @@ class UserAPI(MethodView):
 
 
 class ResetPinAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'admin'}, allowed_basic_auth_types=('external'))
+    @requires_auth(allowed_roles={'ADMIN': 'admin'}, allowed_basic_auth_types=('external',))
     def post(self, user_id):
 
         post_data = request.get_json()
