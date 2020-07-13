@@ -7,11 +7,7 @@ import { ModuleHeader, Row, StyledSelect, Input } from "../styledElements";
 import { DefaultTheme } from "../theme";
 import AsyncButton from "../AsyncButton.jsx";
 
-import {
-  editBankAccount,
-  createBankAccount,
-  UPDATE_ACTIVE_STEP
-} from "../../reducers/businessVerificationReducer";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 
 const ErrorMessage = function(props) {
   var error = props.input + "_val";
@@ -36,9 +32,13 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    createBankAccount: body => dispatch(createBankAccount({ body })),
-    editBankAccount: (body, path) => dispatch(editBankAccount({ body, path })),
-    backStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 2 })
+    createBankAccount: body =>
+      dispatch(BusinessVerificationAction.createBankAccountRequest({ body })),
+    editBankAccount: (body, path) =>
+      dispatch(
+        BusinessVerificationAction.editBankAccountRequest({ body, path })
+      ),
+    backStep: () => dispatch(BusinessVerificationAction.updateActiveStep(2))
   };
 };
 
