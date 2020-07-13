@@ -6,6 +6,7 @@ from flask import current_app, g
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Index
 from sqlalchemy.sql import func
+from sqlalchemy import or_
 from uuid import uuid4
 
 from server import db, bt
@@ -109,27 +110,44 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         )
 
     def _get_required_prior_tasks(self):
+        """
+        Get the tasks involving the sender's account that must complete prior to this task being submitted to chain
+        To calculate the prior tasks for the sender Alice:
 
-        base_oob_query = (
-            CreditTransfer.query
-                .order_by(CreditTransfer.id.desc())
-                .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-                .filter(CreditTransfer.sender_transfer_account == self.sender_transfer_account)
-                .filter(CreditTransfer.id != self.id)
+        - Find the most recent credit transfer where Alice was the sender, not including any transfers that have the
+            same batch UUID as this transfer. Call this "most_recent_out_of_batch_send"
+        - Find all credit transfers subsequent to "most_recent_out_of_batch_send" where Alice was the recipient. Call
+            this "more_recent_receives"
 
+        Required priors are all transfers in "more_recent_receives" and "most_recent_out_of_batch_send".
+        For why this works, see https://github.com/teamsempo/SempoBlockchain/pull/262
+
+        """
+
+        # We're constantly querying complete transfers here. Lazy and DRY
+        complete_transfer_base_query = (
+            CreditTransfer.query.filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
         )
 
-        if self.batch_uuid:
-            most_recent_out_of_batch_send = base_oob_query.filter(CreditTransfer.batch_uuid != self.batch_uuid).first()
-        else:
-            most_recent_out_of_batch_send = base_oob_query.first()
+        # Query for finding most_recent_out_of_batch_send
+        most_recent_out_of_batch_send = (
+            complete_transfer_base_query
+                .order_by(CreditTransfer.id.desc())
+                .filter(CreditTransfer.sender_transfer_account == self.sender_transfer_account)
+                .filter(CreditTransfer.id != self.id)
+                .filter(or_(CreditTransfer.batch_uuid != self.batch_uuid,
+                            CreditTransfer.batch_uuid == None  # Only exclude matching batch_uuids if they're not null
+                            )
+                ).first()
+        )
 
+        # Base query for finding more_recent_receives
         base_pr_query = (
-            CreditTransfer.query
-                .filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+            complete_transfer_base_query
                 .filter(CreditTransfer.recipient_transfer_account == self.sender_transfer_account)
         )
 
+        # It's possible that "most_recent_out_of_batch_send" doesn't exist. In that case we search for all receives
         if most_recent_out_of_batch_send:
             more_recent_receives = base_pr_query.filter(CreditTransfer.id > most_recent_out_of_batch_send.id).all()
 
@@ -137,11 +155,18 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         else:
             required_priors = base_pr_query.all()
 
-        return required_priors
+        # Lastly, edge case handle: if most_recent_out_of_batch_send is a batch member, the whole batch are priors
+        if most_recent_out_of_batch_send and most_recent_out_of_batch_send.batch_uuid is not None:
+            same_batch_priors = complete_transfer_base_query.filter(
+                CreditTransfer.batch_uuid == most_recent_out_of_batch_send.batch_uuid
+            ).all()
 
+            required_priors = required_priors + same_batch_priors
 
+        # Return the set to remove any possible duplicates
+        return set(required_priors)
 
-    def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority', batch_uuid=None):
+    def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority', batch_uuid: str=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
             raise Exception(f'Transfer resolve function called multiple times for transaciton {self.id}')
         self.check_sender_transfer_limits()
