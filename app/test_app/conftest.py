@@ -505,7 +505,7 @@ def mock_amazon_ses(mocker):
     mocker.patch('server.utils.amazon_ses.ses_email_handler')
 
 @pytest.fixture(scope="module")
-def monkeymodule(request):
+def monkeymodule():
     from _pytest.monkeypatch import MonkeyPatch
     mpatch = MonkeyPatch()
     yield mpatch
