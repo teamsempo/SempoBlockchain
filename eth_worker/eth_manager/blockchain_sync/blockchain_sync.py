@@ -79,6 +79,10 @@ def synchronize_third_party_transactions():
 # Gets history for given range, and runs handle_transaction on all of them
 # This is the second stage in the third party transaction processing pipeline!
 def process_chunk(filter, floor, ceiling):
+    config.logg.info('proc_chunk')
+    config.logg.info(filter)
+    config.logg.info(floor)
+    config.logg.info(ceiling)
     transaction_history = get_blockchain_transaction_history(
             filter.contract_address, 
             floor, 
@@ -87,6 +91,8 @@ def process_chunk(filter, floor, ceiling):
             filter.id
         )
     for transaction in transaction_history:
+        config.logg.info('LoopTX')
+        config.logg.info(transaction)
         handle_transaction(transaction, filter)
 
 # Processes newly found transaction event
