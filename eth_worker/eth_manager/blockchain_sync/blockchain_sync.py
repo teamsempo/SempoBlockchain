@@ -46,6 +46,7 @@ def synchronize_third_party_transactions():
         if not have_lock:
             config.logg.info(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
             continue
+        print('STARTING TO GET LATEST BLOCK')
         latest_block = get_latest_block_number()
         config.logg.info('LATEST BLOCK')
         config.logg.info(latest_block)
