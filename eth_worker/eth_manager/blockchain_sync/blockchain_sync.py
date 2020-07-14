@@ -174,6 +174,10 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
 
 # Adds transaction filter to database if it doesn't already exist
 def add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals = 18, block_epoch=None):
+    print('TRYING TO ADD TRANSACTION FILTER!')
+    print('TRYING TO ADD TRANSACTION FILTER!')
+    print('TRYING TO ADD TRANSACTION FILTER!')
+    print('TRYING TO ADD TRANSACTION FILTER!')
     # See if there's already a filter with the same contract address AND type. If there is, do nothing
     # This lets you always add all filters at app-launch, without running an entire filter every time
     if not contract_address:
