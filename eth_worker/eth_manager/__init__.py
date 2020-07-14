@@ -58,11 +58,7 @@ celery_app.conf.beat_schedule = {
     'third-party-transaction-sync': {
         'task': utils.eth_endpoint('synchronize_third_party_transactions'),
         'schedule': 30, # Every 30 seconds
-    },
-    #"maintain_eth_balances": {
-    #    "task": utils.eth_endpoint('topup_wallets'),
-    #    "schedule": 600.0
-    #},
+    }
 }
 
 w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
