@@ -85,6 +85,7 @@ def process_chunk(filter, floor, ceiling):
     config.logg.info('proc_chunk')
     config.logg.info(filter)
     config.logg.info(floor)
+    config.logg.info('proc_chunk2')
     config.logg.info(ceiling)
     transaction_history = get_blockchain_transaction_history(
             filter.contract_address, 
