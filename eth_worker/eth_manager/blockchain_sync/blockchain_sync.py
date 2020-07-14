@@ -40,7 +40,7 @@ def synchronize_third_party_transactions():
     for f in filters:
         # Make sure a filter is only being executed once at a time
         have_lock = False
-        lock = red.lock(f'third-party-sync-lock-{f.id}', timeout=sync_const.LOCK_TIMEOUT)
+        lock = red.lock(f'third-party-sync-lock', timeout=sync_const.LOCK_TIMEOUT)
         have_lock = lock.acquire(blocking=False)
         if not have_lock:
             config.logg.info(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
