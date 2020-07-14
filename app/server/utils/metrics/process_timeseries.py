@@ -6,8 +6,8 @@ from server.utils.metrics.metrics_const import *
 
 # Takes sorted list of tuples where the 2nd element is a date, and fills in the gaps
 # Example:
-# Input:  [(5, 01/01/2020, (10, 01/04/2020)] 
-# Output: [(5, 01/01/2020), (0, 01/02/2020), (0, 01/03/2020), (0, 01/04/2020) (10, 01/05/2020)] 
+# Input:  [(5, 01/01/2020), (10, 01/04/2020)] 
+# Output: [(5, 01/01/2020), (0, 01/02/2020), (0, 01/03/2020), (0, 01/04/2020)] 
 # TODO: Make it generic (day/week/month/year)
 def add_missing_days(query_result, population_query_result=None):
     start_date = query_result[0][1]
