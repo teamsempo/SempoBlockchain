@@ -12,6 +12,7 @@ from eth_manager.ABIs import erc20_abi
 
 # Hit the database to get the latest block number to which we're synced
 def get_latest_block_number():
+    print('getting latest block number')
     return w3_websocket.eth.getBlock('latest').number
 
 # Call app-level webhook with newfound transacitons
