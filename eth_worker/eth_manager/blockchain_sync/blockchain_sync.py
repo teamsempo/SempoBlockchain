@@ -47,24 +47,15 @@ def synchronize_third_party_transactions():
         if not have_lock:
             config.logg.info(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
             continue
-        print('STARTING TO GET LATEST BLOCK')
+
         latest_block = get_latest_block_number()
-        config.logg.info('LATEST BLOCK')
-        config.logg.info(latest_block)
         # If there's no filter.max_block (which is the default for auto-generated filters)
         # start tracking third party transactions by looking at the lastest_block
         max_fetched_block = f.max_block or latest_block
-        config.logg.info('max_fetched_block')
-        config.logg.info(max_fetched_block)
         number_of_blocks_to_get = (latest_block - max_fetched_block)
-        config.logg.info('number_of_blocks_to_get')
-        config.logg.info(number_of_blocks_to_get)
         number_of_chunks = ceil(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST)
-        config.logg.info('number_of_chunks')
-        config.logg.info(number_of_chunks)
+
         for chunk in range(number_of_chunks):
-            config.logg.info('chunk')
-            config.logg.info(chunk)
             floor = max_fetched_block + (chunk * sync_const.BLOCKS_PER_REQUEST) + 1
             ceiling = max_fetched_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
             if ceiling > latest_block:
@@ -82,11 +73,6 @@ def synchronize_third_party_transactions():
 # Gets history for given range, and runs handle_transaction on all of them
 # This is the second stage in the third party transaction processing pipeline!
 def process_chunk(filter, floor, ceiling):
-    config.logg.info('proc_chunk')
-    config.logg.info(filter)
-    config.logg.info(floor)
-    config.logg.info('proc_chunk2')
-    config.logg.info(ceiling)
     transaction_history = get_blockchain_transaction_history(
             filter.contract_address, 
             floor, 
@@ -95,8 +81,6 @@ def process_chunk(filter, floor, ceiling):
             filter.id
         )
     for transaction in transaction_history:
-        config.logg.info('LoopTX')
-        config.logg.info(transaction)
         handle_transaction(transaction, filter)
 
 # Processes newly found transaction event
@@ -139,32 +123,14 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
         address = Web3.toChecksumAddress(contract_address),
         abi = erc20_abi.abi
     )
-    print('contract_address')
-    print(contract_address)
-    print('start_block')
-    print(start_block)
-    print('end_block')
-    print(end_block)
-    print('argument_filters')
-    print(argument_filters)
-    print('filter_id')
-    print(filter_id)
-    print('Start making filter')
     try:
         filter = erc20_contract.events.Transfer.createFilter(
             fromBlock = start_block,
             toBlock = end_block,
             argument_filters = argument_filters
         )
-        print('FILTER')
-        print(filter)
         for event in filter.get_all_entries():
-            print('------EVENT-------')
-            print('------EVENT-------')
-            print('------EVENT-------')
-            print(event)
             yield event
-        print('done')
         # Once a batch of chunks is completed, we can mark them completed
         persistence_module.set_block_range_status(start_block, end_block, 'SUCCESS', filter_id)
 
@@ -175,10 +141,6 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
 
 # Adds transaction filter to database if it doesn't already exist
 def add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals = 18, block_epoch=None):
-    print('TRYING TO ADD TRANSACTION FILTER!')
-    print('TRYING TO ADD TRANSACTION FILTER!')
-    print('TRYING TO ADD TRANSACTION FILTER!')
-    print('TRYING TO ADD TRANSACTION FILTER!')
     # See if there's already a filter with the same contract address AND type. If there is, do nothing
     # This lets you always add all filters at app-launch, without running an entire filter every time
     if not contract_address:
