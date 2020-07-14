@@ -135,15 +135,32 @@ def get_blockchain_transaction_history(contract_address, start_block, end_block 
         address = Web3.toChecksumAddress(contract_address),
         abi = erc20_abi.abi
     )
+    print('contract_address')
+    print(contract_address)
+    print('start_block')
+    print(start_block)
+    print('end_block')
+    print(end_block)
+    print('argument_filters')
+    print(argument_filters)
+    print('filter_id')
+    print(filter_id)
+    print('Start making filter')
     try:
         filter = erc20_contract.events.Transfer.createFilter(
             fromBlock = start_block,
             toBlock = end_block,
             argument_filters = argument_filters
         )
+        print('FILTER')
+        print(filter)
         for event in filter.get_all_entries():
+            print('------EVENT-------')
+            print('------EVENT-------')
+            print('------EVENT-------')
+            print(event)
             yield event
-
+        print('done')
         # Once a batch of chunks is completed, we can mark them completed
         persistence_module.set_block_range_status(start_block, end_block, 'SUCCESS', filter_id)
 
