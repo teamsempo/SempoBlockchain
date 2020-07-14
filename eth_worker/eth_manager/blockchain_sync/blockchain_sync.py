@@ -12,7 +12,6 @@ from eth_manager.ABIs import erc20_abi
 
 # Hit the database to get the latest block number to which we're synced
 def get_latest_block_number():
-    print('getting latest block number')
     return w3_websocket.eth.getBlock('latest').number
 
 # Call app-level webhook with newfound transacitons
@@ -34,7 +33,6 @@ def call_webhook(transaction):
 
 # Get list of filters from redis. This is the starting point of the synchronization process
 def synchronize_third_party_transactions():
-    print('STARTING SYNC')
     filters = persistence_module.get_all_synchronization_filters()
     # Since the webook will timeout if we ask for too many blocks at once, we have to break 
     # the range we want into chunks. Once all the chunk-jobs are formed and loaded into redis,
