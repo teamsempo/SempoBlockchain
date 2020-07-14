@@ -53,7 +53,6 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 celery_app.conf.update(redbeat_redis_url=config.REDIS_URL)
-celery_app.conf.update(redbeat_lock_timeout=10)
 
 celery_app.conf.beat_schedule = {
     'third-party-transaction-sync': {
