@@ -8,7 +8,9 @@ from server.models.organisation import Organisation
 
 
 def deploy_cic_token(post_data, creating_org=None):
-
+    print('DEPLOY CIC TOKEN')
+    print('DEPLOY CIC TOKEN')
+    print(post_data)
     name = post_data['name']
     symbol = post_data['symbol']
     decimals = post_data.get('decimals', 18)
@@ -36,7 +38,7 @@ def deploy_cic_token(post_data, creating_org=None):
         }
 
         return response_object, 400
-
+    print("GET WALLET BALANCE")
     balance_wei = bt.get_wallet_balance(deploying_address, exchange_contract.reserve_token)
     print('zzzzzzz')
     print(balance_wei)
