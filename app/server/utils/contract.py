@@ -16,13 +16,10 @@ def deploy_cic_token(post_data, creating_org=None):
     reserve_deposit_wei = int(post_data['reserve_deposit_wei'])
     exchange_contract_id = post_data['exchange_contract_id']
     reserve_ratio_ppm = post_data.get('reserve_ratio_ppm', 250000)
-    print('aaaaaaaaaaaaaaaaaa')
     if creating_org:
         deploying_address = creating_org.primary_blockchain_address
     else:
         deploying_address = g.user.primary_blockchain_address
-
-    print('bbbbbbbb')
 
     if not exchange_contract_id:
         response_object = {
@@ -30,10 +27,8 @@ def deploy_cic_token(post_data, creating_org=None):
         }
 
         return response_object, 400
-    print('ccccccccc')
 
     exchange_contract = ExchangeContract.query.get(exchange_contract_id)
-    print('ddddddd')
 
     if not exchange_contract:
         response_object = {
@@ -43,10 +38,10 @@ def deploy_cic_token(post_data, creating_org=None):
         return response_object, 400
 
     balance_wei = bt.get_wallet_balance(deploying_address, exchange_contract.reserve_token)
-    print('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
+    print('zzzzzzz')
     print(balance_wei)
     print(reserve_deposit_wei)
-    print('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
+    print('zzzz')
 
     if balance_wei < reserve_deposit_wei:
         response_object = {
