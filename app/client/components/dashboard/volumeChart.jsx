@@ -153,7 +153,7 @@ class VolumeChart extends React.Component {
       return (
         <div>
           <ModuleHeader> Transaction and Disbursement Volume </ModuleHeader>
-          <div style={{ padding: "0.2em 1em 1em 1em" }}>
+          <div style={{ padding: "0.2em 1em 1em 1em", height: "200px" }}>
             <Line data={data} height={250} options={options} />
           </div>
         </div>

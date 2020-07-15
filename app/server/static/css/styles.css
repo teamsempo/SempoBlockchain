@@ -13,6 +13,26 @@ body {
   background-color: #f7fafc;
 }
 
+/* Ant Design */
+.logo {
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 16px;
+}
+
+.site-layout .site-layout-background {
+  background: #fff;
+}
+
+[data-theme="dark"] .site-layout .site-layout-background {
+  background: #141414;
+}
+
+.ant-layout-content {
+  /*overide default settings*/
+  margin: 0px !important;
+}
+
 /* used to override default password strength input */
 .default-input {
   width: calc(100% - 2em) !important;

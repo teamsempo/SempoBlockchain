@@ -82,7 +82,7 @@ class userFunnelChart extends React.Component {
       return (
         <div>
           <ModuleHeader>USAGE FUNNEL</ModuleHeader>
-          <div style={{ padding: "0.2em 1em 1em 1em" }}>
+          <div style={{ padding: "0.2em 1em 1em 1em", height: "200px" }}>
             <HorizontalBar data={data} height={150} options={options} />
           </div>
         </div>

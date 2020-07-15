@@ -1,6 +1,6 @@
 var webpack = require("webpack");
-
 const path = require("path");
+const fs = require("fs");
 const APP_DIR = path.resolve(__dirname, "client");
 const BUILD_DIR = path.resolve(__dirname, "server/static/javascript/dist");
 const CleanWebpackPlugin = require("clean-webpack-plugin");
@@ -8,6 +8,11 @@ const CompressionPlugin = require("compression-webpack-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
   .BundleAnalyzerPlugin;
 const MomentLocalesPlugin = require("moment-locales-webpack-plugin");
+
+const lessToJs = require("less-vars-to-js");
+const themeVariables = lessToJs(
+  fs.readFileSync(path.join(__dirname, "client/ant-theme-vars.less"), "utf8")
+);
 
 module.exports = {
   entry: APP_DIR + "/index.jsx",
@@ -33,7 +38,7 @@ module.exports = {
   },
   devtool: "#cheap-module-source-map.", // #eval-source-map" #cheap-module-source-map."
   resolve: {
-    extensions: [".ts", ".tsx", ".js", ".jsx", ".json", ".css"]
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".json", ".css", ".less"]
   },
   module: {
     rules: [
@@ -67,7 +72,8 @@ module.exports = {
             loader: "babel-loader",
             options: {
               babelrc: false,
-              presets: ["env", "react", "stage-2"]
+              presets: ["env", "react", "stage-2"],
+              plugins: [["import", { libraryName: "antd", style: true }]]
             }
           }
         ]
@@ -76,6 +82,22 @@ module.exports = {
         test: /\.(ts|tsx)?$/,
         exclude: /node_modules/,
         loader: "awesome-typescript-loader"
+      },
+      {
+        test: /\.less$/,
+        use: [
+          { loader: "style-loader" },
+          { loader: "css-loader" },
+          {
+            loader: "less-loader",
+            options: {
+              lessOptions: {
+                modifyVars: themeVariables,
+                javascriptEnabled: true
+              }
+            }
+          }
+        ]
       }
     ]
   }
