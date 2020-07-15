@@ -84,12 +84,11 @@ def add_transaction_filter(self, contract_address, contract_type, filter_paramet
     if f:
         return {
             "contract_address": f.contract_address,
-            "contract_type": f.contract_address,
-            "filter_parameters": f.contract_address,
-            "filter_type": f.contract_address,
-            "max_block": f.contract_address,
-            "decimals": f.contract_address,
-            "blocks": f.contract_address,
+            "contract_type": f.contract_type,
+            "filter_parameters": f.filter_parameters,
+            "filter_type": f.filter_type,
+            "max_block": f.max_block,
+            "decimals": f.decimals,
         }
     else:
         return True

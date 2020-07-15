@@ -9,7 +9,7 @@ from sempo_types import UUID
 
 from eth_manager.ABIs import erc20_abi
 from eth_manager.blockchain_sync.blockchain_sync import add_transaction_filter, get_blockchain_transaction_history, synchronize_third_party_transactions, handle_transaction
-from eth_manager.blockchain_sync import blockchain_sync
+from eth_manager.blockchain_sync import blockchain_sync, blockchain_sync_constants
 from sql_persistence.models import BlockchainTransaction
 
 class TestModels:
@@ -106,7 +106,7 @@ class TestModels:
 
         ranges = []
         mocker.patch.object(blockchain_sync, 'process_chunk', lambda filter, floor, ceiling: ranges.append((filter.id, floor, ceiling)))
-        
+        blockchain_sync_constants.BLOCKS_PER_REQUEST=5000
         synchronize_third_party_transactions()
         assert ranges == [(1, 2, 5001), (1, 5002, 10001), (1, 10002, 12000), (2, 2, 5001), (2, 5002, 10001), (2, 10002, 12000)]
 

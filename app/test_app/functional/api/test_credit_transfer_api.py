@@ -3,6 +3,8 @@ from server.utils.auth import get_complete_auth_token
 from test_app.helpers.utils import assert_resp_status_code
 from server.utils.user import create_transfer_account_user
 from server.models.credit_transfer import CreditTransfer
+from server.models.transfer_account import TransferAccountType
+
 from helpers.utils import will_func_test_blockchain
 from server import bt, db
 
@@ -121,7 +123,10 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     # 3. Existing User A -> Stranger A (to ensure we don't give Stranger A two ghost accounts)
     # 4. Stranger B -> Existing User A
     # 5. Idempotency check (repeat step 4's request, ensure only one transfer is created)
-
+    # 6. Stranger A -> Stranger B To ensure we're not tracking transactions between strangers who are in the system
+    # (Do nothing-- we don't care about transfers between strangers who aren't members)
+    # 7. Stranger C -> Stranger D To ensure we're not tracking transactions between strangers who are NOT in the system
+    # (Do nothing-- we don't care about transfers between strangers who aren't members)
     # Util function to POST to internal credit_transfer, since we'll be doing that a lot
     def post_to_credit_transfer_internal(sender_blockchain_address, recipient_blockchain_address, blockchain_transaction_hash, transfer_amount, contract_address):
         basic_auth = 'Basic ' + base64.b64encode(bytes(config.INTERNAL_AUTH_USERNAME + ":" + config.INTERNAL_AUTH_PASSWORD, 'ascii')).decode('ascii')
@@ -163,7 +168,6 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     assert resp.json['data']['credit_transfer']['sender_transfer_account']['id'] == existing_user_a.default_transfer_account.id
     assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] == existing_user_b.default_transfer_account.id
     
-
     transfer_id = resp.json['data']['credit_transfer']['id']
 
     transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
@@ -186,6 +190,7 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
 
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
+    assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
 
     # 3. Existing User A -> Stranger A (to ensure we don't give Stranger A two ghost accounts)
     made_up_hash = '0x000011112322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
@@ -199,6 +204,7 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
 
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
+    assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
 
     # 4. Stranger B -> Existing User A
     fake_user_b_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539739'
@@ -214,10 +220,24 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
 
     assert transfer.recipient_transfer_account == existing_user_a.default_transfer_account
     assert transfer.sender_transfer_account.blockchain_address == fake_user_b_address
+    assert transfer.sender_transfer_account.account_type == TransferAccountType.EXTERNAL
 
     # 5. Idempotency check (repeat step 4's request, ensure only one transfer is created)
     resp_two = post_to_credit_transfer_internal(fake_user_b_address, existing_user_a.default_transfer_account.blockchain_address, made_up_hash, 100, token.address)
     assert resp.json['data']['credit_transfer']['id'] == resp_two.json['data']['credit_transfer']['id']
+
+    # 6. Stranger B -> Stranger A (Strangers who exist in the system)
+    made_up_hash = '0x2222b33f1322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
+
+    resp = post_to_credit_transfer_internal(fake_user_b_address, fake_user_a_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'Only external users involved in this transfer'
+
+    # 7. Stranger C -> Stranger D (Strangers who do NOT exist in the system)
+    made_up_hash = '0x2222b33f13288396649ed2fa2b7e0a944123b65cfab2c4b1435c81bb16697ecb'
+    fake_user_c_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539111'
+    fake_user_d_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539222'
+    resp = post_to_credit_transfer_internal(fake_user_c_address, fake_user_d_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'No existing users involved in this transfer'
 
 def test_force_third_party_transaction_sync():
     if will_func_test_blockchain():

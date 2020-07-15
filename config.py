@@ -136,6 +136,8 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
 
+THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
+
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')
 SECRET_KEY          = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME

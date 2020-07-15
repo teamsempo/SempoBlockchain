@@ -143,7 +143,12 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
     # This lets you always add all filters at app-launch, without running an entire filter every time
     if not contract_address:
         raise Exception('No contract_address found for new contract filter')
+    # Block epoch being None is a sentinel for `latest`
+    if block_epoch == 'latest':
+        epoch = None
+    else:
+        epoch = int(block_epoch)
     if not persistence_module.check_if_synchronization_filter_exists(contract_address, filter_parameters):
         # Set max_block to block_epoch to act as a de-factor zero-point
         config.logg.info(f'No filter found for address {contract_address} with parameters {filter_parameters}. Creating.')
-        return persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=block_epoch)
+        return persistence_module.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch=epoch)

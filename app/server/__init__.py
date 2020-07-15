@@ -78,7 +78,7 @@ def create_app():
             for t in tokens:
                 print(f'Creating transaction filter for {t.address}')
                 if t.address:
-                    add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals)
+                    add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
     except:
         print('Unable to automatically create filters')
     return app
