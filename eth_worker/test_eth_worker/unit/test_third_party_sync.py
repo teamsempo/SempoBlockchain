@@ -20,7 +20,7 @@ class TestModels:
     filter_type = 'TRANSFER'
     decimals = 18
     block_epoch = 1
-    
+
     # Resembles a w3 transaction object to the extent we need it to
     class Transaction():
         class Hash():
@@ -52,9 +52,23 @@ class TestModels:
     
     # Checks that add_transaction_filter correctly generates transaction_filter objects
     # and inserts them
-    def test_add_transaction_filter(self, persistence_module: SQLPersistenceInterface):
+    @pytest.mark.parametrize("block_epoch, expected_max_block", [
+        (123, 123),
+        ("latest", None),
+        (None, None),
+        (0, 0)
+    ])
+    def test_add_transaction_filter(self, persistence_module: SQLPersistenceInterface,
+                                    block_epoch, expected_max_block):
         # Build filter
-        add_transaction_filter(self.contract_address, self.contract_type, self.filter_parameters, self.filter_type, self.decimals, self.block_epoch)
+        add_transaction_filter(
+            self.contract_address,
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            block_epoch
+        )
         # Query the filter
         f = persistence_module.check_if_synchronization_filter_exists(self.contract_address, self.filter_parameters)
         # Validate the filter object
@@ -62,7 +76,7 @@ class TestModels:
         assert f.filter_parameters == self.filter_parameters
         assert f.filter_type == self.filter_type
         assert f.decimals == self.decimals
-        assert f.max_block == self.block_epoch
+        assert f.max_block == expected_max_block
 
     # Tests get_blockchain_history
     def test_get_blockchain_transaction_history(self, mocker, processor):

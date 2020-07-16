@@ -144,7 +144,7 @@ def add_transaction_filter(contract_address, contract_type, filter_parameters, f
     if not contract_address:
         raise Exception('No contract_address found for new contract filter')
     # Block epoch being None is a sentinel for `latest`
-    if block_epoch == 'latest':
+    if block_epoch == 'latest' or block_epoch is None:
         epoch = None
     else:
         epoch = int(block_epoch)
