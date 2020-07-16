@@ -5,7 +5,7 @@ boto3==1.7.2
 celery==4.4.0rc3
 certifi==2019.11.28
 ecdsa==0.13.3
-Flask==1.1.1
+Flask==1.1.2
 Flask-BasicAuth==0.2.0
 Flask-Cors==3.0.7
 Flask-Limiter==1.0.1
