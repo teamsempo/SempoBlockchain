@@ -80,26 +80,26 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
 
     if metric_type in [metrics_const.ALL, metrics_const.TRANSFER]:
-        try:
-            last_day = data['daily_transaction_volume'][0][1]
-            data['last_day_volume'] = data['daily_transaction_volume'][0][0]
-            data['daily_transaction_volume'] = [
-                {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_transaction_volume']
-            ]
-        except IndexError:  # No transactions
-            last_day = datetime.datetime.utcnow()
-            last_day_volume = 0
-            data['has_transferred_count'] = 0
-            data['daily_transaction_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-        
-        data['last_day_volume']: {'date': last_day.isoformat(), 'volume': last_day_volume}
+        #try:
+        #    last_day = data['daily_transaction_volume'][0][1]
+        #    data['last_day_volume'] = data['daily_transaction_volume'][0][0]
+        #    data['daily_transaction_volume'] = [
+        #        {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_transaction_volume']
+        #    ]
+        #except IndexError:  # No transactions
+        #    last_day = datetime.datetime.utcnow()
+        #    last_day_volume = 0
+        #    data['has_transferred_count'] = 0
+        #    data['daily_transaction_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
+        #
+        #data['last_day_volume']: {'date': last_day.isoformat(), 'volume': last_day_volume}
 
-        try:
-            data['daily_disbursement_volume'] = [
-                {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_disbursement_volume']
-            ]
-        except IndexError:
-            data['daily_disbursement_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
+        #try:
+        #    data['daily_disbursement_volume'] = [
+        #        {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_disbursement_volume']
+        #    ]
+        #except IndexError:
+        #    data['daily_disbursement_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
 
         try:
             data['master_wallet_balance'] = cached_funds_available()

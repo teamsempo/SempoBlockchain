@@ -37,7 +37,8 @@ daily_users_created = metric.Metric(
     object_model=User, 
     stock_filters=[], 
     caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-    filterable_by=filterable_attributes)
+    filterable_by=filterable_attributes,
+    timeseries_actions=[FORMAT_TIMESERIES])
 
 total_users_per_day_query = db.session.query(func.count(User.id).label('volume'),
         func.date_trunc('day', User.created).label('date')).group_by(func.date_trunc('day', User.created))
@@ -47,7 +48,9 @@ total_users_per_day = metric.Metric(
     object_model=User, 
     stock_filters=[], 
     caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-    filterable_by=filterable_attributes)
+    filterable_by=filterable_attributes,
+    timeseries_actions=[FORMAT_TIMESERIES])
+
 
 total_users = metric.Metric(
     metric_name='total_users_per_day', 
@@ -56,18 +59,3 @@ total_users = metric.Metric(
     stock_filters=[ADD_MISSING_DAYS, ACCUMULATE_TIMESERIES], 
     caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
     filterable_by=filterable_attributes)
-
-#process_timeseries
-
-
-#total_users_per_day_query = db.session.query(func.count(User.id).label('volume'),
-#        func.date_trunc('day', User.created).label('date')).group_by(func.date_trunc('day', User.created))
-#print(total_users_per_day_query.all())
-#print(total_users_per_day_query.all())
-#print(total_users_per_day_query.all())
-#print(total_users_per_day_query.all())
-#print(total_users_per_day_query.all())
-#
-#user_query = db.session.query(func.count(User.id)).
-#print(user_query.all())
-#

@@ -32,9 +32,7 @@ class Metric(object):
         
         if not self.timeseries_actions:
             return result
-
-        
-        return process_timeseries.process_timeseries(result)
+        return process_timeseries.process_timeseries(result, population_query_result, self.timeseries_actions)
         
     def __init__(self, metric_name, query=None, object_model=None, filterable_by=None, stock_filters=[], caching_combinatory_strategy=None, bypass_user_filters = False, timeseries_actions = False):
         self.metric_name = metric_name

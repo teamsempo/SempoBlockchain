@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from server.utils.metrics.metrics_const import *
 
 
@@ -60,19 +60,31 @@ def calculate_per_user(query_result, population_query_result):
         results_per_user.append((product, result[1]))
     return results_per_user
 
+# Final step in formatting the timeseries data to be in a format 
+# which once JSONified, the API expects. 
+# Input (query_result): [(10, 01/01/2020), (20, 01/02/2020)]
+# Output: [{'date': '2020-01-01T00:00:00', 'volume': 10}, {'date': '2020-01-02T00:00:00', 'volume': 10}]
+# NOTE: Expect this to change a bit in the upcoming GROUP_BY PR
+# Schema preview: https://sempo.slack.com/archives/CLH7NENGJ/p1594856633000600
+def format_timeseries(query_result, population_query_result):
+    try:
+        return  [{'date': item[1].isoformat(), 'volume': item[0]} for item in query_result]
+    except IndexError:
+        return [{'date': datetime.utcnow().isoformat(), 'volume': 0}]
 
 timeseries_actions = {
     ADD_MISSING_DAYS: add_missing_days,
     ACCUMULATE_TIMESERIES: accumulate_timeseries,
-    CALCULATE_PER_USER: calculate_per_user
+    CALCULATE_PER_USER: calculate_per_user,
+    FORMAT_TIMESERIES: format_timeseries
 }
 
+# Executes timeseries_actions against query results
+# These are done in the order they're declared in the Metric object
+# so you can chain together common actions and reuse them across metrics!
 def process_timeseries(query_result, population_query_result = None, actions = None):
-    print(actions)
-    print(actions)
-    print(actions)
-    print(actions)
     for action in actions:
         if action not in TIMESERIES_ACTIONS:
             raise Exception(f'{action} not a valid timeseries action')
-        timeseries_actions[action](query_result, population_query_result)
+        query_result = timeseries_actions[action](query_result, population_query_result)
+    return query_result
