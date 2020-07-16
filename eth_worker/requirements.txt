@@ -5,7 +5,7 @@ celery==4.4.0rc3
 eventlet==0.24.1
 flower==0.9.3
 kombu==4.6.6
-idna==2.6
+idna==2.10
 psycopg2-binary==2.8.5
 py-evm==0.3.0a5
 py-solc==3.2.0
