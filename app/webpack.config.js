@@ -13,6 +13,7 @@ const lessToJs = require("less-vars-to-js");
 const themeVariables = lessToJs(
   fs.readFileSync(path.join(__dirname, "client/ant-theme-vars.less"), "utf8")
 );
+const tsImportPluginFactory = require("ts-import-plugin");
 
 module.exports = {
   entry: APP_DIR + "/index.jsx",
@@ -81,7 +82,20 @@ module.exports = {
       {
         test: /\.(ts|tsx)?$/,
         exclude: /node_modules/,
-        loader: "awesome-typescript-loader"
+        loader: "awesome-typescript-loader",
+        options: {
+          getCustomTransformers: () => ({
+            before: [
+              tsImportPluginFactory([
+                {
+                  libraryName: "antd",
+                  libraryDirectory: "lib",
+                  style: true
+                }
+              ])
+            ]
+          })
+        }
       },
       {
         test: /\.less$/,
