@@ -7,7 +7,7 @@ flower==0.9.3
 kombu==4.6.6
 idna==2.6
 psycopg2-binary==2.8.5
-py-evm==0.3.0a5
+py-evm==0.3.0a18
 py-solc==3.2.0
 raven==6.9.0
 redis==3.4.1
