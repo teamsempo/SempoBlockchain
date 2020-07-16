@@ -52,15 +52,10 @@ import notFoundPage from "./components/pages/notFoundPage.jsx";
 import MessageBar from "./components/messageBar.jsx";
 import ErrorBoundary from "./components/errorBoundary.jsx";
 
-import {
-  WrapperDiv,
-  CenterLoadingSideBarActive
-} from "./components/styledElements";
 import { ThemeProvider } from "styled-components";
 import { DefaultTheme } from "./components/theme.js";
 import { browserHistory } from "./createStore.js";
 import LoadingSpinner from "./components/loadingSpinner.jsx";
-// import NavBar from "./components/navBar";
 import Page from "./components/navBar/page";
 
 const mapStateToProps = state => {

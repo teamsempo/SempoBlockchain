@@ -105,15 +105,13 @@ class NavBar extends React.Component<Props, State> {
     let { loggedIn, email, pathname } = this.props;
     let { iconURL, collapsed } = this.state;
 
+    let activePath = pathname && "/" + pathname.split("/")[1];
+
     if (loggedIn) {
       return (
         <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
           <OrgSwitcher icon={iconURL} collapsed={collapsed}></OrgSwitcher>
-          <Menu
-            theme="dark"
-            selectedKeys={["/" + pathname.split("/")[1]]}
-            mode="inline"
-          >
+          <Menu theme="dark" selectedKeys={[activePath]} mode="inline">
             <SubMenu
               key="sub1"
               icon={<DesktopOutlined translate={""} />}

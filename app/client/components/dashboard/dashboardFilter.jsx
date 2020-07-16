@@ -8,6 +8,7 @@ import moment from "moment";
 import Filter from "../filter";
 import { processFiltersForQuery } from "../../utils";
 import { browserHistory } from "../../createStore.js";
+import LoadingSpinner from "../loadingSpinner";
 
 const mapStateToProps = state => {
   return {
@@ -128,7 +129,7 @@ class DashboardFilter extends React.Component {
               }}
             >
               {this.props.loadStatus.isRequesting ? (
-                <div className="miniSpinner"></div>
+                <LoadingSpinner />
               ) : (
                 "Filter"
               )}
