@@ -23,7 +23,7 @@ export const CenterLoadingSideBarActive = styled.div`
 `;
 
 export const Input = styled.input`
-  width: calc(100% - 2em);
+  width: calc(100% - 1em);
   outline: none;
   display: flex;
   margin: 0.5em;
