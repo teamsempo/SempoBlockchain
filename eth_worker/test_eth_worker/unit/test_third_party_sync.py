@@ -8,7 +8,7 @@ from sql_persistence.models import BlockchainWallet, BlockchainTask, BlockchainT
 from sempo_types import UUID
 
 from eth_manager.ABIs import erc20_abi
-from eth_manager.blockchain_sync.blockchain_sync import add_transaction_filter, get_blockchain_transaction_history, synchronize_third_party_transactions, handle_transaction
+from eth_manager.blockchain_sync.blockchain_sync import add_transaction_filter, get_blockchain_transaction_history, synchronize_third_party_transactions, handle_event
 from eth_manager.blockchain_sync import blockchain_sync, blockchain_sync_constants
 from sql_persistence.models import BlockchainTransaction
 
@@ -124,8 +124,8 @@ class TestModels:
         synchronize_third_party_transactions()
         assert ranges == [(1, 2, 5001), (1, 5002, 10001), (1, 10002, 12000), (2, 2, 5001), (2, 5002, 10001), (2, 10002, 12000)]
 
-    def test_handle_transaction(self, mocker, processor, persistence_module: SQLPersistenceInterface):
-        # Create dummy objects for this functions to consume (handle_transaction only uses decimals)
+    def test_handle_event(self, mocker, processor, persistence_module: SQLPersistenceInterface):
+        # Create dummy objects for this functions to consume (handle_event only uses decimals)
         class DummyFilter():
             decimals = 18
         filt = DummyFilter()
@@ -133,7 +133,7 @@ class TestModels:
         class RequestsResp():
             ok = True
 
-        # Check if handle_transaction halts (returns true) if there's already a synchronized transaction 
+        # Check if handle_event halts (returns true) if there's already a synchronized transaction
         # with the same ID in the DB
         t = self.Transaction(
             10, 
@@ -149,7 +149,7 @@ class TestModels:
         mocker.patch.object(pm, 'create_external_transaction', lambda *args, **kwargs: tx)
         mark_as_completed_mock = mocker.patch.object(pm, 'mark_transaction_as_completed')
 
-        result = handle_transaction(t, filt)
+        result = handle_event(t, filt)
         assert result == True
 
 
@@ -171,7 +171,7 @@ class TestModels:
             resp.ok = False
             return resp
         mocker.patch.object(blockchain_sync, 'call_webhook', check_correct_webhook_call_fail)
-        handle_transaction(t, filt)
+        handle_event(t, filt)
         # Make sure mark_as_completed is NOT called
         assert len(mark_as_completed_mock.call_args_list) == 0
 
@@ -194,8 +194,8 @@ class TestModels:
             assert transaction == tx
             return RequestsResp()
         mocker.patch.object(blockchain_sync, 'call_webhook', check_correct_webhook_call)
-        
-        handle_transaction(t, filt)
+
+        handle_event(t, filt)
         # Make sure mark_as_completed is called
         assert len(mark_as_completed_mock.call_args_list) == 1
 
