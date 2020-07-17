@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled, { ThemeProvider } from "styled-components";
 
-import { loadWyreAccountBalance } from "../../reducers/wyreReducer";
+import { WyreAction } from "../../reducers/wyre/actions";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 const mapStateToProps = state => {
@@ -14,7 +14,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadWyreAccount: () => dispatch(loadWyreAccountBalance())
+    loadWyreAccount: () => dispatch(WyreAction.loadWyreAccountRequest())
   };
 };
 
