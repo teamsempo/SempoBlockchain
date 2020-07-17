@@ -36,6 +36,6 @@ transitions==0.7.1
 twilio==6.11.0
 uWSGI==2.0.17
 web3==5.0.2
-africastalking==1.1.9
+africastalking==1.2.2
 python-i18n[YAML]==0.3.7
 flask-executor==0.9.3
