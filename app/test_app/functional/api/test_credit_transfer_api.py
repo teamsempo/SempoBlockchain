@@ -4,6 +4,7 @@ from test_app.helpers.utils import assert_resp_status_code
 from server.utils.user import create_transfer_account_user
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccountType
+from server.models.organisation import Organisation
 
 from helpers.utils import will_func_test_blockchain
 from server import bt, db
@@ -297,14 +298,15 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
     else: 
         assert rx_ids == recipients
 
-@pytest.mark.parametrize("query_organisations, status_code, result_count", [
-    ('', 200, 58),
-    ('1', 200, 1),
-    ('2', 200, 58),
-    ('1, 2', 200, 61)
+@pytest.mark.parametrize("query_organisations, status_code", [
+    ('', 200),
+    ('1', 200),
+    ('2', 200),
+    ('1, 2', 200)
 ])
-def test_credit_transfer_organisation_filters(test_client, authed_sempo_admin_user, complete_admin_auth_token, create_credit_transfer,
-query_organisations, status_code, result_count):
+def test_credit_transfer_organisation_filters(test_client, init_database, authed_sempo_admin_user,
+                                              complete_admin_auth_token, create_credit_transfer,
+                                              query_organisations, status_code):
     # Checks that the credit_transfer endpoint supports multiple organisations
     url = f'/api/v1/credit_transfer/?query_organisations={query_organisations}'
 
@@ -315,7 +317,7 @@ query_organisations, status_code, result_count):
     create_credit_transfer.recipient_user.organisation = master_organisation
     create_credit_transfer.sender_transfer_account.organisation = master_organisation
     create_credit_transfer.recipient_transfer_account.organisation = master_organisation
-    db.session.commit()
+    init_database.session.commit()
 
     # Add master_organisation (organisation 1) to our user's organisations. admin_user already
     # is a member of organisation 2
@@ -328,11 +330,25 @@ query_organisations, status_code, result_count):
             Accept='application/json'
         ))
 
+    all_transfers = CreditTransfer.query.execution_options(show_all=True).all()
+
+    org1 = Organisation.query.get(1)
+    org2 = Organisation.query.get(2)
+
+    org1_transfer_ids = set(t.id for t in all_transfers if org1 in t.organisations)
+    org2_transfer_ids = set(t.id for t in all_transfers if org2 in t.organisations)
+
     assert response.status_code == status_code
     if status_code == 200:
-        response_ids = []
+        response_ids = set()
         for r in response.json['data'].get('credit_transfers', []):
-            response_ids.append(r['id'])
+            response_ids.add(r['id'])
         if '1' in query_organisations:
             assert create_credit_transfer.id in response_ids
-        assert len(response_ids) == result_count
+
+        if query_organisations == '1':
+            assert response_ids == org1_transfer_ids
+        if query_organisations == '2' or query_organisations == '':
+            assert response_ids == org2_transfer_ids
+        if query_organisations == '1,2':
+            assert response_ids == org1_transfer_ids.union(org2_transfer_ids)
