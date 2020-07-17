@@ -54,7 +54,7 @@ class useagePieChart extends React.Component {
     return (
       <div>
         <ModuleHeader>Transfer Usages</ModuleHeader>
-        <div style={{ padding: "0.2em 1em 1em 1em" }}>
+        <div style={{ padding: "0.2em 1em 1em 1em", height: 200 }}>
           {usage_count.length === 0 ? (
             <div style={{ height: 200, textAlign: "center" }}>
               Transfer Usages Will Appear Here
