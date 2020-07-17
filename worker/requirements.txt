@@ -1,7 +1,7 @@
 bit==0.4.3
 boto3==1.7.33
 cryptography==2.3
-celery==4.2.1
+celery==4.4.6
 eventlet==0.24.1
 flower==0.9.3
 idna==2.6
