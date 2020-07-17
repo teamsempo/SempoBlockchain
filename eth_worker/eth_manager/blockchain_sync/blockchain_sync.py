@@ -41,31 +41,33 @@ def synchronize_third_party_transactions():
         # Make sure a filter is only being executed once at a time
         have_lock = False
         lock = red.lock(f'third-party-sync-lock-{f.id}', timeout=sync_const.LOCK_TIMEOUT)
-        have_lock = lock.acquire(blocking=False)
-        if not have_lock:
-            config.logg.info(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
-            continue
+        try:
+            have_lock = lock.acquire(blocking=False)
+            if not have_lock:
+                config.logg.info(f'Skipping execution of synchronizing filter {f.id}, as it is already running in another process')
+                continue
 
-        latest_block = get_latest_block_number()
-        # If there's no filter.max_block (which is the default for auto-generated filters)
-        # start tracking third party transactions by looking at the lastest_block
-        max_fetched_block = f.max_block or latest_block
-        number_of_blocks_to_get = (latest_block - max_fetched_block)
-        number_of_chunks = ceil(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST)
+            latest_block = get_latest_block_number()
+            # If there's no filter.max_block (which is the default for auto-generated filters)
+            # start tracking third party transactions by looking at the lastest_block
+            max_fetched_block = f.max_block or latest_block
+            number_of_blocks_to_get = (latest_block - max_fetched_block)
+            number_of_chunks = ceil(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST)
 
-        for chunk in range(number_of_chunks):
-            floor = max_fetched_block + (chunk * sync_const.BLOCKS_PER_REQUEST) + 1
-            ceiling = max_fetched_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
-            if ceiling > latest_block:
-                ceiling = latest_block
-            process_chunk(f, floor, ceiling)
-            persistence_module.set_filter_max_block(f.id, ceiling)
-            lock.reacquire()
+            for chunk in range(number_of_chunks):
+                floor = max_fetched_block + (chunk * sync_const.BLOCKS_PER_REQUEST) + 1
+                ceiling = max_fetched_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
+                if ceiling > latest_block:
+                    ceiling = latest_block
+                process_chunk(f, floor, ceiling)
+                persistence_module.set_filter_max_block(f.id, ceiling)
+                lock.reacquire()
 
-        if number_of_chunks == 0:
-            persistence_module.set_filter_max_block(f.id, latest_block)
-        if have_lock:
-            lock.release()
+            if number_of_chunks == 0:
+                persistence_module.set_filter_max_block(f.id, latest_block)
+        finally:
+            if have_lock:
+                lock.release()
     return True
 
 # Gets history for given range, and runs handle_transaction on all of them
