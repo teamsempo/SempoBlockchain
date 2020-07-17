@@ -1,4 +1,4 @@
-alembic==1.1.0
+alembic==1.4.2
 boto3==1.7.33
 cryptography==2.3
 celery==4.4.0rc3
@@ -7,7 +7,7 @@ flower==0.9.3
 kombu==4.6.11
 idna==2.10
 psycopg2-binary==2.8.5
-py-evm==0.3.0a5
+py-evm==0.3.0a18
 py-solc==3.2.0
 raven==6.9.0
 redis==3.4.1
