@@ -1,5 +1,5 @@
 alembic==1.1.0
-boto3==1.7.33
+boto3==1.14.22
 cryptography==2.3
 celery==4.4.0rc3
 eventlet==0.24.1
