@@ -70,7 +70,7 @@ def synchronize_third_party_transactions():
                 lock.release()
     return True
 
-# Gets history for given range, and runs handle_transaction on all of them
+# Gets history for given range, and runs handle_event on all of them
 # This is the second stage in the third party transaction processing pipeline!
 def process_chunk(filter, floor, ceiling):
     transaction_history = get_blockchain_transaction_history(
@@ -80,15 +80,15 @@ def process_chunk(filter, floor, ceiling):
             filter.filter_parameters,
             filter.id
         )
-    for transaction in transaction_history:
-        handle_transaction(transaction, filter)
+    for event in transaction_history:
+        handle_event(event, filter)
 
 # Processes newly found transaction event
 # Creates database object for transaction
 # Calls webhook
 # Sets sync status (whether or not webhook was successful)
 # Fallback if something goes wrong at this level: `is_synchronized_with_app` flag. Can batch unsynced stuff
-def handle_transaction(transaction, filter):
+def handle_event(transaction, filter):
     # Check if transaction already exists (I.e. already synchronized, or first party transactions)
     transaction_object = persistence_module.get_transaction(hash=transaction.transactionHash.hex())
     if transaction_object and transaction_object.is_synchronized_with_app:

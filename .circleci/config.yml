@@ -213,15 +213,15 @@ workflows:
   main_workflow:
     jobs:
       - build
-#      - test:backend:
-#          requires:
-#            - build
-#      - test:worker:
-#          requires:
-#            - build
-#      - test:frontend:
-#          requires:
-#            - build
+      - test:backend:
+          requires:
+            - build
+      - test:worker:
+          requires:
+            - build
+      - test:frontend:
+          requires:
+            - build
       - deploy:
           filters:
             branches:
@@ -230,6 +230,6 @@ workflows:
                 - third-party-txn-sync
           requires:
             - build
-#            - test:backend
-#            - test:worker
-#            - test:frontend
+            - test:backend
+            - test:worker
+            - test:frontend
