@@ -102,7 +102,7 @@ def handle_transaction(transaction, filter):
             is_synchronized_with_app = False,
             recipient_address = transaction.args['to'],
             sender_address = transaction.args['from'],
-            amount = float(transaction.args['value'])/(10**filter.decimals)
+            amount = float(transaction.args['value'])/(10**filter.decimals)*100 #To cents
         )
 
     webook_resp = call_webhook(transaction_object)
