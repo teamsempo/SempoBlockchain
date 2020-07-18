@@ -31,7 +31,7 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
 else
     if [ "$CONTAINER_TYPE" == 'BEAT' ]; then
         echo "Starting Beat Worker"
-        celery -A eth_manager beat --loglevel=WARNING
+        celery beat -S redbeat.RedBeatScheduler -A eth_manager --loglevel=WARNING
     elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
         echo "Starting Flower Worker"
         flower -A worker --port=5555
@@ -43,6 +43,7 @@ else
         celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
         echo "Starting High Priority Worker"
+        alembic upgrade head
         celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'ANY_PRIORITY_WORKER' ]; then
         echo "Starting Any Priority Worker"

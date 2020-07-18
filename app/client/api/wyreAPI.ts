@@ -6,5 +6,5 @@ export const loadExchangeRates = () =>
 export const loadWyreAccountBalance = () =>
   apiClient({ url: "/wyre_account/", method: "GET" });
 
-export const createWyreTransferRequest = ({ body }) =>
+export const createWyreTransferRequest = ({ body }: any) =>
   apiClient({ url: "/wyre_transfer/", method: "POST", body: body });

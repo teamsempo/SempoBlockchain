@@ -22,6 +22,7 @@ class TransferAccountType(enum.Enum):
     ORGANISATION    = 'ORGANISATION'
     FLOAT           = 'FLOAT'
     CONTRACT        = 'CONTRACT'
+    EXTERNAL        = 'EXTERNAL'
 
 
 class TransferAccount(OneOrgBase, ModelBase, SoftDelete):

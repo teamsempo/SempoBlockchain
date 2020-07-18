@@ -10,6 +10,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 
+from server.utils.auth import multi_org
 from server.utils import metrics_cache
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 from sqlalchemy.orm import aliased
@@ -20,6 +21,7 @@ from sqlalchemy import case, or_
 import sqlalchemy
 import datetime, json
 
+@multi_org
 def calculate_transfer_stats(total_time_series=False, start_date=None, end_date=None,
                              user_filter={}):
     date_filter = []
@@ -279,7 +281,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
     return token.token_amount_to_system(balance_wei)
 
     refresh_cache = False
-    funds_available_cache = red.get('funds_available_cache')
+    funds_available_cache = red.get(f'{metrics_cache.ORG_STRING}_funds_available_cache')
 
     try:
         parsed_cache = json.loads(funds_available_cache)
@@ -296,7 +298,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
 
     if refresh_cache:
 
-        master_wallet_balance = get_wallet_balance()
+        master_wallet_balance = bt.get_wallet_balance()
 
         highest_transfer_id_checked = 0
         required_blockchain_statuses = ['PENDING', 'UNKNOWN']
@@ -315,6 +317,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
                             .filter(CreditTransfer.id > highest_transfer_id_checked)
                             .filter(CreditTransfer.created >
                                     datetime.datetime.utcnow() - datetime.timedelta(hours=36))
+                            
                             .all())
 
 
@@ -345,7 +348,7 @@ def cached_funds_available(allowed_cache_age_seconds=60):
             'last_updated': datetime.datetime.utcnow().timestamp()
         }
 
-        red.set('funds_available_cache', json.dumps(cache_data))
+        red.set(f'{metrics_cache.ORG_STRING}_funds_available_cache', json.dumps(cache_data))
 
         balance = master_wallet_balance - local_disbursement_value
 
