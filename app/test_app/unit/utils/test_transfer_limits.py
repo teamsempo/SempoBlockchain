@@ -116,7 +116,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
             transfer_subtype=TransferSubTypeEnum.STANDARD
         )
         db.session.add(c)
-        c.resolve_as_completed()
+        c.resolve_as_complete_and_trigger_blockchain()
         db.session.flush()
 
 def test_liquidtoken_number_of_limits(new_credit_transfer):

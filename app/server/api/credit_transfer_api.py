@@ -12,7 +12,6 @@ from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
-from server.utils.transfer_enums import BlockchainStatus
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum, TransferStatusEnum
 from server.utils.credit_transfer import (
@@ -154,7 +153,7 @@ class CreditTransferAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         if action == 'COMPLETE':
-            credit_transfer.resolve_as_completed()
+            credit_transfer.resolve_as_complete_and_trigger_blockchain()
 
         elif action == 'REJECT':
             credit_transfer.resolve_as_rejected()
@@ -410,7 +409,7 @@ class ConfirmWithdrawalAPI(MethodView):
 
             withdrawal = CreditTransfer.query.get(withdrawal_id)
 
-            withdrawal.resolve_as_completed()
+            withdrawal.resolve_as_complete_and_trigger_blockchain()
 
             credit_transfers.append(CreditTransfer.query.get(withdrawal_id_string))
 
@@ -461,8 +460,10 @@ class InternalCreditTransferAPI(MethodView):
                 }
             # Case 3: Two non-Sempo users who have both interacted with Sempo users before transact with one another
             # We don't have to track this either!
-            elif maybe_recipient_transfer_account and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL \
-and maybe_sender_transfer_account and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL:
+            elif (maybe_recipient_transfer_account
+                  and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
+                  and maybe_sender_transfer_account
+                  and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL):
                     response_object = {
                         'message': 'Only external users involved in this transfer',
                         'data': {}
@@ -477,11 +478,14 @@ and maybe_sender_transfer_account and maybe_sender_transfer_account.account_type
                     token=token,
                     sender_transfer_account=send_transfer_account,
                     recipient_transfer_account=receive_transfer_account,
-                    transfer_type='PAYMENT',
+                    transfer_type=TransferTypeEnum.PAYMENT,
                 )
                 transfer.transfer_status = TransferStatusEnum.COMPLETE
-                transfer.blockchain_status = BlockchainStatus.SUCCESS
-                transfer.blockchain_hash = blockchain_transaction_hash
+
+                transfer.resolve_as_complete_with_existing_blockchain_transaction(
+                    blockchain_transaction_hash
+                )
+
                 send_transfer_account.decrement_balance(transfer_amount)
                 receive_transfer_account.increment_balance(transfer_amount)
                 db.session.flush()

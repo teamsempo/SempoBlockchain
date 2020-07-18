@@ -218,7 +218,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
                 disbursement = self.credit_receives[0]
                 if disbursement.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT and disbursement.transfer_status == TransferStatusEnum.PENDING and auto_resolve:
-                    disbursement.resolve_as_completed()
+                    disbursement.resolve_as_complete_and_trigger_blockchain()
                     return disbursement
 
     def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):

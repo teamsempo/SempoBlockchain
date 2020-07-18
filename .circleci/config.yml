@@ -227,9 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - third-party-txn-sync
           requires:
-            - build
             - test:backend
             - test:worker
             - test:frontend

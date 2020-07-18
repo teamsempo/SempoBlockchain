@@ -12,11 +12,11 @@ def test_new_credit_transfer_complete(create_credit_transfer):
     assert isinstance(create_credit_transfer.transfer_amount, float)
     assert create_credit_transfer.transfer_amount == 1000
     assert create_credit_transfer.transfer_status is TransferStatusEnum.PENDING
-    create_credit_transfer.resolve_as_completed()  # complete credit transfer
+    create_credit_transfer.resolve_as_complete_and_trigger_blockchain()  # complete credit transfer
     assert create_credit_transfer.transfer_status is TransferStatusEnum.COMPLETE
 
     with pytest.raises(Exception):
-        assert create_credit_transfer.resolve_as_completed()
+        assert create_credit_transfer.resolve_as_complete_and_trigger_blockchain()
 
 
 def test_new_credit_transfer_rejected(create_credit_transfer):
