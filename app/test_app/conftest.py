@@ -299,9 +299,6 @@ def initialised_blockchain_network(
     reserve_token = external_reserve_token
 
     def deploy_and_add_smart_token(name, symbol, reserve_ratio_ppm, exchange_contract=None):
-        print('deploy_and_add_smart_token')
-        print('deploy_and_add_smart_token')
-        print('deploy_and_add_smart_token')
         smart_token_result = bt.deploy_smart_token(
             deploying_address=deploying_address,
             name=name, symbol=symbol, decimals=18,
@@ -311,7 +308,6 @@ def initialised_blockchain_network(
             reserve_token_address=reserve_token.address,
             reserve_ratio_ppm=reserve_ratio_ppm
         )
-        print(smart_token_result)
         smart_token_address = smart_token_result['smart_token_address']
         subexchange_address = smart_token_result['subexchange_address']
 
