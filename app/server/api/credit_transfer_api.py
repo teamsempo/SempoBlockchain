@@ -480,7 +480,6 @@ class InternalCreditTransferAPI(MethodView):
                     recipient_transfer_account=receive_transfer_account,
                     transfer_type=TransferTypeEnum.PAYMENT,
                 )
-                transfer.transfer_status = TransferStatusEnum.COMPLETE
 
                 transfer.resolve_as_complete_with_existing_blockchain_transaction(
                     blockchain_transaction_hash
