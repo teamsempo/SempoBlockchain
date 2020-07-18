@@ -1,4 +1,6 @@
 import pytest
+from time import sleep
+
 from flask import current_app
 from faker.providers import phone_number
 from faker import Faker
@@ -21,6 +23,29 @@ fake.add_provider(phone_number)
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
+
+@pytest.fixture(scope='session', autouse=True)
+def wait_for_worker_boot_if_needed():
+    TIMEOUT = 60
+
+    from server.utils.celery import get_celery_worker_status
+    from helpers.utils import will_func_test_blockchain
+
+    if will_func_test_blockchain():
+
+        elapsed = 0
+        while elapsed < TIMEOUT:
+            worker_status = get_celery_worker_status()
+            if 'ERROR' not in worker_status:
+                print("Celery Workers Found")
+                return
+            sleep(1)
+            elapsed += 1
+
+        raise Exception("Timeout while waiting for celery workers")
+    else:
+        print("Not testing blockchain; not waiting for celery workers")
+        return
 
 @pytest.fixture(scope='function')
 def requires_auth(test_client):
