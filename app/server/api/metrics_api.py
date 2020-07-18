@@ -32,12 +32,16 @@ class CreditTransferStatsApi(MethodView):
         encoded_filters = request.args.get('params')
         disable_cache = request.args.get('disable_cache', False)
         metric_type = request.args.get('metric_type', metrics_const.ALL)
+        timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
+        
+        if timeseries_unit not in metrics_const.TIMESERIES_UNITS:
+            raise Exception(f'{timeseries_unit} not a valid timeseries unit. Please choose one of the following: {", ".join(metrics_const.TIMESERIES_UNITS)}')
 
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
 
         filters = process_transfer_filters(encoded_filters)
-        transfer_stats = calculate_transfer_stats(start_date=start_date, end_date=end_date, user_filter=filters, metric_type=metric_type, disable_cache=disable_cache)
+        transfer_stats = calculate_transfer_stats(start_date=start_date, end_date=end_date, user_filter=filters, metric_type=metric_type, disable_cache=disable_cache, timeseries_unit = timeseries_unit)
 
         response_object = {
             'status': 'success',

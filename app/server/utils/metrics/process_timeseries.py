@@ -1,18 +1,18 @@
 from datetime import date, timedelta, datetime
 from server.utils.metrics.metrics_const import *
 
-
-# TODO: Mechanism to get population at day0 if there's a lower bound date filter
-
 # Takes sorted list of tuples where the 2nd element is a date, and fills in the gaps
 # Example:
 # Input:  [(5, 01/01/2020), (10, 01/04/2020)] 
 # Output: [(5, 01/01/2020), (0, 01/02/2020), (0, 01/03/2020), (0, 01/04/2020)] 
-# TODO: Make it generic (day/week/month/year)
-def add_missing_days(query_result, population_query_result=None):
+def add_missing_days(query_result, population_query_result=None, end_date=None):
+    if not query_result:
+        return query_result
     start_date = query_result[0][1]
-    end_date = query_result[-1][1]
+    if not end_date:
+        end_date = query_result[-1][1]
     delta = end_date - start_date
+
     if len(query_result) >=1:
         comparator = query_result.pop(0)
 
@@ -28,6 +28,9 @@ def add_missing_days(query_result, population_query_result=None):
             full_date_range.append((0, day))   
     return full_date_range
 
+# add_missing_days, but goes to today instead of filling out the whole range
+def add_missing_days_to_today(query_result, population_query_result=None):
+    return add_missing_days(query_result, end_date=datetime.now())
 
 # Takes sorted list of tuples where the 2nd element is a date, and accumulates the numbers in the first elements
 # Example:
@@ -70,13 +73,24 @@ def format_timeseries(query_result, population_query_result):
     try:
         return  [{'date': item[1].isoformat(), 'volume': item[0]} for item in query_result]
     except IndexError:
-        return [{'date': datetime.utcnow().isoformat(), 'volume': 0}]
+        return [[{'date': datetime.utcnow().isoformat(), 'volume': 0}]]
+
+# Input (query_result): [{'date': '2020-01-01T00:00:00', 'volume': 10}, {'date': '2020-01-02T00:00:00', 'volume': 10}]
+# Output: {'timeseries': [{'date': '2020-01-01T00:00:00', 'volume': 10}, {'date': '2020-01-02T00:00:00', 'volume': 10}],
+#           'aggregate': {'total': 20} }
+def aggregate_formatted_timeseries(query_result, population_query_result):
+    total = 0
+    for qr in query_result:
+        total += qr['volume']
+    return { 'timeseries': query_result, 'aggregate': { 'total': total } }
 
 timeseries_actions = {
     ADD_MISSING_DAYS: add_missing_days,
+    ADD_MISSING_DAYS_TO_TODAY: add_missing_days_to_today,
     ACCUMULATE_TIMESERIES: accumulate_timeseries,
     CALCULATE_PER_USER: calculate_per_user,
-    FORMAT_TIMESERIES: format_timeseries
+    FORMAT_TIMESERIES: format_timeseries,
+    AGGREGATE_FORMATTED_TIMESERIES: aggregate_formatted_timeseries,
 }
 
 # Executes timeseries_actions against query results

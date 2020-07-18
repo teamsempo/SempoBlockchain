@@ -31,12 +31,13 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
         else:
             assert response.json['data']['filters'] == json.dumps(ALL_FILTERS)
 
-
 base_participant = {'data': 
     {'transfer_stats': 
         {'total_beneficiaries': 0, 
         'total_users': 0, 
-        'total_vendors': 0
+        'total_vendors': 0,
+        'master_wallet_balance': 0,
+        'users_created': {'aggregate': {'total': 0}, 'timeseries': []}
         }
     }, 
     'message': 'Successfully Loaded.', 'status': 'success'
@@ -44,35 +45,44 @@ base_participant = {'data':
 
 base_all = {'data':
     {'transfer_stats': 
-        {'daily_disbursement_volume': [], 
-        'daily_transaction_volume': [{'date': '', 'volume': 0}], 
+        {
+        'total_beneficiaries': 0, 
+        'total_users': 0, 
+        'total_vendors': 0,
+        'master_wallet_balance': 0,
+        'users_created': {'aggregate': {'total': 0}, 'timeseries': []},
+        'daily_disbursement_volume': [], 
+        'daily_transaction_volume': [], 
         'exhausted_balance': 0, 
         'has_transferred_count': 0, 
         'master_wallet_balance': 0, 
-        'total_beneficiaries': 0, 
         'total_distributed': 0.0, 
         'total_exchanged': 0.0, 
         'total_spent': 0.0, 
-        'total_users': 0, 
-        'total_vendors': 0, 
-        'transfer_use_breakdown': []
+        'transfer_use_breakdown': [],
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
+        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
         }
     },
     'message': 'Successfully Loaded.',
     'status': 'success'
 }
 
-base_transfer ={'data': 
+base_transfer = {'data': 
     {'transfer_stats': 
         {'daily_disbursement_volume': [], 
-        'daily_transaction_volume': [{'date': '', 'volume': 0}], 
+        'daily_transaction_volume': [], 
         'exhausted_balance': 0, 
         'has_transferred_count': 0, 
         'master_wallet_balance': 0, 
         'total_distributed': 0.0, 
         'total_exchanged': 0.0, 
         'total_spent': 0.0, 
-        'transfer_use_breakdown': []
+        'transfer_use_breakdown': [],
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
+        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
         }
     },
     'message': 'Successfully Loaded.',
@@ -97,9 +107,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         )
     response = get_metrics(metric_type)
     assert response.status_code == status_code
-
-    if metric_type == 'transfer' or metric_type == 'all':
-        response.json['data']['transfer_stats']['daily_transaction_volume'][0]['date'] = ''
+    if status_code != 500:
         response.json['data']['transfer_stats']['master_wallet_balance'] = 0
     if metric_type == 'transfer':
         assert response.json == base_transfer
