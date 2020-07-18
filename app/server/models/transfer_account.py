@@ -117,28 +117,35 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     def set_balance_offset(self, val):
         self._balance_offset_wei = val * int(1e16)
-        self.calculate_balance()
+        self.update_balance()
 
-    def calculate_balance(self):
-        new_balance = self.total_received * int(1e16) - self.total_sent * int(1e16) + self._balance_offset_wei
-        self._balance_wei = new_balance
-        return new_balance
+    def update_balance(self):
+        net_credit_transfer_position_wei = (self.total_received - self.total_sent) * int(1e16)
+        self._balance_wei = net_credit_transfer_position_wei + self._balance_offset_wei
 
     @hybrid_property
     def total_sent(self):
-        return int(
-            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
+        amount_cents = (
+                db.session.query(
+                    func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
+                )
+                .execution_options(show_all=True)
+                .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id)
+                .first().total
         )
+        return amount_cents or 0
 
     @hybrid_property
     def total_received(self):
-        return int(
-            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
+        amount_cents = (
+            db.session.query(
+                func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
+            )
+            .execution_options(show_all=True)
+            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id)
+            .first().total
         )
+        return amount_cents or 0
 
     @hybrid_property
     def primary_user(self):

@@ -280,7 +280,7 @@ def user_with_reserve_balance(create_transfer_account_user, external_reserve_tok
     bt.make_token_transfer(loaded_master_wallet_address,
                         transfer_account.token,
                         loaded_master_wallet_address, transfer_account.blockchain_address,
-                        amount * int(1e16))
+                        amount)
     transfer_account.set_balance_offset(amount)
     create_transfer_account_user.is_activated = True
 

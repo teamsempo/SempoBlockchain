@@ -106,8 +106,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.check_sender_transfer_limits()
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
-        self.sender_transfer_account.calculate_balance()
-        self.recipient_transfer_account.calculate_balance()
+        self.sender_transfer_account.update_balance()
+        self.recipient_transfer_account.update_balance()
 
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
