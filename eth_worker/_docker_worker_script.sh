@@ -2,7 +2,7 @@
 echo Container mode: $CONTAINER_MODE
 echo Container type: $CONTAINER_TYPE
 
-sleep 20
+sleep 10
 
 WORKER_CONCURRENCY=4
 
