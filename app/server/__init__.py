@@ -81,7 +81,7 @@ def create_app():
     #                add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
     #except:
     #    print('Unable to automatically create filters')
-    #return app
+    return app
 
 def register_extensions(app):
     db.init_app(app)
