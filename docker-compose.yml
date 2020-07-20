@@ -65,7 +65,7 @@ services:
 
   eth_postgres:
     image: "postgres"
-    restart: no
+    restart: "no"
     environment:
       POSTGRES_DB: "sempo_docker_eth"
       POSTGRES_USER: "postgres"
