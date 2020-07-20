@@ -69,24 +69,27 @@ def create_app():
 
     app.json_encoder = ExtendedJSONEncoder
 
-    # On app start, we send token addresses to the worker
-    #try:
-    #    with app.app_context():
-    #        from server.utils.synchronization_filter import add_transaction_filter
-    #        from server.models.token import Token
-    #        tokens = db.session.query(Token)
-    #        for t in tokens:
-    #            print(f'Creating transaction filter for {t.address}')
-    #            if t.address:
-    #                add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
-    #except:
-    #    print('Unable to automatically create filters')
     return app
 
 def register_extensions(app):
     db.init_app(app)
     executor.init_app(app)
     basic_auth.init_app(app)
+    # On app start, we send token addresses to the worker
+    @app.before_first_request
+    def add_transaction_filter():
+        try:
+            with app.app_context():
+                from server.utils.synchronization_filter import add_transaction_filter
+                from server.models.token import Token
+                tokens = db.session.query(Token)
+                for t in tokens:
+                    print(f'Creating transaction filter for {t.address}')
+                    if t.address:
+                        add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
+        except:
+            print('Unable to automatically create filters')
+
 
     @app.before_request
     def enable_form_raw_cache():
