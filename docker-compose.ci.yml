@@ -46,15 +46,23 @@ services:
       CONTAINER_TYPE: "PRIMARY"
       PYTHONUNBUFFERED: 0
     image: "eth_worker:${IMAGE_TAG:-latest}"
+    depends_on:
+      - redis
   eth_worker_processor:
     environment:
       <<: *CI_ENV
       CONTAINER_TYPE: "PROCESSOR"
       PYTHONUNBUFFERED: 0
     image: "eth_worker_process:${IMAGE_TAG:-latest}"
+    depends_on:
+      - redis
   pgbouncer:
     environment:
       <<: *CI_ENV
     image: "pgbouncer:${IMAGE_TAG:-latest}"
+    depends_on:
+      - redis
   ganache:
     command: "-l 80000000 -i 42 -s GANACHE_SEED_DETERMINISTIC -e 10000"
+    depends_on:
+      - redis
