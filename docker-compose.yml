@@ -57,7 +57,7 @@ services:
 
   postgres:
     image: "postgres"
-    restart: always
+    restart: no
     environment:
       POSTGRES_DB: "sempo_docker"
       POSTGRES_USER: "postgres"
@@ -65,7 +65,7 @@ services:
 
   eth_postgres:
     image: "postgres"
-    restart: always
+    restart: no
     environment:
       POSTGRES_DB: "sempo_docker_eth"
       POSTGRES_USER: "postgres"
