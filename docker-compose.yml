@@ -8,9 +8,9 @@ services:
     environment:
       CONTAINER_TYPE: "APP"
     depends_on:
+      - redis
       - postgres
       - eth_worker
-      - redis
     ports:
       - "3031:3031"
       - "9000:9000"

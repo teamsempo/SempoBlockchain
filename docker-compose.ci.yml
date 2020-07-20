@@ -36,6 +36,8 @@ services:
       CIRCLE_ARTIFACTS: ${CIRCLE_ARTIFACTS}
       CIRCLE_TEST_REPORTS: ${CIRCLE_TEST_REPORTS}
     depends_on:
+      - postgres
+      - redis
       - eth_worker
       - eth_worker_processor
       - ganache
@@ -48,6 +50,8 @@ services:
     image: "eth_worker:${IMAGE_TAG:-latest}"
     depends_on:
       - redis
+      - ganache
+      - eth_postgres
   eth_worker_processor:
     environment:
       <<: *CI_ENV
@@ -56,12 +60,16 @@ services:
     image: "eth_worker_process:${IMAGE_TAG:-latest}"
     depends_on:
       - redis
+      - ganache
+      - eth_postgres
   pgbouncer:
     environment:
       <<: *CI_ENV
     image: "pgbouncer:${IMAGE_TAG:-latest}"
     depends_on:
       - redis
+      - eth_postgres
+      - postgres
   ganache:
     command: "-l 80000000 -i 42 -s GANACHE_SEED_DETERMINISTIC -e 10000"
     depends_on:
