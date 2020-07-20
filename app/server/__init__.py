@@ -79,7 +79,7 @@ def register_extensions(app):
     @app.before_first_request
     def add_transaction_filter():
         print('ADDING TRANSACTION FILTER!!!!')
-        if config.ENV_DEPLOYMENT_NAME == 'DOCKER_TEST':
+        if not config.IS_TEST:
             print("DOCKER TEST")
             try:
                 with app.app_context():
