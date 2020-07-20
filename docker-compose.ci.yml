@@ -35,6 +35,11 @@ services:
       CIRCLE_SHA1: ${CIRCLE_SHA1}
       CIRCLE_ARTIFACTS: ${CIRCLE_ARTIFACTS}
       CIRCLE_TEST_REPORTS: ${CIRCLE_TEST_REPORTS}
+    depends_on:
+      - eth_worker
+      - eth_worker_processor
+      - ganache
+
   eth_worker:
     environment:
       <<: *CI_ENV

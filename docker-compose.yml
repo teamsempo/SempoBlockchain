@@ -10,8 +10,6 @@ services:
     depends_on:
       - postgres
       - eth_worker
-      - eth_worker_processor
-      - ganache
     ports:
       - "3031:3031"
       - "9000:9000"
