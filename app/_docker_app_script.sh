@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-sleep 10
+sleep 15
 echo Container mode: $CONTAINER_MODE
 
 cd src
