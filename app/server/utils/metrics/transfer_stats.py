@@ -2,6 +2,10 @@ from sqlalchemy.sql import func, distinct
 
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
+
+from server.models.user import User
+from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+
 from server.utils.metrics import filters, metrics_cache, metric, process_timeseries, metric_group
 from server.utils.metrics.metrics_const import *
 
@@ -130,3 +134,52 @@ class TransferStats(metric_group.MetricGroup):
             caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             filterable_by=self.filterable_attributes,
             timeseries_actions=[CALCULATE_PER_USER, FORMAT_TIMESERIES, AGGREGATE_FORMATTED_TIMESERIES]))
+
+        #transaction_count_query = db.session.query(func.count(CreditTransfer.id).label('volume'),
+        #        func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date'), User.id).group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created)).group_by(User.id)
+        #transaction_count_query.join(CreditTransfer, User.id == CreditTransfer.sender_user_id)
+        
+
+        
+        # transfer_mode
+        subquery = db.session.query(User.id).join(CustomAttributeUserStorage, CustomAttributeUserStorage.user_id == User.id)\
+            .filter(CustomAttributeUserStorage.name == 'gender')
+
+        transaction_count_query = db.session.query(func.count(CreditTransfer.id).label('volume'),
+                func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date'))\
+                .group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))\
+            .filter(User.id.notin_(subquery))
+            #.join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)
+        print('zzz')
+        print(transaction_count_query.all())
+        #for a in transaction_count_query.all():
+        #    print(a)
+        #print('zzz')
+
+        
+        transaction_count_query = db.session.query(func.count(CreditTransfer.id).label('volume'),
+                func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date'), CustomAttributeUserStorage.value)\
+                    .group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))\
+                    .group_by(CustomAttributeUserStorage.value)\
+            .join(User, CreditTransfer.recipient_user_id == User.id)\
+            .join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
+            .filter(CustomAttributeUserStorage.name == 'gender')
+        print(transaction_count_query.all())
+
+        #for a in transaction_count_query.all():
+        #    print(a)
+        #print('zzz')
+        
+        #transaction_count_query = db.session.query(func.count(CreditTransfer.id).label('volume'),
+        #        func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date'), 
+        #        CreditTransfer.transfer_mode)\
+        #        .group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))\
+        #        .group_by(CreditTransfer.transfer_mode)
+        #transaction_count_query.join(CreditTransfer, User.id == CreditTransfer.sender_user_id)
+
+        #transaction_count_query = db.session.query(func.count(CreditTransfer.id).label('volume'),
+        #        func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date'), 
+        #        User.id)\
+        #        .group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))\
+        #        .group_by(User.id)
+        #transaction_count_query.join(CreditTransfer, User.id == CreditTransfer.sender_user_id)

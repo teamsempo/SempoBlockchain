@@ -37,6 +37,11 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
     if user_filter or date_filters or disable_cache or timeseries_unit != metrics_const.DAY:
         enable_cache = False
 
+    group_by = metrics_const.TRANSFER_MODE
+    print(group_by)
+    print(group_by)
+    print(group_by)
+    print(group_by)
     transfer_stats = TransferStats(timeseries_unit)
     participant_stats = ParticipantStats(timeseries_unit)
 
