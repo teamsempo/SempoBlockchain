@@ -20,12 +20,12 @@ WORKDIR /
 
 EXPOSE 80
 
-#ENTRYPOINT celery -A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet
-#CMD ["celery -A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet"]
+#ENTRYPOINT celery -A worker worker --loglevel=INFO --concurrency=500 --pool=gevent
+#CMD ["celery -A worker worker --loglevel=INFO --concurrency=500 --pool=gevent"]
 
 RUN chmod +x /_docker_worker_script.sh
 RUN chmod +x /_beat_starter.sh
 
 CMD ["/_docker_worker_script.sh"]
 
-#ENTRYPOINT celery -A worker worker --loglevel=INFO --concurrency=500 --pool=eventlet
+#ENTRYPOINT celery -A worker worker --loglevel=INFO --concurrency=500 --pool=gevent
