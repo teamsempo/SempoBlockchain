@@ -1,0 +1,5 @@
+/* custom css specifically for the dashboard page */
+.ant-tabs-nav-list {
+  width: 100%;
+  justify-content: space-between;
+}

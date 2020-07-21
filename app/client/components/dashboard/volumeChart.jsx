@@ -2,7 +2,6 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { Line } from "react-chartjs-2";
-import { ModuleHeader } from "../styledElements.js";
 import { get_zero_filled_values, getDateArray } from "../../utils";
 
 const mapStateToProps = state => {
@@ -17,7 +16,7 @@ class VolumeChart extends React.Component {
   construct_dataset_object(label, color, dataset) {
     return {
       label: label,
-      fill: false,
+      fill: true,
       lineTension: 0.1,
       backgroundColor: color,
       borderColor: color,
@@ -43,6 +42,11 @@ class VolumeChart extends React.Component {
     if (Object.keys(this.props.creditTransferStats).length == 0) {
       return <p>No Transfer Data</p>;
     } else {
+      console.log(
+        "this.props.creditTransferStats",
+        this.props.creditTransferStats
+      );
+
       let transaction_dates = this.props.creditTransferStats.daily_transaction_volume.map(
         data => new Date(data.date)
       );
@@ -110,6 +114,13 @@ class VolumeChart extends React.Component {
               },
               ticks: {
                 beginAtZero: true
+              },
+              scales: {
+                yAxes: [
+                  {
+                    stacked: true
+                  }
+                ]
               }
             },
             {
@@ -152,9 +163,8 @@ class VolumeChart extends React.Component {
 
       return (
         <div>
-          <ModuleHeader> Transaction and Disbursement Volume </ModuleHeader>
-          <div style={{ padding: "0.2em 1em 1em 1em", height: "200px" }}>
-            <Line data={data} height={250} options={options} />
+          <div style={{ height: "200px" }}>
+            <Line data={data} height={200} options={options} />
           </div>
         </div>
       );

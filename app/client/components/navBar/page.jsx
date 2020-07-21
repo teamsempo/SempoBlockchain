@@ -19,7 +19,9 @@ export default class Page extends React.Component {
               <Title>{this.props.title}</Title>
             </Header>
           ) : null}
-          <Content>{this.props.children}</Content>
+          <Content style={{ margin: this.props.isAntDesign ? "0 16px" : "" }}>
+            {this.props.children}
+          </Content>
           {this.props.footer ? (
             <Footer style={{ textAlign: "center" }}>Sempo ©2020</Footer>
           ) : null}
@@ -30,5 +32,6 @@ export default class Page extends React.Component {
 }
 
 Page.defaultProps = {
-  footer: true
+  footer: true,
+  isAntDesign: false
 };

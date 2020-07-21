@@ -26,6 +26,16 @@ import {
 
 import { ActivateAccountAction } from "../../reducers/auth/actions";
 import NoDataMessage from "../NoDataMessage";
+import { Grid, Row, Col, Card, DatePicker, Tabs, Space, Statistic } from "antd";
+import {
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  RightOutlined
+} from "@ant-design/icons";
+import DashboardChart from "../dashboard/DashboardChart";
+
+const { RangePicker } = DatePicker;
+const { TabPane } = Tabs;
 
 const mapStateToProps = state => {
   return {
@@ -52,8 +62,7 @@ class DashboardPage extends React.Component {
     super();
     this.state = {
       subscribe,
-      unsubscribe,
-      loading: true
+      unsubscribe
     };
   }
 
@@ -124,37 +133,35 @@ class DashboardPage extends React.Component {
       return <NoDataMessage />;
     } else if (this.props.creditTransfers.loadStatus.success === true) {
       return (
-        <WrapperDiv>
-          <PageWrapper>
-            <DashboardFilter>
-              <Main>
-                <GraphMetricColumn>
-                  <ModuleBox>
-                    <VolumeChart />
-                  </ModuleBox>
-
-                  <ModuleBox>
-                    <MetricsBar />
-                  </ModuleBox>
-
-                  <ModuleBox>
-                    <BeneficiaryFunnel />
-                  </ModuleBox>
-                </GraphMetricColumn>
-
-                <LiveFeedColumn>
-                  <ModuleBox>
-                    <UsagePieChart />
-                  </ModuleBox>
-
-                  <ModuleBox>
-                    <BeneficiaryLiveFeed />
-                  </ModuleBox>
-                </LiveFeedColumn>
-              </Main>
-            </DashboardFilter>
-          </PageWrapper>
-        </WrapperDiv>
+        <div>
+          <div className="site-card-wrapper">
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Row gutter={16}>
+                <Col span={16}>
+                  <Card
+                    title="Master Wallet"
+                    bordered={false}
+                    bodyStyle={{ height: "140px" }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        backgroundColor: "#ececec"
+                      }}
+                    >
+                      fake chart2
+                    </div>
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <BeneficiaryLiveFeed />
+                </Col>
+              </Row>
+              <DashboardChart />
+            </Space>
+          </div>
+        </div>
       );
     } else {
       return (
@@ -170,21 +177,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(DashboardPage);
-
-const Main = styled.div`
-  display: flex;
-  @media (max-width: 767px) {
-    flex-direction: column;
-  }
-`;
-
-const GraphMetricColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-`;
-
-const LiveFeedColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
