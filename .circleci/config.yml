@@ -227,6 +227,7 @@ workflows:
             branches:
               only:
                 - master
+                - fix-double-transaction-bug
           requires:
             - build
             - test:backend
