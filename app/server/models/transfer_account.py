@@ -121,6 +121,8 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         self.update_balance()
 
     def update_balance(self):
+        if not self._balance_offset_wei:
+            self._balance_offset_wei = 0
         net_credit_transfer_position_wei = (self.total_received - self.total_sent) * int(1e16)
         self._balance_wei = net_credit_transfer_position_wei + self._balance_offset_wei
 
