@@ -2,7 +2,7 @@ alembic==1.1.0
 boto3==1.7.33
 cryptography==2.3
 celery==4.4.0rc3
-eventlet==0.24.1
+gevent==20.6.2
 flower==0.9.3
 kombu==4.6.6
 idna==2.6
