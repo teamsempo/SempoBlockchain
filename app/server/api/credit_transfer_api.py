@@ -20,7 +20,6 @@ from server.utils.credit_transfer import (
     make_target_balance_transfer,
     make_blockchain_transfer)
 from server.utils.user import create_transfer_account_if_required
-from server.utils.metrics import calculate_transfer_stats
 from server.utils.auth import multi_org
 from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
 
