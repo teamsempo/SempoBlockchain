@@ -1,5 +1,5 @@
 import pytest
-
+from helpers.model_factories import CreditTransfer
 
 def test_create_transfer_account(create_transfer_account):
     """
@@ -37,3 +37,34 @@ def test_approve_vendor_transfer_account(create_transfer_account_user):
     create_transfer_account_user.transfer_account.approve_and_disburse()
 
     assert create_transfer_account_user.transfer_account.balance == 400
+
+
+def test_balance_update_with_null_offset(create_transfer_account):
+    """
+    GIVEN a Transfer Account with a null offset(for example due to DB editing or migration)
+    WHEN the balance is updated
+    THEN check that the balance doesn't error out
+    """
+
+    create_transfer_account._balance_offset_wei = None
+    create_transfer_account.update_balance()
+
+def test_set_balance_offset(create_transfer_account):
+    """
+    GIVEN a Transfer Account
+    WHEN the balance offset is updated
+    THEN check that the function takes cents and stores in wei
+    """
+
+    create_transfer_account.set_balance_offset(123)
+    assert create_transfer_account._balance_offset_wei == int(123e16)
+
+def test_get_balance(create_transfer_account):
+    """
+    GIVEN a Transfer Account with a non-zero balance
+    WHEN the balance is requested
+    THEN check that the function goes from stored wei and returns cents
+    """
+
+    create_transfer_account._balance_wei = int(123e16)
+    assert create_transfer_account.balance == 123
