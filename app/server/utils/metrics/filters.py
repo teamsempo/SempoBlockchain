@@ -1,3 +1,7 @@
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
+
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
 from server.utils.metrics import metrics_cache

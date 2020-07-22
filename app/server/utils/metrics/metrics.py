@@ -1,3 +1,6 @@
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
 
 from server import db, red, bt
 
@@ -23,11 +26,11 @@ import sqlalchemy
 import datetime, json
 
 def calculate_transfer_stats(
-    start_date=None, 
-    end_date=None, 
-    user_filter={}, 
-    metric_type=metrics_const.ALL, 
-    disable_cache = False, 
+    start_date=None,
+    end_date=None,
+    user_filter={},
+    metric_type=metrics_const.ALL,
+    disable_cache: bool = False,
     timeseries_unit = metrics_const.DAY):
     # TODO (group_by PR): Add token filter here!
     # - Check orgs being queried (dependant on multi-org PR)

@@ -1,3 +1,7 @@
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
+
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -18,19 +22,19 @@ class ParticipantStats(metric_group.MetricGroup):
 
         total_beneficiaries_query = db.session.query(User)
         self.metrics.append(metric.Metric(
-            metric_name='total_beneficiaries', 
-            query=total_beneficiaries_query, 
-            object_model=User, 
-            stock_filters=[filters.beneficiary_filters], 
+            metric_name='total_beneficiaries',
+            query=total_beneficiaries_query,
+            object_model=User,
+            stock_filters=[filters.beneficiary_filters],
             caching_combinatory_strategy=metrics_cache.COUNT,
             filterable_by=self.filterable_attributes))
 
         total_vendors_query = db.session.query(User)
         self.metrics.append(metric.Metric(
-            metric_name='total_vendors', 
-            query=total_vendors_query, 
-            object_model=User, 
-            stock_filters=[filters.vendor_filters], 
+            metric_name='total_vendors',
+            query=total_vendors_query,
+            object_model=User,
+            stock_filters=[filters.vendor_filters],
             caching_combinatory_strategy=metrics_cache.COUNT,
             filterable_by=self.filterable_attributes))
 
@@ -38,9 +42,9 @@ class ParticipantStats(metric_group.MetricGroup):
                 func.date_trunc(self.timeseries_unit, User.created).label('date')).group_by(func.date_trunc(self.timeseries_unit, User.created))
         self.metrics.append(metric.Metric(
             metric_name='users_created',  # Will rename when API breaking changes come in
-            query=users_created_timeseries_query, 
-            object_model=User, 
-            stock_filters=[filters.beneficiary_filters], 
+            query=users_created_timeseries_query,
+            object_model=User,
+            stock_filters=[filters.beneficiary_filters],
             caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             filterable_by=self.filterable_attributes,
             timeseries_actions=[FORMAT_TIMESERIES, AGGREGATE_FORMATTED_TIMESERIES]))
@@ -49,10 +53,10 @@ class ParticipantStats(metric_group.MetricGroup):
         total_users_timeseries_query = db.session.query(func.count(User.id).label('volume'),
                 func.date_trunc(self.timeseries_unit, User.created).label('date')).group_by(func.date_trunc(self.timeseries_unit, User.created))
         self.total_users_timeseries = metric.Metric(
-            metric_name='total_population', 
-            query=total_users_timeseries_query, 
-            object_model=User, 
-            stock_filters=[], 
+            metric_name='total_population',
+            query=total_users_timeseries_query,
+            object_model=User,
+            stock_filters=[],
             caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             filterable_by=self.filterable_attributes,
             timeseries_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
