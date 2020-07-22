@@ -5,11 +5,7 @@ import styled, { ThemeProvider } from "styled-components";
 import { Row, Input, StyledSelect } from "../styledElements";
 
 import { CountryDropdown, RegionDropdown } from "react-country-region-selector";
-import {
-  editBusinessProfile,
-  createBusinessProfile,
-  UPDATE_ACTIVE_STEP
-} from "../../reducers/businessVerificationReducer";
+import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 import AsyncButton from "../AsyncButton.jsx";
 import { DefaultTheme } from "../theme.js";
 
@@ -37,9 +33,17 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => {
   return {
     editBusinessProfile: (body, path) =>
-      dispatch(editBusinessProfile({ body, path })),
-    createBusinessProfile: body => dispatch(createBusinessProfile({ body })),
-    nextStep: () => dispatch({ type: UPDATE_ACTIVE_STEP, activeStep: 1 })
+      dispatch(
+        BusinessVerificationAction.editBusinessVerificationRequest({
+          body,
+          path
+        })
+      ),
+    createBusinessProfile: body =>
+      dispatch(
+        BusinessVerificationAction.createBusinessVerificationRequest({ body })
+      ),
+    nextStep: () => dispatch(BusinessVerificationAction.updateActiveStep(1))
   };
 };
 
