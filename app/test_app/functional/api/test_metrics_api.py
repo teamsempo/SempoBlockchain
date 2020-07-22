@@ -165,6 +165,10 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         )
     response = get_metrics(metric_type)
     assert response.status_code == status_code
+    if response.json:
+        returned_stats = response.json['data']['transfer_stats']
+    else:
+        returned_stats = None
 
     if metric_type == 'transfer' or metric_type == 'all':
         returned_stats['daily_transaction_volume'][0]['date'] = ''
