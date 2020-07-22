@@ -175,7 +175,7 @@ def make_blockchain_transfer(transfer_amount,
         transfer.uuid = uuid
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed(existing_blockchain_txn=existing_blockchain_txn)
+        transfer.resolve_as_complete()
 
     return transfer
 
@@ -283,7 +283,7 @@ def make_payment_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed(queue=queue)
+        transfer.resolve_as_complete_and_trigger_blockchain(queue=queue)
 
     if make_cashout_incentive_transaction:
         try:
@@ -340,7 +340,7 @@ def make_withdrawal_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed()
+        transfer.resolve_as_complete_and_trigger_blockchain()
 
     return transfer
 
@@ -371,7 +371,7 @@ def make_deposit_transfer(transfer_amount,
                               uuid=uuid, fiat_ramp=fiat_ramp)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed()
+        transfer.resolve_as_complete_and_trigger_blockchain()
 
     return transfer
 

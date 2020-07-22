@@ -21,7 +21,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
                                      is_ghost: bool = False):
     transfer_account = TransferAccount(bound_entity=user)
     transfer_account.token = token
-    transfer_account.balance = balance
+    transfer_account.set_balance_offset(balance)
 
     if is_default:
         user.default_transfer_account = transfer_account
