@@ -9,8 +9,12 @@ import pickle
 SUM = 'SUM'
 SUM_OBJECTS ='SUM_OBJECTS'
 COUNT ='COUNT'
+FIRST_COUNT = 'FIRST_COUNT'
+QUERY_ALL = 'QUERY_ALL'
 
-valid_strategies = [SUM, COUNT, SUM_OBJECTS]
+valid_strategies = [SUM, COUNT, SUM_OBJECTS, FIRST_COUNT, QUERY_ALL]
+# Combinatory stategies which aren't cachable
+dumb_strategies = [FIRST_COUNT, QUERY_ALL]
 
 def _store_cache(key, value):
     pickled_object = pickle.dumps(value)
@@ -27,9 +31,9 @@ def _load_cache(key):
         red.delete(key)
         return None
 
-def execute_with_partial_history_cache(metric_name, query, object_model, strategy, disable_cache = False):
-    # disable_cache pass-thru. This is so we don't cache data when filters are active.
-    if disable_cache:
+def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True):
+    # enable_cache pass-thru. This is so we don't cache data when filters are active.
+    if not enable_cache or strategy in dumb_strategies:
         return _handle_combinatory_strategy(query, None, strategy)
 
     # Redis object names
@@ -98,4 +102,11 @@ def _sum_list_of_objects(query, cache_result):
         formatted_results.append((combined_results[result], result))
     return formatted_results
 
-strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects }
+# "Dumb" combinatory strategies which are uncachable
+def _first_count(query, cache_result):
+    return query.first().count
+
+def _return_all(query, cache_result):
+    return query.all()
+
+strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects, FIRST_COUNT: _first_count, QUERY_ALL: _return_all }
