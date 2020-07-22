@@ -50,7 +50,7 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
     recipient_user_id = recipient_user_id_accessor(create_transfer_account_user)
 
     if transfer_type == 'PAYMENT' and sender_user_id:
-        create_transfer_account_user.transfer_account.balance = 10000
+        create_transfer_account_user.transfer_account.set_balance_offset(10000)
         create_transfer_account_user.transfer_account.is_approved = True
 
     if tier:
@@ -117,7 +117,7 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
         assert isinstance(response.json['data']['credit_transfers'], list)
 
 
-def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user, create_organisation):
+def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_admin_user, create_organisation):
     # For this, we want to test 5 permutations of third-party transactions to add:
     # 1. Existing User A -> Existing User B
     # 2. Existing User A -> Stranger A
@@ -128,6 +128,16 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     # (Do nothing-- we don't care about transfers between strangers who aren't members)
     # 7. Stranger C -> Stranger D To ensure we're not tracking transactions between strangers who are NOT in the system
     # (Do nothing-- we don't care about transfers between strangers who aren't members)
+
+    send_to_worker_called = []
+    def mock_send_blockchain_payload_to_worker(is_retry=False, queue='high_priority'):
+        send_to_worker_called.append([is_retry, queue])
+
+    mocker.patch(
+        'server.models.credit_transfer.CreditTransfer.send_blockchain_payload_to_worker',
+        mock_send_blockchain_payload_to_worker
+    )
+
     # Util function to POST to internal credit_transfer, since we'll be doing that a lot
     def post_to_credit_transfer_internal(sender_blockchain_address, recipient_blockchain_address, blockchain_transaction_hash, transfer_amount, contract_address):
         basic_auth = 'Basic ' + base64.b64encode(bytes(config.INTERNAL_AUTH_USERNAME + ":" + config.INTERNAL_AUTH_PASSWORD, 'ascii')).decode('ascii')
@@ -239,6 +249,11 @@ def test_credit_transfer_internal_callback(test_client, authed_sempo_admin_user,
     fake_user_d_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539222'
     resp = post_to_credit_transfer_internal(fake_user_c_address, fake_user_d_address, made_up_hash, 100, token.address)
     assert resp.json['message'] == 'No existing users involved in this transfer'
+
+    # Make sure we're not sending any of the tranfers off to the blockchain
+    assert len(send_to_worker_called) == 0
+    from flask import g
+    assert len(g.pending_transactions) == 0
 
 def test_force_third_party_transaction_sync():
     if will_func_test_blockchain():

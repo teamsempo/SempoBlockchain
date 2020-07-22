@@ -47,7 +47,7 @@ class FiatRamp(ModelBase):
 
         self._payment_method = payment_method
 
-    def resolve_as_completed(self):
+    def resolve_as_complete(self):
         self.updated = datetime.datetime.utcnow()
         self.payment_status = FiatRampStatusEnum.COMPLETE
 
