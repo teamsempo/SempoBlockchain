@@ -30,14 +30,20 @@ class CreditTransferStatsApi(MethodView):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
-        disable_cache = request.args.get('disable_cache', False)
+        disable_cache = request.args.get('disable_cache', 'False').lower() in ['true', '1']  # Defaults to bool false
         metric_type = request.args.get('metric_type', metrics_const.ALL)
 
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
 
         filters = process_transfer_filters(encoded_filters)
-        transfer_stats = calculate_transfer_stats(start_date=start_date, end_date=end_date, user_filter=filters, metric_type=metric_type, disable_cache=disable_cache)
+        transfer_stats = calculate_transfer_stats(
+            start_date=start_date,
+            end_date=end_date,
+            user_filter=filters,
+            metric_type=metric_type,
+            disable_cache=disable_cache
+        )
 
         response_object = {
             'status': 'success',

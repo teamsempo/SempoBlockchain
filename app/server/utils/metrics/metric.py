@@ -2,26 +2,19 @@ from server.utils.metrics import filters, metrics_cache
 from server.utils.metrics.metrics_const import *
 
 class Metric(object):
-    metric_name = None
-    filterable_by = []
-    query = lambda: None
-    stock_filters = []
-    caching_combinatory_strategy = None
-    object_model = None
-    bypass_user_filters = False
-
-    def execute_query(self, user_filters=[], date_filters=None, enable_caching=True):
+    def execute_query(self, user_filters: dict = None, date_filters=None, enable_caching=True):
+        user_filters = user_filters or {}
         # Apply stock filters
         filtered_query = self.query
         for f in self.stock_filters:
             filtered_query = filtered_query.filter(*f)
 
         # Validate that the filters we're applying are in the metrics' filterable_by
-        for f in user_filters or []:
+        for f in user_filters:
             if f not in self.filterable_by:
                 raise Exception(f'{self.metric_name} not filterable by {f}') 
 
-        if DATE in self.filterable_by or []:
+        if DATE in self.filterable_by:
             filtered_query = filtered_query.filter(*date_filters)
 
         if not self.bypass_user_filters:
@@ -29,11 +22,35 @@ class Metric(object):
 
         return metrics_cache.execute_with_partial_history_cache(self.metric_name, filtered_query, self.object_model, self.caching_combinatory_strategy, enable_caching) 
 
-    def __init__(self, metric_name, query=None, object_model=None, filterable_by=None, stock_filters=[], caching_combinatory_strategy=None, bypass_user_filters = False):
+    def __repr__(self):
+        return f"<Metric {self.metric_name}>"
+
+    def __init__(
+            self,
+            metric_name,
+            query=None,
+            object_model=None,
+            filterable_by=None,
+            stock_filters=None,
+            caching_combinatory_strategy=None,
+            bypass_user_filters=False
+    ):
+        """
+        :param metric_name: eg 'total_exchanged' or 'has_transferred_count'. Used for cache
+        :param query: the based query that defines the aggregation process eg summing over transfers
+        :param object_model: what the base object we're getting the metric for is (Transfers/Transfer Accounts/Users)
+            used for applying filters with appropriate joins, and for cache
+        :param filterable_by: used to validate whether the custom filters are valid for this case
+        :param stock_filters: the base filters required to get this metric to return what we expect, regardless of what
+        futher custom filtering we need to do
+        :param caching_combinatory_strategy: how da cache gonna cache
+        :param bypass_user_filters: ignore any user supplied filter
+        """
+
         self.metric_name = metric_name
-        self.filterable_by = filterable_by
-        self.query = query
+        self.filterable_by = filterable_by or []
+        self.query = query or (lambda: None)
         self.object_model = object_model
-        self.stock_filters = stock_filters
+        self.stock_filters = stock_filters or []
         self.caching_combinatory_strategy = caching_combinatory_strategy
         self.bypass_user_filters = bypass_user_filters

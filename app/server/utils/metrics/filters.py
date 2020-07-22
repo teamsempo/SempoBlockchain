@@ -10,7 +10,24 @@ from sqlalchemy.sql import func, text
 from sqlalchemy import case, or_
 from server import db, red, bt
 
-def apply_filters(query, filters, query_table):
+def apply_filters(query, filters: dict, query_table):
+    """
+    Applies a dictionary of filters to a query.
+    If the table being queried is the CreditTransfer, will add a join on the sender user and sender transfer accounts
+    (via _determine_join_conditions) so that we can filter on attributes like the sender balance or sender name
+
+    Filter Dictionary format is:
+    Key: the table name, eg 'transfer_account'
+    Value: list of Filter Rules applying to that table.
+
+
+    {'transfer_account': [[('rounded_account_balance', 'GT', 100.0)]]}
+
+    :param query: The base query
+    :param filters: A filter dictionary
+    :param query_table: The table object that we're querying against
+    :return:
+    """
 
     if filters is None:
         return query
@@ -19,24 +36,26 @@ def apply_filters(query, filters, query_table):
 
     for filter_table_name, _filts in filters.items():
         if filter_table_name == TransferAccount.__tablename__:
-                # only join transfer account if table is not transfer account
-                if query_table.__tablename__ == filter_table_name: 
-                    query = _apply_single_column_filter(query, _filts, TransferAccount, None, None) 
-                else:
-                    query = _apply_single_column_filter(query, _filts, TransferAccount, account_join_attribute, None)
+            if query_table.__tablename__ != TransferAccount.__tablename__:
+                # The filter is on transfer account, but the base query is something else, so we have to do a join
+                query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
+
+            query = _apply_single_column_filter(query, _filts, TransferAccount)
 
         elif filter_table_name == User.__tablename__:
-                # only join user account if table is not user 
-                if query_table.__tablename__ == filter_table_name:
-                    query = _apply_single_column_filter(query, _filts, User, None, None)
-                else:
-                    query = _apply_single_column_filter(query, _filts, User, None, user_join_attribute)
+            if query_table.__tablename__ != User.__tablename__:
+                # The filter is on user, but the base query is something else, so we have to do a join
+                query = query.join(User, User.id == user_join_attribute)
+
+            query = _apply_single_column_filter(query, _filts, User)
 
         elif filter_table_name == CreditTransfer.__tablename__:
-                # No join needed for CreditTransfer, since it's only availible to be filtered on when directly queried 
-                query = _apply_single_column_filter(query, _filts, CreditTransfer, None, None, None)
+            # No join needed for CreditTransfer, since it's only availible to be filtered on when directly queried
+            query = _apply_single_column_filter(query, _filts, CreditTransfer)
+
         elif filter_table_name == CustomAttributeUserStorage.__tablename__ and user_join_attribute is not None:
             query = _apply_ca_filters(query, _filts, user_join_attribute)
+
     return query
 
 def _determine_join_conditions(query_table):
@@ -45,12 +64,15 @@ def _determine_join_conditions(query_table):
     if query_table == User:
         return User.id, None
 
-def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None, transfer_join_attribute=None):
-    if target_table.__tablename__ == TransferAccount.__tablename__ and account_join_attribute is not None:
-        query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
-    elif target_table.__tablename__ == User.__tablename__ and user_join_attribute is not None:
-        query = query.join(User, User.id == user_join_attribute)
-
+def _apply_single_column_filter(query, filters, target_table):
+    """
+    Converts a list of filter rule tuples (applying to a particular table specified
+    by target_table) to an actual alchemy query and applies it
+    :param query: the base query
+    :param filters: the list of filter rule tuples
+    :param target_table: the table being filtered on
+    :return:
+    """
     for batches in filters:
         to_batch = []
         for _filt in batches:
