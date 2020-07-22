@@ -188,17 +188,21 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     elif metric_type == 'user':
         assert response.json == base_participant
 
-@pytest.mark.parametrize("metric_type, status_code", [
-    ("all", 200),
-    ("user", 200),
-    ("transfer", 200),
-    ("notarealmetrictype", 500),
+@pytest.mark.parametrize("metric_type, params, status_code", [
+    ("all", None, 200),
+    ("user", None, 200),
+    ("transfer", None, 200),
+    ("notarealmetrictype", None, 500),
+    ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
 ])
-def test_get_summed_metrics(test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_metrics,
-                             metric_type, status_code):
+def test_get_summed_metrics(
+        test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_metrics,
+        metric_type, params, status_code
+):
     def get_metrics(metric_type):
+        p = f'&params={params}' if params else ''
         return test_client.get(
-            f'/api/v1/metrics/?metric_type={metric_type}&disable_cache=True&org={create_organisation.id}',
+            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}',
             headers=dict(
                 Authorization=complete_admin_auth_token,
                 Accept='application/json'
@@ -212,14 +216,17 @@ def test_get_summed_metrics(test_client, complete_admin_auth_token, external_res
     else:
         returned_stats = None
 
+    total_spent_val = 150
+    if params is not None:
+        # Test the filter worked
+        total_spent_val == 25
+
     if metric_type == 'transfer' or metric_type == 'all':
-        assert returned_stats['daily_disbursement_volume'][0]['volume'] == 300
         assert returned_stats['daily_transaction_volume'][0]['volume'] == 150
         assert returned_stats['exhausted_balance'] == 0
         assert returned_stats['has_transferred_count'] == 2
-        assert returned_stats['total_distributed'] == 300
         assert returned_stats['total_exchanged'] == 0
-        assert returned_stats['total_spent'] == 150
+        assert returned_stats['total_spent'] == total_spent_val
         assert returned_stats['transfer_use_breakdown'] == [[['Burger'], 1], [['HotDog'], 1], [['Pizza'], 2]]
     elif metric_type == 'participant' or metric_type == 'all':
         assert returned_stats['total_beneficiaries'] == 1
