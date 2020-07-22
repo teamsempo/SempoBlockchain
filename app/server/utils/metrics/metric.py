@@ -37,7 +37,8 @@ class Metric(object):
             filterable_by=None,
             stock_filters=None,
             caching_combinatory_strategy=None,
-            bypass_user_filters=False
+            bypass_user_filters=False,
+            timeseries_actions=None,
     ):
         """
         :param metric_name: eg 'total_exchanged' or 'has_transferred_count'. Used for cache
@@ -58,3 +59,4 @@ class Metric(object):
         self.stock_filters = stock_filters or []
         self.caching_combinatory_strategy = caching_combinatory_strategy
         self.bypass_user_filters = bypass_user_filters
+        self.timeseries_actions = timeseries_actions

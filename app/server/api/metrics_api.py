@@ -77,6 +77,10 @@ class FiltersApi(MethodView):
         METRIC_TYPES_FILTERS = {
             metrics_const.ALL: ALL_FILTERS,
             metrics_const.USER: USER_FILTERS,
+            metrics_const.TRANSFER: TRANSFER_FILTERS,
+        }
+
+        response_object = {
             'status' : 'success',
             'message': 'Successfully Loaded.',
             'data': {
