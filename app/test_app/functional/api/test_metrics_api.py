@@ -221,10 +221,12 @@ def test_get_summed_metrics(
         # Test the filter worked
         total_spent_val == 25
 
-    if metric_type == 'transfer' or metric_type == 'all':
+    elif metric_type == 'transfer' or metric_type == 'all':
+        assert returned_stats['daily_disbursement_volume'][0]['volume'] == 300
         assert returned_stats['daily_transaction_volume'][0]['volume'] == 150
         assert returned_stats['exhausted_balance'] == 0
         assert returned_stats['has_transferred_count'] == 2
+        assert returned_stats['total_distributed'] == 300
         assert returned_stats['total_exchanged'] == 0
         assert returned_stats['total_spent'] == total_spent_val
         assert returned_stats['transfer_use_breakdown'] == [[['Burger'], 1], [['HotDog'], 1], [['Pizza'], 2]]
