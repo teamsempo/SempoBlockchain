@@ -1,13 +1,13 @@
 import pytest
 from server.models.transfer_usage import TransferUsage
-from server.utils.transfer_filter import ALL_FILTERS, PARTICIPANT_FILTERS
+from server.utils.transfer_filter import ALL_FILTERS, USER_FILTERS
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user
 from server import db
 import json
 
 @pytest.mark.parametrize("metric_type, status_code", [
-    ("participant", 200),
+    ("user", 200),
     ("all", 200),
     ("transfer", 200),
     ("notarealmetrictype", 500),
@@ -26,8 +26,8 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
     assert response.status_code == status_code
 
     if status_code == 200:
-        if metric_type == 'participant':
-            assert response.json['data']['filters'] == json.dumps(PARTICIPANT_FILTERS)
+        if metric_type == 'user':
+            assert response.json['data']['filters'] == json.dumps(USER_FILTERS)
         else:
             assert response.json['data']['filters'] == json.dumps(ALL_FILTERS)
 
@@ -90,7 +90,7 @@ base_transfer = {'data':
 }
 
 @pytest.mark.parametrize("metric_type, status_code", [
-    ("participant", 200),
+    ("user", 200),
     ("all", 200),
     ("transfer", 200),
     ("notarealmetrictype", 500),
@@ -113,10 +113,11 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         assert response.json == base_transfer
     elif metric_type == 'all':
         assert response.json == base_all
-    elif metric_type == 'participant':
+    elif metric_type == 'user':
         assert response.json == base_participant
 
-def test_generate_metrics(create_organisation):
+@pytest.fixture(scope='module')
+def generate_metrics(create_organisation):
     # Does a bunch of things which generate metrics, and sums them at the same time
     # Results in the following metrics:
     # disbursement_volume: 300
@@ -132,12 +133,16 @@ def test_generate_metrics(create_organisation):
                                     phone="+19025551234",
                                     organisation=create_organisation,
                                     is_beneficiary=True)
+    user1.default_transfer_account.is_approved = True
+
     user1.default_transfer_account._make_initial_disbursement(100, True)
 
     user2 = create_transfer_account_user(first_name='Roy',
                                     last_name='Donk',
                                     phone="+19025551235",
                                     organisation=create_organisation)
+    user2.default_transfer_account.is_approved = True
+
     user2.default_transfer_account._make_initial_disbursement(200, True)
 
     db.session.commit()
@@ -180,11 +185,11 @@ def test_generate_metrics(create_organisation):
 
 @pytest.mark.parametrize("metric_type, status_code", [
     ("all", 200),
-    ("participant", 200),
+    ("user", 200),
     ("transfer", 200),
     ("notarealmetrictype", 500),
 ])
-def test_get_summed_metrics(test_client, complete_admin_auth_token, external_reserve_token, create_organisation,
+def test_get_summed_metrics(test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_metrics,
                              metric_type, status_code):
     def get_metrics(metric_type):
         return test_client.get(
@@ -200,7 +205,7 @@ def test_get_summed_metrics(test_client, complete_admin_auth_token, external_res
     if metric_type == 'transfer' or metric_type == 'all':
         assert response.json['data']['transfer_stats']['daily_disbursement_volume'][0]['volume'] == 300
         assert response.json['data']['transfer_stats']['daily_transaction_volume'][0]['volume'] == 150
-        assert response.json['data']['transfer_stats']['exhausted_balance'] == 1
+        assert response.json['data']['transfer_stats']['exhausted_balance'] == 0
         assert response.json['data']['transfer_stats']['has_transferred_count'] == 2
         assert response.json['data']['transfer_stats']['total_distributed'] == 300
         assert response.json['data']['transfer_stats']['total_exchanged'] == 0
@@ -210,4 +215,3 @@ def test_get_summed_metrics(test_client, complete_admin_auth_token, external_res
         assert response.json['data']['transfer_stats']['total_beneficiaries'] == 1
         assert response.json['data']['transfer_stats']['total_users'] == 1
         assert response.json['data']['transfer_stats']['total_vendors'] == 0
-

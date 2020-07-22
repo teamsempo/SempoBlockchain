@@ -105,7 +105,7 @@ Transaction on the blockchain are made using asynchronous workers that consume a
 
 ```
 cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 ## Details and Other Options
@@ -156,7 +156,7 @@ Start celery:
 
 ```
 cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 You can also add a runtime configuration with the `script path` set as the path to your virtual env `[path-to-your-python-env]/bin/celery`.

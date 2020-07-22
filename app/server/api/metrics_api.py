@@ -4,7 +4,7 @@ import json
 from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const
 from flask.views import MethodView
-from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, PARTICIPANT_FILTERS, process_transfer_filters
+from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, USER_FILTERS, process_transfer_filters
 from server.utils.auth import requires_auth
 
 metrics_blueprint = Blueprint('metrics', __name__)
@@ -30,7 +30,8 @@ class CreditTransferStatsApi(MethodView):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
-        disable_cache = request.args.get('disable_cache', False)
+
+        disable_cache = request.args.get('disable_cache', 'False').lower() in ['true', '1']  # Defaults to bool false
         metric_type = request.args.get('metric_type', metrics_const.ALL)
         timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
         
@@ -41,7 +42,15 @@ class CreditTransferStatsApi(MethodView):
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
 
         filters = process_transfer_filters(encoded_filters)
-        transfer_stats = calculate_transfer_stats(start_date=start_date, end_date=end_date, user_filter=filters, metric_type=metric_type, disable_cache=disable_cache, timeseries_unit = timeseries_unit)
+
+        transfer_stats = calculate_transfer_stats(
+            start_date=start_date,
+            end_date=end_date,
+            user_filter=filters,
+            metric_type=metric_type,
+            disable_cache=disable_cache,
+            timeseries_unit = timeseries_unit
+        )
 
         response_object = {
             'status': 'success',
@@ -53,7 +62,7 @@ class CreditTransferStatsApi(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
-class CreditTransferFiltersApi(MethodView):
+class FiltersApi(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
         """
@@ -67,11 +76,7 @@ class CreditTransferFiltersApi(MethodView):
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
         METRIC_TYPES_FILTERS = {
             metrics_const.ALL: ALL_FILTERS,
-            metrics_const.PARTICIPANT: PARTICIPANT_FILTERS,
-            metrics_const.TRANSFER: TRANSFER_FILTERS,
-        }
-
-        response_object = {
+            metrics_const.USER: USER_FILTERS,
             'status' : 'success',
             'message': 'Successfully Loaded.',
             'data': {
@@ -88,6 +93,6 @@ metrics_blueprint.add_url_rule(
 
 metrics_blueprint.add_url_rule(
     '/metrics/filters/',
-    view_func=CreditTransferFiltersApi.as_view('metrics_filters_view'),
+    view_func=FiltersApi.as_view('metrics_filters_view'),
     methods=['GET']
 )

@@ -9,7 +9,8 @@ class BankAccount(ModelBase):
     wyre_id = db.Column(db.String)
 
     kyc_application_id = db.Column(
-        db.Integer, db.ForeignKey('kyc_application.id'))
+        db.Integer, db.ForeignKey('kyc_application.id')
+    )
 
     bank_country = db.Column(db.String)
     routing_number = db.Column(db.String)
