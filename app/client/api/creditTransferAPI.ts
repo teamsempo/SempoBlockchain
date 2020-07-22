@@ -35,7 +35,7 @@ export const loadCreditTransferStatsAPI = ({
   path
 }: LoadMetricsPayload) =>
   apiClient({
-    url: "/credit_transfer/stats/",
+    url: "/metrics/",
     method: "GET",
     query: query,
     path: path
@@ -43,6 +43,6 @@ export const loadCreditTransferStatsAPI = ({
 
 export const loadCreditTransferFiltersAPI = () =>
   apiClient({
-    url: "/credit_transfer/filters/",
+    url: "/metrics/filters/",
     method: "GET"
   });

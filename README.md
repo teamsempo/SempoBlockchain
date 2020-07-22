@@ -8,7 +8,7 @@
 [![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
 [![Codecov](https://img.shields.io/codecov/c/github/teamsempo/SempoBlockchain)](https://codecov.io/gh/teamsempo/SempoBlockchain)
 
-Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments
+Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments.
 
 ## To run locally:
 
@@ -25,7 +25,7 @@ If you plan on using the quick setup script, be sure to install the [PSQL](https
 
 **Local Test Blockchain**
 
-You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli)
+You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli) - other versions of Ganache may not perform as expected.
 
 ```
 npm install -g ganache-cli@6.4.1
