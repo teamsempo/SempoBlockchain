@@ -8,7 +8,6 @@ from server.models.organisation import Organisation
 
 
 def deploy_cic_token(post_data, creating_org=None):
-
     name = post_data['name']
     symbol = post_data['symbol']
     decimals = post_data.get('decimals', 18)
@@ -16,12 +15,10 @@ def deploy_cic_token(post_data, creating_org=None):
     reserve_deposit_wei = int(post_data['reserve_deposit_wei'])
     exchange_contract_id = post_data['exchange_contract_id']
     reserve_ratio_ppm = post_data.get('reserve_ratio_ppm', 250000)
-
     if creating_org:
         deploying_address = creating_org.primary_blockchain_address
     else:
         deploying_address = g.user.primary_blockchain_address
-
 
     if not exchange_contract_id:
         response_object = {
@@ -42,39 +39,11 @@ def deploy_cic_token(post_data, creating_org=None):
     balance_wei = bt.get_wallet_balance(deploying_address, exchange_contract.reserve_token)
 
     if balance_wei < reserve_deposit_wei:
+        response_object = {
+            'message': f'Insufficient reserve funds (balance in wei: {balance_wei}). Please load the master wallet manually!'
+        }
 
-        load_amount = int((reserve_deposit_wei - balance_wei) / 1e16)
-
-        master_org = Organisation.master_organisation()
-
-        print(f'Insufficient reserve funds (balance in wei: {balance_wei}), loading')
-
-        if master_org.org_level_transfer_account.balance < load_amount:
-            response_object = {
-                'message': f'Insufficient reserve funds for both deploying account  ({balance_wei} wei), '
-                           f'and master ({master_org.org_level_transfer_account.balance * 1e16} wei)'
-            }
-
-            return response_object, 400
-
-        load_task_uuid = bt.make_token_transfer(
-            signing_address=master_org.primary_blockchain_address,
-            token=exchange_contract.reserve_token,
-            from_address=master_org.primary_blockchain_address,
-            to_address=deploying_address,
-            amount=load_amount
-        )
-
-        try:
-            bt.await_task_success(load_task_uuid)
-        except TimeoutError:
-            response_object = {
-                'message': f'Insufficient reserve funds (balance in wei: {balance_wei}), and could not load from master'
-            }
-
-            return response_object, 400
-
-        master_org.org_level_transfer_account.balance -= load_amount
+        return response_object, 400
 
     token = Token(name=name, symbol=symbol, token_type=TokenType.LIQUID)
     db.session.add(token)
@@ -107,7 +76,7 @@ def deploy_cic_token(post_data, creating_org=None):
 
             _creating_org = Organisation.query.get(_creating_org_id)
             _creating_org.bind_token(_token)
-            _creating_org.org_level_transfer_account.balance = int(_deploy_data['issue_amount_wei'] / 1e16)
+            _creating_org.org_level_transfer_account.set_balance_offset(int(_deploy_data['issue_amount_wei'] / 1e16))
 
             bal = bt.get_wallet_balance(_creating_org.primary_blockchain_address, _token)
 

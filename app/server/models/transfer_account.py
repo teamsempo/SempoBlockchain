@@ -30,6 +30,12 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     name            = db.Column(db.String())
     _balance_wei    = db.Column(db.Numeric(27), default=0)
+    # The purpose of the balance offset is to allow the master wallet to be seeded at
+    # initial deploy time. Since balance is calculated by subtracting total credits from 
+    # total debits, without a balance offset we'd be stuck in a zero-sum system with no 
+    # mechanism to have initial funds. It's essentially an app-level analogy to minting 
+    # which happens on the chain. 
+    _balance_offset_wei    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -110,36 +116,39 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # rounded to whole value of balance
         return float((self._balance_wei or 0) / int(1e16))
 
-    @balance.setter
-    def balance(self, val):
-        self._balance_wei = val * int(1e16)
+    def set_balance_offset(self, val):
+        self._balance_offset_wei = val * int(1e16)
+        self.update_balance()
 
-    def decrement_balance(self, val):
-        self.increment_balance(-1 * val)
-
-    def increment_balance(self, val):
-        # self.balance += val
-        val_wei = val * int(1e16)
-        if isinstance(val_wei, float):
-            val_wei = Decimal(val_wei).quantize(Decimal('1'))
-
-        self._balance_wei = (self._balance_wei or 0) + val_wei
+    def update_balance(self):
+        if not self._balance_offset_wei:
+            self._balance_offset_wei = 0
+        net_credit_transfer_position_wei = (self.total_received - self.total_sent) * int(1e16)
+        self._balance_wei = net_credit_transfer_position_wei + self._balance_offset_wei
 
     @hybrid_property
     def total_sent(self):
-        return int(
-            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
+        amount_cents = (
+                db.session.query(
+                    func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
+                )
+                .execution_options(show_all=True)
+                .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id)
+                .first().total
         )
+        return amount_cents or 0
 
     @hybrid_property
     def total_received(self):
-        return int(
-            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
+        amount_cents = (
+            db.session.query(
+                func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
+            )
+            .execution_options(show_all=True)
+            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id)
+            .first().total
         )
+        return amount_cents or 0
 
     @hybrid_property
     def primary_user(self):
@@ -211,7 +220,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
                 disbursement = self.credit_receives[0]
                 if disbursement.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT and disbursement.transfer_status == TransferStatusEnum.PENDING and auto_resolve:
-                    disbursement.resolve_as_completed()
+                    disbursement.resolve_as_complete_and_trigger_blockchain()
                     return disbursement
 
     def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
