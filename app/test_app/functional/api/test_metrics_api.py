@@ -181,8 +181,8 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         assert response.json == base_participant
 
 @pytest.mark.parametrize("metric_type, params, status_code", [
-    # ("all", None, 200),
-    ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
+    ("all", None, 200),
+    #("all", '%$user_filters%,rounded_account_balance%>2%', 200),
     ("participant", None, 200),
     ("transfer", None, 200),
     ("notarealmetrictype", None, 500),
