@@ -87,6 +87,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
+        # Approval is called so that the master account can make transactions on behalf of the transfer account.
+        # Make sure this approval is done first before making a transaction
         approval_priors = list(
             filter(lambda x: x is not None,
                    [
@@ -94,6 +96,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                        recipient_approval.eth_send_task_uuid, recipient_approval.approval_task_uuid
                    ]))
 
+        # Forces an order on transactions so that if there's an outage somewhere, transactions don't get confirmed
+        # On chain in an order that leads to a unrecoverable state
         other_priors = [t.blockchain_task_uuid for t in self._get_required_prior_tasks()]
 
         all_priors = approval_priors + other_priors

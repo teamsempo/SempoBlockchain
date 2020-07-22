@@ -51,6 +51,10 @@ u2 = 'bono'
 u3 = '52eed2eb-af79-49f3-ad47-9eb9fd37bbb1'
 
 def test_prior_task_requirements(test_client, init_database):
+    """
+    Test whether the calculated submission order for a set of transactions is what we expect it to be
+    ie one that prevents an unrecoverable state from being reached
+    """
 
     token = TokenFactory(name='fooToken', symbol='fooToken')
     organisation = OrganisationFactory(token=token, country_code='AU')
