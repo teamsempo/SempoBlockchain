@@ -22,7 +22,13 @@ from sqlalchemy.dialects.postgresql import JSONB
 import sqlalchemy
 import datetime, json
 
-def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, metric_type=metrics_const.ALL, disable_cache = False, timeseries_unit = metrics_const.DAY):
+def calculate_transfer_stats(
+    start_date=None, 
+    end_date=None, 
+    user_filter={}, 
+    metric_type=metrics_const.ALL, 
+    disable_cache = False, 
+    timeseries_unit = metrics_const.DAY):
     # TODO (group_by PR): Add token filter here!
     # - Check orgs being queried (dependant on multi-org PR)
     # - Create 'manditory filter' field which is returned in the response
@@ -50,7 +56,7 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
 
     metric_sets_by_type = {
         metrics_const.TRANSFER: transfer_stats.metrics,
-        metrics_const.PARTICIPANT: participant_stats.metrics,
+        metrics_const.USER: participant_stats.metrics,
         metrics_const.ALL: transfer_stats.metrics + participant_stats.metrics,
     }
 
@@ -59,7 +65,7 @@ def calculate_transfer_stats(start_date=None, end_date=None, user_filter={}, met
         data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
 
     # Legacy and aggregate metrics which don't fit the modular pattern
-    if metric_type in [metrics_const.ALL, metrics_const.PARTICIPANT]:
+    if metric_type in [metrics_const.ALL, metrics_const.USER]:
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
 
     try:

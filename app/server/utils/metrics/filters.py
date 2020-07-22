@@ -11,6 +11,23 @@ from sqlalchemy import case, or_
 from server import db, red, bt
 
 def apply_filters(query, filters, query_table):
+    """
+    Applies a dictionary of filters to a query.
+    If the table being queried is the CreditTransfer, will add a join on the sender user and sender transfer accounts
+    (via _determine_join_conditions) so that we can filter on attributes like the sender balance or sender name
+
+    Filter Dictionary format is:
+    Key: the table name, eg 'transfer_account'
+    Value: list of Filter Rules applying to that table.
+
+
+    {'transfer_account': [[('rounded_account_balance', 'GT', 100.0)]]}
+
+    :param query: The base query
+    :param filters: A filter dictionary
+    :param query_table: The table object that we're querying against
+    :return:
+    """
 
     if filters is None:
         return query
@@ -46,6 +63,15 @@ def _determine_join_conditions(query_table):
         return User.id, None
 
 def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None, transfer_join_attribute=None):
+    """
+    Converts a list of filter rule tuples (applying to a particular table specified
+    by target_table) to an actual alchemy query and applies it
+    :param query: the base query
+    :param filters: the list of filter rule tuples
+    :param target_table: the table being filtered on
+    :return:
+    """
+
     if target_table.__tablename__ == TransferAccount.__tablename__ and account_join_attribute is not None:
         query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
     elif target_table.__tablename__ == User.__tablename__ and user_join_attribute is not None:

@@ -12,9 +12,9 @@ YEAR = 'year'
 TIMESERIES_UNITS = [DAY, WEEK, MONTH, YEAR]
 
 TRANSFER = 'transfer'
-PARTICIPANT = 'participant'
+USER = 'user'
 ALL='all'
-METRIC_TYPES = [TRANSFER, PARTICIPANT, ALL]
+METRIC_TYPES = [TRANSFER, USER, ALL]
 
 # Calculate timeseries per user
 ADD_MISSING_DAYS = 'add_missing_days'

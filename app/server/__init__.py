@@ -69,6 +69,18 @@ def create_app():
 
     app.json_encoder = ExtendedJSONEncoder
 
+    # On app start, we send token addresses to the worker
+    try:
+        with app.app_context():
+            from server.utils.synchronization_filter import add_transaction_filter
+            from server.models.token import Token
+            tokens = db.session.query(Token)
+            for t in tokens:
+                print(f'Creating transaction filter for {t.address}')
+                if t.address:
+                    add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
+    except:
+        print('Unable to automatically create filters')
     return app
 
 def register_extensions(app):
@@ -159,6 +171,7 @@ def register_blueprints(app):
     from server.api.ussd_api import ussd_blueprint
     from server.api.contract_api import contracts_blueprint
     from server.api.ge_migration_api import ge_migration_blueprint
+    from server.api.synchronization_filter_api import synchronization_filter_blueprint
     from server.api.blockchain_taskable_api import blockchain_taskable_blueprint
     from server.api.metrics_api import metrics_blueprint
 
@@ -192,6 +205,7 @@ def register_blueprints(app):
     app.register_blueprint(ussd_blueprint, url_prefix=versioned_url)
     app.register_blueprint(contracts_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ge_migration_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(synchronization_filter_blueprint, url_prefix=versioned_url)
     app.register_blueprint(blockchain_taskable_blueprint, url_prefix=versioned_url)
     app.register_blueprint(metrics_blueprint, url_prefix=versioned_url)
 
@@ -302,4 +316,3 @@ from server.utils.ussd.ussd_tasks import UssdTasker
 ussd_tasker = UssdTasker()
 
 ge_w3 = Web3(HTTPProvider(config.GE_HTTP_PROVIDER))
-
