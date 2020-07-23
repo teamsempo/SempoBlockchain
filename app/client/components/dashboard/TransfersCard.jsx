@@ -1,5 +1,7 @@
 import React from "react";
 import VolumeChart from "./volumeChart";
+import GroupByChart from "./GroupByChart";
+
 import { Grid, Row, Col, Card, DatePicker, Tabs, Space, Statistic } from "antd";
 import {
   ArrowUpOutlined,
@@ -12,7 +14,7 @@ const { TabPane } = Tabs;
 
 import "./Tabs.css";
 
-export default class DashboardChart extends React.Component {
+export default class TransfersCard extends React.Component {
   render() {
     const data = {
       timeseries: [
@@ -138,7 +140,7 @@ export default class DashboardChart extends React.Component {
           <div
             style={{ height: 200, width: "40%", backgroundColor: "#ececec" }}
           >
-            fake chart2
+            <GroupByChart />
           </div>
         </div>
         {actions}

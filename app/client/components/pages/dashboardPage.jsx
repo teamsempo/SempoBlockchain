@@ -17,25 +17,18 @@ import {
 } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
-import {
-  WrapperDiv,
-  ModuleBox,
-  PageWrapper,
-  CenterLoadingSideBarActive
-} from "../styledElements";
+import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
 
 import { ActivateAccountAction } from "../../reducers/auth/actions";
 import NoDataMessage from "../NoDataMessage";
-import { Grid, Row, Col, Card, DatePicker, Tabs, Space, Statistic } from "antd";
+import { Row, Col, Card, Space } from "antd";
 import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   RightOutlined
 } from "@ant-design/icons";
-import DashboardChart from "../dashboard/DashboardChart";
-
-const { RangePicker } = DatePicker;
-const { TabPane } = Tabs;
+import TransfersCard from "../dashboard/TransfersCard";
+import MasterWalletCard from "../dashboard/MasterWalletCard";
 
 const mapStateToProps = state => {
   return {
@@ -138,27 +131,13 @@ class DashboardPage extends React.Component {
             <Space direction="vertical" style={{ width: "100%" }}>
               <Row gutter={16}>
                 <Col span={16}>
-                  <Card
-                    title="Master Wallet"
-                    bordered={false}
-                    bodyStyle={{ height: "140px" }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: "100%",
-                        backgroundColor: "#ececec"
-                      }}
-                    >
-                      fake chart2
-                    </div>
-                  </Card>
+                  <MasterWalletCard />
                 </Col>
                 <Col span={8}>
                   <BeneficiaryLiveFeed />
                 </Col>
               </Row>
-              <DashboardChart />
+              <TransfersCard />
             </Space>
           </div>
         </div>

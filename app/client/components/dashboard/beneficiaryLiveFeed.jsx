@@ -318,16 +318,6 @@ const BottomText = styled.div`
   font-weight: 300;
 `;
 
-const Highlight = styled.h5`
-  color: #2d9ea0;
-  display: inline;
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
 const DarkHighlight = styled.h5`
   color: #4a4a4a;
   display: inline;
@@ -339,7 +329,7 @@ const DarkHighlight = styled.h5`
 `;
 
 const ClickableHighlight = styled.h5`
-  color: #2d9ea0;
+  color: #edcba2;
   display: inline;
   margin: 0;
   font-size: 15px;
