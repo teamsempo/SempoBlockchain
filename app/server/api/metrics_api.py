@@ -1,3 +1,7 @@
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
+
 from flask import Blueprint, request, make_response, jsonify, g
 import json
 
@@ -30,8 +34,13 @@ class CreditTransferStatsApi(MethodView):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
+
         disable_cache = request.args.get('disable_cache', 'False').lower() in ['true', '1']  # Defaults to bool false
         metric_type = request.args.get('metric_type', metrics_const.ALL)
+        timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
+
+        if timeseries_unit not in metrics_const.TIMESERIES_UNITS:
+            raise Exception(f'{timeseries_unit} not a valid timeseries unit. Please choose one of the following: {", ".join(metrics_const.TIMESERIES_UNITS)}')
 
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
@@ -42,7 +51,8 @@ class CreditTransferStatsApi(MethodView):
             end_date=end_date,
             user_filter=filters,
             metric_type=metric_type,
-            disable_cache=disable_cache
+            disable_cache=disable_cache,
+            timeseries_unit = timeseries_unit
         )
 
         response_object = {

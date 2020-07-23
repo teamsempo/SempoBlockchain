@@ -1,3 +1,6 @@
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
 
 from server import db, red, bt
 
@@ -5,6 +8,8 @@ from flask import g
 
 from server.utils.metrics import filters, metrics_cache, metric, metrics_const
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
+from server.utils.metrics.transfer_stats import TransferStats
+from server.utils.metrics.participant_stats import ParticipantStats
 
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
@@ -21,18 +26,15 @@ import sqlalchemy
 import datetime, json
 
 def calculate_transfer_stats(
-        start_date=None,
-        end_date=None,
-        user_filter={},
-        metric_type=metrics_const.ALL,
-        disable_cache: bool = False
-):
-    # TODO (next PR): Add token filter here!
+    start_date=None,
+    end_date=None,
+    user_filter={},
+    metric_type=metrics_const.ALL,
+    disable_cache: bool = False,
+    timeseries_unit = metrics_const.DAY):
+    # TODO (group_by PR): Add token filter here!
     # - Check orgs being queried (dependant on multi-org PR)
     # - Create 'manditory filter' field which is returned in the response
-
-    from server.utils.metrics import transfer_stats
-    from server.utils.metrics import participant_stats
 
     date_filters = []
     if start_date is not None and end_date is not None:
@@ -41,68 +43,33 @@ def calculate_transfer_stats(
 
     # Disable cache if any filters are being used, or explicitly requested
     enable_cache = True
-    if user_filter or date_filters or disable_cache:
+    if user_filter or date_filters or disable_cache or timeseries_unit != metrics_const.DAY:
         enable_cache = False
 
-    # Metrics taxonomy, used to determine which metrics to display when which 
-    # metric_type is queried
-    transfer_stats = [
-        transfer_stats.total_distributed, 
-        transfer_stats.total_spent, 
-        transfer_stats.total_exchanged, 
-        transfer_stats.exhausted_balance_count, 
-        transfer_stats.has_transferred_count,
-        transfer_stats.daily_transaction_volume, 
-        transfer_stats.daily_disbursement_volume, 
-        transfer_stats.transfer_use_breakdown
-    ]
+    transfer_stats = TransferStats(timeseries_unit)
+    participant_stats = ParticipantStats(timeseries_unit)
 
-    participant_stats = [
-        participant_stats.total_beneficiaries,
-        participant_stats.total_vendors,
-    ]
-    all_stats = transfer_stats + participant_stats
+    # Don't send total_users_timeseries date filters, since it needs to use all users through history to aggregate current numbers correctly
+    total_users = participant_stats.total_users_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
 
     metric_sets_by_type = {
-        metrics_const.ALL: all_stats,
-        metrics_const.TRANSFER: transfer_stats,
-        metrics_const.USER: participant_stats
+        metrics_const.TRANSFER: transfer_stats.metrics,
+        metrics_const.USER: participant_stats.metrics,
+        metrics_const.ALL: transfer_stats.metrics + participant_stats.metrics,
     }
 
     data = {}
     for metric in metric_sets_by_type[metric_type]:
-        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache)
+        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
 
     # Legacy and aggregate metrics which don't fit the modular pattern
     if metric_type in [metrics_const.ALL, metrics_const.USER]:
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
 
-    if metric_type in [metrics_const.ALL, metrics_const.TRANSFER]:
-        try:
-            last_day = data['daily_transaction_volume'][0][1]
-            data['last_day_volume'] = data['daily_transaction_volume'][0][0]
-            data['daily_transaction_volume'] = [
-                {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_transaction_volume']
-            ]
-        except IndexError:  # No transactions
-            last_day = datetime.datetime.utcnow()
-            last_day_volume = 0
-            data['has_transferred_count'] = 0
-            data['daily_transaction_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-        
-        data['last_day_volume']: {'date': last_day.isoformat(), 'volume': last_day_volume}
-
-        try:
-            data['daily_disbursement_volume'] = [
-                {'date': item[1].isoformat(), 'volume': item[0]} for item in data['daily_disbursement_volume']
-            ]
-        except IndexError:
-            data['daily_disbursement_volume'] = [{'date': datetime.datetime.utcnow().isoformat(), 'volume': 0}]
-
-        try:
-            data['master_wallet_balance'] = cached_funds_available()
-        except:
-            data['master_wallet_balance'] = 0
+    try:
+        data['master_wallet_balance'] = cached_funds_available()
+    except:
+        data['master_wallet_balance'] = 0
 
     return data
 

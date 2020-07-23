@@ -1,8 +1,12 @@
-from server.utils.metrics import filters, metrics_cache
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
+
+from server.utils.metrics import filters, metrics_cache, process_timeseries
 from server.utils.metrics.metrics_const import *
 
 class Metric(object):
-    def execute_query(self, user_filters: dict = None, date_filters=None, enable_caching=True):
+    def execute_query(self, user_filters: dict = None, date_filters=None, enable_caching=True, population_query_result=False):
         user_filters = user_filters or {}
         # Apply stock filters
         filtered_query = self.query
@@ -12,7 +16,7 @@ class Metric(object):
         # Validate that the filters we're applying are in the metrics' filterable_by
         for f in user_filters:
             if f not in self.filterable_by:
-                raise Exception(f'{self.metric_name} not filterable by {f}') 
+                raise Exception(f'{self.metric_name} not filterable by {f}')
 
         if DATE in self.filterable_by:
             filtered_query = filtered_query.filter(*date_filters)
@@ -20,7 +24,12 @@ class Metric(object):
         if not self.bypass_user_filters:
             filtered_query = filters.apply_filters(filtered_query, user_filters, self.object_model)
 
-        return metrics_cache.execute_with_partial_history_cache(self.metric_name, filtered_query, self.object_model, self.caching_combinatory_strategy, enable_caching) 
+        result = metrics_cache.execute_with_partial_history_cache(self.metric_name, filtered_query, self.object_model, self.caching_combinatory_strategy, enable_caching)
+        if not self.timeseries_actions:
+            return result
+
+        return process_timeseries.process_timeseries(result, population_query_result, self.timeseries_actions)
+
 
     def __repr__(self):
         return f"<Metric {self.metric_name}>"
@@ -33,7 +42,8 @@ class Metric(object):
             filterable_by=None,
             stock_filters=None,
             caching_combinatory_strategy=None,
-            bypass_user_filters=False
+            bypass_user_filters=False,
+            timeseries_actions=None,
     ):
         """
         :param metric_name: eg 'total_exchanged' or 'has_transferred_count'. Used for cache
@@ -54,3 +64,4 @@ class Metric(object):
         self.stock_filters = stock_filters or []
         self.caching_combinatory_strategy = caching_combinatory_strategy
         self.bypass_user_filters = bypass_user_filters
+        self.timeseries_actions = timeseries_actions
