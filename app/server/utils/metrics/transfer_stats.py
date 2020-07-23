@@ -182,9 +182,9 @@ class TransferStats(metric_group.MetricGroup):
         #        .group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))\
         #        .group_by(User.id)
         #transaction_count_query.join(CreditTransfer, User.id == CreditTransfer.sender_user_id)
-            query=transaction_count_query,
-            object_model=CreditTransfer,
-            stock_filters=[filters.standard_payment_filters],
-            caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            filterable_by=self.filterable_attributes,
-            timeseries_actions=[CALCULATE_PER_USER, FORMAT_TIMESERIES, AGGREGATE_FORMATTED_TIMESERIES]))
+        #    query=transaction_count_query,
+        #    object_model=CreditTransfer,
+        #    stock_filters=[filters.standard_payment_filters],
+        #    caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+        #    filterable_by=self.filterable_attributes,
+        #    timeseries_actions=[CALCULATE_PER_USER, FORMAT_TIMESERIES, AGGREGATE_FORMATTED_TIMESERIES]))
