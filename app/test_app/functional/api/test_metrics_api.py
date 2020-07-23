@@ -98,10 +98,10 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
         else:
             assert response.json['data']['filters'] == json.dumps(ALL_FILTERS)
 
-base_participant = {'data': 
-    {'transfer_stats': 
-        {'total_beneficiaries': 0, 
-        'total_users': 0, 
+base_participant = {'data':
+    {'transfer_stats':
+        {'total_beneficiaries': 0,
+        'total_users': 0,
         'total_vendors': 0,
         'master_wallet_balance': 0,
         'users_created': {'aggregate': {'total': 0}, 'timeseries': []}
@@ -111,24 +111,24 @@ base_participant = {'data':
 }
 
 base_all = {'data':
-    {'transfer_stats': 
+    {'transfer_stats':
         {
-        'total_beneficiaries': 0, 
-        'total_users': 0, 
+        'total_beneficiaries': 0,
+        'total_users': 0,
         'total_vendors': 0,
         'master_wallet_balance': 0,
         'users_created': {'aggregate': {'total': 0}, 'timeseries': []},
-        'daily_disbursement_volume': [], 
-        'daily_transaction_volume': [], 
-        'exhausted_balance': 0, 
-        'has_transferred_count': 0, 
-        'master_wallet_balance': 0, 
-        'total_distributed': 0.0, 
-        'total_exchanged': 0.0, 
-        'total_spent': 0.0, 
+        'daily_disbursement_volume': [],
+        'daily_transaction_volume': [],
+        'exhausted_balance': 0,
+        'has_transferred_count': 0,
+        'master_wallet_balance': 0,
+        'total_distributed': 0.0,
+        'total_exchanged': 0.0,
+        'total_spent': 0.0,
         'transfer_use_breakdown': [],
-        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
-        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
         'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
         }
     },
@@ -136,19 +136,19 @@ base_all = {'data':
     'status': 'success'
 }
 
-base_transfer = {'data': 
-    {'transfer_stats': 
-        {'daily_disbursement_volume': [], 
-        'daily_transaction_volume': [], 
-        'exhausted_balance': 0, 
-        'has_transferred_count': 0, 
-        'master_wallet_balance': 0, 
-        'total_distributed': 0.0, 
-        'total_exchanged': 0.0, 
-        'total_spent': 0.0, 
+base_transfer = {'data':
+    {'transfer_stats':
+        {'daily_disbursement_volume': [],
+        'daily_transaction_volume': [],
+        'exhausted_balance': 0,
+        'has_transferred_count': 0,
+        'master_wallet_balance': 0,
+        'total_distributed': 0.0,
+        'total_exchanged': 0.0,
+        'total_spent': 0.0,
         'transfer_use_breakdown': [],
-        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
-        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []}, 
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
         'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
         }
     },

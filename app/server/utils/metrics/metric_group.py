@@ -1,13 +1,14 @@
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
+
 class MetricGroup(object):
-    timeseries_unit = 'day',
-    metrics = [],
-    filterable_attributes = []
-    
+   
     def __init__(self,
-                timeseries_unit,
-                metrics,
-                filterable_attributes):
+                timeseries_unit = 'day',
+                metrics = None,
+                filterable_attributes = None):
         timeseries_unit = timeseries_unit
-        metrics = metrics
-        filterable_attributes = filterable_attributes
+        metrics = metrics or []
+        filterable_attributes = filterable_attributes or []
 
