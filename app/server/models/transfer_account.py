@@ -116,6 +116,10 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # rounded to whole value of balance
         return float((self._balance_wei or 0) / int(1e16))
 
+    @property
+    def balance_offset(self):
+        return float((self._balance_offset_wei or 0) / int(1e16))
+
     def set_balance_offset(self, val):
         self._balance_offset_wei = val * int(1e16)
         self.update_balance()
