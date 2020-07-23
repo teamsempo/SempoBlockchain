@@ -75,7 +75,7 @@ def generate_metrics(create_organisation):
     )
 
 @pytest.mark.parametrize("metric_type, status_code", [
-    ("participant", 200),
+    ("user", 200),
     ("all", 200),
     ("transfer", 200),
     ("notarealmetrictype", 500),
@@ -94,17 +94,18 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
     assert response.status_code == status_code
 
     if status_code == 200:
-        if metric_type == 'participant':
+        if metric_type == 'user':
             assert response.json['data']['filters'] == json.dumps(USER_FILTERS)
         else:
             assert response.json['data']['filters'] == json.dumps(ALL_FILTERS)
-
 
 base_participant = {'data':
     {'transfer_stats':
         {'total_beneficiaries': 0,
         'total_users': 0,
-        'total_vendors': 0
+        'total_vendors': 0,
+        'master_wallet_balance': 0,
+        'users_created': {'aggregate': {'total': 0}, 'timeseries': []}
         }
     },
     'message': 'Successfully Loaded.', 'status': 'success'
@@ -112,35 +113,44 @@ base_participant = {'data':
 
 base_all = {'data':
     {'transfer_stats':
-        {'daily_disbursement_volume': [],
-        'daily_transaction_volume': [{'date': '', 'volume': 0}],
+        {
+        'total_beneficiaries': 0,
+        'total_users': 0,
+        'total_vendors': 0,
+        'master_wallet_balance': 0,
+        'users_created': {'aggregate': {'total': 0}, 'timeseries': []},
+        'daily_disbursement_volume': [],
+        'daily_transaction_volume': [],
         'exhausted_balance': 0,
         'has_transferred_count': 0,
         'master_wallet_balance': 0,
-        'total_beneficiaries': 0,
         'total_distributed': 0.0,
         'total_exchanged': 0.0,
         'total_spent': 0.0,
-        'total_users': 0,
-        'total_vendors': 0,
-        'transfer_use_breakdown': []
+        'transfer_use_breakdown': [],
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
+        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
         }
     },
     'message': 'Successfully Loaded.',
     'status': 'success'
 }
 
-base_transfer ={'data':
+base_transfer = {'data':
     {'transfer_stats':
         {'daily_disbursement_volume': [],
-        'daily_transaction_volume': [{'date': '', 'volume': 0}],
+        'daily_transaction_volume': [],
         'exhausted_balance': 0,
         'has_transferred_count': 0,
         'master_wallet_balance': 0,
         'total_distributed': 0.0,
         'total_exchanged': 0.0,
         'total_spent': 0.0,
-        'transfer_use_breakdown': []
+        'transfer_use_breakdown': [],
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
+        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
         }
     },
     'message': 'Successfully Loaded.',
@@ -148,7 +158,7 @@ base_transfer ={'data':
 }
 
 @pytest.mark.parametrize("metric_type, status_code", [
-    ("participant", 200),
+    ("user", 200),
     ("all", 200),
     ("transfer", 200),
     ("notarealmetrictype", 500),
@@ -170,19 +180,18 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     else:
         returned_stats = None
 
-    if metric_type == 'transfer' or metric_type == 'all':
-        returned_stats['daily_transaction_volume'][0]['date'] = ''
+    if status_code != 500:
         returned_stats['master_wallet_balance'] = 0
     if metric_type == 'transfer':
         assert response.json == base_transfer
     elif metric_type == 'all':
         assert response.json == base_all
-    elif metric_type == 'participant':
+    elif metric_type == 'user':
         assert response.json == base_participant
 
 @pytest.mark.parametrize("metric_type, params, status_code", [
     ("all", None, 200),
-    ("participant", None, 200),
+    ("user", None, 200),
     ("transfer", None, 200),
     ("notarealmetrictype", None, 500),
     ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
@@ -212,9 +221,8 @@ def test_get_summed_metrics(
     if params is not None:
         # Test the filter worked
         total_spent_val == 25
-    
+
     elif metric_type == 'transfer' or metric_type == 'all':
-        
         assert returned_stats['daily_disbursement_volume'][0]['volume'] == 300
         assert returned_stats['daily_transaction_volume'][0]['volume'] == 150
         assert returned_stats['exhausted_balance'] == 0
@@ -223,9 +231,7 @@ def test_get_summed_metrics(
         assert returned_stats['total_exchanged'] == 0
         assert returned_stats['total_spent'] == total_spent_val
         assert returned_stats['transfer_use_breakdown'] == [[['Burger'], 1], [['HotDog'], 1], [['Pizza'], 2]]
-
     elif metric_type == 'participant' or metric_type == 'all':
         assert returned_stats['total_beneficiaries'] == 1
         assert returned_stats['total_users'] == 1
         assert returned_stats['total_vendors'] == 0
-

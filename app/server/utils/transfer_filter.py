@@ -61,6 +61,7 @@ ALL_FILTERS = {
 }
 
 TRANSFER_FILTERS = ALL_FILTERS
+
 USER_FILTERS = {
     'created': ALL_FILTERS['created'],
     'user_type': ALL_FILTERS['user_type'],
