@@ -1,3 +1,8 @@
+export interface LoadAllowedFiltersPayload {
+  query?: object;
+  filterObject?: string;
+}
+
 export enum MetricsActionType {
   UPDATE_METRICS = "UPDATE_METRICS"
 }

@@ -4,11 +4,13 @@ import {
   CreditTransferFilters,
   CreditTransferFiltersActionTypes
 } from "./types";
+import { LoadAllowedFiltersPayload } from "../metric/types";
 
 export const CreditTransferFiltersAction = {
-  loadCreditTransferFiltersRequest: () =>
+  loadCreditTransferFiltersRequest: (payload: LoadAllowedFiltersPayload) =>
     createAction(
-      CreditTransferFiltersActionTypes.LOAD_CREDIT_TRANSFER_FILTERS_REQUEST
+      CreditTransferFiltersActionTypes.LOAD_CREDIT_TRANSFER_FILTERS_REQUEST,
+      payload
     ),
   loadCreditTransferFiltersSuccess: () =>
     createAction(

@@ -42,7 +42,11 @@ const mapDispatchToProps = dispatch => {
         LoadCreditTransferAction.loadCreditTransferListRequest({ query })
       ),
     loadCreditTransferFilters: () =>
-      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
+      dispatch(
+        CreditTransferFiltersAction.loadCreditTransferFiltersRequest({
+          filterObject: "metrics"
+        })
+      ),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload)),
     loadMetrics: (query, path) =>

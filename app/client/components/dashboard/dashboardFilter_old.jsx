@@ -8,9 +8,6 @@ import moment from "moment";
 import Filter from "../filter";
 import { processFiltersForQuery } from "../../utils";
 import { browserHistory } from "../../createStore.js";
-import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
-import { ActivateAccountAction } from "../../reducers/auth/actions";
-import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 const mapStateToProps = state => {
   return {
@@ -21,8 +18,6 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadCreditTransferFilters: P =>
-      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
     loadMetrics: (query, path) =>
       dispatch(LoadMetricAction.loadMetricRequest({ query, path }))
   };
@@ -36,8 +31,6 @@ class DashboardFilter extends React.Component {
       endDate: null,
       encoded_filters: null
     };
-
-    this.props.loadMetrics();
   }
 
   onDatesChange = ({ startDate, endDate }) => {
