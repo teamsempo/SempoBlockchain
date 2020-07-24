@@ -6,7 +6,7 @@ from server import db, red, bt
 
 from flask import g
 
-from server.utils.metrics import filters, metrics_cache, metric, metrics_const
+from server.utils.metrics import filters, metrics_cache, metric, metrics_const, group
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 from server.utils.metrics.transfer_stats import TransferStats
 from server.utils.metrics.participant_stats import ParticipantStats
@@ -31,7 +31,8 @@ def calculate_transfer_stats(
     user_filter={},
     metric_type=metrics_const.ALL,
     disable_cache: bool = False,
-    timeseries_unit = metrics_const.DAY):
+    timeseries_unit = metrics_const.DAY,
+    group_by = None):
     # TODO (group_by PR): Add token filter here!
     # - Check orgs being queried (dependant on multi-org PR)
     # - Create 'manditory filter' field which is returned in the response
@@ -45,27 +46,23 @@ def calculate_transfer_stats(
     enable_cache = True
     if user_filter or date_filters or disable_cache or timeseries_unit != metrics_const.DAY:
         enable_cache = False
-
-    group_by = metrics_const.TRANSFER_MODE
-    print(group_by)
-    print(group_by)
-    print(group_by)
-    print(group_by)
     
-    transfer_stats = TransferStats(timeseries_unit)
-    participant_stats = ParticipantStats(timeseries_unit)
+    group_strategy = group.GROUP_TYPES[group_by]
 
     # Don't send total_users_timeseries date filters, since it needs to use all users through history to aggregate current numbers correctly
-    total_users = participant_stats.total_users_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
-
-    metric_sets_by_type = {
-        metrics_const.TRANSFER: transfer_stats.metrics,
-        metrics_const.USER: participant_stats.metrics,
-        metrics_const.ALL: transfer_stats.metrics + participant_stats.metrics,
-    }
+    #total_users = participant_stats.total_users_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
+    # TODO: Figure out what to do with this!
+    total_users = []
+    
+    if metric_type == metrics_const.TRANSFER:
+        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
+    elif metric_type == metrics_const.USER:
+        metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
+    elif metric_type == metrics_const.ALL:
+        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
 
     data = {}
-    for metric in metric_sets_by_type[metric_type]:
+    for metric in metrics_list:
         data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
 
     # Legacy and aggregate metrics which don't fit the modular pattern

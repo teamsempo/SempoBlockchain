@@ -2,7 +2,7 @@
 # The code in this file is not included in the GPL license applied to this repository
 # Unauthorized copying of this file, via any medium is strictly prohibited
 
-from server.utils.metrics import filters, metrics_cache, process_timeseries
+from server.utils.metrics import filters, metrics_cache, process_timeseries, group
 from server.utils.metrics.metrics_const import *
 
 class Metric(object):
@@ -30,13 +30,6 @@ class Metric(object):
 
         return process_timeseries.process_timeseries(result, population_query_result, self.timeseries_actions)
 
-        result = metrics_cache.execute_with_partial_history_cache(self.metric_name, filtered_query, self.object_model, self.caching_combinatory_strategy, enable_caching)
-        if not self.timeseries_actions:
-            return result
-
-        return process_timeseries.process_timeseries(result, population_query_result, self.timeseries_actions)
-
-
     def __repr__(self):
         return f"<Metric {self.metric_name}>"
 
@@ -50,6 +43,7 @@ class Metric(object):
             caching_combinatory_strategy=None,
             bypass_user_filters=False,
             timeseries_actions=None,
+            groupable_attributes=[]
     ):
         """
         :param metric_name: eg 'total_exchanged' or 'has_transferred_count'. Used for cache
@@ -71,3 +65,4 @@ class Metric(object):
         self.caching_combinatory_strategy = caching_combinatory_strategy
         self.bypass_user_filters = bypass_user_filters
         self.timeseries_actions = timeseries_actions
+        self.groupable_attributes = groupable_attributes
