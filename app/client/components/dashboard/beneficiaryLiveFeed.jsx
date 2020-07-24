@@ -1,12 +1,11 @@
 import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
+import { Card } from "antd";
 
-import { formatMoney, generateQueryString } from "../../utils.js";
+import { formatMoney } from "../../utils.js";
 
 import DateTime from "../dateTime.jsx";
-import { ModuleHeader } from "../styledElements.js";
-
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 const mapStateToProps = state => {
@@ -33,14 +32,16 @@ class BeneficiaryLiveFeed extends React.Component {
       creditTransfers,
       creditTransferList
     } = this.props;
-    let beneficiaryTerm = window.BENEFICIARY_TERM;
 
     if (Object.keys(creditTransferList).length == 0) {
       return <LoadingSpinner />;
     } else {
       return (
-        <Wrapper>
-          <ModuleHeader>{beneficiaryTerm} LIVE FEED</ModuleHeader>
+        <Card
+          title="Live Feed"
+          bordered={false}
+          bodyStyle={{ height: "140px", overflow: "scroll" }}
+        >
           <LiveFeed>
             {creditTransferList
               .sort((a, b) => b.id - a.id)
@@ -261,7 +262,7 @@ class BeneficiaryLiveFeed extends React.Component {
                 }
               })}
           </LiveFeed>
-        </Wrapper>
+        </Card>
       );
     }
   }
@@ -272,23 +273,14 @@ export default connect(
   null
 )(BeneficiaryLiveFeed);
 
-const Wrapper = styled.div`
-  margin: 0 1em;
-  display: flex;
-  justify-content: end;
-  align-items: center;
-  flex-direction: column;
-  position: relative;
-  height: 428px;
-`;
-
 const LiveFeed = styled.div`
   overflow-y: scroll;
+  margin: -24px 0;
 `;
 
 const UserWrapper = styled.div`
   display: flex;
-  margin: 1em;
+  margin: 1em 0;
   justify-content: center;
 `;
 
@@ -326,16 +318,6 @@ const BottomText = styled.div`
   font-weight: 300;
 `;
 
-const Highlight = styled.h5`
-  color: #2d9ea0;
-  display: inline;
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
 const DarkHighlight = styled.h5`
   color: #4a4a4a;
   display: inline;
@@ -347,7 +329,7 @@ const DarkHighlight = styled.h5`
 `;
 
 const ClickableHighlight = styled.h5`
-  color: #2d9ea0;
+  color: #edcba2;
   display: inline;
   margin: 0;
   font-size: 15px;

@@ -1,25 +1,28 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import { Line } from "react-chartjs-2";
-import { ModuleHeader } from "../styledElements.js";
-import { get_zero_filled_values, getDateArray } from "../../utils";
+import { Line, defaults } from "react-chartjs-2";
+import {
+  getDateArray,
+  hexToRgb,
+  toTitleCase,
+  replaceUnderscores
+} from "../../utils";
 
 const mapStateToProps = state => {
   return {
-    creditTransferStats: state.metrics.metricsState,
-    login: state.login,
     activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
 
 class VolumeChart extends React.Component {
   construct_dataset_object(label, color, dataset) {
+    let rgb = hexToRgb(color);
     return {
       label: label,
-      fill: false,
-      lineTension: 0.1,
-      backgroundColor: color,
+      fill: true,
+      lineTension: 0,
+      backgroundColor: rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)` : null,
       borderColor: color,
       borderCapStyle: "butt",
       borderDash: [],
@@ -34,131 +37,124 @@ class VolumeChart extends React.Component {
       pointHoverBorderWidth: 2,
       pointRadius: 1,
       pointHitRadius: 10,
-      data: dataset,
-      yAxisID: label
+      data: dataset.map(data => data.value)
     };
   }
 
   render() {
-    if (Object.keys(this.props.creditTransferStats).length == 0) {
-      return <p>No Transfer Data</p>;
-    } else {
-      let transaction_dates = this.props.creditTransferStats.daily_transaction_volume.map(
-        data => new Date(data.date)
-      );
+    const selected = this.props.selected;
 
-      let disbursement_dates = this.props.creditTransferStats.daily_disbursement_volume.map(
-        data => new Date(data.date)
-      );
+    let possibleTimeseriesKeys = Object.keys(this.props.data.groups); // ["taco", "spy"]
 
-      let all_dates = transaction_dates.concat(disbursement_dates);
+    // TODO? assumes that each category has the same date range
+    let all_dates = this.props.data.time_series[possibleTimeseriesKeys[0]].map(
+      data => new Date(data.date)
+    );
 
-      let minDate = new Date(Math.min.apply(null, all_dates));
-      let maxDate = new Date(Math.max.apply(null, all_dates));
+    let minDate = new Date(Math.min.apply(null, all_dates));
+    let maxDate = new Date(Math.max.apply(null, all_dates));
 
-      let date_array = getDateArray(minDate, maxDate);
+    let date_array = getDateArray(minDate, maxDate);
 
-      let transaction_volume = get_zero_filled_values(
-        "volume",
-        this.props.creditTransferStats.daily_transaction_volume,
-        date_array
-      );
+    // Update Font Family to ant default
+    defaults.global.defaultFontFamily =
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'";
 
-      let disbursement_volume = get_zero_filled_values(
-        "volume",
-        this.props.creditTransferStats.daily_disbursement_volume,
-        date_array
-      );
+    const labelString = selected
+      ? selected.includes("volume")
+        ? `${toTitleCase(replaceUnderscores(selected))} (${
+            this.props.activeOrganisation.token.symbol
+          })`
+        : `${toTitleCase(replaceUnderscores(selected))}`
+      : null;
 
-      var options = {
-        animation: false,
-        maintainAspectRatio: false,
-        legend: {
-          display: false
-        },
-        scales: {
-          xAxes: [
-            {
-              type: "time",
-              time: {
-                unit: "day",
-                round: "day",
-                displayFormats: {
-                  day: "MMM D"
-                }
-              },
-              gridLines: {
-                display: false
-              }
-            }
-          ],
-
-          yAxes: [
-            {
-              type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
-              display: true,
-              position: "left",
-              id: "Daily Transaction Volume",
-              gridLines: {
-                display: false
-              },
-              scaleLabel: {
-                display: true,
-                labelString: `${this.props.activeOrganisation.token.symbol} Transacted`,
-                fontColor: "rgba(75,192,192,0.7)",
-                fontSize: "15"
-              },
-              ticks: {
-                beginAtZero: true
+    const options = {
+      animation: false,
+      maintainAspectRatio: false,
+      legend: {
+        display: false
+      },
+      tooltips: {
+        mode: "x",
+        backgroundColor: "rgba(87, 97, 113, 0.9)"
+      },
+      scales: {
+        xAxes: [
+          {
+            type: "time",
+            time: {
+              unit: "day",
+              round: "day",
+              displayFormats: {
+                day: "MMM D"
               }
             },
-            {
-              type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+            scaleLabel: {
               display: true,
-              position: "right",
-              id: "Daily Disbursement Volume",
-              gridLines: {
-                display: false
-              },
-              scaleLabel: {
-                display: true,
-                labelString: `${this.props.activeOrganisation.token.symbol} Disbursed`,
-                fontColor: "rgba(204,142,233,0.7)",
-                fontSize: "15"
-              }
+              labelString: `Date`,
+              fontColor: "rgba(0, 0, 0, 0.45)",
+              fontSize: "10"
+            },
+            gridLines: {
+              display: false
             }
-          ],
-          gridLines: {
-            display: false
           }
-        }
-      };
-
-      var data = {
-        labels: date_array,
-        datasets: [
-          this.construct_dataset_object(
-            "Daily Transaction Volume",
-            "rgba(75,192,192,0.7)",
-            transaction_volume
-          ),
-          this.construct_dataset_object(
-            "Daily Disbursement Volume",
-            "rgba(204,142,233,0.7)",
-            disbursement_volume
-          )
+        ],
+        yAxes: [
+          {
+            type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+            display: true,
+            position: "left",
+            id: "Volume",
+            gridLines: {
+              display: true,
+              color: "#F0F3F5"
+            },
+            scaleLabel: {
+              display: true,
+              labelString: labelString,
+              fontColor: "rgba(0, 0, 0, 0.45)",
+              fontSize: "10"
+            },
+            ticks: {
+              beginAtZero: true
+            },
+            stacked: true
+          }
         ]
-      };
+      }
+    };
 
-      return (
-        <div>
-          <ModuleHeader> Transaction and Disbursement Volume </ModuleHeader>
-          <div style={{ padding: "0.2em 1em 1em 1em" }}>
-            <Line data={data} height={250} options={options} />
-          </div>
+    const color_scheme = [
+      "#003F5C",
+      "#2E4A7A",
+      "#62508E",
+      "#995194",
+      "#CB5188",
+      "#F05B6F",
+      "#FF764D"
+    ];
+
+    const datasets = possibleTimeseriesKeys.map((key, i) =>
+      this.construct_dataset_object(
+        key,
+        color_scheme[i],
+        this.props.data.time_series[key]
+      )
+    );
+
+    var data = {
+      labels: date_array,
+      datasets: datasets
+    };
+
+    return (
+      <div>
+        <div style={{ height: "200px" }}>
+          <Line data={data} height={200} options={options} />
         </div>
-      );
-    }
+      </div>
+    );
   }
 }
 
