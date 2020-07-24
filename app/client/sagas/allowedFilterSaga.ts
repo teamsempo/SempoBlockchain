@@ -6,10 +6,13 @@ import { AllowedFiltersActionTypes as ActionTypes } from "../reducers/allowedFil
 import { loadAllowedFiltersAPI } from "../api/filterAPI";
 import { handleError } from "../utils";
 import { LoadAllowedFiltersPayload as Payload } from "../reducers/metric/types";
-import { NamedActionWithPayload} from "../reduxUtils";
+import { NamedActionWithPayload } from "../reduxUtils";
 
 function* loadAllowedFilters(
-  action: NamedActionWithPayload<ActionTypes.LOAD_ALLOWED_FILTERS_REQUEST, Payload>
+  action: NamedActionWithPayload<
+    ActionTypes.LOAD_ALLOWED_FILTERS_REQUEST,
+    Payload
+  >
 ) {
   try {
     console.log("calling load allowed filters", action.payload);
@@ -36,10 +39,7 @@ function* loadAllowedFilters(
 }
 
 function* watchLoadAllowedFilters() {
-  yield takeEvery(
-    ActionTypes.LOAD_ALLOWED_FILTERS_REQUEST,
-    loadAllowedFilters
-  );
+  yield takeEvery(ActionTypes.LOAD_ALLOWED_FILTERS_REQUEST, loadAllowedFilters);
 }
 
 export default function* metricSagas() {
