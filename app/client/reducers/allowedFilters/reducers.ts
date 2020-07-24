@@ -4,7 +4,10 @@ import { DEEEEEEP } from "../../utils";
 import { AllowedFiltersAction } from "./actions";
 import { AllowedFiltersActionTypes } from "./types";
 
-const allowedFilterState = (state = {}, action: AllowedFiltersAction) => {
+const allowedFilterState = (
+  state = {},
+  action: AllowedFiltersAction
+) => {
   switch (action.type) {
     case AllowedFiltersActionTypes.UPDATE_ALLOWED_FILTERS:
       return DEEEEEEP(state, action.payload);
@@ -25,7 +28,10 @@ const initialState: RequestingState = {
   error: null
 };
 
-const loadStatus = (state = initialState, action: AllowedFiltersAction) => {
+const loadStatus = (
+  state = initialState,
+  action: AllowedFiltersAction
+) => {
   switch (action.type) {
     case AllowedFiltersActionTypes.LOAD_ALLOWED_FILTERS_REQUEST:
       return { ...state, isRequesting: true };
@@ -43,25 +49,22 @@ const loadStatus = (state = initialState, action: AllowedFiltersAction) => {
 
 function createNamedWrapperReducer(reducerFunction: any, reducerName: string) {
   return (state: any, action: any) => {
-    const { name } = action;
-    const isInitializationCall = state === undefined;
-    if (name !== reducerName && !isInitializationCall) return state;
+    const { name } = action
+    const isInitializationCall = state === undefined
+    if (name !== reducerName && !isInitializationCall) return state
 
-    return reducerFunction(state, action);
-  };
+    return reducerFunction(state, action)
+  }
 }
 
 const user = combineReducers({
-  loadStatus: createNamedWrapperReducer(loadStatus, "user"),
-  allowedFilters: createNamedWrapperReducer(allowedFilterState, "user")
+  loadStatus: createNamedWrapperReducer(loadStatus, 'user'),
+  allowedFilters: createNamedWrapperReducer(allowedFilterState, 'user')
 });
 
 const credit_transfer = combineReducers({
-  loadStatus: createNamedWrapperReducer(loadStatus, "credit_transfer"),
-  allowedFilters: createNamedWrapperReducer(
-    allowedFilterState,
-    "credit_transfer"
-  )
+  loadStatus: createNamedWrapperReducer(loadStatus, 'credit_transfer'),
+  allowedFilters: createNamedWrapperReducer(allowedFilterState, 'credit_transfer')
 });
 
 export const allowedFilters = combineReducers({

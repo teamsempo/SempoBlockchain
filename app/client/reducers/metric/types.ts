@@ -1,4 +1,4 @@
-import { inferredPredicate } from "../../../node_modules/@types/babel__traverse/node_modules/@babel/types/lib";
+import {inferredPredicate} from "../../../node_modules/@types/babel__traverse/node_modules/@babel/types/lib";
 
 export interface LoadAllowedFiltersPayload {
   query?: LoadAllowedFiltersQuery;
@@ -6,7 +6,7 @@ export interface LoadAllowedFiltersPayload {
 }
 
 interface LoadAllowedFiltersQuery {
-  metric_type: "user" | "credit_transfer";
+  metric_type: "user" | "credit_transfer"
 }
 
 export enum MetricsActionType {

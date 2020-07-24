@@ -1,17 +1,13 @@
-import {
-  createAction,
-  createNamedAction,
-  ActionsUnion
-} from "../../reduxUtils";
+import { createAction, createNamedAction, ActionsUnion } from "../../reduxUtils";
 
-import { AllowedFilters, AllowedFiltersActionTypes } from "./types";
+import {
+  AllowedFilters,
+  AllowedFiltersActionTypes
+} from "./types";
 import { LoadAllowedFiltersPayload } from "../metric/types";
 
 export const AllowedFiltersAction = {
-  loadAllowedFiltersRequest: (
-    name: string,
-    payload: LoadAllowedFiltersPayload
-  ) =>
+  loadAllowedFiltersRequest: (name: string, payload: LoadAllowedFiltersPayload) =>
     createNamedAction(
       AllowedFiltersActionTypes.LOAD_ALLOWED_FILTERS_REQUEST,
       name,
@@ -35,4 +31,6 @@ export const AllowedFiltersAction = {
       filters
     )
 };
-export type AllowedFiltersAction = ActionsUnion<typeof AllowedFiltersAction>;
+export type AllowedFiltersAction = ActionsUnion<
+  typeof AllowedFiltersAction
+>;

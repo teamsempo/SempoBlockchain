@@ -197,12 +197,7 @@ class Filter extends React.Component {
             </option>
             {typeof keys !== "undefined"
               ? keys.map((key, index) => (
-                  <option
-                    name="value"
-                    value={key}
-                    key={index}
-                    style={{ color: "green" }}
-                  >
+                  <option name="value" value={key} key={index} style={{color: "green"}}>
                     {replaceUnderscores(possibleFilters[key]["name"] || key)}
                   </option>
                 ))
