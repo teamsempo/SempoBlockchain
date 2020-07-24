@@ -216,6 +216,16 @@ export const replaceUnderscores = stringlike => {
   }
 };
 
+export const toTitleCase = stringlike => {
+  if (stringlike) {
+    return stringlike.replace(/\w\S*/g, function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  } else {
+    return "";
+  }
+};
+
 export const replaceSpaces = stringlike => {
   if (stringlike) {
     return stringlike.toString().replace(/ /g, "-");

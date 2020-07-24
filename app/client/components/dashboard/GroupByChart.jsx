@@ -2,92 +2,101 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
+import { toTitleCase, replaceUnderscores } from "../../utils";
 
 const mapStateToProps = state => {
   return {
-    creditTransferStats: state.metrics.metricsState
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
 
-const mapDispatchToProps = dispatch => {
-  return {};
-};
-
-let beneficiaryTermPlural = window.BENEFICIARY_TERM_PLURAL;
-
 class GroupByChart extends React.Component {
   render() {
-    if (Object.keys(this.props.creditTransferStats).length == 0) {
-      return <p>No Transfer Data</p>;
-    } else {
-      var options = {
-        barPercentage: 0.3,
-        maintainAspectRatio: false,
-        legend: {
-          display: false
-        },
+    const selected = this.props.selected;
 
-        scales: {
-          xAxes: [
-            {
-              gridLines: {
-                display: false
-              },
-              ticks: {
-                beginAtZero: true,
-                min: 0
-              }
-            }
-          ],
-          yAxes: [
-            {
-              gridLines: {
-                display: false
-              },
-              ticks: {
-                beginAtZero: true,
-                min: 0
-              }
-            }
-          ]
-        }
-      };
+    const aggregate = this.props.data.groups;
+    const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
+    const aggregateData = aggregate ? Object.values(aggregate) : [];
 
-      var data = {
-        labels: [
-          "Users",
-          beneficiaryTermPlural,
-          "Made Purchase" +
-            (this.props.creditTransferStats.filter_active ? " In Period" : ""),
-          "Exhausted Balance" +
-            (this.props.creditTransferStats.filter_active ? " In Period" : "")
-        ],
-        datasets: [
+    const labelString = selected
+      ? selected.includes("volume")
+        ? `${toTitleCase(replaceUnderscores(selected))} (${
+            this.props.activeOrganisation.token.symbol
+          })`
+        : `${toTitleCase(replaceUnderscores(selected))}`
+      : null;
+
+    const options = {
+      barPercentage: 0.3,
+      maintainAspectRatio: false,
+      legend: {
+        display: false
+      },
+      tooltips: {
+        mode: "y",
+        backgroundColor: "rgba(87, 97, 113, 0.9)"
+      },
+      scales: {
+        xAxes: [
           {
-            label: `Count`,
-            backgroundColor: ["#96DADC", "#CC8EE9", "#F9F295", "#F9A395"],
-
-            data: [
-              this.props.creditTransferStats.total_users + 2,
-              this.props.creditTransferStats.total_beneficiaries + 2,
-              this.props.creditTransferStats.has_transferred_count + 2,
-              this.props.creditTransferStats.zero_balance_count + 2
-            ]
+            gridLines: {
+              display: false
+            },
+            scaleLabel: {
+              display: true,
+              labelString: labelString,
+              fontColor: "rgba(0, 0, 0, 0.45)",
+              fontSize: "10"
+            },
+            ticks: {
+              beginAtZero: true,
+              min: 0
+            }
+          }
+        ],
+        yAxes: [
+          {
+            gridLines: {
+              display: false
+            },
+            ticks: {
+              beginAtZero: true,
+              min: 0
+            }
           }
         ]
-      };
-      return (
-        <div>
-          <div style={{ padding: "0.2em 1em 1em 1em", height: "200px" }}>
-            <HorizontalBar data={data} height={150} options={options} />
-          </div>
+      }
+    };
+
+    var data = {
+      labels: aggregateKeys,
+      datasets: [
+        {
+          label: `${toTitleCase(replaceUnderscores(selected))}`,
+          backgroundColor: [
+            "#003F5C",
+            "#2E4A7A",
+            "#62508E",
+            "#995194",
+            "#CB5188",
+            "#F05B6F",
+            "#FF764D"
+          ],
+
+          data: aggregateData
+        }
+      ]
+    };
+    return (
+      <div>
+        <div style={{ height: "200px" }}>
+          <HorizontalBar data={data} height={200} options={options} />
         </div>
-      );
-    }
+      </div>
+    );
   }
 }
-
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  null
 )(GroupByChart);
