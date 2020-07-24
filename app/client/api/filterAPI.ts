@@ -13,7 +13,8 @@ export const loadAllowedFiltersAPI = ({
   filterObject
 }: LoadAllowedFiltersPayload) =>
   apiClient({
-    url: `/${filterObject ? filterObject : "metrics"}/filters/`,
+    // url: `/${filterObject ? filterObject : "metrics"}/filters/`,
+    url: `/metrics/filters/`,
     method: "GET",
     query: query
   });

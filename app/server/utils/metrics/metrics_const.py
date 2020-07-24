@@ -11,7 +11,7 @@ MONTH = 'month'
 YEAR = 'year'
 TIMESERIES_UNITS = [DAY, WEEK, MONTH, YEAR]
 
-TRANSFER = 'transfer'
+TRANSFER = 'credit_transfer'
 USER = 'user'
 ALL='all'
 METRIC_TYPES = [TRANSFER, USER, ALL]

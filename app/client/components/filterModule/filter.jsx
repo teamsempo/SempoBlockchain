@@ -1,13 +1,13 @@
 import React from "react";
-import { StyledSelect, Input, StyledButton } from "./styledElements";
+import { StyledSelect, Input, StyledButton } from "../styledElements.js";
 import styled from "styled-components";
 import PropTypes from "prop-types";
-import { replaceUnderscores } from "../utils";
+import { replaceUnderscores } from "../../utils.js";
 import { SingleDatePicker } from "react-dates";
 
 import moment from "moment";
 
-import { USER_FILTER_TYPE, USER_FILTER_ATTRIBUTE } from "../constants";
+import { USER_FILTER_TYPE, USER_FILTER_ATTRIBUTE } from "../../constants.js";
 
 const propTypes = {
   possibleFilters: PropTypes.object,
@@ -197,7 +197,12 @@ class Filter extends React.Component {
             </option>
             {typeof keys !== "undefined"
               ? keys.map((key, index) => (
-                  <option name="value" value={key} key={index}>
+                  <option
+                    name="value"
+                    value={key}
+                    key={index}
+                    style={{ color: "green" }}
+                  >
                     {replaceUnderscores(possibleFilters[key]["name"] || key)}
                   </option>
                 ))

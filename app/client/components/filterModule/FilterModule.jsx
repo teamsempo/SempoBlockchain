@@ -5,30 +5,32 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { StyledButton } from "../styledElements";
 import moment from "moment";
-import Filter from "../filter";
+import Filter from "./filter";
 import { processFiltersForQuery } from "../../utils";
 import { browserHistory } from "../../createStore.js";
-import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
-import { ActivateAccountAction } from "../../reducers/auth/actions";
-import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state, ownProps) => {
   return {
-    loadStatus: state.metrics.loadStatus,
-    creditTransferFilters: state.creditTransferFilters.creditTransferFilterState
+    allowedFilters: state.allowedFilters[ownProps.filterObject].allowedFilters,
+    loadStatus: state.allowedFilters[ownProps.filterObject].loadStatus
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadCreditTransferFilters: P =>
-      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
     loadMetrics: (query, path) =>
-      dispatch(LoadMetricAction.loadMetricRequest({ query, path }))
+      dispatch(LoadMetricAction.loadMetricRequest({ query, path })),
+    loadAllowedFilters: filterObject =>
+      dispatch(
+        AllowedFiltersAction.loadAllowedFiltersRequest(filterObject, {
+          query: { metric_types: filterObject }
+        })
+      )
   };
 };
 
-class DashboardFilter extends React.Component {
+class FilterModule extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -37,7 +39,7 @@ class DashboardFilter extends React.Component {
       encoded_filters: null
     };
 
-    this.props.loadMetrics();
+    this.props.loadAllowedFilters(this.props.filterObject);
   }
 
   onDatesChange = ({ startDate, endDate }) => {
@@ -96,7 +98,7 @@ class DashboardFilter extends React.Component {
         <FilterContainer>
           <Filter
             label={"Filter by user:"}
-            possibleFilters={this.props.creditTransferFilters}
+            possibleFilters={this.props.allowedFilters}
             onFiltersChanged={this.onFiltersChanged}
           />
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -158,4 +160,4 @@ const FilterContainer = styled.div`
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(DashboardFilter);
+)(FilterModule);
