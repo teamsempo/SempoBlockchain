@@ -10,6 +10,7 @@ from server.utils.metrics import filters, metrics_cache, metric, metrics_const, 
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 from server.utils.metrics.transfer_stats import TransferStats
 from server.utils.metrics.participant_stats import ParticipantStats
+from server.utils.metrics.total_users import TotalUsers
 
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
@@ -49,11 +50,15 @@ def calculate_transfer_stats(
     
     group_strategy = group.GROUP_TYPES[group_by]
 
+
     # Don't send total_users_timeseries date filters, since it needs to use all users through history to aggregate current numbers correctly
-    #total_users = participant_stats.total_users_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
-    # TODO: Figure out what to do with this!
-    total_users = []
-    
+    if group_strategy.group_object_model.__tablename__ in [CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__]:
+        total_users_stats = TotalUsers(group_strategy, timeseries_unit)
+        total_users = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
+    else:
+        total_users_stats = TotalUsers(group.GROUP_TYPES[metrics_const.GENDER], timeseries_unit)
+        total_users = total_users_stats.total_users_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
+
     if metric_type == metrics_const.TRANSFER:
         metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
     elif metric_type == metrics_const.USER:
