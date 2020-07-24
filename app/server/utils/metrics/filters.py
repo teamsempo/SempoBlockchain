@@ -150,7 +150,6 @@ standard_payment_filters = [
 exchanged_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
     CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
-    #CreditTransfer.token == g.active_organisation.token
 ]
 
 beneficiary_filters = [User.has_beneficiary_role == True]

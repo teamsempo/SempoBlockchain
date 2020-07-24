@@ -41,10 +41,10 @@ class ParticipantStats(metric_group.MetricGroup):
         users_created_timeseries_query = db.session.query(func.count(User.id).label('volume'),
                 func.date_trunc(self.timeseries_unit, User.created).label('date'), group_strategy.group_by_column).group_by(func.date_trunc(self.timeseries_unit, User.created))
         self.metrics.append(metric.Metric(
-            metric_name='users_created',  # Will rename when API breaking changes come in
+            metric_name='users_created',
             query=group_strategy.build_query_group_by_with_join(users_created_timeseries_query, User),
             object_model=User,
-            #stock_filters=[filters.beneficiary_filters],
+            #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
@@ -53,10 +53,10 @@ class ParticipantStats(metric_group.MetricGroup):
         active_users_timeseries_query = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id)).label('volume'),
                 func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date'), group_strategy.group_by_column).group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))
         self.metrics.append(metric.Metric(
-            metric_name='active_users',  # Will rename when API breaking changes come in
+            metric_name='active_users',
             query=group_strategy.build_query_group_by_with_join(active_users_timeseries_query, CreditTransfer),
             object_model=CreditTransfer,
-            #stock_filters=[filters.beneficiary_filters],
+            #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
