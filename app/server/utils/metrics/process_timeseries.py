@@ -172,9 +172,6 @@ def aggregate_formatted_timeseries(query_result, population_query_result):
         totals[group] = group_total
     totals['total'] = overall_total
     return { 'timeseries': query_result, 'aggregate': totals }
-    #total = 0
-    #for qr in query_result:
-    #    total += qr['volume']
 
 timeseries_actions = {
     ADD_MISSING_DAYS: add_missing_days,

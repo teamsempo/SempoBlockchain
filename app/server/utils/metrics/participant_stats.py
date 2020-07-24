@@ -40,6 +40,7 @@ class ParticipantStats(metric_group.MetricGroup):
 
         users_created_timeseries_query = db.session.query(func.count(User.id).label('volume'),
                 func.date_trunc(self.timeseries_unit, User.created).label('date'), group_strategy.group_by_column).group_by(func.date_trunc(self.timeseries_unit, User.created))
+
         self.metrics.append(metric.Metric(
             metric_name='users_created',
             query=group_strategy.build_query_group_by_with_join(users_created_timeseries_query, User),

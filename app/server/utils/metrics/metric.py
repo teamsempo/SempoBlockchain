@@ -23,7 +23,7 @@ class Metric(object):
 
         if not self.bypass_user_filters:
             filtered_query = filters.apply_filters(filtered_query, user_filters, self.object_model)
-            
+    
         result = metrics_cache.execute_with_partial_history_cache(self.metric_name, filtered_query, self.object_model, self.caching_combinatory_strategy, enable_caching) 
         if not self.timeseries_actions:
             return result

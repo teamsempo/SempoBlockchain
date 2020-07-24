@@ -50,14 +50,18 @@ def calculate_transfer_stats(
     
     group_strategy = group.GROUP_TYPES[group_by]
 
-
-    # Don't send total_users_timeseries date filters, since it needs to use all users through history to aggregate current numbers correctly
-    if group_strategy.group_object_model.__tablename__ in [CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__]:
+    # We use total_users ungrouped if we are grouping OR filtering the population by a non-user-based attribute
+    # We also don't send total_users_timeseries date filters, since it needs to use all users through history to 
+    # aggregate current numbers correctly
+    groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
+    for f in user_filter or []:
+        groups_and_filters_tables.append(f)
+    if set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
         total_users_stats = TotalUsers(group_strategy, timeseries_unit)
         total_users = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
     else:
         total_users_stats = TotalUsers(group.GROUP_TYPES[metrics_const.GENDER], timeseries_unit)
-        total_users = total_users_stats.total_users_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
+        total_users = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters=[], enable_caching=enable_cache)
 
     if metric_type == metrics_const.TRANSFER:
         metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
