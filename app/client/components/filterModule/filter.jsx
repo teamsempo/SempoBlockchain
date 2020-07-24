@@ -1,4 +1,7 @@
 import React from "react";
+import { Select } from "antd";
+const { Option, OptGroup } = Select;
+
 import { StyledSelect, Input, StyledButton } from "../styledElements.js";
 import styled from "styled-components";
 import PropTypes from "prop-types";
@@ -28,137 +31,59 @@ const defaultProps = {
 class Filter extends React.Component {
   constructor() {
     super();
+
     this.state = {
       phrase: "",
       date: moment(),
       focused: false,
       filters: [],
-      keyName: "select",
-      value: "select",
+      attribute: "select",
       filterType: "of",
       comparator: "<",
-      keyNameValues: {},
+      attributeValues: {},
+      discreteOptions: [],
+      discreteSelected: [],
       possibleFilters: null,
       filterActive: false,
       dropdownActive: false,
       saveFilterDropdown: false,
       loadFiltersDropdown: false,
-      filterName: null
+      filterName: null,
+      selectorKeyBase: ""
     };
   }
 
-  keyNameChange = (name, value) => {
-    var keyNameProperties = this.props.possibleFilters[value];
-    var keyNameValues = keyNameProperties.values;
-    // resets keyName and keyNameValues to default to avoid controlled/uncontrolled checkbox error
-    // maps over new keyNameValues,
+  handleAttributeSelectorChange = attribute => {
+    var attributeProperties = this.props.possibleFilters[attribute];
 
-    if (keyNameProperties.type === USER_FILTER_TYPE.DATE_RANGE) {
+    if (attributeProperties.type === USER_FILTER_TYPE.DATE_RANGE) {
       this.setState({
-        [name]: value,
-        keyNameValues: {},
+        attribute: attribute,
         filterType: USER_FILTER_TYPE.DATE_RANGE,
         GtLtThreshold: 0,
         dropdownActive: false
       });
-    } else if (keyNameProperties.type === USER_FILTER_TYPE.INT_RANGE) {
+    } else if (attributeProperties.type === USER_FILTER_TYPE.INT_RANGE) {
       this.setState({
-        [name]: value,
-        keyNameValues: {},
+        attribute: attribute,
         filterType: USER_FILTER_TYPE.INT_RANGE,
         GtLtThreshold: 0,
         dropdownActive: false
       });
     } else {
-      this.setState(
-        {
-          [name]: value,
-          keyNameValues: {},
-          filterType: USER_FILTER_TYPE.DISCRETE,
-          GtLtThreshold: 0,
-          dropdownActive: false
-        },
-        () => {
-          [...keyNameValues].map(i => {
-            this.setState(prevState => ({
-              keyNameValues: {
-                ...prevState.keyNameValues,
-                [i]: false
-              }
-            }));
-          });
-        }
-      );
-    }
-  };
-
-  toggleSelected = key => {
-    const value = !this.state.keyNameValues[key];
-
-    this.setState(prevState => ({
-      keyNameValues: {
-        ...prevState.keyNameValues,
-        [key]: value
-      }
-    }));
-  };
-
-  addFilter = () => {
-    let id = this.state.filters.length + 1;
-    var newFilter;
-    if (
-      this.state.filterType === USER_FILTER_TYPE.DISCRETE ||
-      USER_FILTER_TYPE.BOOLEAN_MAPPING == this.state.filterType
-    ) {
-      let values = this.get_selected_ids_array(this.state.keyNameValues);
-      newFilter = {
-        id: id,
-        type: USER_FILTER_TYPE.DISCRETE,
-        keyName: this.state.keyName,
-        allowedValues: values
-      };
-    } else if (this.state.filterType === USER_FILTER_TYPE.DATE_RANGE) {
-      newFilter = {
-        id: id,
-        type: this.state.comparator,
-        keyName: this.state.keyName,
-        threshold: this.state.date.format("YYYY-MM-DD")
-      };
-    } else {
-      let value = parseFloat(this.state.GtLtThreshold);
-      newFilter = {
-        id: id,
-        type: this.state.comparator,
-        keyName: this.state.keyName,
-        threshold: value
-      };
-    }
-
-    this.setState({ filters: [...this.state.filters, newFilter] }, () => {
       this.setState({
-        keyName: "select",
-        value: "select",
-        keyNameValues: {},
-        filterType: "of",
+        attribute: attribute,
+        filterType: USER_FILTER_TYPE.DISCRETE,
         GtLtThreshold: 0,
-        dropdownActive: false
+        discreteSelected: [],
+        dropdownActive: false,
+        discreteOptions: attributeProperties.values
       });
-      this.props.onFiltersChanged(this.state.filters);
-    });
-  };
-
-  removeFilter = evt => {
-    let newFilters = [...this.state.filters].filter(
-      filter => filter.id !== parseInt(evt.target.name)
-    );
-    this.setState({ filters: newFilters }, () =>
-      this.props.onFiltersChanged(this.state.filters)
-    );
+    }
   };
 
   attributePicker = () => {
     let { possibleFilters } = this.props;
-    let { keyName } = this.state;
     const keys =
       possibleFilters !== undefined && possibleFilters !== null
         ? Object.keys(possibleFilters).filter(key => key !== "profile_picture")
@@ -166,6 +91,7 @@ class Filter extends React.Component {
 
     return (
       <div
+        key={this.state.selectorKeyBase + "AS"}
         style={{
           margin: "1em",
           marginRight: "0em",
@@ -185,29 +111,19 @@ class Filter extends React.Component {
           <FilterText style={{ padding: "0 10px 0 0" }}>
             {this.props.label}
           </FilterText>
-          <StyledSelectKey
-            name="keyName"
-            value={keyName}
-            onChange={evt =>
-              this.keyNameChange(evt.target.name, evt.target.value)
-            }
+
+          <Select
+            defaultValue="Select Attribute"
+            onChange={this.handleAttributeSelectorChange}
           >
-            <option name="key" value="select" disabled>
-              select attribute
-            </option>
             {typeof keys !== "undefined"
               ? keys.map((key, index) => (
-                  <option
-                    name="value"
-                    value={key}
-                    key={index}
-                    style={{ color: "green" }}
-                  >
+                  <Option key={key}>
                     {replaceUnderscores(possibleFilters[key]["name"] || key)}
-                  </option>
+                  </Option>
                 ))
               : null}
-          </StyledSelectKey>
+          </Select>
         </div>
       </div>
     );
@@ -227,10 +143,10 @@ class Filter extends React.Component {
   };
 
   filterTypePicker = () => {
-    let { filterType, keyName, comparator } = this.state;
+    let { filterType, attribute, comparator } = this.state;
     var filter_type_picker = <div />;
 
-    if (keyName !== "select") {
+    if (attribute !== "select") {
       if (
         filterType === USER_FILTER_TYPE.DISCRETE ||
         USER_FILTER_TYPE.BOOLEAN_MAPPING === filterType
@@ -262,128 +178,112 @@ class Filter extends React.Component {
     return filter_type_picker;
   };
 
+  handleDiscreteSelect = values => {
+    this.setState({
+      discreteSelected: values
+    });
+  };
+
+  toggleSelected = key => {
+    const value = !this.state.attributeValues[key];
+
+    this.setState(prevState => ({
+      attributeValues: {
+        ...prevState.attributeValues,
+        [key]: value
+      }
+    }));
+  };
+
   valuePicker = () => {
-    let { possibleFilters } = this.props;
-    let {
-      keyName,
-      filterType,
-      dropdownActive,
-      value,
-      keyNameValues
-    } = this.state;
-    var valuePicker = <div />;
-    if (
-      keyName !== "select" &&
-      (filterType === USER_FILTER_TYPE.DISCRETE ||
-        filterType === USER_FILTER_TYPE.BOOLEAN_MAPPING)
-    ) {
-      let valueArray =
-        typeof possibleFilters[keyName].values !== "undefined"
-          ? [...possibleFilters[keyName].values]
-          : [];
+    let { filterType, attribute } = this.state;
 
-      valuePicker = (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center"
-          }}
-        >
-          <div style={{ width: "200px" }}>
-            <div
-              style={{ width: "inherit", position: "relative" }}
-              onClick={this.dropdownActive}
-            >
-              <StyledSelectKey
-                style={{ width: "inherit" }}
-                name="value"
-                value={value}
-                onClick={this.dropdownActive}
-                onChange={this.handleChange}
-              >
-                <option name="value" value="select" disabled>
-                  select value
-                </option>
-              </StyledSelectKey>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  left: 0
-                }}
-              />
-            </div>
-            <Checkboxes
-              style={{ display: dropdownActive ? "block" : "none" }}
-              onMouseLeave={() =>
-                this.setState({ dropdownActive: !this.state.dropdownActive })
-              }
-            >
-              {valueArray.length !== 0
-                ? valueArray.map((key, index) => (
-                    <CheckboxLabel key={index}>
-                      <input
-                        type="checkbox"
-                        value={key}
-                        checked={keyNameValues[key]}
-                        onChange={() => this.toggleSelected(key)}
-                      />
-                      {replaceUnderscores(key)}
-                    </CheckboxLabel>
-                  ))
-                : null}
-            </Checkboxes>
-            <CloseWrapper
-              onClick={() =>
-                this.setState({ dropdownActive: !this.state.dropdownActive })
-              }
-              style={{ display: this.state.dropdownActive ? "" : "none" }}
-            />
-          </div>
-
-          {this.addFilterBtn()}
-        </div>
-      );
-    } else if (keyName !== "select") {
-      valuePicker = (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center"
-          }}
-        >
-          {/* <ThresholdInput type="number" name="GtLtThreshold" value={this.state.GtLtThreshold} onChange={this.handleChange}/> */}
-          {filterType === USER_FILTER_TYPE.DATE_RANGE ? (
-            <StyledWrapper>
-              <SingleDatePicker
-                noBorder={false}
-                small={true}
-                isOutsideRange={() => false}
-                date={this.state.date} // momentPropTypes.momentObj or null
-                onDateChange={date => this.setState({ date: date })} // PropTypes.func.isRequired
-                numberOfMonths={1}
-                focused={this.state.focused} // PropTypes.bool
-                onFocusChange={({ focused }) => this.setState({ focused })} // PropTypes.func.isRequired
-                id="your_unique_id" // PropTypes.string.isRequired,
-              />
-            </StyledWrapper>
-          ) : (
-            <ThresholdInput
-              type="number"
-              name="GtLtThreshold"
-              value={this.state.GtLtThreshold}
-              onChange={this.handleChange}
-            />
-          )}
-          {this.addFilterBtn()}
-        </div>
-      );
+    if (attribute === "select") {
+      return <div />;
     }
-    return valuePicker;
+
+    if (
+      filterType === USER_FILTER_TYPE.DISCRETE ||
+      filterType === USER_FILTER_TYPE.BOOLEAN_MAPPING
+    ) {
+      return this.discreteValuePicker();
+    }
+
+    return this.dateValuePicker();
+  };
+
+  discreteValuePicker = () => {
+    let { possibleFilters } = this.props;
+
+    let { attribute } = this.state;
+
+    let valueArray =
+      typeof possibleFilters[attribute].values !== "undefined"
+        ? [...possibleFilters[attribute].values]
+        : [];
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center"
+        }}
+      >
+        <Select
+          mode="multiple"
+          style={{ minWidth: "250px" }}
+          placeholder="Please select"
+          onChange={this.handleDiscreteSelect}
+        >
+          {valueArray.length !== 0
+            ? valueArray.map(value => (
+                <Option key={value}>{replaceUnderscores(value)}</Option>
+              ))
+            : null}
+        </Select>
+        {this.addFilterBtn()}
+      </div>
+    );
+  };
+
+  dateValuePicker = () => {
+    let { filterType } = this.state;
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center"
+        }}
+      >
+        {/* <ThresholdInput type="number" name="GtLtThreshold" value={this.state.GtLtThreshold} onChange={this.handleChange}/> */}
+        {filterType === USER_FILTER_TYPE.DATE_RANGE ? (
+          <StyledWrapper>
+            <SingleDatePicker
+              noBorder={false}
+              small={true}
+              isOutsideRange={() => false}
+              date={this.state.date} // momentPropTypes.momentObj or null
+              onDateChange={date => this.setState({ date: date })} // PropTypes.func.isRequired
+              numberOfMonths={1}
+              focused={this.state.focused} // PropTypes.bool
+              onFocusChange={({ focused }) => this.setState({ focused })} // PropTypes.func.isRequired
+              id="your_unique_id" // PropTypes.string.isRequired,
+            />
+          </StyledWrapper>
+        ) : (
+          <ThresholdInput
+            type="number"
+            name="GtLtThreshold"
+            value={this.state.GtLtThreshold}
+            onChange={this.handleChange}
+          />
+        )}
+        {this.addFilterBtn()}
+      </div>
+    );
   };
 
   dropdownActive = () => {
@@ -394,9 +294,63 @@ class Filter extends React.Component {
     this.setState({ [evt.target.name]: evt.target.value });
   };
 
+  handleAddFilter = () => {
+    let id = this.state.filters.length + 1;
+    var newFilter;
+    if (
+      this.state.filterType === USER_FILTER_TYPE.DISCRETE ||
+      USER_FILTER_TYPE.BOOLEAN_MAPPING == this.state.filterType
+    ) {
+      let values = this.get_selected_ids_array(this.state.attributeValues);
+      newFilter = {
+        id: id,
+        type: USER_FILTER_TYPE.DISCRETE,
+        attribute: this.state.attribute,
+        allowedValues: this.state.discreteSelected
+      };
+    } else if (this.state.filterType === USER_FILTER_TYPE.DATE_RANGE) {
+      newFilter = {
+        id: id,
+        type: this.state.comparator,
+        attribute: this.state.attribute,
+        threshold: this.state.date.format("YYYY-MM-DD")
+      };
+    } else {
+      let value = parseFloat(this.state.GtLtThreshold);
+      newFilter = {
+        id: id,
+        type: this.state.comparator,
+        attribute: this.state.attribute,
+        threshold: value
+      };
+    }
+
+    this.setState({ filters: [...this.state.filters, newFilter] }, () => {
+      this.setState({
+        attribute: "select",
+        value: "select",
+        attributeValues: {},
+        filterType: "of",
+        GtLtThreshold: 0,
+        dropdownActive: false,
+        selectorKeyBase: `${Math.random()}`
+      });
+      this.props.onFiltersChanged(this.state.filters);
+    });
+  };
+
+  removeFilter = evt => {
+    let newFilters = [...this.state.filters].filter(
+      filter => filter.id !== parseInt(evt.target.name)
+    );
+    this.setState({ filters: newFilters }, () =>
+      this.props.onFiltersChanged(this.state.filters)
+    );
+  };
+
   addFilterBtn = () => {
-    let { keyNameValues, filterType } = this.state;
-    let rowValues = Object.values(keyNameValues);
+    let { attributeValues, filterType } = this.state;
+    let rowValues = Object.values(attributeValues);
     let numberSelected = rowValues.filter(Boolean).length;
     let isSelected = numberSelected > 0 || filterType !== "of";
     var addFilterBtn = <div />;
@@ -410,7 +364,7 @@ class Filter extends React.Component {
               lineHeight: "25px",
               height: "25px"
             }}
-            onClick={this.addFilter}
+            onClick={this.handleAddFilter}
           >
             Add
           </StyledButton>
@@ -442,7 +396,7 @@ class Filter extends React.Component {
               return (
                 <FilterBubble key={index}>
                   <FilterText style={{ color: "#FFF" }}>
-                    {filter.keyName}:{" "}
+                    {filter.attribute}:{" "}
                     {filter.allowedValues.map((value, index) => {
                       if (filter.allowedValues.length === index + 1) {
                         return value;
@@ -462,7 +416,7 @@ class Filter extends React.Component {
               return (
                 <FilterBubble key={index}>
                   <FilterText style={{ color: "#FFF" }}>
-                    {filter.keyName} {filter.type} {filter.threshold}
+                    {filter.attribute} {filter.type} {filter.threshold}
                   </FilterText>
                   <SVG
                     name={filter.id}
@@ -482,7 +436,6 @@ class Filter extends React.Component {
   render() {
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {this.activeFilterBubbles()}
         <div
           style={{
             display: "flex",
@@ -495,6 +448,7 @@ class Filter extends React.Component {
           {this.filterTypePicker()}
           {this.valuePicker()}
         </div>
+        {this.activeFilterBubbles()}
       </div>
     );
   }
@@ -602,3 +556,110 @@ const StyledWrapper = styled.div`
   .DateInput_input__focused {
   }
 `;
+//
+// <StyledSelectKey
+//             name="keyName"
+//             value={keyName}
+//             onChange={evt =>
+//               this.keyNameChange(evt.target.name, evt.target.value)
+//             }
+//           >
+//             <option name="key" value="select" disabled>
+//               select attribute
+//             </option>
+//             {typeof keys !== "undefined"
+//               ? keys.map((key, index) => (
+//                   <option
+//                     name="value"
+//                     value={key}
+//                     key={index}
+//                     style={{ color: "green" }}
+//                   >
+//                     {replaceUnderscores(possibleFilters[key]["name"] || key)}
+//                   </option>
+//                 ))
+//               : null}
+//           </StyledSelectKey>
+
+//
+// olddiscreteValuePicker = () => {
+//
+//     let { possibleFilters } = this.props;
+//
+//     let {
+//       dropdownActive,
+//       attribute,
+//       attributeValues
+//     } = this.state;
+//
+//     let valueArray =
+//       typeof possibleFilters[attribute].values !== "undefined"
+//         ? [...possibleFilters[attribute].values]
+//         : [];
+//
+//     return (
+//       <div
+//         style={{
+//           display: "flex",
+//           flexDirection: "row",
+//           alignItems: "center"
+//         }}
+//       >
+//         <div style={{ width: "200px" }}>
+//           <div
+//             style={{ width: "inherit", position: "relative" }}
+//             onClick={this.dropdownActive}
+//           >
+//             <StyledSelectKey
+//               style={{ width: "inherit" }}
+//               name="value"
+//               value={attribute}
+//               onClick={this.dropdownActive}
+//               onChange={this.handleChange}
+//             >
+//               <option name="value" value="select" disabled>
+//                 select value
+//               </option>
+//             </StyledSelectKey>
+//             <div
+//               style={{
+//                 position: "absolute",
+//                 top: 0,
+//                 right: 0,
+//                 bottom: 0,
+//                 left: 0
+//               }}
+//             />
+//           </div>
+//           <Checkboxes
+//             style={{ display: dropdownActive ? "block" : "none" }}
+//             onMouseLeave={() =>
+//               this.setState({ dropdownActive: !this.state.dropdownActive })
+//             }
+//           >
+//             {valueArray.length !== 0
+//               ? valueArray.map((key, index) => (
+//                   <CheckboxLabel key={index}>
+//                     <input
+//                       type="checkbox"
+//                       value={key}
+//                       checked={attributeValues[key]}
+//                       onChange={() => this.toggleSelected(key)}
+//                     />
+//                     {replaceUnderscores(key)}
+//                   </CheckboxLabel>
+//                 ))
+//               : null}
+//           </Checkboxes>
+//           <CloseWrapper
+//             onClick={() =>
+//               this.setState({ dropdownActive: !this.state.dropdownActive })
+//             }
+//             style={{ display: this.state.dropdownActive ? "" : "none" }}
+//           />
+//         </div>
+//
+//         {this.addFilterBtn()}
+//       </div>
+//     );
+//   };

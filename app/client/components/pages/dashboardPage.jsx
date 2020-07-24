@@ -5,17 +5,16 @@ import { subscribe, unsubscribe } from "pusher-redux";
 
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
-import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
 
 import {
   VolumeChart,
   BeneficiaryFunnel,
   UsagePieChart,
   MetricsBar,
-  BeneficiaryLiveFeed,
-  DashboardFilter
+  BeneficiaryLiveFeed
 } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
+import FilterModule from "../filterModule/FilterModule";
 
 import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
 
@@ -43,8 +42,6 @@ const mapDispatchToProps = dispatch => {
       dispatch(
         LoadCreditTransferAction.loadCreditTransferListRequest({ query })
       ),
-    loadCreditTransferFilters: () =>
-      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest()),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))
   };
@@ -74,8 +71,6 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
-
-    this.props.loadCreditTransferFilters();
   }
 
   componentWillUnmount() {
@@ -137,6 +132,7 @@ class DashboardPage extends React.Component {
                   <BeneficiaryLiveFeed />
                 </Col>
               </Row>
+              <FilterModule filterObject="user"></FilterModule>n
               <TransfersCard />
             </Space>
           </div>

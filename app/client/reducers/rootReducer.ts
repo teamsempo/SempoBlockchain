@@ -53,8 +53,8 @@ const appReducer = combineReducers({
   wyre,
   transferUsages: TransferUsageReducer,
   organisations: OrganisationReducer,
-  form,
-  allowedFilters
+  allowedFilters,
+  form
 });
 
 const rootReducer = (state: any, action: any) => {
