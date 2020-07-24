@@ -93,12 +93,12 @@ export default class TransfersCard extends React.Component {
 
           let color;
           let arrow;
-          if (startValue > endValue) {
+          if (endValue > startValue) {
             color = "#3f8600";
             arrow = (
               <CaretUpOutlined style={{ color: color, marginRight: 0 }} />
             );
-          } else if (endValue > startValue) {
+          } else if (startValue > endValue) {
             color = "#cf1322";
             arrow = (
               <CaretDownOutlined style={{ color: color, marginRight: 0 }} />
