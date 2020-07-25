@@ -51,6 +51,8 @@ def calculate_transfer_stats(
             token, orgs = next(iter(tokens_to_orgs.items()))
         else:
             token = Token.query.get(token_id)
+            if token not in tokens_to_orgs:
+                raise Exception(f'No active org with token {token.id}')
             orgs = tokens_to_orgs[token]
         g.query_organisations = [o.id for o in orgs]
         mandatory_filter = {
