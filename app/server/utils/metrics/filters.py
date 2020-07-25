@@ -64,7 +64,7 @@ def _determine_join_conditions(query_table):
     if query_table == CreditTransfer:
         return CreditTransfer.sender_user_id, CreditTransfer.sender_transfer_account_id
     if query_table == User:
-        return User.id, None
+        return User.id, User.id
 
 def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None, transfer_join_attribute=None):
     """
@@ -150,7 +150,6 @@ standard_payment_filters = [
 exchanged_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
     CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
-    #CreditTransfer.token == g.active_organisation.token
 ]
 
 beneficiary_filters = [User.has_beneficiary_role == True]

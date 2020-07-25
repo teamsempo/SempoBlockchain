@@ -127,7 +127,6 @@ base_all = {'data':
         'total_distributed': 0.0,
         'total_exchanged': 0.0,
         'total_spent': 0.0,
-        'transfer_use_breakdown': [],
         'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
         'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
         'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
@@ -147,7 +146,6 @@ base_transfer = {'data':
         'total_distributed': 0.0,
         'total_exchanged': 0.0,
         'total_spent': 0.0,
-        'transfer_use_breakdown': [],
         'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
         'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
         'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
@@ -190,11 +188,11 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         assert response.json == base_participant
 
 @pytest.mark.parametrize("metric_type, params, status_code", [
-    ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
     ("all", None, 200),
     ("user", None, 200),
     ("transfer", None, 200),
     ("notarealmetrictype", None, 500),
+    ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
 ])
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_metrics,

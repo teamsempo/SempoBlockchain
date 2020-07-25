@@ -6,17 +6,18 @@ from server import db, red, bt
 
 from flask import g
 
-from server.utils.metrics import filters, metrics_cache, metric, metrics_const
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
+from server.utils.metrics import filters, metrics_cache, metric, metrics_const, group
 from server.utils.metrics.transfer_stats import TransferStats
 from server.utils.metrics.participant_stats import ParticipantStats
+from server.utils.metrics.total_users import TotalUsers
 
-from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
-from server.models.blockchain_address import BlockchainAddress
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+from server.models.organisation import Organisation
+from server.models.token import Token
 
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import cast
@@ -31,10 +32,35 @@ def calculate_transfer_stats(
     user_filter={},
     metric_type=metrics_const.ALL,
     disable_cache: bool = False,
-    timeseries_unit = metrics_const.DAY):
-    # TODO (group_by PR): Add token filter here!
-    # - Check orgs being queried (dependant on multi-org PR)
-    # - Create 'manditory filter' field which is returned in the response
+    timeseries_unit = metrics_const.DAY,
+    group_by = None,
+    token_id = None):
+
+    # Handle a situation where multi_org is used with orgs with different tokens
+    tokens_to_orgs = {}
+    mandatory_filter = {}
+    organisations = [Organisation.query.get(o) for o in g.get('query_organisations', [])]
+    tokens = [o.token for o in organisations]
+    for o in organisations:
+        if o.token not in tokens_to_orgs:
+            tokens_to_orgs[o.token] = []
+        tokens_to_orgs[o.token].append(o)
+
+    if len(tokens_to_orgs) > 1:
+        if not token_id:
+            token, orgs = next(iter(tokens_to_orgs.items()))
+        else:
+            token = Token.query.get(token_id)
+            if token not in tokens_to_orgs:
+                raise Exception(f'No active org with token {token.id}')
+            orgs = tokens_to_orgs[token]
+        g.query_organisations = [o.id for o in orgs]
+        mandatory_filter = {
+            'token_filter':{
+                'current_setting': {'id': token.id, 'name': token.name},
+                'options': [{'id': t.id, 'name':t.name} for t in tokens]
+            }
+        }
 
     date_filters = []
     if start_date is not None and end_date is not None:
@@ -46,25 +72,33 @@ def calculate_transfer_stats(
     if user_filter or date_filters or disable_cache or timeseries_unit != metrics_const.DAY:
         enable_cache = False
 
-    transfer_stats = TransferStats(timeseries_unit)
-    participant_stats = ParticipantStats(timeseries_unit)
+    group_strategy = group.GROUP_TYPES[group_by]
 
-    # Don't send total_users_timeseries date filters, since it needs to use all users through history to aggregate current numbers correctly
-    total_users = participant_stats.total_users_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
+    # We use total_users ungrouped if we are grouping OR filtering the population by a non-user-based attribute
+    # We also don't send total_users_timeseries date filters, since it needs to use all users through history to
+    # aggregate current numbers correctly
+    groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
+    for f in user_filter or []:
+        groups_and_filters_tables.append(f)
+    if set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
+        total_users_stats = TotalUsers(group_strategy, timeseries_unit)
+        total_users = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
+    else:
+        total_users_stats = TotalUsers(group.GROUP_TYPES[metrics_const.GENDER], timeseries_unit)
+        total_users = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters=[], enable_caching=enable_cache)
 
-    metric_sets_by_type = {
-        metrics_const.TRANSFER: transfer_stats.metrics,
-        metrics_const.USER: participant_stats.metrics,
-        metrics_const.ALL: transfer_stats.metrics + participant_stats.metrics,
-    }
+    if metric_type == metrics_const.TRANSFER:
+        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
+    elif metric_type == metrics_const.USER:
+        metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
+    elif metric_type == metrics_const.ALL:
+        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
 
     data = {}
-    i = 0
-    for metric in metric_sets_by_type[metric_type]:
-        # print(f"I is {i}")
-        # print(metric)
-        i += 1
+    for metric in metrics_list:
         data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
+
+    data['mandatory_filter'] = mandatory_filter
 
     # Legacy and aggregate metrics which don't fit the modular pattern
     if metric_type in [metrics_const.ALL, metrics_const.USER]:
@@ -72,9 +106,18 @@ def calculate_transfer_stats(
 
     try:
         data['master_wallet_balance'] = 0
+
+        # data['master_wallet_balance'] = cached_funds_available()
     except:
         data['master_wallet_balance'] = 0
 
+    active_filters = []
+    for uf in user_filter or []:
+        for f in user_filter[uf]:
+            active_filters.append(f[0][0])
+
+    data['active_group_by'] = group_by
+    data['active_filters'] = active_filters
     return data
 
 
