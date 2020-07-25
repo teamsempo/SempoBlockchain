@@ -2,6 +2,7 @@ import React from "react";
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
 import CustomTabs from "./card/CustomTabs";
+import DateRangeSelector from "./dateRangeSelector";
 import moment from "moment";
 import FilterModule from "../filterModule/FilterModule";
 
@@ -25,36 +26,18 @@ export default class TransfersCard extends React.Component {
     this.state = {
       selected_time_series: "volume", // volume, count, average_volume, average_count
       selected_groupby: "stonks", // stonks, gender
-      date_value: ""
+      dateRange: ""
     };
   }
 
+  setDateRange = dateRange => {
+    this.setState({
+      dateRange: dateRange
+    });
+  };
+
   changeTimeseries(ts) {
     this.setState({ selected_time_series: ts });
-  }
-
-  handleChange(value) {
-    console.log(`selected ${value}`);
-  }
-
-  setDate(selection) {
-    if (selection === "today") {
-      let today = new Date();
-      this.setState({
-        date_value: [moment(today, dateFormat), moment(today, dateFormat)]
-      });
-    } else {
-      let startOf = moment()
-        .startOf(selection)
-        .toDate();
-      let endOf = moment()
-        .endOf(selection)
-        .toDate();
-
-      this.setState({
-        date_value: [moment(startOf, dateFormat), moment(endOf, dateFormat)]
-      });
-    }
   }
 
   render() {
@@ -74,30 +57,7 @@ export default class TransfersCard extends React.Component {
       "average_count"
     ];
 
-    const filter = (
-      <div>
-        <Space size={"middle"}>
-          <Link type="link" onClick={() => this.setDate("today")}>
-            Today
-          </Link>
-          <Link type="link" onClick={() => this.setDate("isoweek")}>
-            This Week
-          </Link>
-          <Link type="link" onClick={() => this.setDate("month")}>
-            This Month
-          </Link>
-          <RangePicker
-            defaultValue={[
-              moment("25/07/2020", dateFormat),
-              moment("25/07/2020", dateFormat)
-            ]}
-            format={dateFormat}
-            value={this.state.date_value}
-            onCalendarChange={values => this.setState({ date_value: values })}
-          />
-        </Space>
-      </div>
-    );
+    const filter = <DateRangeSelector onChange={this.setDateRange} />;
 
     return (
       <Card title="Transfers" bordered={false} extra={filter}>
@@ -110,29 +70,10 @@ export default class TransfersCard extends React.Component {
             justifyContent: "space-between"
           }}
         >
-          <FilterModule filterObject="credit_transfer"></FilterModule>
-
-          <div>fake filters</div>
-          <div>
-            <Space size={"middle"}>
-              <Text>Group By:</Text>
-              <Select
-                defaultValue={activeGroupBy}
-                style={{ width: 120 }}
-                onChange={this.handleChange}
-              >
-                {groupByKeys
-                  ? groupByKeys.map(key => {
-                      return (
-                        <Option value={key}>
-                          {toTitleCase(replaceUnderscores(key))}
-                        </Option>
-                      );
-                    })
-                  : null}
-              </Select>
-            </Space>
-          </div>
+          <FilterModule
+            filterObject="credit_transfer"
+            dateRange={this.state.dateRange}
+          />
         </div>
 
         <Divider dashed />

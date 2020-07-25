@@ -53,15 +53,12 @@ function createNamedWrapperReducer(reducerFunction: any, reducerName: string) {
 
 const user = combineReducers({
   loadStatus: createNamedWrapperReducer(loadStatus, "user"),
-  allowedFilters: createNamedWrapperReducer(allowedFilterState, "user")
+  allowed: createNamedWrapperReducer(allowedFilterState, "user")
 });
 
 const credit_transfer = combineReducers({
   loadStatus: createNamedWrapperReducer(loadStatus, "credit_transfer"),
-  allowedFilters: createNamedWrapperReducer(
-    allowedFilterState,
-    "credit_transfer"
-  )
+  allowed: createNamedWrapperReducer(allowedFilterState, "credit_transfer")
 });
 
 export const allowedFilters = combineReducers({

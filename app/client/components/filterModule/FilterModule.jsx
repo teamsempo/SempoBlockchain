@@ -1,4 +1,7 @@
 import React from "react";
+import { DatePicker, Space, Select, Typography, Divider } from "antd";
+const { Text, Link } = Typography;
+const { Option } = Select;
 
 import { DateRangePicker } from "react-dates";
 import { LoadMetricAction } from "../../reducers/metric/actions";
@@ -7,13 +10,18 @@ import styled from "styled-components";
 import { StyledButton } from "../styledElements";
 import moment from "moment";
 import Filter from "./filter";
-import { processFiltersForQuery } from "../../utils";
+import {
+  processFiltersForQuery,
+  replaceUnderscores,
+  toTitleCase
+} from "../../utils";
 import { browserHistory } from "../../createStore.js";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    allowedFilters: state.allowedFilters[ownProps.filterObject].allowedFilters,
+    allowedFilters: state.allowedFilters[ownProps.filterObject].allowed.filters,
+    allowedGroups: state.allowedFilters[ownProps.filterObject].allowed.groups,
     loadStatus: state.allowedFilters[ownProps.filterObject].loadStatus
   };
 };
@@ -35,33 +43,20 @@ class FilterModule extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      startDate: null,
-      endDate: null,
-      encoded_filters: null
+      encoded_filters: null,
+      groupBy: null
     };
 
     this.props.loadAllowedFilters(this.props.filterObject);
   }
 
-  onDatesChange = ({ startDate, endDate }) => {
-    this.setState(
-      {
-        startDate,
-        endDate
-      },
-      () => this.updateStats()
-    );
-  };
-
-  updateStats = () => {
-    let { startDate, endDate } = this.state;
-    if (!startDate && !endDate) {
-      this.props.loadMetrics();
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.dateRange !== this.props.dateRange) {
+      this.loadMetricsWithParams();
     }
-  };
+  }
 
   onFiltersChanged = filters => {
-    console.log("filters are", filters);
     let encoded_filters = processFiltersForQuery(filters);
     console.log("encoded filters are", encoded_filters);
     this.setState(
@@ -76,7 +71,8 @@ class FilterModule extends React.Component {
   };
 
   loadMetricsWithParams = () => {
-    let { startDate, endDate, encoded_filters } = this.state;
+    let { encoded_filters, groupBy } = this.state;
+    let { dateRange } = this.props;
     let params = {};
 
     params.metric_type = this.props.filterObject;
@@ -84,83 +80,66 @@ class FilterModule extends React.Component {
     if (encoded_filters) {
       params.params = encoded_filters;
     }
-    if (startDate && endDate) {
-      params.start_date = startDate.toISOString();
-      params.end_date = endDate.toISOString();
+
+    if (groupBy) {
+      params.group_by = groupBy;
+    }
+
+    if (dateRange) {
+      params.start_date = dateRange[0] && dateRange[0].toISOString();
+      params.end_date = dateRange[1] && dateRange[1].toISOString();
     }
     this.props.loadMetrics(params);
   };
 
+  updateGroupBy = groupBy => {
+    this.setState({ groupBy }, () => this.loadMetricsWithParams());
+  };
+
   render() {
-    // TODO: this should go somewhere else
-    moment.updateLocale("en", {
-      longDateFormat: {
-        L: "MM/DD/YY"
-      }
-    });
+    let { allowedGroups } = this.props;
+
+    let groupByModule = (
+      <Space size={"middle"}>
+        <Text>Group By:</Text>
+        <Select
+          // defaultValue={activeGroupBy}
+          style={{ width: 120 }}
+          onChange={this.updateGroupBy}
+        >
+          {allowedGroups
+            ? Object.keys(allowedGroups).map(key => {
+                return (
+                  <Option key={key}>
+                    {toTitleCase(replaceUnderscores(key))}
+                  </Option>
+                );
+              })
+            : null}
+        </Select>
+      </Space>
+    );
 
     return (
-      <div>
-        <FilterContainer>
-          <Filter
-            label={"Filter by user:"}
-            possibleFilters={this.props.allowedFilters}
-            onFiltersChanged={this.onFiltersChanged}
-          />
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <DateRangePicker
-              displayFormat={() => moment.localeData().longDateFormat("L")}
-              daySize={35}
-              small={true}
-              isOutsideRange={() => false}
-              showClearDates={true}
-              startDatePlaceholderText={"Start Date"}
-              endDatePlaceholderText={"End Date"}
-              startDate={this.state.startDate} // momentPropTypes.momentObj or null,
-              startDateId="your_unique_start_date_id" // PropTypes.string.isRequired,
-              endDate={this.state.endDate} // momentPropTypes.momentObj or null,
-              endDateId="your_unique_end_date_id" // PropTypes.string.isRequired,
-              onDatesChange={this.onDatesChange} // PropTypes.func.isRequired,
-              focusedInput={this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
-              onFocusChange={focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
-            />
-            <StyledButton
-              onClick={
-                this.state.startDate && this.state.endDate
-                  ? this.loadMetricsWithParams
-                  : () => {}
-              }
-              style={{
-                fontWeight: "400",
-                margin: "0em 1em",
-                lineHeight: "25px",
-                height: "30px",
-                backgroundColor:
-                  (!this.state.startDate || !this.state.endDate) && "grey",
-                textTransform: "capitalize",
-                cursor:
-                  (this.state.startDate || this.state.endDate) && "pointer"
-              }}
-            >
-              {this.props.loadStatus.isRequesting ? (
-                <div className="miniSpinner"></div>
-              ) : (
-                "Filter"
-              )}
-            </StyledButton>
-          </div>
-        </FilterContainer>
-        {this.props.children}
-      </div>
+      <FilterContainer>
+        <Filter
+          label={"Filter by user:"}
+          possibleFilters={this.props.allowedFilters}
+          onFiltersChanged={this.onFiltersChanged}
+        />
+        {groupByModule}
+      </FilterContainer>
     );
   }
 }
 
 const FilterContainer = styled.div`
-  margin: 1em;
   display: flex;
+  flex-direction: row;
   align-items: center;
+  margin-bottom: 1em;
   justify-content: space-between;
+  width: 100%;
 `;
 
 export default connect(
