@@ -224,8 +224,18 @@ export default class TransfersCard extends React.Component {
               selected={this.state.selected_time_series}
             />
           </div>
-          <RightOutlined style={{ fontSize: "50px", color: "#ececec" }} />
-          <div style={{ height: 200, width: "40%" }}>
+
+          <img
+            src="/static/media/BigArrow.svg"
+            style={{
+              height: 150,
+              padding: "0 1em",
+              marginBottom: "3em"
+            }}
+          />
+
+          {/*  need to offset the arrow width + padding */}
+          <div style={{ height: 200, width: "calc(40% - 2em - 22px)" }}>
             <GroupByChart
               data={selectedData}
               selected={this.state.selected_time_series}
