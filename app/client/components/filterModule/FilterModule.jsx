@@ -61,16 +61,18 @@ class FilterModule extends React.Component {
   };
 
   onFiltersChanged = filters => {
+    console.log("filters are", filters);
     let encoded_filters = processFiltersForQuery(filters);
+    console.log("encoded filters are", encoded_filters);
     this.setState(
       {
         encoded_filters
       },
       () => this.loadMetricsWithParams()
     );
-    browserHistory.push({
-      search: "?params=" + encoded_filters
-    });
+    // browserHistory.push({
+    //   search: "?params=" + encoded_filters
+    // });
   };
 
   loadMetricsWithParams = () => {

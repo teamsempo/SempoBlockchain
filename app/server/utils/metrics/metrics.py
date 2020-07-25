@@ -61,8 +61,8 @@ def calculate_transfer_stats(
     data = {}
     i = 0
     for metric in metric_sets_by_type[metric_type]:
-        print(f"I is {i}")
-        print(metric)
+        # print(f"I is {i}")
+        # print(metric)
         i += 1
         data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
 

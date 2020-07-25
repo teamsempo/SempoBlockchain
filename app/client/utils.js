@@ -263,22 +263,43 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
 };
 
 export const processFiltersForQuery = filters => {
-  let encoded_filters = encodeURIComponent("%$user_filters%");
+  let encoded_filters = encodeURIComponent("");
+  let delimiter = ":";
+  // let encoded_filters = encodeURIComponent("%$user_filters%");
+
   filters.forEach(filter => {
+    encoded_filters += encodeURIComponent(filter.attribute);
+    let parsed_filter = "";
     if (
-      USER_FILTER_TYPE.DISCRETE == filter.type ||
-      USER_FILTER_TYPE.BOOLEAN_MAPPING == filter.type
+      USER_FILTER_TYPE.DISCRETE === filter.type ||
+      USER_FILTER_TYPE.BOOLEAN_MAPPING === filter.type
     ) {
-      encoded_filters += encodeURIComponent("," + filter.keyName + "%");
+      let rule = "(in)";
+      let allowed_vals = "";
       filter.allowedValues.forEach(value => {
-        encoded_filters += encodeURIComponent("=" + value + "%");
+        allowed_vals += encodeURIComponent(value) + ",";
       });
+
+      parsed_filter = `${rule}(${allowed_vals.slice(0, -1)})`;
     } else {
-      encoded_filters += encodeURIComponent("," + filter.keyName + "%");
-      let parsed_filter = filter.type + filter.threshold + "%";
-      encoded_filters += encodeURIComponent(parsed_filter);
+      let rule = "";
+      if (filter.type === ">") {
+        rule = "(gt)";
+      } else if (filter.type === "<") {
+        rule = "(lt)";
+      } else {
+        rule = "(eq)";
+      }
+      let threshold = `(${encodeURIComponent(filter.threshold)})`;
+
+      parsed_filter = rule + threshold;
     }
+
+    encoded_filters += parsed_filter + delimiter;
   });
+
+  encoded_filters = encoded_filters.slice(0, -delimiter.length);
+
   return encoded_filters;
 };
 

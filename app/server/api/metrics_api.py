@@ -47,6 +47,9 @@ class CreditTransferStatsApi(MethodView):
 
         filters = process_transfer_filters(encoded_filters)
 
+        print("filters")
+        print(filters)
+
         transfer_stats = calculate_transfer_stats(
             start_date=start_date,
             end_date=end_date,

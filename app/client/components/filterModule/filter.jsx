@@ -266,7 +266,9 @@ class Filter extends React.Component {
         selectorKeyBase: `${Math.random()}`,
         ...this.baseRuleConstructionState
       }),
-      this.props.onFiltersChanged(this.state.filters)
+      () => {
+        this.props.onFiltersChanged(this.state.filters);
+      }
     );
   };
 
@@ -291,7 +293,9 @@ class Filter extends React.Component {
       prevstate => ({
         filters: prevstate.filters.filter(filter => filter.id !== parseInt(id))
       }),
-      this.props.onFiltersChanged(this.state.filters)
+      () => {
+        this.props.onFiltersChanged(this.state.filters);
+      }
     );
   };
 

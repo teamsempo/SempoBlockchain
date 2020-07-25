@@ -78,15 +78,20 @@ def process_transfer_filters(encoded_filters):
     if(encoded_filters is None):
         return
 
-    tokenized_filters = encoded_filters.split("%")
+    tokenized_filters = encoded_filters.split(":")
     filters = {}
     curr_keyName = None
 
     to_handle = []
     for item in tokenized_filters:
         if item is not None and len(item) > 0:
-            symbol = item[:1]
-            subject = item[1:]
+            left_bracket_split = item.split('(')
+            stripped_of_right_bracket = [s.strip(')') for s in left_bracket_split]
+
+            attribute = stripped_of_right_bracket[0]
+            rule = stripped_of_right_bracket[1]
+            value_list = stripped_of_right_bracket[2].split(',')
+
             if symbol == ",":
 
                 # handle currently collected filters
