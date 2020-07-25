@@ -94,6 +94,72 @@ export const reduxState = {
       allowed_groupbys: ["stonks", "gender"],
       selected_groupby: "stonks",
       selected_time_series: "volume"
+    },
+    participant_stats: {
+      total: {
+        total: 6,
+        groups: {
+          male: 3,
+          female: 5,
+          other: 6
+        },
+        time_series: {
+          male: [
+            { date: "2020-07-23T00:00:00", value: 1 },
+            { date: "2020-07-24T00:00:00", value: 2 },
+            { date: "2020-07-25T00:00:00", value: 4 }
+          ],
+          female: [
+            { date: "2020-07-23T00:00:00", value: 3 },
+            { date: "2020-07-24T00:00:00", value: 2 },
+            { date: "2020-07-25T00:00:00", value: 2 }
+          ],
+          other: [
+            { date: "2020-07-23T00:00:00", value: 5 },
+            { date: "2020-07-24T00:00:00", value: 1 },
+            { date: "2020-07-25T00:00:00", value: 3 }
+          ]
+        }
+      },
+      new: {
+        total: 2000,
+        groups: {
+          male: 1200,
+          female: 2000
+        },
+        time_series: {
+          male: [
+            { date: "2020-07-23T00:00:00", value: 550 },
+            { date: "2020-07-24T00:00:00", value: 900 },
+            { date: "2020-07-25T00:00:00", value: 123 }
+          ],
+          female: [
+            { date: "2020-07-23T00:00:00", value: 650 },
+            { date: "2020-07-24T00:00:00", value: 1100 },
+            { date: "2020-07-25T00:00:00", value: 111 }
+          ]
+        }
+      },
+      active: {
+        total: 300,
+        groups: {
+          male: 1100,
+          female: 2000
+        },
+        time_series: {
+          male: [
+            { date: "2020-07-23T00:00:00", value: 500 },
+            { date: "2020-07-24T00:00:00", value: 1000 }
+          ],
+          female: [
+            { date: "2020-07-23T00:00:00", value: 600 },
+            { date: "2020-07-24T00:00:00", value: 1000 }
+          ]
+        }
+      },
+      allowed_groupbys: ["gender", "location"],
+      selected_groupby: "gender",
+      selected_time_series: "total"
     }
   }
 };
