@@ -132,7 +132,7 @@ class DashboardPage extends React.Component {
                   <BeneficiaryLiveFeed />
                 </Col>
               </Row>
-              <FilterModule filterObject="user"></FilterModule>n
+              <FilterModule filterObject="credit_transfer"></FilterModule>
               <TransfersCard />
             </Space>
           </div>

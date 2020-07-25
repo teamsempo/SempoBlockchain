@@ -58,7 +58,7 @@ class CreditTransferStatsApi(MethodView):
             disable_cache=disable_cache,
             timeseries_unit = timeseries_unit
         )
-
+        
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',

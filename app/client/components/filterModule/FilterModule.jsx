@@ -25,7 +25,7 @@ const mapDispatchToProps = dispatch => {
     loadAllowedFilters: filterObject =>
       dispatch(
         AllowedFiltersAction.loadAllowedFiltersRequest(filterObject, {
-          query: { metric_types: filterObject }
+          query: { metric_type: filterObject }
         })
       )
   };
@@ -78,6 +78,9 @@ class FilterModule extends React.Component {
   loadMetricsWithParams = () => {
     let { startDate, endDate, encoded_filters } = this.state;
     let params = {};
+
+    params.metric_type = this.props.filterObject;
+
     if (encoded_filters) {
       params.params = encoded_filters;
     }
