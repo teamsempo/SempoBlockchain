@@ -190,11 +190,11 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         assert response.json == base_participant
 
 @pytest.mark.parametrize("metric_type, params, status_code", [
+    ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
     ("all", None, 200),
     ("user", None, 200),
     ("transfer", None, 200),
     ("notarealmetrictype", None, 500),
-    ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
 ])
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_metrics,
@@ -220,7 +220,7 @@ def test_get_summed_metrics(
     total_spent_val = 150
     if params is not None:
         # Test the filter worked
-        total_spent_val == 25
+        assert total_spent_val == 25
 
     elif metric_type == 'transfer' or metric_type == 'all':
         assert returned_stats['daily_disbursement_volume'][0]['volume'] == 300

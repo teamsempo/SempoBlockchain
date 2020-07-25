@@ -78,20 +78,15 @@ def process_transfer_filters(encoded_filters):
     if(encoded_filters is None):
         return
 
-    tokenized_filters = encoded_filters.split(":")
+    tokenized_filters = encoded_filters.split("%")
     filters = {}
     curr_keyName = None
 
     to_handle = []
     for item in tokenized_filters:
         if item is not None and len(item) > 0:
-            left_bracket_split = item.split('(')
-            stripped_of_right_bracket = [s.strip(')') for s in left_bracket_split]
-
-            attribute = stripped_of_right_bracket[0]
-            rule = stripped_of_right_bracket[1]
-            value_list = stripped_of_right_bracket[2].split(',')
-
+            symbol = item[:1]
+            subject = item[1:]
             if symbol == ",":
 
                 # handle currently collected filters
@@ -111,6 +106,9 @@ def process_transfer_filters(encoded_filters):
     filters = handle_filters_per_keyname(to_handle, curr_keyName, filters)
     return filters
 
+def get_table_for_filter(filter_attribute):
+    return  ALL_FILTERS[filter_attribute]['table']
+
 def handle_filters_per_keyname(to_handle, key_name, filters):
     if len(to_handle) > 0 and (key_name is not None):
         curr_table = ALL_FILTERS[key_name]['table']
@@ -119,15 +117,16 @@ def handle_filters_per_keyname(to_handle, key_name, filters):
         filters[curr_table] = _filters
     return filters
 
-def handle_filter(keyname, filters):
-    if ALL_FILTERS[keyname]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
-        return handle_boolean_mapping(keyname, filters)
-    elif ALL_FILTERS[keyname]['type'] == TransferFilterEnum.DISCRETE:
-        return handle_discrete(keyname, filters)
+def handle_filter(attribute, filters):
+    if ALL_FILTERS[attribute]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
+        return handle_boolean_mapping(attribute, filters)
+    elif ALL_FILTERS[attribute]['type'] == TransferFilterEnum.DISCRETE:
+        return handle_discrete(attribute, filters)
     else:
-        return handle_other_types(keyname, filters)
+        return handle_other_types(attribute, filters)
 
 def handle_boolean_mapping(keyname, filters):
+
     formatted_filters = []
     for _filt in filters:
         comparator = _filt['comparator']
@@ -159,3 +158,91 @@ def handle_other_types(keyname, filters):
             return
 
     return formatted_filters
+
+
+def new_process_transfer_filters(encoded_filters):
+    # parse and prepare filters for calculating transfer stats
+    if (encoded_filters is None):
+        return
+
+    filter_list = parse_filter_string(encoded_filters)
+
+    filter_dict = {}
+
+    for filter in filter_list:
+
+        unprocessed_attribute = filter['attribute']
+        table = ALL_FILTERS[unprocessed_attribute]['table']
+
+        processed = proccess_filter(**filter)
+
+        for p in processed:
+            if table not in filter_dict:
+                filter_dict[table] = []
+            filter_dict[table].append(p)
+
+    return filter_dict
+
+
+def parse_filter_string(filter_string):
+    """
+    Converts a filter string into a list of dictionary values
+    """
+    tokenized_filters = filter_string.split(":")
+
+    filters = []
+    for item in tokenized_filters:
+        if item is not None and len(item) > 0:
+            left_bracket_split = item.split('(')
+            stripped_of_right_bracket = [s.strip(')') for s in left_bracket_split]
+
+            attribute = stripped_of_right_bracket[0]
+            comparator = stripped_of_right_bracket[1]
+            value_list = stripped_of_right_bracket[2].split(',')
+
+            if comparator == 'IN':
+                # comparator to treat equal and in the same
+                comparator = 'EQ'
+                value = value_list
+            else:
+                value = value_list[0]
+
+            filters.append({
+                'attribute': attribute,
+                'comparator': comparator,
+                'value': value
+            })
+
+    return filters
+
+
+def proccess_filter(attribute, comparator, value):
+    if ALL_FILTERS[attribute]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
+        return process_boolean_mapping(attribute, comparator, value)
+
+    elif ALL_FILTERS[attribute]['type'] == TransferFilterEnum.DISCRETE:
+        return process_discrete(attribute, comparator, value)
+    else:
+        return process_other_types(attribute, comparator, value)
+
+
+def process_boolean_mapping(attribute, comparator, value):
+
+    filters = []
+    for v in value:
+        attribute = BOOLEAN_MAPPINGS[v]
+        filters.append((attribute, "EQ", True))
+
+    return filters
+
+
+def process_discrete(attribute, comparator, value):
+    return [(attribute, "EQ", value)]
+
+
+def process_other_types(attribute, comparator, value):
+
+    value = value if ALL_FILTERS[attribute]['type'] == TransferFilterEnum.DATE_RANGE else float(value)
+
+    return [(attribute, comparator, value)]
+

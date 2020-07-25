@@ -274,7 +274,7 @@ export const processFiltersForQuery = filters => {
       USER_FILTER_TYPE.DISCRETE === filter.type ||
       USER_FILTER_TYPE.BOOLEAN_MAPPING === filter.type
     ) {
-      let rule = "(in)";
+      let rule = "(IN)";
       let allowed_vals = "";
       filter.allowedValues.forEach(value => {
         allowed_vals += encodeURIComponent(value) + ",";
@@ -284,11 +284,11 @@ export const processFiltersForQuery = filters => {
     } else {
       let rule = "";
       if (filter.type === ">") {
-        rule = "(gt)";
+        rule = "(GT)";
       } else if (filter.type === "<") {
-        rule = "(lt)";
+        rule = "(LT)";
       } else {
-        rule = "(eq)";
+        rule = "(EQ)";
       }
       let threshold = `(${encodeURIComponent(filter.threshold)})`;
 
