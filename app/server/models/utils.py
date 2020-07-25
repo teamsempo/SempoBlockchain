@@ -178,6 +178,13 @@ def filter_by_org(query):
 #         "joined eager loading?" % obj)
 
 
+credit_transfer_transfer_usage_association_table = db.Table(
+    'credit_transfer_transfer_usage_association_table',
+    db.Model.metadata,
+    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id'), index=True),
+    db.Column('transfer_usage_id', db.Integer, db.ForeignKey('transfer_usage.id'), index=True)
+)
+
 user_transfer_account_association_table = db.Table(
     'user_transfer_account_association_table',
     db.Model.metadata,

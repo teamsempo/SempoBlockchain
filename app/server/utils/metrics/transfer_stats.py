@@ -70,15 +70,6 @@ class TransferStats(metric_group.MetricGroup):
             filterable_by=self.filterable_attributes,
             bypass_user_filters=True))
 
-        transfer_use_breakdown_query = db.session.query(CreditTransfer.transfer_use.cast(JSONB),func.count(CreditTransfer.transfer_use)).group_by(CreditTransfer.transfer_use.cast(JSONB))
-        self.metrics.append(metric.Metric(
-            metric_name='transfer_use_breakdown',
-            query=transfer_use_breakdown_query,
-            object_model=CreditTransfer,
-            stock_filters=[filters.transfer_use_filters],
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
-            filterable_by=self.filterable_attributes))
-
         # Timeseries Metrics
         disbursement_volume_timeseries_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('volume'),
                 func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date')).group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))
