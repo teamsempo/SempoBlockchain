@@ -1,0 +1,10 @@
+/* Custom CSS for the ant card wrapper on dashboard */
+
+.ant-card-head-wrapper {
+  flex-direction: column;
+  align-items: normal;
+}
+
+.ant-card-extra {
+  width: 100%;
+}

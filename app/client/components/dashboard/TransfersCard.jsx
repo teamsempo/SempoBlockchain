@@ -1,30 +1,21 @@
 import React from "react";
+import { Card } from "antd";
+
+import Filter from "./Filter";
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
 import CustomTabs from "./card/CustomTabs";
-import moment from "moment";
 
-import { Card, DatePicker, Space, Select, Typography, Divider } from "antd";
-
-import { RightOutlined } from "@ant-design/icons";
-
-const { RangePicker } = DatePicker;
-const { Option } = Select;
-const { Text, Link } = Typography;
-
-import { toTitleCase, replaceUnderscores } from "../../utils";
+import "./card/Card.css";
 
 import { reduxState } from "./FakeState";
-
-const dateFormat = "DD/MM/YYYY";
+import { isMobile } from "../helpers/responsive";
 
 export default class TransfersCard extends React.Component {
   constructor() {
     super();
     this.state = {
-      selected_time_series: "volume", // volume, count, average_volume, average_count
-      selected_groupby: "stonks", // stonks, gender
-      date_value: ""
+      selected_time_series: "volume" // volume, count, average_volume, average_count
     };
   }
 
@@ -32,39 +23,9 @@ export default class TransfersCard extends React.Component {
     this.setState({ selected_time_series: ts });
   }
 
-  handleChange(value) {
-    console.log(`selected ${value}`);
-  }
-
-  setDate(selection) {
-    if (selection === "today") {
-      let today = new Date();
-      this.setState({
-        date_value: [moment(today, dateFormat), moment(today, dateFormat)]
-      });
-    } else {
-      let startOf = moment()
-        .startOf(selection)
-        .toDate();
-      let endOf = moment()
-        .endOf(selection)
-        .toDate();
-
-      this.setState({
-        date_value: [moment(startOf, dateFormat), moment(endOf, dateFormat)]
-      });
-    }
-  }
-
   render() {
     const selectedData =
       reduxState.metricsState.transfer_stats[this.state.selected_time_series];
-
-    const groupByOptions =
-      reduxState.metricsState.transfer_stats.allowed_groupbys;
-    const groupByKeys = groupByOptions ? groupByOptions : null;
-    const activeGroupBy =
-      reduxState.metricsState.transfer_stats.selected_groupby;
 
     const possibleTimeseries = [
       "volume",
@@ -73,67 +34,8 @@ export default class TransfersCard extends React.Component {
       "average_count"
     ];
 
-    const filter = (
-      <div>
-        <Space size={"middle"}>
-          <Link type="link" onClick={() => this.setDate("today")}>
-            Today
-          </Link>
-          <Link type="link" onClick={() => this.setDate("isoweek")}>
-            This Week
-          </Link>
-          <Link type="link" onClick={() => this.setDate("month")}>
-            This Month
-          </Link>
-          <RangePicker
-            defaultValue={[
-              moment("25/07/2020", dateFormat),
-              moment("25/07/2020", dateFormat)
-            ]}
-            format={dateFormat}
-            value={this.state.date_value}
-            onCalendarChange={values => this.setState({ date_value: values })}
-          />
-        </Space>
-      </div>
-    );
-
     return (
-      <Card title="Transfers" bordered={false} extra={filter}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: "1em",
-            justifyContent: "space-between"
-          }}
-        >
-          <div>fake filters</div>
-          <div>
-            <Space size={"middle"}>
-              <Text>Group By:</Text>
-              <Select
-                defaultValue={activeGroupBy}
-                style={{ width: 120 }}
-                onChange={this.handleChange}
-              >
-                {groupByKeys
-                  ? groupByKeys.map(key => {
-                      return (
-                        <Option value={key}>
-                          {toTitleCase(replaceUnderscores(key))}
-                        </Option>
-                      );
-                    })
-                  : null}
-              </Select>
-            </Space>
-          </div>
-        </div>
-
-        <Divider dashed />
-
+      <Card title="Transfers" bordered={false} extra={<Filter />}>
         <div
           style={{
             display: "flex",
