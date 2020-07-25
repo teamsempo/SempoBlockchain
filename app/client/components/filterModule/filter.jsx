@@ -1,6 +1,8 @@
 import React from "react";
-import { Select } from "antd";
+import { Select, InputNumber, DatePicker, Button } from "antd";
 const { Option, OptGroup } = Select;
+
+import { DefaultTheme } from "../theme";
 
 import { StyledSelect, Input, StyledButton } from "../styledElements.js";
 import styled from "styled-components";
@@ -33,42 +35,36 @@ class Filter extends React.Component {
     super();
 
     this.state = {
-      phrase: "",
-      date: moment(),
-      focused: false,
       filters: [],
-      attribute: "select",
-      filterType: "of",
-      comparator: "<",
-      attributeValues: {},
-      discreteOptions: [],
-      discreteSelected: [],
-      possibleFilters: null,
-      filterActive: false,
-      dropdownActive: false,
-      saveFilterDropdown: false,
-      loadFiltersDropdown: false,
-      filterName: null,
-      selectorKeyBase: ""
+      selectorKeyBase: "",
+      ...this.baseRuleConstructionState
     };
   }
 
+  baseRuleConstructionState = {
+    attribute: "select",
+    filterType: "of",
+    comparator: "=",
+    discreteOptions: [],
+    discreteSelected: [],
+    GtLtThreshold: 0,
+    date: moment()
+  };
+
   handleAttributeSelectorChange = attribute => {
-    var attributeProperties = this.props.possibleFilters[attribute];
+    let attributeProperties = this.props.possibleFilters[attribute];
 
     if (attributeProperties.type === USER_FILTER_TYPE.DATE_RANGE) {
       this.setState({
         attribute: attribute,
         filterType: USER_FILTER_TYPE.DATE_RANGE,
-        GtLtThreshold: 0,
-        dropdownActive: false
+        GtLtThreshold: 0
       });
     } else if (attributeProperties.type === USER_FILTER_TYPE.INT_RANGE) {
       this.setState({
         attribute: attribute,
         filterType: USER_FILTER_TYPE.INT_RANGE,
-        GtLtThreshold: 0,
-        dropdownActive: false
+        GtLtThreshold: 0
       });
     } else {
       this.setState({
@@ -76,13 +72,12 @@ class Filter extends React.Component {
         filterType: USER_FILTER_TYPE.DISCRETE,
         GtLtThreshold: 0,
         discreteSelected: [],
-        dropdownActive: false,
         discreteOptions: attributeProperties.values
       });
     }
   };
 
-  attributePicker = () => {
+  attributeSelector = () => {
     let { possibleFilters } = this.props;
     const keys =
       possibleFilters !== undefined && possibleFilters !== null
@@ -93,89 +88,68 @@ class Filter extends React.Component {
       <div
         key={this.state.selectorKeyBase + "AS"}
         style={{
-          margin: "1em",
-          marginRight: "0em",
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
           flexFlow: "row wrap"
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center"
-          }}
+        <Select
+          defaultValue="Select Attribute"
+          onChange={this.handleAttributeSelectorChange}
+          style={{ width: "150px" }}
         >
-          <FilterText style={{ padding: "0 10px 0 0" }}>
-            {this.props.label}
-          </FilterText>
-
-          <Select
-            defaultValue="Select Attribute"
-            onChange={this.handleAttributeSelectorChange}
-          >
-            {typeof keys !== "undefined"
-              ? keys.map((key, index) => (
-                  <Option key={key}>
-                    {replaceUnderscores(possibleFilters[key]["name"] || key)}
-                  </Option>
-                ))
-              : null}
-          </Select>
-        </div>
+          {typeof keys !== "undefined"
+            ? keys.map((key, index) => (
+                <Option key={key}>
+                  {replaceUnderscores(possibleFilters[key]["name"] || key)}
+                </Option>
+              ))
+            : null}
+        </Select>
       </div>
     );
   };
 
-  comparatorChange(value) {
+  comparatorChange = value => {
     this.setState({ comparator: value });
-  }
-
-  get_selected_ids_array = selected => {
-    Object.filter = (obj, predicate) =>
-      Object.keys(obj)
-        .filter(key => predicate(obj[key]))
-        .reduce((res, key) => ((res[key] = obj[key]), res), {});
-
-    return Object.keys(Object.filter(selected, selected => selected === true));
   };
 
   filterTypePicker = () => {
-    let { filterType, attribute, comparator } = this.state;
-    var filter_type_picker = <div />;
+    let { filterType, attribute } = this.state;
 
-    if (attribute !== "select") {
-      if (
-        filterType === USER_FILTER_TYPE.DISCRETE ||
-        USER_FILTER_TYPE.BOOLEAN_MAPPING === filterType
-      ) {
-        filter_type_picker = (
-          <FilterText style={{ padding: "0 10px" }}>is one of</FilterText>
-        );
-      } else {
-        filter_type_picker = (
-          <StyledSelectKey
-            name="keyName"
-            value={comparator}
-            onChange={evt => this.comparatorChange(evt.target.value)}
-          >
-            <option name="value" value={"<"}>
-              {filterType === USER_FILTER_TYPE.DATE_RANGE
-                ? "before"
-                : "is less than"}
-            </option>
-            <option name="value" value={">"}>
-              {filterType === USER_FILTER_TYPE.DATE_RANGE
-                ? "after"
-                : "is greater than"}
-            </option>
-          </StyledSelectKey>
-        );
-      }
+    if (attribute === "select") {
+      return <div />;
     }
-    return filter_type_picker;
+
+    if (
+      filterType === USER_FILTER_TYPE.DISCRETE ||
+      filterType === USER_FILTER_TYPE.BOOLEAN_MAPPING
+    ) {
+      return <FilterText style={{ width: "45px" }}>one of</FilterText>;
+    }
+
+    return (
+      <Select
+        onChange={this.comparatorChange}
+        defaultValue={"="}
+        style={{ width: "150px" }}
+      >
+        <Option key={"="}>
+          {filterType === USER_FILTER_TYPE.DATE_RANGE ? "on" : "is equal to"}
+        </Option>
+        <Option key={"<"}>
+          {filterType === USER_FILTER_TYPE.DATE_RANGE
+            ? "before"
+            : "is less than"}
+        </Option>
+        <Option key={">"}>
+          {filterType === USER_FILTER_TYPE.DATE_RANGE
+            ? "after"
+            : "is greater than"}
+        </Option>
+      </Select>
+    );
   };
 
   handleDiscreteSelect = values => {
@@ -184,15 +158,16 @@ class Filter extends React.Component {
     });
   };
 
-  toggleSelected = key => {
-    const value = !this.state.attributeValues[key];
+  handleDateSelect = (date, dateString) => {
+    this.setState({
+      date: date
+    });
+  };
 
-    this.setState(prevState => ({
-      attributeValues: {
-        ...prevState.attributeValues,
-        [key]: value
-      }
-    }));
+  handleNumericSet = value => {
+    this.setState({
+      GtLtThreshold: value
+    });
   };
 
   valuePicker = () => {
@@ -209,7 +184,10 @@ class Filter extends React.Component {
       return this.discreteValuePicker();
     }
 
-    return this.dateValuePicker();
+    if (filterType === USER_FILTER_TYPE.DATE_RANGE) {
+      return this.dateValuePicker();
+    }
+    return this.numericValuePicker();
   };
 
   discreteValuePicker = () => {
@@ -223,75 +201,33 @@ class Filter extends React.Component {
         : [];
 
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center"
-        }}
+      <Select
+        mode="multiple"
+        style={{ minWidth: "238px" }}
+        placeholder="Please select"
+        onChange={this.handleDiscreteSelect}
       >
-        <Select
-          mode="multiple"
-          style={{ minWidth: "250px" }}
-          placeholder="Please select"
-          onChange={this.handleDiscreteSelect}
-        >
-          {valueArray.length !== 0
-            ? valueArray.map(value => (
-                <Option key={value}>{replaceUnderscores(value)}</Option>
-              ))
-            : null}
-        </Select>
-        {this.addFilterBtn()}
-      </div>
+        {valueArray.length !== 0
+          ? valueArray.map(value => (
+              <Option key={value}>{replaceUnderscores(value)}</Option>
+            ))
+          : null}
+      </Select>
     );
   };
 
   dateValuePicker = () => {
-    let { filterType } = this.state;
+    return <DatePicker onChange={this.handleDateSelect} />;
+  };
 
+  numericValuePicker = () => {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center"
-        }}
-      >
-        {/* <ThresholdInput type="number" name="GtLtThreshold" value={this.state.GtLtThreshold} onChange={this.handleChange}/> */}
-        {filterType === USER_FILTER_TYPE.DATE_RANGE ? (
-          <StyledWrapper>
-            <SingleDatePicker
-              noBorder={false}
-              small={true}
-              isOutsideRange={() => false}
-              date={this.state.date} // momentPropTypes.momentObj or null
-              onDateChange={date => this.setState({ date: date })} // PropTypes.func.isRequired
-              numberOfMonths={1}
-              focused={this.state.focused} // PropTypes.bool
-              onFocusChange={({ focused }) => this.setState({ focused })} // PropTypes.func.isRequired
-              id="your_unique_id" // PropTypes.string.isRequired,
-            />
-          </StyledWrapper>
-        ) : (
-          <ThresholdInput
-            type="number"
-            name="GtLtThreshold"
-            value={this.state.GtLtThreshold}
-            onChange={this.handleChange}
-          />
-        )}
-        {this.addFilterBtn()}
-      </div>
+      <InputNumber
+        type="number"
+        style={{ width: "133px" }}
+        onChange={this.handleNumericSet}
+      />
     );
-  };
-
-  dropdownActive = () => {
-    this.setState({ dropdownActive: !this.state.dropdownActive });
-  };
-
-  handleChange = evt => {
-    this.setState({ [evt.target.name]: evt.target.value });
   };
 
   handleAddFilter = () => {
@@ -299,138 +235,139 @@ class Filter extends React.Component {
     var newFilter;
     if (
       this.state.filterType === USER_FILTER_TYPE.DISCRETE ||
-      USER_FILTER_TYPE.BOOLEAN_MAPPING == this.state.filterType
+      this.state.filterType === USER_FILTER_TYPE.BOOLEAN_MAPPING
     ) {
-      let values = this.get_selected_ids_array(this.state.attributeValues);
       newFilter = {
         id: id,
-        type: USER_FILTER_TYPE.DISCRETE,
         attribute: this.state.attribute,
+        type: USER_FILTER_TYPE.DISCRETE,
         allowedValues: this.state.discreteSelected
       };
     } else if (this.state.filterType === USER_FILTER_TYPE.DATE_RANGE) {
       newFilter = {
         id: id,
-        type: this.state.comparator,
         attribute: this.state.attribute,
+        type: this.state.comparator,
         threshold: this.state.date.format("YYYY-MM-DD")
       };
     } else {
       let value = parseFloat(this.state.GtLtThreshold);
       newFilter = {
         id: id,
-        type: this.state.comparator,
         attribute: this.state.attribute,
+        type: this.state.comparator,
         threshold: value
       };
     }
 
-    this.setState({ filters: [...this.state.filters, newFilter] }, () => {
-      this.setState({
-        attribute: "select",
-        value: "select",
-        attributeValues: {},
-        filterType: "of",
-        GtLtThreshold: 0,
-        dropdownActive: false,
-        selectorKeyBase: `${Math.random()}`
-      });
-      this.props.onFiltersChanged(this.state.filters);
-    });
-  };
-
-  removeFilter = evt => {
-    let newFilters = [...this.state.filters].filter(
-      filter => filter.id !== parseInt(evt.target.name)
-    );
-    this.setState({ filters: newFilters }, () =>
+    this.setState(
+      prevstate => ({
+        filters: [...prevstate.filters, newFilter],
+        selectorKeyBase: `${Math.random()}`,
+        ...this.baseRuleConstructionState
+      }),
       this.props.onFiltersChanged(this.state.filters)
     );
   };
 
   addFilterBtn = () => {
-    let { attributeValues, filterType } = this.state;
-    let rowValues = Object.values(attributeValues);
+    let { filterType } = this.state;
+    let rowValues = Object.values({});
     let numberSelected = rowValues.filter(Boolean).length;
     let isSelected = numberSelected > 0 || filterType !== "of";
     var addFilterBtn = <div />;
     if (isSelected) {
       addFilterBtn = (
-        <div>
-          <StyledButton
-            style={{
-              fontWeight: "400",
-              margin: "0em 1em",
-              lineHeight: "25px",
-              height: "25px"
-            }}
-            onClick={this.handleAddFilter}
-          >
-            Add
-          </StyledButton>
-        </div>
+        <Button type="primary" onClick={this.handleAddFilter}>
+          Add
+        </Button>
       );
     }
     return addFilterBtn;
   };
 
+  removeFilter = id => {
+    this.setState(
+      prevstate => ({
+        filters: prevstate.filters.filter(filter => filter.id !== parseInt(id))
+      }),
+      this.props.onFiltersChanged(this.state.filters)
+    );
+  };
+
   activeFilterBubbles = () => {
     let { filters } = this.state;
-    let addedFilters = <div />;
     if (filters) {
-      addedFilters = (
+      return (
         <div
           style={{
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            margin: "0 1em",
             flexFlow: "row wrap"
           }}
         >
           {filters.map((filter, index) => {
+            let attributeProperties = this.props.possibleFilters[
+              filter.attribute
+            ];
+
+            let color =
+              attributeProperties.table === "credit_transfer"
+                ? DefaultTheme.primary
+                : DefaultTheme.alt;
+
+            let filterVals = <div />;
+
             if (
               filter.type === USER_FILTER_TYPE.DISCRETE ||
               filter.type === USER_FILTER_TYPE.BOOLEAN_MAPPING
             ) {
-              return (
-                <FilterBubble key={index}>
-                  <FilterText style={{ color: "#FFF" }}>
-                    {filter.attribute}:{" "}
-                    {filter.allowedValues.map((value, index) => {
-                      if (filter.allowedValues.length === index + 1) {
-                        return value;
-                      } else {
-                        return value + " or ";
-                      }
-                    })}
-                  </FilterText>
-                  <SVG
-                    name={filter.id}
-                    onClick={this.removeFilter}
-                    src="/static/media/close.svg"
-                  />
-                </FilterBubble>
+              filterVals = (
+                <BubbleText style={{ color: color }}>
+                  {filter.allowedValues.map((value, index) => {
+                    if (filter.allowedValues.length === index + 1) {
+                      return value;
+                    } else {
+                      return value + " or ";
+                    }
+                  })}
+                </BubbleText>
               );
             } else {
-              return (
-                <FilterBubble key={index}>
-                  <FilterText style={{ color: "#FFF" }}>
-                    {filter.attribute} {filter.type} {filter.threshold}
-                  </FilterText>
-                  <SVG
-                    name={filter.id}
-                    onClick={this.removeFilter}
-                    src="/static/media/close.svg"
-                  />
-                </FilterBubble>
+              filterVals = (
+                <BubbleText style={{ color: color }}>
+                  {filter.type} {filter.threshold}
+                </BubbleText>
               );
             }
+
+            return (
+              <FilterBubble
+                key={index}
+                onClick={() => this.removeFilter(filter.id)}
+                style={{ borderColor: color }}
+              >
+                <BubbleLeft style={{ backgroundColor: color }}>
+                  <BubbleText style={{ color: "#FFF" }}>
+                    {attributeProperties.name}:
+                  </BubbleText>
+                </BubbleLeft>
+                {filterVals}
+                <SVG
+                  src={
+                    attributeProperties.table === "credit_transfer"
+                      ? "/static/media/closePrimary.svg"
+                      : "/static/media/closeAlt.svg"
+                  }
+                />
+              </FilterBubble>
+            );
           })}
         </div>
       );
     }
-    return addedFilters;
+    return <div />;
   };
 
   render() {
@@ -444,9 +381,13 @@ class Filter extends React.Component {
             flexFlow: "row wrap"
           }}
         >
-          {this.attributePicker()}
-          {this.filterTypePicker()}
-          {this.valuePicker()}
+          <PaddedInput>{this.attributeSelector()}</PaddedInput>
+
+          <PaddedInput>{this.filterTypePicker()}</PaddedInput>
+
+          <PaddedInput>{this.valuePicker()}</PaddedInput>
+
+          <PaddedInput>{this.addFilterBtn()}</PaddedInput>
         </div>
         {this.activeFilterBubbles()}
       </div>
@@ -458,208 +399,56 @@ class Filter extends React.Component {
 
 export default Filter;
 
+const PaddedInput = styled.div`
+  margin: 10px;
+`;
+
 const FilterText = styled.p`
+  white-space: nowrap;
   margin: 0;
-  font: 400 11px system-ui;
+  font: 200 14px system-ui;
   color: #777;
-  padding: 0 0 0 10px;
-`;
-
-const StyledSelectKey = styled(StyledSelect)`
-  box-shadow: 0 0 0 1px rgba(44, 45, 48, 0.15);
-  font: 400 12px system-ui;
-  color: #777;
-  background-color: white;
-  padding: 0 0 0 10px;
-  margin: 5px;
-  line-height: 25px;
-  height: 25px;
-  &:hover {
-    background-color: white;
-  }
-`;
-
-const ThresholdInput = styled(Input)`
-  font: 400 12px system-ui;
-  border-radius: 5px;
-  height: 12px;
+  -webkit-user-select: none; /* Chrome all / Safari all */
+  -moz-user-select: none; /* Firefox all */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
 `;
 
 const FilterBubble = styled.div`
   display: flex;
   align-items: center;
   width: fit-content;
-  margin: 10px 10px 0 0;
-  font: 400 12px system-ui;
-  color: #fff;
-  padding: 5px 0;
-  background-color: #607d8b;
-  border-radius: 10px;
+  margin: 10px 10px 10px 10px;
+  height: 32px;
+  padding: 0 10px 0 0;
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+`;
+
+const BubbleLeft = styled.div`
+  display: flex;
+  align-items: center;
+  height: 32px;
+  margin-left: -1px;
+  border-radius: 2px 0 0 2px;
+  background-color: #d9d9d9;
+`;
+
+const BubbleText = styled.p`
+  white-space: nowrap;
+  margin: 0;
+  padding: 10px;
+  font: 200 14px system-ui;
+  color: #777;
+  -webkit-user-select: none; /* Chrome all / Safari all */
+  -moz-user-select: none; /* Firefox all */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
 `;
 
 const SVG = styled.img`
   width: 12px;
-  padding: 0px 10px;
+  height: 12px;
+  cursor: pointer;
 `;
-
-const Checkboxes = styled.div`
-  display: block;
-  position: absolute;
-  z-index: 55;
-  background-color: rgb(255, 255, 255);
-  width: inherit;
-  border-radius: 2px;
-  margin: 5px;
-  box-shadow: 0 0 0 1px rgba(44, 45, 48, 0.15),
-    0 5px 10px rgba(44, 45, 48, 0.12);
-`;
-
-const CheckboxLabel = styled.label`
-  border-bottom: 1px solid #eaedef;
-  padding: 5px;
-  font: 400 12px system-ui;
-  color: #777;
-  display: block;
-  &:hover {
-    background-color: #f7fafc;
-  }
-  &::selection {
-    background: none;
-  }
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const CloseWrapper = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: transparent;
-  z-index: 54;
-  width: 100vw;
-  height: 100vh;
-`;
-
-const StyledWrapper = styled.div`
-  .SingleDatePickerInput {
-    border-radius: 5px;
-  }
-  .DateInput__small {
-    border-radius: 5px;
-  }
-  .DateInput_input__small {
-    height: 12px;
-    border-radius: 5px;
-    border-bottom: 2px solid white;
-  }
-  .DateInput_input__focused {
-  }
-`;
-//
-// <StyledSelectKey
-//             name="keyName"
-//             value={keyName}
-//             onChange={evt =>
-//               this.keyNameChange(evt.target.name, evt.target.value)
-//             }
-//           >
-//             <option name="key" value="select" disabled>
-//               select attribute
-//             </option>
-//             {typeof keys !== "undefined"
-//               ? keys.map((key, index) => (
-//                   <option
-//                     name="value"
-//                     value={key}
-//                     key={index}
-//                     style={{ color: "green" }}
-//                   >
-//                     {replaceUnderscores(possibleFilters[key]["name"] || key)}
-//                   </option>
-//                 ))
-//               : null}
-//           </StyledSelectKey>
-
-//
-// olddiscreteValuePicker = () => {
-//
-//     let { possibleFilters } = this.props;
-//
-//     let {
-//       dropdownActive,
-//       attribute,
-//       attributeValues
-//     } = this.state;
-//
-//     let valueArray =
-//       typeof possibleFilters[attribute].values !== "undefined"
-//         ? [...possibleFilters[attribute].values]
-//         : [];
-//
-//     return (
-//       <div
-//         style={{
-//           display: "flex",
-//           flexDirection: "row",
-//           alignItems: "center"
-//         }}
-//       >
-//         <div style={{ width: "200px" }}>
-//           <div
-//             style={{ width: "inherit", position: "relative" }}
-//             onClick={this.dropdownActive}
-//           >
-//             <StyledSelectKey
-//               style={{ width: "inherit" }}
-//               name="value"
-//               value={attribute}
-//               onClick={this.dropdownActive}
-//               onChange={this.handleChange}
-//             >
-//               <option name="value" value="select" disabled>
-//                 select value
-//               </option>
-//             </StyledSelectKey>
-//             <div
-//               style={{
-//                 position: "absolute",
-//                 top: 0,
-//                 right: 0,
-//                 bottom: 0,
-//                 left: 0
-//               }}
-//             />
-//           </div>
-//           <Checkboxes
-//             style={{ display: dropdownActive ? "block" : "none" }}
-//             onMouseLeave={() =>
-//               this.setState({ dropdownActive: !this.state.dropdownActive })
-//             }
-//           >
-//             {valueArray.length !== 0
-//               ? valueArray.map((key, index) => (
-//                   <CheckboxLabel key={index}>
-//                     <input
-//                       type="checkbox"
-//                       value={key}
-//                       checked={attributeValues[key]}
-//                       onChange={() => this.toggleSelected(key)}
-//                     />
-//                     {replaceUnderscores(key)}
-//                   </CheckboxLabel>
-//                 ))
-//               : null}
-//           </Checkboxes>
-//           <CloseWrapper
-//             onClick={() =>
-//               this.setState({ dropdownActive: !this.state.dropdownActive })
-//             }
-//             style={{ display: this.state.dropdownActive ? "" : "none" }}
-//           />
-//         </div>
-//
-//         {this.addFilterBtn()}
-//       </div>
-//     );
-//   };
