@@ -7,7 +7,7 @@ import {
   hexToRgb,
   toTitleCase,
   replaceUnderscores
-} from "../../utils";
+} from "../../../utils";
 
 const mapStateToProps = state => {
   return {

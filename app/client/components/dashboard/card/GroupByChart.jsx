@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
-import { toTitleCase, replaceUnderscores } from "../../utils";
+import { toTitleCase, replaceUnderscores } from "../../../utils";
 
 const mapStateToProps = state => {
   return {

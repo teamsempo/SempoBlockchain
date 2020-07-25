@@ -1,31 +1,17 @@
 import React from "react";
-import VolumeChart from "./volumeChart";
-import GroupByChart from "./GroupByChart";
+import VolumeChart from "./card/VolumeChart";
+import GroupByChart from "./card/GroupByChart";
+import CustomTabs from "./card/CustomTabs";
 import moment from "moment";
 
-import {
-  Card,
-  DatePicker,
-  Tabs,
-  Statistic,
-  Space,
-  Select,
-  Typography,
-  Divider
-} from "antd";
-import {
-  CaretUpOutlined,
-  CaretDownOutlined,
-  RightOutlined,
-  MinusOutlined
-} from "@ant-design/icons";
+import { Card, DatePicker, Space, Select, Typography, Divider } from "antd";
+
+import { RightOutlined } from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
-const { TabPane } = Tabs;
 const { Option } = Select;
 const { Text, Link } = Typography;
 
-import "./Tabs.css";
 import { toTitleCase, replaceUnderscores } from "../../utils";
 
 import { reduxState } from "./FakeState";
@@ -112,70 +98,6 @@ export default class TransfersCard extends React.Component {
       </div>
     );
 
-    const actions = [
-      <Tabs
-        defaultActiveKey="0"
-        centered
-        style={{ width: "100%", justifyContent: "space-between" }}
-        onTabClick={key => this.changeTimeseries(possibleTimeseries[key])}
-      >
-        {possibleTimeseries.map((tab, i) => {
-          const time_series =
-            reduxState.metricsState.transfer_stats[tab].time_series;
-          let startValue = 0;
-          let endValue = 0;
-          Object.keys(time_series).map(key => {
-            startValue += time_series[key][0].value;
-            endValue += time_series[key][time_series[key].length - 1].value;
-          });
-
-          let color;
-          let arrow;
-          if (endValue > startValue) {
-            color = "#3f8600";
-            arrow = (
-              <CaretUpOutlined style={{ color: color, marginRight: 0 }} />
-            );
-          } else if (startValue > endValue) {
-            color = "#cf1322";
-            arrow = (
-              <CaretDownOutlined style={{ color: color, marginRight: 0 }} />
-            );
-          } else {
-            color = "#485465";
-            arrow = <MinusOutlined style={{ color: color, marginRight: 0 }} />;
-          }
-
-          return (
-            <TabPane
-              tab={
-                <Statistic
-                  title={toTitleCase(replaceUnderscores(tab))}
-                  value={reduxState.metricsState.transfer_stats[tab].total}
-                  precision={2}
-                  prefix={
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        marginRight: 12
-                      }}
-                    >
-                      {arrow}
-                      <Text style={{ color: color, fontSize: 12 }}>
-                        {Math.round((endValue / startValue - 1) * 100)}%
-                      </Text>
-                    </div>
-                  }
-                />
-              }
-              key={i}
-            />
-          );
-        })}
-      </Tabs>
-    ];
-
     return (
       <Card title="Transfers" bordered={false} extra={filter}>
         <div
@@ -243,7 +165,12 @@ export default class TransfersCard extends React.Component {
             />
           </div>
         </div>
-        {actions}
+        {[
+          <CustomTabs
+            possibleTimeseries={possibleTimeseries}
+            changeTimeseries={key => this.changeTimeseries(key)}
+          />
+        ]}
       </Card>
     );
   }
