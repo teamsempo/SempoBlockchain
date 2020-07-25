@@ -106,6 +106,7 @@ export default class TransfersCard extends React.Component {
             ]}
             format={dateFormat}
             value={this.state.date_value}
+            onCalendarChange={values => this.setState({ date_value: values })}
           />
         </Space>
       </div>
