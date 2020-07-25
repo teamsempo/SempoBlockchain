@@ -4,7 +4,9 @@
 
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
+from server.models.transfer_usage import TransferUsage
 from server.models.user import User
+from server.models.utils import credit_transfer_transfer_usage_association_table
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.utils.metrics.metrics_const import *
 
@@ -16,7 +18,10 @@ group_joining_strategies = {
         TransferAccount.__tablename__: lambda query : query.join(TransferAccount, TransferAccount.id == CreditTransfer.sender_transfer_account_id),
         CustomAttributeUserStorage.__tablename__: lambda query : query.join(User, CreditTransfer.sender_user_id == User.id)\
                                                                     .join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
-                                                                    .filter(CustomAttributeUserStorage.name == 'gender')
+                                                                    .filter(CustomAttributeUserStorage.name == 'gender'),
+        TransferUsage.__tablename__: lambda query : query.join(credit_transfer_transfer_usage_association_table, 
+                                    credit_transfer_transfer_usage_association_table.c.credit_transfer_id == CreditTransfer.id)\
+                                    .join(TransferUsage, credit_transfer_transfer_usage_association_table.c.transfer_usage_id == TransferUsage.id)    
     },
     User.__tablename__: {
         CustomAttributeUserStorage.__tablename__: lambda query : query.join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
@@ -65,10 +70,11 @@ class Group(object):
 GROUP_TYPES = {
     GENDER: Group('Gender', CustomAttributeUserStorage, CustomAttributeUserStorage.value),
     TRANSFER_TYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.transfer_type),
-    TRANSFER_SUBTYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.transfer_subtype),
-    TRANSFER_STATUS: Group('Transfer Type', CreditTransfer, CreditTransfer.transfer_status),
-    TRANSFER_MODE: Group('Transfer Type', CreditTransfer, CreditTransfer.transfer_mode),
+    TRANSFER_SUBTYPE: Group('Transfer Subtype', CreditTransfer, CreditTransfer.transfer_subtype),
+    TRANSFER_STATUS: Group('Transfer Status', CreditTransfer, CreditTransfer.transfer_status),
+    TRANSFER_MODE: Group('Transfer Mode', CreditTransfer, CreditTransfer.transfer_mode),
     ACCOUNT_TYPE: Group('Account Type', TransferAccount, TransferAccount.account_type),
+    TRANSFER_USAGE: Group('Transfer Usages', TransferUsage, TransferUsage._name)
 }
 
 # Transfers can handle ALL groups!
