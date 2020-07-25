@@ -5,16 +5,36 @@ export const reduxState = {
         total: 6,
         groups: {
           cheese: 3,
-          milk: 5
+          milk: 5,
+          bananas: 6,
+          mushrooms: 11,
+          apples: 3
         },
         time_series: {
           cheese: [
             { date: "2020-07-23T00:00:00", value: 1 },
-            { date: "2020-07-24T00:00:00", value: 2 }
+            { date: "2020-07-24T00:00:00", value: 2 },
+            { date: "2020-07-25T00:00:00", value: 4 }
           ],
           milk: [
             { date: "2020-07-23T00:00:00", value: 3 },
-            { date: "2020-07-24T00:00:00", value: 2 }
+            { date: "2020-07-24T00:00:00", value: 2 },
+            { date: "2020-07-25T00:00:00", value: 2 }
+          ],
+          bananas: [
+            { date: "2020-07-23T00:00:00", value: 5 },
+            { date: "2020-07-24T00:00:00", value: 1 },
+            { date: "2020-07-25T00:00:00", value: 3 }
+          ],
+          mushrooms: [
+            { date: "2020-07-23T00:00:00", value: 1 },
+            { date: "2020-07-24T00:00:00", value: 3 },
+            { date: "2020-07-25T00:00:00", value: 6 }
+          ],
+          apples: [
+            { date: "2020-07-23T00:00:00", value: 1 },
+            { date: "2020-07-24T00:00:00", value: 0 },
+            { date: "2020-07-25T00:00:00", value: 2 }
           ]
         }
       },
