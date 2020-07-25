@@ -6,18 +6,18 @@ from server import db, red, bt
 
 from flask import g
 
-from server.utils.metrics import filters, metrics_cache, metric, metrics_const, group
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
+from server.utils.metrics import filters, metrics_cache, metric, metrics_const, group
 from server.utils.metrics.transfer_stats import TransferStats
 from server.utils.metrics.participant_stats import ParticipantStats
 from server.utils.metrics.total_users import TotalUsers
 
-from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount
-from server.models.blockchain_address import BlockchainAddress
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+from server.models.organisation import Organisation
+from server.models.token import Token
 
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import cast
@@ -33,10 +33,32 @@ def calculate_transfer_stats(
     metric_type=metrics_const.ALL,
     disable_cache: bool = False,
     timeseries_unit = metrics_const.DAY,
-    group_by = None):
-    # TODO (group_by PR): Add token filter here!
-    # - Check orgs being queried (dependant on multi-org PR)
-    # - Create 'manditory filter' field which is returned in the response
+    group_by = None,
+    token_id = None):
+
+    # Handle a situation where multi_org is used with orgs with different tokens
+    tokens_to_orgs = {}
+    mandatory_filter = {}
+    organisations = [Organisation.query.get(o) for o in g.get('query_organisations', [])]
+    tokens = [o.token for o in organisations]
+    for o in organisations:
+        if o.token not in tokens_to_orgs:
+            tokens_to_orgs[o.token] = []
+        tokens_to_orgs[o.token].append(o)
+
+    if len(tokens_to_orgs) > 1: 
+        if not token_id:
+            token, orgs = next(iter(tokens_to_orgs.items()))
+        else:
+            token = Token.query.get(token_id)
+            orgs = tokens_to_orgs[token]
+        g.query_organisations = [o.id for o in orgs]
+        mandatory_filter = {
+            'token_filter':{
+                'current_setting': {'id': token.id, 'name': token.name},
+                'options': [{'id': t.id, 'name':t.name} for t in tokens]
+            }
+        }
 
     date_filters = []
     if start_date is not None and end_date is not None:
@@ -74,6 +96,8 @@ def calculate_transfer_stats(
     for metric in metrics_list:
         data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
 
+    data['mandatory_filter'] = mandatory_filter
+
     # Legacy and aggregate metrics which don't fit the modular pattern
     if metric_type in [metrics_const.ALL, metrics_const.USER]:
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
@@ -83,6 +107,13 @@ def calculate_transfer_stats(
     except:
         data['master_wallet_balance'] = 0
 
+    active_filters = []
+    for uf in user_filter or []:
+        for f in user_filter[uf]:
+            active_filters.append(f[0][0])
+
+    data['active_group_by'] = group_by
+    data['active_filters'] = active_filters
     return data
 
 

@@ -9,11 +9,12 @@ from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const, group
 from flask.views import MethodView
 from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, USER_FILTERS, process_transfer_filters
-from server.utils.auth import requires_auth
+from server.utils.auth import requires_auth, multi_org
 
 metrics_blueprint = Blueprint('metrics', __name__)
 
 class CreditTransferStatsApi(MethodView):
+    @multi_org
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
         """
@@ -28,7 +29,11 @@ class CreditTransferStatsApi(MethodView):
             - encoded_filters: (Default: None) Set of filters to apply to the metrics query. 
                 Additional documentation for filters can be found in /utils/transfer_filter.py
             - disable_cache: (Default: False) Force-disables cache
-            - metric_type: (Default: ALL) Allows the user to swtich between `transfer`, `participant`, and `all`
+            - metric_type: (Default: 'all') Allows the user to swtich between `transfer`, `participant`, and `all`
+            - timeseries_unit: (Default: 'day') Allows the user to swtich between `day`, `week`, `month` and `year`
+            - group_by: (Default: 'gender') Allows the user to swtich choose group_by category. See /metrics/filters for all options
+            - token_id: (Default: None) If multi-org is being used, and the orgs have different tokens, this lets the user choose 
+                which token's stats to present
         """
 
         start_date = request.args.get('start_date')
@@ -39,6 +44,7 @@ class CreditTransferStatsApi(MethodView):
         metric_type = request.args.get('metric_type', metrics_const.ALL)
         timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
         group_by = request.args.get('group_by', metrics_const.GENDER)
+        token_id = request.args.get('token_id', None)
 
         if timeseries_unit not in metrics_const.TIMESERIES_UNITS:
             raise Exception(f'{timeseries_unit} not a valid timeseries unit. Please choose one of the following: {", ".join(metrics_const.TIMESERIES_UNITS)}')
@@ -59,7 +65,8 @@ class CreditTransferStatsApi(MethodView):
             metric_type=metric_type,
             disable_cache=disable_cache,
             timeseries_unit = timeseries_unit,
-            group_by = group_by
+            group_by = group_by,
+            token_id = token_id
         )
 
         response_object = {
