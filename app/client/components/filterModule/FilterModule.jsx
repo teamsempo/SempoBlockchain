@@ -81,6 +81,8 @@ class FilterModule extends React.Component {
       params.params = encoded_filters;
     }
 
+    params.disable_cache = true;
+
     if (groupBy) {
       params.group_by = groupBy;
     }
