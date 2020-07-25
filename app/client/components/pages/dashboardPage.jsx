@@ -7,7 +7,6 @@ import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions"
 
 import { BeneficiaryLiveFeed } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
-import FilterModule from "../filterModule/FilterModule";
 
 import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
 
@@ -120,7 +119,6 @@ class DashboardPage extends React.Component {
                       <MasterWalletCard />
                     </Col>
                     <Col span={8}>
-                      <FilterModule filterObject="credit_transfer"></FilterModule>
                       <BeneficiaryLiveFeed />
                     </Col>
                   </Row>
@@ -140,7 +138,6 @@ class DashboardPage extends React.Component {
                   </Row>
                 </div>
               </Mobile>
-
               <TransfersCard />
             </Space>
           </div>

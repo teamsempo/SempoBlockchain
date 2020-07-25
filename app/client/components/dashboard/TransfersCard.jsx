@@ -3,6 +3,7 @@ import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
 import CustomTabs from "./card/CustomTabs";
 import moment from "moment";
+import FilterModule from "../filterModule/FilterModule";
 
 import { Card, DatePicker, Space, Select, Typography, Divider } from "antd";
 
@@ -109,6 +110,8 @@ export default class TransfersCard extends React.Component {
             justifyContent: "space-between"
           }}
         >
+          <FilterModule filterObject="credit_transfer"></FilterModule>
+
           <div>fake filters</div>
           <div>
             <Space size={"middle"}>
