@@ -1,25 +1,19 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
 
-import { BeneficiaryLiveFeed, DashboardFilter } from "../dashboard";
+import { BeneficiaryLiveFeed } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
 
 import { ActivateAccountAction } from "../../reducers/auth/actions";
 import NoDataMessage from "../NoDataMessage";
-import { Row, Col, Card, Space } from "antd";
-import {
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  RightOutlined
-} from "@ant-design/icons";
+import { Row, Col, Space } from "antd";
 import TransfersCard from "../dashboard/TransfersCard";
 import MasterWalletCard from "../dashboard/MasterWalletCard";
 
