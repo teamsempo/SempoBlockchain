@@ -7,14 +7,7 @@ import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
 
-import {
-  VolumeChart,
-  BeneficiaryFunnel,
-  UsagePieChart,
-  MetricsBar,
-  BeneficiaryLiveFeed,
-  DashboardFilter
-} from "../dashboard";
+import { BeneficiaryLiveFeed, DashboardFilter } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
