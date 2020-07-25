@@ -228,7 +228,6 @@ def test_get_summed_metrics(
         assert returned_stats['total_distributed'] == 300
         assert returned_stats['total_exchanged'] == 0
         assert returned_stats['total_spent'] == total_spent_val
-        #assert returned_stats['transfer_use_breakdown'] == [[['Burger'], 1], [['HotDog'], 1], [['Pizza'], 2]]
     elif metric_type == 'participant' or metric_type == 'all':
         assert returned_stats['total_beneficiaries'] == 1
         assert returned_stats['total_users'] == 1
