@@ -7,7 +7,7 @@ import {
   hexToRgb,
   toTitleCase,
   replaceUnderscores
-} from "../../utils";
+} from "../../../utils";
 
 const mapStateToProps = state => {
   return {
@@ -16,11 +16,10 @@ const mapStateToProps = state => {
 };
 
 class VolumeChart extends React.Component {
-  construct_dataset_object(label, color, dataset) {
+  construct_dataset_object(index, label, color, dataset) {
     let rgb = hexToRgb(color);
-    return {
+    let data = {
       label: label,
-      fill: true,
       lineTension: 0,
       backgroundColor: rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)` : null,
       borderColor: color,
@@ -39,6 +38,13 @@ class VolumeChart extends React.Component {
       pointHitRadius: 10,
       data: dataset.map(data => data.value)
     };
+
+    if (index === 0) {
+      // see: https://github.com/chartjs/Chart.js/issues/2380#issuecomment-287535063
+      data["fill"] = "origin";
+    }
+
+    return data;
   }
 
   render() {
@@ -76,7 +82,13 @@ class VolumeChart extends React.Component {
       },
       tooltips: {
         mode: "x",
-        backgroundColor: "rgba(87, 97, 113, 0.9)"
+        backgroundColor: "rgba(87, 97, 113, 0.9)",
+        cornerRadius: 1
+      },
+      elements: {
+        line: {
+          fill: "-1" // by default, fill lines to the previous dataset
+        }
       },
       scales: {
         xAxes: [
@@ -127,18 +139,19 @@ class VolumeChart extends React.Component {
 
     const color_scheme = [
       "#003F5C",
-      "#2E4A7A",
-      "#62508E",
-      "#995194",
+      "#FF764D",
       "#CB5188",
+      "#62508E",
+      "#2E4A7A",
       "#F05B6F",
-      "#FF764D"
+      "#995194"
     ];
 
-    const datasets = possibleTimeseriesKeys.map((key, i) =>
+    const datasets = possibleTimeseriesKeys.map((key, index) =>
       this.construct_dataset_object(
+        index,
         key,
-        color_scheme[i],
+        color_scheme[index],
         this.props.data.time_series[key]
       )
     );

@@ -41,6 +41,7 @@ class BeneficiaryLiveFeed extends React.Component {
           title="Live Feed"
           bordered={false}
           bodyStyle={{ height: "140px", overflow: "scroll" }}
+          style={{ width: "100%" }}
         >
           <LiveFeed>
             {creditTransferList

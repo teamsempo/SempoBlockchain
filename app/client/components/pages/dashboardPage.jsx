@@ -1,18 +1,11 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
-import {
-  VolumeChart,
-  BeneficiaryFunnel,
-  UsagePieChart,
-  MetricsBar,
-  BeneficiaryLiveFeed
-} from "../dashboard";
+import { BeneficiaryLiveFeed } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import FilterModule from "../filterModule/FilterModule";
 
@@ -20,14 +13,10 @@ import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
 
 import { ActivateAccountAction } from "../../reducers/auth/actions";
 import NoDataMessage from "../NoDataMessage";
-import { Row, Col, Card, Space } from "antd";
-import {
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  RightOutlined
-} from "@ant-design/icons";
+import { Row, Col, Space } from "antd";
 import TransfersCard from "../dashboard/TransfersCard";
 import MasterWalletCard from "../dashboard/MasterWalletCard";
+import { Default, Mobile } from "../helpers/responsive";
 
 const mapStateToProps = state => {
   return {
@@ -123,16 +112,35 @@ class DashboardPage extends React.Component {
       return (
         <div>
           <div className="site-card-wrapper">
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Row gutter={16}>
-                <Col span={16}>
-                  <MasterWalletCard />
-                </Col>
-                <Col span={8}>
-                  <BeneficiaryLiveFeed />
-                </Col>
-              </Row>
-              <FilterModule filterObject="credit_transfer"></FilterModule>
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              <Default>
+                <div style={{ marginBottom: "-16px" }}>
+                  <Row gutter={16}>
+                    <Col span={16}>
+                      <MasterWalletCard />
+                    </Col>
+                    <Col span={8}>
+                      <FilterModule filterObject="credit_transfer"></FilterModule>
+                      <BeneficiaryLiveFeed />
+                    </Col>
+                  </Row>
+                </div>
+              </Default>
+
+              <Mobile>
+                {/* override ant defaults for mobile! */}
+                <div style={{ marginTop: "-24px", marginBottom: "-16px" }}>
+                  <Row gutter={[0, 16]}>
+                    <Col style={{ width: "100%" }}>
+                      <MasterWalletCard />
+                    </Col>
+                    <Col style={{ width: "100%" }}>
+                      <BeneficiaryLiveFeed />
+                    </Col>
+                  </Row>
+                </div>
+              </Mobile>
+
               <TransfersCard />
             </Space>
           </div>

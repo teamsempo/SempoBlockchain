@@ -33,8 +33,10 @@ class MasterWalletCard extends React.Component {
         display: false
       },
       tooltips: {
+        enabled: false,
         mode: "nearest",
-        backgroundColor: "rgba(87, 97, 113, 0.9)"
+        backgroundColor: "rgba(87, 97, 113, 0.9)",
+        cornerRadius: 1
       },
 
       scales: {
@@ -90,6 +92,7 @@ class MasterWalletCard extends React.Component {
         title="Master Wallet"
         bordered={false}
         bodyStyle={{ height: "140px" }}
+        style={{ width: "100%" }}
       >
         <div style={{ height: "100%", width: "100%" }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>

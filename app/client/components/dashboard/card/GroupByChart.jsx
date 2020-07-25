@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
-import { toTitleCase, replaceUnderscores } from "../../utils";
+import { toTitleCase, replaceUnderscores } from "../../../utils";
 
 const mapStateToProps = state => {
   return {
@@ -34,7 +34,8 @@ class GroupByChart extends React.Component {
       },
       tooltips: {
         mode: "y",
-        backgroundColor: "rgba(87, 97, 113, 0.9)"
+        backgroundColor: "rgba(87, 97, 113, 0.9)",
+        cornerRadius: 1
       },
       scales: {
         xAxes: [
@@ -56,8 +57,10 @@ class GroupByChart extends React.Component {
         ],
         yAxes: [
           {
+            maxBarThickness: 15,
             gridLines: {
-              display: false
+              display: true,
+              color: "#F0F3F5"
             },
             ticks: {
               beginAtZero: true,
@@ -75,14 +78,13 @@ class GroupByChart extends React.Component {
           label: `${toTitleCase(replaceUnderscores(selected))}`,
           backgroundColor: [
             "#003F5C",
-            "#2E4A7A",
-            "#62508E",
-            "#995194",
+            "#FF764D",
             "#CB5188",
+            "#62508E",
+            "#2E4A7A",
             "#F05B6F",
-            "#FF764D"
+            "#995194"
           ],
-
           data: aggregateData
         }
       ]
