@@ -55,7 +55,7 @@ export default class Filter extends React.Component {
 
     return (
       <div>
-        <div style={{ position: "absolute", top: 24, right: 24 }}>
+        <div style={{ position: "absolute", top: 16, right: 24 }}>
           <Space size={"middle"}>
             <Link type="link" onClick={() => this.setDate("today")}>
               Today
