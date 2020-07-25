@@ -33,6 +33,7 @@ class MasterWalletCard extends React.Component {
         display: false
       },
       tooltips: {
+        enabled: false,
         mode: "nearest",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
         cornerRadius: 1

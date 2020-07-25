@@ -1,6 +1,7 @@
 import React from "react";
 import VolumeChart from "./volumeChart";
 import GroupByChart from "./GroupByChart";
+import moment from "moment";
 
 import {
   Card,
@@ -22,19 +23,22 @@ import {
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 const { Option } = Select;
-const { Text } = Typography;
+const { Text, Link } = Typography;
 
 import "./Tabs.css";
 import { toTitleCase, replaceUnderscores } from "../../utils";
 
 import { reduxState } from "./FakeState";
 
+const dateFormat = "DD/MM/YYYY";
+
 export default class TransfersCard extends React.Component {
   constructor() {
     super();
     this.state = {
       selected_time_series: "volume", // volume, count, average_volume, average_count
-      selected_groupby: "stonks" // stonks, gender
+      selected_groupby: "stonks", // stonks, gender
+      date_value: ""
     };
   }
 
@@ -44,6 +48,26 @@ export default class TransfersCard extends React.Component {
 
   handleChange(value) {
     console.log(`selected ${value}`);
+  }
+
+  setDate(selection) {
+    if (selection === "today") {
+      let today = new Date();
+      this.setState({
+        date_value: [moment(today, dateFormat), moment(today, dateFormat)]
+      });
+    } else {
+      let startOf = moment()
+        .startOf(selection)
+        .toDate();
+      let endOf = moment()
+        .endOf(selection)
+        .toDate();
+
+      this.setState({
+        date_value: [moment(startOf, dateFormat), moment(endOf, dateFormat)]
+      });
+    }
   }
 
   render() {
@@ -66,10 +90,23 @@ export default class TransfersCard extends React.Component {
     const filter = (
       <div>
         <Space size={"middle"}>
-          <a href="#">Today</a>
-          <a href="#">This Week</a>
-          <a href="#">This Month</a>
-          <RangePicker />
+          <Link type="link" onClick={() => this.setDate("today")}>
+            Today
+          </Link>
+          <Link type="link" onClick={() => this.setDate("isoweek")}>
+            This Week
+          </Link>
+          <Link type="link" onClick={() => this.setDate("month")}>
+            This Month
+          </Link>
+          <RangePicker
+            defaultValue={[
+              moment("25/07/2020", dateFormat),
+              moment("25/07/2020", dateFormat)
+            ]}
+            format={dateFormat}
+            value={this.state.date_value}
+          />
         </Space>
       </div>
     );
