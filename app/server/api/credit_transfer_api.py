@@ -18,9 +18,9 @@ from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
     make_blockchain_transfer)
+
 from server.utils.user import create_transfer_account_if_required
 from server.utils.auth import multi_org
-from server.utils.transfer_filter import TRANSFER_FILTERS, process_transfer_filters
 
 from server.exceptions import NoTransferAccountError, UserNotFoundError, InsufficientBalanceError, AccountNotApprovedError, \
     InvalidTargetBalanceError, BlockchainError
