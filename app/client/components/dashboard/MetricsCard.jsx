@@ -3,24 +3,15 @@ import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
 import CustomTabs from "./card/CustomTabs";
 import DateRangeSelector from "./dateRangeSelector";
-import moment from "moment";
 import FilterModule from "../filterModule/FilterModule";
 
-import { Card, DatePicker, Space, Select, Typography, Divider } from "antd";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
-import { RightOutlined } from "@ant-design/icons";
-
-const { RangePicker } = DatePicker;
-const { Option } = Select;
-const { Text, Link } = Typography;
-
-import { toTitleCase, replaceUnderscores } from "../../utils";
+import { Card, Divider } from "antd";
 
 import { reduxState } from "./FakeState";
 
-const dateFormat = "DD/MM/YYYY";
-
-export default class MetricsCard extends React.Component {
+class MetricsCard extends React.Component {
   constructor() {
     super();
     this.state = {
@@ -41,19 +32,11 @@ export default class MetricsCard extends React.Component {
   }
 
   render() {
-    let { possibleTimeseries, cardTitle, filterObject } = this.props;
-
+    let { possibleTimeseries, cardTitle, filterObject, isMobile } = this.props;
     const selectedData =
       reduxState.metricsState.transfer_stats[this.state.selected_time_series];
 
-    const groupByOptions =
-      reduxState.metricsState.transfer_stats.allowed_groupbys;
-    const groupByKeys = groupByOptions ? groupByOptions : null;
-    const activeGroupBy =
-      reduxState.metricsState.transfer_stats.selected_groupby;
-
     const filter = <DateRangeSelector onChange={this.setDateRange} />;
-
     return (
       <Card title={cardTitle} bordered={false} extra={filter}>
         <div
@@ -76,11 +59,11 @@ export default class MetricsCard extends React.Component {
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
+            flexDirection: isMobile ? "column" : "row",
             alignItems: "center"
           }}
         >
-          <div style={{ height: 200, width: "60%" }}>
+          <div style={{ height: 200, width: isMobile ? "100%" : "60%" }}>
             <VolumeChart
               data={selectedData}
               selected={this.state.selected_time_series}
@@ -92,12 +75,18 @@ export default class MetricsCard extends React.Component {
             style={{
               height: 150,
               padding: "0 1em",
-              marginBottom: "3em"
+              margin: isMobile ? "-3em 0" : "0 0 3em",
+              transform: isMobile ? "rotate(90deg)" : null
             }}
           />
 
           {/*  need to offset the arrow width + padding */}
-          <div style={{ height: 200, width: "calc(40% - 2em - 22px)" }}>
+          <div
+            style={{
+              height: 200,
+              width: isMobile ? "100%" : "calc(40% - 2em - 22px)"
+            }}
+          >
             <GroupByChart
               data={selectedData}
               selected={this.state.selected_time_series}
@@ -114,3 +103,5 @@ export default class MetricsCard extends React.Component {
     );
   }
 }
+
+export default withMediaQuery([isMobileQuery])(MetricsCard);
