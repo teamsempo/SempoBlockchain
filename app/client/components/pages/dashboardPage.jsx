@@ -147,6 +147,7 @@ class DashboardPage extends React.Component {
                 timeSeriesNameLabels={[
                   ["all_payments_volume", "Volume"],
                   ["daily_transaction_count", "Transaction Count"],
+                  ["users_who_made_purchase", "Unique Users"],
                   ["transfer_amount_per_user", "Volume Per User"],
                   ["trades_per_user", "Count Per User"]
                 ]}

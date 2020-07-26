@@ -91,7 +91,7 @@ def calculate_transfer_stats(
         metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
     elif metric_type == metrics_const.USER:
         metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
-    elif metric_type == metrics_const.ALL:
+    else:
         metrics_list = TransferStats(group_strategy, timeseries_unit).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
 
     data = {}
