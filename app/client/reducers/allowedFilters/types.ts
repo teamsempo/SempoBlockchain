@@ -1,3 +1,7 @@
+// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+// The code in this file is not included in the GPL license applied to this repository
+// Unauthorized copying of this file, via any medium is strictly prohibited
+
 export enum AllowedFiltersActionTypes {
   LOAD_ALLOWED_FILTERS_REQUEST = "LOAD_ALLOWED_FILTERS_REQUEST",
   LOAD_ALLOWED_FILTERS_SUCCESS = "LOAD_ALLOWED_FILTERS_SUCCESS",
