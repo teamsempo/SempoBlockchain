@@ -3,7 +3,7 @@ import React from "react";
 import { connect } from "react-redux";
 import moment from "moment";
 
-import { isMobileQuery } from "../helpers/responsive";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 import { Card, Divider } from "antd";
 
@@ -36,8 +36,7 @@ class MetricsCard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedTimeSeries: props.defaultTimeSeries, // volume, count, average_volume, average_count
-      selected_groupby: props.defaultGroupBy, // stonks, gender
+      selectedTimeSeries: props.defaultTimeSeries,
       dateRange: ""
     };
   }
@@ -48,8 +47,8 @@ class MetricsCard extends React.Component {
     });
   };
 
-  changeTimeseries(ts_name) {
-    this.setState({ selectedTimeSeries: ts_name });
+  changeTimeseries(tsName) {
+    this.setState({ selectedTimeSeries: tsName });
   }
 
   render() {
@@ -62,9 +61,6 @@ class MetricsCard extends React.Component {
       defaultGroupBy,
       isMobile
     } = this.props;
-
-    console.log("metrics is", metrics);
-    console.log("selected ts is", this.state.selectedTimeSeries);
 
     const selectedData = metrics[this.state.selectedTimeSeries];
 

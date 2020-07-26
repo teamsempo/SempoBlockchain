@@ -110,7 +110,7 @@ class FilterModule extends React.Component {
         <Text>Group By:</Text>
         <Select
           defaultValue={defaultGroupBy}
-          style={{ width: 120 }}
+          style={{ width: 200 }}
           onChange={this.updateGroupBy}
         >
           {allowedGroups

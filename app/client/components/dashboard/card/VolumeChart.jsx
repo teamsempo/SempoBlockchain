@@ -1,5 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
+import { Empty } from "antd";
 
 import { Line, defaults } from "react-chartjs-2";
 import {
@@ -52,8 +53,17 @@ class VolumeChart extends React.Component {
   render() {
     let { selected, data } = this.props;
 
-    if (!data) {
-      return <LoadingSpinner />;
+    if (!(data && data.timeseries)) {
+      return (
+        <div style={{ display: "flex" }}>
+          <LoadingSpinner />
+        </div>
+      );
+    }
+
+    if (Object.keys(data.timeseries).length === 0) {
+      //  Timeseries is empty, so just render empty data warning
+      return <Empty />;
     }
 
     let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]

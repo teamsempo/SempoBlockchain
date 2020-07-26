@@ -143,9 +143,14 @@ class DashboardPage extends React.Component {
               <MetricsCard
                 cardTitle="Transfers"
                 defaultGroupBy="gender"
-                defaultTimeSeries="volume"
+                defaultTimeSeries="all_payments_volume"
                 filterObject="credit_transfer"
-                timeSeriesNameLabels={[["volume", "Active"]]}
+                timeSeriesNameLabels={[
+                  ["all_payments_volume", "Volume"],
+                  ["daily_transaction_count", "Transaction Count"],
+                  ["transfer_amount_per_user", "Volume Per User"],
+                  ["trades_per_user", "Count Per User"]
+                ]}
               />
               <MetricsCard
                 cardTitle="Participants"

@@ -25,7 +25,7 @@ export default class CustomTabs extends React.Component {
         centered
         tabPosition={"top"}
         style={{ width: "100%", justifyContent: "space-between" }}
-        onTabClick={key => changeTimeseries(timeSeriesNameLabels[key])}
+        onTabClick={key => changeTimeseries(key)}
       >
         {timeSeriesNameLabels.map((ts, i) => {
           let tsName = ts[0];
@@ -56,6 +56,11 @@ export default class CustomTabs extends React.Component {
             arrow = <MinusOutlined style={{ color: color, marginRight: 0 }} />;
           }
 
+          let percentChange = "--";
+          if (endValue && startValue) {
+            percentChange = Math.round((endValue / startValue - 1) * 100);
+          }
+
           return (
             <TabPane
               key={tsName}
@@ -74,7 +79,7 @@ export default class CustomTabs extends React.Component {
                     >
                       {arrow}
                       <Text style={{ color: color, fontSize: 12 }}>
-                        {Math.round((endValue / startValue - 1) * 100)}%
+                        {percentChange}%
                       </Text>
                     </div>
                   }
