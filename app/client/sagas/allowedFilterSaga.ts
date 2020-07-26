@@ -15,20 +15,12 @@ function* loadAllowedFilters(
   >
 ) {
   try {
-    console.log("calling load allowed filters", action.payload);
-
     const credit_transfer_filters_load_result = yield call(
       loadAllowedFiltersAPI,
       action.payload
     );
 
     const data = credit_transfer_filters_load_result.data;
-
-    const filters = data.filters;
-    const groups = data.groups;
-
-    console.log("found allowed filters", filters);
-    console.log("found allowed groups", groups);
 
     yield put(AllowedFiltersAction.updateAllowedFilters(action.name, data));
 

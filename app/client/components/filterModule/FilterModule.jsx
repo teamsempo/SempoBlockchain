@@ -3,9 +3,9 @@ import { Space, Select, Typography } from "antd";
 
 const { Text } = Typography;
 const { Option } = Select;
+import { connect } from "react-redux";
 
 import { LoadMetricAction } from "../../reducers/metric/actions";
-import { connect } from "react-redux";
 import styled from "styled-components";
 import Filter from "./filter";
 import {
@@ -42,10 +42,16 @@ class FilterModule extends React.Component {
     super(props);
     this.state = {
       encoded_filters: null,
-      groupBy: null
+      groupBy: props.defaultGroupBy
     };
 
     this.props.loadAllowedFilters(this.props.filterObject);
+
+    console.log("Default groupby is", props.defaultGroupBy);
+  }
+
+  componentDidMount() {
+    this.loadMetricsWithParams();
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -97,13 +103,13 @@ class FilterModule extends React.Component {
   };
 
   render() {
-    let { allowedGroups, isMobile } = this.props;
+    let { allowedGroups, defaultGroupBy, isMobile } = this.props;
 
     let groupByModule = (
       <Space size={"middle"}>
         <Text>Group By:</Text>
         <Select
-          // defaultValue={activeGroupBy}
+          defaultValue={defaultGroupBy}
           style={{ width: 120 }}
           onChange={this.updateGroupBy}
         >

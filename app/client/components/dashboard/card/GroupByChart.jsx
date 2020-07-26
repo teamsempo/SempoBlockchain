@@ -14,7 +14,7 @@ class GroupByChart extends React.Component {
   render() {
     const selected = this.props.selected;
 
-    const aggregate = this.props.data.groups;
+    const aggregate = this.props.data.aggregate;
     const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
     const aggregateData = aggregate ? Object.values(aggregate) : [];
 

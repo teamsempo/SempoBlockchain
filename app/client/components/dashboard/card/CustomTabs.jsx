@@ -12,13 +12,12 @@ const { TabPane } = Tabs;
 const { Text } = Typography;
 
 import { replaceUnderscores, toTitleCase } from "../../../utils";
-import { reduxState } from "../FakeState";
 
 import "./Tabs.css";
 
 export default class CustomTabs extends React.Component {
   render() {
-    const { possibleTimeseries, changeTimeseries } = this.props;
+    const { timeSeriesNameLabels, changeTimeseries, metrics } = this.props;
 
     return (
       <Tabs
@@ -26,16 +25,18 @@ export default class CustomTabs extends React.Component {
         centered
         tabPosition={"top"}
         style={{ width: "100%", justifyContent: "space-between" }}
-        onTabClick={key => changeTimeseries(possibleTimeseries[key])}
+        onTabClick={key => changeTimeseries(timeSeriesNameLabels[key])}
       >
-        {possibleTimeseries.map((tab, i) => {
-          const time_series =
-            reduxState.metricsState.transfer_stats[tab].time_series;
+        {timeSeriesNameLabels.map((ts, i) => {
+          let tsName = ts[0];
+          let tsLabel = ts[1];
+
+          const timeseries = metrics[tsName].timeseries;
           let startValue = 0;
           let endValue = 0;
-          Object.keys(time_series).map(key => {
-            startValue += time_series[key][0].value;
-            endValue += time_series[key][time_series[key].length - 1].value;
+          Object.keys(timeseries).map(key => {
+            startValue += timeseries[key][0].value;
+            endValue += timeseries[key][timeseries[key].length - 1].value;
           });
 
           let color;
@@ -57,10 +58,11 @@ export default class CustomTabs extends React.Component {
 
           return (
             <TabPane
+              key={tsName}
               tab={
                 <Statistic
-                  title={toTitleCase(replaceUnderscores(tab))}
-                  value={reduxState.metricsState.transfer_stats[tab].total}
+                  title={toTitleCase(replaceUnderscores(tsLabel))}
+                  value={metrics[tsName].total}
                   precision={2}
                   prefix={
                     <div
@@ -78,7 +80,6 @@ export default class CustomTabs extends React.Component {
                   }
                 />
               }
-              key={i}
             />
           );
         })}
@@ -86,8 +87,8 @@ export default class CustomTabs extends React.Component {
     );
   }
 }
-
-Tabs.PropTypes = {
-  possibleTimeseries: PropTypes.arrayOf(PropTypes.string),
-  changeTimeseries: () => fn()
-};
+//
+// Tabs.PropTypes = {
+//   possibleTimeseries: PropTypes.arrayOf(PropTypes.string),
+//   changeTimeseries: () => fn()
+// };

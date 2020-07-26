@@ -37,7 +37,7 @@ export default class TransfersCard extends React.Component {
   };
 
   changeTimeseries(ts) {
-    this.setState({ selected_time_series: ts });
+    this.setState({ selectedTimeSeries: ts });
   }
 
   render() {

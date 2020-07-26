@@ -93,7 +93,7 @@ export const reduxState = {
       },
       allowed_groupbys: ["stonks", "gender"],
       selected_groupby: "stonks",
-      selected_time_series: "volume"
+      selectedTimeSeries: "volume"
     }
   }
 };

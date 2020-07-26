@@ -140,15 +140,21 @@ class DashboardPage extends React.Component {
                   </Row>
                 </div>
               </Mobile>
-              <TransfersCard />
+              <MetricsCard
+                cardTitle="Transfers"
+                defaultGroupBy="gender"
+                defaultTimeSeries="volume"
+                filterObject="credit_transfer"
+                timeSeriesNameLabels={[["volume", "Active"]]}
+              />
               <MetricsCard
                 cardTitle="Participants"
+                defaultGroupBy="account_type"
+                defaultTimeSeries="active_users"
                 filterObject="user"
-                possibleTimeseries={[
-                  "volume",
-                  "count",
-                  "average_volume",
-                  "average_count"
+                timeSeriesNameLabels={[
+                  ["active_users", "Active"],
+                  ["users_created", "New"]
                 ]}
               />
             </Space>

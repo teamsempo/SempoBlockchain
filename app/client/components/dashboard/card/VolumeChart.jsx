@@ -9,6 +9,8 @@ import {
   replaceUnderscores
 } from "../../../utils";
 
+import LoadingSpinner from "../../loadingSpinner.jsx";
+
 const mapStateToProps = state => {
   return {
     activeOrganisation: state.organisations.byId[state.login.organisationId]
@@ -48,12 +50,16 @@ class VolumeChart extends React.Component {
   }
 
   render() {
-    const selected = this.props.selected;
+    let { selected, data } = this.props;
 
-    let possibleTimeseriesKeys = Object.keys(this.props.data.groups); // ["taco", "spy"]
+    if (!data) {
+      return <LoadingSpinner />;
+    }
+
+    let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
 
     // TODO? assumes that each category has the same date range
-    let all_dates = this.props.data.time_series[possibleTimeseriesKeys[0]].map(
+    let all_dates = data.timeseries[possibleTimeseriesKeys[0]].map(
       data => new Date(data.date)
     );
 
@@ -152,11 +158,11 @@ class VolumeChart extends React.Component {
         index,
         key,
         color_scheme[index],
-        this.props.data.time_series[key]
+        data.timeseries[key]
       )
     );
 
-    var data = {
+    var chartData = {
       labels: date_array,
       datasets: datasets
     };
@@ -164,7 +170,7 @@ class VolumeChart extends React.Component {
     return (
       <div>
         <div style={{ height: "200px" }}>
-          <Line data={data} height={200} options={options} />
+          <Line data={chartData} height={200} options={options} />
         </div>
       </div>
     );
