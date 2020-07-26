@@ -151,4 +151,4 @@ const FilterContainer = styled.div`
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withMediaQuery([isMobileQuery])(FilterModule));
+)(FilterModule);
