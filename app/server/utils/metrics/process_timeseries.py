@@ -119,14 +119,24 @@ def calculate_per_user(query_result, population_query_result):
         population_dates[date][group] = value
 
     results_per_user = []
+    last_succesful_population_lookup = None
     for result in query_result:
         # If population_query_result is grouped we want to divide our result by the population of the relevant group
         # Otherwise, the total population is the product
         if is_grouped:
             product = result[0]/population_dates[result[1]][result[2]]
         else:
-            product = result[0]/population_dates[result[1]][VALUE]
-        
+            try:
+                last_succesful_population_lookup = population_dates[result[1]]
+
+            except KeyError as e:
+                # Makes the data slightly more robust to missing info
+                # by allowing us to fallback to the last population info
+                if not last_succesful_population_lookup:
+                    raise e
+
+            product = result[0] / last_succesful_population_lookup[VALUE]
+
         if result[2]:
             results_per_user.append((product, result[1], result[2]))
         else:
