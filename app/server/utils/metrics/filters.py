@@ -75,11 +75,13 @@ def _apply_single_column_filter(query, filters, target_table, account_join_attri
     :param target_table: the table being filtered on
     :return:
     """
-
-    if target_table.__tablename__ == TransferAccount.__tablename__ and account_join_attribute is not None:
-        query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
-    elif target_table.__tablename__ == User.__tablename__ and user_join_attribute is not None:
-        query = query.join(User, User.id == user_join_attribute)
+    joined_tables = [mapper.class_ for mapper in query._join_entities]
+    if target_table not in joined_tables:
+        if target_table.__tablename__ == TransferAccount.__tablename__ and account_join_attribute is not None:
+            if TransferAccount not in joined_tables:
+                query = query.join(TransferAccount, TransferAccount.id == account_join_attribute)
+        elif target_table.__tablename__ == User.__tablename__ and user_join_attribute is not None:
+                query = query.join(User, User.id == user_join_attribute)
 
     for batches in filters:
         to_batch = []
@@ -150,7 +152,6 @@ standard_payment_filters = [
 exchanged_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
     CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
-    #CreditTransfer.token == g.active_organisation.token
 ]
 
 beneficiary_filters = [User.has_beneficiary_role == True]

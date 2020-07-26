@@ -279,7 +279,6 @@ class TransferAccountManager extends React.Component {
                   </StyledButton>
                   <AsyncButton
                     onClick={this.onSave}
-                    miniSpinnerStyle={{ height: "10px", width: "10px" }}
                     buttonStyle={{
                       display: "inline-flex",
                       fontWeight: "400",

@@ -248,7 +248,6 @@ def make_payment_transfer(transfer_amount,
     make_cashout_incentive_transaction = False
 
     if transfer_use is not None:
-        usages = []
         try:
             use_ids = transfer_use.split(',')  # passed as '3,4' etc.
         except AttributeError:
@@ -257,13 +256,11 @@ def make_payment_transfer(transfer_amount,
             if use_id != 'null':
                 use = TransferUsage.query.get(int(use_id))
                 if use:
-                    usages.append(use.name)
+                    transfer.transfer_usages.append(use)
                     if use.is_cashout:
                         make_cashout_incentive_transaction = True
                 else:
-                    usages.append('Other')
-
-        transfer.transfer_use = usages
+                    raise Exception(f'{use_id} not a valid transfer usage')
 
     transfer.uuid = uuid
 
