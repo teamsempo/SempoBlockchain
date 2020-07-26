@@ -129,13 +129,17 @@ def calculate_per_user(query_result, population_query_result):
             try:
                 last_succesful_population_lookup = population_dates[result[1]]
 
+                denominator = last_succesful_population_lookup[VALUE]
+
             except KeyError as e:
                 # Makes the data slightly more robust to missing info
                 # by allowing us to fallback to the last population info
-                if not last_succesful_population_lookup:
-                    raise e
+                if last_succesful_population_lookup:
+                    denominator = last_succesful_population_lookup[VALUE]
+                else:
+                    denominator = 1
 
-            product = result[0] / last_succesful_population_lookup[VALUE]
+            product = result[0] / denominator
 
         if result[2]:
             results_per_user.append((product, result[1], result[2]))

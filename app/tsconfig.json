@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "typeCheck": false,
-    "transpileOnly": true,
     "keyofStringsOnly": true,
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
