@@ -26,7 +26,9 @@ class TransferStats(metric_group.MetricGroup):
             object_model=CreditTransfer,
             stock_filters=[filters.disbursement_filters],
             caching_combinatory_strategy=metrics_cache.SUM,
-            filterable_by=self.filterable_attributes))
+            filterable_by=self.filterable_attributes,
+            bypass_user_filters=True
+        ))
 
         total_spent_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
         self.metrics.append(metric.Metric(
