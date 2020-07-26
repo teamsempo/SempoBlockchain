@@ -108,13 +108,11 @@ class MetricsCard extends React.Component {
               />
             </div>
           </div>
-          {[
-            <CustomTabs
-              metrics={metrics}
-              timeSeriesNameLabels={timeSeriesNameLabels}
-              changeTimeseries={key => this.changeTimeseries(key)}
-            />
-          ]}
+          <CustomTabs
+            metrics={metrics}
+            timeSeriesNameLabels={timeSeriesNameLabels}
+            changeTimeseries={key => this.changeTimeseries(key)}
+          />
         </div>
       );
     } else {

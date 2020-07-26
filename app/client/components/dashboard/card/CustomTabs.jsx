@@ -67,7 +67,7 @@ export default class CustomTabs extends React.Component {
               tab={
                 <Statistic
                   title={toTitleCase(replaceUnderscores(tsLabel))}
-                  value={metrics[tsName].total}
+                  value={metrics[tsName].aggregate.total}
                   precision={2}
                   prefix={
                     <div

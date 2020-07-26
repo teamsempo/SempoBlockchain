@@ -13,7 +13,6 @@ import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
 import { ActivateAccountAction } from "../../reducers/auth/actions";
 import NoDataMessage from "../NoDataMessage";
 import { Row, Col, Space } from "antd";
-import TransfersCard from "../dashboard/TransfersCard";
 import MetricsCard from "../dashboard/MetricsCard";
 
 import MasterWalletCard from "../dashboard/MasterWalletCard";
