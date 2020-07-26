@@ -46,7 +46,7 @@ def add_missing_days(query_result, population_query_result=None, end_date=None):
 
     full_date_range = []
     for group in group_set or [group_name]:
-        for i in range(delta.days + 1):
+        for i in range(delta.days + 2):
             day = start_date + timedelta(days=i)
             if day in days_to_results:
                 if group in days_to_results[day]:
