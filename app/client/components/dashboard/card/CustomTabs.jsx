@@ -24,6 +24,7 @@ export default class CustomTabs extends React.Component {
       <Tabs
         defaultActiveKey="0"
         centered
+        tabPosition={"top"}
         style={{ width: "100%", justifyContent: "space-between" }}
         onTabClick={key => changeTimeseries(possibleTimeseries[key])}
       >
