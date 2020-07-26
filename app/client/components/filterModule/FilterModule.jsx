@@ -1,22 +1,20 @@
 import React from "react";
-import { DatePicker, Space, Select, Typography, Divider } from "antd";
-const { Text, Link } = Typography;
+import { Space, Select, Typography } from "antd";
+
+const { Text } = Typography;
 const { Option } = Select;
 
-import { DateRangePicker } from "react-dates";
 import { LoadMetricAction } from "../../reducers/metric/actions";
 import { connect } from "react-redux";
 import styled from "styled-components";
-import { StyledButton } from "../styledElements";
-import moment from "moment";
 import Filter from "./filter";
 import {
   processFiltersForQuery,
   replaceUnderscores,
   toTitleCase
 } from "../../utils";
-import { browserHistory } from "../../createStore.js";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -99,7 +97,7 @@ class FilterModule extends React.Component {
   };
 
   render() {
-    let { allowedGroups } = this.props;
+    let { allowedGroups, isMobile } = this.props;
 
     let groupByModule = (
       <Space size={"middle"}>
@@ -123,7 +121,7 @@ class FilterModule extends React.Component {
     );
 
     return (
-      <FilterContainer>
+      <FilterContainer isMobile={isMobile}>
         <Filter
           label={"Filter by user:"}
           possibleFilters={this.props.allowedFilters}
@@ -137,7 +135,7 @@ class FilterModule extends React.Component {
 
 const FilterContainer = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: ${props => (props.isMobile ? "column" : "row")};
   align-items: center;
   margin-bottom: 1em;
   justify-content: space-between;
@@ -147,4 +145,4 @@ const FilterContainer = styled.div`
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(FilterModule);
+)(withMediaQuery([isMobileQuery])(FilterModule));
