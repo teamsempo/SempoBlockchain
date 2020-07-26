@@ -185,7 +185,6 @@ class CreateUserForm extends React.Component<
         <div>
           {businessUsage}
           <InputField name="transferAccountName" label={"Store Name"} />
-          <InputField name="location" label={"Address"} />
         </div>
       );
     } else if (accountType === TransferAccountTypes.TOKENAGENT.toLowerCase()) {
