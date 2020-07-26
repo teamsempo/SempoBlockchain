@@ -36,8 +36,6 @@ export function apiClient<T>({
     throw new Error("Method provided is not supported");
   }
 
-  console.log("url is", url);
-
   let formData: FormData;
   let headers: HeadersInit = {};
   let request: RequestInit = {

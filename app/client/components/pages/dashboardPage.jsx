@@ -14,6 +14,8 @@ import { ActivateAccountAction } from "../../reducers/auth/actions";
 import NoDataMessage from "../NoDataMessage";
 import { Row, Col, Space } from "antd";
 import TransfersCard from "../dashboard/TransfersCard";
+import MetricsCard from "../dashboard/MetricsCard";
+
 import MasterWalletCard from "../dashboard/MasterWalletCard";
 import { Default, Mobile } from "../helpers/responsive";
 
@@ -139,6 +141,16 @@ class DashboardPage extends React.Component {
                 </div>
               </Mobile>
               <TransfersCard />
+              <MetricsCard
+                cardTitle="Participants"
+                filterObject="user"
+                possibleTimeseries={[
+                  "volume",
+                  "count",
+                  "average_volume",
+                  "average_count"
+                ]}
+              />
             </Space>
           </div>
         </div>

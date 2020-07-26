@@ -8,6 +8,7 @@ import { MetricsActionType, LoadMetricsActionType, Metrics } from "./types";
 const metricsState = (state: Metrics[] = [] || {}, action: MetricAction) => {
   switch (action.type) {
     case MetricsActionType.UPDATE_METRICS:
+      console.log("payload is", action.payload);
       return DEEEEEEP(state, action.payload);
     default:
       return state;
