@@ -345,7 +345,7 @@ class RDSMigrate:
 
                     db.session.add(migration_transfer)
 
-                    migration_transfer.resolve_as_completed()
+                    migration_transfer.resolve_as_complete_and_trigger_blockchain()
 
             except Exception as e:
                 print(e)
@@ -389,7 +389,7 @@ class RDSMigrate:
 
             # db.session.add(transfer)
 
-            # transfer.resolve_as_completed()
+            # transfer.resolve_as_complete_and_trigger_blockchain()
 
             # transfer.transfer_type = TransferTypeEnum.PAYMENT
 

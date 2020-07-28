@@ -1,4 +1,6 @@
 import pytest
+from time import sleep
+
 from flask import current_app
 from faker.providers import phone_number
 from faker import Faker
@@ -6,8 +8,8 @@ from faker import Faker
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
@@ -21,6 +23,29 @@ fake.add_provider(phone_number)
 
 # ---- https://www.patricksoftwareblog.com/testing-a-flask-application-using-pytest/
 # ---- https://medium.com/@bfortuner/python-unit-testing-with-pytest-and-mock-197499c4623c
+
+@pytest.fixture(scope='session', autouse=True)
+def wait_for_worker_boot_if_needed():
+    TIMEOUT = 60
+
+    from server.utils.celery import get_celery_worker_status
+    from helpers.utils import will_func_test_blockchain
+
+    if will_func_test_blockchain():
+
+        elapsed = 0
+        while elapsed < TIMEOUT:
+            worker_status = get_celery_worker_status()
+            if 'ERROR' not in worker_status:
+                print("Celery Workers Found")
+                return
+            sleep(1)
+            elapsed += 1
+
+        raise Exception("Timeout while waiting for celery workers")
+    else:
+        print("Not testing blockchain; not waiting for celery workers")
+        return
 
 @pytest.fixture(scope='function')
 def requires_auth(test_client):
@@ -258,8 +283,7 @@ def admin_with_org_reserve_balance(authed_sempo_admin_user, external_reserve_tok
     amount = 100
 
     org_transfer_account = authed_sempo_admin_user.default_organisation.org_level_transfer_account
-
-    org_transfer_account.balance = amount
+    org_transfer_account.set_balance_offset(amount)
 
     bt.make_token_transfer(
         loaded_master_wallet_address,
@@ -282,8 +306,7 @@ def user_with_reserve_balance(create_transfer_account_user, external_reserve_tok
                         transfer_account.token,
                         loaded_master_wallet_address, transfer_account.blockchain_address,
                         amount)
-
-    transfer_account.balance = amount
+    transfer_account.set_balance_offset(amount)
     create_transfer_account_user.is_activated = True
 
     return create_transfer_account_user
@@ -309,7 +332,6 @@ def initialised_blockchain_network(
             reserve_token_address=reserve_token.address,
             reserve_ratio_ppm=reserve_ratio_ppm
         )
-
         smart_token_address = smart_token_result['smart_token_address']
         subexchange_address = smart_token_result['subexchange_address']
 

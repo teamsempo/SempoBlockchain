@@ -107,7 +107,7 @@ set -e
 
 echo ~~~Starting worker
 cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q processor,celery,low-priority,high-priority &
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority &
 sleep 5
 
 echo ~~~Seeding Data

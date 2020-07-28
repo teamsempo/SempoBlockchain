@@ -216,6 +216,16 @@ export const replaceUnderscores = stringlike => {
   }
 };
 
+export const toTitleCase = stringlike => {
+  if (stringlike) {
+    return stringlike.replace(/\w\S*/g, function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  } else {
+    return "";
+  }
+};
+
 export const replaceSpaces = stringlike => {
   if (stringlike) {
     return stringlike.toString().replace(/ /g, "-");
@@ -253,21 +263,59 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
 };
 
 export const processFiltersForQuery = filters => {
-  let encoded_filters = encodeURIComponent("%$user_filters%");
+  let encoded_filters = encodeURIComponent("");
+  let delimiter = ":";
+  // let encoded_filters = encodeURIComponent("%$user_filters%");
+
   filters.forEach(filter => {
+    encoded_filters += encodeURIComponent(filter.attribute);
+    let parsed_filter = "";
     if (
-      USER_FILTER_TYPE.DISCRETE == filter.type ||
-      USER_FILTER_TYPE.BOOLEAN_MAPPING == filter.type
+      USER_FILTER_TYPE.DISCRETE === filter.type ||
+      USER_FILTER_TYPE.BOOLEAN_MAPPING === filter.type
     ) {
-      encoded_filters += encodeURIComponent("," + filter.keyName + "%");
+      let rule = "(IN)";
+      let allowed_vals = "";
       filter.allowedValues.forEach(value => {
-        encoded_filters += encodeURIComponent("=" + value + "%");
+        allowed_vals += encodeURIComponent(value) + ",";
       });
+
+      parsed_filter = `${rule}(${allowed_vals.slice(0, -1)})`;
     } else {
-      encoded_filters += encodeURIComponent("," + filter.keyName + "%");
-      let parsed_filter = filter.type + filter.threshold + "%";
-      encoded_filters += encodeURIComponent(parsed_filter);
+      let rule = "";
+      if (filter.type === ">") {
+        rule = "(GT)";
+      } else if (filter.type === "<") {
+        rule = "(LT)";
+      } else {
+        rule = "(EQ)";
+      }
+      let threshold = `(${encodeURIComponent(filter.threshold)})`;
+
+      parsed_filter = rule + threshold;
     }
+
+    encoded_filters += parsed_filter + delimiter;
   });
+
+  encoded_filters = encoded_filters.slice(0, -delimiter.length);
+
   return encoded_filters;
 };
+
+export function hexToRgb(hex) {
+  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+  var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+    return r + r + g + g + b + b;
+  });
+
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      }
+    : null;
+}

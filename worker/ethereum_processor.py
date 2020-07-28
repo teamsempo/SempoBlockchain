@@ -302,7 +302,6 @@ class BaseERC20Processor(ABC):
             self.ethereum_chain_id = int(ethereum_chain_id)
 
             self.w3 = Web3(HTTPProvider(http_provider))
-            # self.wsw3 = Web3(WebsocketProvider(websocket_provider))
 
             self.contract = self.w3.eth.contract(address=self.contract_address, abi=self.abi_dict)
             self.decimals = self.get_decimals()
@@ -667,45 +666,6 @@ class UnmintableERC20Processor(BaseERC20Processor):
             return [address_dict['address'] for address_dict in address_dict_list]
         else:
             return []
-
-
-    def find_new_external_inbounds(self):
-
-        address_list = self.get_transfer_account_blockchain_addresses()
-
-        try:
-            latest_block = self.wsw3.eth.getBlock('latest')
-
-            threshold = latest_block.number - 2
-
-            inbound_filter = self.websocket_contract.events.Transfer.createFilter(
-                fromBlock=threshold,
-                argument_filters={'dst': address_list})
-
-
-            for event in inbound_filter.get_all_entries():
-
-                try:
-
-                    converted_amount = self.native_amount_to_cents(event['args']['wad'])
-
-                    body = {
-                        'sender_blockchain_address': event['args']['src'],
-                        'recipient_blockchain_address': event['args']['dst'],
-                        'blockchain_transaction_hash': event['transactionHash'].hex(),
-                        'transfer_amount': converted_amount
-                    }
-
-                    r = requests.post(config.APP_HOST + '/api/credit_transfer/internal/',
-                                      json=body,
-                                      auth=HTTPBasicAuth(config.BASIC_AUTH_USERNAME,
-                                                         config.BASIC_AUTH_PASSWORD))
-                except KeyError:
-                    pass
-
-        except ssl.SSLError as e:
-            pass
-
 
     def __init__(self,
                  contract_address,

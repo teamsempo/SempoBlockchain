@@ -163,7 +163,8 @@ class Setup(object):
                 'symbol': symbol,
                 'issue_amount_wei': issue_amount_wei,
                 'reserve_deposit_wei': reserve_deposit_wei,
-                'reserve_ratio_ppm': reserve_ratio_ppm
+                'reserve_ratio_ppm': reserve_ratio_ppm,
+                'allow_autotopup': True
             })
 
         json = cic_post.json()
@@ -202,7 +203,8 @@ class Setup(object):
                               'symbol': symbol,
                               'issue_amount_wei': issue_amount_wei,
                               'reserve_deposit_wei': reserve_deposit_wei,
-                              'reserve_ratio_ppm': reserve_ratio_ppm
+                              'reserve_ratio_ppm': reserve_ratio_ppm,
+                              'allow_autotopup': True
                           })
 
         json = r.json()

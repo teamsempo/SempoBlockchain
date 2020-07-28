@@ -10,3 +10,4 @@ raven==6.9.0
 redis==3.4.1
 requests==2.20.0
 web3==5.0.2
+celery-redbeat==1.0.0

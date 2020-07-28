@@ -62,7 +62,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     # Check additional GE LIMITS for Liquid Token (withdrawal)
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
-    new_credit_transfer.sender_transfer_account.balance = 10000
+    new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     assert new_credit_transfer.get_transfer_limits() == [
         limit for limit in LIMIT_IMPLEMENTATIONS
         if 'GE Liquid Token - Standard User' == limit.name or 'Sempo Level 3: WD' in limit.name
@@ -72,7 +72,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-    new_credit_transfer.sender_transfer_account.balance = 10000
+    new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     assert new_credit_transfer.get_transfer_limits() == [
         limit for limit in LIMIT_IMPLEMENTATIONS
         if 'GE Liquid Token - Standard User' in limit.name or 'Sempo Level 3: P' in limit.name
@@ -83,7 +83,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-    new_credit_transfer.sender_transfer_account.balance = 10000
+    new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     assert new_credit_transfer.get_transfer_limits() == [
         limit for limit in LIMIT_IMPLEMENTATIONS
         if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: P' in limit.name
@@ -116,7 +116,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
             transfer_subtype=TransferSubTypeEnum.STANDARD
         )
         db.session.add(c)
-        c.resolve_as_completed()
+        c.resolve_as_complete_and_trigger_blockchain()
         db.session.flush()
 
 def test_liquidtoken_number_of_limits(new_credit_transfer):
@@ -142,7 +142,7 @@ def test_liquidtoken_fraction_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
 
-    new_credit_transfer.sender_transfer_account.balance = 1000
+    new_credit_transfer.sender_transfer_account.set_balance_offset(1000)
     new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
     with pytest.raises(TransferBalanceFractionLimitError):
@@ -158,8 +158,7 @@ def test_liquidtoken_min_send_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_amount = 1500
-
-    new_credit_transfer.sender_transfer_account.balance = 5000
+    new_credit_transfer.sender_transfer_account.set_balance_offset(5000)
     new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
     with pytest.raises(MinimumSentLimitError):
@@ -178,7 +177,7 @@ def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer)
     other_new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     other_new_credit_transfer.token.token_type = token.TokenType.LIQUID
     other_new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-    other_new_credit_transfer.sender_transfer_account.balance = 2000
+    other_new_credit_transfer.sender_transfer_account.set_balance_offset(2000)
     other_new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
 
     with pytest.raises(TransferCountLimitError):
@@ -255,7 +254,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_withdrawa
     # Check GE LIMITS for Liquid Token (withdrawal) on check LIMITS
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_type = TransferTypeEnum.WITHDRAWAL
-    new_credit_transfer.sender_transfer_account.balance = 1000
+    new_credit_transfer.sender_transfer_account.set_balance_offset(1000)
     with pytest.raises(TransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
 
@@ -266,7 +265,7 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_ge_agent_out
     new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-    new_credit_transfer.sender_transfer_account.balance = 1000
+    new_credit_transfer.sender_transfer_account.set_balance_offset(1000)
     with pytest.raises(TransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
 
