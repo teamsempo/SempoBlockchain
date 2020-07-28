@@ -1,4 +1,4 @@
-FROM python:3.6-slim-stretch
+FROM python:3.7.8-slim-stretch
 
 RUN apt update && apt -y install gcc libssl-dev libffi-dev curl:
 
