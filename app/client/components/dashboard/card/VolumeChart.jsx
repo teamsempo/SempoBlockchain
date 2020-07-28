@@ -175,7 +175,7 @@ class VolumeChart extends React.Component {
         date_array
       );
 
-      this.construct_dataset_object(
+      return this.construct_dataset_object(
         index,
         key,
         color_scheme[index],
