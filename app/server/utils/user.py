@@ -169,10 +169,10 @@ def update_transfer_account_user(user,
     user.set_held_role('VENDOR', vendor_tier)
 
     if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+        user.set_held_role('TOKEN_AGENT', 'token_agent')
 
     if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
@@ -236,10 +236,10 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
     user.set_held_role('VENDOR', vendor_tier)
 
     if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+        user.set_held_role('TOKEN_AGENT', 'token_agent')
 
     if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')

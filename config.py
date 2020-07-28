@@ -361,22 +361,6 @@ try:
 except KeyError:
     NAMESCAN_KEY = None
 
-try:
-    GE_DB_NAME = secrets_parser['GE_MIGRATION'].get('name')
-    GE_DB_USER = secrets_parser['GE_MIGRATION'].get('user')
-    GE_DB_HOST = secrets_parser['GE_MIGRATION'].get('host')
-    GE_DB_PORT = secrets_parser['GE_MIGRATION'].get('port')
-    GE_DB_PASSWORD = secrets_parser['GE_MIGRATION'].get('password')
-    GE_HTTP_PROVIDER = secrets_parser['GE_MIGRATION'].get('ge_http_provider')
-
-except KeyError:
-    GE_DB_NAME = ''
-    GE_DB_USER = ''
-    GE_DB_HOST = ''
-    GE_DB_PORT = ''
-    GE_DB_PASSWORD = ''
-    GE_HTTP_PROVIDER = ''
-
 TRANSFER_LIMITS = {}
 TRANSFER_LIMITS['0.P7']	= 5000
 TRANSFER_LIMITS['0.P30']	= 10000

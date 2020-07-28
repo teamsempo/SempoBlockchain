@@ -11,7 +11,8 @@ import {
   getDateArray,
   hexToRgb,
   toTitleCase,
-  replaceUnderscores
+  replaceUnderscores,
+  get_zero_filled_values
 } from "../../../utils";
 
 import LoadingSpinner from "../../loadingSpinner.jsx";
@@ -43,7 +44,7 @@ class VolumeChart extends React.Component {
       pointHoverBorderWidth: 2,
       pointRadius: 1,
       pointHitRadius: 10,
-      data: dataset.map(data => data.value)
+      data: dataset
     };
 
     if (index === 0) {
@@ -167,14 +168,20 @@ class VolumeChart extends React.Component {
       "#995194"
     ];
 
-    const datasets = possibleTimeseriesKeys.map((key, index) =>
-      this.construct_dataset_object(
+    const datasets = possibleTimeseriesKeys.map((key, index) => {
+      const zero_filled_data = get_zero_filled_values(
+        "value",
+        data.timeseries[key],
+        date_array
+      );
+
+      return this.construct_dataset_object(
         index,
         key,
         color_scheme[index],
-        data.timeseries[key]
-      )
-    );
+        zero_filled_data
+      );
+    });
 
     var chartData = {
       labels: date_array,
