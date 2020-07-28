@@ -18,7 +18,6 @@ kombu==4.6.11
 SQLAlchemy==1.3.18
 toastedmarshmallow==2.15.2.post1
 messagebird==1.5.0
-mysqlclient==1.4.5
 openpyxl==2.5.12
 orjson==3.2.2
 pandas==0.23.4
@@ -35,7 +34,7 @@ redis==3.4.1
 transitions==0.7.1
 twilio==6.11.0
 uWSGI==2.0.17
-web3==5.0.2
+web3==5.11.1
 africastalking==1.2.2
 python-i18n[YAML]==0.3.7
 flask-executor==0.9.3
