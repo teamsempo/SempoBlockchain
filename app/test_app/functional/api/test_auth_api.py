@@ -13,7 +13,12 @@ from cryptography.fernet import Fernet
 
 from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
+from server.constants import ACCESS_ROLES
 from flask import current_app
+
+
+def all_auth_roles_and_tiers_combos():
+    return [(key, value) for key in ACCESS_ROLES.keys() for value in ACCESS_ROLES[key]]
 
 
 def interal_auth_username():
@@ -509,37 +514,17 @@ def test_token_auth(test_client, authed_sempo_admin_user, role, tier, status_cod
     assert response.status_code == status_code
 
 
-@pytest.mark.parametrize("user, is_activated, is_disabled, message", [
-    (False, None, None, 'user not found'),
-    (True, False, None, 'user not activated'),
-    (True, True, True, 'user has been disabled'),
-])
-def test_token_auth_errors(test_client, authed_sempo_admin_user, user, is_activated, is_disabled, message):
+@pytest.mark.parametrize("role, tier", all_auth_roles_and_tiers_combos())
+def test_token_auth_errors_disabled(test_client, authed_sempo_admin_user, role, tier):
     """
-    GIVEN a Flask application
+    GIVEN a Flask application with disabled user
     WHEN the '/api/auth/check/token/' api is requested (GET)
-    THEN check the response is only returned for superadmin
+    THEN check the response is 401 for all roles, tiers
     """
 
-    if user:
-        authed_sempo_admin_user.is_activated = is_activated
-        authed_sempo_admin_user.is_disabled = is_disabled
-        authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
-        auth = get_complete_auth_token(authed_sempo_admin_user)
-    else:
-        # build a fake auth token with incorrect user id
-        payload = {
-            'exp': datetime.utcnow() + timedelta(days=7, seconds=0),
-            'iat': datetime.utcnow(),
-            'id': 12,
-            'roles': 'ADMIN'
-        }
-
-        auth = jwt.encode(
-            payload,
-            current_app.config['SECRET_KEY'],
-            algorithm='HS256'
-        )
+    authed_sempo_admin_user.is_disabled = True
+    authed_sempo_admin_user.set_held_role(role, tier)
+    auth = get_complete_auth_token(authed_sempo_admin_user)
 
     response = test_client.get('/api/v1/auth/check/token/',
                                headers=dict(
@@ -548,4 +533,56 @@ def test_token_auth_errors(test_client, authed_sempo_admin_user, user, is_activa
                                ),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 401
-    assert response.json['message'] == message
+    assert response.json['message'] == 'user has been disabled'
+
+
+@pytest.mark.parametrize("role, tier", all_auth_roles_and_tiers_combos())
+def test_token_auth_errors_unactivated(test_client, authed_sempo_admin_user, role, tier):
+    """
+    GIVEN a Flask application with unactivated user
+    WHEN the '/api/auth/check/token/' api is requested (GET)
+    THEN check the response is 401 for all roles, tiers
+    """
+    authed_sempo_admin_user.is_disabled = False
+    authed_sempo_admin_user.is_activated = False
+    authed_sempo_admin_user.set_held_role(role, tier)
+    auth = get_complete_auth_token(authed_sempo_admin_user)
+
+    response = test_client.get('/api/v1/auth/check/token/',
+                               headers=dict(
+                                   Authorization=auth,
+                                   Accept='application/json'
+                               ),
+                               content_type='application/json', follow_redirects=True)
+    assert response.status_code == 401
+    assert response.json['message'] == 'user not activated'
+
+
+def test_token_auth_errors_fakeuser(test_client, authed_sempo_admin_user):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/check/token/' api is requested (GET)
+    THEN check the response is only returned for superadmin
+    """
+
+    payload = {
+        'exp': datetime.utcnow() + timedelta(days=7, seconds=0),
+        'iat': datetime.utcnow(),
+        'id': 15125,
+        'roles': 'ADMIN'
+    }
+
+    auth = jwt.encode(
+        payload,
+        current_app.config['SECRET_KEY'],
+        algorithm='HS256'
+    )
+
+    response = test_client.get('/api/v1/auth/check/token/',
+                               headers=dict(
+                                   Authorization=auth,
+                                   Accept='application/json'
+                               ),
+                               content_type='application/json', follow_redirects=True)
+    assert response.status_code == 401
+    assert response.json['message'] == 'user not found'
