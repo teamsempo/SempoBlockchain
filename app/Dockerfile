@@ -1,12 +1,7 @@
-FROM python:3.6-slim-stretch
+FROM python:3.8-slim-buster
 
 RUN apt update \
-  && apt -y install gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev curl
-
-# GE MIGRATION
-# For local OSX try:
-# https://stackoverflow.com/questions/49025594/osx-ld-library-not-found-for-lssl
-RUN apt -y install mysql-server default-libmysqlclient-dev
+  && apt -y install gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-dev libssl-dev curl
 
 COPY ./app/requirements.txt /
 COPY ./test_requirements.txt /
@@ -14,7 +9,6 @@ COPY ./test_requirements.txt /
 RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-6-dev python3-dev musl-dev libssl-dev
-
 
 COPY ./config.py /src/
 RUN mkdir /src/config_files
