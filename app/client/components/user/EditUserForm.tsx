@@ -236,7 +236,6 @@ class EditUserForm extends React.Component<
                   // @ts-ignore */}
                   <AsyncButton
                     type="submit"
-                    miniSpinnerStyle={{ height: "10px", width: "10px" }}
                     buttonStyle={{
                       display: "inline-flex",
                       fontWeight: "400",
@@ -345,7 +344,6 @@ class EditUserForm extends React.Component<
                   <AsyncButton
                     type="button"
                     onClick={this.props.onDeleteUser}
-                    miniSpinnerStyle={{ height: "10px", width: "10px" }}
                     buttonStyle={{
                       display: "inline-flex",
                       fontWeight: "400",

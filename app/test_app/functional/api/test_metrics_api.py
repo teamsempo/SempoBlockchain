@@ -73,11 +73,12 @@ def generate_metrics(create_organisation):
         receive_transfer_account=user2.default_transfer_account,
         transfer_use=str(int(tu3.id))
     )
+    db.session.flush()
 
 @pytest.mark.parametrize("metric_type, status_code", [
     ("user", 200),
     ("all", 200),
-    ("transfer", 200),
+    ("credit_transfer", 200),
     ("notarealmetrictype", 500),
 ])
 def test_get_metric_filters(test_client, complete_admin_auth_token, external_reserve_token,
@@ -95,77 +96,88 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
 
     if status_code == 200:
         if metric_type == 'user':
-            assert response.json['data']['filters'] == json.dumps(USER_FILTERS)
+            assert response.json['data']['filters'] == USER_FILTERS
         else:
-            assert response.json['data']['filters'] == json.dumps(ALL_FILTERS)
+            assert response.json['data']['filters'] == ALL_FILTERS
 
-base_participant = {'data':
+base_participant = {
+    'data':
     {'transfer_stats':
-        {'total_beneficiaries': 0,
-        'total_users': 0,
-        'total_vendors': 0,
+        {'active_filters': [],
+        'active_group_by': 'account_type',
+        'active_users': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'mandatory_filter': {},
         'master_wallet_balance': 0,
-        'users_created': {'aggregate': {'total': 0}, 'timeseries': []}
-        }
-    },
-    'message': 'Successfully Loaded.', 'status': 'success'
-}
-
-base_all = {'data':
-    {'transfer_stats':
-        {
         'total_beneficiaries': 0,
         'total_users': 0,
         'total_vendors': 0,
-        'master_wallet_balance': 0,
-        'users_created': {'aggregate': {'total': 0}, 'timeseries': []},
-        'daily_disbursement_volume': [],
-        'daily_transaction_volume': [],
+        'users_created': {'aggregate': {'total': 0},
+        'timeseries': {}}}},
+        'message': 'Successfully Loaded.',
+        'status': 'success'
+}
+
+
+base_all = {'data':
+    {'transfer_stats':
+        {'active_filters': [],
+        'active_group_by': 'account_type',
+        'active_users': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'all_payments_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'daily_disbursement_volume': {'aggregate': {'total': 0},'timeseries': {}},
+        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'daily_transaction_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'users_who_made_purchase': {'aggregate': {'total': 0}, 'timeseries': {}},
         'exhausted_balance': 0,
         'has_transferred_count': 0,
+        'mandatory_filter': {},
         'master_wallet_balance': 0,
+        'total_beneficiaries': 0,
         'total_distributed': 0.0,
         'total_exchanged': 0.0,
         'total_spent': 0.0,
-        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
-        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
-        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
-        }
-    },
-    'message': 'Successfully Loaded.',
-    'status': 'success'
-}
+        'total_users': 0,
+        'total_vendors': 0,
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'users_created': {'aggregate': {'total': 0}, 'timeseries': {}}}},
+        'message': 'Successfully Loaded.',
+        'status': 'success'}
+
 
 base_transfer = {'data':
     {'transfer_stats':
-        {'daily_disbursement_volume': [],
-        'daily_transaction_volume': [],
+        {'active_filters': [],
+        'active_group_by': 'account_type',
+        'all_payments_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'daily_disbursement_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'daily_transaction_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'users_who_made_purchase': {'aggregate': {'total': 0}, 'timeseries': {}},
         'exhausted_balance': 0,
         'has_transferred_count': 0,
+        'mandatory_filter': {},
         'master_wallet_balance': 0,
         'total_distributed': 0.0,
         'total_exchanged': 0.0,
         'total_spent': 0.0,
-        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
-        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': []},
-        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': []},
-        }
-    },
-    'message': 'Successfully Loaded.',
-    'status': 'success'
-}
+        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
+        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': {}}}},
+        'message': 'Successfully Loaded.',
+        'status': 'success'}
+
 
 @pytest.mark.parametrize("metric_type, status_code", [
     ("user", 200),
     ("all", 200),
-    ("transfer", 200),
+    ("credit_transfer", 200),
     ("notarealmetrictype", 500),
 ])
 def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reserve_token, create_organisation,
                              metric_type, status_code):
     def get_metrics(metric_type):
         return test_client.get(
-            f'/api/v1/metrics/?metric_type={metric_type}&disable_cache=True&org={create_organisation.id}',
+            f'/api/v1/metrics/?metric_type={metric_type}&disable_cache=True&org={create_organisation.id}&group_by=account_type',
             headers=dict(
                 Authorization=complete_admin_auth_token,
                 Accept='application/json'
@@ -180,7 +192,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
 
     if status_code != 500:
         returned_stats['master_wallet_balance'] = 0
-    if metric_type == 'transfer':
+    if metric_type == 'credit_transfer':
         assert response.json == base_transfer
     elif metric_type == 'all':
         assert response.json == base_all
@@ -190,9 +202,9 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
 @pytest.mark.parametrize("metric_type, params, status_code", [
     ("all", None, 200),
     ("user", None, 200),
-    ("transfer", None, 200),
+    ("credit_transfer", None, 200),
     ("notarealmetrictype", None, 500),
-    ("all", '%$user_filters%,rounded_account_balance%>2%', 200),
+    ("all", "rounded_account_balance(GT)(2)", 200),
 ])
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_metrics,
@@ -201,7 +213,7 @@ def test_get_summed_metrics(
     def get_metrics(metric_type):
         p = f'&params={params}' if params else ''
         return test_client.get(
-            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}',
+            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by=account_type',
             headers=dict(
                 Authorization=complete_admin_auth_token,
                 Accept='application/json'
@@ -218,11 +230,11 @@ def test_get_summed_metrics(
     total_spent_val = 150
     if params is not None:
         # Test the filter worked
-        total_spent_val == 25
+        total_spent_val = 25
 
-    elif metric_type == 'transfer' or metric_type == 'all':
-        assert returned_stats['daily_disbursement_volume'][0]['volume'] == 300
-        assert returned_stats['daily_transaction_volume'][0]['volume'] == 150
+    elif metric_type == 'credit_transfer' or metric_type == 'all':
+        assert returned_stats['daily_disbursement_volume']['aggregate']['ORGANISATION'] == 300
+        assert returned_stats['daily_transaction_volume']['aggregate']['USER'] == 150
         assert returned_stats['exhausted_balance'] == 0
         assert returned_stats['has_transferred_count'] == 2
         assert returned_stats['total_distributed'] == 300

@@ -8,11 +8,12 @@ import moment from "moment";
 import Filter from "../filter";
 import { processFiltersForQuery } from "../../utils";
 import { browserHistory } from "../../createStore.js";
+import LoadingSpinner from "../loadingSpinner";
 
 const mapStateToProps = state => {
   return {
     loadStatus: state.metrics.loadStatus,
-    creditTransferFilters: state.creditTransferFilters.creditTransferFilterState
+    allowedFilters: state.allowedFilters.allowedFilterState
   };
 };
 
@@ -89,7 +90,7 @@ class DashboardFilter extends React.Component {
         <FilterContainer>
           <Filter
             label={"Filter by user:"}
-            possibleFilters={this.props.creditTransferFilters}
+            possibleFilters={this.props.allowedFilters}
             onFiltersChanged={this.onFiltersChanged}
           />
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -128,7 +129,7 @@ class DashboardFilter extends React.Component {
               }}
             >
               {this.props.loadStatus.isRequesting ? (
-                <div className="miniSpinner"></div>
+                <LoadingSpinner />
               ) : (
                 "Filter"
               )}

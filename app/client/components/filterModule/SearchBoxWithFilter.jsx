@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { ModuleBox, Input } from "./styledElements";
+import { ModuleBox, Input } from "../styledElements";
 import styled from "styled-components";
 import matchSorter from "match-sorter";
 import PropTypes from "prop-types";
@@ -8,10 +8,10 @@ import PropTypes from "prop-types";
 import {
   LoadFilterAction,
   CreateFilterAction
-} from "../reducers/filter/actions";
+} from "../../reducers/filter/actions";
 
-import LoadingSpinner from "./loadingSpinner.jsx";
-import { USER_FILTER_TYPE } from "../constants";
+import LoadingSpinner from "../loadingSpinner.jsx";
+import { USER_FILTER_TYPE } from "../../constants";
 
 import Filter from "./filter";
 
@@ -28,7 +28,7 @@ const defaultProps = {
 const mapStateToProps = state => {
   return {
     filters: state.filters,
-    creditTransferFilters: state.creditTransferFilters.creditTransferFilterState
+    allowedFilters: state.allowedFilters.allowedFilterState
   };
 };
 

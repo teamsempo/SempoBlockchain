@@ -302,7 +302,6 @@ class CreditTransferList extends React.Component {
             <div style={{ margin: "1em" }}>
               <AsyncButton
                 onClick={this.onNext}
-                miniSpinnerStyle={{ height: "10px", width: "10px" }}
                 buttonStyle={{
                   display: showNext ? "none" : "inline-flex",
                   fontWeight: "400",
