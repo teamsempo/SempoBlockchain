@@ -277,8 +277,6 @@ def test_get_summed_metrics(
     else:
         returned_stats = None
     if status_code == 200:
-        #total_spent_val = 150
-
         script_directory = os.path.dirname(os.path.realpath(__file__))
         desired_output_file = os.path.join(script_directory, 'metrics_outputs', output_file)
         desired_output = json.loads(open(desired_output_file, 'r').read())
