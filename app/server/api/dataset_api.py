@@ -1,7 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from openpyxl import load_workbook
-import pandas as pd
 
 from server.constants import ALLOWED_SPREADSHEET_EXTENSIONS, SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
 from server import db
@@ -34,9 +33,13 @@ class SpreadsheetUploadAPI(MethodView):
 
         worksheet = load_workbook(spreadsheet).active
 
-        df = pd.DataFrame(worksheet.values)
+        data_dict = {}
+        for i, row in enumerate(worksheet.rows):
+            row_dict = {}
+            for j, cell in enumerate(row):
+                row_dict[j] = cell.value
 
-        data_dict = df.to_dict(orient='index')
+            data_dict[i] = row_dict
 
         column_firstrows = {v: k for k, v in data_dict[0].items()}
 

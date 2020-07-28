@@ -41,7 +41,7 @@ def test_send_balance_sms(mocker, test_client, init_database, initialised_blockc
                      preferred_language, sample_text):
     user = UserFactory(preferred_language=preferred_language, phone=phone())
     if user_type == "group":
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.set_held_role('GROUP_ACCOUNT', 'group_account')
         user.is_phone_verified = True
         kyc = KycApplication(type='INDIVIDUAL')
         kyc.user = user
@@ -83,7 +83,7 @@ def test_fetch_exchange_rate(mocker, test_client, init_database, initialised_blo
                              preferred_language, exchange_text, limit_text):
     user = UserFactory(preferred_language=preferred_language, phone=phone())
     if user_type == "group":
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.set_held_role('GROUP_ACCOUNT', 'group_account')
         user.is_phone_verified = True
         kyc = KycApplication(type='INDIVIDUAL')
         kyc.user = user
@@ -159,13 +159,13 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
 def test_exchange_token(mocker, test_client, init_database, initialised_blockchain_network, mock_sms_apis):
     org = OrganisationFactory(country_code='KE')
     sender = UserFactory(preferred_language="en", phone=phone(), first_name="Bob", last_name="Foo", default_organisation=org)
-    sender.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    sender.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     token1 = Token.query.filter_by(symbol="SM1").first()
     create_transfer_account_for_user(sender, token1, 20000)
 
     agent = UserFactory(phone=phone(), first_name="Joe", last_name="Bar", default_organisation=org)
-    agent.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+    agent.set_held_role('TOKEN_AGENT', 'token_agent')
     # this is under the assumption that token agent would have default token being the reserve token. is this the case?
     reserve = Token.query.filter_by(symbol="AUD").first()
     create_transfer_account_for_user(agent, reserve, 30000)

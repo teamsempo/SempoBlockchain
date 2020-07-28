@@ -33,7 +33,7 @@ npm install -g ganache-cli@6.4.1
 
 **Python**
 
-Download and install python 3.6 and its respective pip and virtualenv (**python 3.7 will break things**). Then:
+Download and install python 3.8 and its respective pip and virtualenv. Then:
 
 ```
 python3 -m venv venv
