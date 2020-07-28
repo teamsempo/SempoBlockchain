@@ -136,12 +136,12 @@ def test_delete_user_and_transfer_account(create_transfer_account_user):
     WHEN delete_user_and_transfer_account is called
     THEN check that raises an error when balance > 0, check PII is deleted, check duplication deletion fails
     """
-    create_transfer_account_user.transfer_account.balance = 10
+    create_transfer_account_user.transfer_account._balance_wei = 10
 
     with pytest.raises(TransferAccountDeletionError):
         create_transfer_account_user.delete_user_and_transfer_account()
 
-    create_transfer_account_user.transfer_account.balance = 0
+    create_transfer_account_user.transfer_account._balance_wei = 0
 
     create_transfer_account_user.delete_user_and_transfer_account()
     assert create_transfer_account_user.first_name is None

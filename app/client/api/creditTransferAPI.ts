@@ -1,11 +1,10 @@
 import { apiClient } from "./client/apiClient";
 
 import {
+  CreateCreditTransferPayload,
   LoadCreditTransferPayload,
-  ModifyCreditTransferRequestPayload,
-  CreateCreditTransferPayload
+  ModifyCreditTransferRequestPayload
 } from "../reducers/creditTransfer/types";
-import { LoadMetricsPayload } from "../reducers/metric/types";
 
 export const loadCreditTransferListAPI = ({
   query
@@ -29,20 +28,3 @@ export const modifyTransferAPI = ({
 
 export const newTransferAPI = ({ body }: CreateCreditTransferPayload) =>
   apiClient({ url: "/credit_transfer/", method: "POST", body: body });
-
-export const loadCreditTransferStatsAPI = ({
-  query,
-  path
-}: LoadMetricsPayload) =>
-  apiClient({
-    url: "/credit_transfer/stats/",
-    method: "GET",
-    query: query,
-    path: path
-  });
-
-export const loadCreditTransferFiltersAPI = () =>
-  apiClient({
-    url: "/credit_transfer/filters/",
-    method: "GET"
-  });

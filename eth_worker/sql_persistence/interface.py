@@ -7,7 +7,9 @@ from sempo_types import UUID, UUIDList
 from sql_persistence.models import (
     BlockchainTransaction,
     BlockchainTask,
-    BlockchainWallet
+    BlockchainWallet,
+    SynchronizedBlock,
+    SynchronizationFilter
 )
 
 from exceptions import (
@@ -166,9 +168,13 @@ class SQLPersistenceInterface(object):
 
         return blockchain_transaction
 
-    def get_transaction(self, transaction_id):
-        return self.session.query(BlockchainTransaction).get(transaction_id)
-
+    # Gets transaction using transaction_id OR hash
+    def get_transaction(self, transaction_id = None, hash = None):
+        if transaction_id:
+            return self.session.query(BlockchainTransaction).get(transaction_id)
+        else:
+            return self.session.query(BlockchainTransaction).filter_by(hash=hash).first()
+    
     def get_transaction_signing_wallet(self, transaction_id):
 
         transaction = self.session.query(BlockchainTransaction).get(transaction_id)
@@ -408,6 +414,27 @@ class SQLPersistenceInterface(object):
 
         return wallet
 
+    def create_external_transaction(self, status, block, hash, contract_address, is_synchronized_with_app, recipient_address, sender_address, amount):
+        transaction_object = BlockchainTransaction(
+            _status = status,
+            block = block,
+            hash = hash,
+            contract_address = contract_address,
+            is_synchronized_with_app = is_synchronized_with_app,
+            recipient_address = recipient_address,
+            sender_address = sender_address,
+            amount = amount,
+            is_third_party_transaction = True # External transaction will always be third party
+        )   
+        self.session.add(transaction_object)
+        self.session.commit()
+        return transaction_object
+
+    def mark_transaction_as_completed(self, transaction):
+        transaction.is_synchronized_with_app = True
+        self.session.commit()
+        return transaction
+
     def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
 
         if private_key:
@@ -443,6 +470,45 @@ class SQLPersistenceInterface(object):
         wallet.last_topup_task_uuid = task_uuid
 
         self.session.commit()
+
+    def check_if_synchronization_filter_exists(self, contract_address, filter_parameters):
+        filter = self.session.query(SynchronizationFilter).filter(
+            SynchronizationFilter.contract_address == contract_address, SynchronizationFilter.filter_parameters == filter_parameters).first()
+        if filter == None:
+            return False
+        return filter
+
+    def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch):
+        filter = SynchronizationFilter(contract_address=contract_address, contract_type=contract_type, filter_parameters=filter_parameters, max_block=block_epoch, filter_type=filter_type, decimals=decimals)
+        self.session.add(filter)
+        self.session.commit()
+        return filter
+
+    def set_filter_max_block(self, filter_id, block):
+        filter = self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
+        filter.max_block = block
+        self.session.commit()
+        return True
+
+    def get_synchronization_filter(self, filter_id):
+        return self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
+
+    def get_all_synchronization_filters(self):
+        return self.session.query(SynchronizationFilter).all()
+
+    def add_block_range(self, start, end, filter_id):
+        for n in range(start, end):
+            block = SynchronizedBlock(block_number = n , status = 'PENDING', is_synchronized = False, synchronization_filter_id = filter_id)
+            self.session.add(block)
+        self.session.commit()
+
+    def set_block_range_status(self, start, end, status, filter_id):
+        for n in range(start, end):
+            blocks  = self.session.query(SynchronizedBlock).filter(SynchronizedBlock.block_number == n, SynchronizedBlock.synchronization_filter_id == filter_id).all()
+            for block in blocks:
+                block.status = status
+        self.session.commit()
+
 
     def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
 

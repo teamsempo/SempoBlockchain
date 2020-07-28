@@ -152,7 +152,7 @@ class PoliPaymentsAPI(MethodView):
                         transfer_mode=TransferModeEnum.MOBILE,
                         fiat_ramp=fiat_ramp)
 
-                    deposit.resolve_as_completed()
+                    deposit.resolve_as_complete_and_trigger_blockchain()
 
                 else:
                     # The POLi link failed for some reason.

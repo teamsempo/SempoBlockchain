@@ -26,7 +26,7 @@ import { wyre } from "./wyre/reducers";
 import { TransferUsageReducer } from "./transferUsage/reducers";
 import { OrganisationReducer } from "./organisation/reducers";
 import { metrics } from "./metric/reducers";
-import { creditTransferFilters } from "./creditTransferFilter/reducers";
+import { allowedFilters } from "./allowedFilters/reducers";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
@@ -53,8 +53,8 @@ const appReducer = combineReducers({
   wyre,
   transferUsages: TransferUsageReducer,
   organisations: OrganisationReducer,
-  form,
-  creditTransferFilters
+  allowedFilters,
+  form
 });
 
 const rootReducer = (state: any, action: any) => {

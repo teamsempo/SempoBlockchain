@@ -6,7 +6,7 @@ import {
   LoadMetricsPayload
 } from "../reducers/metric/types";
 
-import { loadCreditTransferStatsAPI } from "../api/creditTransferAPI";
+import { loadCreditTransferStatsAPI } from "../api/metricsAPI";
 import { handleError } from "../utils";
 import { ActionWithPayload } from "../reduxUtils";
 

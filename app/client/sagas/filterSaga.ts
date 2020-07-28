@@ -16,7 +16,7 @@ import {
   CreateFilterPayload
 } from "../reducers/filter/types";
 
-import { loadFiltersAPI, createFilterAPI } from "../api/filterAPI";
+import { loadSavedFilters, createFilterAPI } from "../api/filterAPI";
 import { MessageAction } from "../reducers/message/actions";
 import { ActionWithPayload } from "../reduxUtils";
 
@@ -37,7 +37,7 @@ function* updateStateFromFilter(data: FilterData) {
 
 function* loadFilters() {
   try {
-    const load_result = yield call(loadFiltersAPI);
+    const load_result = yield call(loadSavedFilters);
 
     yield call(updateStateFromFilter, load_result.data);
 
