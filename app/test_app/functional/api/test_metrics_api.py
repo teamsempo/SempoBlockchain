@@ -298,4 +298,3 @@ def test_get_summed_metrics(
                 for timeseries_category in returned_stats[do]['timeseries']:
                     for idx in range(len(returned_stats[do]['timeseries'][timeseries_category])):
                         assert returned_stats[do]['timeseries'][timeseries_category][idx]['value'] == desired_output[do]['timeseries'][timeseries_category][idx]['value']
-                        
