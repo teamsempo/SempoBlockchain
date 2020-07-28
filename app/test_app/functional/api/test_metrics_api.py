@@ -2,46 +2,76 @@ import pytest
 from server.models.transfer_usage import TransferUsage
 from server.utils.transfer_filter import ALL_FILTERS, USER_FILTERS
 from server.utils.credit_transfer import make_payment_transfer
-from server.utils.user import create_transfer_account_user
+from server.utils.user import create_transfer_account_user, set_custom_attributes
+from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server import db
 import json
-
+import os
+from datetime import datetime, timedelta
 
 @pytest.fixture(scope='module')
-def generate_metrics(create_organisation):
-    # Does a bunch of things which generate metrics, and sums them at the same time
-    # Results in the following metrics:
-    # disbursement_volume: 300
-    # transaction_volume: 150
-    # exhausted_balance: 1
-    # has_transferred_count: 2
-    # last_day_volume: 150
-    # total_spent: 150
-    # total_beneficiaries: 1
-
-    user1 = create_transfer_account_user(first_name='Paul',
-                                    last_name='Buffano',
+def generate_timeseries_metrics(create_organisation):
+    # Generates metrics over timeline
+    
+    # User1 and User2 made today
+    user1 = create_transfer_account_user(first_name='Ricky',
                                     phone="+19025551234",
                                     organisation=create_organisation,
                                     is_beneficiary=True)
     user1.default_transfer_account.is_approved = True
-
     user1.default_transfer_account._make_initial_disbursement(100, True)
 
-    user2 = create_transfer_account_user(first_name='Roy',
-                                    last_name='Donk',
+    user2 = create_transfer_account_user(first_name='Bubbles',
                                     phone="+19025551235",
                                     organisation=create_organisation)
     user2.default_transfer_account.is_approved = True
-
     user2.default_transfer_account._make_initial_disbursement(200, True)
+
+    # user3 made yesterday
+    user3 = create_transfer_account_user(first_name='Julian',
+                                    phone="+19025531230",
+                                    organisation=create_organisation)
+    user3.default_transfer_account.is_approved = True
+    disburse = user3.default_transfer_account._make_initial_disbursement(210, True)
+    user3.created = user3.created - timedelta(days=1)
+    disburse.created = user3.created - timedelta(days=1)
+
+    # user4 made 4 days ago
+    user4 = create_transfer_account_user(first_name='Randy',
+                                    phone="+19025511230",
+                                    organisation=create_organisation)
+    user4.default_transfer_account.is_approved = True
+    disburse = user4.default_transfer_account._make_initial_disbursement(201, True)
+    user4.created = user4.created - timedelta(days=4)
+    disburse.created = user4.created - timedelta(days=4)
+
+    # user5/user6 made 10 days ago
+    user5 = create_transfer_account_user(first_name='Cory',
+                                    phone="+19011531230",
+                                    organisation=create_organisation)
+    user5.default_transfer_account.is_approved = True
+    disburse = user5.default_transfer_account._make_initial_disbursement(202, True)
+    user5.created = user5.created - timedelta(days=10)
+    disburse.created = user5.created - timedelta(days=10)
+
+    user6 = create_transfer_account_user(first_name='Trevor',
+                                    phone="+19025111230",
+                                    organisation=create_organisation)
+    user6.default_transfer_account.is_approved = True
+    disburse = user6.default_transfer_account._make_initial_disbursement(204, True)
+    user6.created = user6.created - timedelta(days=10)
+    disburse.created = user6.created - timedelta(days=10)
 
     db.session.commit()
 
-    tu1 = TransferUsage.find_or_create("Pizza")
-    tu2 = TransferUsage.find_or_create("HotDog")
-    tu3 = TransferUsage.find_or_create("Burger")
-    make_payment_transfer(100,
+    tu1 = TransferUsage.find_or_create("Pepperoni")
+    tu2 = TransferUsage.find_or_create("Jalepeno Chips")
+    tu3 = TransferUsage.find_or_create("Shopping Carts")
+    tu1.created = tu1.created - timedelta(days=15)
+    tu2.created = tu1.created - timedelta(days=15)
+    tu3.created = tu1.created - timedelta(days=15)
+
+    p1 = make_payment_transfer(100,
         create_organisation.token,
         send_user=user1,
         send_transfer_account=user1.default_transfer_account,
@@ -49,31 +79,54 @@ def generate_metrics(create_organisation):
         receive_transfer_account=user2.default_transfer_account,
         transfer_use=str(int(tu1.id))
     )
-    make_payment_transfer(25,
+
+    p2 = make_payment_transfer(25,
         create_organisation.token,
-        send_user=user2,
-        send_transfer_account=user2.default_transfer_account,
-        receive_user=user1,
-        receive_transfer_account=user1.default_transfer_account,
+        send_user=user3,
+        send_transfer_account=user3.default_transfer_account,
+        receive_user=user4,
+        receive_transfer_account=user4.default_transfer_account,
         transfer_use=str(int(tu1.id))
     )
-    make_payment_transfer(5,
+    p2.created = p2.created - timedelta(days=1)
+
+    p3 = make_payment_transfer(5,
         create_organisation.token,
-        send_user=user1,
-        send_transfer_account=user1.default_transfer_account,
+        send_user=user4,
+        send_transfer_account=user4.default_transfer_account,
         receive_user=user2,
         receive_transfer_account=user2.default_transfer_account,
         transfer_use=str(int(tu2.id))
     )
-    make_payment_transfer(20,
+    p3.created = p3.created - timedelta(days=1)
+
+    p4 = make_payment_transfer(20,
         create_organisation.token,
-        send_user=user1,
-        send_transfer_account=user1.default_transfer_account,
-        receive_user=user2,
-        receive_transfer_account=user2.default_transfer_account,
+        send_user=user5,
+        send_transfer_account=user5.default_transfer_account,
+        receive_user=user6,
+        receive_transfer_account=user6.default_transfer_account,
         transfer_use=str(int(tu3.id))
     )
-    db.session.flush()
+    p4.created = p4.created - timedelta(days=4)
+
+    p4 = make_payment_transfer(20,
+        create_organisation.token,
+        send_user=user6,
+        send_transfer_account=user6.default_transfer_account,
+        receive_user=user5,
+        receive_transfer_account=user5.default_transfer_account,
+        transfer_use=str(int(tu2.id))
+    )
+    p4.created = p4.created - timedelta(days=6)
+    db.session.commit()
+    print(user1.default_transfer_account.balance)
+    print(user2.default_transfer_account.balance)
+    print(user3.default_transfer_account.balance)
+    print(user4.default_transfer_account.balance)
+    print(user5.default_transfer_account.balance)
+    print(user6.default_transfer_account.balance)
+
 
 @pytest.mark.parametrize("metric_type, status_code", [
     ("user", 200),
@@ -199,21 +252,25 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     elif metric_type == 'user':
         assert response.json == base_participant
 
-@pytest.mark.parametrize("metric_type, params, status_code", [
-    ("all", None, 200),
-    ("user", None, 200),
-    ("credit_transfer", None, 200),
-    ("notarealmetrictype", None, 500),
-    ("all", "rounded_account_balance(GT)(2)", 200),
+@pytest.mark.parametrize("metric_type, params, status_code, group_by, output_file", [
+    ("all", None, 200, 'account_type', 'all_by_account_type.json'),
+    ("all", "rounded_account_balance(GT)(2)", 200, 'account_type', 'all_by_account_type_filtered.json'),
+    ("credit_transfer", None, 200, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
+    ("user", None, 200, 'account_type', 'user_by_account_type.json'),
+    ("all", None, 500, 'transfer_usage', ''), # 500 because can't group all by transfer_usage 
+    ("user", None, 500, 'transfer_usage', ''), # 500 because can't group user by transfer_usage
+    ("user", 'transfer_amount(LT)(50)', 500, 'account_type', ''), # 500 because can't filter user by transfer_amount
+    ("all", 'transfer_amount(LT)(50)', 500, 'account_type', ''), # 500 because can't filter all by transfer_amount
+    ("notarealmetrictype", None, 500, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
 ])
 def test_get_summed_metrics(
-        test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_metrics,
-        metric_type, params, status_code
+        test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
+        metric_type, params, status_code, group_by, output_file
 ):
     def get_metrics(metric_type):
         p = f'&params={params}' if params else ''
         return test_client.get(
-            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by=account_type',
+            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by={group_by}',
             headers=dict(
                 Authorization=complete_admin_auth_token,
                 Accept='application/json'
@@ -226,21 +283,18 @@ def test_get_summed_metrics(
         returned_stats = response.json['data']['transfer_stats']
     else:
         returned_stats = None
+    if status_code == 200:
+        #total_spent_val = 150
 
-    total_spent_val = 150
-    if params is not None:
-        # Test the filter worked
-        total_spent_val = 25
+        script_directory = os.path.dirname(os.path.realpath(__file__))
+        desired_output_file = os.path.join(script_directory, 'metrics_outputs', output_file)
+        desired_output = json.loads(open(desired_output_file, 'r').read())
 
-    elif metric_type == 'credit_transfer' or metric_type == 'all':
-        assert returned_stats['daily_disbursement_volume']['aggregate']['ORGANISATION'] == 300
-        assert returned_stats['daily_transaction_volume']['aggregate']['USER'] == 150
-        assert returned_stats['exhausted_balance'] == 0
-        assert returned_stats['has_transferred_count'] == 2
-        assert returned_stats['total_distributed'] == 300
-        assert returned_stats['total_exchanged'] == 0
-        assert returned_stats['total_spent'] == total_spent_val
-    elif metric_type == 'participant' or metric_type == 'all':
-        assert returned_stats['total_beneficiaries'] == 1
-        assert returned_stats['total_users'] == 1
-        assert returned_stats['total_vendors'] == 0
+        for do in desired_output:
+            if not isinstance(desired_output[do], dict) or "timeseries" not in desired_output[do]:
+                assert returned_stats[do] == desired_output[do]
+            else:
+                assert returned_stats[do]['aggregate'] == desired_output[do]['aggregate']
+                for timeseries_category in returned_stats[do]['timeseries']:
+                    for idx in range(len(returned_stats[do]['timeseries'][timeseries_category])):
+                        assert returned_stats[do]['timeseries'][timeseries_category][idx]['value'] == desired_output[do]['timeseries'][timeseries_category][idx]['value']
