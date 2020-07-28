@@ -9,7 +9,7 @@ from sqlalchemy.sql import func
 from uuid import uuid4
 
 from server import db, bt
-from server.models.utils import BlockchainTaskableBase, ManyOrgBase
+from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 
@@ -45,7 +45,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode       = db.Column(db.Enum(TransferModeEnum))
-    transfer_use        = db.Column(JSON)
+    transfer_use        = db.Column(JSON) # Deprecated
+    transfer_usages = db.relationship(
+        "TransferUsage",
+        secondary=credit_transfer_transfer_usage_association_table,
+        back_populates="credit_transfers",
+        lazy='joined'
+    )
     transfer_metadata = db.Column(JSONB)
 
     exclude_from_limit_calcs = db.Column(db.Boolean, default=False)

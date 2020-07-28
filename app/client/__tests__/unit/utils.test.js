@@ -110,3 +110,11 @@ test("replaceUnderscores", () => {
 test("replaceSpaces", () => {
   expect(utils.replaceSpaces("Hello World")).toBe("Hello-World");
 });
+
+test("toTitleCase", () => {
+  expect(utils.toTitleCase("hello world")).toBe("Hello World");
+});
+
+test("hexToRgb", () => {
+  expect(utils.hexToRgb("#30a4a6")).toStrictEqual({ r: 48, g: 164, b: 166 });
+});
