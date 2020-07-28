@@ -9,8 +9,8 @@ ALLOWED_SPREADSHEET_EXTENSIONS = {'xlsx', 'csv'}
 RANKED_ADMIN_TIERS = ['sempoadmin', 'superadmin', 'admin', 'subadmin', 'view']
 RANKED_VENDOR_TIERS = ['supervendor', 'vendor', 'cashier']
 RANKED_BENEFICIARY_TIERS = ['beneficiary']
-POSSIBLE_TOKEN_AGENTS = ['grassroots_token_agent']
-POSSIBLE_GROUP_ACCOUNTS = ['grassroots_group_account']
+POSSIBLE_TOKEN_AGENTS = ['token_agent']
+POSSIBLE_GROUP_ACCOUNTS = ['group_account']
 
 ACCESS_ROLES = {
     'ADMIN': RANKED_ADMIN_TIERS,
@@ -49,39 +49,6 @@ SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES = [
     ('last_name', 'last names'),
     ('phone', 'phone numbers')
 ]
-
-GE_BUSINESS_CATEGORY_MAPPINGS = {
-    'Food': 'Food/Water',
-    'Water': 'Food/Water',
-    'Energy': 'Fuel/Energy',
-    'Education': 'Education',
-    'Health': 'Health',
-    'General shop': 'Shop',
-    'Environment': 'Environment',
-    'Transport': 'Transport',
-    'Labour': 'Farming/Labour',
-    'Other': 'Savings Group'
-}
-
-GE_MIGRATION_TOKENS = {
-    'GATINA': '0x826a4205b829d1907930b1632f9ce227072e59ca',
-    'BANGLA': '0x59c7eec63b7ccd438a6dc428848973f11d894b7d',
-    'LINDI': '0x8a890d89cd3585b06a48a174dd847d7818d3074f',
-    'KANG': '0x22e9839aeff9818a8b3617586167e8b92f2ed3c4',
-    'NGOP': '0x6756aa7fc7ef9850722c508845d98e862a22490a',
-    'MSA': '0xe1f32c0ac661300e1ae6046a12505e4e4f167fa7',
-    'GE': '0xcbe421e457989791c0079ba1d5f45272f917f70b',
-    'MIYANI': '0x6bdd2ddc6044cafc7de6d0d7b05ed8b3271c424e',
-    'OLYMPIC': '0x59f45d4a9beede88458d74a4f08e73cd9de5ef56',
-    'TUNGU': '0x859db7784dc79e6595cd30d13a32a6d440d34153',
-    'CONGO': '0xd90da2fa2865af5895f4ef592bf4882fb08b3429',
-    'SARAFU': '0xeef28e529146e43e7beccb592f0d2d494b7ccbd6',
-    'NAI': '0x62e167dfaab37ecaae88b052b1668ce3f10c22fd',
-    'YENI': '0x5aaa0a032f601eb08b80d503d79073799317a21b',
-    'ZENI': '0xdaedbdcecab09fcb243d3b009ee4f55c826a6337',
-    'GEP': '0xcbe421e457989791c0079ba1d5f45272f917f70b',
-    'CHIGA': '0x5a29fd35018081f7a8b48af03c6a93dd718bdf15'
-}
 
 DENOMINATION_DICT = {
     'LB': {},

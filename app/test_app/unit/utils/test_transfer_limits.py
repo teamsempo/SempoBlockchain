@@ -79,7 +79,7 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
     ]
 
     # Check additional GE LIMITS for Liquid Token and Group Account (payment, Agent Out Subtype)
-    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
@@ -143,7 +143,7 @@ def test_liquidtoken_fraction_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
 
     new_credit_transfer.sender_transfer_account.set_balance_offset(1000)
-    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(TransferBalanceFractionLimitError):
         new_credit_transfer.check_sender_transfer_limits()
@@ -159,7 +159,7 @@ def test_liquidtoken_min_send_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_amount = 1500
     new_credit_transfer.sender_transfer_account.set_balance_offset(5000)
-    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(MinimumSentLimitError):
         new_credit_transfer.check_sender_transfer_limits()
@@ -178,7 +178,7 @@ def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer)
     other_new_credit_transfer.token.token_type = token.TokenType.LIQUID
     other_new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     other_new_credit_transfer.sender_transfer_account.set_balance_offset(2000)
-    other_new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    other_new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(TransferCountLimitError):
         other_new_credit_transfer.check_sender_transfer_limits()
@@ -213,7 +213,7 @@ def test_liquidtoken_max_amount_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
 
-    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(MaximumPerTransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
