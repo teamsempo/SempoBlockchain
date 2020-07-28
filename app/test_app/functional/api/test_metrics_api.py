@@ -120,13 +120,6 @@ def generate_timeseries_metrics(create_organisation):
     )
     p4.created = p4.created - timedelta(days=6)
     db.session.commit()
-    print(user1.default_transfer_account.balance)
-    print(user2.default_transfer_account.balance)
-    print(user3.default_transfer_account.balance)
-    print(user4.default_transfer_account.balance)
-    print(user5.default_transfer_account.balance)
-    print(user6.default_transfer_account.balance)
-
 
 @pytest.mark.parametrize("metric_type, status_code", [
     ("user", 200),
