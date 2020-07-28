@@ -7,7 +7,7 @@ import {
 } from "../styledElements";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
-import { CreditTransferFiltersAction } from "../../reducers/creditTransferFilter/actions";
+import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import NoDataMessage from "../NoDataMessage";
 
 const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
@@ -25,8 +25,8 @@ const mapDispatchToProps = dispatch => {
       dispatch(
         LoadCreditTransferAction.loadCreditTransferListRequest({ query })
       ),
-    loadCreditTransferFilters: () =>
-      dispatch(CreditTransferFiltersAction.loadCreditTransferFiltersRequest())
+    loadAllowedFilters: () =>
+      dispatch(AllowedFiltersAction.loadAllowedFiltersRequest())
   };
 };
 
@@ -47,7 +47,7 @@ class MapPage extends React.Component {
       page: page
     });
 
-    this.props.loadCreditTransferFilters();
+    this.props.loadAllowedFilters();
   }
 
   render() {

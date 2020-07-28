@@ -15,6 +15,8 @@ def deploy_cic_token(post_data, creating_org=None):
     reserve_deposit_wei = int(post_data['reserve_deposit_wei'])
     exchange_contract_id = post_data['exchange_contract_id']
     reserve_ratio_ppm = post_data.get('reserve_ratio_ppm', 250000)
+    allow_autotopup = post_data.get('allow_autotopup', False)
+
     if creating_org:
         deploying_address = creating_org.primary_blockchain_address
     else:
@@ -39,6 +41,14 @@ def deploy_cic_token(post_data, creating_org=None):
     balance_wei = bt.get_wallet_balance(deploying_address, exchange_contract.reserve_token)
 
     if balance_wei < reserve_deposit_wei:
+
+        if not allow_autotopup:
+            response_object = {
+                'message': f'Insufficient reserve funds (balance in wei: {balance_wei}). Please load the master wallet manually!'
+            }
+
+            return response_object, 400
+
         load_amount = int((reserve_deposit_wei - balance_wei) / 1e16)
 
         master_org = Organisation.master_organisation()

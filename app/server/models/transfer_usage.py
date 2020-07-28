@@ -10,8 +10,7 @@ from server.constants import (
 )
 
 from server import db
-from server.models.utils import ModelBase
-
+from server.models.utils import ModelBase, credit_transfer_transfer_usage_association_table
 
 class TransferUsage(ModelBase):
     __tablename__ = 'transfer_usage'
@@ -24,6 +23,13 @@ class TransferUsage(ModelBase):
     default = db.Column(db.Boolean)
 
     users = db.relationship('User', backref='business_usage', lazy=True)
+
+    credit_transfers = db.relationship(
+        "CreditTransfer",
+        secondary=credit_transfer_transfer_usage_association_table,
+        back_populates="transfer_usages",
+        lazy='joined'
+    )
 
     @hybrid_property
     def icon(self):

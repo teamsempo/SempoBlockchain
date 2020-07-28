@@ -15,7 +15,7 @@ from server.utils.metrics.metrics_const import *
 
 
 class ParticipantStats(metric_group.MetricGroup):
-    def __init__(self, timeseries_unit = 'day'):
+    def __init__(self, group_strategy, timeseries_unit = 'day'):
         self.filterable_attributes = [DATE, CUSTOM_ATTRIBUTE, TRANSFER_ACCOUNT, USER]
         self.timeseries_unit = timeseries_unit
         self.metrics = []
@@ -39,24 +39,26 @@ class ParticipantStats(metric_group.MetricGroup):
             filterable_by=self.filterable_attributes))
 
         users_created_timeseries_query = db.session.query(func.count(User.id).label('volume'),
-                func.date_trunc(self.timeseries_unit, User.created).label('date')).group_by(func.date_trunc(self.timeseries_unit, User.created))
+                func.date_trunc(self.timeseries_unit, User.created).label('date'), group_strategy.group_by_column).group_by(func.date_trunc(self.timeseries_unit, User.created))
+
         self.metrics.append(metric.Metric(
-            metric_name='users_created',  # Will rename when API breaking changes come in
-            query=users_created_timeseries_query,
+            metric_name='users_created',
+            query=group_strategy.build_query_group_by_with_join(users_created_timeseries_query, User),
             object_model=User,
-            stock_filters=[filters.beneficiary_filters],
-            caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
+            stock_filters=[],
+            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             timeseries_actions=[FORMAT_TIMESERIES, AGGREGATE_FORMATTED_TIMESERIES]))
 
-        # Special case query-- this is just used to calculate per_user
-        total_users_timeseries_query = db.session.query(func.count(User.id).label('volume'),
-                func.date_trunc(self.timeseries_unit, User.created).label('date')).group_by(func.date_trunc(self.timeseries_unit, User.created))
-        self.total_users_timeseries = metric.Metric(
-            metric_name='total_population',
-            query=total_users_timeseries_query,
-            object_model=User,
+        active_users_timeseries_query = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id)).label('volume'),
+                func.date_trunc(self.timeseries_unit, CreditTransfer.created).label('date'), group_strategy.group_by_column).group_by(func.date_trunc(self.timeseries_unit, CreditTransfer.created))
+        self.metrics.append(metric.Metric(
+            metric_name='active_users',
+            query=group_strategy.build_query_group_by_with_join(active_users_timeseries_query, CreditTransfer),
+            object_model=CreditTransfer,
+            #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
-            caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
-            timeseries_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
+            timeseries_actions=[FORMAT_TIMESERIES, AGGREGATE_FORMATTED_TIMESERIES]))
