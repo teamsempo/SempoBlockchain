@@ -1,9 +1,14 @@
+# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+# The code in this file is not included in the GPL license applied to this repository
+# Unauthorized copying of this file, via any medium is strictly prohibited
+
 import enum
 from sqlalchemy.sql import text
 from sqlalchemy import or_, Column, String, Float
 from server import db
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_account import TransferAccount
+from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from sqlalchemy.sql.expression import cast
 
@@ -28,7 +33,13 @@ class TransferFilterEnum:
     DISCRETE        = "discrete"
     BOOLEAN_MAPPING = "boolean_mapping"
 
-TRANSFER_FILTERS = {
+
+ALL_FILTERS = {
+    'transfer_amount': {
+        'name': 'Transfer Amount',
+        'table': CreditTransfer.__tablename__,
+        'type': TransferFilterEnum.INT_RANGE
+    },
     'created': {
         'name': "Created",
         'table': User.__tablename__,
@@ -53,88 +64,97 @@ TRANSFER_FILTERS = {
     }
 }
 
+TRANSFER_FILTERS = ALL_FILTERS
+
+USER_FILTERS = {
+    'created': ALL_FILTERS['created'],
+    'user_type': ALL_FILTERS['user_type'],
+    'gender': ALL_FILTERS['gender'],
+    'rounded_account_balance': ALL_FILTERS['rounded_account_balance']
+}
+
 # will return a dictionary with table names as keys
 # values will be a dictionary of array of tuples
 # values on the outer array should be AND'd together
 
 def process_transfer_filters(encoded_filters):
     # parse and prepare filters for calculating transfer stats
-    if(encoded_filters is None):
+    if (encoded_filters is None):
         return
 
-    tokenized_filters = encoded_filters.split("%")
-    filters = {}
-    curr_keyName = None
+    filter_list = parse_filter_string(encoded_filters)
 
-    to_handle = []
+    filter_dict = {}
+
+    for f in filter_list:
+
+        unprocessed_attribute = f['attribute']
+        table = ALL_FILTERS[unprocessed_attribute]['table']
+
+        processed = handle_filter(**f)
+
+        if table not in filter_dict:
+            filter_dict[table] = []
+        filter_dict[table].append(processed)
+
+    return filter_dict
+
+
+def parse_filter_string(filter_string):
+    """
+    Converts a filter string into a list of dictionary values
+    """
+    tokenized_filters = filter_string.split(":")
+
+    filters = []
     for item in tokenized_filters:
         if item is not None and len(item) > 0:
-            symbol = item[:1]
-            subject = item[1:]
-            if symbol == ",":
+            left_bracket_split = item.split('(')
+            stripped_of_right_bracket = [s.strip(')') for s in left_bracket_split]
 
-                # handle currently collected filters
-                filters = handle_filters_per_keyname(to_handle, curr_keyName, filters)
+            attribute = stripped_of_right_bracket[0]
+            comparator = stripped_of_right_bracket[1]
+            value_list = stripped_of_right_bracket[2].split(',')
 
-                curr_keyName = None
-                if subject in TRANSFER_FILTERS:
-                    to_handle = []
-                    curr_keyName = subject
-            if (symbol == "=" or symbol == "<" or symbol == ">"):
-                to_handle.append({
-                    'comparator': symbol,
-                    'value': subject
-                })
+            if comparator == 'IN':
+                value = value_list
+            else:
+                value = value_list[0]
 
-    # handle currently collected filters
-    filters = handle_filters_per_keyname(to_handle, curr_keyName, filters)
+            filters.append({
+                'attribute': attribute,
+                'comparator': comparator,
+                'value': value
+            })
+
     return filters
 
-def handle_filters_per_keyname(to_handle, key_name, filters):
-    if len(to_handle) > 0 and (key_name is not None):
-        curr_table = TRANSFER_FILTERS[key_name]['table']
-        _filters = filters[curr_table] if curr_table in filters and isinstance(filters[curr_table], list) else []
-        _filters.append(handle_filter(key_name, to_handle))
-        filters[curr_table] = _filters
-    return filters
 
-def handle_filter(keyname, filters):
-    if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
-        return handle_boolean_mapping(keyname, filters)
-    elif TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DISCRETE:
-        return handle_discrete(keyname, filters)
+def handle_filter(attribute, comparator, value):
+    if ALL_FILTERS[attribute]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
+        return handle_boolean_mapping(attribute, comparator, value)
+
+    elif ALL_FILTERS[attribute]['type'] == TransferFilterEnum.DISCRETE:
+        return handle_discrete(attribute, comparator, value)
     else:
-        return handle_other_types(keyname, filters)
+        return handle_other_types(attribute, comparator, value)
 
-def handle_boolean_mapping(keyname, filters):
-    formatted_filters = []
-    for _filt in filters:
-        comparator = _filt['comparator']
-        mapping_name = _filt['value']
-        val = BOOLEAN_MAPPINGS[mapping_name]
-        formatted_filters.append((val, "EQ", True))
-    return formatted_filters
 
-def handle_discrete(keyname, filters):
+def handle_boolean_mapping(attribute, comparator, value):
 
-    equals_in = []
-    for _filt in filters:
-        comparator = _filt['comparator']
-        val = _filt['value']
-        equals_in.append(val)
-    return [(keyname, "EQ", equals_in)]
+    filters = []
+    for v in value:
+        attribute = BOOLEAN_MAPPINGS[v]
+        filters.append((attribute, "EQ", True))
 
-def handle_other_types(keyname, filters):
-    formatted_filters = []
-    for _filt in filters:
-        comparator = _filt['comparator']
-        val = _filt['value']
+    return filters
 
-        if comparator == '>':
-            formatted_filters.append((keyname, "GT", val if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
-        elif comparator == '<':
-            formatted_filters.append((keyname, "LT", val if TRANSFER_FILTERS[keyname]['type'] == TransferFilterEnum.DATE_RANGE else float(val)))
-        else:
-            return
 
-    return formatted_filters
+def handle_discrete(attribute, comparator, value):
+    return [(attribute, "EQ", value)]
+
+
+def handle_other_types(attribute, comparator, value):
+    value = value if ALL_FILTERS[attribute]['type'] == TransferFilterEnum.DATE_RANGE else float(value)
+    return [(attribute, comparator, value)]
+

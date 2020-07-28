@@ -10,5 +10,4 @@ def find_transfer_accounts_with_matching_token(account_holder, token):
         raise NoTransferAccountError(f"No transfer account for holder {account_holder} and token {token}")
     if len(matching_transfer_accounts) > 1:
         raise Exception(f"User has multiple transfer accounts for token {token}")
-
     return matching_transfer_accounts[0]

@@ -1,8 +1,13 @@
-import pytest, json
+import pytest, json, base64, config
 from server.utils.auth import get_complete_auth_token
 from test_app.helpers.utils import assert_resp_status_code
-from server import db
+from server.utils.user import create_transfer_account_user
+from server.models.credit_transfer import CreditTransfer
+from server.models.transfer_account import TransferAccountType
+from server.models.organisation import Organisation
 
+from helpers.utils import will_func_test_blockchain
+from server import bt, db
 
 @pytest.mark.parametrize("transfer_amount, target_balance, credit_transfer_uuid_selector_func, "
                          "recipient_transfer_accounts_ids_accessor, sender_user_id_accessor,"
@@ -45,7 +50,7 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
     recipient_user_id = recipient_user_id_accessor(create_transfer_account_user)
 
     if transfer_type == 'PAYMENT' and sender_user_id:
-        create_transfer_account_user.transfer_account.balance = 10000
+        create_transfer_account_user.transfer_account.set_balance_offset(10000)
         create_transfer_account_user.transfer_account.is_approved = True
 
     if tier:
@@ -111,19 +116,164 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
     if not credit_transfer_selector_func(create_credit_transfer):
         assert isinstance(response.json['data']['credit_transfers'], list)
 
+
+def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_admin_user, create_organisation):
+    # For this, we want to test 5 permutations of third-party transactions to add:
+    # 1. Existing User A -> Existing User B
+    # 2. Existing User A -> Stranger A
+    # 3. Existing User A -> Stranger A (to ensure we don't give Stranger A two ghost accounts)
+    # 4. Stranger B -> Existing User A
+    # 5. Idempotency check (repeat step 4's request, ensure only one transfer is created)
+    # 6. Stranger A -> Stranger B To ensure we're not tracking transactions between strangers who are in the system
+    # (Do nothing-- we don't care about transfers between strangers who aren't members)
+    # 7. Stranger C -> Stranger D To ensure we're not tracking transactions between strangers who are NOT in the system
+    # (Do nothing-- we don't care about transfers between strangers who aren't members)
+
+    send_to_worker_called = []
+    def mock_send_blockchain_payload_to_worker(is_retry=False, queue='high_priority'):
+        send_to_worker_called.append([is_retry, queue])
+
+    mocker.patch(
+        'server.models.credit_transfer.CreditTransfer.send_blockchain_payload_to_worker',
+        mock_send_blockchain_payload_to_worker
+    )
+
+    # Util function to POST to internal credit_transfer, since we'll be doing that a lot
+    def post_to_credit_transfer_internal(sender_blockchain_address, recipient_blockchain_address, blockchain_transaction_hash, transfer_amount, contract_address):
+        basic_auth = 'Basic ' + base64.b64encode(bytes(config.INTERNAL_AUTH_USERNAME + ":" + config.INTERNAL_AUTH_PASSWORD, 'ascii')).decode('ascii')
+        return test_client.post(
+            '/api/v1/credit_transfer/internal/',
+            headers=dict(
+                Authorization=basic_auth,
+                Accept='application/json'
+            ),
+            data=json.dumps(dict(
+                sender_blockchain_address=sender_blockchain_address,
+                recipient_blockchain_address=recipient_blockchain_address,
+                blockchain_transaction_hash=blockchain_transaction_hash,
+                transfer_amount=transfer_amount,
+                contract_address=contract_address,
+            )),
+            content_type='application/json', follow_redirects=True)
+
+    org = create_organisation
+    token = org.token
+
+    # 1. Existing User A -> Existing User B
+    existing_user_a = create_transfer_account_user(
+                                    first_name='Arthur',
+                                    last_name='Read',
+                                    phone="+19025551234",
+                                    organisation=org,
+                                    initial_disbursement = 100)
+
+    existing_user_b = create_transfer_account_user(
+                                    first_name='Buster',
+                                    last_name='Baxter',
+                                    phone="+19025554321",
+                                    organisation=org,
+                                    initial_disbursement = 100)
+    made_up_hash = '0xdeadbeef2322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
+
+    resp = post_to_credit_transfer_internal(existing_user_a.default_transfer_account.blockchain_address, existing_user_b.default_transfer_account.blockchain_address, made_up_hash, 100, token.address)
+    assert resp.json['data']['credit_transfer']['sender_transfer_account']['id'] == existing_user_a.default_transfer_account.id
+    assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] == existing_user_b.default_transfer_account.id
+    
+    transfer_id = resp.json['data']['credit_transfer']['id']
+
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
+    assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
+    assert transfer.recipient_transfer_account == existing_user_b.default_transfer_account
+
+    # 2. Existing User A -> Stranger A
+    fake_user_a_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539739'
+    made_up_hash = '0x0000beef2322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
+
+    resp = post_to_credit_transfer_internal(existing_user_a.default_transfer_account.blockchain_address, fake_user_a_address, made_up_hash, 100, token.address)
+    assert resp.json['data']['credit_transfer']['sender_transfer_account']['id'] == existing_user_a.default_transfer_account.id
+    assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] != existing_user_b.default_transfer_account.id
+    assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] != existing_user_a.default_transfer_account.id
+    
+    stranger_a_id = resp.json['data']['credit_transfer']['recipient_transfer_account']['id']
+
+    transfer_id = resp.json['data']['credit_transfer']['id']
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
+
+    assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
+    assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
+    assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
+
+    # 3. Existing User A -> Stranger A (to ensure we don't give Stranger A two ghost accounts)
+    made_up_hash = '0x000011112322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
+
+    resp = post_to_credit_transfer_internal(existing_user_a.default_transfer_account.blockchain_address, fake_user_a_address, made_up_hash, 100, token.address)
+    assert resp.json['data']['credit_transfer']['sender_transfer_account']['id'] == existing_user_a.default_transfer_account.id
+    assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] == stranger_a_id 
+    
+    transfer_id = resp.json['data']['credit_transfer']['id']
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
+
+    assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
+    assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
+    assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
+
+    # 4. Stranger B -> Existing User A
+    fake_user_b_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539739'
+    made_up_hash = '0x2222beef2322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
+
+    resp = post_to_credit_transfer_internal(fake_user_b_address, existing_user_a.default_transfer_account.blockchain_address, made_up_hash, 100, token.address)
+    assert resp.json['data']['credit_transfer']['recipient_transfer_account']['id'] == existing_user_a.default_transfer_account.id
+    
+    stranger_a_id = resp.json['data']['credit_transfer']['recipient_transfer_account']['id']
+
+    transfer_id = resp.json['data']['credit_transfer']['id']
+    transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
+
+    assert transfer.recipient_transfer_account == existing_user_a.default_transfer_account
+    assert transfer.sender_transfer_account.blockchain_address == fake_user_b_address
+    assert transfer.sender_transfer_account.account_type == TransferAccountType.EXTERNAL
+
+    # 5. Idempotency check (repeat step 4's request, ensure only one transfer is created)
+    resp_two = post_to_credit_transfer_internal(fake_user_b_address, existing_user_a.default_transfer_account.blockchain_address, made_up_hash, 100, token.address)
+    assert resp.json['data']['credit_transfer']['id'] == resp_two.json['data']['credit_transfer']['id']
+
+    # 6. Stranger B -> Stranger A (Strangers who exist in the system)
+    made_up_hash = '0x2222b33f1322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
+
+    resp = post_to_credit_transfer_internal(fake_user_b_address, fake_user_a_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'Only external users involved in this transfer'
+
+    # 7. Stranger C -> Stranger D (Strangers who do NOT exist in the system)
+    made_up_hash = '0x2222b33f13288396649ed2fa2b7e0a944123b65cfab2c4b1435c81bb16697ecb'
+    fake_user_c_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539111'
+    fake_user_d_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539222'
+    resp = post_to_credit_transfer_internal(fake_user_c_address, fake_user_d_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'No existing users involved in this transfer'
+
+    # Make sure we're not sending any of the tranfers off to the blockchain
+    assert len(send_to_worker_called) == 0
+    from flask import g
+    assert len(g.pending_transactions) == 0
+
+def test_force_third_party_transaction_sync():
+    if will_func_test_blockchain():
+        task_uuid = bt.force_third_party_transaction_sync()
+        bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
+
 @pytest.mark.parametrize("is_bulk, invert_recipient_list, transfer_amount, transfer_type, status_code", [
-    [True, False, 10, 'DISBURSEMENT', 201],
-    [True, True, 20, 'DISBURSEMENT', 201]
+    [True, False, 1000, 'DISBURSEMENT', 201],
+    [True, True, 2000, 'DISBURSEMENT', 201]
 ])
 def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, create_transfer_account_user,
                                 create_credit_transfer, is_bulk, invert_recipient_list, transfer_amount, 
                                 transfer_type, status_code):
     from server.utils.user import create_transfer_account_user
+    from flask import g
 
     # Create admin user and auth
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
-
+    g.active_organisation = authed_sempo_admin_user.default_organisation
     # Create 15 users to test against
     users = []
     user_ids = []
@@ -134,8 +284,8 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
         user_ids.append(user.id)
 
     # Create set subset of created users to disburse to (first 5 users)
-    recipients = user_ids[:5]
-
+    recipients = [10, 11, 12, 13]
+    
     response = test_client.post(
         '/api/v1/credit_transfer/',
         headers=dict(
@@ -150,6 +300,7 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
             transfer_type=transfer_type,
         )),
         content_type='application/json', follow_redirects=True)
+    db.session.commit()
 
     # Get IDs for every user disbursed to, then check that the list matches up
     # with the list of recipients (or the inverse if invert_recipient_list)
@@ -162,17 +313,18 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
     else: 
         assert rx_ids == recipients
 
-@pytest.mark.parametrize("query_organisations, status_code, result_count", [
-    ('', 200, 58),
-    ('1', 200, 1),
-    ('2', 200, 58),
-    ('1, 2', 200, 61)
+@pytest.mark.parametrize("query_organisations, status_code", [
+    ('', 200),
+    ('1', 200),
+    ('2', 200),
+    ('1, 2', 200)
 ])
-def test_credit_transfer_organisation_filters(test_client, authed_sempo_admin_user, complete_admin_auth_token, create_credit_transfer,
-query_organisations, status_code, result_count):
+def test_credit_transfer_organisation_filters(test_client, init_database, authed_sempo_admin_user,
+                                              complete_admin_auth_token, create_credit_transfer,
+                                              query_organisations, status_code):
     # Checks that the credit_transfer endpoint supports multiple organisations
     url = f'/api/v1/credit_transfer/?query_organisations={query_organisations}'
-    
+
     from server.models.organisation import Organisation
     # master_organisation is organisation 1
     master_organisation = Organisation.master_organisation()
@@ -180,9 +332,9 @@ query_organisations, status_code, result_count):
     create_credit_transfer.recipient_user.organisation = master_organisation
     create_credit_transfer.sender_transfer_account.organisation = master_organisation
     create_credit_transfer.recipient_transfer_account.organisation = master_organisation
-    db.session.commit()
+    init_database.session.commit()
 
-    # Add master_organisation (organisation 1) to our user's organisations. admin_user already 
+    # Add master_organisation (organisation 1) to our user's organisations. admin_user already
     # is a member of organisation 2
     authed_sempo_admin_user.organisations.append(master_organisation)
 
@@ -193,11 +345,25 @@ query_organisations, status_code, result_count):
             Accept='application/json'
         ))
 
+    all_transfers = CreditTransfer.query.execution_options(show_all=True).all()
+
+    org1 = Organisation.query.get(1)
+    org2 = Organisation.query.get(2)
+
+    org1_transfer_ids = set(t.id for t in all_transfers if org1 in t.organisations)
+    org2_transfer_ids = set(t.id for t in all_transfers if org2 in t.organisations)
+
     assert response.status_code == status_code
     if status_code == 200:
-        response_ids = []
+        response_ids = set()
         for r in response.json['data'].get('credit_transfers', []):
-            response_ids.append(r['id'])
+            response_ids.add(r['id'])
         if '1' in query_organisations:
             assert create_credit_transfer.id in response_ids
-        assert len(response_ids) == result_count
+
+        if query_organisations == '1':
+            assert response_ids == org1_transfer_ids
+        if query_organisations == '2' or query_organisations == '':
+            assert response_ids == org2_transfer_ids
+        if query_organisations == '1,2':
+            assert response_ids == org1_transfer_ids.union(org2_transfer_ids)

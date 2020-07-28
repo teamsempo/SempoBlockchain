@@ -6,7 +6,10 @@ export const LightTheme = {
 };
 
 export const DefaultTheme = {
+  primary: "#62AFB0",
+  alt: "#E2A963",
   background: "#30a4a6",
   backgroundColor: "#34b0b3",
+
   color: "#FFF"
 };

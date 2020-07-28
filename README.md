@@ -8,7 +8,7 @@
 [![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
 [![Codecov](https://img.shields.io/codecov/c/github/teamsempo/SempoBlockchain)](https://codecov.io/gh/teamsempo/SempoBlockchain)
 
-Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments
+Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments.
 
 ## To run locally:
 
@@ -25,7 +25,7 @@ If you plan on using the quick setup script, be sure to install the [PSQL](https
 
 **Local Test Blockchain**
 
-You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli)
+You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli) - other versions of Ganache may not perform as expected.
 
 ```
 npm install -g ganache-cli@6.4.1
@@ -105,7 +105,7 @@ Transaction on the blockchain are made using asynchronous workers that consume a
 
 ```
 cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 ## Details and Other Options
@@ -156,7 +156,7 @@ Start celery:
 
 ```
 cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 You can also add a runtime configuration with the `script path` set as the path to your virtual env `[path-to-your-python-env]/bin/celery`.

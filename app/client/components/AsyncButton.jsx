@@ -1,5 +1,6 @@
 import React from "react";
 import { StyledButton } from "./styledElements";
+import LoadingSpinner from "./loadingSpinner";
 
 export default class AsyncButton extends React.Component {
   render() {
@@ -17,10 +18,7 @@ export default class AsyncButton extends React.Component {
           }}
         >
           <div style={{ position: "absolute" }}>
-            <div
-              style={{ ...this.props.miniSpinnerStyle }}
-              className="miniSpinner"
-            ></div>
+            <LoadingSpinner style={{ color: "white" }} />
           </div>
           <div style={{ opacity: 0 }}> {this.props.buttonText} </div>
         </StyledButton>

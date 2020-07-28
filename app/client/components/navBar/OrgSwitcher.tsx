@@ -1,15 +1,22 @@
+// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+// The code in this file is not included in the GPL license applied to this repository
+// Unauthorized copying of this file, via any medium is strictly prohibited
+
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { SVG, StyledLogoLink } from "./styles";
 import styled from "styled-components";
+import { Menu, Dropdown } from "antd";
+import { DownOutlined, LinkOutlined } from "@ant-design/icons";
+
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 import { LoginAction } from "../../reducers/auth/actions";
 import { Organisation } from "../../reducers/organisation/types";
 
 interface Props {
-  selfPress: () => any;
   icon: string;
+  collapsed: boolean;
 }
 
 const OrgSwitcher: React.FunctionComponent<Props> = props => {
@@ -48,68 +55,63 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
     dispatch(LoginAction.updateActiveOrgRequest({ organisationId }));
   };
 
+  let menu = (
+    <Menu
+      style={{ width: "200px", margin: props.collapsed ? "0 1em" : "0" }}
+      selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
+    >
+      <Menu.ItemGroup title="Your Organisations">
+        {orgs.map((org: Organisation) => {
+          return (
+            <Menu.Item key={org.id} onClick={() => selectOrg(org.id)}>
+              <span>{org.name}</span>
+            </Menu.Item>
+          );
+        })}
+      </Menu.ItemGroup>
+      <Menu.Divider />
+      <Menu.Item key="support">
+        <a href="https://help.withsempo.com/" target="_blank">
+          Support <LinkOutlined translate={""} />
+        </a>
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          cursor: "pointer"
-        }}
-      >
-        <StyledLogoLink to="/" onClick={props.selfPress}>
-          <SVG src={props.icon} />
-        </StyledLogoLink>
+    <Dropdown overlay={menu} trigger={["click"]}>
+      <a onClick={e => e.preventDefault()}>
         <div
           style={{
             display: "flex",
-            width: "100%",
-            justifyContent: "space-between"
+            flexDirection: "row",
+            cursor: "pointer"
           }}
-          onClick={toggleSwitchOrgDropdown}
         >
-          <div style={{ margin: "auto 0", maxWidth: "100px" }}>
-            <BoldedNavBarHeaderText>
-              {activeOrganisation && activeOrganisation.name}
-            </BoldedNavBarHeaderText>
-            <StandardNavBarHeaderText>{email}</StandardNavBarHeaderText>
+          <StyledLogoLink to="#">
+            <SVG src={props.icon} />
+          </StyledLogoLink>
+          <div
+            style={{
+              display: "flex",
+              width: "100%",
+              justifyContent: "space-between"
+            }}
+            onClick={toggleSwitchOrgDropdown}
+          >
+            {props.collapsed ? null : (
+              <div style={{ margin: "auto 0", maxWidth: "100px" }}>
+                <BoldedNavBarHeaderText>
+                  {activeOrganisation && activeOrganisation.name}{" "}
+                  <DownOutlined translate={""} />
+                </BoldedNavBarHeaderText>
+                <StandardNavBarHeaderText>{email}</StandardNavBarHeaderText>
+              </div>
+            )}
           </div>
-          {orgs.length <= 1 ? null : (
-            <SVG
-              style={{ padding: "0 0.5em 0 0", width: "30px" }}
-              src={"/static/media/angle-down.svg"}
-            />
-          )}
         </div>
-      </div>
-      <DropdownContent
-        style={{
-          display: switcherActive ? "block" : "none",
-          zIndex: 99
-        }}
-      >
-        <DropdownContentTitle>Switch Organisation</DropdownContentTitle>
-        {orgs.map((org: Organisation) => {
-          return (
-            <DropdownContentText key={org.id} onClick={() => selectOrg(org.id)}>
-              {org.name}
-            </DropdownContentText>
-          );
-        })}
-      </DropdownContent>
-      <div
-        style={{
-          display: switcherActive ? "block" : "none",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 98,
-          width: "100vw",
-          height: "100vh"
-        }}
-        onClick={toggleSwitchOrgDropdown}
-      />
-    </div>
+      </a>
+    </Dropdown>
   );
 };
 
@@ -129,35 +131,4 @@ const BoldedNavBarHeaderText = styled(StandardNavBarHeaderText)`
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-`;
-
-const DropdownContent = styled.div`
-  display: none;
-  position: absolute;
-  top: 74px;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  width: 234px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-`;
-
-const DropdownContentText = styled.p`
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-  margin: 0;
-  border-bottom: 0.5px solid #80808059;
-  &:hover {
-    background-color: #f1f1f1;
-  }
-`;
-
-const DropdownContentTitle = styled(DropdownContentText)`
-  text-transform: uppercase;
-  font-size: 12px;
-  font-weight: bold;
-  color: grey;
-  padding: 5px 16px;
 `;

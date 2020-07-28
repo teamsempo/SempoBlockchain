@@ -4,7 +4,6 @@ import styled from "styled-components";
 
 import UploadButton from "../uploader/uploadButton.jsx";
 import UploadedTable from "../uploader/uploadedTable.jsx";
-import SideBar from "../navBar";
 
 const mapStateToProps = state => {
   return {
@@ -35,8 +34,6 @@ const uploadPage = ({ loggedIn, spreadsheetData, location }) => {
   if (loggedIn) {
     return (
       <WrapperDiv>
-        <SideBar />
-
         <Break />
 
         {inner_div}
@@ -45,8 +42,6 @@ const uploadPage = ({ loggedIn, spreadsheetData, location }) => {
   } else {
     return (
       <WrapperDiv>
-        <SideBar />
-
         <div style={{ margin: "1em" }}>Please log in</div>
       </WrapperDiv>
     );

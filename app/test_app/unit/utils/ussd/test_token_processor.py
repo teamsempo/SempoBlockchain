@@ -11,6 +11,7 @@ from server.models.kyc_application import KycApplication
 from server.models.user import User
 from server.utils.user import default_transfer_account
 from server.utils.ussd.token_processor import TokenProcessor
+from server.models.transfer_usage import TransferUsage
 
 fake = Faker()
 fake.add_provider(phone_number)
@@ -21,7 +22,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
                                      is_ghost: bool = False):
     transfer_account = TransferAccount(bound_entity=user)
     transfer_account.token = token
-    transfer_account.balance = balance
+    transfer_account.set_balance_offset(balance)
 
     if is_default:
         user.default_transfer_account = transfer_account
@@ -139,7 +140,8 @@ def test_send_token(mocker, test_client, init_database, initialised_blockchain_n
             return from_amount * 0.75
     mocker.patch('server.bt.get_conversion_amount', mock_convert)
 
-    TokenProcessor.send_token(sender, recipient, 1000, "A reason", 1)
+    TransferUsage.find_or_create("Alf DVDs")
+    TokenProcessor.send_token(sender, recipient, 1000, "1", 1)
     assert default_transfer_account(sender).balance == 19000
     assert default_transfer_account(recipient).balance == recipient_balance
 
