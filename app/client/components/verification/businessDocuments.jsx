@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import styled, { ThemeProvider } from "styled-components";
 import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
-import DateTime from "../datetime";
+import DateTime from "../dateTime.tsx";
 
 import { DefaultTheme } from "../theme";
 import AsyncButton from "../AsyncButton.jsx";

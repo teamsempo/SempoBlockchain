@@ -8,7 +8,7 @@ import { TopRow, StyledSelect } from "../styledElements.js";
 import { ModifyCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
-import DateTime from "../dateTime";
+import DateTime from "../dateTime.tsx";
 import AsyncButton from "../AsyncButton.jsx";
 import { formatMoney } from "../../utils";
 import { ModuleBox } from "../styledElements";

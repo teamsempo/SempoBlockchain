@@ -13,7 +13,7 @@ import {
 } from "../styledElements.js";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
-import DateTime from "../datetime";
+import DateTime from "../dateTime.tsx";
 import NewTransferManager from "../management/newTransferManager.jsx";
 
 import { formatMoney } from "../../utils";
