@@ -8,7 +8,8 @@ import redis, requests
 from requests.auth import HTTPBasicAuth
 from web3 import (
     Web3,
-    HTTPProvider
+    HTTPProvider,
+    WebsocketProvider
 )
 
 from web3.exceptions import BadFunctionCallOutput
@@ -35,6 +36,7 @@ from eth_manager.contract_registry.ABIs import (
 from eth_manager.eth_transaction_processor import EthTransactionProcessor
 from eth_manager.transaction_supervisor import TransactionSupervisor
 from eth_manager.task_manager import TaskManager
+from eth_manager.blockchain_sync.blockchain_sync import BlockchainSyncer
 
 import celery_utils
 
@@ -58,6 +60,7 @@ app.conf.beat_schedule = {
 }
 
 w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+w3_websocket = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
@@ -83,6 +86,7 @@ supervisor = TransactionSupervisor(
 
 task_manager = TaskManager(persistence=persistence_module, transaction_supervisor=supervisor)
 
+blockchain_sync = BlockchainSyncer(persistence=persistence_module, red=red, w3_websocket=w3_websocket)
 
 if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
     persistence_module.create_blockchain_wallet_from_private_key(

@@ -195,7 +195,7 @@ class TestInterface:
 
         assert trans.task.uuid == task.uuid
 
-    def test_create_function_task(self, db_session, persistence_int: SQLPersistenceInterface):
+    def test_create_function_task(self, db_session, persistence_module: SQLPersistenceInterface):
 
         signing_wallet_obj = BlockchainWallet()
         db_session.add(signing_wallet_obj)
@@ -212,7 +212,7 @@ class TestInterface:
         prior_tasks = None
         reserves_task = None
 
-        trans = persistence_int.create_function_task(uuid,
+        trans = persistence_module.create_function_task(uuid,
                 signing_wallet_obj,
                 contract_address, abi_type,
                 function_name, args, kwargs,
@@ -221,7 +221,7 @@ class TestInterface:
         assert trans.uuid == uuid
         assert trans.type == 'FUNCTION'
 
-    def test_deploy_contract_test(self, db_session, persistence_int: SQLPersistenceInterface):
+    def test_deploy_contract_test(self, db_session, persistence_module: SQLPersistenceInterface):
         signing_wallet_obj = BlockchainWallet()
         db_session.add(signing_wallet_obj)
 
@@ -232,7 +232,7 @@ class TestInterface:
         gas_limit = None
         prior_tasks = None
 
-        trans = persistence_int.create_deploy_contract_task(
+        trans = persistence_module.create_deploy_contract_task(
                 uuid,
                 signing_wallet_obj,
                 contract_name,
@@ -242,10 +242,15 @@ class TestInterface:
         assert trans.uuid == uuid
         assert trans.type == 'DEPLOY_CONTRACT'
 
-    def test_create_blockchain_wallet_from_private_key(self, db_session, persistence_int: SQLPersistenceInterface):
-        trans = persistence_int.create_blockchain_wallet_from_private_key(pk)
+    def test_create_blockchain_wallet_from_private_key(self, db_session, persistence_module: SQLPersistenceInterface):
 
-        assert trans.address == address
+        from utils import keypair
+
+        kp = keypair()
+
+        trans = persistence_module.create_blockchain_wallet_from_private_key(kp['pk'])
+
+        assert trans.address == kp['address']
 
 
     @pytest.mark.xfail(reason="SQL Testing Weirdness causes this to be problematic")

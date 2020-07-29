@@ -19,6 +19,7 @@ import config
 from eth_src.eth_manager.eth_transaction_processor import EthTransactionProcessor
 from eth_src.eth_manager.transaction_supervisor import TransactionSupervisor
 from eth_src.eth_manager.task_manager import TaskManager
+from eth_src.eth_manager.blockchain_sync.blockchain_sync import BlockchainSyncer
 from eth_src.sql_persistence import engine, session_factory
 from eth_src.sql_persistence.interface import SQLPersistenceInterface
 from eth_src.sql_persistence.models import Base
@@ -69,22 +70,34 @@ def mock_w3(monkeypatch, noncer, mock_txn_send):
     w3 = Web3()
 
     def txn_signer(transaction_dict, private_key):
-        from eth_account.datastructures import AttributeDict
         from hexbytes import (
             HexBytes
         )
 
-        return AttributeDict({
+        class MockAttributeDict(object):
             # Allows us to snoop on the txn data without dealing with hard-to-reason-with encoded data
-            'rawTransaction': transaction_dict,
-            'hash':  HexBytes(b'0xdeadbeef1'),
-            'r': 1,
-            's': 2,
-            'v': 3,
-        })
+
+            def __init__(self, rawTransaction, hash, r, s, v):
+                self.rawTransaction = rawTransaction
+                self.hash = hash
+                self.r = r
+                self.s = s
+                self.v = v
+
+
+        return MockAttributeDict(
+            rawTransaction=transaction_dict,
+            hash=HexBytes(b'0xdeadbeef1'),
+            r=1,
+            s=2,
+            v=3
+        )
+
+    def mock_estimate_gas(*args, **kwargs):
+        return 40000
 
     monkeypatch.setattr(w3.eth, "getTransactionCount", noncer.get_transaction_count)
-    monkeypatch.setattr(w3.eth, "estimateGas", lambda x: 40000)
+    monkeypatch.setattr(w3.eth, "estimateGas",mock_estimate_gas)
     monkeypatch.setattr(w3.eth.account, "sign_transaction", txn_signer)
     monkeypatch.setattr(w3.eth, "sendRawTransaction", lambda x: mock_txn_send.send(x))
 
@@ -126,6 +139,20 @@ def manager(persistence_module, supervisor):
         persistence_module,
         supervisor
     )
+
+@pytest.fixture(scope='function')
+def blockchain_sync(persistence_module, mock_w3):
+
+    red = MockRedis()
+
+    s = BlockchainSyncer(
+        w3_websocket=mock_w3,
+        red=red,
+        persistence=persistence_module
+    )
+
+    return s
+
 
 @pytest.fixture(scope='function')
 def dummy_wallet(db_session):

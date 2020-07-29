@@ -10,6 +10,15 @@ class MockRedis(object):
 
 
 class MockRedisLock(object):
+    def acquire(self, *args, **kwargs):
+        return True
+
+    def reacquire(self, *args, **kwargs):
+        return True
+
+    def release(self, *args, **kwargs):
+        return True
+
     def __enter__(self):
         pass
 

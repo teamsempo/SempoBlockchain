@@ -1,13 +1,7 @@
 import celery
-import traceback
-
-from celery import signals
 
 import config
-from celery_app import app, processor, supervisor, task_manager, persistence_module
-import eth_manager.task_interfaces.composite
-from eth_manager.blockchain_sync import blockchain_sync
-from eth_manager import celery_app, blockchain_processor, persistence_module
+from celery_app import app, processor, supervisor, task_manager, persistence_module, blockchain_sync
 from exceptions import (
     LockedNotAcquired
 )
@@ -35,7 +29,6 @@ class SqlAlchemyTask(celery.Task):
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         try:
             persistence_module.session.remove()
-            persistence_module.session = scoped_session(session)
         except:
             pass
 
