@@ -248,11 +248,7 @@ def make_payment_transfer(transfer_amount,
     make_cashout_incentive_transaction = False
 
     if transfer_use is not None:
-        try:
-            use_ids = transfer_use.split(',')  # passed as '3,4' etc.
-        except AttributeError:
-            use_ids = transfer_use
-        for use_id in use_ids:
+        for use_id in transfer_use:
             if use_id != 'null':
                 use = TransferUsage.query.get(int(use_id))
                 if use:

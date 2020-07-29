@@ -178,6 +178,10 @@ class CreditTransferAPI(MethodView):
         target_balance = post_data.get('target_balance')
 
         transfer_use = post_data.get('transfer_use')
+        try:
+            use_ids = transfer_use.split(',')  # passed as '3,4' etc.
+        except AttributeError:
+            use_ids = transfer_use
 
         sender_user_id = post_data.get('sender_user_id')
         recipient_user_id = post_data.get('recipient_user_id')
