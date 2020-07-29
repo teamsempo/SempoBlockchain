@@ -41,4 +41,7 @@ class TransferStatusEnum(enum.Enum):
     # BLOCKCHAIN_REJECTED = -2
     # BLOCKCHAIN_COMPLETE = 2
 
-#TODO add an enum for blockchain status
+class BlockchainStatus(enum.Enum):
+    PENDING = 'PENDING'
+    SUCCESS = 'SUCCESS'
+    FAILED = 'FAILED'

@@ -1,8 +1,43 @@
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    wait_for_ci: yes
+    after_n_builds: 3
+
+coverage:
+  status:
+    project:
+      default: false
+      patch:
+        threshold: 2
+      server:
+        paths:
+          - "app/server"
+      client:
+        paths:
+          - "app/client"
+          - "!app/client/__fixtures__"
+          - "!app/client/__mocks__"
+          - "!app/client/__tests__"
+      eth_worker:
+        paths:
+          - "eth_worker/eth_manager"
+          - "eth_worker/sql_persistence"
+      #tests:
+      #paths:
+      #- "app/test_app"
+      #- "app/client/__tests__"
+      #- "eth_worker/test_eth_worker"
+      #threshold: 100%
 fixes:
   - "server/::app/server/"
+  - "client/::app/client/"
+  - "test_app/::app/test_app/"
   - "manage.py::app/manage.py"
   - "migrations/seed.py::app/migrations/seed.py"
   - "sql_persistence/::eth_worker/sql_persistence/"
+  - "test_eth_worker/::eth_worker/test_eth_worker/"
+  - "eth_manager/::eth_worker/eth_manager/"
   - "exceptions.py::eth_worker/exceptions.py"
   - "sempo_types.py::eth_worker/sempo_types.py"
   - "generate_secrets.py::config_files/generate_secrets.py"

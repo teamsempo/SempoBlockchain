@@ -4,7 +4,11 @@ from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Table, Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, JSON, Numeric
 from sqlalchemy.orm import scoped_session
-from sqlalchemy import select, func, case
+from sqlalchemy import select, func, case, event
+
+import requests
+import time
+from requests.auth import HTTPBasicAuth
 import datetime, base64, os
 from cryptography.fernet import Fernet
 from eth_utils import keccak
@@ -230,6 +234,12 @@ class BlockchainTransaction(ModelBase):
     nonce = Column(Integer)
     nonce_consumed = Column(Boolean, default=False)
 
+    sender_address = Column(String)
+    recipient_address = Column(String)
+    amount = Column(Numeric(27))
+    is_synchronized_with_app = Column(Boolean, default=False)
+    is_third_party_transaction = Column(Boolean, default=False)
+
     ignore = Column(Boolean, default=False)
 
     first_block_hash = Column(String)
@@ -238,13 +248,14 @@ class BlockchainTransaction(ModelBase):
 
     blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id))
 
+    blockchain_task = relationship('BlockchainTask', foreign_keys=[blockchain_task_id])
+
     @hybrid_property
     def status(self):
         return self._status or 'UNKNOWN'
 
     @status.setter
     def status(self, value):
-
         if value not in STATUS_STRING_TO_INT:
             raise ValueError('Status {} not allowed. (Must be {}'.format(value, STATUS_STRING_TO_INT))
 
@@ -267,3 +278,65 @@ class BlockchainTransaction(ModelBase):
     def __repr__(self):
         return ('<BlockchainTransaction ID:{} Nonce:{} Status: {}>'
                 .format(self.id, self.nonce, self.status))
+    
+class SynchronizedBlock(ModelBase):
+    __tablename__ = 'synchronized_block'
+    block_number = Column(Integer)
+    status = Column(String)
+    is_synchronized = Column(Boolean)
+    synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'))
+    synchronization_filter = relationship("SynchronizationFilter", back_populates="blocks", lazy=True)
+    decimals = Column(Integer)
+
+class SynchronizationFilter(ModelBase):
+    __tablename__ = 'synchronization_filter'
+    contract_address = Column(String, unique=True)
+    contract_type = Column(String)
+    filter_parameters = Column(String)
+    filter_type = Column(String) # TRANSFER, EXCHANGE
+    max_block = Column(Integer)
+    decimals = Column(Integer)
+    blocks = relationship("SynchronizedBlock", back_populates="synchronization_filter", lazy=True)
+
+# When BlockchainTransaction is updated, let the api layer know about it
+@event.listens_for(BlockchainTransaction, 'after_update')
+def receive_after_update(mapper, connection, target):
+    if target.blockchain_task and not target.is_third_party_transaction:
+        post_data = {
+                'blockchain_task_uuid': target.blockchain_task.uuid,
+                'timestamp': time.time(),
+                'blockchain_status': target.status,
+                'error': target.error,
+                'message': target.message,
+                'hash': target.hash
+            }
+        callback_url = config.APP_HOST + '/api/v1/blockchain_taskable'
+
+        try:
+            r = requests.post(
+                callback_url,
+                timeout=5,
+                json=post_data,
+                auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
+                                   config.INTERNAL_AUTH_PASSWORD)
+            )
+        except:
+            r = None
+
+        if r and r.ok:
+            obj_table = BlockchainTransaction.__table__
+            connection.execute(
+                obj_table.update().
+                where(obj_table.c.id == target.id).
+                values(is_synchronized_with_app=True)
+            )
+        else:
+            # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
+            # where is_synchronized_with_app=False
+            config.logg.warn(f"Could not reach 'APP_HOST' URL: {callback_url}. Please check your config.ini'")
+            obj_table = BlockchainTransaction.__table__
+            connection.execute(
+                obj_table.update().
+                where(obj_table.c.id == target.id).
+                values(is_synchronized_with_app=False)
+            )

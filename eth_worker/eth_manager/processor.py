@@ -255,16 +255,16 @@ class TransactionProcessor(object):
 
             print(f'Status for transaction {transaction_object.id} of task UUID {task.uuid} is:'
             f'\n {status}')
-
             if status == 'SUCCESS':
 
                 unstarted_posteriors = self.get_unstarted_posteriors(task)
+
+                self.persistence_interface.set_task_status_text(task, 'SUCCESS')
 
                 for dep_task in unstarted_posteriors:
                     print('Starting posterior task: {}'.format(dep_task.uuid))
                     signature(utils.eth_endpoint('_attempt_transaction'), args=(dep_task.uuid,)).delay()
 
-                self.persistence_interface.set_task_status_text(task, 'SUCCESS')
 
             if status == 'PENDING':
                 celery_task.request.retries = 0

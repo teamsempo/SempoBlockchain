@@ -68,6 +68,13 @@ class BlockchainTasker(object):
             kwargs=kwargs, queue=queue, task_uuid=task_uuid
         ).id
 
+    def add_transaction_sync_filter(self, kwargs):
+        task_runner.delay_task(self._eth_endpoint('add_transaction_filter'), kwargs = kwargs)
+        return True
+
+    def force_third_party_transaction_sync(self):
+        return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions'), queue='low-priority').id
+
     def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task
@@ -192,7 +199,6 @@ class BlockchainTasker(object):
         :return: task uuid for the transfer
         """
         raw_amount = token.system_amount_to_token(amount, queue=queue)
-
         if signing_address == from_address:
             return self._transaction_task(
                 signing_address=signing_address,
@@ -434,7 +440,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_and_fund_reserve_token'),
             args=args,
-            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 20
         )
 
     def deploy_smart_token(self,

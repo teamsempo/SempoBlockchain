@@ -9,6 +9,7 @@ import { Switch, Route, Router, Redirect } from "react-router-dom";
 const dashboardPage = lazy(() =>
   import("./components/pages/dashboardPage.jsx")
 );
+const mapPage = lazy(() => import("./components/pages/mapPage.jsx"));
 const uploadPage = lazy(() => import("./components/pages/uploadPage.jsx"));
 const transferAccountListPage = lazy(() =>
   import("./components/pages/transferAccountListPage.jsx")
@@ -51,15 +52,11 @@ import notFoundPage from "./components/pages/notFoundPage.jsx";
 import MessageBar from "./components/messageBar.jsx";
 import ErrorBoundary from "./components/errorBoundary.jsx";
 
-import {
-  WrapperDiv,
-  CenterLoadingSideBarActive
-} from "./components/styledElements";
 import { ThemeProvider } from "styled-components";
 import { DefaultTheme } from "./components/theme.js";
 import { browserHistory } from "./createStore.js";
 import LoadingSpinner from "./components/loadingSpinner.jsx";
-import NavBar from "./components/navBar";
+import Page from "./components/navBar/page";
 
 const mapStateToProps = state => {
   return {
@@ -72,7 +69,6 @@ class Nav extends React.Component {
   render() {
     const isLoggedIn = this.props.loggedIn;
     const isReAuthing = this.props.login.isLoggingIn;
-    const beneficiaryURL = "/" + window.BENEFICIARY_TERM_PLURAL.toLowerCase();
 
     return (
       <Router history={browserHistory}>
@@ -85,6 +81,15 @@ class Nav extends React.Component {
               component={dashboardPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
+              path="/map"
+              component={mapPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              footer={false}
             />
             <PrivateRoute
               exact
@@ -188,7 +193,6 @@ class Nav extends React.Component {
               component={exportPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              z
             />
 
             {/* PUBLIC PAGES */}
@@ -219,34 +223,16 @@ const LoadingSpinnerWrapper = () => {
   );
 };
 
-const LoadingSpinnerWrapperSideBarActive = () => {
-  return (
-    <WrapperDiv>
-      <CenterLoadingSideBarActive>
-        <LoadingSpinnerWrapper />
-      </CenterLoadingSideBarActive>
-    </WrapperDiv>
-  );
-};
-
 const PageWrapper = ({ noNav, component: Component, ...props }) => {
   return (
     <ErrorBoundary>
-      {noNav ? null : <NavBar />}
-
       <MessageBar />
 
-      <Suspense
-        fallback={
-          noNav ? (
-            <LoadingSpinnerWrapper />
-          ) : (
-            <LoadingSpinnerWrapperSideBarActive />
-          )
-        }
-      >
-        <Component {...props} />
-      </Suspense>
+      <Page noNav={noNav} {...props}>
+        <Suspense fallback={<LoadingSpinnerWrapper />}>
+          <Component {...props} />
+        </Suspense>
+      </Page>
     </ErrorBoundary>
   );
 };

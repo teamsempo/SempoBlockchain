@@ -16,7 +16,7 @@ def test_new_fiat_ramp(create_fiat_ramp):
 
     assert create_fiat_ramp.payment_status is FiatRampStatusEnum.PENDING
 
-    create_fiat_ramp.resolve_as_completed()
+    create_fiat_ramp.resolve_as_complete()
 
     assert create_fiat_ramp.payment_status is FiatRampStatusEnum.COMPLETE
 

@@ -1,5 +1,5 @@
 import "../../setup/setupTests";
-import { apiClient } from "../../../api/apiClient";
+import { apiClient } from "../../../api/client/apiClient";
 
 describe("test sempo apiClient", () => {
   beforeEach(() => {

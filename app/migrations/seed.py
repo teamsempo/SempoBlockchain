@@ -382,6 +382,8 @@ def create_float_wallet(app):
 
         db.session.commit()
 
+    print_section_conclusion('Done Creating/Updating Float Wallet')
+
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
     current_app = create_app()

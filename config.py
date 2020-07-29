@@ -5,12 +5,12 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-
-VERSION = '1.1.37'  # Remember to bump this in every PR
+VERSION = '1.4.2'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
-CONFIG_DIR = os.path.abspath(os.path.dirname(__file__))
+RELATIVE_CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'config_files/')
+CONFIG_DIR = os.path.abspath(RELATIVE_CONFIG_DIR)
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
@@ -80,9 +80,9 @@ else:
     # Load config from local
 
     # This occurs in local environments
-    folder_common_secrets_path = os.path.join(CONFIG_DIR, 'config_files/secret/' + COMMON_FILENAME)
-    folder_config_path = os.path.join(CONFIG_DIR, 'config_files/public/' + CONFIG_FILENAME)
-    folder_secrets_path = os.path.join(CONFIG_DIR, 'config_files/secret/' + SECRETS_FILENAME)
+    folder_common_secrets_path = os.path.join(CONFIG_DIR, 'secret/' + COMMON_FILENAME)
+    folder_config_path = os.path.join(CONFIG_DIR, 'public/' + CONFIG_FILENAME)
+    folder_secrets_path = os.path.join(CONFIG_DIR, 'secret/' + SECRETS_FILENAME)
 
     # This occurs in docker environments, where the config folder is copied and unpacked to the parent directory
     # We can't avoid unpacking the config folder due to docker stupidness around conditional file copying
@@ -136,6 +136,8 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
 
+THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
+
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')
 SECRET_KEY          = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
@@ -144,12 +146,8 @@ ECDSA_SECRET        = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].encod
 INTERNAL_AUTH_USERNAME = secrets_parser['APP']['BASIC_AUTH_USERNAME'] + '_' + DEPLOYMENT_NAME
 INTERNAL_AUTH_PASSWORD = secrets_parser['APP']['BASIC_AUTH_PASSWORD']
 
-EXTERNAL_AUTH_USERNAME = 'admin_auth_' + DEPLOYMENT_NAME
-EXTERNAL_AUTH_PASSWORD = hashlib.sha256(SECRET_KEY.encode()).hexdigest()[0:8]
-
 BASIC_AUTH_CREDENTIALS = {
-    INTERNAL_AUTH_USERNAME: (INTERNAL_AUTH_PASSWORD, 'internal'),
-    EXTERNAL_AUTH_USERNAME: (EXTERNAL_AUTH_PASSWORD, 'external')
+    INTERNAL_AUTH_USERNAME: (INTERNAL_AUTH_PASSWORD, 'internal')
 }
 
 REDIS_URL = 'redis://' + config_parser['REDIS']['URI']
@@ -362,22 +360,6 @@ try:
     NAMESCAN_KEY    = common_secrets_parser['NAMESCAN']['key']
 except KeyError:
     NAMESCAN_KEY = None
-
-try:
-    GE_DB_NAME = secrets_parser['GE_MIGRATION'].get('name')
-    GE_DB_USER = secrets_parser['GE_MIGRATION'].get('user')
-    GE_DB_HOST = secrets_parser['GE_MIGRATION'].get('host')
-    GE_DB_PORT = secrets_parser['GE_MIGRATION'].get('port')
-    GE_DB_PASSWORD = secrets_parser['GE_MIGRATION'].get('password')
-    GE_HTTP_PROVIDER = secrets_parser['GE_MIGRATION'].get('ge_http_provider')
-
-except KeyError:
-    GE_DB_NAME = ''
-    GE_DB_USER = ''
-    GE_DB_HOST = ''
-    GE_DB_PORT = ''
-    GE_DB_PASSWORD = ''
-    GE_HTTP_PROVIDER = ''
 
 TRANSFER_LIMITS = {}
 TRANSFER_LIMITS['0.P7']	= 5000

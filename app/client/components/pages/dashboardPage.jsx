@@ -1,33 +1,26 @@
-import React, { Suspense, lazy } from "react";
+// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
+// The code in this file is not included in the GPL license applied to this repository
+// Unauthorized copying of this file, via any medium is strictly prohibited
+
+import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { subscribe, unsubscribe } from "pusher-redux";
 
-import { PUSHER_CREDIT_TRANSFER } from "../../reducers/creditTransferReducer";
-import { LoginAction } from "../../reducers/auth/actions";
-import { loadCreditTransferList } from "../../reducers/creditTransferReducer";
-import { loadCreditTransferFilters } from "../../reducers/creditTransferFilterReducer";
+import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
-import {
-  VolumeChart,
-  BeneficiaryFunnel,
-  UsagePieChart,
-  MetricsBar,
-  BeneficiaryLiveFeed,
-  DashboardFilter
-} from "../dashboard";
+import { BeneficiaryLiveFeed } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
-import {
-  ModuleBox,
-  PageWrapper,
-  CenterLoadingSideBarActive
-} from "../styledElements";
-import { parseQuery } from "../../utils";
+import { WrapperDiv, CenterLoadingSideBarActive } from "../styledElements";
 
 import { ActivateAccountAction } from "../../reducers/auth/actions";
+import NoDataMessage from "../NoDataMessage";
+import { Row, Col, Space } from "antd";
+import MetricsCard from "../dashboard/MetricsCard";
 
-const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
+import MasterWalletCard from "../dashboard/MasterWalletCard";
+import { Default, Mobile } from "../helpers/responsive";
 
 const mapStateToProps = state => {
   return {
@@ -38,11 +31,10 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    logout: () => dispatch(LoginAction.logout()),
-    loadCreditTransferList: (query, path) =>
-      dispatch(loadCreditTransferList({ query, path })),
-    loadCreditTransferFilters: (query, path) =>
-      dispatch(loadCreditTransferFilters({ query, path })),
+    loadCreditTransferList: query =>
+      dispatch(
+        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
+      ),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))
   };
@@ -53,8 +45,7 @@ class DashboardPage extends React.Component {
     super();
     this.state = {
       subscribe,
-      unsubscribe,
-      loading: true
+      unsubscribe
     };
   }
 
@@ -73,15 +64,6 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
-
-    const parsed = parseQuery(location.search);
-
-    if (parsed.actok) {
-      console.log("actok", parsed.actok);
-      this.props.activateAccount({ body: { activation_token: parsed.actok } });
-    }
-
-    this.props.loadCreditTransferFilters();
   }
 
   componentWillUnmount() {
@@ -98,7 +80,7 @@ class DashboardPage extends React.Component {
     subscribe(
       pusher_channel,
       "credit_transfer",
-      PUSHER_CREDIT_TRANSFER,
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER,
       additionalParams
     );
 
@@ -112,7 +94,11 @@ class DashboardPage extends React.Component {
   }
 
   unsubscribe() {
-    unsubscribe("MainChannel", "credit_transfer", PUSHER_CREDIT_TRANSFER);
+    unsubscribe(
+      "MainChannel",
+      "credit_transfer",
+      CreditTransferActionTypes.PUSHER_CREDIT_TRANSFER
+    );
   }
 
   render() {
@@ -125,59 +111,64 @@ class DashboardPage extends React.Component {
         </WrapperDiv>
       );
     } else if (Object.values(this.props.creditTransfers.byId).length === 0) {
-      return (
-        <WrapperDiv>
-          <PageWrapper>
-            <ModuleBox>
-              <NoDataMessageWrapper>
-                <IconSVG src="/static/media/no_data_icon.svg" />
-                <p>There is no data available. Please upload a spreadsheet.</p>
-              </NoDataMessageWrapper>
-            </ModuleBox>
-          </PageWrapper>
-        </WrapperDiv>
-      );
+      return <NoDataMessage />;
     } else if (this.props.creditTransfers.loadStatus.success === true) {
       return (
-        <WrapperDiv>
-          <PageWrapper>
-            <DashboardFilter>
-              <Main>
-                <GraphMetricColumn>
-                  <ModuleBox>
-                    <VolumeChart />
-                  </ModuleBox>
+        <div>
+          <div className="site-card-wrapper">
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              <Default>
+                <div style={{ marginBottom: "-16px" }}>
+                  <Row gutter={16}>
+                    <Col span={16}>
+                      <MasterWalletCard />
+                    </Col>
+                    <Col span={8}>
+                      <BeneficiaryLiveFeed />
+                    </Col>
+                  </Row>
+                </div>
+              </Default>
 
-                  <ModuleBox>
-                    <MetricsBar />
-                  </ModuleBox>
-
-                  <ModuleBox>
-                    <BeneficiaryFunnel />
-                  </ModuleBox>
-                </GraphMetricColumn>
-
-                <LiveFeedColumn>
-                  <ModuleBox>
-                    <UsagePieChart />
-                  </ModuleBox>
-
-                  <ModuleBox>
-                    <BeneficiaryLiveFeed />
-                  </ModuleBox>
-                </LiveFeedColumn>
-              </Main>
-
-              <Main style={{ marginTop: 0, maxHeight: "80vh" }}>
-                <ModuleBox>
-                  <Suspense fallback={<div>Loading Map...</div>}>
-                    <HeatMap />
-                  </Suspense>
-                </ModuleBox>
-              </Main>
-            </DashboardFilter>
-          </PageWrapper>
-        </WrapperDiv>
+              <Mobile>
+                {/* override ant defaults for mobile! */}
+                <div style={{ marginTop: "-24px", marginBottom: "-16px" }}>
+                  <Row gutter={[0, 16]}>
+                    <Col style={{ width: "100%" }}>
+                      <MasterWalletCard />
+                    </Col>
+                    <Col style={{ width: "100%" }}>
+                      <BeneficiaryLiveFeed />
+                    </Col>
+                  </Row>
+                </div>
+              </Mobile>
+              <MetricsCard
+                cardTitle="Transfers"
+                defaultGroupBy="gender"
+                defaultTimeSeries="all_payments_volume"
+                filterObject="credit_transfer"
+                timeSeriesNameLabels={[
+                  ["all_payments_volume", "Volume"],
+                  ["daily_transaction_count", "Transaction Count"],
+                  ["users_who_made_purchase", "Unique Users"],
+                  ["transfer_amount_per_user", "Volume Per User"],
+                  ["trades_per_user", "Count Per User"]
+                ]}
+              />
+              <MetricsCard
+                cardTitle="Participants"
+                defaultGroupBy="account_type"
+                defaultTimeSeries="active_users"
+                filterObject="user"
+                timeSeriesNameLabels={[
+                  ["active_users", "Active"],
+                  ["users_created", "New"]
+                ]}
+              />
+            </Space>
+          </div>
+        </div>
       );
     } else {
       return (
@@ -193,45 +184,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(DashboardPage);
-
-const WrapperDiv = styled.div`
-  //width: 100vw;
-  //min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  position: relative;
-`;
-
-const Main = styled.div`
-  display: flex;
-  @media (max-width: 767px) {
-    flex-direction: column;
-  }
-`;
-
-const GraphMetricColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-`;
-
-const LiveFeedColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const IconSVG = styled.img`
-  width: 35px;
-  padding: 1em 0 0.5em;
-  display: flex;
-`;
-
-const NoDataMessageWrapper = styled.div`
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-`;

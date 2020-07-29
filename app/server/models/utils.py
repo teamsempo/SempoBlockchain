@@ -12,6 +12,7 @@ from sqlalchemy import or_
 import server
 from server import db, bt, AppQuery
 from server.exceptions import OrganisationNotProvidedException, ResourceAlreadyDeletedError
+from server.utils.transfer_enums import BlockchainStatus
 
 
 @contextmanager
@@ -100,6 +101,9 @@ def filter_by_org(query):
     subclass of OrgBase"""
     show_deleted = query._execution_options.get("show_deleted", False)
     show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
+    # We want to support multiple active organizations, but only for select GET requets.
+    # This is done through a multi_org flag, very similar to the show_all flag
+    multi_org = getattr(g, "multi_org", False) or query._execution_options.get("multi_org", False)
 
     if show_all and show_deleted:
         return query
@@ -126,13 +130,20 @@ def filter_by_org(query):
                     # member_organisations = getattr(g, "member_organisations", [])
                     active_organisation = getattr(g, "active_organisation", None)
                     active_organisation_id = getattr(active_organisation, "id", None)
-                    member_organisation_ids = [active_organisation_id] if active_organisation_id else []
+                    # If we're operating on a query supporting multi_org, AND the application
+                    # context has query_organisations set from the HTTP request, use those  
+                    # organizations. Otherwise, use a singleton of the current active org 
+                    query_organisations = [active_organisation_id] if active_organisation_id else []
+                    if getattr(g, 'query_organisations', None):
+                        if not multi_org:
+                            raise Exception('Multiple organizations not supported for this operation')
+                        query_organisations = g.query_organisations
 
                     if issubclass(mapper.class_, ManyOrgBase):
                         # filters many-to-many
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisations.any(
-                                server.models.organisation.Organisation.id.in_(member_organisation_ids)),
+                                server.models.organisation.Organisation.id.in_(query_organisations)),
                             ent['entity'].is_public == True,
                         ))
                     else:
@@ -167,6 +178,13 @@ def filter_by_org(query):
 #         "joined eager loading?" % obj)
 
 
+credit_transfer_transfer_usage_association_table = db.Table(
+    'credit_transfer_transfer_usage_association_table',
+    db.Model.metadata,
+    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id'), index=True),
+    db.Column('transfer_usage_id', db.Integer, db.ForeignKey('transfer_usage.id'), index=True)
+)
+
 user_transfer_account_association_table = db.Table(
     'user_transfer_account_association_table',
     db.Model.metadata,
@@ -200,19 +218,21 @@ class ModelBase(db.Model):
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
+from server.models.worker_messages import WorkerMessages
 class BlockchainTaskableBase(ModelBase):
+
     __abstract__ = True
 
     blockchain_task_uuid = db.Column(db.String)
 
-    @hybrid_property
-    def blockchain_status(self):
-        if self.blockchain_task_uuid:
-            task = bt.get_blockchain_task(self.blockchain_task_uuid)
-
-            return task.get('status', 'ERROR')
-        else:
-            return 'UNKNOWN'
+    # Present status, and time of last update (according to worker) to ensure the present blockchain_status 
+    # is the newest (since order of ack's is not guaranteed)
+    blockchain_status   = db.Column(db.Enum(BlockchainStatus), default=BlockchainStatus.PENDING)
+    blockchain_hash = db.Column(db.String)
+    last_worker_update = db.Column(db.DateTime)
+    @declared_attr
+    def messages(cls):
+        return db.relationship('WorkerMessages', primaryjoin=lambda: db.foreign(WorkerMessages.blockchain_task_uuid)==cls.blockchain_task_uuid, lazy=True)
 
 
 class SoftDelete(object):
