@@ -233,11 +233,11 @@ def test_get_summed_metrics(
         total_spent_val = 25
 
     elif metric_type == 'credit_transfer' or metric_type == 'all':
-        assert returned_stats['daily_disbursement_volume']['aggregate']['ORGANISATION'] == 300
+        assert returned_stats['daily_disbursement_volume']['aggregate']['ORGANISATION'] == 700
         assert returned_stats['daily_transaction_volume']['aggregate']['USER'] == 150
         assert returned_stats['exhausted_balance'] == 0
         assert returned_stats['has_transferred_count'] == 2
-        assert returned_stats['total_distributed'] == 300
+        assert returned_stats['total_distributed'] == 700
         assert returned_stats['total_exchanged'] == 0
         assert returned_stats['total_spent'] == total_spent_val
     elif metric_type == 'participant' or metric_type == 'all':
