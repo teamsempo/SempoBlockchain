@@ -234,7 +234,7 @@ def create_transfer(amount, sender_user, recipient_user, token, subtype=None):
     # Mimics before_request hook
     g.pending_transactions = []
 
-    transfer.resolve_as_completed()
+    transfer.resolve_as_complete_and_trigger_blockchain()
     
     # Mimics after_request hook
     for transaction, queue in g.pending_transactions:

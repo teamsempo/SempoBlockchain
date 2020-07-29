@@ -241,8 +241,8 @@ class Exchange(BlockchainTaskableBase):
         self.from_transfer.blockchain_task_uuid = self.blockchain_task_uuid
         self.to_transfer.blockchain_task_uuid = self.blockchain_task_uuid
 
-        self.from_transfer.resolve_as_completed(existing_blockchain_txn=True)
-        self.to_transfer.resolve_as_completed(existing_blockchain_txn=True)
+        self.from_transfer.resolve_as_complete()
+        self.to_transfer.resolve_as_complete()
 
     def send_blockchain_payload_to_worker(self, queue='high-priority'):
         return bt.make_liquid_token_exchange(

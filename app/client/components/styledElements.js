@@ -2,31 +2,28 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 
 export const PageWrapper = styled.div`
-  margin-left: 234px;
-  width: calc(100vw - 234px);
+  width: 100%;
   @media (max-width: 767px) {
-    margin-top: 50px;
     margin-left: 0;
-    width: 100vw;
+    width: 100%;
     flex-direction: column;
   }
 `;
 
 export const CenterLoadingSideBarActive = styled.div`
-  margin-left: 234px;
-  width: calc(100vw - 234px);
+  width: 100%;
   flex-direction: column;
   height: 100vh;
   display: flex;
   justify-content: center;
   @media (max-width: 767px) {
     margin-left: 0;
-    width: 100vw;
+    width: 100%;
   }
 `;
 
 export const Input = styled.input`
-  width: calc(100% - 2em);
+  width: calc(100% - 1em);
   outline: none;
   display: flex;
   margin: 0.5em;

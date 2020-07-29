@@ -8,6 +8,8 @@ from server.schemas import user_schema, users_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
+from server.utils.auth import multi_org
+
 from server.exceptions import ResourceAlreadyDeletedError, TransferAccountDeletionError
 
 user_blueprint = Blueprint('user', __name__)
@@ -15,6 +17,7 @@ user_blueprint = Blueprint('user', __name__)
 
 class UserAPI(MethodView):
     @requires_auth
+    @multi_org
     def get(self, user_id):
 
         can_see_full_details = AccessControl.has_suffient_role(
