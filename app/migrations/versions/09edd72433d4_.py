@@ -1,5 +1,5 @@
-"""empty message
-
+"""
+Add batch uuid
 Revision ID: 09edd72433d4
 Revises: 49e8a333d285
 Create Date: 2020-07-04 10:12:49.015322
