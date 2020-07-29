@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { BusinessVerificationAction } from "../reducers/businessVerification/actions";
 
-import LoadingSpinner from "./loadingSpinner.js";
+import LoadingSpinner from "./loadingSpinner.jsx";
 import { Link } from "react-router-dom";
 import { ReduxState } from "../reducers/rootReducer";
 
@@ -104,7 +104,11 @@ const StyledHeader = styled.p`
   margin: 0 0 0.6em;
 `;
 
-const StyledContent = styled.p`
+interface ParaProps {
+  backgroundColor: string;
+}
+
+const StyledContent = styled.p<ParaProps>`
   font-weight: 400;
   margin: 0;
   &:before {

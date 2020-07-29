@@ -2,11 +2,14 @@ import React from "react";
 import styled from "styled-components";
 import { useSelector } from "react-redux";
 import Intercom, { IntercomAPI } from "react-intercom";
-import { ReduxState } from "../reducers/rootReducer";
 
 export default function CustomerSupport() {
-  const login = useSelector((state: ReduxState) => state.login);
-  const activeOrganisation = useSelector((state: ReduxState) => state.login.organisationId ? state.organisations.byId[state.login.organisationId] : null);
+  const login = useSelector(state => state.login);
+  const activeOrganisation = useSelector(state =>
+    state.login.organisationId
+      ? state.organisations.byId[state.login.organisationId]
+      : null
+  );
   function openChat() {
     IntercomAPI("show");
   }
@@ -17,7 +20,7 @@ export default function CustomerSupport() {
     name: login.email,
     company: {
       id: login.organisationId,
-      name: activeOrganisation?.name
+      name: activeOrganisation.name
     }
   };
 
@@ -37,7 +40,6 @@ export default function CustomerSupport() {
       <Intercom appID="kowgw7cm" {...user} />
     </div>
   );
-
 }
 
 const IconSVG = styled.img`
