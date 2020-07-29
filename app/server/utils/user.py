@@ -17,7 +17,7 @@ from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_card import TransferCard
-from server.models.transfer_account import TransferAccount
+from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
@@ -169,10 +169,10 @@ def update_transfer_account_user(user,
     user.set_held_role('VENDOR', vendor_tier)
 
     if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+        user.set_held_role('TOKEN_AGENT', 'token_agent')
 
     if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
@@ -197,11 +197,11 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_self_sign_up=False,
                                  business_usage=None,
                                  initial_disbursement=None):
-
     user = User(first_name=first_name,
                 last_name=last_name,
                 lat=lat, lng=lng,
                 preferred_language=preferred_language,
+                blockchain_address=blockchain_address,
                 phone=phone,
                 email=email,
                 public_serial_number=public_serial_number,
@@ -236,10 +236,10 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
     user.set_held_role('VENDOR', vendor_tier)
 
     if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+        user.set_held_role('TOKEN_AGENT', 'token_agent')
 
     if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'grassroots_group_account')
+        user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     if is_beneficiary:
         user.set_held_role('BENEFICIARY', 'beneficiary')
@@ -279,7 +279,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
     user.default_transfer_account = transfer_account
 
     return user
-
 
 def save_device_info(device_info, user):
     add_device = False
@@ -830,3 +829,14 @@ def transfer_usages_for_user(user: User) -> List[TransferUsage]:
 
     ordered_transfer_usages = sorted(TransferUsage.query.all(), key=cmp_to_key(usage_sort))
     return ordered_transfer_usages
+
+def create_transfer_account_if_required(blockchain_address, token, account_type=TransferAccountType.EXTERNAL):
+    transfer_account = TransferAccount.query.execution_options(show_all=True).filter_by(blockchain_address=blockchain_address).first()
+    if transfer_account:
+        return transfer_account
+    else:
+        return TransferAccount(
+            blockchain_address=blockchain_address,
+            token=token,
+            account_type=account_type
+        )

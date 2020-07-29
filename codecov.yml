@@ -1,3 +1,9 @@
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    wait_for_ci: yes
+    after_n_builds: 3
+
 coverage:
   status:
     project:

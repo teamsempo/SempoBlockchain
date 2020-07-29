@@ -266,7 +266,11 @@ class BlockchainTransaction(ModelBase):
     nonce = Column(Integer)
     nonce_consumed = Column(Boolean, default=False)
 
+    sender_address = Column(String)
+    recipient_address = Column(String)
+    amount = Column(Numeric(27))
     is_synchronized_with_app = Column(Boolean, default=False)
+    is_third_party_transaction = Column(Boolean, default=False)
 
     ignore = Column(Boolean, default=False)
 
@@ -307,10 +311,29 @@ class BlockchainTransaction(ModelBase):
         return ('<BlockchainTransaction ID:{} Nonce:{} Status: {}>'
                 .format(self.id, self.nonce, self.status))
 
+class SynchronizedBlock(ModelBase):
+    __tablename__ = 'synchronized_block'
+    block_number = Column(Integer)
+    status = Column(String)
+    is_synchronized = Column(Boolean)
+    synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'))
+    synchronization_filter = relationship("SynchronizationFilter", back_populates="blocks", lazy=True)
+    decimals = Column(Integer)
+
+class SynchronizationFilter(ModelBase):
+    __tablename__ = 'synchronization_filter'
+    contract_address = Column(String, unique=True)
+    contract_type = Column(String)
+    filter_parameters = Column(String)
+    filter_type = Column(String) # TRANSFER, EXCHANGE
+    max_block = Column(Integer)
+    decimals = Column(Integer)
+    blocks = relationship("SynchronizedBlock", back_populates="synchronization_filter", lazy=True)
+
 # When BlockchainTransaction is updated, let the api layer know about it
 @event.listens_for(BlockchainTransaction, 'after_update')
 def receive_after_update(mapper, connection, target):
-    if target.blockchain_task:
+    if target.blockchain_task and not target.is_third_party_transaction:
         post_data = {
                 'blockchain_task_uuid': target.blockchain_task.uuid,
                 'timestamp': time.time(),

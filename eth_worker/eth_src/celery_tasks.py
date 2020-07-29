@@ -5,6 +5,9 @@ from celery import signals
 
 import config
 from celery_app import app, processor, supervisor, task_manager, persistence_module
+import eth_manager.task_interfaces.composite
+from eth_manager.blockchain_sync import blockchain_sync
+from eth_manager import celery_app, blockchain_processor, persistence_module
 from exceptions import (
     LockedNotAcquired
 )
@@ -75,6 +78,25 @@ processor_task_config = {
 #     print('[task:%s]' % (kwargs['sender'].request.correlation_id, )
 #           + '\n'
 #           + kwargs.get('einfo').traceback)
+
+@app.task(**low_priority_config)
+def synchronize_third_party_transactions(self):
+    return blockchain_sync.synchronize_third_party_transactions()
+
+@app.task(**low_priority_config)
+def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type, decimals = 18, block_epoch = None):
+    f = blockchain_sync.add_transaction_filter(contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch)
+    if f:
+        return {
+            "contract_address": f.contract_address,
+            "contract_type": f.contract_type,
+            "filter_parameters": f.filter_parameters,
+            "filter_type": f.filter_type,
+            "max_block": f.max_block,
+            "decimals": f.decimals,
+        }
+    else:
+        return True
 
 @app.task(**base_task_config)
 def deploy_exchange_network(self, deploying_address):

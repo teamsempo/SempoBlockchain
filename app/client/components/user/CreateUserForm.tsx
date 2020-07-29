@@ -156,7 +156,7 @@ class CreateUserForm extends React.Component<
       //  USER
       selectedAccountTypeForm = (
         <>
-          {businessUsage}
+          {/*{businessUsage}*/}
           {initialDisbursementAmount}
         </>
       );
@@ -183,8 +183,8 @@ class CreateUserForm extends React.Component<
       //  VENDOR
       selectedAccountTypeForm = (
         <div>
+          {businessUsage}
           <InputField name="transferAccountName" label={"Store Name"} />
-          <InputField name="location" label={"Address"} />
         </div>
       );
     } else if (accountType === TransferAccountTypes.TOKENAGENT.toLowerCase()) {
@@ -215,7 +215,7 @@ class CreateUserForm extends React.Component<
             <InputField name="phone" label={"Phone Number"} isPhoneNumber />
             <InputField name="firstName" label="Given Name(s)" isRequired />
             <InputField name="lastName" label="Family/Surname" />
-            <InputField name="bio" label="Directory Entry" />
+            {/*<InputField name="bio" label="Directory Entry" />*/}
             <InputField name="location" label="Location" />
             <SelectField
               name="gender"
@@ -223,11 +223,11 @@ class CreateUserForm extends React.Component<
               options={["Female", "Male", "Other"]}
               hideNoneOption={true}
             />
-            <InputField
-              name="referredBy"
-              label={"Referred by user phone number"}
-              isPhoneNumber
-            />
+            {/*<InputField*/}
+            {/*name="referredBy"*/}
+            {/*label={"Referred by user phone number"}*/}
+            {/*isPhoneNumber*/}
+            {/*/>*/}
             {selectedAccountTypeForm}
             <ErrorMessage>{this.props.users.createStatus.error}</ErrorMessage>
             {/*

@@ -277,14 +277,6 @@ def print_foo():
     return True
 
 @celery_app.task()
-def find_new_ouputs():
-    return blockchain_processor.find_new_outputs()
-
-@celery_app.task()
-def find_new_external_inbounds():
-    return blockchain_processor.find_new_external_inbounds()
-
-@celery_app.task()
 def geolocate_address(geo_task):
     app_host = config.APP_HOST
 
