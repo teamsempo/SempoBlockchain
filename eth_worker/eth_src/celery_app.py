@@ -58,7 +58,12 @@ app.conf.beat_schedule = {
         "schedule": 600.0
     },
 }
-
+app.conf.beat_schedule = {
+    'third-party-transaction-sync': {
+        'task': celery_utils.eth_endpoint('synchronize_third_party_transactions'),
+        'schedule': 30, # Every 30 seconds
+    }
+}
 w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 w3_websocket = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
