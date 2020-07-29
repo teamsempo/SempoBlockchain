@@ -11,7 +11,7 @@ import json
 def generate_metrics(create_organisation):
     # Does a bunch of things which generate metrics, and sums them at the same time
     # Results in the following metrics:
-    # disbursement_volume: 300
+    # disbursement_volume: 700 // 300 custom, 400 initial disbursement of new users.
     # transaction_volume: 150
     # exhausted_balance: 1
     # has_transferred_count: 2
