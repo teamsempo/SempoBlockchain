@@ -253,7 +253,7 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
 
   let transaction_volume = date_array.map(date => {
     if (value_dict[date] !== undefined) {
-      return value_dict[date] / 100;
+      return value_dict[date];
     } else {
       return 0;
     }
