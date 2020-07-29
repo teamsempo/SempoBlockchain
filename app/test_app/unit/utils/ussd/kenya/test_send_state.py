@@ -19,7 +19,7 @@ phone = partial(fake.msisdn)
 def standard_user(test_client, init_database):
     from flask import g
 
-    token = TokenFactory(name='FooToken', symbol='FOO')
+    token = TokenFactory(name='Sarafu', symbol='Sarafu')
     organisation = OrganisationFactory(token=token, country_code='AU')
     g.active_organisation = organisation
 
