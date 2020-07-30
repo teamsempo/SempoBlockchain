@@ -7,6 +7,18 @@ from server.utils.metrics.metrics_const import *
 
 VALUE = 'value'
 
+# Sometimes group names can have quotation marks, be None, or be an enum
+# This turns them into readable strings for the API!
+def _format_group_name(group_name):
+    if not group_name:
+        return 'None'
+    try:
+        # Sometimes group_name can be an enum. Ugly hack to get the enum's value in this case
+        return group_name.value
+    except:
+        # Custom attributes contain quotation marks we don't need. Ugly hack #2
+        return group_name.replace('"', "")
+
 # Takes sorted list of tuples where the 2nd element is a date, and fills in the gaps
 # Example:
 # Input:  [(5, 01/01/2020), (10, 01/04/2020)] 
@@ -102,7 +114,7 @@ def accumulate_timeseries(query_result, population_query_result=None):
 # Input (query_result):  [(10, 01/01/2020), (20, 01/02/2020), (10, 01/03/2020), (30, 01/04/2020) (20, 01/05/2020)]
 # Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
 # Output: [(1, 01/01/2020), (2, 01/02/2020), (1, 01/03/2020), (1.333, 01/04/2020) (1, 01/05/2020)] 
-def calculate_per_user(query_result, population_query_result):
+def calculate_timeseries_per_user(query_result, population_query_result):
     is_grouped = True
     if population_query_result and len(population_query_result[0]) == 2:
         is_grouped = False
@@ -156,15 +168,7 @@ def calculate_per_user(query_result, population_query_result):
 def format_timeseries(query_result, population_query_result):
     data_by_groups = {}
     for r in query_result:
-        group_name = r[2]
-        if not group_name:
-            group_name = 'None'
-        try:
-            # Sometimes group_name can be an enum. Ugly hack to get the enum's value in this case
-            group_name = group_name.value
-        except:
-            # Custom attributes contain quotation marks we don't need. Ugly hack #2
-            group_name = group_name.replace('"', "")
+        group_name = _format_group_name(r[2])
         date = r[1]
         value = r[0]
         if group_name not in data_by_groups:
@@ -187,21 +191,36 @@ def aggregate_formatted_timeseries(query_result, population_query_result):
     totals['total'] = overall_total
     return { 'timeseries': query_result, 'aggregate': totals }
 
-timeseries_actions = {
+# TODO: Describe this
+def format_aggregate_metrics(query_result, population_query_result):
+    result = {}
+    for r in query_result:
+        result[_format_group_name(r[1])] = r[0]
+    return result
+
+# TODO: Describe this
+def get_first(query_result, population_query_result):
+    if query_result:
+        return query_result[0][0]
+    else:
+        return 0
+
+query_actions = {
     ADD_MISSING_DAYS: add_missing_days,
     ADD_MISSING_DAYS_TO_TODAY: add_missing_days_to_today,
     ACCUMULATE_TIMESERIES: accumulate_timeseries,
-    CALCULATE_PER_USER: calculate_per_user,
+    CALCULATE_TIMESERIES_PER_USER: calculate_timeseries_per_user,
     FORMAT_TIMESERIES: format_timeseries,
-    AGGREGATE_FORMATTED_TIMESERIES: aggregate_formatted_timeseries,
+    FORMAT_AGGREGATE_METRICS: format_aggregate_metrics,
+    GET_FIRST: get_first,
 }
 
-# Executes timeseries_actions against query results
+# Executes query_actions against query results
 # These are done in the order they're declared in the Metric object
 # so you can chain together common actions and reuse them across metrics!
 def process_timeseries(query_result, population_query_result = None, actions = None):
     for action in actions:
         if action not in TIMESERIES_ACTIONS:
             raise Exception(f'{action} not a valid timeseries action')
-        query_result = timeseries_actions[action](query_result, population_query_result)
+        query_result = query_actions[action](query_result, population_query_result)
     return query_result

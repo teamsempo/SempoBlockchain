@@ -30,7 +30,7 @@ class TotalUsers(metric_group.MetricGroup):
             stock_filters=[],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
-            timeseries_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
+            query_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
 
         # Special case query-- this is just used to calculate ungrouped per_user
         total_users_timeseries_query = db.session.query(func.count(User.id).label('volume'),
@@ -42,4 +42,4 @@ class TotalUsers(metric_group.MetricGroup):
             stock_filters=[],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
-            timeseries_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
+            query_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
