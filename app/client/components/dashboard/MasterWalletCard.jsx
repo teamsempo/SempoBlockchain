@@ -30,6 +30,13 @@ class MasterWalletCard extends React.Component {
     const amountDisbursed = creditTransferStats.total_distributed / 100;
     const symbol = activeOrganisation.token.symbol;
 
+    const tracker_link =
+      window.ETH_EXPLORER_URL +
+      "/address/" +
+      (window.USING_EXTERNAL_ERC20
+        ? window.master_wallet_address
+        : window.ETH_CONTRACT_ADDRESS);
+
     var options = {
       animation: false,
       maintainAspectRatio: false,
@@ -97,6 +104,11 @@ class MasterWalletCard extends React.Component {
         bordered={false}
         bodyStyle={{ height: "140px" }}
         style={{ width: "100%" }}
+        extra={
+          <a href={tracker_link} target="_blank">
+            View
+          </a>
+        }
       >
         <div style={{ height: "100%", width: "100%" }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
