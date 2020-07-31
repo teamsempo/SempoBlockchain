@@ -6,11 +6,23 @@ from server.utils.metrics import filters, metrics_cache, process_timeseries, gro
 from server.utils.metrics.metrics_const import *
 
 class Metric(object):
-    # TODO: Docs here
-    def execute_query(self, user_filters: dict = None, date_filters_dict=None, enable_caching=True, population_query_result=False):
+    def execute_query(self, user_filters: dict = None, date_filters_dict=None, enable_caching=True, population_query_result=False, calculate_only_aggregates=False):
+        """
+        :param user_filters: list of filters to apply to all metrics
+        :param date_filters_dict: lookup table linking object models to their date filters (if applicable)  
+        :param enable_caching: set to False if you don't want the query result to be cached
+        :param population_query_result: This is a representation of the number of users over time, used in 
+            post-processing of certian metrics. See process_timeseries.py for more details.
+        :param calculate_only_aggregates: if true, this skips calculating timeseries data and only fetches
+             aggregated_query and total_query
+        """
         actions = { 'query': self.query_actions, 'aggregated_query': self.aggregated_query_actions, 'total_query': self.total_query_actions }
         if self.is_timeseries:
-            queries = { 'query': self.query, 'aggregated_query': self.aggregated_query, 'total_query': self.total_query }
+            if calculate_only_aggregates:
+                queries = { 'aggregated_query': self.aggregated_query, 'total_query': self.total_query }
+            else:   
+                queries = { 'query': self.query, 'aggregated_query': self.aggregated_query, 'total_query': self.total_query }
+           
             if None in queries.values():
                 raise Exception('Timeseries query requires a query, aggregated_query, and a total_query')
         else:
@@ -45,7 +57,8 @@ class Metric(object):
         
         if self.is_timeseries:
             result = {}
-            result['timeseries'] = results['query']
+            if not calculate_only_aggregates:
+                result['timeseries'] = results['query']
             result['aggregate'] = results['aggregated_query']
             result['aggregate']['total'] = results['total_query']
             return result
@@ -74,7 +87,7 @@ class Metric(object):
     ):
         """
         :param metric_name: eg 'total_exchanged' or 'has_transferred_count'. Used for cache
-        :param query: the based query that defines the aggregation process eg summing over transfers
+        :param is_timeseries: boolean indicating that the metric is a timeseries
         :param object_model: what the base object we're getting the metric for is (Transfers/Transfer Accounts/Users)
             used for applying filters with appropriate joins, and for cache
         :param filterable_by: used to validate whether the custom filters are valid for this case
@@ -82,10 +95,19 @@ class Metric(object):
         futher custom filtering we need to do
         :param caching_combinatory_strategy: how da cache gonna cache
         :param bypass_user_filters: ignore any user supplied filter
-        """
-        # TODO: Update the docs here^ 
-
-        
+        :param query: the base query of the metric. This could be a timeseries query, or one which only returns a single number
+        :param aggregated_query: used only with timeseries metrics, this is the query which defines an aggregated version 
+            of the main query. For example, if the main query returns a timeseries representing number of transfer usages 
+            over time, this query should get a non-timeseries of transfer usages spanning the entire time
+        :param total_query: used only with timeseries metrics, this is a query which should return a single 
+            value-- the total of the figure represenging the metric. For example, if the main query returns a timeseries of 
+            transfer usages over time, this query should represent the summation of all transfer usages
+        :param query_actions: Which post-processing actions are executed against the query after it runs. For more details, see
+            process_timeseries.py
+        :param aggregated_query_actions: query_actions for aggregated_query
+        :param total_query_actions: query_actions for total_query
+        :param groupable_attributes: list of attributes this metric is allowed to be grouped by
+        """        
         self.metric_name = metric_name
         self.is_timeseries = is_timeseries
         self.filterable_by = filterable_by or []

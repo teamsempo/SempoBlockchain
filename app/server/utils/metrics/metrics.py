@@ -31,6 +31,7 @@ def calculate_transfer_stats(
     end_date=None,
     user_filter={},
     metric_type=metrics_const.ALL,
+    requested_metric=metrics_const.ALL,
     disable_cache: bool = False,
     timeseries_unit = metrics_const.DAY,
     group_by = None,
@@ -45,7 +46,6 @@ def calculate_transfer_stats(
         if o.token not in tokens_to_orgs:
             tokens_to_orgs[o.token] = []
         tokens_to_orgs[o.token].append(o)
-
     if len(tokens_to_orgs) > 1:
         if not token_id:
             token, orgs = next(iter(tokens_to_orgs.items()))
@@ -62,6 +62,7 @@ def calculate_transfer_stats(
             }
         }
 
+    # Build date filters for each metricable table
     date_filters_dict = {}
     if start_date is not None and end_date is not None:
         date_filters_dict[CreditTransfer] = []
@@ -108,10 +109,19 @@ def calculate_transfer_stats(
         metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
     else:
         metrics_list = TransferStats(group_strategy, timeseries_unit).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
+    
+    # Ensure that the metric requested by the user is available
+    availible_metrics = [m.metric_name for m in metrics_list]
+    availible_metrics.append(metrics_const.ALL)
+    if requested_metric not in availible_metrics:
+        raise Exception(f'{requested_metric} is not an availible metric of type {metric_type}. Please choose one of the following: {", ".join(availible_metrics)}')
 
     data = {}
     for metric in metrics_list:
-        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters_dict=date_filters_dict, enable_caching=enable_cache, population_query_result=total_users)
+        calculate_only_aggregates = True
+        if requested_metric in [metric.metric_name, metrics_const.ALL]:
+            calculate_only_aggregates = False
+        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters_dict=date_filters_dict, enable_caching=enable_cache, population_query_result=total_users, calculate_only_aggregates=calculate_only_aggregates)
 
     data['mandatory_filter'] = mandatory_filter
 
