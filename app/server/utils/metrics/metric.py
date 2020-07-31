@@ -7,7 +7,7 @@ from server.utils.metrics.metrics_const import *
 
 class Metric(object):
     # TODO: Docs here
-    def execute_query(self, user_filters: dict = None, date_filters=None, enable_caching=True, population_query_result=False):
+    def execute_query(self, user_filters: dict = None, date_filters_dict=None, enable_caching=True, population_query_result=False):
         actions = { 'query': self.query_actions, 'aggregated_query': self.aggregated_query_actions, 'total_query': self.total_query_actions }
         if self.is_timeseries:
             queries = { 'query': self.query, 'aggregated_query': self.aggregated_query, 'total_query': self.total_query }
@@ -28,9 +28,11 @@ class Metric(object):
             for f in user_filters or []:
                 if f not in self.filterable_by:
                     raise Exception(f'{self.metric_name} not filterable by {f}')
-
+            # Apply the applicable date filters
             if DATE in self.filterable_by or []:
-                filtered_query = filtered_query.filter(*date_filters)
+                if date_filters_dict:
+                    date_filters = date_filters_dict[self.object_model]
+                    filtered_query = filtered_query.filter(*date_filters)
 
             if not self.bypass_user_filters:
                 filtered_query = filters.apply_filters(filtered_query, user_filters, self.object_model)

@@ -133,8 +133,8 @@ class TransferStats(metric_group.MetricGroup):
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
-            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
-            total_query_actions=[GET_FIRST],
+            aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS],
+            total_query_actions=[GET_FIRST, CALCULATE_TOTAL_PER_USER],
         ))
 
         transaction_count_timeseries_query = db.session.query(func.count(CreditTransfer.id).label('volume'),
@@ -167,8 +167,8 @@ class TransferStats(metric_group.MetricGroup):
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
-            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
-            total_query_actions=[GET_FIRST],
+            aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS],
+            total_query_actions=[GET_FIRST, CALCULATE_TOTAL_PER_USER],
         ))
 
         active_users_timeseries_query = db.session.query(func.count(func.distinct(CreditTransfer.sender_user_id)).label('volume'),

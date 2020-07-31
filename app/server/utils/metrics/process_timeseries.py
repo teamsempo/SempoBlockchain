@@ -115,9 +115,12 @@ def accumulate_timeseries(query_result, population_query_result=None):
 # Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
 # Output: [(1, 01/01/2020), (2, 01/02/2020), (1, 01/03/2020), (1.333, 01/04/2020) (1, 01/05/2020)] 
 def calculate_timeseries_per_user(query_result, population_query_result):
-    is_grouped = True
-    if population_query_result and len(population_query_result[0]) == 2:
-        is_grouped = False
+    is_grouped = False
+    population_query_result = population_query_result[UNGROUPED]
+    if GROUPED in population_query_result:
+        is_grouped = True
+        population_query_result = population_query_result[GROUPED]
+
     # Make dict to lookup the relevant population
     population_dates = {}
     for pqr in population_query_result:
@@ -158,6 +161,32 @@ def calculate_timeseries_per_user(query_result, population_query_result):
         else:
             results_per_user.append((product, result[1]))
     return results_per_user
+
+# Similar to calculate_timeseries_per_user, but for aggregate queries
+# Input (query_result):  [(2, 'apples'), (20, 'bananas)]
+# Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
+# Output: [(.1, 'apples'), (1, 'bananas)]
+def calculate_aggregate_per_user(query_result, population_query_result):
+    result = []
+    if population_query_result[UNGROUPED]:
+        last_day_population = population_query_result[UNGROUPED][-1][0]
+    else:
+        last_day_population = 1
+    for r in query_result:
+        result.append((r[0]/last_day_population, r[1]))
+    return result
+
+# Similar to calculate_timeseries_per_user, but for totals
+# Input (query_result):  2
+# Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
+# Output: 0.2
+def calculate_total_per_user(query_result, population_query_result):
+    if population_query_result[UNGROUPED]:
+        last_day_population = population_query_result[UNGROUPED][-1][0]
+    else:
+        last_day_population = 1
+    query_result = query_result or 0
+    return query_result/last_day_population
 
 # Final step in formatting the timeseries data to be in a format 
 # which once JSONified, the API expects. 
@@ -210,6 +239,8 @@ query_actions = {
     ADD_MISSING_DAYS_TO_TODAY: add_missing_days_to_today,
     ACCUMULATE_TIMESERIES: accumulate_timeseries,
     CALCULATE_TIMESERIES_PER_USER: calculate_timeseries_per_user,
+    CALCULATE_AGGREGATE_PER_USER: calculate_aggregate_per_user,
+    CALCULATE_TOTAL_PER_USER: calculate_total_per_user,
     FORMAT_TIMESERIES: format_timeseries,
     FORMAT_AGGREGATE_METRICS: format_aggregate_metrics,
     GET_FIRST: get_first,
