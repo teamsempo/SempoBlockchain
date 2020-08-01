@@ -83,7 +83,6 @@ def add_missing_days_to_today(query_result, population_query_result=None):
 # Example:
 # Input:  [(5, 01/01/2020), (1, 01/02/2020), (2, 01/03/2020), (0, 01/04/2020) (3, 01/05/2020)]
 # Output: [(5, 01/01/2020), (6, 01/02/2020), (8, 01/03/2020), (8, 01/04/2020) (11, 01/05/2020)] 
-# TODO: Make it generic (day/week/month/year)
 def accumulate_timeseries(query_result, population_query_result=None):
     accumulator = {}
     accumulated_result = []
@@ -205,29 +204,14 @@ def format_timeseries(query_result, population_query_result):
         data_by_groups[group_name].append({'date': date.isoformat(), VALUE: value})
     return data_by_groups
 
-# Input (query_result): [{'date': '2020-01-01T00:00:00', 'volume': 10}, {'date': '2020-01-02T00:00:00', 'volume': 10}]
-# Output: {'timeseries': [{'date': '2020-01-01T00:00:00', 'volume': 10}, {'date': '2020-01-02T00:00:00', 'volume': 10}],
-#           'aggregate': {'total': 20} }
-def aggregate_formatted_timeseries(query_result, population_query_result):
-    totals = {}
-    overall_total = 0
-    for group in query_result:
-        group_total = 0
-        for value in query_result[group]:
-            group_total += value[VALUE]
-            overall_total += value[VALUE]
-        totals[group] = group_total
-    totals['total'] = overall_total
-    return { 'timeseries': query_result, 'aggregate': totals }
-
-# TODO: Describe this
+# Changes sqlalchemy raw output into the shape expected for the API!
 def format_aggregate_metrics(query_result, population_query_result):
     result = {}
     for r in query_result:
         result[_format_group_name(r[1])] = r[0]
     return result
 
-# TODO: Describe this
+# Some singleton metrics are returned in a tuple in a list. This unpacks and handles nulls
 def get_first(query_result, population_query_result):
     if query_result:
         if not query_result[0][0]:
