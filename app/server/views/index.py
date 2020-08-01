@@ -12,6 +12,9 @@ def get_js_bundle_filename():
     bundle_directory = os.path.join(current_app.config['BASEDIR'], "static/javascript/dist")
     globs = glob.glob(os.path.join(bundle_directory, 'main.bundle.*.js'))
 
+    if len(globs) == 0:
+        return ''
+
     # We need the most recent file because webpack doesn't clean when dev-ing
     latest_file = max(globs, key=os.path.getctime)
 
