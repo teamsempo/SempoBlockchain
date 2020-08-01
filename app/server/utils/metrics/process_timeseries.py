@@ -230,6 +230,8 @@ def format_aggregate_metrics(query_result, population_query_result):
 # TODO: Describe this
 def get_first(query_result, population_query_result):
     if query_result:
+        if not query_result[0][0]:
+            return 0 # query_result[0][0] can be null, which means 0 for our context
         return query_result[0][0]
     else:
         return 0
