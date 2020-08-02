@@ -45,7 +45,9 @@ class Organisation(ModelBase):
     users               = db.relationship(
         "User",
         secondary=organisation_association_table,
-        back_populates="organisations")
+        back_populates="organisations",
+        enable_typechecks=False,
+        )
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 

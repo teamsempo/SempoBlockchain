@@ -68,6 +68,10 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     """
     __tablename__ = 'user'
 
+    __mapper_args = {
+        'polymorphic_identity': 'user',
+            }
+
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     preferred_language = db.Column(db.String())
