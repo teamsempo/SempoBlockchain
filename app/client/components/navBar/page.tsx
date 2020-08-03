@@ -53,7 +53,7 @@ const Page: React.FunctionComponent<OuterProps> = props => {
                 </CenterLoadingSideBarActive>
               }
             >
-              {children || <Component {...props} />}
+              <Component {...props} />
             </React.Suspense>
           </Content>
           {footer ? (
