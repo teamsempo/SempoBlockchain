@@ -4,10 +4,15 @@
 
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { NavLink } from "react-router-dom";
 import { SVG, StyledLogoLink } from "./styles";
 import styled from "styled-components";
 import { Menu, Dropdown } from "antd";
-import { DownOutlined, LinkOutlined, MessageOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  UserAddOutlined,
+  SettingOutlined
+} from "@ant-design/icons";
 
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
@@ -72,13 +77,18 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
-      <Menu.Item key="help">
-        <a href="https://help.withsempo.com/" target="_blank">
-          Help Center <LinkOutlined translate={""} />
-        </a>
-      </Menu.Item>
-      <Menu.Item key="support">
+      <Menu.Item key="chat">
         <IntercomChat />
+      </Menu.Item>
+      <Menu.Item key="settings">
+        <NavLink to="/settings/organisation">
+          Organisation Settings <SettingOutlined translate={""} />
+        </NavLink>
+      </Menu.Item>
+      <Menu.Item key="invite">
+        <NavLink to="/settings/invite">
+          Invite User <UserAddOutlined translate={""} />
+        </NavLink>
       </Menu.Item>
     </Menu>
   );
