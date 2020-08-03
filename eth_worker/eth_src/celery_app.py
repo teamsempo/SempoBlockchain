@@ -2,6 +2,7 @@
 # python3.7 / concurrent / futures/thread.py line 135 was originally self._work_queue = queue.SimpleQueue()
 from celery import Celery
 import sentry_sdk
+from sentry_sdk import configure_scope
 from sentry_sdk.integrations.celery import CeleryIntegration
 import redis, requests
 
@@ -41,6 +42,8 @@ from eth_manager.blockchain_sync.blockchain_sync import BlockchainSyncer
 import celery_utils
 
 sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
+with configure_scope() as scope:
+    scope.set_tag("domain", config.APP_HOST)
 
 ETH_CHECK_TRANSACTION_RETRIES = config.ETH_CHECK_TRANSACTION_RETRIES
 ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT = config.ETH_CHECK_TRANSACTION_RETRIES_TIME_LIMIT
