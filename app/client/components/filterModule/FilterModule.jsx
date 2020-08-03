@@ -94,11 +94,13 @@ class FilterModule extends React.Component {
     if (groupBy) {
       params.group_by = groupBy;
     }
-
-    if (dateRange) {
+    if (dateRange && dateRange[0]) {
       params.start_date = dateRange[0] && dateRange[0].toISOString();
+    }
+    if (dateRange && dateRange[1]) {
       params.end_date = dateRange[1] && dateRange[1].toISOString();
     }
+
     this.props.loadMetrics(params);
   };
 
