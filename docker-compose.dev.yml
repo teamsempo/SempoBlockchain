@@ -1,0 +1,38 @@
+# Overrides docker-compose.yml to enable a dev environment
+
+version: "3"
+services:
+  app:
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "APP"
+      CONTAINER_MODE: "" # sets up sample data
+  eth_worker:
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "PRIMARY"
+      CONTAINER_MODE: "" # sets up sample data
+  eth_worker_high_priority:
+    build:
+      context: .
+      dockerfile: eth_worker/Dockerfile
+    image: eth_worker
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "HIGH_PRIORITY_WORKER"
+  eth_worker_low_priority:
+    build:
+      context: .
+      dockerfile: eth_worker/Dockerfile
+    image: eth_worker
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "LOW_PRIORITY_WORKER"
+  eth_worker_processor:
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"
+      CONTAINER_TYPE: "PROCESSOR"
+      PYTHONUNBUFFERED: 0
+  pgbouncer:
+    environment:
+      DEPLOYMENT_NAME: "LOCAL_DOCKER"

@@ -3,7 +3,6 @@ import { connect } from "react-redux";
 
 import { Organisation } from "../../../reducers/organisation/types";
 import { EditOrganisationAction } from "../../../reducers/organisation/actions";
-import SideBar from "../../navBar";
 import * as styles from "../../styledElements";
 import OrganisationSettingForm, {
   IOrganisationSettings
@@ -89,8 +88,6 @@ class OrganisationPage extends React.Component<IProps, IState> {
   render() {
     return (
       <styles.Wrapper>
-        <SideBar />
-
         <styles.PageWrapper>
           <styles.ModuleBox>
             <styles.ModuleHeader>
@@ -123,7 +120,7 @@ const mapStateToProps = (state: any): StateProps => {
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
-    editOrganisation: (body: any, path: number) => 
+    editOrganisation: (body: any, path: number) =>
       dispatch(EditOrganisationAction.editOrganisationRequest({ body, path }))
   };
 };

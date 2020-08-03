@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 
 import CreditTransferList from "./creditTransferList.jsx";
-import SearchBoxWithFilter from "../SearchBoxWithFilter.jsx";
+import SearchBoxWithFilter from "../filterModule/SearchBoxWithFilter.jsx";
 
 export default class CreditTransferListWithFilterWrapper extends React.Component {
   constructor() {

@@ -166,7 +166,6 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
     transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
-
     token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
     sender_transfer_account_id      = fields.Int()
@@ -184,7 +183,6 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
     lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
-
     is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
     def get_authorising_user_email(self, obj):
@@ -407,9 +405,17 @@ class OrganisationSchema(SchemaBase):
 
 class TransferUsageSchema(Schema):
     id                  = fields.Int(dump_only=True)
-
     name                = fields.Str()
     default             = fields.Boolean()
+
+class SynchronizationFilterSchema(Schema):
+    id                          = fields.Int(dump_only=True)
+    contract_address            = fields.Str()
+    contract_type               = fields.Str()
+    filter_parameters           = fields.Str()
+    filter_type                 = fields.Str()
+    created                     = fields.DateTime(dump_only=True)
+    updated                     = fields.DateTime(dump_only=True)
 
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
@@ -454,6 +460,8 @@ view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credi
 
 credit_transfer_schema = CreditTransferSchema()
 credit_transfers_schema = CreditTransferSchema(many=True)
+
+synchronization_filter_schema = SynchronizationFilterSchema()
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))

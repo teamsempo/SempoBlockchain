@@ -107,12 +107,12 @@ sleep 5
 set -e
 
 echo ~~~Starting worker
-cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q processor,celery,low-priority,high-priority &
+cd eth_worker/eth_src
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority &
 sleep 5
 
 echo ~~~Seeding Data
-cd ../app/migrations/
+cd ../../app/migrations/
 python -u seed.py
 
 echo ~~~Starting App
@@ -134,6 +134,10 @@ if [[ "$testdata" != 'none' ]]; then
     cd ./app/migrations/
     python -u dev_data.py ${testdata}
 fi
+
+echo ~~~Generating Auth Token
+curl -s 'http://localhost:9000/api/v1/auth/request_api_token/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse"}' --compressed --insecure | \
+    python3 -c "import sys, json; print(json.load(sys.stdin)['auth_token'])"
 
 echo ~~~Killing Python Processes
 sleep 5

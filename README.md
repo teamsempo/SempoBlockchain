@@ -8,7 +8,7 @@
 [![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
 [![Codecov](https://img.shields.io/codecov/c/github/teamsempo/SempoBlockchain)](https://codecov.io/gh/teamsempo/SempoBlockchain)
 
-Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments
+Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments.
 
 ## To run locally:
 
@@ -30,7 +30,7 @@ Set these to the environment variables `PGUSER` and `PGPASSWORD`.
 
 **Local Test Blockchain**
 
-You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli)
+You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli) - other versions of Ganache may not perform as expected.
 
 ```
 npm install -g ganache-cli@6.4.1
@@ -38,7 +38,7 @@ npm install -g ganache-cli@6.4.1
 
 **Python**
 
-Download and install python 3.6 and its respective pip and virtualenv (**python 3.7 will break things**). Then:
+Download and install python 3.8 and its respective pip and virtualenv. Then:
 
 from devtools directory:
 
@@ -124,7 +124,7 @@ Transaction on the blockchain are made using asynchronous workers that consume a
 From eth_worker directory:
 
 ```
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 ## Details and Other Options
@@ -176,7 +176,7 @@ Start celery:
 From eth_worker directory
 
 ```
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 You can also add a runtime configuration with the `script path` set as the path to your virtual env `[path-to-your-python-env]/bin/celery`.
@@ -269,15 +269,12 @@ Ensure redis-server is running (this is not ideal but necessary atm).
 
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
 
-## Seed Data
+## Postman Collections
 
-(Currently broken!!)
-You can quickly create seed data for a local machine, including exchanges and blockchain transactions:
+Platform APIs are documented using Postman. API documentation:
 
-1. Clear all data out of ur databases by running /app/migrations/clear_seed_dev.py
-2. Launch Redis, ganache & Celery as per above.
-3. Create new data by running seed_dev.py No guarantees for anything if you try and run this more than once
-   without clearing your databases!
+- [Live Docs](https://documenter.getpostman.com/view/3140301/SzzobwEU?version=latest)
+- JSON Collections and Environments (stored in `/postman` in root directory)
 
 ## Sempo Specific Setup
 
@@ -300,6 +297,14 @@ To run with docker first you must generate local secrets that will be read by th
 
 ```
 cd config files
+python generate_secrets.py -n local_docker
 python generate_secrets.py -n docker_test
-docker-compose up
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+You may find it useful to add an alias to your `.bashrc` (or `.zshrc` etc) that aliases the docker-compose command
+
+```
+alias sempo='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.dev.yml'
+alias sempoci='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.ci.yml'
 ```

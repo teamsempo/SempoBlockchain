@@ -189,15 +189,18 @@ function* requestToken(
     const token_response = yield call(requestApiToken, action.payload);
 
     if (token_response.status === "success") {
+      yield call(updateOrganisationStateFromLoginData, token_response);
+
+      storeSessionToken(token_response.auth_token);
+      yield call(authenticatePusher);
+
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(token_response))
       );
-      yield call(updateOrganisationStateFromLoginData, token_response);
-      yield call(storeSessionToken, token_response.auth_token);
-      yield call(authenticatePusher);
+
       return token_response;
     } else if (token_response.tfa_url) {
-      yield call(storeSessionToken, token_response.auth_token);
+      storeSessionToken(token_response.auth_token);
       yield put(
         LoginAction.loginPartial({
           error: token_response.message,
@@ -209,7 +212,7 @@ function* requestToken(
       return token_response;
     } else if (token_response.tfa_failure) {
       yield call(removeTFAToken); // something failed on the TFA logic
-      yield call(storeSessionToken, token_response.auth_token);
+      storeSessionToken(token_response.auth_token);
       yield put(
         LoginAction.loginPartial({
           error: token_response.message,
@@ -240,11 +243,12 @@ function* refreshToken() {
     yield put(LoginAction.reauthRequest());
     const token_request = yield call(refreshApiToken);
     if (token_request.auth_token) {
+      storeSessionToken(token_request.auth_token);
+
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(token_request))
       );
       yield call(updateOrganisationStateFromLoginData, token_request);
-      yield call(storeSessionToken, token_request.auth_token);
       yield call(authenticatePusher);
     }
     return token_request;
@@ -289,16 +293,17 @@ function* register(
       );
       browserHistory.push("/login");
     } else if (registered_account.auth_token && !registered_account.tfa_url) {
+      storeSessionToken(registered_account.auth_token);
+
       yield call(updateOrganisationStateFromLoginData, registered_account);
       // email invite, auto login as email validated
       yield put(RegisterAction.registerSuccess());
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(registered_account))
       );
-      yield call(storeSessionToken, registered_account.auth_token);
       yield call(authenticatePusher);
     } else if (registered_account.tfa_url) {
-      yield call(storeSessionToken, registered_account.auth_token);
+      storeSessionToken(registered_account.auth_token);
       yield put(
         LoginAction.loginPartial({
           error: registered_account.message,
@@ -308,7 +313,7 @@ function* register(
       );
     } else if (registered_account.tfa_failure) {
       yield call(removeTFAToken); // something failed on the TFA logic
-      yield call(storeSessionToken, registered_account.auth_token);
+      storeSessionToken(registered_account.auth_token);
       yield put(
         LoginAction.loginPartial({
           error: registered_account.message,
@@ -342,15 +347,16 @@ function* activate(
     const activated_account = yield call(activateAPI, action.payload);
 
     if (activated_account.auth_token && !activated_account.tfa_url) {
+      storeSessionToken(activated_account.auth_token);
       yield put(ActivateAccountAction.activateAccountSuccess());
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(activated_account))
       );
       yield call(updateOrganisationStateFromLoginData, activated_account);
-      yield call(storeSessionToken, activated_account.auth_token);
+
       yield call(authenticatePusher);
     } else if (activated_account.tfa_url) {
-      yield call(storeSessionToken, activated_account.auth_token);
+      storeSessionToken(activated_account.auth_token);
       yield put(
         LoginAction.loginPartial({
           error: activated_account.message,
@@ -360,7 +366,7 @@ function* activate(
       );
     } else if (activated_account.tfa_failure) {
       yield call(removeTFAToken); // something failed on the TFA logic
-      yield call(storeSessionToken, activated_account.auth_token);
+      storeSessionToken(activated_account.auth_token);
       yield put(
         LoginAction.loginPartial({
           error: activated_account.message,

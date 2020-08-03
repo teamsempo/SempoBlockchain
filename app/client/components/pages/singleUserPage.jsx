@@ -2,7 +2,6 @@ import React from "react";
 import { connect } from "react-redux";
 import styled, { ThemeProvider } from "styled-components";
 
-import SideBar from "../navBar";
 import {
   PageWrapper,
   ModuleBox,
@@ -67,8 +66,6 @@ class SingleUserPage extends React.Component {
     if (this.props.users.loadStatus.isRequesting === true) {
       return (
         <WrapperDiv>
-          <SideBar />
-
           <CenterLoadingSideBarActive>
             <LoadingSpinner />
           </CenterLoadingSideBarActive>
@@ -77,8 +74,6 @@ class SingleUserPage extends React.Component {
     } else {
       return (
         <WrapperDiv>
-          <SideBar />
-
           <PageWrapper>
             <ThemeProvider theme={LightTheme}>{userComponent}</ThemeProvider>
           </PageWrapper>

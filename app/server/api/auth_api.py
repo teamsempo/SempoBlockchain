@@ -303,9 +303,12 @@ class LoginAPI(MethodView):
         }
         return make_response(jsonify(response_object)), 200
 
-    # @limiter.limit("20 per day")
     def post(self):
-        # get the post data
+        # There is an unique case where users are using their mobile number from the App to either login or register
+        # The app uses g.active_organisation to reference user.transfer_account to send an SMS to the User.
+        # This means that g.active_organisation should default to the master_organisation
+        # For admin users, it doesn't matter as this endpoint is unauthed.
+        g.active_organisation = Organisation.master_organisation()
 
         post_data = request.get_json()
 
@@ -441,13 +444,6 @@ class LoginAPI(MethodView):
         except Exception as e:
             sentry_sdk.capture_exception(e)
             raise e
-
-            # response_object = {
-            #     'status': 'fail',
-            #     'message': "Unknown Error."
-            # }
-            #
-            # return make_response(jsonify(response_object)), 500
 
 
 class LogoutAPI(MethodView):

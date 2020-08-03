@@ -175,7 +175,7 @@ def make_blockchain_transfer(transfer_amount,
         transfer.uuid = uuid
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed(existing_blockchain_txn=existing_blockchain_txn)
+        transfer.resolve_as_complete()
 
     return transfer
 
@@ -248,22 +248,15 @@ def make_payment_transfer(transfer_amount,
     make_cashout_incentive_transaction = False
 
     if transfer_use is not None:
-        usages = []
-        try:
-            use_ids = transfer_use.split(',')  # passed as '3,4' etc.
-        except AttributeError:
-            use_ids = transfer_use
-        for use_id in use_ids:
+        for use_id in transfer_use:
             if use_id != 'null':
                 use = TransferUsage.query.get(int(use_id))
                 if use:
-                    usages.append(use.name)
+                    transfer.transfer_usages.append(use)
                     if use.is_cashout:
                         make_cashout_incentive_transaction = True
                 else:
-                    usages.append('Other')
-
-        transfer.transfer_use = usages
+                    raise Exception(f'{use_id} not a valid transfer usage')
 
     transfer.uuid = uuid
 
@@ -283,7 +276,7 @@ def make_payment_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed(queue=queue)
+        transfer.resolve_as_complete_and_trigger_blockchain(queue=queue)
 
     if make_cashout_incentive_transaction:
         try:
@@ -340,7 +333,7 @@ def make_withdrawal_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed()
+        transfer.resolve_as_complete_and_trigger_blockchain()
 
     return transfer
 
@@ -371,7 +364,7 @@ def make_deposit_transfer(transfer_amount,
                               uuid=uuid, fiat_ramp=fiat_ramp)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed()
+        transfer.resolve_as_complete_and_trigger_blockchain()
 
     return transfer
 
