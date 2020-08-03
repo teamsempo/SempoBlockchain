@@ -27,7 +27,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     noNav,
     location,
     title,
-    children,
     component: Component = React.Component
   } = props;
 
