@@ -7,12 +7,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { SVG, StyledLogoLink } from "./styles";
 import styled from "styled-components";
 import { Menu, Dropdown } from "antd";
-import { DownOutlined, LinkOutlined } from "@ant-design/icons";
+import { DownOutlined, LinkOutlined, MessageOutlined } from "@ant-design/icons";
 
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 import { LoginAction } from "../../reducers/auth/actions";
 import { Organisation } from "../../reducers/organisation/types";
+
+import { IntercomChat } from "../intercom/IntercomChat";
 
 interface Props {
   icon: string;
@@ -70,10 +72,13 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
-      <Menu.Item key="support">
+      <Menu.Item key="help">
         <a href="https://help.withsempo.com/" target="_blank">
-          Support <LinkOutlined translate={""} />
+          Help Center <LinkOutlined translate={""} />
         </a>
+      </Menu.Item>
+      <Menu.Item key="support">
+        <IntercomChat />
       </Menu.Item>
     </Menu>
   );
