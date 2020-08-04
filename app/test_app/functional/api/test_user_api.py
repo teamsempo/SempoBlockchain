@@ -219,12 +219,12 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
         return transfer_account_ids
 
     # User 1 is in both orgs
-    # User 2 is in Org 2
-    # User 3 is in Org 2 
+    # User 3 is in Org 2
+    # User 4 is in Org 2
     response = get_user_endpoint('1,2')
     assert response.status_code == 200
     users_list = response.json['data']['users']
-    assert get_transfer_account_ids(users_list) == [3, 1]
+    assert get_transfer_account_ids(users_list) == [4, 3, 1]
 
     response = get_user_endpoint('1')
     assert response.status_code == 200
@@ -235,5 +235,4 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
     response = get_user_endpoint('2')
     assert response.status_code == 200
     users_list = response.json['data']['users']
-    assert get_transfer_account_ids(users_list) == [3, 1]
-
+    assert get_transfer_account_ids(users_list) == [4, 3, 1]
