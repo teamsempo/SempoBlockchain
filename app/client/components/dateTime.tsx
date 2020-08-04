@@ -2,11 +2,19 @@ import React from "react";
 import moment from "moment";
 
 interface Props {
-  created: string | number | void | moment.Moment | Date | React.ReactText[] | moment.MomentInputObject | undefined
+  created:
+    | string
+    | number
+    | void
+    | moment.Moment
+    | Date
+    | React.ReactText[]
+    | moment.MomentInputObject
+    | undefined;
 }
 
 export default function DateTime(props: Props) {
-  const {created} = props
+  const { created } = props;
   if (created) {
     var formatted_time = moment.utc(created).fromNow();
 
@@ -15,4 +23,3 @@ export default function DateTime(props: Props) {
     return <div style={{ margin: 0 }}>Not long ago</div>;
   }
 }
-

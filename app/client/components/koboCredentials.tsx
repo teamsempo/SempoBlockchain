@@ -1,22 +1,22 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { generateQueryString, getToken, handleResponse } from "../utils";
 
 export default function KoboCredentials() {
-  const [username, setUsername] = useState<string | null>(null)
-  const [password, setPassword] = useState<string | null>(null)
+  const [username, setUsername] = useState<string | null>(null);
+  const [password, setPassword] = useState<string | null>(null);
 
   useEffect(() => {
-    getKoboCredentials()
-  }, [])
+    getKoboCredentials();
+  }, []);
 
   function getKoboCredentials() {
     const query_string = generateQueryString();
     var URL = `/api/v1/auth/external/${query_string}`;
     const requestHeaders: HeadersInit = new Headers();
-    const token = getToken()
-    if (token === null) throw "No authorization token"
-    requestHeaders.set("Authorization", token)
+    const token = getToken();
+    if (token === null) throw "No authorization token";
+    requestHeaders.set("Authorization", token);
     return fetch(URL, {
       headers: requestHeaders,
       method: "GET"
@@ -25,8 +25,8 @@ export default function KoboCredentials() {
         return handleResponse(response);
       })
       .then(handled => {
-        setUsername(handled.username)
-        setUsername(handled.password)
+        setUsername(handled.username);
+        setUsername(handled.password);
       })
       .catch(error => {
         throw error;
@@ -52,7 +52,6 @@ export default function KoboCredentials() {
   } else {
     return <div></div>;
   }
-
 }
 
 const StyledHeader = styled.p`

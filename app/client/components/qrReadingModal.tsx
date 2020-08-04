@@ -3,28 +3,28 @@ const QrReader = lazy(() => import("react-qr-reader"));
 import { Modal, ModalContent, ModalClose } from "./styledElements";
 
 interface Props {
-  updateData: (any: any) => any
+  updateData: (any: any) => any;
 }
 export default function QrReadingModal(props: Props) {
-  const [existingQrData, setExistingQrData] = useState<any | null>(null)
-  const [readerActive, setReaderActive] = useState(false)
+  const [existingQrData, setExistingQrData] = useState<any | null>(null);
+  const [readerActive, setReaderActive] = useState(false);
 
   function handleScan(data: any) {
     if (data && data !== existingQrData) {
-      setReaderActive(false)
-      props.updateData(data)
+      setReaderActive(false);
+      props.updateData(data);
     }
   }
 
   function handleError(err: any) {
     console.error(err);
-  };
+  }
 
   function toggleModal() {
-    setReaderActive(!readerActive)
-  };
+    setReaderActive(!readerActive);
+  }
 
-  let qrReader
+  let qrReader;
   if (readerActive) {
     qrReader = (
       <Modal onClick={() => toggleModal()}>
@@ -63,6 +63,4 @@ export default function QrReadingModal(props: Props) {
       {qrReader}
     </div>
   );
-
-
 }

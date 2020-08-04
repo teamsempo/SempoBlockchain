@@ -1,11 +1,13 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { PageWrapper } from "./styledElements.js";
 import { ReduxState } from "../reducers/rootReducer";
 
 export default function MessageBar() {
-  const loggedIn = useSelector((state: ReduxState) => state.login.token != null);
+  const loggedIn = useSelector(
+    (state: ReduxState) => state.login.token != null
+  );
   const message = useSelector((state: ReduxState) => state.message);
 
   return (
