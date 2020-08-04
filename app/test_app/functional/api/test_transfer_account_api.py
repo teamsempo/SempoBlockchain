@@ -96,7 +96,6 @@ def test_put_single_transfer_account_api(test_client, authed_sempo_admin_user, c
 ])
 def test_put_multiple_transfer_account_api(test_client, authed_sempo_admin_user, create_transfer_account_user_function,
                                            transfer_account_id_accessor, tier, status_code):
-    create_transfer_account_user_function.transfer_account.balance = 0
     create_transfer_account_user_function.transfer_account.is_beneficiary = True
     create_transfer_account_user_function.transfer_account.is_approved = False
     if tier:
