@@ -6,6 +6,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import { Card, Typography } from "antd";
+import { LinkOutlined } from "@ant-design/icons";
 import { HorizontalBar } from "react-chartjs-2";
 import { formatMoney } from "../../utils";
 
@@ -106,7 +107,7 @@ class MasterWalletCard extends React.Component {
         style={{ width: "100%" }}
         extra={
           <a href={tracker_link} target="_blank">
-            View
+            <LinkOutlined /> View in Explorer
           </a>
         }
       >
