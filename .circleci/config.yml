@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - new_dashboard_filter
+                - more_worker_testing
           requires:
             - build
             - test:backend

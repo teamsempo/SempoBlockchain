@@ -5,7 +5,7 @@ import { Card } from "antd";
 
 import { formatMoney } from "../../utils.js";
 
-import DateTime from "../dateTime.jsx";
+import DateTime from "../dateTime.tsx";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
 const mapStateToProps = state => {

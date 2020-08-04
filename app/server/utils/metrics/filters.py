@@ -162,7 +162,3 @@ exhaused_balance_filters = [
     TransferAccount._balance_wei == 0
 ]
 
-transfer_use_filters = [
-    *standard_payment_filters,
-    CreditTransfer.transfer_use.isnot(None),
-]
