@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const APP_DIR = path.resolve(__dirname, "client");
 const BUILD_DIR = path.resolve(__dirname, "server/static/javascript/dist");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CompressionPlugin = require("compression-webpack-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
   .BundleAnalyzerPlugin;
@@ -18,8 +18,8 @@ const tsImportPluginFactory = require("ts-import-plugin");
 module.exports = {
   entry: APP_DIR + "/index.jsx",
   plugins: [
-    new CleanWebpackPlugin([BUILD_DIR]),
-    // new CompressionPlugin()
+    new CleanWebpackPlugin(),
+    new CompressionPlugin(),
 
     new MomentLocalesPlugin({
       localesToKeep: ["es-us"]
@@ -73,7 +73,7 @@ module.exports = {
             loader: "babel-loader",
             options: {
               babelrc: false,
-              presets: ["env", "react", "stage-2"],
+              presets: ["@babel/preset-env", "@babel/preset-react"],
               plugins: [["import", { libraryName: "antd", style: true }]]
             }
           }

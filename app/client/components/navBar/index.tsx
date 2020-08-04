@@ -100,11 +100,7 @@ class NavBar extends React.Component<Props, State> {
         <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
           <OrgSwitcher icon={iconURL} collapsed={collapsed}></OrgSwitcher>
           <Menu theme="dark" selectedKeys={[activePath]} mode="inline">
-            <SubMenu
-              key="sub1"
-              icon={<DesktopOutlined translate={""} />}
-              title="Dashboard"
-            >
+            <SubMenu key="sub1" icon={<DesktopOutlined />} title="Dashboard">
               <Menu.Item key="/">
                 <NavLink to="/">Analytics</NavLink>
               </Menu.Item>
@@ -112,16 +108,13 @@ class NavBar extends React.Component<Props, State> {
                 <NavLink to="/map">Map</NavLink>
               </Menu.Item>
             </SubMenu>
-            <Menu.Item key="/accounts" icon={<TeamOutlined translate={""} />}>
+            <Menu.Item key="/accounts" icon={<TeamOutlined />}>
               <NavLink to="/accounts">Accounts</NavLink>
             </Menu.Item>
-            <Menu.Item key="/transfers" icon={<SendOutlined translate={""} />}>
+            <Menu.Item key="/transfers" icon={<SendOutlined />}>
               <NavLink to="/transfers">Transfers</NavLink>
             </Menu.Item>
-            <Menu.Item
-              key="/settings"
-              icon={<SettingOutlined translate={""} />}
-            >
+            <Menu.Item key="/settings" icon={<SettingOutlined />}>
               <NavLink to="/settings">Settings</NavLink>
             </Menu.Item>
           </Menu>

@@ -119,6 +119,8 @@ class AdminUserList extends React.Component {
           </DisabledIcon>
         </StatusWrapper>
       );
+    } else {
+      statusComponent = null;
     }
     return statusComponent;
   }
