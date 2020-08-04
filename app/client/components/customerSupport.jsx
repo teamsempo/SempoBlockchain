@@ -1,56 +1,46 @@
 import React from "react";
-import { connect } from "react-redux";
 import styled from "styled-components";
-
+import { useSelector } from "react-redux";
 import Intercom, { IntercomAPI } from "react-intercom";
 
-const mapStateToProps = state => {
-  return {
-    login: state.login,
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
-  };
-};
-
-class CustomerSupport extends React.Component {
-  openChat() {
+export default function CustomerSupport() {
+  const login = useSelector(state => state.login);
+  const activeOrganisation = useSelector(state =>
+    state.login.organisationId
+      ? state.organisations.byId[state.login.organisationId]
+      : null
+  );
+  function openChat() {
     IntercomAPI("show");
   }
 
-  render() {
-    const { login, activeOrganisation } = this.props;
+  const user = {
+    user_id: login.userId,
+    user_hash: login.intercomHash,
+    name: login.email,
+    company: {
+      id: login.organisationId,
+      name: activeOrganisation.name
+    }
+  };
 
-    const user = {
-      user_id: login.userId,
-      user_hash: login.intercomHash,
-      name: login.email,
-      company: {
-        id: login.organisationId,
-        name: activeOrganisation.name
-      }
-    };
-
-    return (
-      <div style={{ margin: "1em" }}>
-        <StyledAccountWrapper>
-          <StyledHeader>Support:</StyledHeader>
-          <StyledContent onClick={this.openChat}>
-            <IconSVG src="/static/media/question-speech-bubble.svg" />
-            Chat
-          </StyledContent>
-          <StyledContent href="http://help.withsempo.com/en/" target="_blank">
-            <IconSVG src="/static/media/open-book.svg" />
-            Help Center
-          </StyledContent>
-        </StyledAccountWrapper>
-        <Intercom appID="kowgw7cm" {...user} />
-      </div>
-    );
-  }
+  return (
+    <div style={{ margin: "1em" }}>
+      <StyledAccountWrapper>
+        <StyledHeader>Support:</StyledHeader>
+        <StyledContent onClick={openChat}>
+          <IconSVG src="/static/media/question-speech-bubble.svg" />
+          Chat
+        </StyledContent>
+        <StyledContent href="http://help.withsempo.com/en/" target="_blank">
+          <IconSVG src="/static/media/open-book.svg" />
+          Help Center
+        </StyledContent>
+      </StyledAccountWrapper>
+      <Intercom appID="kowgw7cm" {...user} />
+    </div>
+  );
 }
-export default connect(
-  mapStateToProps,
-  null
-)(CustomerSupport);
 
 const IconSVG = styled.img`
   width: 21px;

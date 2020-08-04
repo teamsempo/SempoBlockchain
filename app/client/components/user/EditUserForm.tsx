@@ -13,16 +13,16 @@ import {
   Row,
   SubRow
 } from "../styledElements";
-import AsyncButton from "./../AsyncButton.jsx";
-import ProfilePicture from "../profilePicture.jsx";
-import GetVerified from "../GetVerified.jsx";
+import AsyncButton from "./../AsyncButton";
+import ProfilePicture from "../profilePicture";
+import GetVerified from "../GetVerified";
 
 import InputField from "../form/InputField";
 import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import { TransferAccountTypes } from "../transferAccount/types";
-import QrReadingModal from "../qrReadingModal.jsx";
+import QrReadingModal from "../qrReadingModal";
 import { replaceUnderscores } from "../../utils";
 
 export interface IEditUser {
