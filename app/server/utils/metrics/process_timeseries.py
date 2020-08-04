@@ -114,11 +114,12 @@ def accumulate_timeseries(query_result, population_query_result=None):
 # Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
 # Output: [(1, 01/01/2020), (2, 01/02/2020), (1, 01/03/2020), (1.333, 01/04/2020) (1, 01/05/2020)] 
 def calculate_timeseries_per_user(query_result, population_query_result):
-    is_grouped = False
-    population_query_result = population_query_result[UNGROUPED]
     if GROUPED in population_query_result:
         is_grouped = True
         population_query_result = population_query_result[GROUPED]
+    else:
+        is_grouped = False
+        population_query_result = population_query_result[UNGROUPED]
 
     # Make dict to lookup the relevant population
     population_dates = {}
