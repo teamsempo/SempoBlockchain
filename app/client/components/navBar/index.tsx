@@ -123,12 +123,12 @@ class NavBar extends React.Component<Props, State> {
             >
               <Menu.Item key="/">
                 <NavLink to="/">
-                  Analytics <StockOutlined translate={""} />
+                  <StockOutlined translate={""} /> Analytics
                 </NavLink>
               </Menu.Item>
               <Menu.Item key="/map">
                 <NavLink to="/map">
-                  Map <CompassOutlined translate={""} />
+                  <CompassOutlined translate={""} /> Map
                 </NavLink>
               </Menu.Item>
             </SubMenu>

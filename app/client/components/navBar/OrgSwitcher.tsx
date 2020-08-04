@@ -82,12 +82,12 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       </Menu.Item>
       <Menu.Item key="settings">
         <NavLink to="/settings/organisation">
-          Organisation Settings <SettingOutlined translate={""} />
+          <SettingOutlined translate={""} /> Organisation Settings
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite">
         <NavLink to="/settings/invite">
-          Invite User <UserAddOutlined translate={""} />
+          <UserAddOutlined translate={""} /> Invite User
         </NavLink>
       </Menu.Item>
     </Menu>
