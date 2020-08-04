@@ -18,9 +18,8 @@ from server.utils.exchange import (
 
 class BlockchainTasker(object):
     def _eth_endpoint(self, endpoint):
-        eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
-        return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+        return f'{celery_tasks_name}.{endpoint}'
 
     def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)

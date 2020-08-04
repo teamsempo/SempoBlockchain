@@ -10,6 +10,7 @@ from pusher import Pusher
 import boto3
 from twilio.rest import Client as TwilioClient
 import sentry_sdk
+from sentry_sdk import configure_scope
 from sentry_sdk.integrations.flask import FlaskIntegration
 import messagebird
 import africastalking
@@ -107,6 +108,8 @@ def register_extensions(app):
     celery_app.conf.update(app.config)
     if not config.IS_TEST:
         sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
+        with configure_scope() as scope:
+            scope.set_tag("domain", config.APP_HOST)
 
     print('celery joined on {} at {}'.format(
         app.config['REDIS_URL'], datetime.utcnow()))
