@@ -68,6 +68,13 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     """
     __tablename__ = 'user'
 
+    discriminator = db.Column(db.String())
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'user',
+        'polymorphic_on': discriminator
+    }
+
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     preferred_language = db.Column(db.String())
@@ -697,3 +704,32 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
+
+
+class FooUser(User):
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'foouser',
+    }
+
+    foostring = db.Column(db.String(128))
+
+    def __init__(self, blockchain_address=None, foostring=None, **kwargs):
+        super().__init__(blockchain_address, **kwargs)
+
+        self.foostring = foostring
+
+
+
+class BarUser(User):
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'baruser',
+    }
+
+    barstring = db.Column(db.String(128))
+
+    def __init__(self, blockchain_address=None, barstring=None, **kwargs):
+        super().__init__(blockchain_address, **kwargs)
+
+        self.barstring = barstring

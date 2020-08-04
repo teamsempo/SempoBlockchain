@@ -156,3 +156,60 @@ def test_delete_user_and_transfer_account(create_transfer_account_user):
 
     with pytest.raises(ResourceAlreadyDeletedError):
         create_transfer_account_user.delete_user_and_transfer_account()
+
+def test_extended_user(test_client, init_database, create_organisation, external_reserve_token):
+    from server.models.user import FooUser, BarUser, User
+    from server.models.organisation import Organisation
+
+    adr = '0xdeadbeef_totally_unique'
+    foostr = 'wow, such foo'
+    barstr = 'a duck walks into a bar'
+
+
+    foouser = FooUser(blockchain_address=adr, foostring=foostr)
+    init_database.session.add(foouser)
+    foouser.organisations.append(create_organisation)
+    foouser.default_organisation = create_organisation
+
+    init_database.session.commit()
+
+
+    # Check that another subclass plays nice
+    baruser = BarUser(blockchain_address=adr, barstring=barstr)
+    baruser.organisations.append(create_organisation)
+    baruser.default_organisation = create_organisation
+    init_database.session.add(baruser)
+
+    init_database.session.commit()
+
+    # Test that foouser is polymorphic on parent
+    queried_base_user = User.query.execution_options(show_all=True).first()
+
+    assert queried_base_user.primary_blockchain_address == adr
+
+    assert queried_base_user.foostring == foostr
+
+    queried_foo_user = FooUser.query.execution_options(show_all=True).first()
+
+    # Should be able to see parent attributes still
+    assert queried_foo_user.primary_blockchain_address == adr
+
+    assert queried_foo_user.foostring == foostr
+
+    # Now try through join
+    org = Organisation.query.execution_options(show_all=True).get(2)
+    assert org.users[0] == queried_foo_user
+
+    # Try creating a new org and associating to one of the subclasses
+    new_org = Organisation(name='Sempo', token=external_reserve_token, default_disbursement=400, country_code='US')
+    init_database.session.add(new_org)
+    init_database.session.commit()
+
+    foouser.organisations.append(new_org)
+    foouser.default_organisation = new_org
+
+    init_database.session.commit()
+
+    assert new_org in foouser.organisations
+
+
