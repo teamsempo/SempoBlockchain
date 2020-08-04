@@ -189,15 +189,20 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.blockchain_status = BlockchainStatus.SUCCESS
         self.blockchain_hash = transaction_hash
 
-    def resolve_as_complete_and_trigger_blockchain(self, existing_blockchain_txn=None, queue='high-priority', batch_uuid: str=None):
+    def resolve_as_complete_and_trigger_blockchain(
+            self,
+            existing_blockchain_txn=None,
+            queue='high-priority',
+            batch_uuid: str=None
+    ):
 
-        self.resolve_as_complete()
+        self.resolve_as_complete(batch_uuid)
 
         if not existing_blockchain_txn:
             self.blockchain_task_uuid = str(uuid4())
             g.pending_transactions.append((self, queue))
 
-    def resolve_as_complete(self):
+    def resolve_as_complete(self, batch_uuid=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
             raise Exception(f'Transfer resolve function called multiple times for transaction {self.id}')
         self.check_sender_transfer_limits()
