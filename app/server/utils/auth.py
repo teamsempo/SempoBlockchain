@@ -34,6 +34,16 @@ def show_all(f):
         return f(*args, **kwargs)
     return wrapper
 
+def multi_org(f):
+    """
+    Decorator for endpoints to tell SQLAlchemy that it's dealing with a multi-org friendly endpoint
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        g.multi_org = True
+        return f(*args, **kwargs)
+    return wrapper
+
 
 def requires_auth(f=None,
                   allowed_roles: Optional[Dict]=None,
@@ -201,6 +211,20 @@ def requires_auth(f=None,
                         # Then get the fallback organisation
                         if g.active_organisation is None:
                             g.active_organisation = user.fallback_active_organisation()
+
+                        # Check for query_organisations as well. These are stored in g and used for operations which
+                        # are allowed to be run against multiple orgs. Submitted as a CSV
+                        # E.g. GET metrics, user list, transfer list should be gettable with ?query_organisations=1,2,3
+                        query_organisations = request.args.get('query_organisations', None)
+                        if query_organisations:
+                            g.query_organisations = []
+                            try:
+                                query_organisations = [int(q) for q in query_organisations.split(',')]
+                                if set(query_organisations).issubset(set(g.member_organisations)):
+                                    g.query_organisations = query_organisations
+                            except ValueError:
+                                pass
+
 
                     except NotImplementedError:
                         g.active_organisation = None

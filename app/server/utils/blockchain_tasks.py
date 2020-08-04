@@ -18,9 +18,8 @@ from server.utils.exchange import (
 
 class BlockchainTasker(object):
     def _eth_endpoint(self, endpoint):
-        eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
-        return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+        return f'{celery_tasks_name}.{endpoint}'
 
     def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
@@ -67,6 +66,13 @@ class BlockchainTasker(object):
             self._eth_endpoint('transact_with_contract_function'),
             kwargs=kwargs, queue=queue, task_uuid=task_uuid
         ).id
+
+    def add_transaction_sync_filter(self, kwargs):
+        task_runner.delay_task(self._eth_endpoint('add_transaction_filter'), kwargs = kwargs)
+        return True
+
+    def force_third_party_transaction_sync(self):
+        return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions'), queue='low-priority').id
 
     def get_blockchain_task(self, task_uuid):
         """
@@ -192,7 +198,6 @@ class BlockchainTasker(object):
         :return: task uuid for the transfer
         """
         raw_amount = token.system_amount_to_token(amount, queue=queue)
-
         if signing_address == from_address:
             return self._transaction_task(
                 signing_address=signing_address,

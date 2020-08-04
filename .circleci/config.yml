@@ -227,7 +227,9 @@ workflows:
             branches:
               only:
                 - master
+                - more_worker_testing
           requires:
+            - build
             - test:backend
             - test:worker
             - test:frontend

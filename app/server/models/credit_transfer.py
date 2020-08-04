@@ -10,7 +10,7 @@ from sqlalchemy import or_
 from uuid import uuid4
 
 from server import db, bt
-from server.models.utils import BlockchainTaskableBase, ManyOrgBase
+from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 
@@ -25,7 +25,13 @@ from server.exceptions import (
 
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum, TransferModeEnum
+from server.utils.transfer_enums import (
+    TransferTypeEnum,
+    TransferSubTypeEnum,
+    TransferStatusEnum,
+    TransferModeEnum,
+    BlockchainStatus
+)
 
 
 class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
@@ -41,7 +47,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode       = db.Column(db.Enum(TransferModeEnum))
-    transfer_use        = db.Column(JSON)
+    transfer_use        = db.Column(JSON) # Deprecated
+    transfer_usages = db.relationship(
+        "TransferUsage",
+        secondary=credit_transfer_transfer_usage_association_table,
+        back_populates="credit_transfers",
+        lazy='joined'
+    )
     transfer_metadata = db.Column(JSONB)
 
     exclude_from_limit_calcs = db.Column(db.Boolean, default=False)
@@ -170,14 +182,29 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         # Return the set to remove any possible duplicates
         return set(required_priors)
 
-    def resolve_as_completed(self, existing_blockchain_txn=None, queue='high-priority', batch_uuid: str=None):
+    def resolve_as_complete_with_existing_blockchain_transaction(self, transaction_hash):
+
+        self.resolve_as_complete()
+
+        self.blockchain_status = BlockchainStatus.SUCCESS
+        self.blockchain_hash = transaction_hash
+
+    def resolve_as_complete_and_trigger_blockchain(self, existing_blockchain_txn=None, queue='high-priority', batch_uuid: str=None):
+
+        self.resolve_as_complete()
+
+        if not existing_blockchain_txn:
+            self.blockchain_task_uuid = str(uuid4())
+            g.pending_transactions.append((self, queue))
+
+    def resolve_as_complete(self):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
-            raise Exception(f'Transfer resolve function called multiple times for transaciton {self.id}')
+            raise Exception(f'Transfer resolve function called multiple times for transaction {self.id}')
         self.check_sender_transfer_limits()
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
-        self.sender_transfer_account.decrement_balance(self.transfer_amount)
-        self.recipient_transfer_account.increment_balance(self.transfer_amount)
+        self.sender_transfer_account.update_balance()
+        self.recipient_transfer_account.update_balance()
 
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -187,10 +214,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.batch_uuid = batch_uuid
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
-            self.fiat_ramp.resolve_as_completed()
-        if not existing_blockchain_txn:
-            self.blockchain_task_uuid = str(uuid4())
-            g.pending_transactions.append((self, queue))
+            self.fiat_ramp.resolve_as_complete()
 
     def resolve_as_rejected(self, message=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
