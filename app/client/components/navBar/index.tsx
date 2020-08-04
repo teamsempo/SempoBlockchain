@@ -154,6 +154,7 @@ class NavBar extends React.Component<Props, State> {
               bottom: "60px",
               width: collapsed ? 80 : 200
             }}
+            selectable={false}
           >
             <SubMenu
               key="help"
