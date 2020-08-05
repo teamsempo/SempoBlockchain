@@ -286,12 +286,6 @@ def test_get_summed_metrics(
         script_directory = os.path.dirname(os.path.realpath(__file__))
         desired_output_file = os.path.join(script_directory, 'metrics_outputs', output_file)
         desired_output = json.loads(open(desired_output_file, 'r').read())
-        print(group_by)
-        print(group_by)
-        print(group_by)
-        print(group_by)
-        print(group_by)
-        print(json.dumps(returned_stats))
 
         for do in desired_output:
             if not isinstance(desired_output[do], dict) or "timeseries" not in desired_output[do]:
