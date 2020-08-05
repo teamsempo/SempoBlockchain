@@ -21,8 +21,7 @@ coverage:
           - "!app/client/__tests__"
       eth_worker:
         paths:
-          - "eth_worker/eth_manager"
-          - "eth_worker/sql_persistence"
+          - "eth_worker/src"
       #tests:
       #paths:
       #- "app/test_app"
@@ -30,14 +29,15 @@ coverage:
       #- "eth_worker/test_eth_worker"
       #threshold: 100%
 fixes:
+  #  Server Fixes
   - "server/::app/server/"
-  - "client/::app/client/"
   - "test_app/::app/test_app/"
   - "manage.py::app/manage.py"
   - "migrations/seed.py::app/migrations/seed.py"
-  - "sql_persistence/::eth_worker/sql_persistence/"
+  # Client Fixes
+  - "client/::app/client/"
+  #Eth Worker Fixes
+  - "eth_src/::eth_worker/eth_src/" #We use eth_src instead of just src to prevent potential collisions with other src directories
   - "test_eth_worker/::eth_worker/test_eth_worker/"
-  - "eth_manager/::eth_worker/eth_manager/"
-  - "exceptions.py::eth_worker/exceptions.py"
-  - "sempo_types.py::eth_worker/sempo_types.py"
+  #Commons Fixes
   - "generate_secrets.py::config_files/generate_secrets.py"

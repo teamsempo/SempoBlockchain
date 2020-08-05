@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled, { ThemeProvider } from "styled-components";
 
-import DateTime from "../dateTime.jsx";
+import DateTime from "../dateTime.tsx";
 import { BusinessVerificationAction } from "../../reducers/businessVerification/actions";
 
 import { DefaultTheme } from "../theme";
