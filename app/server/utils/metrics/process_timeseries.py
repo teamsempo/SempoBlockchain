@@ -156,7 +156,10 @@ def calculate_per_user(query_result, population_query_result):
 def format_timeseries(query_result, population_query_result):
     data_by_groups = {}
     for r in query_result:
-        group_name = r[2]
+        if len(r) < 3:
+            group_name='None'
+        else:
+            group_name = r[2]
         if not group_name:
             group_name = 'None'
         try:
