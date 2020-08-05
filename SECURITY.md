@@ -13,4 +13,4 @@ The Sempo team takes security seriously to ensure the security of customer funds
 
 ## Reporting a Vulnerability
 
-Please report security bugs by emailing us directly at [team@withsempo.com](mailto:team@withsempo.com)
+Please report security bugs by emailing us directly at [security@withsempo.com](mailto:security@withsempo.com)
