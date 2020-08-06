@@ -22,7 +22,7 @@ const colorRange = [
 const elevationScale = { min: 1, max: 50 };
 
 const defaultProps = {
-  radius: 100,
+  radius: 2000,
   upperPercentile: 100,
   coverage: 1
 };
@@ -34,8 +34,8 @@ export default class DeckGLOverlay extends Component {
 
   static get defaultViewport() {
     return {
-      zoom: 12,
-      minZoom: 2,
+      zoom: 6,
+      minZoom: 5,
       maxZoom: 15,
       pitch: 40.5,
       bearing: 0
@@ -92,20 +92,6 @@ export default class DeckGLOverlay extends Component {
     }
   }
 
-  getTooltip({ object }) {
-    if (!object) {
-      return null;
-    }
-    const lat = object.position[1];
-    const lng = object.position[0];
-    const count = object.points.length;
-
-    return `\
-      latitude: ${Number.isFinite(lat) ? lat.toFixed(6) : ""}
-      longitude: ${Number.isFinite(lng) ? lng.toFixed(6) : ""}
-      $Volume: {count}`;
-  }
-
   render() {
     const { viewport, data, radius, coverage, upperPercentile } = this.props;
 
@@ -119,13 +105,13 @@ export default class DeckGLOverlay extends Component {
         colorRange,
         coverage,
         data: data,
-        elevationRange: [0, 200],
+        elevationRange: [0, 3000],
         elevationScale: this.state.elevationScale,
         extruded: true,
         getPosition: d => d,
         lightSettings: LIGHT_SETTINGS,
         onHover: this.props.onHover,
-        opacity: 0.3,
+        opacity: 1,
         pickable: Boolean(this.props.onHover),
         radius,
         upperPercentile

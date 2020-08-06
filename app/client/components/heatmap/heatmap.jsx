@@ -33,8 +33,8 @@ class HeatMap extends Component {
         ...DeckGLOverlay.defaultViewport,
         width: 500,
         height: 500,
-        latitude: this.props.activeOrganisation.default_lat || -17.73,
-        longitude: this.props.activeOrganisation.default_lng || 168.29
+        longitude: this.props.activeOrganisation.default_lng || 144,
+        latitude: this.props.activeOrganisation.default_lat || -1
       },
       data: null
     };

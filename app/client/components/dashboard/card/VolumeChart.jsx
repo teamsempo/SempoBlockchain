@@ -42,7 +42,6 @@ class VolumeChart extends React.Component {
       pointHoverBackgroundColor: color,
       pointHoverBorderColor: color,
       pointHoverBorderWidth: 2,
-      borderWidth: 2,
       pointRadius: 1,
       pointHitRadius: 10,
       data: dataset
@@ -103,7 +102,7 @@ class VolumeChart extends React.Component {
         display: false
       },
       tooltips: {
-        mode: "nearest",
+        mode: "x",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
         cornerRadius: 1
       },
@@ -164,14 +163,9 @@ class VolumeChart extends React.Component {
       "#FF764D",
       "#CB5188",
       "#62508E",
-      "#508E79",
       "#2E4A7A",
       "#F05B6F",
-      "#995194",
-      "#57AA65",
-      "#FF9C22",
-      "#42B1B1",
-      "#555555"
+      "#995194"
     ];
 
     const datasets = possibleTimeseriesKeys.map((key, index) => {
@@ -181,11 +175,12 @@ class VolumeChart extends React.Component {
         date_array
       );
 
-      let color = color_scheme[index]
-        ? color_scheme[index]
-        : color_scheme[color_scheme.length - 1];
-
-      return this.construct_dataset_object(index, key, color, zero_filled_data);
+      return this.construct_dataset_object(
+        index,
+        key,
+        color_scheme[index],
+        zero_filled_data
+      );
     });
 
     var chartData = {
@@ -195,12 +190,8 @@ class VolumeChart extends React.Component {
 
     return (
       <div>
-        <div style={{ height: `${this.props.chartHeight}px` }}>
-          <Line
-            data={chartData}
-            height={this.props.chartHeight}
-            options={options}
-          />
+        <div style={{ height: "200px" }}>
+          <Line data={chartData} height={200} options={options} />
         </div>
       </div>
     );

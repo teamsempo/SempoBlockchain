@@ -6,6 +6,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import { Card, Typography } from "antd";
+import { LinkOutlined } from "@ant-design/icons";
 import { HorizontalBar } from "react-chartjs-2";
 import { formatMoney } from "../../utils";
 
@@ -29,6 +30,13 @@ class MasterWalletCard extends React.Component {
     const masterWalletBalance = creditTransferStats.master_wallet_balance / 100;
     const amountDisbursed = creditTransferStats.total_distributed / 100;
     const symbol = activeOrganisation.token.symbol;
+
+    const tracker_link =
+      window.ETH_EXPLORER_URL +
+      "/address/" +
+      (window.USING_EXTERNAL_ERC20
+        ? window.master_wallet_address
+        : window.ETH_CONTRACT_ADDRESS);
 
     var options = {
       animation: false,
@@ -97,6 +105,11 @@ class MasterWalletCard extends React.Component {
         bordered={false}
         bodyStyle={{ height: "140px" }}
         style={{ width: "100%" }}
+        extra={
+          <a href={tracker_link} target="_blank">
+            <LinkOutlined /> View in Explorer
+          </a>
+        }
       >
         <div style={{ height: "100%", width: "100%" }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
