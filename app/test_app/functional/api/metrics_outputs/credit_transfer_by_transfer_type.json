@@ -41,8 +41,8 @@
   },
   "daily_disbursement_volume": {
     "aggregate": {
-      "PAYMENT": 1117,
-      "total": 1117
+      "PAYMENT": 1517,
+      "total": 1517
     },
     "timeseries": {
       "PAYMENT": [
@@ -60,7 +60,7 @@
         },
         {
           "date": "2020-08-01T00:00:00",
-          "value": 300
+          "value": 700
         }
       ]
     }
@@ -121,7 +121,7 @@
   "has_transferred_count": 5,
   "mandatory_filter": {},
   "master_wallet_balance": 0,
-  "total_distributed": 1117,
+  "total_distributed": 1517,
   "total_exchanged": 0,
   "total_spent": 170,
   "trades_per_user": {
