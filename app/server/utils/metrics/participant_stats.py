@@ -9,7 +9,7 @@ from server import db, red, bt
 
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
-from server.utils.metrics import filters, metrics_cache, metric, process_timeseries, metric_group
+from server.utils.metrics import filters, metrics_cache, metric, metric_group
 from server.utils.metrics.metrics_const import *
 
 

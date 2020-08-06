@@ -2,17 +2,17 @@
 # The code in this file is not included in the GPL license applied to this repository
 # Unauthorized copying of this file, via any medium is strictly prohibited
 
-from server.utils.metrics import filters, metrics_cache, process_timeseries, group
+from server.utils.metrics import filters, metrics_cache, postprocessing_actions, group
 from server.utils.metrics.metrics_const import *
 
 class Metric(object):
     def execute_query(self, user_filters: dict = None, date_filters_dict=None, enable_caching=True, population_query_result=False, calculate_only_aggregates=False):
         """
-        :param user_filters: list of filters to apply to all metrics
+        :param user_filters: dict of filters to apply to all metrics
         :param date_filters_dict: lookup table linking object models to their date filters (if applicable)  
         :param enable_caching: set to False if you don't want the query result to be cached
         :param population_query_result: This is a representation of the number of users over time, used in 
-            post-processing of certian metrics. See process_timeseries.py for more details.
+            post-processing of certian metrics. See postprocessing_actions.py for more details.
         :param calculate_only_aggregates: if true, this skips calculating timeseries data and only fetches
              aggregated_query and total_query
         """
@@ -49,11 +49,16 @@ class Metric(object):
             if not self.bypass_user_filters:
                 filtered_query = filters.apply_filters(filtered_query, user_filters, self.object_model)
 
-            result = metrics_cache.execute_with_partial_history_cache(self.metric_name, filtered_query, self.object_model, self.caching_combinatory_strategy, enable_caching) 
+            result = metrics_cache.execute_with_partial_history_cache(
+                self.metric_name, 
+                filtered_query, 
+                self.object_model, 
+                self.caching_combinatory_strategy, 
+                enable_caching) 
             if not actions[query]:
                 results[query] = result
             else:
-                results[query] = process_timeseries.process_timeseries(result, population_query_result, actions[query])
+                results[query] = postprocessing_actions.execute_postprocessing(result, population_query_result, actions[query])
         
         if self.is_timeseries:
             result = {}
@@ -103,7 +108,7 @@ class Metric(object):
             value-- the total of the figure represenging the metric. For example, if the main query returns a timeseries of 
             transfer usages over time, this query should represent the summation of all transfer usages
         :param query_actions: Which post-processing actions are executed against the query after it runs. For more details, see
-            process_timeseries.py
+            postprocessing_actions.py
         :param aggregated_query_actions: query_actions for aggregated_query
         :param total_query_actions: query_actions for total_query
         :param groupable_attributes: list of attributes this metric is allowed to be grouped by

@@ -236,7 +236,7 @@ query_actions = {
 # Executes query_actions against query results
 # These are done in the order they're declared in the Metric object
 # so you can chain together common actions and reuse them across metrics!
-def process_timeseries(query_result, population_query_result = None, actions = None):
+def execute_postprocessing(query_result, population_query_result = None, actions = None):
     for action in actions:
         if action not in TIMESERIES_ACTIONS:
             raise Exception(f'{action} not a valid timeseries action')
