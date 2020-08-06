@@ -1,4 +1,5 @@
 import pytest
+from flask import g
 from helpers.model_factories import CreditTransfer
 
 def test_create_transfer_account(create_transfer_account):
@@ -18,6 +19,7 @@ def test_approve_beneficiary_transfer_account(create_transfer_account_user, crea
     THEN check a BENEFICIARY is disbursed initial balance
     """
     create_transfer_account_user.transfer_account.is_beneficiary = True
+    g.active_organisation = create_organisation
     create_transfer_account_user.transfer_account.approve_and_disburse(
         initial_disbursement=create_organisation.default_disbursement
     )
