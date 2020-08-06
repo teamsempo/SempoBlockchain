@@ -93,8 +93,8 @@
   },
   "daily_disbursement_volume": {
     "aggregate": {
-      "ORGANISATION": 1117,
-      "total": 1117
+      "ORGANISATION": 1517,
+      "total": 1517
     },
     "timeseries": {
       "ORGANISATION": [
@@ -112,7 +112,7 @@
         },
         {
           "date": "2020-07-28T00:00:00",
-          "value": 300
+          "value": 700
         }
       ]
     }
@@ -174,7 +174,7 @@
   "mandatory_filter": {},
   "master_wallet_balance": 0,
   "total_beneficiaries": 1,
-  "total_distributed": 1117,
+  "total_distributed": 1517,
   "total_exchanged": 0,
   "total_spent": 170,
   "total_users": 1,
