@@ -89,7 +89,7 @@ class TransferStats(metric_group.MetricGroup):
             metric_name='daily_transaction_volume',
             query=group_strategy.build_query_group_by_with_join(transaction_volume_timeseries_query, CreditTransfer),
             object_model=CreditTransfer,
-            stock_filters=[filters.standard_payment_filters],
+            stock_filters=[filters.transaction_volume_filters],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             timeseries_actions=[FORMAT_TIMESERIES, AGGREGATE_FORMATTED_TIMESERIES]))
