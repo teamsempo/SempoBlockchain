@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.3.1'  # Remember to bump this in every PR
+VERSION = '1.4.7'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -360,22 +360,6 @@ try:
     NAMESCAN_KEY    = common_secrets_parser['NAMESCAN']['key']
 except KeyError:
     NAMESCAN_KEY = None
-
-try:
-    GE_DB_NAME = secrets_parser['GE_MIGRATION'].get('name')
-    GE_DB_USER = secrets_parser['GE_MIGRATION'].get('user')
-    GE_DB_HOST = secrets_parser['GE_MIGRATION'].get('host')
-    GE_DB_PORT = secrets_parser['GE_MIGRATION'].get('port')
-    GE_DB_PASSWORD = secrets_parser['GE_MIGRATION'].get('password')
-    GE_HTTP_PROVIDER = secrets_parser['GE_MIGRATION'].get('ge_http_provider')
-
-except KeyError:
-    GE_DB_NAME = ''
-    GE_DB_USER = ''
-    GE_DB_HOST = ''
-    GE_DB_PORT = ''
-    GE_DB_PASSWORD = ''
-    GE_HTTP_PROVIDER = ''
 
 TRANSFER_LIMITS = {}
 TRANSFER_LIMITS['0.P7']	= 5000

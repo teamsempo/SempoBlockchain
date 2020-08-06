@@ -10,6 +10,7 @@ from pusher import Pusher
 import boto3
 from twilio.rest import Client as TwilioClient
 import sentry_sdk
+from sentry_sdk import configure_scope
 from sentry_sdk.integrations.flask import FlaskIntegration
 import messagebird
 import africastalking
@@ -107,6 +108,8 @@ def register_extensions(app):
     celery_app.conf.update(app.config)
     if not config.IS_TEST:
         sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
+        with configure_scope() as scope:
+            scope.set_tag("domain", config.APP_HOST)
 
     print('celery joined on {} at {}'.format(
         app.config['REDIS_URL'], datetime.utcnow()))
@@ -170,7 +173,6 @@ def register_blueprints(app):
     from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
     from server.api.contract_api import contracts_blueprint
-    from server.api.ge_migration_api import ge_migration_blueprint
     from server.api.synchronization_filter_api import synchronization_filter_blueprint
     from server.api.blockchain_taskable_api import blockchain_taskable_blueprint
     from server.api.metrics_api import metrics_blueprint
@@ -204,7 +206,6 @@ def register_blueprints(app):
     app.register_blueprint(poli_payments_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ussd_blueprint, url_prefix=versioned_url)
     app.register_blueprint(contracts_blueprint, url_prefix=versioned_url)
-    app.register_blueprint(ge_migration_blueprint, url_prefix=versioned_url)
     app.register_blueprint(synchronization_filter_blueprint, url_prefix=versioned_url)
     app.register_blueprint(blockchain_taskable_blueprint, url_prefix=versioned_url)
     app.register_blueprint(metrics_blueprint, url_prefix=versioned_url)
@@ -314,5 +315,3 @@ mt = MiscTasker()
 
 from server.utils.ussd.ussd_tasks import UssdTasker
 ussd_tasker = UssdTasker()
-
-ge_w3 = Web3(HTTPProvider(config.GE_HTTP_PROVIDER))

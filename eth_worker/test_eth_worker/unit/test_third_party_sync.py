@@ -1,16 +1,8 @@
-import uuid
 import pytest
 
-from eth_keys import keys
-
 from sql_persistence.interface import SQLPersistenceInterface
-from sql_persistence.models import BlockchainWallet, BlockchainTask, BlockchainTransaction
-from sempo_types import UUID
-
-from eth_manager.ABIs import erc20_abi
-from eth_manager.blockchain_sync.blockchain_sync import add_transaction_filter, get_blockchain_transaction_history, synchronize_third_party_transactions, handle_event
-from eth_manager.blockchain_sync import blockchain_sync, blockchain_sync_constants
 from sql_persistence.models import BlockchainTransaction
+from eth_manager.blockchain_sync import blockchain_sync_constants
 
 class TestModels:
     # Generic filter parameters used a few times in the tests
@@ -58,10 +50,10 @@ class TestModels:
         (None, None),
         (0, 0)
     ])
-    def test_add_transaction_filter(self, persistence_module: SQLPersistenceInterface,
+    def test_add_transaction_filter(self, blockchain_sync, persistence_module: SQLPersistenceInterface,
                                     block_epoch, expected_max_block):
         # Build filter
-        add_transaction_filter(
+        blockchain_sync.add_transaction_filter(
             self.contract_address,
             self.contract_type,
             self.filter_parameters,
@@ -79,10 +71,17 @@ class TestModels:
         assert f.max_block == expected_max_block
 
     # Tests get_blockchain_history
-    def test_get_blockchain_transaction_history(self, mocker, processor):
+    def test_get_blockchain_transaction_history(self, mocker, blockchain_sync, processor):
         # Need a valid filter object since get_blockchain_transaction_history creates and modifies 
         # the SynchronizedBlock table, which has needs to be linked to a tx filter foreign key
-        filter = add_transaction_filter(self.contract_address, self.contract_type, self.filter_parameters, self.filter_type, self.decimals, self.block_epoch)
+        filter = blockchain_sync.add_transaction_filter(
+            self.contract_address,
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            self.block_epoch
+        )
         
         start_block = 0 
         end_block = 500
@@ -102,29 +101,46 @@ class TestModels:
                             assert kwargs['argument_filters'] == argument_filters
                             return Filter()
             return Contract()
-        from eth_manager import w3_websocket
-        mocker.patch.object(w3_websocket.eth, 'contract', dummy_contract)
+        mocker.patch.object(blockchain_sync.w3_websocket.eth, 'contract', dummy_contract)
 
-        events = get_blockchain_transaction_history(self.contract_address, start_block, end_block, argument_filters, filter_id)
+        events = blockchain_sync.get_blockchain_transaction_history(self.contract_address, start_block, end_block, argument_filters, filter_id)
 
         for event in events:
             # Have to consume generator for test to halt
             assert event == None
 
-    def test_synchronize_third_party_transactions(self, mocker, processor, persistence_module: SQLPersistenceInterface):
+    def test_synchronize_third_party_transactions(
+            self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface
+    ):
         # Create filters for this function to consume
-        tf1_id = add_transaction_filter(self.contract_address, self.contract_type, self.filter_parameters, self.filter_type, self.decimals, self.block_epoch).id
-        tf2_id = add_transaction_filter('0x000090c5a236130E5D51260A2A5Bfde834C694b6', self.contract_type, self.filter_parameters, self.filter_type, self.decimals, self.block_epoch).id
+        tf1_id = blockchain_sync.add_transaction_filter(
+            self.contract_address,
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            self.block_epoch
+        ).id
+
+        tf2_id = blockchain_sync.add_transaction_filter(
+            '0x000090c5a236130E5D51260A2A5Bfde834C694b6',
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            self.block_epoch
+        ).id
+
         # Make get_latest_block_number return 12000, which will ensure we test the chunking every 5000 blocks
         mocker.patch.object(blockchain_sync, 'get_latest_block_number', lambda: 12000)
 
         ranges = []
         mocker.patch.object(blockchain_sync, 'process_chunk', lambda filter, floor, ceiling: ranges.append((filter.id, floor, ceiling)))
         blockchain_sync_constants.BLOCKS_PER_REQUEST=5000
-        synchronize_third_party_transactions()
+        blockchain_sync.synchronize_third_party_transactions()
         assert ranges == [(1, 2, 5001), (1, 5002, 10001), (1, 10002, 12000), (2, 2, 5001), (2, 5002, 10001), (2, 10002, 12000)]
 
-    def test_handle_event(self, mocker, processor, persistence_module: SQLPersistenceInterface):
+    def test_handle_event(self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface):
         # Create dummy objects for this functions to consume (handle_event only uses decimals)
         class DummyFilter():
             decimals = 18
@@ -144,12 +160,13 @@ class TestModels:
             '0x3333333333333333333333333', 
             10
         )
-        from eth_manager import persistence_module as pm
+        # from celery_app import persistence_module as pm
+        pm = persistence_module
         mocker.patch.object(pm, 'get_transaction', lambda hash: t)
         mocker.patch.object(pm, 'create_external_transaction', lambda *args, **kwargs: tx)
         mark_as_completed_mock = mocker.patch.object(pm, 'mark_transaction_as_completed')
 
-        result = handle_event(t, filt)
+        result = blockchain_sync.handle_event(t, filt)
         assert result == True
 
 
@@ -171,7 +188,7 @@ class TestModels:
             resp.ok = False
             return resp
         mocker.patch.object(blockchain_sync, 'call_webhook', check_correct_webhook_call_fail)
-        handle_event(t, filt)
+        blockchain_sync.handle_event(t, filt)
         # Make sure mark_as_completed is NOT called
         assert len(mark_as_completed_mock.call_args_list) == 0
 
@@ -195,7 +212,7 @@ class TestModels:
             return RequestsResp()
         mocker.patch.object(blockchain_sync, 'call_webhook', check_correct_webhook_call)
 
-        handle_event(t, filt)
+        blockchain_sync.handle_event(t, filt)
         # Make sure mark_as_completed is called
         assert len(mark_as_completed_mock.call_args_list) == 1
 

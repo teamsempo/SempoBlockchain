@@ -1,6 +1,5 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { NavLink } from "react-router-dom";
 import { Layout, Menu } from "antd";
 
@@ -46,10 +45,6 @@ type State = typeof initialState;
 declare global {
   interface Window {
     DEPLOYMENT_NAME: string;
-    ETH_EXPLORER_URL: string;
-    USING_EXTERNAL_ERC20: boolean;
-    master_wallet_address: string;
-    ETH_CONTRACT_ADDRESS: string;
   }
 }
 
@@ -95,14 +90,7 @@ class NavBar extends React.Component<Props, State> {
   };
 
   render() {
-    var tracker_link =
-      window.ETH_EXPLORER_URL +
-      "/address/" +
-      (window.USING_EXTERNAL_ERC20
-        ? window.master_wallet_address
-        : window.ETH_CONTRACT_ADDRESS);
-
-    let { loggedIn, email, pathname } = this.props;
+    let { loggedIn, pathname } = this.props;
     let { iconURL, collapsed } = this.state;
 
     let activePath = pathname && "/" + pathname.split("/")[1];
@@ -137,13 +125,6 @@ class NavBar extends React.Component<Props, State> {
               <NavLink to="/settings">Settings</NavLink>
             </Menu.Item>
           </Menu>
-          {this.state.collapsed ? null : (
-            <ContractAddress href={tracker_link} target="_blank">
-              {window.USING_EXTERNAL_ERC20
-                ? "Master Wallet Tracker"
-                : "Contract Tracker"}
-            </ContractAddress>
-          )}
         </Sider>
       );
     } else {
@@ -166,13 +147,3 @@ const mapStateToProps = (state: ReduxState): StateProps => {
 };
 
 export default connect(mapStateToProps)(NavBar);
-
-const ContractAddress = styled.a`
-  color: #fff;
-  margin: auto 2em;
-  font-size: 12px;
-  text-decoration: none;
-  font-weight: 400;
-  position: fixed;
-  bottom: 60px;
-`;
