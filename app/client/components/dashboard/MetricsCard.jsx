@@ -152,4 +152,4 @@ class MetricsCard extends React.Component {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(MetricsCard);
+)(withMediaQuery([isMobileQuery])(MetricsCard));

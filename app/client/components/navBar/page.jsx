@@ -1,19 +1,64 @@
 import React from "react";
 import { Layout, Typography } from "antd";
 import NavBar from "../navBar";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
 
-export default class Page extends React.Component {
+class Page extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      collapsed: false
+    };
+  }
+
+  onCollapse = collapsed => {
+    this.setState({ collapsed });
+  };
+
   render() {
+    const { isMobile } = this.props;
+    const { collapsed } = this.state;
+
     return (
       <Layout style={{ minHeight: "100vh" }}>
         {this.props.noNav ? null : (
-          <NavBar pathname={this.props.location.pathname} />
+          <NavBar
+            pathname={this.props.location.pathname}
+            onCollapse={this.onCollapse}
+            collapsed={collapsed}
+          />
         )}
 
-        <Layout className="site-layout">
+        <div
+          onClick={() => this.onCollapse(true)}
+          style={
+            isMobile
+              ? collapsed
+                ? undefined
+                : {
+                    height: "100%",
+                    width: "100%",
+                    backgroundColor: "rgba(0,0,0,.45)",
+                    position: "fixed",
+                    zIndex: 1
+                  }
+              : undefined
+          }
+        />
+
+        <Layout
+          className="site-layout"
+          style={
+            isMobile
+              ? undefined
+              : collapsed
+              ? { marginLeft: "80px" }
+              : { marginLeft: "200px" }
+          }
+        >
           {this.props.title ? (
             <Header className="site-layout-background" style={{ padding: 0 }}>
               <Title>{this.props.title}</Title>
@@ -30,6 +75,8 @@ export default class Page extends React.Component {
     );
   }
 }
+
+export default withMediaQuery([isMobileQuery])(Page);
 
 Page.defaultProps = {
   footer: true,

@@ -57,7 +57,11 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
 
   let menu = (
     <Menu
-      style={{ width: "200px", margin: props.collapsed ? "0 1em" : "0" }}
+      style={{
+        width: "200px",
+        margin: props.collapsed ? "0 1em" : "0",
+        position: "fixed"
+      }}
       selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
     >
       <Menu.ItemGroup title="Your Organisations">
