@@ -90,11 +90,14 @@ def calculate_transfer_stats(
     population_date_filter = {}
     if end_date:
         population_date_filter[User] = [User.created <= end_date]
-    groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
+
+    if group_strategy:
+        groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
+        for f in user_filter or []:
+            groups_and_filters_tables.append(f)
+
     total_users = {}
-    for f in user_filter or []:
-        groups_and_filters_tables.append(f)
-    if set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
+    if group_strategy and set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
         total_users_stats = TotalUsers(group_strategy, timeseries_unit)
         total_users[metrics_const.GROUPED] = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters_dict=population_date_filter, enable_caching=enable_cache)
         total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters_dict=population_date_filter, enable_caching=enable_cache)

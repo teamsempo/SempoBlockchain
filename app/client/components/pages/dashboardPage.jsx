@@ -145,7 +145,7 @@ class DashboardPage extends React.Component {
               </Mobile>
               <MetricsCard
                 cardTitle="Transfers"
-                defaultGroupBy="gender"
+                defaultGroupBy="ungrouped"
                 defaultTimeSeries="all_payments_volume"
                 filterObject="credit_transfer"
                 timeSeriesNameLabels={[
@@ -158,7 +158,7 @@ class DashboardPage extends React.Component {
               />
               <MetricsCard
                 cardTitle="Participants"
-                defaultGroupBy="account_type"
+                defaultGroupBy="ungrouped"
                 defaultTimeSeries="active_users"
                 filterObject="user"
                 timeSeriesNameLabels={[

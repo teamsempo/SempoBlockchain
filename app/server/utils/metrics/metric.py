@@ -17,14 +17,18 @@ class Metric(object):
              aggregated_query and total_query
         """
         actions = { 'query': self.query_actions, 'aggregated_query': self.aggregated_query_actions, 'total_query': self.total_query_actions }
+
+        # Build the dict of queries to execute. Ungrouped metrics don't have aggregated queries,
+        # and sometimes we only want aggregates and totals (based on calculate_only_aggregates)
         if self.is_timeseries:
             if calculate_only_aggregates:
-                queries = { 'aggregated_query': self.aggregated_query, 'total_query': self.total_query }
+                queries = { 'total_query': self.total_query }
             else:   
-                queries = { 'query': self.query, 'aggregated_query': self.aggregated_query, 'total_query': self.total_query }
-           
+                queries = { 'query': self.query, 'total_query': self.total_query }
+            if self.aggregated_query:
+                queries['aggregated_query'] = self.aggregated_query
             if None in queries.values():
-                raise Exception('Timeseries query requires a query, aggregated_query, and a total_query')
+                raise Exception('Timeseries query requires a query, and a total_query')
         else:
             queries = { 'query': self.query }
 
@@ -59,13 +63,16 @@ class Metric(object):
                 results[query] = result
             else:
                 results[query] = postprocessing_actions.execute_postprocessing(result, population_query_result, actions[query])
-        
+
         if self.is_timeseries:
             result = {}
             if not calculate_only_aggregates:
                 result['timeseries'] = results['query']
-            result['aggregate'] = results['aggregated_query']
-            result['aggregate']['total'] = results['total_query']
+            if self.aggregated_query:
+                result['aggregate'] = results['aggregated_query']
+                result['aggregate']['total'] = results['total_query']
+            else:
+                result['aggregate'] = {'total': results['total_query']}
             return result
         else:
             return results['query']

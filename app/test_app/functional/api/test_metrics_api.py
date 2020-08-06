@@ -247,6 +247,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
 
 @pytest.mark.parametrize("metric_type, params, status_code, requested_metric, group_by, output_file", [
     ("all", None, 200, None, 'account_type', 'all_by_account_type.json'),
+    ("all", None, 200, None, 'ungrouped', 'all_ungrouped.json'),
     ("all", "rounded_account_balance(GT)(2)", 200, None, 'account_type', 'all_by_account_type_filtered.json'),
     ("credit_transfer", None, 200, None, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
     ("user", None, 200, None, 'account_type', 'user_by_account_type.json'),
