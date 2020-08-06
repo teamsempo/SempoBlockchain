@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 
 import AuthModule from "../../auth/authModule.jsx";
 import UserList from "../../adminUser/adminUserList.jsx";
-import KoboCredentials from "../../koboCredentials.jsx";
-import GetVerified from "../../GetVerified.jsx";
+import KoboCredentials from "../../koboCredentials";
+import GetVerified from "../../GetVerified";
 
 import {
   WrapperDiv,

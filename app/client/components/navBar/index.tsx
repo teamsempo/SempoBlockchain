@@ -50,10 +50,6 @@ type State = typeof initialState;
 declare global {
   interface Window {
     DEPLOYMENT_NAME: string;
-    ETH_EXPLORER_URL: string;
-    USING_EXTERNAL_ERC20: boolean;
-    master_wallet_address: string;
-    ETH_CONTRACT_ADDRESS: string;
   }
 }
 
@@ -99,14 +95,7 @@ class NavBar extends React.Component<Props, State> {
   };
 
   render() {
-    var tracker_link =
-      window.ETH_EXPLORER_URL +
-      "/address/" +
-      (window.USING_EXTERNAL_ERC20
-        ? window.master_wallet_address
-        : window.ETH_CONTRACT_ADDRESS);
-
-    let { loggedIn, email, pathname } = this.props;
+    let { loggedIn, pathname } = this.props;
     let { iconURL, collapsed } = this.state;
 
     let activePath = pathname && "/" + pathname.split("/")[1];

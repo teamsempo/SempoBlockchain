@@ -8,7 +8,7 @@ const SingleDatePickerWrapper = lazy(() =>
   import("./SingleDatePickerWrapper.jsx")
 );
 import NewTransferManager from "../management/newTransferManager.jsx";
-import DateTime from "../dateTime.jsx";
+import DateTime from "../dateTime.tsx";
 
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
