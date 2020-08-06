@@ -27,10 +27,10 @@ class MockDataApi(MethodView):
         if safety_check != total_users:
             # Prevent a whole bunch of data being created unintentionally
             response_object = {
-                'message': 'Failed Safety Check'
+                'message': f"Failed Safety Check:"
+                           f"Please set safety_check to the current number of users on the platform ({total_users})."
             }
             return make_response(jsonify(response_object)), 400
-
 
         transfer_usages = TransferUsage.query.all()
         admin_ta = g.active_organisation.org_level_transfer_account
@@ -40,7 +40,7 @@ class MockDataApi(MethodView):
 
         if admin_ta.balance < amount_to_disburse*number_of_users:
             response_object = {
-                'message': f'Not enough balance to disburse. Have {admin_ta.banace}, need {total_disbursed}.'
+                'message': f'Not enough balance to disburse. Have {admin_ta.balance}, need {total_disbursed}.'
             }
 
             return make_response(jsonify(response_object)), 400

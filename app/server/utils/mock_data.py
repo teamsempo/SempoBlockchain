@@ -71,7 +71,7 @@ def create_users(number_of_users, transfer_usages, org, created_offset=0):
     i = 0
     users_by_location = {}
 
-    while i < number_of_users:
+    for i in range(number_of_users):
 
         print(f'Created user {i}')
 
@@ -88,8 +88,6 @@ def create_users(number_of_users, transfer_usages, org, created_offset=0):
             users_by_location[location] = []
 
         users_by_location[location].append((user, behavior))
-
-        i += 1
 
         db.session.commit()
     return users_by_location
@@ -189,7 +187,7 @@ def create_payments(users_by_location, number_of_transfers, time_period_days, tr
 
     for day_index, required_transfers in enumerate(transfer_count_per_day):
         i = 0
-        while i < required_transfers:
+        for i in range(required_transfers):
             print(f'Creating day {day_index}, transfer {i}')
 
             found_a_sender = False
@@ -241,7 +239,6 @@ def create_payments(users_by_location, number_of_transfers, time_period_days, tr
             )
 
             transfer_list.append(transfer)
-            i += 1
 
         print(f'Finished Day {day_index}')
         # Commit to prevent memory errors with large numbers of txns counts
