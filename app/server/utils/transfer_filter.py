@@ -6,6 +6,7 @@ import enum
 from sqlalchemy.sql import text
 from sqlalchemy import or_, Column, String, Float
 from server import db
+from server.utils.transfer_enums import TransferTypeEnum
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -50,6 +51,12 @@ ALL_FILTERS = {
         'table': User.__tablename__,
         'type': TransferFilterEnum.BOOLEAN_MAPPING,
         'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
+    },
+    'transfer_type': {
+        'name': "Transfer Type",
+        'table': CreditTransfer.__tablename__,
+        'type': TransferFilterEnum.DISCRETE,
+        'values': [f.value for f in TransferTypeEnum]
     },
     'gender': {
         'name': "Gender",
