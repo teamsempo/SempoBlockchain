@@ -1,9 +1,7 @@
-from flask import Blueprint, request, make_response, jsonify, g, Response
+from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 import datetime
 import orjson
-
-from sqlalchemy.orm import lazyload
 
 from server import db
 from server.models.utils import paginate_query
@@ -49,9 +47,9 @@ class TransferAccountAPI(MethodView):
             base_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)
 
             if account_type_filter == 'vendor':
-                transfer_accounts_query = base_query.filter_by(has_vendor_role=True)
+                transfer_accounts_query = base_query.filter_by(is_vendor=True)
             elif account_type_filter == 'beneficiary':
-                transfer_accounts_query = base_query.filter_by(has_vendor_role=False)
+                transfer_accounts_query = base_query.filter_by(is_beneficiary=True)
             else:
                 pass
                 # Filter Contract, Float and Organisation Transfer Accounts
@@ -168,7 +166,7 @@ class TransferAccountAPI(MethodView):
 transfer_account_blueprint.add_url_rule(
     '/transfer_account/',
     view_func=TransferAccountAPI.as_view('transfer_account_view'),
-    methods=['GET', 'PUT', 'POST'],
+    methods=['GET', 'PUT'],
     defaults={'transfer_account_id': None}
 )
 
