@@ -6,6 +6,7 @@ from server import db
 from server.utils.auth import get_complete_auth_token
 from server.utils.phone import proccess_phone_number
 from server.models.transfer_usage import TransferUsage
+from server.models.user import User
 from server.utils.location import async_set_user_gps_from_location
 
 fake = Faker()
@@ -28,14 +29,16 @@ def mock_async_set_user_gps_from_location(mocker):
     return fn_inputs
 
 
-@pytest.mark.parametrize("user_phone_accessor, phone, business_usage_name, referred_by, tier, status_code", [
-    (lambda o: o.phone, None, 'Fuel/Energy', '+61401391419', 'superadmin', 400),
-    (lambda o: o.phone, fake.msisdn(), 'Fuel/Energy', fake.msisdn(), 'superadmin', 200),
-    (lambda o: o.phone, fake.msisdn(), 'Food/Water', fake.msisdn(), 'view', 403)
+@pytest.mark.parametrize("user_phone_accessor, phone, business_usage_name, referred_by, "
+                         "initial_disbursement, tier, status_code", [
+                             (lambda o: o.phone, None, 'Fuel/Energy', '+61401391419', None, 'superadmin', 400),
+                             (lambda o: o.phone, fake.msisdn(), 'Fuel/Energy', fake.msisdn(), 0, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), 'Fuel/Energy', fake.msisdn(), None, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), 'Food/Water', fake.msisdn(), None, 'view', 403)
 ])
 def test_create_user(test_client, authed_sempo_admin_user, init_database, create_transfer_account_user,
-                     mock_async_set_user_gps_from_location,
-                     user_phone_accessor, phone, business_usage_name, referred_by, tier, status_code):
+                     mock_async_set_user_gps_from_location, user_phone_accessor, phone,
+                     business_usage_name, referred_by, initial_disbursement, tier, status_code):
 
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)
@@ -62,7 +65,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             'is_vendor': False,
             'is_tokenagent': False,
             'is_groupaccount': False,
-            'initial_disbursement': 0,
+            'initial_disbursement': initial_disbursement,
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
             'referred_by': user_phone_accessor(create_transfer_account_user)
@@ -80,11 +83,16 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
         assert data['user']['is_vendor'] is False
         assert data['user']['is_tokenagent'] is False
         assert data['user']['is_groupaccount'] is False
-        assert data['user']['transfer_accounts'][0]['balance'] == 0
         assert data['user']['location'] == 'Elwood'
         assert data['user']['business_usage_id'] == init_database.session.query(TransferUsage)\
             .filter_by(name=business_usage_name).first().id
         assert data['user']['referred_by'] == user_phone_accessor(create_transfer_account_user)
+
+        if initial_disbursement is not None:
+            assert data['user']['transfer_accounts'][0]['balance'] == initial_disbursement
+        else:
+            db_user = init_database.session.query(User).get(data['user']['id'])
+            assert data['user']['transfer_accounts'][0]['balance'] == db_user.default_organisation.default_disbursement
 
         # Checks that we're calling the gps location fetching job, and passing the right data to it
         # Used in lieu of the test below working
@@ -211,12 +219,12 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
         return transfer_account_ids
 
     # User 1 is in both orgs
-    # User 2 is in Org 2
-    # User 3 is in Org 2 
+    # User 3 is in Org 2
+    # User 4 is in Org 2
     response = get_user_endpoint('1,2')
     assert response.status_code == 200
     users_list = response.json['data']['users']
-    assert get_transfer_account_ids(users_list) == [3, 1]
+    assert get_transfer_account_ids(users_list) == [4, 3, 1]
 
     response = get_user_endpoint('1')
     assert response.status_code == 200
@@ -227,5 +235,4 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
     response = get_user_endpoint('2')
     assert response.status_code == 200
     users_list = response.json['data']['users']
-    assert get_transfer_account_ids(users_list) == [3, 1]
-
+    assert get_transfer_account_ids(users_list) == [4, 3, 1]

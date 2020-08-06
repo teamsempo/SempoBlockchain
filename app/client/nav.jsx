@@ -49,7 +49,7 @@ const OrganisationPage = lazy(() =>
   import("./components/pages/settings/OrganisationPage.tsx")
 );
 import notFoundPage from "./components/pages/notFoundPage.jsx";
-import MessageBar from "./components/messageBar.jsx";
+import MessageBar from "./components/messageBar";
 import ErrorBoundary from "./components/errorBoundary.jsx";
 
 import { ThemeProvider } from "styled-components";
