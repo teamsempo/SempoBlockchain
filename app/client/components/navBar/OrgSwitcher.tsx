@@ -59,8 +59,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
     <Menu
       style={{
         width: "200px",
-        margin: props.collapsed ? "0 1em" : "0",
-        position: "fixed"
+        margin: props.collapsed ? "0 1em" : "0"
       }}
       selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
     >
@@ -83,7 +82,11 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
   );
 
   return (
-    <Dropdown overlay={menu} trigger={["click"]}>
+    <Dropdown
+      overlay={menu}
+      trigger={["click"]}
+      overlayStyle={{ position: "fixed" }}
+    >
       <a onClick={e => e.preventDefault()}>
         <div
           style={{
