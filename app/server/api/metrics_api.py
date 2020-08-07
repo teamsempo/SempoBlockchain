@@ -44,7 +44,7 @@ class CreditTransferStatsApi(MethodView):
         metric_type = request.args.get('metric_type', metrics_const.ALL)
         requested_metric = request.args.get('requested_metric', metrics_const.ALL)
         timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
-        group_by = request.args.get('group_by', metrics_const.GENDER)
+        group_by = request.args.get('group_by', metrics_const.UNGROUPED)
         token_id = request.args.get('token_id', None)
 
         if timeseries_unit not in metrics_const.TIMESERIES_UNITS:
@@ -108,8 +108,10 @@ class FiltersApi(MethodView):
         groups = {}
         group_filters = GROUP_TYPES_FILTERS[metric_type]
         for f in group_filters:
-            groups[f] = group_filters[f].get_api_representation()
-
+            if group_filters[f]:
+                groups[f] = group_filters[f].get_api_representation()
+            else:
+                groups[f] = {'name': 'Ungrouped'}
         response_object = {
             'status' : 'success',
             'message': 'Successfully Loaded.',

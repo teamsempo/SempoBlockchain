@@ -156,7 +156,7 @@ def calculate_timeseries_per_user(query_result, population_query_result):
 
             product = result[0] / denominator
 
-        if result[2]:
+        if len(result) > 2 and result[2]:
             results_per_user.append((product, result[1], result[2]))
         else:
             results_per_user.append((product, result[1]))
@@ -217,8 +217,7 @@ def format_timeseries(query_result, population_query_result):
             # Sometimes group_name can be an enum. Ugly hack to get the enum's value in this case
             group_name = group_name.value
         except:
-            # Custom attributes contain quotation marks we don't need. Ugly hack #2
-            group_name = group_name.replace('"', "")
+            pass
         date = r[1]
         value = r[0]
         if group_name not in data_by_groups:

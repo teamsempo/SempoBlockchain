@@ -254,6 +254,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
 @pytest.mark.parametrize("metric_type, params, status_code, requested_metric, group_by, output_file", [
     ("all", None, 200, None, 'account_type', 'all_by_account_type.json'),
     ("all", None, 200, None ,'location', 'all_by_location.json'),
+    ("all", None, 200, None, 'ungrouped', 'all_ungrouped.json'),
     ("all", "rounded_account_balance(GT)(2)", 200, None, 'account_type', 'all_by_account_type_filtered.json'),
     ("credit_transfer", None, 200, None, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
     ("user", None, 200, None, 'account_type', 'user_by_account_type.json'),
@@ -287,9 +288,6 @@ def test_get_summed_metrics(
     else:
         returned_stats = None
     if status_code == 200:
-        print(output_file)
-        print(output_file)
-        print(json.dumps(returned_stats))
         script_directory = os.path.dirname(os.path.realpath(__file__))
         desired_output_file = os.path.join(script_directory, 'metrics_outputs', output_file)
         desired_output = json.loads(open(desired_output_file, 'r').read())
