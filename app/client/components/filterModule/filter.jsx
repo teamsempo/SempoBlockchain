@@ -99,7 +99,7 @@ class Filter extends React.Component {
         }}
       >
         <Select
-          defaultValue="Filters"
+          defaultValue="Select Attribute"
           onChange={this.handleAttributeSelectorChange}
           style={{ width: "150px" }}
         >
