@@ -105,7 +105,7 @@ class TransferStats(metric_group.MetricGroup):
             aggregated_query=aggregated_transaction_volume_query,
             total_query=total_transaction_volume_query,
             object_model=CreditTransfer,
-            stock_filters=[filters.standard_payment_filters],
+            stock_filters=[filters.transaction_volume_filters],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],

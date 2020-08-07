@@ -189,10 +189,10 @@
     "aggregate": {
       "Dartmouth": 25,
       "Lower Sackville": 5,
-      "None": 20,
+      "None": 1537,
       "Sunnyvale": 100,
       "Truro": 20,
-      "total": 170
+      "total": 1687
     },
     "timeseries": {
       "Dartmouth": [
@@ -209,8 +209,24 @@
       ],
       "None": [
         {
+          "date": "2020-07-18T00:00:00",
+          "value": 406
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 201
+        },
+        {
           "date": "2020-08-01T00:00:00",
           "value": 20
+        },
+        {
+          "date": "2020-08-05T00:00:00",
+          "value": 210
+        },
+        {
+          "date": "2020-08-07T00:00:00",
+          "value": 700
         }
       ],
       "Sunnyvale": [

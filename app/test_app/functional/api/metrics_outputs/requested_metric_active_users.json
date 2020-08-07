@@ -67,8 +67,9 @@
   },
   "daily_transaction_volume": {
     "aggregate": {
+      "ORGANISATION": 1517,
       "USER": 170,
-      "total": 170
+      "total": 1687
     }
   },
   "exhausted_balance": 0,

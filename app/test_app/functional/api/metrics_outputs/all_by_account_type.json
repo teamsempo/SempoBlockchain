@@ -145,10 +145,29 @@
   },
   "daily_transaction_volume": {
     "aggregate": {
+      "ORGANISATION": 1517,
       "USER": 170,
-      "total": 170
+      "total": 1687
     },
     "timeseries": {
+      "ORGANISATION": [
+        {
+          "date": "2020-07-17T00:00:00",
+          "value": 406
+        },
+        {
+          "date": "2020-07-29T00:00:00",
+          "value": 201
+        },
+        {
+          "date": "2020-08-04T00:00:00",
+          "value": 210
+        },
+        {
+          "date": "2020-08-06T00:00:00",
+          "value": 700
+        }
+      ],
       "USER": [
         {
           "date": "2020-08-01T00:00:00",
