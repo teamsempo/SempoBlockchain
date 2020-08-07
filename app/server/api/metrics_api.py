@@ -42,6 +42,7 @@ class CreditTransferStatsApi(MethodView):
 
         disable_cache = request.args.get('disable_cache', 'False').lower() in ['true', '1']  # Defaults to bool false
         metric_type = request.args.get('metric_type', metrics_const.ALL)
+        requested_metric = request.args.get('requested_metric', metrics_const.ALL)
         timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
         group_by = request.args.get('group_by', metrics_const.GENDER)
         token_id = request.args.get('token_id', None)
@@ -63,6 +64,7 @@ class CreditTransferStatsApi(MethodView):
             end_date=end_date,
             user_filter=filters,
             metric_type=metric_type,
+            requested_metric=requested_metric,
             disable_cache=disable_cache,
             timeseries_unit = timeseries_unit,
             group_by = group_by,
