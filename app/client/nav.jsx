@@ -1,7 +1,7 @@
 import "babel-polyfill";
 import "react-dates/initialize";
 
-import React, { lazy, Suspense } from "react";
+import React, { lazy } from "react";
 import { connect } from "react-redux";
 
 import { Switch, Route, Router, Redirect } from "react-router-dom";
@@ -49,8 +49,6 @@ const OrganisationPage = lazy(() =>
   import("./components/pages/settings/OrganisationPage.tsx")
 );
 import notFoundPage from "./components/pages/notFoundPage.jsx";
-import MessageBar from "./components/messageBar";
-import ErrorBoundary from "./components/errorBoundary.jsx";
 
 import { ThemeProvider } from "styled-components";
 import { DefaultTheme } from "./components/theme.js";
@@ -223,20 +221,6 @@ const LoadingSpinnerWrapper = () => {
   );
 };
 
-const PageWrapper = ({ noNav, component: Component, ...props }) => {
-  return (
-    <ErrorBoundary>
-      <MessageBar />
-
-      <Page noNav={noNav} {...props}>
-        <Suspense fallback={<LoadingSpinnerWrapper />}>
-          <Component {...props} />
-        </Suspense>
-      </Page>
-    </ErrorBoundary>
-  );
-};
-
 const PrivateRoute = ({
   noNav,
   isLoggedIn,
@@ -248,7 +232,7 @@ const PrivateRoute = ({
     {...props}
     render={() =>
       isLoggedIn ? (
-        <PageWrapper component={Component} noNav={noNav || false} {...props} />
+        <Page component={Component} noNav={noNav || false} {...props} />
       ) : isReAuthing ? (
         <LoadingSpinnerWrapper />
       ) : (
@@ -266,9 +250,7 @@ const PrivateRoute = ({
 const PublicRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
-    render={props => (
-      <PageWrapper component={Component} noNav={true} {...props} />
-    )}
+    render={props => <Page component={Component} noNav={true} {...props} />}
   />
 );
 

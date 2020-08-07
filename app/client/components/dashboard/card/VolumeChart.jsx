@@ -188,7 +188,7 @@ class VolumeChart extends React.Component {
     return (
       <div>
         <div style={{ height: "200px" }}>
-          <Line data={chartData} height={200} options={options} />
+          <Line data={chartData} height={200} options={options} redraw />
         </div>
       </div>
     );
