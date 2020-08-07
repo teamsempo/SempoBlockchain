@@ -1,0 +1,217 @@
+{
+  "active_filters": [],
+  "active_group_by": "transfer_type",
+  "all_payments_volume": {
+    "aggregate": {
+      "PAYMENT": 1687,
+      "total": 1687
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-12T00:00:00",
+          "value": 406
+        },
+        {
+          "date": "2020-07-24T00:00:00",
+          "value": 201
+        },
+        {
+          "date": "2020-07-26T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-07-28T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 210
+        },
+        {
+          "date": "2020-07-31T00:00:00",
+          "value": 30
+        },
+        {
+          "date": "2020-08-01T00:00:00",
+          "value": 800
+        }
+      ]
+    }
+  },
+  "daily_disbursement_volume": {
+    "aggregate": {
+      "PAYMENT": 1517,
+      "total": 1517
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-12T00:00:00",
+          "value": 406
+        },
+        {
+          "date": "2020-07-24T00:00:00",
+          "value": 201
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 210
+        },
+        {
+          "date": "2020-08-01T00:00:00",
+          "value": 700
+        }
+      ]
+    }
+  },
+  "daily_transaction_count": {
+    "aggregate": {
+      "PAYMENT": 5,
+      "total": 5
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-26T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-28T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-31T00:00:00",
+          "value": 2
+        },
+        {
+          "date": "2020-08-01T00:00:00",
+          "value": 1
+        }
+      ]
+    }
+  },
+  "daily_transaction_volume": {
+    "aggregate": {
+      "PAYMENT": 170,
+      "total": 170
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-26T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-07-28T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-07-31T00:00:00",
+          "value": 30
+        },
+        {
+          "date": "2020-08-01T00:00:00",
+          "value": 100
+        }
+      ]
+    }
+  },
+  "exhausted_balance": 0,
+  "has_transferred_count": 5,
+  "mandatory_filter": {},
+  "master_wallet_balance": 0,
+  "total_distributed": 1517,
+  "total_exchanged": 0,
+  "total_spent": 170,
+  "trades_per_user": {
+    "aggregate": {
+      "PAYMENT": 0.7142857142857143,
+      "total": 0.7142857142857143
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-26T00:00:00",
+          "value": 0.5
+        },
+        {
+          "date": "2020-07-28T00:00:00",
+          "value": 0.3333333333333333
+        },
+        {
+          "date": "2020-07-31T00:00:00",
+          "value": 0.5
+        },
+        {
+          "date": "2020-08-01T00:00:00",
+          "value": 0.14285714285714285
+        }
+      ]
+    }
+  },
+  "transfer_amount_per_user": {
+    "aggregate": {
+      "PAYMENT": 24.285714285714285,
+      "total": 24.285714285714285
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-26T00:00:00",
+          "value": 10
+        },
+        {
+          "date": "2020-07-28T00:00:00",
+          "value": 6.666666666666667
+        },
+        {
+          "date": "2020-07-31T00:00:00",
+          "value": 7.5
+        },
+        {
+          "date": "2020-08-01T00:00:00",
+          "value": 14.285714285714286
+        }
+      ]
+    }
+  },
+  "users_who_made_purchase": {
+    "aggregate": {
+      "PAYMENT": 6,
+      "total": 6
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-12T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-24T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-26T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-28T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-31T00:00:00",
+          "value": 2
+        },
+        {
+          "date": "2020-08-01T00:00:00",
+          "value": 2
+        }
+      ]
+    }
+  }
+}
