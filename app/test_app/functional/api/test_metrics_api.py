@@ -1,6 +1,6 @@
 import pytest
 from server.models.transfer_usage import TransferUsage
-from server.utils.transfer_filter import ALL_FILTERS, USER_FILTERS
+from server.utils.transfer_filter import Filters
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user, set_custom_attributes
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
@@ -144,12 +144,12 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
     )
 
     assert response.status_code == status_code
-
+    filters = Filters()
     if status_code == 200:
         if metric_type == 'user':
-            assert response.json['data']['filters'] == USER_FILTERS
+            assert response.json['data']['filters'] == filters.USER_FILTERS
         else:
-            assert response.json['data']['filters'] == ALL_FILTERS
+            assert response.json['data']['filters'] == filters.ALL_FILTERS
 
 base_participant = {
     'data':
