@@ -7,6 +7,18 @@ from server.utils.metrics.metrics_const import *
 
 VALUE = 'value'
 
+# Sometimes group names can have quotation marks, be None, or be an enum
+# This turns them into readable strings for the API!
+def _format_group_name(group_name):
+    if not group_name:
+        return 'None'
+    try:
+        # Sometimes group_name can be an enum. Ugly hack to get the enum's value in this case
+        return group_name.value
+    except:
+        # Custom attributes contain quotation marks we don't need. Ugly hack #2
+        return group_name.replace('"', "")
+
 # Takes sorted list of tuples where the 2nd element is a date, and fills in the gaps
 # Example:
 # Input:  [(5, 01/01/2020), (10, 01/04/2020)] 
@@ -71,7 +83,6 @@ def add_missing_days_to_today(query_result, population_query_result=None):
 # Example:
 # Input:  [(5, 01/01/2020), (1, 01/02/2020), (2, 01/03/2020), (0, 01/04/2020) (3, 01/05/2020)]
 # Output: [(5, 01/01/2020), (6, 01/02/2020), (8, 01/03/2020), (8, 01/04/2020) (11, 01/05/2020)] 
-# TODO: Make it generic (day/week/month/year)
 def accumulate_timeseries(query_result, population_query_result=None):
     accumulator = {}
     accumulated_result = []
@@ -102,10 +113,14 @@ def accumulate_timeseries(query_result, population_query_result=None):
 # Input (query_result):  [(10, 01/01/2020), (20, 01/02/2020), (10, 01/03/2020), (30, 01/04/2020) (20, 01/05/2020)]
 # Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
 # Output: [(1, 01/01/2020), (2, 01/02/2020), (1, 01/03/2020), (1.333, 01/04/2020) (1, 01/05/2020)] 
-def calculate_per_user(query_result, population_query_result):
-    is_grouped = True
-    if population_query_result and len(population_query_result[0]) == 2:
+def calculate_timeseries_per_user(query_result, population_query_result):
+    if GROUPED in population_query_result:
+        is_grouped = True
+        population_query_result = population_query_result[GROUPED]
+    else:
         is_grouped = False
+        population_query_result = population_query_result[UNGROUPED]
+
     # Make dict to lookup the relevant population
     population_dates = {}
     for pqr in population_query_result:
@@ -147,6 +162,42 @@ def calculate_per_user(query_result, population_query_result):
             results_per_user.append((product, result[1]))
     return results_per_user
 
+# Similar to calculate_timeseries_per_user, but for aggregate queries
+# Input (query_result):  [(2, 'apples'), (20, 'bananas)]
+# Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
+# Output: [(.1, 'apples'), (1, 'bananas)]
+def calculate_aggregate_per_user(query_result, population_query_result):
+    result = []
+    last_day = population_query_result[UNGROUPED][-1][1]
+    if GROUPED in population_query_result:
+        category_populations = {}
+        for pqr in population_query_result[GROUPED]:
+            if pqr[1] == last_day:
+                category_populations[pqr[2]] = pqr[0]
+        for r in query_result:
+            result.append((r[0]/category_populations[r[1]], r[1]))
+        return result
+    
+    elif UNGROUPED in population_query_result:
+        last_day_population = population_query_result[UNGROUPED][-1][0]
+    else:
+        last_day_population = 1    
+    for r in query_result:
+        result.append((r[0]/last_day_population, r[1]))
+    return result
+
+# Similar to calculate_timeseries_per_user, but for totals
+# Input (query_result):  2
+# Input (population_query_result):  [(10, 01/01/2020), (10, 01/02/2020), (10, 01/03/2020), (20, 01/04/2020) (20, 01/05/2020)]
+# Output: 0.2
+def calculate_total_per_user(query_result, population_query_result):
+    if population_query_result[UNGROUPED]:
+        last_day_population = population_query_result[UNGROUPED][-1][0]
+    else:
+        last_day_population = 1
+    query_result = query_result or 0
+    return query_result/last_day_population
+
 # Final step in formatting the timeseries data to be in a format 
 # which once JSONified, the API expects. 
 # Input (query_result): [(10, 01/01/2020), (20, 01/02/2020)]
@@ -159,7 +210,7 @@ def format_timeseries(query_result, population_query_result):
         if len(r) < 3:
             group_name='None'
         else:
-            group_name = r[2]
+            group_name = _format_group_name(r[2])
         if not group_name:
             group_name = 'None'
         try:
@@ -175,36 +226,40 @@ def format_timeseries(query_result, population_query_result):
         data_by_groups[group_name].append({'date': date.isoformat(), VALUE: value})
     return data_by_groups
 
-# Input (query_result): [{'date': '2020-01-01T00:00:00', 'volume': 10}, {'date': '2020-01-02T00:00:00', 'volume': 10}]
-# Output: {'timeseries': [{'date': '2020-01-01T00:00:00', 'volume': 10}, {'date': '2020-01-02T00:00:00', 'volume': 10}],
-#           'aggregate': {'total': 20} }
-def aggregate_formatted_timeseries(query_result, population_query_result):
-    totals = {}
-    overall_total = 0
-    for group in query_result:
-        group_total = 0
-        for value in query_result[group]:
-            group_total += value[VALUE]
-            overall_total += value[VALUE]
-        totals[group] = group_total
-    totals['total'] = overall_total
-    return { 'timeseries': query_result, 'aggregate': totals }
+# Changes sqlalchemy raw output into the shape expected for the API!
+def format_aggregate_metrics(query_result, population_query_result):
+    result = {}
+    for r in query_result:
+        result[_format_group_name(r[1])] = r[0]
+    return result
 
-timeseries_actions = {
+# Some singleton metrics are returned in a tuple in a list. This unpacks and handles nulls
+def get_first(query_result, population_query_result):
+    if query_result:
+        if not query_result[0][0]:
+            return 0 # query_result[0][0] can be null, which means 0 for our context
+        return query_result[0][0]
+    else:
+        return 0
+
+query_actions = {
     ADD_MISSING_DAYS: add_missing_days,
     ADD_MISSING_DAYS_TO_TODAY: add_missing_days_to_today,
     ACCUMULATE_TIMESERIES: accumulate_timeseries,
-    CALCULATE_PER_USER: calculate_per_user,
+    CALCULATE_TIMESERIES_PER_USER: calculate_timeseries_per_user,
+    CALCULATE_AGGREGATE_PER_USER: calculate_aggregate_per_user,
+    CALCULATE_TOTAL_PER_USER: calculate_total_per_user,
     FORMAT_TIMESERIES: format_timeseries,
-    AGGREGATE_FORMATTED_TIMESERIES: aggregate_formatted_timeseries,
+    FORMAT_AGGREGATE_METRICS: format_aggregate_metrics,
+    GET_FIRST: get_first,
 }
 
-# Executes timeseries_actions against query results
+# Executes query_actions against query results
 # These are done in the order they're declared in the Metric object
 # so you can chain together common actions and reuse them across metrics!
-def process_timeseries(query_result, population_query_result = None, actions = None):
+def execute_postprocessing(query_result, population_query_result = None, actions = None):
     for action in actions:
         if action not in TIMESERIES_ACTIONS:
             raise Exception(f'{action} not a valid timeseries action')
-        query_result = timeseries_actions[action](query_result, population_query_result)
+        query_result = query_actions[action](query_result, population_query_result)
     return query_result

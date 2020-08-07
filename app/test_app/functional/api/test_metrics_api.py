@@ -162,7 +162,7 @@ base_participant = {
         'total_beneficiaries': 0,
         'total_users': 0,
         'total_vendors': 0,
-        'users_created': {'aggregate': {'total': 0},
+        'users_created': {'aggregate': {'total': 1},
         'timeseries': {}}}},
         'message': 'Successfully Loaded.',
         'status': 'success'
@@ -191,7 +191,7 @@ base_all = {'data':
         'total_vendors': 0,
         'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
         'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'users_created': {'aggregate': {'total': 0}, 'timeseries': {}}}},
+        'users_created': {'aggregate': {'total': 1}, 'timeseries': {}}}},
         'message': 'Successfully Loaded.',
         'status': 'success'}
 
@@ -250,26 +250,30 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     elif metric_type == 'user':
         assert response.json == base_participant
 
-@pytest.mark.parametrize("metric_type, params, status_code, group_by, output_file", [
-    ("all", None, 200, 'account_type', 'all_by_account_type.json'),
-    ("all", None, 200, 'location', 'all_by_location.json'),
-    ("all", "rounded_account_balance(GT)(2)", 200, 'account_type', 'all_by_account_type_filtered.json'),
-    ("credit_transfer", None, 200, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
-    ("user", None, 200, 'account_type', 'user_by_account_type.json'),
-    ("all", None, 500, 'transfer_usage', ''), # 500 because can't group all by transfer_usage 
-    ("user", None, 500, 'transfer_usage', ''), # 500 because can't group user by transfer_usage
-    ("user", 'transfer_amount(LT)(50)', 500, 'account_type', ''), # 500 because can't filter user by transfer_amount
-    ("all", 'transfer_amount(LT)(50)', 500, 'account_type', ''), # 500 because can't filter all by transfer_amount
-    ("notarealmetrictype", None, 500, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
+
+@pytest.mark.parametrize("metric_type, params, status_code, requested_metric, group_by, output_file", [
+    ("all", None, 200, None, 'account_type', 'all_by_account_type.json'),
+    ("all", None, 200, None ,'location', 'all_by_location.json'),
+    ("all", "rounded_account_balance(GT)(2)", 200, None, 'account_type', 'all_by_account_type_filtered.json'),
+    ("credit_transfer", None, 200, None, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
+    ("user", None, 200, None, 'account_type', 'user_by_account_type.json'),
+    ("credit_transfer", None, 200, None, 'transfer_type', 'credit_transfer_by_transfer_type.json'),
+    ("all", None, 200, 'active_users', 'account_type', 'requested_metric_active_users.json'),
+    ("all", None, 500, None, 'transfer_usage', ''), # 500 because can't group all by transfer_usage 
+    ("user", None, 500, None, 'transfer_usage', ''), # 500 because can't group user by transfer_usage
+    ("user", 'transfer_amount(LT)(50)', 500, None, 'account_type', ''), # 500 because can't filter user by transfer_amount
+    ("all", 'transfer_amount(LT)(50)', 500, None, 'account_type', ''), # 500 because can't filter all by transfer_amount
+    ("notarealmetrictype", None, 500, None, 'transfer_usage', ''),
 ])
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
-        metric_type, params, status_code, group_by, output_file
+        metric_type, params, status_code, requested_metric, group_by, output_file
 ):
     def get_metrics(metric_type):
         p = f'&params={params}' if params else ''
+        rm = f'&requested_metric={requested_metric}' if requested_metric else ''
         return test_client.get(
-            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by={group_by}',
+            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by={group_by}{rm}',
             headers=dict(
                 Authorization=complete_admin_auth_token,
                 Accept='application/json'
@@ -283,10 +287,12 @@ def test_get_summed_metrics(
     else:
         returned_stats = None
     if status_code == 200:
+        print(output_file)
+        print(output_file)
+        print(json.dumps(returned_stats))
         script_directory = os.path.dirname(os.path.realpath(__file__))
         desired_output_file = os.path.join(script_directory, 'metrics_outputs', output_file)
         desired_output = json.loads(open(desired_output_file, 'r').read())
-
         for do in desired_output:
             if not isinstance(desired_output[do], dict) or "timeseries" not in desired_output[do]:
                 assert returned_stats[do] == desired_output[do]
