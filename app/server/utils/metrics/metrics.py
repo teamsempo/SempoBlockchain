@@ -121,10 +121,10 @@ def calculate_transfer_stats(
 
     data = {}
     for metric in metrics_list:
-        calculate_only_aggregates = True
+        dont_include_timeseries = True
         if requested_metric in [metric.metric_name, metrics_const.ALL]:
-            calculate_only_aggregates = False
-        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters_dict=date_filters_dict, enable_caching=enable_cache, population_query_result=total_users, calculate_only_aggregates=calculate_only_aggregates)
+            dont_include_timeseries = False
+        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters_dict=date_filters_dict, enable_caching=enable_cache, population_query_result=total_users, dont_include_timeseries=dont_include_timeseries)
 
     data['mandatory_filter'] = mandatory_filter
 

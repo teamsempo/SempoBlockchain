@@ -6,22 +6,22 @@ from server.utils.metrics import filters, metrics_cache, postprocessing_actions,
 from server.utils.metrics.metrics_const import *
 
 class Metric(object):
-    def execute_query(self, user_filters: dict = None, date_filters_dict=None, enable_caching=True, population_query_result=False, calculate_only_aggregates=False):
+    def execute_query(self, user_filters: dict = None, date_filters_dict=None, enable_caching=True, population_query_result=False, dont_include_timeseries=False):
         """
         :param user_filters: dict of filters to apply to all metrics
         :param date_filters_dict: lookup table linking object models to their date filters (if applicable)  
         :param enable_caching: set to False if you don't want the query result to be cached
         :param population_query_result: This is a representation of the number of users over time, used in 
             post-processing of certian metrics. See postprocessing_actions.py for more details.
-        :param calculate_only_aggregates: if true, this skips calculating timeseries data and only fetches
+        :param dont_include_timeseries: if true, this skips calculating timeseries data and only fetches
              aggregated_query and total_query
         """
         actions = { 'query': self.query_actions, 'aggregated_query': self.aggregated_query_actions, 'total_query': self.total_query_actions }
 
         # Build the dict of queries to execute. Ungrouped metrics don't have aggregated queries,
-        # and sometimes we only want aggregates and totals (based on calculate_only_aggregates)
+        # and sometimes we only want aggregates and totals (based on dont_include_timeseries)
         if self.is_timeseries:
-            if calculate_only_aggregates:
+            if dont_include_timeseries:
                 queries = { 'total_query': self.total_query }
             else:   
                 queries = { 'query': self.query, 'total_query': self.total_query }
@@ -66,7 +66,7 @@ class Metric(object):
 
         if self.is_timeseries:
             result = {}
-            if not calculate_only_aggregates:
+            if not dont_include_timeseries:
                 result['timeseries'] = results['query']
             if self.aggregated_query:
                 result['aggregate'] = results['aggregated_query']
