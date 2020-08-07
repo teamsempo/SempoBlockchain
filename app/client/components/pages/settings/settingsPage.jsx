@@ -6,7 +6,6 @@ import AuthModule from "../../auth/authModule.jsx";
 import UserList from "../../adminUser/adminUserList.jsx";
 import KoboCredentials from "../../koboCredentials";
 import GetVerified from "../../GetVerified";
-import CustomerSupport from "../../customerSupport.jsx";
 
 import {
   WrapperDiv,
@@ -27,7 +26,6 @@ export default class settingsPage extends React.Component {
               <p style={{ margin: "1em" }}></p>
               <KoboCredentials />
               <GetVerified />
-              <CustomerSupport />
               <PageLink
                 to="/settings/organisation"
                 headerText="Organisation Settings"
