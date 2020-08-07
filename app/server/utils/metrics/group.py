@@ -68,13 +68,14 @@ class Group(object):
 
 
 GROUP_TYPES = {
+    UNGROUPED: None,
     GENDER: Group('Gender', CustomAttributeUserStorage, CustomAttributeUserStorage.value),
     TRANSFER_TYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.transfer_type),
     TRANSFER_SUBTYPE: Group('Transfer Subtype', CreditTransfer, CreditTransfer.transfer_subtype),
     TRANSFER_STATUS: Group('Transfer Status', CreditTransfer, CreditTransfer.transfer_status),
     TRANSFER_MODE: Group('Transfer Mode', CreditTransfer, CreditTransfer.transfer_mode),
     ACCOUNT_TYPE: Group('Account Type', TransferAccount, TransferAccount.account_type),
-    TRANSFER_USAGE: Group('Transfer Usages', TransferUsage, TransferUsage._name)
+    TRANSFER_USAGE: Group('Transfer Usages', TransferUsage, TransferUsage._name),
 }
 
 # Transfers can handle ALL groups!
@@ -83,5 +84,6 @@ TRANSFER_GROUPS = GROUP_TYPES
 # Users can only use ones with TransferAccount and CustomAttributeUserStorage
 USER_GROUPS = {
     GENDER: GROUP_TYPES[GENDER],
-    ACCOUNT_TYPE: GROUP_TYPES[ACCOUNT_TYPE]
+    ACCOUNT_TYPE: GROUP_TYPES[ACCOUNT_TYPE],
+    UNGROUPED: None,
 }

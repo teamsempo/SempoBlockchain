@@ -90,11 +90,14 @@ def calculate_transfer_stats(
     population_date_filter = {}
     if end_date:
         population_date_filter[User] = [User.created <= end_date]
-    groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
+
+    if group_strategy:
+        groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
+        for f in user_filter or []:
+            groups_and_filters_tables.append(f)
+
     total_users = {}
-    for f in user_filter or []:
-        groups_and_filters_tables.append(f)
-    if set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
+    if group_strategy and set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
         total_users_stats = TotalUsers(group_strategy, timeseries_unit)
         total_users[metrics_const.GROUPED] = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters_dict=population_date_filter, enable_caching=enable_cache)
         total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters_dict=population_date_filter, enable_caching=enable_cache)
@@ -118,10 +121,10 @@ def calculate_transfer_stats(
 
     data = {}
     for metric in metrics_list:
-        calculate_only_aggregates = True
+        dont_include_timeseries = True
         if requested_metric in [metric.metric_name, metrics_const.ALL]:
-            calculate_only_aggregates = False
-        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters_dict=date_filters_dict, enable_caching=enable_cache, population_query_result=total_users, calculate_only_aggregates=calculate_only_aggregates)
+            dont_include_timeseries = False
+        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters_dict=date_filters_dict, enable_caching=enable_cache, population_query_result=total_users, dont_include_timeseries=dont_include_timeseries)
 
     data['mandatory_filter'] = mandatory_filter
 
