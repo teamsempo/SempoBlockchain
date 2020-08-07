@@ -1,6 +1,6 @@
 import pytest
 from server.models.transfer_usage import TransferUsage
-from server.utils.transfer_filter import ALL_FILTERS, USER_FILTERS
+from server.utils.transfer_filter import Filters
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user, set_custom_attributes
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
@@ -20,12 +20,14 @@ def generate_timeseries_metrics(create_organisation):
                                     is_beneficiary=True)
     user1.default_transfer_account.is_approved = True
     user1.default_transfer_account._make_initial_disbursement(100, True)
+    user1._location = 'Sunnyvale'
 
     user2 = create_transfer_account_user(first_name='Bubbles',
                                     phone="+19025551235",
                                     organisation=create_organisation)
     user2.default_transfer_account.is_approved = True
     user2.default_transfer_account._make_initial_disbursement(200, True)
+    user2._location = 'Sunnyvale'
 
     # user3 made yesterday
     user3 = create_transfer_account_user(first_name='Julian',
@@ -35,6 +37,7 @@ def generate_timeseries_metrics(create_organisation):
     disburse = user3.default_transfer_account._make_initial_disbursement(210, True)
     user3.created = user3.created - timedelta(days=1)
     disburse.created = user3.created - timedelta(days=1)
+    user3._location = 'Dartmouth'
 
     # user4 made 4 days ago
     user4 = create_transfer_account_user(first_name='Randy',
@@ -44,6 +47,7 @@ def generate_timeseries_metrics(create_organisation):
     disburse = user4.default_transfer_account._make_initial_disbursement(201, True)
     user4.created = user4.created - timedelta(days=4)
     disburse.created = user4.created - timedelta(days=4)
+    user4._location = 'Lower Sackville'
 
     # user5/user6 made 10 days ago
     user5 = create_transfer_account_user(first_name='Cory',
@@ -53,6 +57,7 @@ def generate_timeseries_metrics(create_organisation):
     disburse = user5.default_transfer_account._make_initial_disbursement(202, True)
     user5.created = user5.created - timedelta(days=10)
     disburse.created = user5.created - timedelta(days=10)
+    user5._location = 'Truro'
 
     user6 = create_transfer_account_user(first_name='Trevor',
                                     phone="+19025111230",
@@ -139,12 +144,12 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
     )
 
     assert response.status_code == status_code
-
+    filters = Filters()
     if status_code == 200:
         if metric_type == 'user':
-            assert response.json['data']['filters'] == USER_FILTERS
+            assert response.json['data']['filters'] == filters.USER_FILTERS
         else:
-            assert response.json['data']['filters'] == ALL_FILTERS
+            assert response.json['data']['filters'] == filters.ALL_FILTERS
 
 base_participant = {
     'data':
@@ -245,8 +250,10 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     elif metric_type == 'user':
         assert response.json == base_participant
 
+
 @pytest.mark.parametrize("metric_type, params, status_code, requested_metric, group_by, output_file", [
     ("all", None, 200, None, 'account_type', 'all_by_account_type.json'),
+    ("all", None, 200, None ,'location', 'all_by_location.json'),
     ("all", None, 200, None, 'ungrouped', 'all_ungrouped.json'),
     ("all", "rounded_account_balance(GT)(2)", 200, None, 'account_type', 'all_by_account_type_filtered.json'),
     ("credit_transfer", None, 200, None, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),

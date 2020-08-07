@@ -70,6 +70,7 @@ class Group(object):
 GROUP_TYPES = {
     UNGROUPED: None,
     GENDER: Group('Gender', CustomAttributeUserStorage, CustomAttributeUserStorage.value),
+    LOCATION: Group('Location', User, User._location),
     TRANSFER_TYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.transfer_type),
     TRANSFER_SUBTYPE: Group('Transfer Subtype', CreditTransfer, CreditTransfer.transfer_subtype),
     TRANSFER_STATUS: Group('Transfer Status', CreditTransfer, CreditTransfer.transfer_status),
@@ -85,5 +86,6 @@ TRANSFER_GROUPS = GROUP_TYPES
 USER_GROUPS = {
     GENDER: GROUP_TYPES[GENDER],
     ACCOUNT_TYPE: GROUP_TYPES[ACCOUNT_TYPE],
+    LOCATION: GROUP_TYPES[LOCATION],
     UNGROUPED: None,
 }

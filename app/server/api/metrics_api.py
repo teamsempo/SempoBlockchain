@@ -8,7 +8,7 @@ import json
 from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const, group
 from flask.views import MethodView
-from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, USER_FILTERS, process_transfer_filters
+from server.utils.transfer_filter import Filters, process_transfer_filters
 from server.utils.auth import requires_auth, multi_org
 
 metrics_blueprint = Blueprint('metrics', __name__)
@@ -93,10 +93,11 @@ class FiltersApi(MethodView):
         metric_type = request.args.get('metric_type', metrics_const.ALL)
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
+        filters = Filters()
         METRIC_TYPES_FILTERS = {
-            metrics_const.ALL: ALL_FILTERS,
-            metrics_const.USER: USER_FILTERS,
-            metrics_const.TRANSFER: TRANSFER_FILTERS,
+            metrics_const.ALL: filters.ALL_FILTERS,
+            metrics_const.USER: filters.USER_FILTERS,
+            metrics_const.TRANSFER: filters.TRANSFER_FILTERS,
         }
 
         GROUP_TYPES_FILTERS = {
