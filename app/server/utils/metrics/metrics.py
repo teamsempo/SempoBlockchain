@@ -11,6 +11,7 @@ from server.utils.metrics import filters, metrics_cache, metric, metrics_const, 
 from server.utils.metrics.transfer_stats import TransferStats
 from server.utils.metrics.participant_stats import ParticipantStats
 from server.utils.metrics.total_users import TotalUsers
+from server.utils.metrics.group import Groups
 
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -81,8 +82,8 @@ def calculate_transfer_stats(
     enable_cache = True
     if user_filter or date_filters_dict or disable_cache or timeseries_unit != metrics_const.DAY:
         enable_cache = False
-
-    group_strategy = group.GROUP_TYPES[group_by]
+    groups = Groups()
+    group_strategy = groups.GROUP_TYPES[group_by]
 
     # We use total_users ungrouped if we are grouping OR filtering the population by a non-user-based attribute
     # We also only send the end_date of the date filters, since it needs to use all previous users through history to
@@ -102,7 +103,7 @@ def calculate_transfer_stats(
         total_users[metrics_const.GROUPED] = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters_dict=population_date_filter, enable_caching=enable_cache)
         total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters_dict=population_date_filter, enable_caching=enable_cache)
     else:
-        total_users_stats = TotalUsers(group.GROUP_TYPES[metrics_const.GENDER], timeseries_unit)
+        total_users_stats = TotalUsers(None, timeseries_unit)
         total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters_dict=population_date_filter, enable_caching=enable_cache)
 
     # Determines which metrics the user is asking for, and calculate them

@@ -6,7 +6,8 @@ from flask import Blueprint, request, make_response, jsonify, g
 import json
 
 from server.utils.metrics.metrics import calculate_transfer_stats
-from server.utils.metrics import metrics_const, group
+from server.utils.metrics import metrics_const
+from server.utils.metrics.group import Groups
 from flask.views import MethodView
 from server.utils.transfer_filter import Filters, process_transfer_filters
 from server.utils.auth import requires_auth, multi_org
@@ -31,11 +32,11 @@ class CreditTransferStatsApi(MethodView):
             - disable_cache: (Default: False) Force-disables cache
             - metric_type: (Default: 'all') Allows the user to swtich between `transfer`, `participant`, and `all`
             - timeseries_unit: (Default: 'day') Allows the user to swtich between `day`, `week`, `month` and `year`
-            - group_by: (Default: 'gender') Allows the user to swtich choose group_by category. See /metrics/filters for all options
+            - group_by: (Default: 'ungrouped') Allows the user to swtich choose group_by category. See /metrics/filters for all options
             - token_id: (Default: None) If multi-org is being used, and the orgs have different tokens, this lets the user choose
                 which token's stats to present
         """
-
+        
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
@@ -53,8 +54,9 @@ class CreditTransferStatsApi(MethodView):
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid metric type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
 
-        if group_by not in metrics_const.GROUP_BY_TYPES:
-            raise Exception(f'{group_by} not a valid grouping type. Please choose one of the following: {", ".join(metrics_const.GROUP_BY_TYPES)}')
+        groups = Groups()
+        if group_by not in groups.GROUP_TYPES.keys():
+            raise Exception(f'{group_by} not a valid grouping type. Please choose one of the following: {", ".join(groups.GROUP_TYPES.keys())}')
 
 
         filters = process_transfer_filters(encoded_filters)
@@ -100,10 +102,11 @@ class FiltersApi(MethodView):
             metrics_const.TRANSFER: filters.TRANSFER_FILTERS,
         }
 
+        group_objects = Groups()
         GROUP_TYPES_FILTERS = {
-            metrics_const.ALL: group.GROUP_TYPES,
-            metrics_const.USER: group.USER_GROUPS,
-            metrics_const.TRANSFER: group.TRANSFER_GROUPS,
+            metrics_const.ALL: group_objects.GROUP_TYPES,
+            metrics_const.USER: group_objects.USER_GROUPS,
+            metrics_const.TRANSFER: group_objects.TRANSFER_GROUPS,
         }
         groups = {}
         group_filters = GROUP_TYPES_FILTERS[metric_type]
