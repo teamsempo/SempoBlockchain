@@ -10,40 +10,44 @@
     "timeseries": {
       "ORGANISATION": [
         {
-          "date": "2020-07-18T00:00:00",
+          "date": "2020-07-21T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-07-30T00:00:00",
+          "date": "2020-08-02T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-05T00:00:00",
+          "date": "2020-08-08T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-07T00:00:00",
+          "date": "2020-08-10T00:00:00",
           "value": 1
         }
       ],
       "USER": [
         {
-          "date": "2020-08-01T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-03T00:00:00",
+          "date": "2020-08-04T00:00:00",
           "value": 1
         },
         {
           "date": "2020-08-06T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-09T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-08-07T00:00:00",
+          "date": "2020-08-10T00:00:00",
           "value": 1
         }
       ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "type": "count"
     }
   },
   "all_payments_volume": {
@@ -51,18 +55,34 @@
       "ORGANISATION": 1517,
       "USER": 170,
       "total": 1687
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "type": "currency"
     }
   },
   "daily_disbursement_volume": {
     "aggregate": {
       "ORGANISATION": 1517,
       "total": 1517
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "type": "currency"
     }
   },
   "daily_transaction_count": {
     "aggregate": {
       "USER": 5,
       "total": 5
+    },
+    "type": {
+      "display_decimals": 0,
+      "type": "count"
     }
   },
   "daily_transaction_volume": {
@@ -70,6 +90,12 @@
       "ORGANISATION": 1517,
       "USER": 170,
       "total": 1687
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "type": "currency"
     }
   },
   "exhausted_balance": 0,
@@ -86,18 +112,32 @@
     "aggregate": {
       "USER": 0.8333333333333334,
       "total": 0.7142857142857143
+    },
+    "type": {
+      "display_decimals": 2,
+      "type": "count_average"
     }
   },
   "transfer_amount_per_user": {
     "aggregate": {
       "USER": 28.333333333333332,
       "total": 24.285714285714285
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "type": "currency"
     }
   },
   "users_created": {
     "aggregate": {
       "USER": 6,
       "total": 7
+    },
+    "type": {
+      "display_decimals": 0,
+      "type": "count"
     }
   },
   "users_who_made_purchase": {
@@ -105,6 +145,10 @@
       "ORGANISATION": 1,
       "USER": 5,
       "total": 6
+    },
+    "type": {
+      "display_decimals": 0,
+      "type": "count"
     }
   }
 }
