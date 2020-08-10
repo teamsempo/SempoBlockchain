@@ -156,7 +156,7 @@ def calculate_timeseries_per_user(query_result, population_query_result):
 
             product = result[0] / denominator
 
-        if result[2]:
+        if len(result) > 2 and result[2]:
             results_per_user.append((product, result[1], result[2]))
         else:
             results_per_user.append((product, result[1]))
@@ -168,10 +168,20 @@ def calculate_timeseries_per_user(query_result, population_query_result):
 # Output: [(.1, 'apples'), (1, 'bananas)]
 def calculate_aggregate_per_user(query_result, population_query_result):
     result = []
-    if population_query_result[UNGROUPED]:
+    last_day = population_query_result[UNGROUPED][-1][1]
+    if GROUPED in population_query_result:
+        category_populations = {}
+        for pqr in population_query_result[GROUPED]:
+            if pqr[1] == last_day:
+                category_populations[pqr[2]] = pqr[0]
+        for r in query_result:
+            result.append((r[0]/category_populations[r[1]], r[1]))
+        return result
+    
+    elif UNGROUPED in population_query_result:
         last_day_population = population_query_result[UNGROUPED][-1][0]
     else:
-        last_day_population = 1
+        last_day_population = 1    
     for r in query_result:
         result.append((r[0]/last_day_population, r[1]))
     return result
@@ -197,7 +207,17 @@ def calculate_total_per_user(query_result, population_query_result):
 def format_timeseries(query_result, population_query_result):
     data_by_groups = {}
     for r in query_result:
-        group_name = _format_group_name(r[2])
+        if len(r) < 3:
+            group_name='None'
+        else:
+            group_name = _format_group_name(r[2])
+        if not group_name:
+            group_name = 'None'
+        try:
+            # Sometimes group_name can be an enum. Ugly hack to get the enum's value in this case
+            group_name = group_name.value
+        except:
+            pass
         date = r[1]
         value = r[0]
         if group_name not in data_by_groups:
