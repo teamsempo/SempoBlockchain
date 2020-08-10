@@ -66,6 +66,16 @@ class Metric(object):
 
         if self.is_timeseries:
             result = {}
+            if self.value_type not in VALUE_TYPES:
+                raise Exception(f'{self.value_type} not a valid metric type!')
+            result['type'] = {
+                'type': self.value_type,
+                'display_decimals': 2 if self.value_type == COUNT_AVERAGE else 0
+            }
+            if self.token:
+                result['type']['currency_name'] = self.token.name
+                result['type']['currency_symbol'] = self.token.symbol
+                result['type']['display_decimals'] = 2 # change this to self.token.display_decimals once #251 is merged
             if not dont_include_timeseries:
                 result['timeseries'] = results['query']
             if self.aggregated_query:
@@ -95,8 +105,10 @@ class Metric(object):
             query_actions=None,
             aggregated_query_actions=None,
             total_query_actions=None,
-            groupable_attributes=[]
-    ):
+            groupable_attributes=[],
+            value_type=COUNT,
+            token=None
+        ):
         """
         :param metric_name: eg 'total_exchanged' or 'has_transferred_count'. Used for cache
         :param is_timeseries: boolean indicating that the metric is a timeseries
@@ -119,6 +131,8 @@ class Metric(object):
         :param aggregated_query_actions: query_actions for aggregated_query
         :param total_query_actions: query_actions for total_query
         :param groupable_attributes: list of attributes this metric is allowed to be grouped by
+        :param value_type: type of metric (count, currency)
+        :param token: Token obj to determine label attributable to the metric (Dollars, Euro, etc...)
         """        
         self.metric_name = metric_name
         self.is_timeseries = is_timeseries
@@ -137,3 +151,5 @@ class Metric(object):
         self.total_query_actions = total_query_actions
 
         self.groupable_attributes = groupable_attributes
+        self.value_type = value_type
+        self.token = token

@@ -42,7 +42,9 @@ export default class CustomTabs extends React.Component {
             startValue += timeseries[key][0].value;
             endValue += timeseries[key][timeseries[key].length - 1].value;
           });
-
+          let suffix = metrics[tsName].type.currency_symbol
+            ? " " + metrics[tsName].type.currency_symbol
+            : "";
           let color;
           let arrow;
           if (endValue > startValue) {
@@ -72,7 +74,8 @@ export default class CustomTabs extends React.Component {
                 <Statistic
                   title={toTitleCase(replaceUnderscores(tsLabel))}
                   value={metrics[tsName].aggregate.total}
-                  precision={2}
+                  suffix={suffix}
+                  precision={metrics[tsName].type.display_decimals}
                   prefix={
                     <div
                       style={{

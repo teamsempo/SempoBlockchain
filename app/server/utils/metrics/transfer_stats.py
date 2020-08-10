@@ -14,7 +14,7 @@ from server import db, red, bt
 from sqlalchemy.dialects.postgresql import JSONB
 
 class TransferStats(metric_group.MetricGroup):
-    def __init__(self, group_strategy, timeseries_unit = 'day'):
+    def __init__(self, group_strategy, timeseries_unit = 'day', token=None):
         self.filterable_attributes = [DATE, CUSTOM_ATTRIBUTE, TRANSFER_ACCOUNT, CREDIT_TRANSFER, USER]
         self.timeseries_unit = timeseries_unit
         self.metrics = []
@@ -27,7 +27,7 @@ class TransferStats(metric_group.MetricGroup):
             stock_filters=[filters.disbursement_filters],
             caching_combinatory_strategy=metrics_cache.SUM,
             filterable_by=self.filterable_attributes,
-            bypass_user_filters=True
+            bypass_user_filters=True,
         ))
 
         total_spent_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
@@ -96,6 +96,8 @@ class TransferStats(metric_group.MetricGroup):
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST],
+            value_type=CURRENCY,
+            token=token
         ))
 
         self.metrics.append(metric.Metric(
@@ -111,6 +113,8 @@ class TransferStats(metric_group.MetricGroup):
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST],
+            value_type=CURRENCY,
+            token=token
         ))
 
         self.metrics.append(metric.Metric(
@@ -125,6 +129,8 @@ class TransferStats(metric_group.MetricGroup):
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST],
+            value_type=CURRENCY,
+            token=token
         ))
 
         self.metrics.append(metric.Metric(
@@ -140,6 +146,8 @@ class TransferStats(metric_group.MetricGroup):
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
             aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST, CALCULATE_TOTAL_PER_USER],
+            value_type=CURRENCY,
+            token=token
         ))
 
         if group_strategy:
@@ -164,6 +172,7 @@ class TransferStats(metric_group.MetricGroup):
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST],
+            value_type=COUNT
         ))
         
         self.metrics.append(metric.Metric(
@@ -179,6 +188,7 @@ class TransferStats(metric_group.MetricGroup):
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
             aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST, CALCULATE_TOTAL_PER_USER],
+            value_type=COUNT_AVERAGE,
         ))
 
         if group_strategy:
@@ -204,4 +214,5 @@ class TransferStats(metric_group.MetricGroup):
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST],
+            value_type=COUNT,
         ))
