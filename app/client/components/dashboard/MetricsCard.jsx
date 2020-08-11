@@ -86,6 +86,7 @@ class MetricsCard extends React.Component {
               <VolumeChart
                 data={selectedData}
                 selected={this.state.selectedTimeSeries}
+                filter_dates={this.state.dateRange}
               />
             </div>
 
