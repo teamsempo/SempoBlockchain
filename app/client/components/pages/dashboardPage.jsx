@@ -149,7 +149,7 @@ class DashboardPage extends React.Component {
                 defaultTimeSeries="all_payments_volume"
                 filterObject="credit_transfer"
                 timeSeriesNameLabels={[
-                  ["all_payments_volume", "Transaction Volume"],
+                  ["all_payments_volume", "Payment Volume"],
                   ["daily_transaction_count", "Transaction Count"],
                   ["users_who_made_purchase", "Unique Users"],
                   ["transfer_amount_per_user", "Volume Per User"],
