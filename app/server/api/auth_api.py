@@ -392,7 +392,7 @@ class LoginAPI(MethodView):
 
         try:
 
-            if not user or not user.verify_password(password):
+            if not (user and password and user.verify_password(password)):
                 response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
