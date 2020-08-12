@@ -85,9 +85,14 @@ class GroupByChart extends React.Component {
             "#FF764D",
             "#CB5188",
             "#62508E",
+            "#508E79",
             "#2E4A7A",
             "#F05B6F",
-            "#995194"
+            "#995194",
+            "#57AA65",
+            "#FF9C22",
+            "#42B1B1",
+            "#555555"
           ],
           data: aggregateData
         }
@@ -95,8 +100,12 @@ class GroupByChart extends React.Component {
     };
     return (
       <div>
-        <div style={{ height: "200px" }}>
-          <HorizontalBar data={data} height={200} options={options} />
+        <div style={{ height: `${this.props.chartHeight}px` }}>
+          <HorizontalBar
+            data={data}
+            height={this.props.chartHeight}
+            options={options}
+          />
         </div>
       </div>
     );
