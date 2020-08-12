@@ -27,7 +27,7 @@ from server.utils.credit_transfer import (
     handle_transfer_to_blockchain_address,
     make_payment_transfer
 )
-from server.utils.pusher import push_user_transfer_confirmation
+from server.utils.pusher_utils import push_user_transfer_confirmation
 
 
 class MeCreditTransferAPI(MethodView):
