@@ -276,24 +276,20 @@ def create_business_categories():
 
     print_section_title('Creating Business Categories')
     business_categories = [
-        {'name': 'Food/Water', 'icon': 'message', 'translations': {
-            'en': 'Food/Water', 'sw': 'Chakula/Maji'}},
-        {'name': 'Fuel/Energy', 'icon': 'message', 'translations': {
-            'en': 'Fuel/Energy', 'sw': 'Kuni/Makaa/Mafuta'}},
-        {'name': 'Education', 'icon': 'message', 'translations': {
-            'en': 'Education', 'sw': 'Elimu'}},
-        {'name': 'Health', 'icon': 'message', 'translations': {
-            'en': 'Health', 'sw': 'Afya'}},
-        {'name': 'Shop', 'icon': 'message', 'translations': {
-            'en': 'Shop', 'sw': 'Duka'}},
-        {'name': 'Environment', 'icon': 'message', 'translations': {
-            'en': 'Environment', 'sw': 'Mazingira'}},
-        {'name': 'Transport', 'icon': 'message', 'translations': {
-            'en': 'Transport', 'sw': 'Usafiri'}},
-        {'name': 'Farming/Labour', 'icon': 'message', 'translations': {
-            'en': 'Farming/Labour', 'sw': 'Mkulima/Mfanyikazi'}},
-        {'name': 'Savings Group', 'icon': 'message', 'translations': {
-            'en': 'Savings Group', 'sw': 'Chama'}}
+        {'name': 'Fresh Food', 'icon': 'food-apple', 'translations': {
+            'en': 'Fresh Food'}},
+        {'name': 'Long Life Food', 'icon': 'food-variant', 'translations': {
+            'en': 'Long Life Food'}},
+        {'name': 'Water/Sanitation/Hygiene', 'icon': 'water', 'translations': {
+            'en': 'Water/Sanitation/Hygiene'}},
+        {'name': 'Health/Medicine', 'icon': 'medical-bag', 'translations': {
+            'en': 'Health/Medicine'}},
+        {'name': 'Clothing', 'icon': 'tshirt-crew', 'translations': {
+            'en': 'Clothing'}},
+        {'name': 'Household Items', 'icon': 'home', 'translations': {
+            'en': 'Household Items'}},
+        {'name': 'Other', 'icon': 'star', 'translations': {
+            'en': 'Other'}}
     ]
     for index, business_category in enumerate(business_categories):
         name = business_category['name']
@@ -331,8 +327,10 @@ def create_reserve_token(app):
                 address=reserve_token_address,
                 name=reserve_token_name,
                 symbol=reserve_token_symbol,
-                token_type=TokenType.RESERVE
+                token_type=TokenType.RESERVE,
             )
+
+            reserve_token.decimals = 18
 
             db.session.add(reserve_token)
             db.session.commit()
