@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - more_worker_testing
+                - mock_data_api
           requires:
             - build
             - test:backend

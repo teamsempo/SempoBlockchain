@@ -25,21 +25,21 @@ read resetSecretsInput
 echo "Persist Ganache? y/N"
 read ganachePersistInput
 
-echo "Create Dev Data? (s)mall/(m)edium/(l)arge/(N)o"
-read testDataInput
+echo "Create Mock Data? (s)mall/(m)edium/(l)arge/(N)o"
+read mockDataInput
 
-if [ "$testDataInput" == 's' ]; then
-    echo "Will create Small Dev Dataset"
-    testdata='small'
-elif [ "$testDataInput" == 'm' ]; then
-    echo "Will create Medium Dev Dataset"
-    testdata='medium'
-elif [ "$testDataInput" == 'l' ]; then
-    echo "Will create Large Dev Dataset"
-    testdata='large'
+if [ "mockDataInput" == 's' ]; then
+    echo "Will create Small Mock Dataset"
+    mockData='small'
+elif [ "mockDataInput" == 'm' ]; then
+    echo "Will create Medium Mock Dataset"
+    mockData='medium'
+elif [ "mockDataInput" == 'l' ]; then
+    echo "Will create Large Mock Dataset"
+    mockData='large'
 else
-    echo "Will not create Dev Dataset"
-    testdata='none'
+    echo "Will not create Mock Dataset"
+    mockData='none'
 fi
 
 if [ "$resetSecretsInput" == "y" ]; then
@@ -129,10 +129,10 @@ echo ~~~Setting up Contracts
 cd ../
 python -u devtools/contract_setup_script.py
 
-if [[ "$testdata" != 'none' ]]; then
-    echo ~~~Creating test data
-    cd ./app/migrations/
-    python -u dev_data.py ${testdata}
+if [[ "mockData" != 'none' ]]; then
+    echo ~~~Creating mock data
+    cd ./app/server/utils
+    python -u mock_data.py ${testdata}
 fi
 
 echo ~~~Generating Auth Token

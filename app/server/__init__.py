@@ -129,7 +129,7 @@ def register_blueprints(app):
 
     @app.after_request
     def after_request(response):
-        from server.utils import pusher
+        from server.utils import pusher_utils
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
 
@@ -142,7 +142,7 @@ def register_blueprints(app):
         # Push only credit transfers, not exchanges
         from server.models.credit_transfer import CreditTransfer
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
-        pusher.push_admin_credit_transfer(transactions)
+        pusher_utils.push_admin_credit_transfer(transactions)
 
         return response
 
@@ -176,6 +176,7 @@ def register_blueprints(app):
     from server.api.synchronization_filter_api import synchronization_filter_blueprint
     from server.api.blockchain_taskable_api import blockchain_taskable_blueprint
     from server.api.metrics_api import metrics_blueprint
+    from server.api.mock_data_api import mock_data_blueprint
 
     versioned_url = '/api/v1'
 
@@ -209,6 +210,7 @@ def register_blueprints(app):
     app.register_blueprint(synchronization_filter_blueprint, url_prefix=versioned_url)
     app.register_blueprint(blockchain_taskable_blueprint, url_prefix=versioned_url)
     app.register_blueprint(metrics_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(mock_data_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)
