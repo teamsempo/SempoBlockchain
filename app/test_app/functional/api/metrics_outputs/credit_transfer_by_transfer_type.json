@@ -1,39 +1,21 @@
 {
-  "active_filters": ["rounded_account_balance"],
-  "active_group_by": "account_type",
-  "active_users": {
-    "aggregate": {
-      "USER": 4,
-      "total": 4
-    },
-    "timeseries": {
-      "USER": [
-        {
-          "date": "2020-08-01T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-03T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-06T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-07T00:00:00",
-          "value": 1
-        }
-      ]
-    }
-  },
+  "active_filters": [],
+  "active_group_by": "transfer_type",
   "all_payments_volume": {
     "aggregate": {
-      "USER": 145,
-      "total": 145
+      "PAYMENT": 1687,
+      "total": 1687
     },
     "timeseries": {
-      "USER": [
+      "PAYMENT": [
+        {
+          "date": "2020-07-18T00:00:00",
+          "value": 406
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 201
+        },
         {
           "date": "2020-08-01T00:00:00",
           "value": 20
@@ -43,29 +25,53 @@
           "value": 20
         },
         {
+          "date": "2020-08-05T00:00:00",
+          "value": 210
+        },
+        {
           "date": "2020-08-06T00:00:00",
-          "value": 5
+          "value": 30
         },
         {
           "date": "2020-08-07T00:00:00",
-          "value": 100
+          "value": 800
         }
       ]
     }
   },
   "daily_disbursement_volume": {
     "aggregate": {
-      "total": 0
+      "PAYMENT": 1517,
+      "total": 1517
     },
-    "timeseries": {}
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2020-07-18T00:00:00",
+          "value": 406
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 201
+        },
+        {
+          "date": "2020-08-05T00:00:00",
+          "value": 210
+        },
+        {
+          "date": "2020-08-07T00:00:00",
+          "value": 700
+        }
+      ]
+    }
   },
   "daily_transaction_count": {
     "aggregate": {
-      "USER": 4,
-      "total": 4
+      "PAYMENT": 5,
+      "total": 5
     },
     "timeseries": {
-      "USER": [
+      "PAYMENT": [
         {
           "date": "2020-08-01T00:00:00",
           "value": 1
@@ -76,7 +82,7 @@
         },
         {
           "date": "2020-08-06T00:00:00",
-          "value": 1
+          "value": 2
         },
         {
           "date": "2020-08-07T00:00:00",
@@ -87,11 +93,19 @@
   },
   "daily_transaction_volume": {
     "aggregate": {
-      "USER": 145,
-      "total": 145
+      "PAYMENT": 1687,
+      "total": 1687
     },
     "timeseries": {
-      "USER": [
+      "PAYMENT": [
+        {
+          "date": "2020-07-18T00:00:00",
+          "value": 406
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 201
+        },
         {
           "date": "2020-08-01T00:00:00",
           "value": 20
@@ -101,12 +115,16 @@
           "value": 20
         },
         {
+          "date": "2020-08-05T00:00:00",
+          "value": 210
+        },
+        {
           "date": "2020-08-06T00:00:00",
-          "value": 5
+          "value": 30
         },
         {
           "date": "2020-08-07T00:00:00",
-          "value": 100
+          "value": 800
         }
       ]
     }
@@ -115,19 +133,16 @@
   "has_transferred_count": 5,
   "mandatory_filter": {},
   "master_wallet_balance": 0,
-  "total_beneficiaries": 5,
   "total_distributed": 1517,
   "total_exchanged": 0,
-  "total_spent": 145,
-  "total_users": 5,
-  "total_vendors": 0,
+  "total_spent": 170,
   "trades_per_user": {
     "aggregate": {
-      "USER": 0.8,
-      "total": 0.5714285714285714
+      "PAYMENT": 0.7142857142857143,
+      "total": 0.7142857142857143
     },
     "timeseries": {
-      "USER": [
+      "PAYMENT": [
         {
           "date": "2020-08-01T00:00:00",
           "value": 0.5
@@ -138,22 +153,22 @@
         },
         {
           "date": "2020-08-06T00:00:00",
-          "value": 0.3333333333333333
+          "value": 0.5
         },
         {
           "date": "2020-08-07T00:00:00",
-          "value": 0.2
+          "value": 0.14285714285714285
         }
       ]
     }
   },
   "transfer_amount_per_user": {
     "aggregate": {
-      "USER": 29,
-      "total": 20.714285714285715
+      "PAYMENT": 24.285714285714285,
+      "total": 24.285714285714285
     },
     "timeseries": {
-      "USER": [
+      "PAYMENT": [
         {
           "date": "2020-08-01T00:00:00",
           "value": 10
@@ -164,44 +179,30 @@
         },
         {
           "date": "2020-08-06T00:00:00",
-          "value": 1.6666666666666667
+          "value": 7.5
         },
         {
           "date": "2020-08-07T00:00:00",
-          "value": 20
-        }
-      ]
-    }
-  },
-  "users_created": {
-    "aggregate": {
-      "USER": 5,
-      "total": 35
-    },
-    "timeseries": {
-      "USER": [
-        {
-          "date": "2020-07-28T00:00:00",
-          "value": 2
-        },
-        {
-          "date": "2020-08-03T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-07T00:00:00",
-          "value": 2
+          "value": 14.285714285714286
         }
       ]
     }
   },
   "users_who_made_purchase": {
     "aggregate": {
-      "USER": 4,
-      "total": 4
+      "PAYMENT": 6,
+      "total": 6
     },
     "timeseries": {
-      "USER": [
+      "PAYMENT": [
+        {
+          "date": "2020-07-18T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-07-30T00:00:00",
+          "value": 1
+        },
         {
           "date": "2020-08-01T00:00:00",
           "value": 1
@@ -211,12 +212,16 @@
           "value": 1
         },
         {
-          "date": "2020-08-06T00:00:00",
+          "date": "2020-08-05T00:00:00",
           "value": 1
         },
         {
+          "date": "2020-08-06T00:00:00",
+          "value": 2
+        },
+        {
           "date": "2020-08-07T00:00:00",
-          "value": 1
+          "value": 2
         }
       ]
     }

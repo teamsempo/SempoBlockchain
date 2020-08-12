@@ -72,13 +72,9 @@ class VolumeChart extends React.Component {
       return <Empty />;
     }
 
-    let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
-
-    // TODO? assumes that each category has the same date range
-    let all_dates = data.timeseries[possibleTimeseriesKeys[0]].map(
-      data => new Date(data.date)
-    );
-
+    let all_dates = Object.values(data.timeseries)
+      .flat()
+      .map(data => new Date(data.date));
     let minDate = new Date(Math.min.apply(null, all_dates));
     let maxDate = new Date(Math.max.apply(null, all_dates));
 
@@ -174,6 +170,7 @@ class VolumeChart extends React.Component {
       "#555555"
     ];
 
+    let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
     const datasets = possibleTimeseriesKeys.map((key, index) => {
       const zero_filled_data = get_zero_filled_values(
         "value",
@@ -200,6 +197,7 @@ class VolumeChart extends React.Component {
             data={chartData}
             height={this.props.chartHeight}
             options={options}
+            redraw
           />
         </div>
       </div>
