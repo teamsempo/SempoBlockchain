@@ -9,7 +9,7 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from server import create_app, db
 from server.utils.auth import get_complete_auth_token
@@ -28,7 +28,7 @@ fake.add_provider(phone_number)
 def wait_for_worker_boot_if_needed():
     TIMEOUT = 60
 
-    from server.utils.celery import get_celery_worker_status
+    from server.utils.celery_utils import get_celery_worker_status
     from helpers.utils import will_func_test_blockchain
 
     if will_func_test_blockchain():

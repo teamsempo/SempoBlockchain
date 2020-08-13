@@ -144,6 +144,7 @@ class DashboardPage extends React.Component {
                 </div>
               </Mobile>
               <MetricsCard
+                chartHeight={250}
                 cardTitle="Transfers"
                 defaultGroupBy="ungrouped"
                 defaultTimeSeries="all_payments_volume"
@@ -157,6 +158,7 @@ class DashboardPage extends React.Component {
                 ]}
               />
               <MetricsCard
+                chartHeight={250}
                 cardTitle="Participants"
                 defaultGroupBy="ungrouped"
                 defaultTimeSeries="active_users"
