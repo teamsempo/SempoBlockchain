@@ -227,7 +227,6 @@ workflows:
             branches:
               only:
                 - master
-                - alembic_fix
           requires:
             - build
             - test:backend
