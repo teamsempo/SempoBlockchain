@@ -135,11 +135,14 @@ class FilterModule extends React.Component {
 
     return (
       <FilterContainer isMobile={isMobile}>
-        <Filter
-          label={"Filter by user:"}
-          possibleFilters={this.props.allowedFilters}
-          onFiltersChanged={this.onFiltersChanged}
-        />
+        <Space>
+          <Text>Filters:</Text>
+          <Filter
+            label={"Filter by user:"}
+            possibleFilters={this.props.allowedFilters}
+            onFiltersChanged={this.onFiltersChanged}
+          />
+        </Space>
         {groupByModule}
       </FilterContainer>
     );
