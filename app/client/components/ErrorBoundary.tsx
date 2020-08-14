@@ -1,13 +1,22 @@
 import React from "react";
 import * as Sentry from "@sentry/browser";
 
-export default class ErrorBoundary extends React.Component {
-  constructor(props) {
+interface Props {
+  noNav?: boolean;
+  children?: React.ReactNode;
+}
+
+interface State {
+  error: boolean | null;
+}
+
+export default class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: any) {
     super(props);
     this.state = { error: null };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: any, errorInfo: any) {
     console.log(error);
     console.log(errorInfo);
 
@@ -25,7 +34,7 @@ export default class ErrorBoundary extends React.Component {
       // You can render any custom fallback UI
       let style = this.props.noNav
         ? { width: "calc(100% - 234px)", marginLeft: "234px" }
-        : null;
+        : undefined;
       return (
         <div style={style}>
           <h1>Something went wrong.</h1>

@@ -2,12 +2,17 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { NavLink } from "react-router-dom";
 import { Layout, Menu } from "antd";
+import { IntercomChat } from "../intercom/IntercomChat";
+import { IntercomHelpCentre } from "../intercom/IntercomHelpCentre";
 
 import {
   DesktopOutlined,
   SendOutlined,
   TeamOutlined,
-  SettingOutlined
+  SettingOutlined,
+  QuestionCircleOutlined,
+  StockOutlined,
+  CompassOutlined
 } from "@ant-design/icons";
 
 const { Sider } = Layout;
@@ -99,13 +104,17 @@ class NavBar extends React.Component<Props, State> {
       return (
         <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
           <OrgSwitcher icon={iconURL} collapsed={collapsed}></OrgSwitcher>
-          <Menu theme="dark" selectedKeys={[activePath]} mode="inline">
+          <Menu theme="dark" selectedKeys={[activePath]} mode="vertical">
             <SubMenu key="sub1" icon={<DesktopOutlined />} title="Dashboard">
               <Menu.Item key="/">
-                <NavLink to="/">Analytics</NavLink>
+                <NavLink to="/">
+                  <StockOutlined /> Analytics
+                </NavLink>
               </Menu.Item>
               <Menu.Item key="/map">
-                <NavLink to="/map">Map</NavLink>
+                <NavLink to="/map">
+                  <CompassOutlined /> Map
+                </NavLink>
               </Menu.Item>
             </SubMenu>
             <Menu.Item key="/accounts" icon={<TeamOutlined />}>
@@ -117,6 +126,30 @@ class NavBar extends React.Component<Props, State> {
             <Menu.Item key="/settings" icon={<SettingOutlined />}>
               <NavLink to="/settings">Settings</NavLink>
             </Menu.Item>
+          </Menu>
+
+          <Menu
+            theme="dark"
+            mode="vertical"
+            style={{
+              position: "fixed",
+              bottom: "60px",
+              width: collapsed ? 80 : 200
+            }}
+            selectable={false}
+          >
+            <SubMenu
+              key="help"
+              icon={<QuestionCircleOutlined translate={""} />}
+              title="Help"
+            >
+              <Menu.Item key="help-centre">
+                <IntercomHelpCentre />
+              </Menu.Item>
+              <Menu.Item key="contact-support">
+                <IntercomChat />
+              </Menu.Item>
+            </SubMenu>
           </Menu>
         </Sider>
       );

@@ -1,9 +1,0 @@
-{
-  "AWSEBDockerrunVersion": "1",
-  "Volumes": [
-    {
-      "HostDirectory": "/dev/shm",
-      "ContainerDirectory": "/dev/shm"
-    }
-  ]
-}
