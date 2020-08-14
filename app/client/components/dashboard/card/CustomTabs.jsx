@@ -3,9 +3,8 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import PropTypes from "prop-types";
 
-import { Tabs, Statistic, Typography } from "antd";
+import { Tabs, Statistic, Typography, Tooltip } from "antd";
 import {
   CaretUpOutlined,
   CaretDownOutlined,
@@ -34,6 +33,7 @@ export default class CustomTabs extends React.Component {
         {timeSeriesNameLabels.map((ts, i) => {
           let tsName = ts[0];
           let tsLabel = ts[1];
+          let tsPrompt = ts[2];
 
           const timeseries = metrics[tsName].timeseries;
           let startValue = 0;
@@ -70,7 +70,11 @@ export default class CustomTabs extends React.Component {
               key={tsName}
               tab={
                 <Statistic
-                  title={toTitleCase(replaceUnderscores(tsLabel))}
+                  title={
+                    <Tooltip title={tsPrompt}>
+                      {toTitleCase(replaceUnderscores(tsLabel))}
+                    </Tooltip>
+                  }
                   value={metrics[tsName].aggregate.total}
                   precision={2}
                   prefix={
@@ -96,8 +100,3 @@ export default class CustomTabs extends React.Component {
     );
   }
 }
-//
-// Tabs.PropTypes = {
-//   possibleTimeseries: PropTypes.arrayOf(PropTypes.string),
-//   changeTimeseries: () => fn()
-// };
