@@ -1,6 +1,6 @@
 import pytest
 from server.models.transfer_usage import TransferUsage
-from server.utils.transfer_filter import ALL_FILTERS, USER_FILTERS
+from server.utils.transfer_filter import Filters
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user, set_custom_attributes
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
@@ -20,12 +20,14 @@ def generate_timeseries_metrics(create_organisation):
                                     is_beneficiary=True)
     user1.default_transfer_account.is_approved = True
     user1.default_transfer_account._make_initial_disbursement(100, True)
+    user1._location = 'Sunnyvale'
 
     user2 = create_transfer_account_user(first_name='Bubbles',
                                     phone="+19025551235",
                                     organisation=create_organisation)
     user2.default_transfer_account.is_approved = True
     user2.default_transfer_account._make_initial_disbursement(200, True)
+    user2._location = 'Sunnyvale'
 
     # user3 made yesterday
     user3 = create_transfer_account_user(first_name='Julian',
@@ -35,6 +37,7 @@ def generate_timeseries_metrics(create_organisation):
     disburse = user3.default_transfer_account._make_initial_disbursement(210, True)
     user3.created = user3.created - timedelta(days=1)
     disburse.created = user3.created - timedelta(days=1)
+    user3._location = 'Dartmouth'
 
     # user4 made 4 days ago
     user4 = create_transfer_account_user(first_name='Randy',
@@ -44,6 +47,7 @@ def generate_timeseries_metrics(create_organisation):
     disburse = user4.default_transfer_account._make_initial_disbursement(201, True)
     user4.created = user4.created - timedelta(days=4)
     disburse.created = user4.created - timedelta(days=4)
+    user4._location = 'Lower Sackville'
 
     # user5/user6 made 10 days ago
     user5 = create_transfer_account_user(first_name='Cory',
@@ -53,6 +57,7 @@ def generate_timeseries_metrics(create_organisation):
     disburse = user5.default_transfer_account._make_initial_disbursement(202, True)
     user5.created = user5.created - timedelta(days=10)
     disburse.created = user5.created - timedelta(days=10)
+    user5._location = 'Truro'
 
     user6 = create_transfer_account_user(first_name='Trevor',
                                     phone="+19025111230",
@@ -139,12 +144,12 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
     )
 
     assert response.status_code == status_code
-
+    filters = Filters()
     if status_code == 200:
         if metric_type == 'user':
-            assert response.json['data']['filters'] == USER_FILTERS
+            assert response.json['data']['filters'] == filters.USER_FILTERS
         else:
-            assert response.json['data']['filters'] == ALL_FILTERS
+            assert response.json['data']['filters'] == filters.ALL_FILTERS
 
 base_participant = {
     'data':
@@ -157,7 +162,7 @@ base_participant = {
         'total_beneficiaries': 0,
         'total_users': 0,
         'total_vendors': 0,
-        'users_created': {'aggregate': {'total': 0},
+        'users_created': {'aggregate': {'total': 1},
         'timeseries': {}}}},
         'message': 'Successfully Loaded.',
         'status': 'success'
@@ -186,7 +191,7 @@ base_all = {'data':
         'total_vendors': 0,
         'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
         'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'users_created': {'aggregate': {'total': 0}, 'timeseries': {}}}},
+        'users_created': {'aggregate': {'total': 1}, 'timeseries': {}}}},
         'message': 'Successfully Loaded.',
         'status': 'success'}
 
@@ -245,25 +250,31 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     elif metric_type == 'user':
         assert response.json == base_participant
 
-@pytest.mark.parametrize("metric_type, params, status_code, group_by, output_file", [
-    ("all", None, 200, 'account_type', 'all_by_account_type.json'),
-    ("all", "rounded_account_balance(GT)(2)", 200, 'account_type', 'all_by_account_type_filtered.json'),
-    ("credit_transfer", None, 200, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
-    ("user", None, 200, 'account_type', 'user_by_account_type.json'),
-    ("all", None, 500, 'transfer_usage', ''), # 500 because can't group all by transfer_usage 
-    ("user", None, 500, 'transfer_usage', ''), # 500 because can't group user by transfer_usage
-    ("user", 'transfer_amount(LT)(50)', 500, 'account_type', ''), # 500 because can't filter user by transfer_amount
-    ("all", 'transfer_amount(LT)(50)', 500, 'account_type', ''), # 500 because can't filter all by transfer_amount
-    ("notarealmetrictype", None, 500, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
+
+@pytest.mark.parametrize("metric_type, params, status_code, requested_metric, group_by, output_file", [
+    ("all", None, 200, None, 'account_type', 'all_by_account_type.json'),
+    ("all", None, 200, None ,'location', 'all_by_location.json'),
+    ("all", None, 200, None, 'ungrouped', 'all_ungrouped.json'),
+    ("all", "rounded_account_balance(GT)(2)", 200, None, 'account_type', 'all_by_account_type_filtered.json'),
+    ("credit_transfer", None, 200, None, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
+    ("user", None, 200, None, 'account_type', 'user_by_account_type.json'),
+    ("credit_transfer", None, 200, None, 'transfer_type', 'credit_transfer_by_transfer_type.json'),
+    ("all", None, 200, 'active_users', 'account_type', 'requested_metric_active_users.json'),
+    ("all", None, 500, None, 'transfer_usage', ''), # 500 because can't group all by transfer_usage 
+    ("user", None, 500, None, 'transfer_usage', ''), # 500 because can't group user by transfer_usage
+    ("user", 'transfer_amount(LT)(50)', 500, None, 'account_type', ''), # 500 because can't filter user by transfer_amount
+    ("all", 'transfer_amount(LT)(50)', 500, None, 'account_type', ''), # 500 because can't filter all by transfer_amount
+    ("notarealmetrictype", None, 500, None, 'transfer_usage', ''),
 ])
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
-        metric_type, params, status_code, group_by, output_file
+        metric_type, params, status_code, requested_metric, group_by, output_file
 ):
     def get_metrics(metric_type):
         p = f'&params={params}' if params else ''
+        rm = f'&requested_metric={requested_metric}' if requested_metric else ''
         return test_client.get(
-            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by={group_by}',
+            f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by={group_by}{rm}',
             headers=dict(
                 Authorization=complete_admin_auth_token,
                 Accept='application/json'
@@ -280,7 +291,6 @@ def test_get_summed_metrics(
         script_directory = os.path.dirname(os.path.realpath(__file__))
         desired_output_file = os.path.join(script_directory, 'metrics_outputs', output_file)
         desired_output = json.loads(open(desired_output_file, 'r').read())
-
         for do in desired_output:
             if not isinstance(desired_output[do], dict) or "timeseries" not in desired_output[do]:
                 assert returned_stats[do] == desired_output[do]

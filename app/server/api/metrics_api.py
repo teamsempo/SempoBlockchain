@@ -8,7 +8,7 @@ import json
 from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const, group
 from flask.views import MethodView
-from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, USER_FILTERS, process_transfer_filters
+from server.utils.transfer_filter import Filters, process_transfer_filters
 from server.utils.auth import requires_auth, multi_org
 
 metrics_blueprint = Blueprint('metrics', __name__)
@@ -42,8 +42,9 @@ class CreditTransferStatsApi(MethodView):
 
         disable_cache = request.args.get('disable_cache', 'False').lower() in ['true', '1']  # Defaults to bool false
         metric_type = request.args.get('metric_type', metrics_const.ALL)
+        requested_metric = request.args.get('requested_metric', metrics_const.ALL)
         timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
-        group_by = request.args.get('group_by', metrics_const.GENDER)
+        group_by = request.args.get('group_by', metrics_const.UNGROUPED)
         token_id = request.args.get('token_id', None)
 
         if timeseries_unit not in metrics_const.TIMESERIES_UNITS:
@@ -63,6 +64,7 @@ class CreditTransferStatsApi(MethodView):
             end_date=end_date,
             user_filter=filters,
             metric_type=metric_type,
+            requested_metric=requested_metric,
             disable_cache=disable_cache,
             timeseries_unit = timeseries_unit,
             group_by = group_by,
@@ -91,10 +93,11 @@ class FiltersApi(MethodView):
         metric_type = request.args.get('metric_type', metrics_const.ALL)
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
+        filters = Filters()
         METRIC_TYPES_FILTERS = {
-            metrics_const.ALL: ALL_FILTERS,
-            metrics_const.USER: USER_FILTERS,
-            metrics_const.TRANSFER: TRANSFER_FILTERS,
+            metrics_const.ALL: filters.ALL_FILTERS,
+            metrics_const.USER: filters.USER_FILTERS,
+            metrics_const.TRANSFER: filters.TRANSFER_FILTERS,
         }
 
         GROUP_TYPES_FILTERS = {
@@ -105,8 +108,10 @@ class FiltersApi(MethodView):
         groups = {}
         group_filters = GROUP_TYPES_FILTERS[metric_type]
         for f in group_filters:
-            groups[f] = group_filters[f].get_api_representation()
-
+            if group_filters[f]:
+                groups[f] = group_filters[f].get_api_representation()
+            else:
+                groups[f] = {'name': 'Ungrouped'}
         response_object = {
             'status' : 'success',
             'message': 'Successfully Loaded.',

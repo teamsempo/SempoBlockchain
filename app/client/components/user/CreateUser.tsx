@@ -12,6 +12,8 @@ import CreateUserForm, { ICreateUserUpdate } from "./CreateUserForm";
 import { CreateUserAction } from "../../reducers/user/actions";
 import { CreateUserPayload } from "../../reducers/user/types";
 
+import { toTitleCase } from "../../utils";
+
 interface DispatchProps {
   createUser: (payload: CreateUserPayload) => CreateUserAction;
   resetCreateUser: () => CreateUserAction;
@@ -30,16 +32,19 @@ interface OuterProps {
   isVendor: boolean;
 }
 
-declare global {
-  interface Window {
-    BENEFICIARY_TERM: string;
-  }
+interface ComponentState {
+  accountType?: string;
 }
 
 type Form = ICreateUserUpdate;
 type Props = DispatchProps & StateProps & OuterProps;
 
-class CreateUserUpdated extends React.Component<Props> {
+class CreateUserUpdated extends React.Component<Props, ComponentState> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {};
+  }
+
   componentDidMount() {
     this.props.loadTransferUsages();
     this.props.loadOrganisation();
@@ -58,6 +63,10 @@ class CreateUserUpdated extends React.Component<Props> {
     let businessUsage = form.businessUsage;
     if (businessUsage && businessUsage.toLowerCase() === "other") {
       businessUsage = form.usageOtherSpecific;
+    }
+
+    if (form.accountType) {
+      this.setState({ accountType: form.accountType });
     }
 
     this.props.createUser({
@@ -86,9 +95,8 @@ class CreateUserUpdated extends React.Component<Props> {
   }
 
   render() {
-    const transferAccountType = this.props.isVendor
-      ? "vendor"
-      : window.BENEFICIARY_TERM.toLowerCase();
+    const accountType = this.state.accountType;
+    const transferAccountType = accountType ? toTitleCase(accountType) : "user";
     const { one_time_code, is_external_wallet } = this.props.users.createStatus;
 
     if (one_time_code !== null) {

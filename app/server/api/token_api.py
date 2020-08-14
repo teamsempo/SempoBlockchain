@@ -65,7 +65,8 @@ class TokenAPI(MethodView):
 
         token_type = TokenType.RESERVE if is_reserve else TokenType.LIQUID
 
-        token = Token(address=address, name=name, symbol=symbol, decimals=decimals, token_type=token_type)
+        token = Token(address=address, name=name, symbol=symbol, token_type=token_type)
+        token.decimals = decimals
         db.session.add(token)
 
         response_object = {
