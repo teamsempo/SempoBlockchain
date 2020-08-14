@@ -84,6 +84,7 @@ class MetricsCard extends React.Component {
                 chartHeight={this.props.chartHeight}
                 data={selectedData}
                 selected={this.state.selectedTimeSeries}
+                filter_dates={this.state.dateRange}
               />
             </div>
 

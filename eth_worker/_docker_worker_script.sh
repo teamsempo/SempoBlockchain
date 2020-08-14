@@ -44,7 +44,9 @@ else
         celery -A celery_app worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=gevent -Q=low-priority,celery --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
         echo "Starting High Priority Worker"
+        cd ../
         alembic upgrade head
+        cd eth_src
         celery -A celery_app worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=gevent -Q=high-priority --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'ANY_PRIORITY_WORKER' ]; then
         echo "Starting Any Priority Worker"
