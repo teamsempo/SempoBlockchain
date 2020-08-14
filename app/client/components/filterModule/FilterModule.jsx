@@ -3,7 +3,7 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import { Space, Select, Typography } from "antd";
+import { Space, Select, Typography, Tooltip } from "antd";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -18,7 +18,6 @@ import {
   toTitleCase
 } from "../../utils";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
-import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -114,7 +113,9 @@ class FilterModule extends React.Component {
 
     let groupByModule = (
       <Space size={"middle"}>
-        <Text>Group By:</Text>
+        <Tooltip title="Group data by custom data attributes">
+          <Text>Group By:</Text>
+        </Tooltip>
         <Select
           defaultValue={defaultGroupBy}
           style={{ width: 200 }}
@@ -136,7 +137,9 @@ class FilterModule extends React.Component {
     return (
       <FilterContainer isMobile={isMobile}>
         <Space>
-          <Text>Filters:</Text>
+          <Tooltip title="Filter data by custom data attributes">
+            <Text>Filters:</Text>
+          </Tooltip>
           <Filter
             label={"Filter by user:"}
             possibleFilters={this.props.allowedFilters}
