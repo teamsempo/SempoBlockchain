@@ -37,8 +37,7 @@ class BlockchainSyncer(object):
     def synchronize_third_party_transactions(self):
         filters = self.persistence.get_all_synchronization_filters()
         # Since the webook will timeout if we ask for too many blocks at once, we have to break
-        # the range we want into chunks. Once all the chunk-jobs are formed and loaded into redis,
-        # then trigger process_all_chunks, which will consume those jobs from redis
+        # the range we want into chunks.
         for f in filters:
             # Make sure a filter is only being executed once at a time
             have_lock = False
@@ -84,7 +83,7 @@ class BlockchainSyncer(object):
             )
         for event in transaction_history:
             self.handle_event(event, filter)
-
+        return 'Success'
     # Processes newly found transaction event
     # Creates database object for transaction
     # Calls webhook
@@ -162,6 +161,33 @@ class BlockchainSyncer(object):
                 filter_type, decimals,
                 block_epoch=epoch
             )
+
+    def get_metrics(self):
+        return self.persistence.get_transaction_sync_metrics()
+
+    def get_failed_block_fetches(self):
+        return self.persistence.get_failed_block_fetches()
+
+    def get_failed_callbacks(self):
+        return self.persistence.get_failed_callbacks()
+
+    def force_fetch_block_range(self, filter_address, floor, ceiling):
+        filter = self.persistence.get_synchronization_filter_by_address(filter_address)
+        if not filter:
+            raise Exception(f'{filter_address} does not have an active transaction sync filter')
+        return self.process_chunk(filter, floor, ceiling)
+
+    def force_recall_webhook(self, transaction_hash):
+        transaction = self.persistence.get_transaction_by_hash(transaction_hash)
+        webook_resp = self.call_webhook(transaction)
+        # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
+        # in order to be retryable later
+        if webook_resp.ok:
+            self.persistence.mark_transaction_as_completed(transaction)
+            return 'Success'
+        else:
+            raise Exception(f'Force recall webook failed for {transaction_hash}')
+
 
     def __init__(self, w3_websocket, red, persistence):
 

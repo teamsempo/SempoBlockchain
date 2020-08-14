@@ -72,9 +72,26 @@ processor_task_config = {
 #           + '\n'
 #           + kwargs.get('einfo').traceback)
 
-@app.task(**low_priority_config)
-def synchronize_third_party_transactions(self):
-    return blockchain_sync.synchronize_third_party_transactions()
+@app.task(**base_task_config)
+def get_third_party_sync_metrics(self):
+    return blockchain_sync.get_metrics()
+
+@app.task(**base_task_config)
+def get_failed_block_fetches(self):
+    return blockchain_sync.get_failed_block_fetches()
+
+@app.task(**base_task_config)
+def get_failed_callbacks(self):
+    return blockchain_sync.get_failed_callbacks()
+
+@app.task(**base_task_config)
+def force_fetch_block_range(self, filter_address, floor, ceiling):
+    return blockchain_sync.force_fetch_block_range(filter_address, floor, ceiling)
+
+@app.task(**base_task_config)
+def force_recall_webook(self, transaction_hash):
+    return blockchain_sync.force_recall_webhook(transaction_hash)
+
 
 @app.task(**low_priority_config)
 def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type, decimals = 18, block_epoch = None):
