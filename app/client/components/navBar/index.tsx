@@ -138,11 +138,7 @@ class NavBar extends React.Component<Props, State> {
             }}
             selectable={false}
           >
-            <SubMenu
-              key="help"
-              icon={<QuestionCircleOutlined translate={""} />}
-              title="Help"
-            >
+            <SubMenu key="help" icon={<QuestionCircleOutlined />} title="Help">
               <Menu.Item key="help-centre">
                 <IntercomHelpCentre />
               </Menu.Item>

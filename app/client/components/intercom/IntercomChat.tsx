@@ -8,7 +8,7 @@ export const IntercomChat = () => {
 
   return (
     <a onClick={handleNewMessages} target="_blank">
-      <MessageOutlined translate={""} /> Contact Support
+      <MessageOutlined /> Contact Support
     </a>
   );
 };

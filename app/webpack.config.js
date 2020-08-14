@@ -19,7 +19,7 @@ module.exports = {
   entry: APP_DIR + "/index.jsx",
   plugins: [
     new CleanWebpackPlugin(),
-    new CompressionPlugin(),
+    // new CompressionPlugin(),
 
     new MomentLocalesPlugin({
       localesToKeep: ["es-us"]

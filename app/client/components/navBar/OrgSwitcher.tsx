@@ -82,12 +82,12 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       </Menu.Item>
       <Menu.Item key="settings">
         <NavLink to="/settings/organisation">
-          <SettingOutlined translate={""} /> Organisation Settings
+          <SettingOutlined /> Organisation Settings
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite">
         <NavLink to="/settings/invite">
-          <UserAddOutlined translate={""} /> Invite User
+          <UserAddOutlined /> Invite User
         </NavLink>
       </Menu.Item>
     </Menu>
@@ -118,7 +118,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
               <div style={{ margin: "auto 0", maxWidth: "100px" }}>
                 <BoldedNavBarHeaderText>
                   {activeOrganisation && activeOrganisation.name}{" "}
-                  <DownOutlined translate={""} />
+                  <DownOutlined />
                 </BoldedNavBarHeaderText>
                 <StandardNavBarHeaderText>{email}</StandardNavBarHeaderText>
               </div>
