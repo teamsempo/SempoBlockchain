@@ -147,12 +147,16 @@ class NavBar extends React.Component<Props, State> {
 
           <Menu
             theme="dark"
-            mode="vertical"
-            style={{
-              position: "fixed",
-              bottom: "60px",
-              width: collapsed ? 80 : 200
-            }}
+            mode={isMobile ? "inline" : "vertical"}
+            style={
+              isMobile
+                ? undefined
+                : {
+                    position: "fixed",
+                    bottom: "60px",
+                    width: collapsed ? 80 : 200
+                  }
+            }
             selectable={false}
           >
             <SubMenu
