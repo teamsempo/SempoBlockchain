@@ -569,7 +569,7 @@ class SQLPersistenceInterface(object):
 
     def get_failed_block_fetches(self):
         failed_block_fetches = self.session.query(
-            SynchronizationFilter.contract_address, SynchronizedBlock.id)\
+            SynchronizationFilter.contract_address, SynchronizedBlock.block_number)\
             .filter(SynchronizedBlock.status != 'SUCCESS')\
             .join(SynchronizationFilter)\
             .all()

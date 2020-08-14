@@ -28,6 +28,12 @@ class SynchronizationFilterMetricsAPI(MethodView):
     # Gets metrics regarding the status of third party sync
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
+        """
+        Gets status metrics for third party transaction sync
+        Params:
+        get_failed_block_fetches - 'true' or 'false', will return a list of blocks that failed being fetched (default false)
+        get_failed_callbacks - 'true' or 'false', will return a list of callbacks which have failed (default false)
+        """
         get_failed_block_fetches = request.args.get('get_failed_block_fetches', 'false').lower() in ['true', '1']
         get_failed_callbacks = request.args.get('get_failed_callbacks', 'false').lower() in ['true', '1']
 
@@ -42,7 +48,15 @@ class SynchronizationFilterMetricsAPI(MethodView):
         return make_response(jsonify(resp)), 201
 
 class SynchronizationFilterRefetchAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
+        """
+        Refetches a given range of blocks for third party transaction sync
+        Params:
+        filter_address - Address associated with a token.
+        floor - Where to start fetching blocks
+        ceiling - Where to finish fetching blocks
+        """
         filter_address = request.args.get('filter_address')
         floor = int(request.args.get('floor'))
         ceiling = int(request.args.get('ceiling'))
@@ -50,7 +64,13 @@ class SynchronizationFilterRefetchAPI(MethodView):
         return make_response(jsonify({ 'status': result })), 201
 
 class SynchronizationFilterRecallWebhookAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
+        """
+        Forces a recall of the webhook for a given transaction
+        Params:
+        transaction_hash - Hash for the transaction you want to resync!
+        """
         transaction_hash = request.args.get('transaction_hash')
         bt.force_recall_webook(transaction_hash)
         
