@@ -1,3 +1,4 @@
+dnspython==1.16.0
 alembic==1.4.2
 boto3==1.14.29
 celery==4.4.6
