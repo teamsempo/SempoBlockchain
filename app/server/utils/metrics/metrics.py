@@ -73,6 +73,9 @@ def calculate_transfer_stats(
             date_filters_dict[User].append(User.created >= start_date)
             date_filters_dict[TransferAccount].append(TransferAccount.created >= start_date)
         if end_date:
+            # If an end_date is specified, add one day. This is because the end date will be midnight of the day 
+            # we want to filter to. We want data up to midnight of the following day!
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)  
             date_filters_dict[CreditTransfer].append(CreditTransfer.created <= end_date)
             date_filters_dict[User].append(User.created <= end_date)
             date_filters_dict[TransferAccount].append(TransferAccount.created <= end_date)
