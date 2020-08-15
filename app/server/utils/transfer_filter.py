@@ -11,6 +11,7 @@ from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from sqlalchemy.sql.expression import cast
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 MALE = 'male'
 FEMALE = 'female'
@@ -53,6 +54,12 @@ class Filters(object):
             'type': TransferFilterEnum.BOOLEAN_MAPPING,
             'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
         },
+        'public_transfer_type': {
+            'name': "Transfer Type",
+            'table': CreditTransfer.__tablename__,
+            'type': TransferFilterEnum.DISCRETE,
+            'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
+        }, 
         'gender': {
             'name': "Gender",
             'table': CustomAttributeUserStorage.__tablename__,
