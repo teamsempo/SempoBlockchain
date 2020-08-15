@@ -159,7 +159,7 @@ class DashboardPage extends React.Component {
                   [
                     "users_who_made_purchase",
                     "Unique Users",
-                    "Unique users whom have transacted"
+                    "Unique users who have sent or received a transfer"
                   ],
                   [
                     "transfer_amount_per_user",
@@ -169,7 +169,7 @@ class DashboardPage extends React.Component {
                   [
                     "trades_per_user",
                     "Count Per User",
-                    "Average number of transactions per user"
+                    "Average number of transfers per user"
                   ]
                 ]}
               />
@@ -183,12 +183,12 @@ class DashboardPage extends React.Component {
                   [
                     "active_users",
                     "Active",
-                    "Number of unique users whom have transacted"
+                    "Number of unique users sent or received a transfer"
                   ],
                   [
                     "users_created",
                     "New",
-                    "Number of new users whom have transacted"
+                    "Number of new users sent or received a transfer"
                   ]
                 ]}
               />
