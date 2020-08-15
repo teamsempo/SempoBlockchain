@@ -1,10 +1,11 @@
+dnspython==1.16.0
 alembic==1.4.2
 boto3==1.14.29
 celery==4.4.6
 celery-redbeat==1.0.0
 cryptography==3.0
 flower==0.9.3
-gevent==20.6.2
+eventlet==0.26.0
 idna==2.10
 kombu==4.6.11
 psycopg2-binary==2.8.5
