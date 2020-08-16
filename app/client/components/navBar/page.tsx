@@ -57,7 +57,9 @@ const Page: React.FunctionComponent<OuterProps> = props => {
         <div
           onClick={() => setCollapsed(true)}
           style={
-            isMobile
+            noNav
+              ? undefined
+              : isMobile
               ? collapsed
                 ? undefined
                 : {
