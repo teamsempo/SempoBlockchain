@@ -74,7 +74,9 @@ const Page: React.FunctionComponent<OuterProps> = props => {
         <Layout
           className="site-layout"
           style={
-            isMobile
+            noNav
+              ? undefined
+              : isMobile
               ? undefined
               : collapsed
               ? { marginLeft: "80px" }
