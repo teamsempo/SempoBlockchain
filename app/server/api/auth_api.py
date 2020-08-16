@@ -354,7 +354,7 @@ class LoginAPI(MethodView):
 
             return make_response(jsonify(response_object)), response_code
 
-        if user and user.is_activated and post_data.get('phone') and (password == ''):
+        if user and user.is_activated and post_data.get('phone') and (password == '' or password is None):
             # user already exists, is activated. no password provided, thus request PIN screen.
             # todo: this should check if device exists, if no, resend OTP to verify login is real.
             response_object = {
