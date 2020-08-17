@@ -10,6 +10,7 @@ from server.models.kyc_application import KycApplication
 from server.models.organisation import Organisation
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
+from server.models.credit_transfer import CreditTransfer
 from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.ussd import UssdSession, UssdMenu
@@ -42,6 +43,11 @@ class TransferAccountFactory(SQLAlchemyModelFactory):
         model = TransferAccount
         sqlalchemy_session = db.session
 
+class CreditTransferFactory(SQLAlchemyModelFactory):
+    class Meta:
+        model = CreditTransfer
+        sqlalchemy_session = db.session
+
 
 class FeedbackFactory(SQLAlchemyModelFactory):
     class Meta:
@@ -66,6 +72,7 @@ class OrganisationFactory(SQLAlchemyModelFactory):
         model = Organisation
         sqlalchemy_session = db.session
     name = 'Francines Company'
+
 
 class UssdMenuFactory(SQLAlchemyModelFactory):
     class Meta:

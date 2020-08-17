@@ -18,9 +18,8 @@ from server.utils.exchange import (
 
 class BlockchainTasker(object):
     def _eth_endpoint(self, endpoint):
-        eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
-        return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+        return f'{celery_tasks_name}.{endpoint}'
 
     def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
@@ -51,7 +50,9 @@ class BlockchainTasker(object):
                           func, args=None,
                           gas_limit=None,
                           prior_tasks=None,
-                          queue=None):
+                          queue=None,
+                          task_uuid=None
+                          ):
         kwargs = {
             'signing_address': signing_address,
             'contract_address': contract_address,
@@ -63,8 +64,15 @@ class BlockchainTasker(object):
         }
         return task_runner.delay_task(
             self._eth_endpoint('transact_with_contract_function'),
-            kwargs=kwargs, queue=queue
+            kwargs=kwargs, queue=queue, task_uuid=task_uuid
         ).id
+
+    def add_transaction_sync_filter(self, kwargs):
+        task_runner.delay_task(self._eth_endpoint('add_transaction_filter'), kwargs = kwargs)
+        return True
+
+    def force_third_party_transaction_sync(self):
+        return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions'), queue='low-priority').id
 
     def get_blockchain_task(self, task_uuid):
         """
@@ -176,7 +184,8 @@ class BlockchainTasker(object):
     def make_token_transfer(self, signing_address, token,
                             from_address, to_address, amount,
                             prior_tasks=None,
-                            queue='high-priority'):
+                            queue='high-priority',
+                            task_uuid=None):
         """
         Makes a "Transfer" or "Transfer From" transaction on an ERC20 token.
 
@@ -189,7 +198,6 @@ class BlockchainTasker(object):
         :return: task uuid for the transfer
         """
         raw_amount = token.system_amount_to_token(amount, queue=queue)
-
         if signing_address == from_address:
             return self._transaction_task(
                 signing_address=signing_address,
@@ -201,7 +209,8 @@ class BlockchainTasker(object):
                     raw_amount
                 ],
                 prior_tasks=prior_tasks,
-                queue=queue
+                queue=queue,
+                task_uuid=task_uuid
             )
 
         return self._transaction_task(
@@ -215,7 +224,8 @@ class BlockchainTasker(object):
                 token.system_amount_to_token(amount, queue)
             ],
             prior_tasks=prior_tasks,
-            queue=queue
+            queue=queue,
+            task_uuid=task_uuid
         )
 
     def make_approval(self,
@@ -245,7 +255,8 @@ class BlockchainTasker(object):
                                    to_token,
                                    reserve_token,
                                    from_amount,
-                                   prior_tasks=None):
+                                   prior_tasks=None,
+                                   task_uuid=None):
         """
         Uses a Liquid Token Contract network to exchange between two ERC20 smart tokens.
         :param signing_address: address of wallet signing txn
@@ -257,7 +268,6 @@ class BlockchainTasker(object):
         :param prior_tasks: list of task uuids that must complete before txn will attempt
         :return: task uuid for the exchange
         """
-
         prior_tasks = prior_tasks or []
 
         path = self._get_path(from_token, to_token, reserve_token)
@@ -277,7 +287,8 @@ class BlockchainTasker(object):
                 from_token.system_amount_to_token(from_amount),
                 1
             ],
-            prior_tasks=prior_tasks
+            prior_tasks=prior_tasks,
+            task_uuid=task_uuid
         )
 
     def get_conversion_amount(self, exchange_contract, from_token, to_token, from_amount, signing_address=None):
@@ -428,7 +439,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_and_fund_reserve_token'),
             args=args,
-            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 10
+            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 20
         )
 
     def deploy_smart_token(self,

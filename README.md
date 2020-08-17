@@ -8,7 +8,7 @@
 [![GitHub](https://img.shields.io/github/license/teamsempo/sempoblockchain)](LICENSE)
 [![Codecov](https://img.shields.io/codecov/c/github/teamsempo/SempoBlockchain)](https://codecov.io/gh/teamsempo/SempoBlockchain)
 
-Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments
+Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, Android and NFC Payments.
 
 ## To run locally:
 
@@ -18,14 +18,19 @@ Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, A
 
 We use [postgres](https://www.postgresql.org/) for regular (non-blockchain) data persistance.
 
-If you plan on using the quick setup script, be sure to install the [PSQL](https://www.postgresql.org/docs/current/app-psql.html) terminal application as well
+If you plan on using the quick setup script, be sure to install the [PSQL](https://www.postgresql.org/docs/current/app-psql.html) terminal application as well.
+
+Sempo defaults to using postgres credentials of `username: postgres`, `password: password`. We recommend you create a new user with a fresh password and `CREATEDB` permissions. For example:
+`CREATE USER dev_sempo WITH PASSWORD 'superSecret' CREATEDB;`.
+
+Set these to the environment variables `PGUSER` and `PGPASSWORD`.
 
 **Redis**
 [Redis](https://redis.io/) is used for passing tasks to an asynchronous worker queue
 
 **Local Test Blockchain**
 
-You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli)
+You can use your preferred implementation of the Ethereum Blockchain to test things locally. Our setup scripts use the v6.4.1 [Ganache-CLI](https://github.com/trufflesuite/ganache-cli) - other versions of Ganache may not perform as expected.
 
 ```
 npm install -g ganache-cli@6.4.1
@@ -33,20 +38,23 @@ npm install -g ganache-cli@6.4.1
 
 **Python**
 
-Download and install python 3.6 and its respective pip and virtualenv (**python 3.7 will break things**). Then:
+Download and install python 3.8 and its respective pip and virtualenv. Then:
+
+from devtools directory:
 
 ```
 python3 -m venv venv
 source venv/bin/activate
-./devtools/install_python_requirements.sh
+./install_python_requirements.sh
 ```
 
 **Front-End**
 
 Our frontend uses react.
 
+from app directory:
+
 ```
-cd app
 npm install
 ```
 
@@ -65,26 +73,35 @@ The platform uses three kinds of config files:
 - common secrets: things that ARE sensitive, and can be the same between all deployments
 
 There's already a reasonable set of local configs in `config_files/local_config.ini`
-To create some suitable secrets quickly:
+To create some suitable secrets quickly use the following
+(note that if you're using the quick setup script below, this is done for you):
+
+from config_files directory
 
 ```
-cd config files
 python generate_secrets.py
 ```
 
 ### Quick Setup Script
 
 (Requires PSQL to run)
+If you're using a custom postgres user, remember to set the environment variables `PGUSER` and `PGPASSWORD` first!
 
-For quick setup, run `./devtools/quick_setup_script.sh` with `MASTER_WALLET_PK` set as an environment variable to the master private key found in `/config_files/secret/local_secrets.ini/`.
+For quick setup, use the quick setup script in devtools
+
+From devtools directory
 
 ```
-quick_setup_script.sh [activation path for your python env]
+./quick_setup_script.sh [activation path for your python env]
 ```
+
+For example:
+`./quick_setup_script.sh /venvs/sempo/bin/activate`
 
 The script will:
 
 - Reset your local Sempo state
+- Generate new secrets
 - Launch Ganache and Redis
 - Create an adminstrator account with email `admin@acme.org` and password `C0rrectH0rse`
 - Create a reserve token and bonded token
@@ -94,8 +111,9 @@ When the script has finished running\*, you can start your own app and worker pr
 
 ### Run the app in a Virtual Env
 
+From app directory:
+
 ```
-cd app
 python ./run.py
 ```
 
@@ -103,9 +121,10 @@ python ./run.py
 
 Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue.
 
+From eth_worker directory:
+
 ```
-cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 ## Details and Other Options
@@ -154,9 +173,10 @@ If you get some message about `Creating Server TCP listening socket *:6379: bind
 
 Start celery:
 
+From eth_worker directory
+
 ```
-cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=eventlet -Q=celery,processor
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 You can also add a runtime configuration with the `script path` set as the path to your virtual env `[path-to-your-python-env]/bin/celery`.
@@ -249,15 +269,12 @@ Ensure redis-server is running (this is not ideal but necessary atm).
 
 Then run `python invoke_tests.py`, or if that doesn't work, set it up as a runnable in PyCharm: Run -> Edit Configurations -> Add New Configuration (Python) -> set script path as `SempoBlockchain/invoke_tests.py`
 
-## Seed Data
+## Postman Collections
 
-(Currently broken!!)
-You can quickly create seed data for a local machine, including exchanges and blockchain transactions:
+Platform APIs are documented using Postman. API documentation:
 
-1. Clear all data out of ur databases by running /app/migrations/clear_seed_dev.py
-2. Launch Redis, ganache & Celery as per above.
-3. Create new data by running seed_dev.py No guarantees for anything if you try and run this more than once
-   without clearing your databases!
+- [Live Docs](https://documenter.getpostman.com/view/3140301/SzzobwEU?version=latest)
+- JSON Collections and Environments (stored in `/postman` in root directory)
 
 ## Sempo Specific Setup
 
@@ -273,3 +290,21 @@ This will extract all keys into the config_files folder. To encrypt them again f
 Not that SOPS doesn't handle merge conflicts currently - if you try and merge an encrypted file, it will break in a bad way!
 
 Instead, if you need to merge in two config files, you need to save the old config, load the new one and merge them by hand.
+
+## To Run with Docker
+
+To run with docker first you must generate local secrets that will be read by the `config.py` script that is copied into the `app`, `worker` and `pgbouncer`
+
+```
+cd config files
+python generate_secrets.py -n local_docker
+python generate_secrets.py -n docker_test
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+You may find it useful to add an alias to your `.bashrc` (or `.zshrc` etc) that aliases the docker-compose command
+
+```
+alias sempo='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.dev.yml'
+alias sempoci='cd /path/to/repo && docker-compose -f ./docker-compose.yml -f ./docker-compose.ci.yml'
+```

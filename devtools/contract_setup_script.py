@@ -2,7 +2,7 @@ from functools import reduce
 import requests
 from time import sleep
 import os, sys
-
+from json import JSONDecodeError
 sys.path.append('./')
 import config
 
@@ -163,7 +163,8 @@ class Setup(object):
                 'symbol': symbol,
                 'issue_amount_wei': issue_amount_wei,
                 'reserve_deposit_wei': reserve_deposit_wei,
-                'reserve_ratio_ppm': reserve_ratio_ppm
+                'reserve_ratio_ppm': reserve_ratio_ppm,
+                'allow_autotopup': True
             })
 
         json = cic_post.json()
@@ -202,15 +203,21 @@ class Setup(object):
                               'symbol': symbol,
                               'issue_amount_wei': issue_amount_wei,
                               'reserve_deposit_wei': reserve_deposit_wei,
-                              'reserve_ratio_ppm': reserve_ratio_ppm
+                              'reserve_ratio_ppm': reserve_ratio_ppm,
+                              'allow_autotopup': True
                           })
 
-        json = r.json()
         try:
+            json = r.json()
+
             token_id = json['data']['token_id']
             print(f'{name} Token id: {token_id}')
         except KeyError:
             raise Exception(str(json))
+
+        except JSONDecodeError:
+            raise Exception(str(r))
+
 
         self._wait_for_get_result(f'contract/token/{token_id}', ('data', 'token', 'address'))
 

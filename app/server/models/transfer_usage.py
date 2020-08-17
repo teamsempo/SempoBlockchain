@@ -10,8 +10,7 @@ from server.constants import (
 )
 
 from server import db
-from server.models.utils import ModelBase
-
+from server.models.utils import ModelBase, credit_transfer_transfer_usage_association_table
 
 class TransferUsage(ModelBase):
     __tablename__ = 'transfer_usage'
@@ -25,6 +24,13 @@ class TransferUsage(ModelBase):
 
     users = db.relationship('User', backref='business_usage', lazy=True)
 
+    credit_transfers = db.relationship(
+        "CreditTransfer",
+        secondary=credit_transfer_transfer_usage_association_table,
+        back_populates="transfer_usages",
+        lazy='joined'
+    )
+
     @hybrid_property
     def icon(self):
         return self._icon
@@ -32,7 +38,7 @@ class TransferUsage(ModelBase):
     @icon.setter
     def icon(self, icon):
         if icon not in MATERIAL_COMMUNITY_ICONS:
-            raise IconNotSupportedException('Icon {} not supported or found')
+            raise IconNotSupportedException(f'Icon {icon} not supported or found')
         self._icon = icon
 
     @hybrid_property
@@ -59,3 +65,6 @@ class TransferUsage(ModelBase):
             usage = cls(name=name, default=default, **kwargs)
             db.session.add(usage)
         return usage
+
+    def __repr__(self):
+        return f'<Transfer Usage {id}: {name}>'

@@ -59,9 +59,6 @@ def generate_specific_secrets(write_path):
 
     add_val_sp('SLACK', 'HOST', '')
 
-    GE_MIGRATION = 'GE_MIGRATION'
-    add_val_sp(GE_MIGRATION, 'ge_http_provider', 'http://127.0.0.1:8500')
-
     with open(write_path, 'w') as f:
         specific_secrets_parser.write(f)
 

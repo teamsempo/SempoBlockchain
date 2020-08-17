@@ -15,7 +15,7 @@ from server.utils.transfer_filter import process_transfer_filters
 
 from server.schemas import transfer_accounts_schema, credit_transfers_schema
 from server.models.utils import paginate_query
-from server.utils.metrics import apply_filters
+from server.utils.metrics.filters import apply_filters
 from server.models.search import SearchView
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer

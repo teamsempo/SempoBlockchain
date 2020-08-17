@@ -27,7 +27,7 @@ from server.utils.credit_transfer import (
     handle_transfer_to_blockchain_address,
     make_payment_transfer
 )
-from server.utils.pusher import push_user_transfer_confirmation
+from server.utils.pusher_utils import push_user_transfer_confirmation
 
 
 class MeCreditTransferAPI(MethodView):
@@ -75,6 +75,10 @@ class MeCreditTransferAPI(MethodView):
         created = post_data.get('created')
 
         transfer_use = post_data.get('transfer_use')
+        try:
+            use_ids = transfer_use.split(',')  # passed as '3,4' etc.
+        except AttributeError:
+            use_ids = transfer_use
         transfer_mode = post_data.get('transfer_mode')
 
         transfer_amount = round(float(post_data.get('transfer_amount', 0)),6)

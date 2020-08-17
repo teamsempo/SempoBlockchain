@@ -13,14 +13,7 @@ class ResourceAlreadyDeletedError(Exception):
     pass
 
 
-class TransferLimitCreationError(Exception):
-    """
-    Raise if a TransferLimit is initialized with incorrect variables
-    """
-    pass
-
-
-class AccountLimitError(Exception):
+class TransferLimitError(Exception):
     """
     Raise if account LIMITS have been reached when transfer is attempted
     """
@@ -35,24 +28,39 @@ class AccountLimitError(Exception):
     def __str__(self):
         return self.message
 
-class NoTransferAllowedLimitError(AccountLimitError):
+
+class NoTransferAllowedLimitError(TransferLimitError):
     def __init__(self, token):
         super().__init__(message='No transfers are allowed', limit_time_period_days=0, token=token)
 
-class TransferCountLimitError(AccountLimitError):
+
+class MaximumPerTransferLimitError(TransferLimitError):
+    def __init__(self, maximum_amount_limit: int,  **kwargs):
+        super().__init__(limit_time_period_days=0, **kwargs)
+        self.maximum_amount_limit = maximum_amount_limit
+
+
+class TransferCountLimitError(TransferLimitError):
     def __init__(self, transfer_count_limit: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_count_limit = transfer_count_limit
 
 
-class TransferBalanceFractionLimitError(AccountLimitError):
+class TransferBalanceFractionLimitError(TransferLimitError):
     def __init__(self, transfer_balance_fraction_limit: float, transfer_amount_avail: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_balance_fraction_limit = transfer_balance_fraction_limit
         self.transfer_amount_avail = transfer_amount_avail
 
 
-class TransferAmountLimitError(AccountLimitError):
+class TransferAmountLimitError(TransferLimitError):
+    def __init__(self, transfer_amount_limit: int, transfer_amount_avail: int, **kwargs):
+        super().__init__(**kwargs)
+        self.transfer_amount_limit = transfer_amount_limit
+        self.transfer_amount_avail = transfer_amount_avail
+
+
+class MinimumSentLimitError(TransferLimitError):
     def __init__(self, transfer_amount_limit: int, transfer_amount_avail: int, **kwargs):
         super().__init__(**kwargs)
         self.transfer_amount_limit = transfer_amount_limit

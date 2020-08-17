@@ -1,16 +1,19 @@
 import datetime
 import pendulum
-from typing import Optional
+from typing import Optional, Tuple, Type
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.sql import func
 
 from server import db
-from server.utils.phone import send_message
+from server.sempo_types import TransferAmount
 from server.exceptions import (
     NoTransferAllowedLimitError,
     TransferBalanceFractionLimitError,
+    MaximumPerTransferLimitError,
     TransferCountLimitError,
     TransferAmountLimitError,
-    InsufficientBalanceError
+    InsufficientBalanceError,
+    MinimumSentLimitError
 )
 from server.models.credit_transfer import CreditTransfer
 from server.models.exchange import Exchange
@@ -18,15 +21,20 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.models.user import User
 
-from server.utils.misc import rounded_dollars, round_to_sig_figs
+from server.utils.phone import send_message
+from server.utils.misc import round_to_decimals, rounded_dollars, round_to_sig_figs
 from server.utils.credit_transfer import make_payment_transfer
 from server.models.utils import ephemeral_alchemy_object
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
-from server.utils.transfer_limits import TransferLimit
-
+from server.utils.transfer_limits.limits import (
+    AggregateTransferAmountMixin,
+    AggregateLimit,
+    BalanceFractionLimit,
+    TotalAmountLimit
+)
 
 class TokenProcessor(object):
 
@@ -68,12 +76,11 @@ class TokenProcessor(object):
         return default_transfer_account(user).balance
 
     @staticmethod
-    def get_default_limit(user: User, token: Token, transfer_account: TransferAccount) -> Optional[TransferLimit]:
+    def get_default_limit(user: User, token: Token) -> Optional[Tuple[AggregateLimit, TransferAmount]]:
         """
         :param user:
         :param token:
-        :param transfer_account:
-        :return: lowest limit applicable for a given CreditTransfer
+        :return: lowest amount limit applicable for a given CreditTransfer
         """
 
         with ephemeral_alchemy_object(
@@ -90,40 +97,11 @@ class TokenProcessor(object):
 
             if len(limits) == 0:
                 return None
-            else:
-                # should only ever be one ge limit
-                ge_limit = [limit for limit in limits if 'GE Liquid Token' in limit.name]
 
-                lowest_limit = None
-                lowest_amount_avail = float('inf')
-
-                for limit in limits:
-                    if 'GE Liquid Token' not in limit.name:
-                        transaction_volume = limit.apply_all_filters(
-                            dummy_transfer,
-                            db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-                        ).execution_options(show_all=True).first().total
-
-                        amount_avail = limit.total_amount - (transaction_volume or 0)
-                        fraction = ge_limit[0].transfer_balance_fraction or 0
-                        if amount_avail < (fraction * transfer_account.balance)\
-                                and amount_avail < lowest_amount_avail:
-                            lowest_limit = limit
-                            lowest_amount_avail = amount_avail
-
-                if lowest_limit:
-                    return lowest_limit
-                else:
-                    return ge_limit[0]
-
-    @staticmethod
-    def get_default_exchange_limit(limit: TransferLimit, user: Optional[User]):
-        if limit is not None and limit.transfer_balance_fraction is not None:
-            return limit.transfer_balance_fraction * TokenProcessor.get_balance(user)
-        elif limit.total_amount is not None:
-            return limit.total_amount
-        else:
-            return None
+            amount_limits = filter(lambda l: isinstance(l, AggregateTransferAmountMixin), limits)
+            with_amounts = [(limit, limit.available(dummy_transfer)) for limit in amount_limits]
+            sorted_amount_limits = sorted(with_amounts, key=lambda l: l[1])
+            return sorted_amount_limits[0] if len(sorted_amount_limits) > 0 else None
 
     @staticmethod
     def get_exchange_rate(user: User, from_token: Token):
@@ -173,7 +151,7 @@ class TokenProcessor(object):
                 token_balances=token_balances_dollars)
             return
 
-        default_limit = TokenProcessor.get_default_limit(user, default_token(user), default_transfer_account(user))
+        default_limit, limit_amount = TokenProcessor.get_default_limit(user, default_token(user))
         if default_limit:
             TokenProcessor.send_sms(
                 user,
@@ -194,10 +172,10 @@ class TokenProcessor(object):
     def fetch_exchange_rate(user: User):
         from_token = default_token(user)
 
-        default_limit = TokenProcessor.get_default_limit(user, from_token, default_transfer_account(user))
+        default_limit, limit_amount = TokenProcessor.get_default_limit(user, from_token)
         exchange_rate_full_precision = TokenProcessor.get_exchange_rate(user, from_token)
 
-        exchange_limit = rounded_dollars(TokenProcessor.get_default_exchange_limit(default_limit, user))
+        exchange_limit = rounded_dollars(limit_amount)
         exchange_rate = round_to_sig_figs(exchange_rate_full_precision, 3)
         exchange_sample_value = round(exchange_rate_full_precision * float(1000))
 
@@ -309,7 +287,7 @@ class TokenProcessor(object):
                 "exchange_not_allowed_error_sms",
             )
 
-        except TransferAmountLimitError as e:
+        except (TransferAmountLimitError, MinimumSentLimitError) as e:
             TokenProcessor.send_sms(
                 sender,
                 "exchange_amount_error_sms",
@@ -332,44 +310,50 @@ class TokenProcessor(object):
                 token=e.token,
                 limit_period=e.limit_time_period_days
             )
+        except MaximumPerTransferLimitError as e:
+            TokenProcessor.send_sms(
+                sender,
+                "maximum_per_transaction_error_sms",
+                token=e.token,
+                amount=e.maximum_amount_limit
+            )
 
     @staticmethod
     def _get_token_balances(user: User):
+
         def get_token_info(transfer_account: TransferAccount):
             token = transfer_account.token
-            limit = TokenProcessor.get_default_limit(user, token, transfer_account)
+            limit, limit_amount = TokenProcessor.get_default_limit(user, token)
             exchange_rate = TokenProcessor.get_exchange_rate(user, token)
             return {
                 "name": token.symbol,
                 "balance": transfer_account.balance,
                 "exchange_rate": exchange_rate,
                 "limit": limit,
+                "token": token
             }
 
         def check_if_ge_limit(token_info):
             return 'GE Liquid Token' in token_info['limit'].name
-            # return (token_info['exchange_rate'] is not None
-            #         and token_info['limit'] is not None
-            #         and token_info['limit'].transfer_balance_fraction is not None)
 
-        def ge_string(t):
-            if t['limit'].transfer_balance_fraction:
-                # TODO: This doesn't seem DRY with respect to 'get default exchange rate'
-                allowed_amount = rounded_dollars(t['limit'].transfer_balance_fraction * t['balance'])
-                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
-                return (
-                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
-                )
-            else:
-                return ""
+        def token_string(limit_type: Type[AggregateLimit], t: dict):
+            if isinstance(t['limit'], limit_type):
 
-        def standard_string(t):
-            if t['limit'].total_amount:
-                allowed_amount = f"{rounded_dollars(str(t['limit'].total_amount))}"
-                rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
-                return (
-                    f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
-                )
+                with ephemeral_alchemy_object(
+                        CreditTransfer,
+                        transfer_type=TransferTypeEnum.PAYMENT,
+                        transfer_subtype=TransferSubTypeEnum.AGENT_OUT,
+                        sender_user=user,
+                        recipient_user=user,
+                        token=t['token'],
+                        amount=0
+                ) as dummy_transfer:
+
+                    allowed_amount = f"{rounded_dollars(str(t['limit'].available_base(dummy_transfer)))}"
+                    rounded_rate = round_to_sig_figs(t['exchange_rate'], 3)
+                    return (
+                        f"{allowed_amount} {t['name']} (1 {t['name']} = {rounded_rate} {reserve_token.symbol})"
+                    )
             else:
                 return ""
 
@@ -385,9 +369,9 @@ class TokenProcessor(object):
         ge_tokens = list(filter(check_if_ge_limit, token_info_list))
         is_ge = len(ge_tokens) > 0
         if is_ge:
-            exchange_list = list(map(ge_string, ge_tokens))
+            exchange_list = list(map(lambda i: token_string(BalanceFractionLimit, i), ge_tokens))
         else:
-            exchange_list = list(map(standard_string, token_info_list))
+            exchange_list = list(map(lambda i: token_string(TotalAmountLimit, i), token_info_list))
 
         if len(exchange_list) == 0:
             token_exchanges = None

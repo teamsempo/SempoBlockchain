@@ -22,6 +22,7 @@ class TransferAccountType(enum.Enum):
     ORGANISATION    = 'ORGANISATION'
     FLOAT           = 'FLOAT'
     CONTRACT        = 'CONTRACT'
+    EXTERNAL        = 'EXTERNAL'
 
 
 class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
@@ -29,6 +30,12 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     name            = db.Column(db.String())
     _balance_wei    = db.Column(db.Numeric(27), default=0)
+    # The purpose of the balance offset is to allow the master wallet to be seeded at
+    # initial deploy time. Since balance is calculated by subtracting total credits from
+    # total debits, without a balance offset we'd be stuck in a zero-sum system with no
+    # mechanism to have initial funds. It's essentially an app-level analogy to minting
+    # which happens on the chain.
+    _balance_offset_wei    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
     is_approved     = db.Column(db.Boolean, default=False)
@@ -62,11 +69,9 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         lazy='joined'
     )
 
-    credit_sends       = db.relationship('CreditTransfer', backref='sender_transfer_account',
-                                         foreign_keys='CreditTransfer.sender_transfer_account_id')
+    credit_sends       = db.relationship('CreditTransfer', foreign_keys='CreditTransfer.sender_transfer_account_id', back_populates='sender_transfer_account')
 
-    credit_receives    = db.relationship('CreditTransfer', backref='recipient_transfer_account',
-                                         foreign_keys='CreditTransfer.recipient_transfer_account_id')
+    credit_receives    = db.relationship('CreditTransfer', foreign_keys='CreditTransfer.recipient_transfer_account_id', back_populates='recipient_transfer_account')
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
                                             foreign_keys='SpendApproval.giving_transfer_account_id')
@@ -111,36 +116,43 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # rounded to whole value of balance
         return float((self._balance_wei or 0) / int(1e16))
 
-    @balance.setter
-    def balance(self, val):
-        self._balance_wei = val * int(1e16)
+    @property
+    def balance_offset(self):
+        return float((self._balance_offset_wei or 0) / int(1e16))
 
-    def decrement_balance(self, val):
-        self.increment_balance(-1 * val)
+    def set_balance_offset(self, val):
+        self._balance_offset_wei = val * int(1e16)
+        self.update_balance()
 
-    def increment_balance(self, val):
-        # self.balance += val
-        val_wei = val * int(1e16)
-        if isinstance(val_wei, float):
-            val_wei = Decimal(val_wei).quantize(Decimal('1'))
-
-        self._balance_wei = (self._balance_wei or 0) + val_wei
+    def update_balance(self):
+        if not self._balance_offset_wei:
+            self._balance_offset_wei = 0
+        net_credit_transfer_position_wei = (self.total_received - self.total_sent) * int(1e16)
+        self._balance_wei = net_credit_transfer_position_wei + self._balance_offset_wei
 
     @hybrid_property
     def total_sent(self):
-        return int(
-            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id).first().total or 0
+        amount_cents = (
+                db.session.query(
+                    func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
+                )
+                .execution_options(show_all=True)
+                .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id)
+                .first().total
         )
+        return amount_cents or 0
 
     @hybrid_property
     def total_received(self):
-        return int(
-            db.session.query(func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')).execution_options(show_all=True)
-            .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id).first().total or 0
+        amount_cents = (
+            db.session.query(
+                func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
+            )
+            .execution_options(show_all=True)
+            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id)
+            .first().total
         )
+        return amount_cents or 0
 
     @hybrid_property
     def primary_user(self):
@@ -190,38 +202,29 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     def approve_and_disburse(self, initial_disbursement=None):
         from server.utils.access_control import AccessControl
-
-        active_org = getattr(g, 'active_organisation', self.primary_user.default_organisation)
         admin = getattr(g, 'user', None)
-        auto_resolve = initial_disbursement == active_org.default_disbursement
 
         if not self.is_approved and admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
             self.is_approved = True
 
         if self.is_beneficiary:
-            # TODO: make this more robust
-            # approve_and_disburse might be called for a second time to disburse
-            # so first check that no credit transfer have already been received
-            if len(self.credit_receives) < 1:
-                # make initial disbursement
-                disbursement = self._make_initial_disbursement(initial_disbursement, auto_resolve)
-                return disbursement
+            disbursement = self._make_initial_disbursement(initial_disbursement)
+            return disbursement
 
-            elif len(self.credit_receives) == 1:
-                # else likely initial disbursement received, check if DISBURSEMENT and PENDING and resolve if default
-
-                disbursement = self.credit_receives[0]
-                if disbursement.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT and disbursement.transfer_status == TransferStatusEnum.PENDING and auto_resolve:
-                    disbursement.resolve_as_completed()
-                    return disbursement
-
-    def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
+    def _make_initial_disbursement(self, initial_disbursement=None, auto_resolve=False):
         from server.utils.credit_transfer import make_payment_transfer
 
         active_org = getattr(g, 'active_organisation', Organisation.master_organisation())
-        initial_disbursement = initial_disbursement or active_org.default_disbursement
+        if initial_disbursement is None:
+            # initial disbursement defaults to None. If initial_disbursement is set then skip this section.
+            # If none, then we want to see if the active_org has a default disbursement amount
+            initial_disbursement = active_org.default_disbursement
         if not initial_disbursement:
+            # if initial_disbursement is still none, then we don't want to create a transfer.
             return None
+
+        if initial_disbursement == active_org.default_disbursement:
+            auto_resolve = True
 
         user_id = get_authorising_user_id()
         if user_id is not None:

@@ -21,7 +21,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
-from server.utils import pusher
+from server.utils import pusher_utils
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
 
 
@@ -175,9 +175,7 @@ def make_blockchain_transfer(transfer_amount,
         transfer.uuid = uuid
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed(existing_blockchain_txn=existing_blockchain_txn)
-
-    pusher.push_admin_credit_transfer(transfer)
+        transfer.resolve_as_complete()
 
     return transfer
 
@@ -197,7 +195,6 @@ def make_payment_transfer(transfer_amount,
                           uuid=None,
                           transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
                           is_ghost_transfer=False,
-                          enable_pusher=True,
                           queue='high-priority'):
     """
     This is used for internal transfers between Sempo wallets.
@@ -251,22 +248,15 @@ def make_payment_transfer(transfer_amount,
     make_cashout_incentive_transaction = False
 
     if transfer_use is not None:
-        usages = []
-        try:
-            use_ids = transfer_use.split(',')  # passed as '3,4' etc.
-        except AttributeError:
-            use_ids = transfer_use
-        for use_id in use_ids:
+        for use_id in transfer_use:
             if use_id != 'null':
                 use = TransferUsage.query.get(int(use_id))
                 if use:
-                    usages.append(use.name)
+                    transfer.transfer_usages.append(use)
                     if use.is_cashout:
                         make_cashout_incentive_transaction = True
                 else:
-                    usages.append('Other')
-
-        transfer.transfer_use = usages
+                    raise Exception(f'{use_id} not a valid transfer usage')
 
     transfer.uuid = uuid
 
@@ -286,9 +276,7 @@ def make_payment_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed(queue=queue)
-        if enable_pusher:
-            pusher.push_admin_credit_transfer(transfer)
+        transfer.resolve_as_complete_and_trigger_blockchain(queue=queue)
 
     if make_cashout_incentive_transaction:
         try:
@@ -345,8 +333,7 @@ def make_withdrawal_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed()
-        pusher.push_admin_credit_transfer(transfer)
+        transfer.resolve_as_complete_and_trigger_blockchain()
 
     return transfer
 
@@ -377,8 +364,7 @@ def make_deposit_transfer(transfer_amount,
                               uuid=uuid, fiat_ramp=fiat_ramp)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_completed()
-        pusher.push_admin_credit_transfer(transfer)
+        transfer.resolve_as_complete_and_trigger_blockchain()
 
     return transfer
 

@@ -4,9 +4,8 @@ import { Link } from "react-router-dom";
 
 import AuthModule from "../../auth/authModule.jsx";
 import UserList from "../../adminUser/adminUserList.jsx";
-import KoboCredentials from "../../koboCredentials.jsx";
-import GetVerified from "../../GetVerified.jsx";
-import CustomerSupport from "../../customerSupport.jsx";
+import KoboCredentials from "../../koboCredentials";
+import GetVerified from "../../GetVerified";
 
 import {
   WrapperDiv,
@@ -27,7 +26,6 @@ export default class settingsPage extends React.Component {
               <p style={{ margin: "1em" }}></p>
               <KoboCredentials />
               <GetVerified />
-              <CustomerSupport />
               <PageLink
                 to="/settings/organisation"
                 headerText="Organisation Settings"

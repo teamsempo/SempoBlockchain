@@ -8,10 +8,9 @@ const SingleDatePickerWrapper = lazy(() =>
   import("./SingleDatePickerWrapper.jsx")
 );
 import NewTransferManager from "../management/newTransferManager.jsx";
-import DateTime from "../dateTime.jsx";
+import DateTime from "../dateTime.tsx";
 
-import { editTransferAccount } from "../../reducers/transferAccountReducer";
-import { createTransferRequest } from "../../reducers/creditTransferReducer";
+import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
 
@@ -28,9 +27,10 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    createTransferRequest: payload => dispatch(createTransferRequest(payload)),
     editTransferAccountRequest: (body, path) =>
-      dispatch(editTransferAccount({ body, path }))
+      dispatch(
+        EditTransferAccountAction.editTransferAccountRequest({ body, path })
+      )
   };
 };
 
@@ -55,7 +55,6 @@ class TransferAccountManager extends React.Component {
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
-    this.createNewTransfer = this.createNewTransfer.bind(this);
     this.onSave = this.onSave.bind(this);
     this.onNewTransfer = this.onNewTransfer.bind(this);
   }
@@ -159,29 +158,6 @@ class TransferAccountManager extends React.Component {
     this.handleClick();
   }
 
-  createNewTransfer() {
-    if (this.state.transfer_amount > 0) {
-      var transfer_account_ids = this.props.transfer_account_id;
-      var transfer_amount = this.state.transfer_amount * 100;
-      var transfer_type = this.state.create_transfer_type;
-      var credit_transfer_type_filter = this.state.transfer_type;
-      const transfer_account_filter = this.props.vendors
-        ? "?account_type=vendor"
-        : "?account_type=beneficiary";
-      const credit_transfer_filter = `?transfer_account_ids=${transfer_account_ids}&transfer_type=${credit_transfer_type_filter}`;
-      var id = null;
-
-      this.props.createTransferRequest({
-        transfer_account_ids,
-        transfer_amount,
-        transfer_type,
-        credit_transfer_filter,
-        transfer_account_filter,
-        id
-      });
-    }
-  }
-
   render() {
     const {
       is_beneficiary,
@@ -265,10 +241,12 @@ class TransferAccountManager extends React.Component {
               <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
                 <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
                   <a href={tracker_link} target="_blank">
-                    {this.props.transferAccount.blockchain_address.substring(
-                      2,
-                      7
-                    ) + "..."}
+                    {this.props.transferAccount.blockchain_address
+                      ? this.props.transferAccount.blockchain_address.substring(
+                          2,
+                          7
+                        ) + "..."
+                      : ""}
                   </a>
                 </p>
               </span>
@@ -303,7 +281,6 @@ class TransferAccountManager extends React.Component {
                   </StyledButton>
                   <AsyncButton
                     onClick={this.onSave}
-                    miniSpinnerStyle={{ height: "10px", width: "10px" }}
                     buttonStyle={{
                       display: "inline-flex",
                       fontWeight: "400",

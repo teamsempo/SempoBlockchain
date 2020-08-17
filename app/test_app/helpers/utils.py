@@ -16,7 +16,7 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
                                      is_ghost: bool = False):
     transfer_account = TransferAccount(bound_entity=user)
     transfer_account.token = token
-    transfer_account.balance = balance
+    transfer_account.set_balance_offset(balance)
 
     if is_default:
         user.default_transfer_account = transfer_account
@@ -40,3 +40,11 @@ def fake_transfer_mapping(length: int):
         mapping.append(KenyaUssdStateMachine.make_usage_mapping(transfer_usage))
 
     return mapping
+
+
+def assert_resp_status_code(response, status_code):
+    try:
+        assert response.status_code == status_code
+    except AssertionError as e:
+        e.args += (f'JSON: {response.json}',)
+        raise e

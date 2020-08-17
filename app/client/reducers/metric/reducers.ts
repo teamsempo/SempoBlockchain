@@ -8,7 +8,8 @@ import { MetricsActionType, LoadMetricsActionType, Metrics } from "./types";
 const metricsState = (state: Metrics[] = [] || {}, action: MetricAction) => {
   switch (action.type) {
     case MetricsActionType.UPDATE_METRICS:
-      return DEEEEEEP(state, action.payload);
+      //Shallow merge so that aggregates don't compound
+      return { ...state, ...action.payload };
     default:
       return state;
   }

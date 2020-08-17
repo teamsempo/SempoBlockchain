@@ -1,12 +1,25 @@
 import * as React from "react";
-import { Mobile, Default } from "../helpers/responsive";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { NavLink } from "react-router-dom";
+import { Layout, Menu } from "antd";
+import { IntercomChat } from "../intercom/IntercomChat";
+import { IntercomHelpCentre } from "../intercom/IntercomHelpCentre";
+
+import {
+  DesktopOutlined,
+  SendOutlined,
+  TeamOutlined,
+  SettingOutlined,
+  QuestionCircleOutlined,
+  StockOutlined,
+  CompassOutlined
+} from "@ant-design/icons";
+
+const { Sider } = Layout;
+const { SubMenu } = Menu;
 
 import { ReduxState } from "../../reducers/rootReducer";
 import { replaceSpaces } from "../../utils";
-import MobileTopBar from "./MobileTopBar";
 import OrgSwitcher from "./OrgSwitcher";
 import { Organisation } from "../../reducers/organisation/types";
 import { LoginState } from "../../reducers/auth/loginReducer";
@@ -21,22 +34,22 @@ interface StateProps {
 
 interface DispatchProps {}
 
+interface ComponentProps {
+  pathname: string;
+}
+
 const initialState = Object.freeze({
   iconURL: "/static/media/sempo_icon.svg",
-  mobileMenuOpen: false,
-  isOrgSwitcherActive: false
+  isOrgSwitcherActive: false,
+  collapsed: false
 });
 
-type Props = DispatchProps & StateProps;
+type Props = DispatchProps & StateProps & ComponentProps;
 type State = typeof initialState;
 
 declare global {
   interface Window {
     DEPLOYMENT_NAME: string;
-    ETH_EXPLORER_URL: string;
-    USING_EXTERNAL_ERC20: boolean;
-    master_wallet_address: string;
-    ETH_CONTRACT_ADDRESS: string;
   }
 }
 
@@ -66,16 +79,6 @@ class NavBar extends React.Component<Props, State> {
     });
   }
 
-  componentWillUnmount() {
-    this.setState({ mobileMenuOpen: false });
-  }
-
-  openMobileMenu = () => {
-    this.setState(prevState => ({
-      mobileMenuOpen: !prevState.mobileMenuOpen
-    }));
-  };
-
   imageExists(url: string, callback: (exists: boolean) => any) {
     var img = new Image();
     img.onload = function() {
@@ -87,66 +90,75 @@ class NavBar extends React.Component<Props, State> {
     img.src = url;
   }
 
-  closeMobileMenu = () => this.setState({ mobileMenuOpen: false });
+  onCollapse = (collapsed: boolean) => {
+    this.setState({ collapsed });
+  };
 
   render() {
-    var tracker_link =
-      window.ETH_EXPLORER_URL +
-      "/address/" +
-      (window.USING_EXTERNAL_ERC20
-        ? window.master_wallet_address
-        : window.ETH_CONTRACT_ADDRESS);
+    let { loggedIn, pathname } = this.props;
+    let { iconURL, collapsed } = this.state;
 
-    let { loggedIn, email } = this.props;
-    let { iconURL, mobileMenuOpen } = this.state;
+    let activePath = pathname && "/" + pathname.split("/")[1];
 
     if (loggedIn) {
       return (
-        <div>
-          <SideBarWrapper mobileMenuOpen={mobileMenuOpen}>
-            <Mobile>
-              <MobileTopBar
-                iconUrl={iconURL}
-                email={email}
-                menuOpen={mobileMenuOpen}
-                onPress={this.openMobileMenu}
-              />
-            </Mobile>
+        <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
+          <OrgSwitcher icon={iconURL} collapsed={collapsed}></OrgSwitcher>
+          <Menu theme="dark" selectedKeys={[activePath]} mode="vertical">
+            <SubMenu
+              key="sub1"
+              icon={<DesktopOutlined translate={""} />}
+              title="Dashboard"
+            >
+              <Menu.Item key="/">
+                <NavLink to="/">
+                  <StockOutlined translate={""} /> Analytics
+                </NavLink>
+              </Menu.Item>
+              <Menu.Item key="/map">
+                <NavLink to="/map">
+                  <CompassOutlined translate={""} /> Map
+                </NavLink>
+              </Menu.Item>
+            </SubMenu>
+            <Menu.Item key="/accounts" icon={<TeamOutlined translate={""} />}>
+              <NavLink to="/accounts">Accounts</NavLink>
+            </Menu.Item>
+            <Menu.Item key="/transfers" icon={<SendOutlined translate={""} />}>
+              <NavLink to="/transfers">Transfers</NavLink>
+            </Menu.Item>
+            <Menu.Item
+              key="/settings"
+              icon={<SettingOutlined translate={""} />}
+            >
+              <NavLink to="/settings">Settings</NavLink>
+            </Menu.Item>
+          </Menu>
 
-            <SideBarNavigationItems>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <Default>
-                  <OrgSwitcher
-                    icon={iconURL}
-                    selfPress={this.closeMobileMenu}
-                  ></OrgSwitcher>
-                </Default>
-
-                <NavWrapper mobileMenuOpen={mobileMenuOpen}>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <StyledLink to="/" exact onClick={this.closeMobileMenu}>
-                      Dashboard
-                    </StyledLink>
-                    <StyledLink to="/accounts" onClick={this.closeMobileMenu}>
-                      Accounts
-                    </StyledLink>
-                    <StyledLink to="/transfers" onClick={this.closeMobileMenu}>
-                      Transfers
-                    </StyledLink>
-                    <StyledLink to="/settings" onClick={this.closeMobileMenu}>
-                      Settings
-                    </StyledLink>
-                  </div>
-                  <ContractAddress href={tracker_link} target="_blank">
-                    {window.USING_EXTERNAL_ERC20
-                      ? "Master Wallet Tracker"
-                      : "Contract Tracker"}
-                  </ContractAddress>
-                </NavWrapper>
-              </div>
-            </SideBarNavigationItems>
-          </SideBarWrapper>
-        </div>
+          <Menu
+            theme="dark"
+            mode="vertical"
+            style={{
+              position: "fixed",
+              bottom: "60px",
+              width: collapsed ? 80 : 200
+            }}
+            selectable={false}
+          >
+            <SubMenu
+              key="help"
+              icon={<QuestionCircleOutlined translate={""} />}
+              title="Help"
+            >
+              <Menu.Item key="help-centre">
+                <IntercomHelpCentre />
+              </Menu.Item>
+              <Menu.Item key="contact-support">
+                <IntercomChat />
+              </Menu.Item>
+            </SubMenu>
+          </Menu>
+        </Sider>
       );
     } else {
       return <div></div>;
@@ -168,68 +180,3 @@ const mapStateToProps = (state: ReduxState): StateProps => {
 };
 
 export default connect(mapStateToProps)(NavBar);
-
-const SideBarWrapper = styled.div<any>`
-  width: 234px;
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background-color: #2b333b;
-  -webkit-user-select: none;
-  z-index: 501;
-  @media (max-width: 767px) {
-    display: flex;
-    width: 100vw;
-    flex-direction: column;
-    height: ${props => (props.mobileMenuOpen ? "" : "50px")};
-  }
-`;
-
-const NavWrapper = styled.div<any>`
-  @media (max-width: 767px) {
-    display: ${props => (props.mobileMenuOpen ? "" : "none")};
-  }
-`;
-
-const SideBarNavigationItems = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const activeClassName = "active-link";
-
-const StyledLink = styled(NavLink).attrs({
-  activeClassName
-})`
-  color: #9a9a9a;
-  font-size: 12px;
-  text-decoration: none;
-  font-weight: 400;
-  padding: 1em 2em;
-  &:hover,
-  &.${activeClassName} {
-    color: #fff;
-    background-color: #3d454d;
-  }
-  @media (max-width: 767px) {
-    font-size: 16px;
-  }
-`;
-
-const ContractAddress = styled.a`
-  color: #fff;
-  margin: auto 2em;
-  font-size: 12px;
-  text-decoration: none;
-  font-weight: 400;
-  position: absolute;
-  bottom: 1em;
-  @media (max-width: 767px) {
-    text-align: center;
-    font-size: 16px;
-    left: 0;
-    right: 0;
-    color: #85898c;
-  }
-`;
