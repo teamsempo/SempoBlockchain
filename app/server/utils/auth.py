@@ -363,7 +363,7 @@ def create_user_response_object(user, auth_token, message):
 
     conversion_rate = 1
     currency_symbol = user.default_organisation.token.symbol if user.default_organisation and user.default_organisation.token else None
-    currency_decimals = user.default_organisation.token.display_decimals if user.default_organisation and user.default_organisation.token else None
+    display_decimals = user.default_organisation.token.display_decimals if user.default_organisation and user.default_organisation.token else None
     if user.default_currency:
         conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
         if conversion is not None:
@@ -393,7 +393,7 @@ def create_user_response_object(user, auth_token, message):
         'server_time': int(time.time() * 1000),
         'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
         'pusher_key': current_app.config['PUSHER_KEY'],
-        'currency_decimals': currency_decimals,
+        'currency_decimals': display_decimals,
         'currency_name': currency_symbol,  # todo(mobile-api): rename currency_name to currency_symbol
         'currency_conversion_rate': conversion_rate,
         'secret': user.secret,
