@@ -143,6 +143,10 @@ disbursement_filters = [
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT
 ]
 
+transaction_volume_filters = [
+    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+]
+
 standard_payment_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,

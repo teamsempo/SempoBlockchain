@@ -27,7 +27,7 @@ from server.utils.phone import send_message
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 from server.utils.misc import rounded_dollars
 
 

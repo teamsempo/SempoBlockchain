@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.4.6'  # Remember to bump this in every PR
+VERSION = '1.4.20'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -347,6 +347,7 @@ IPIFY_API_KEY = common_secrets_parser['IPIFY']['api_key']
 
 INTERCOM_ANDROID_SECRET = common_secrets_parser['INTERCOM']['android_secret']
 INTERCOM_WEB_SECRET = common_secrets_parser['INTERCOM']['web_secret']
+INTERCOM_APP_ID = config_parser['INTERCOM']['app_id']
 
 SLACK_HOST      = secrets_parser['SLACK']['host']
 SLACK_API_TOKEN = common_secrets_parser['SLACK']['token']
