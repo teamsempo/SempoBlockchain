@@ -4,7 +4,7 @@
 
 import React from "react";
 
-import { Tabs, Statistic, Typography, Tooltip } from "antd";
+import { Tabs, Statistic, Typography } from "antd";
 import {
   CaretUpOutlined,
   CaretDownOutlined,
@@ -14,9 +14,10 @@ import {
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-import { replaceUnderscores, toTitleCase } from "../../../utils";
+import { replaceUnderscores } from "../../../utils";
 
 import "./Tabs.css";
+import { TooltipWrapper } from "../TooltipWrapper";
 
 export default class CustomTabs extends React.Component {
   render() {
@@ -71,9 +72,10 @@ export default class CustomTabs extends React.Component {
               tab={
                 <Statistic
                   title={
-                    <Tooltip title={tsPrompt}>
-                      {toTitleCase(replaceUnderscores(tsLabel))}
-                    </Tooltip>
+                    <TooltipWrapper
+                      label={replaceUnderscores(tsLabel)}
+                      prompt={tsPrompt}
+                    />
                   }
                   value={metrics[tsName].aggregate.total}
                   precision={2}
