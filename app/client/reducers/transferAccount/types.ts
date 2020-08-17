@@ -3,7 +3,7 @@ export interface TransferAccount {
 }
 
 export interface TransferAccountByIDs {
-  [key: number]: TransferAccount;
+  [key: string]: TransferAccount;
 }
 
 export enum TransferAccountActionTypes {
@@ -57,7 +57,7 @@ interface TransfersForUser {
 }
 
 export interface TransfersByUserId {
-  [userId: number]: TransfersForUser;
+  [userId: string]: TransfersForUser;
 }
 
 export interface LoadTransferAccountListPayload {

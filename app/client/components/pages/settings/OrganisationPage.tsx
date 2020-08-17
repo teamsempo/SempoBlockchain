@@ -20,7 +20,7 @@ interface StateProps {
 }
 
 interface IState {
-  isoCountries: null;
+  isoCountries: string | null;
 }
 
 type IProps = DispatchProps & StateProps;
@@ -45,6 +45,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     //todo: refactor this
     //@ts-ignore
     return fetch(URL, {
+      //@ts-ignore
       headers: {
         Authorization: getToken()
       },
@@ -61,8 +62,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
             return `${isoKey}: ${isoCountries[isoKey]}`;
           });
         }
-        //@ts-ignore
         this.setState({
+          //@ts-ignore
           isoCountries: isoCountriesOptions
         });
       })
@@ -98,6 +99,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
                 activeOrganisation={this.props.activeOrganisation}
                 organisations={this.props.organisations}
                 isoCountries={this.state.isoCountries}
+                //@ts-ignore
                 onSubmit={(form: IOrganisationSettings) => this.onSubmit(form)}
               />
             ) : (

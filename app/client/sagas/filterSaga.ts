@@ -32,6 +32,7 @@ function* updateStateFromFilter(data: FilterData) {
 
   const filters = normalizedData.entities.filters;
 
+  //@ts-ignore
   yield put(FilterListAction.updateFilterList(filters));
 }
 

@@ -10,7 +10,7 @@ export interface Organisation {
 }
 
 export interface OrganisationByIDs {
-  [key: number]: Organisation;
+  [key: string]: Organisation;
 }
 
 export interface OrganisationData {

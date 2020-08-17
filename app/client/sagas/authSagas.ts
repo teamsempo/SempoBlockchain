@@ -111,7 +111,7 @@ function* updateStateFromAdmin(data: AdminData) {
   const admins = normalizeAdminData.entities.admins;
   const invites = normalizeInviteData.entities.invites;
 
-  yield put(AdminUserListAction.updateAdminUserList(admins));
+  yield put(AdminUserListAction.updateAdminUserList(admins || []));
   yield put(InviteUserListAction.deepUpdateInviteUsers(invites || []));
 }
 

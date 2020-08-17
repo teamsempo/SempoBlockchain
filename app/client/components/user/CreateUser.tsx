@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 
 import { StyledButton, ModuleHeader } from "../styledElements";
-import * as styles from "./styles.module.css";
+import styles from "./styles.module.css";
 import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { Organisation } from "../../reducers/organisation/types";

@@ -102,5 +102,5 @@ export interface ResetPinPayload {
 }
 
 export interface UserByIDs {
-  [key: number]: User;
+  [key: string]: User;
 }

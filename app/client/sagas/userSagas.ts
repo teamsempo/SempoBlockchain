@@ -55,7 +55,7 @@ function* updateStateFromUser(data: UserData) {
 
   const users = normalizedData.entities.users;
 
-  yield put(UserListAction.deepUpdateUserList(users));
+  yield put(UserListAction.deepUpdateUserList(users || []));
 }
 
 function* loadUser(

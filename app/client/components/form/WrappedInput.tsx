@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import * as styles from "./styles.module.css";
+import styles from "./styles.module.css";
 
 import { AdaptedPhoneInput } from "./Phone";
 

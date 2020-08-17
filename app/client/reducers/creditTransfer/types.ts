@@ -62,10 +62,7 @@ export type CreditTransfer =
   | DisbursementCreditTransfer
   | ReclamationCreditTransfer;
 
-// TODO we should only need one of these keys
 export interface CreditTransfers {
-  [key: number]: CreditTransfer;
-
   [key: string]: CreditTransfer;
 }
 

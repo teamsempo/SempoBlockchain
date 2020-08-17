@@ -102,7 +102,7 @@ export interface AdminUser {
 }
 
 export interface AdminUserByIDs {
-  [key: number]: AdminUser;
+  [key: string]: AdminUser;
 }
 
 export const UPDATE_ADMIN_USER_LIST = "UPDATE_ADMIN_USER_LIST";
@@ -115,7 +115,7 @@ export interface Invite {
 }
 
 export interface InviteByIDs {
-  [key: number]: Invite;
+  [key: string]: Invite;
 }
 
 export enum InviteUserListActionTypes {
