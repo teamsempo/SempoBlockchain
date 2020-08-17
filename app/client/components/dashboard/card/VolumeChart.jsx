@@ -57,7 +57,7 @@ class VolumeChart extends React.Component {
   }
 
   render() {
-    let { selected, data } = this.props;
+    let { selected, data, filter_dates } = this.props;
 
     if (!(data && data.timeseries)) {
       return (
@@ -75,6 +75,16 @@ class VolumeChart extends React.Component {
     let all_dates = Object.values(data.timeseries)
       .flat()
       .map(data => new Date(data.date));
+
+    // Handles cases where start or end dates don't have any timeseries data
+    if (filter_dates) {
+      all_dates = all_dates.concat(
+        filter_dates
+          .filter(date => date != null)
+          .map(date => date.startOf("day"))
+      );
+    }
+
     let minDate = new Date(Math.min.apply(null, all_dates));
     let maxDate = new Date(Math.max.apply(null, all_dates));
 
