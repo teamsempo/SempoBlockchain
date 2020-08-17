@@ -227,9 +227,9 @@ workflows:
             branches:
               only:
                 - master
-                - more_worker_testing
+                - move-away-from-gevent
           requires:
             - build
-            - test:backend
-            - test:worker
-            - test:frontend
+            #- test:backend
+            #- test:worker
+            #- test:frontend

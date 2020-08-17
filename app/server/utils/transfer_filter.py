@@ -33,45 +33,57 @@ class TransferFilterEnum:
     DISCRETE        = "discrete"
     BOOLEAN_MAPPING = "boolean_mapping"
 
-
-ALL_FILTERS = {
-    'transfer_amount': {
-        'name': 'Transfer Amount',
-        'table': CreditTransfer.__tablename__,
-        'type': TransferFilterEnum.INT_RANGE
-    },
-    'created': {
-        'name': "Created",
-        'table': User.__tablename__,
-        'type' : TransferFilterEnum.DATE_RANGE,
-    },
-    'user_type': {
-        'name': "User Type",
-        'table': User.__tablename__,
-        'type': TransferFilterEnum.BOOLEAN_MAPPING,
-        'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
-    },
-    'gender': {
-        'name': "Gender",
-        'table': CustomAttributeUserStorage.__tablename__,
-        'type': TransferFilterEnum.DISCRETE,
-        'values' : [MALE, FEMALE]
-    },
-    'rounded_account_balance': {
-        'name': "Balance",
-        'table': TransferAccount.__tablename__,
-        'type' : TransferFilterEnum.INT_RANGE
+class Filters(object):
+    @property
+    def ALL_FILTERS(self):
+        return {
+        'transfer_amount': {
+            'name': 'Transfer Amount',
+            'table': CreditTransfer.__tablename__,
+            'type': TransferFilterEnum.INT_RANGE
+        },
+        'created': {
+            'name': "Created",
+            'table': User.__tablename__,
+            'type' : TransferFilterEnum.DATE_RANGE,
+        },
+        'user_type': {
+            'name': "User Type",
+            'table': User.__tablename__,
+            'type': TransferFilterEnum.BOOLEAN_MAPPING,
+            'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
+        },
+        'gender': {
+            'name': "Gender",
+            'table': CustomAttributeUserStorage.__tablename__,
+            'type': TransferFilterEnum.DISCRETE,
+            'values' : [MALE, FEMALE]
+        },
+        '_location': {
+            'name': "Location",
+            'table': User.__tablename__,
+            'type': TransferFilterEnum.DISCRETE,
+            'values' : [u._location for u in db.session.query(User._location).distinct()]
+        },
+        'rounded_account_balance': {
+            'name': "Balance",
+            'table': TransferAccount.__tablename__,
+            'type' : TransferFilterEnum.INT_RANGE
+        }
     }
-}
-
-TRANSFER_FILTERS = ALL_FILTERS
-
-USER_FILTERS = {
-    'created': ALL_FILTERS['created'],
-    'user_type': ALL_FILTERS['user_type'],
-    'gender': ALL_FILTERS['gender'],
-    'rounded_account_balance': ALL_FILTERS['rounded_account_balance']
-}
+    @property
+    def TRANSFER_FILTERS(self): return self.ALL_FILTERS
+    
+    @property
+    def USER_FILTERS(self): 
+        all_filters = self.ALL_FILTERS
+        return {
+            'created': all_filters['created'],
+            'user_type': all_filters['user_type'],
+            'gender': all_filters['gender'],
+            '_location': all_filters['_location'],
+            'rounded_account_balance': all_filters['rounded_account_balance']
+        }
 
 # will return a dictionary with table names as keys
 # values will be a dictionary of array of tuples
@@ -81,6 +93,7 @@ def process_transfer_filters(encoded_filters):
     # parse and prepare filters for calculating transfer stats
     if (encoded_filters is None):
         return
+    filters = Filters()
 
     filter_list = parse_filter_string(encoded_filters)
 
@@ -89,7 +102,7 @@ def process_transfer_filters(encoded_filters):
     for f in filter_list:
 
         unprocessed_attribute = f['attribute']
-        table = ALL_FILTERS[unprocessed_attribute]['table']
+        table = filters.ALL_FILTERS[unprocessed_attribute]['table']
 
         processed = handle_filter(**f)
 
@@ -131,13 +144,15 @@ def parse_filter_string(filter_string):
 
 
 def handle_filter(attribute, comparator, value):
-    if ALL_FILTERS[attribute]['type'] == TransferFilterEnum.BOOLEAN_MAPPING:
+    filters = Filters()
+    attribute_type = filters.ALL_FILTERS[attribute]['type']
+    if attribute_type == TransferFilterEnum.BOOLEAN_MAPPING:
         return handle_boolean_mapping(attribute, comparator, value)
 
-    elif ALL_FILTERS[attribute]['type'] == TransferFilterEnum.DISCRETE:
+    elif attribute_type == TransferFilterEnum.DISCRETE:
         return handle_discrete(attribute, comparator, value)
     else:
-        return handle_other_types(attribute, comparator, value)
+        return handle_other_types(attribute, comparator, value, attribute_type)
 
 
 def handle_boolean_mapping(attribute, comparator, value):
@@ -154,7 +169,7 @@ def handle_discrete(attribute, comparator, value):
     return [(attribute, "EQ", value)]
 
 
-def handle_other_types(attribute, comparator, value):
-    value = value if ALL_FILTERS[attribute]['type'] == TransferFilterEnum.DATE_RANGE else float(value)
+def handle_other_types(attribute, comparator, value, attribute_type):
+    value = value if attribute_type == TransferFilterEnum.DATE_RANGE else float(value)
     return [(attribute, comparator, value)]
 
