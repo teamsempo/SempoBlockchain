@@ -1,5 +1,6 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects.postgresql import JSONB
 import pendulum
 import secrets
 
@@ -24,6 +25,8 @@ class Organisation(ModelBase):
     name                = db.Column(db.String)
 
     external_auth_username = db.Column(db.String)
+
+    valid_roles = db.Column(JSONB)
     
     _external_auth_password = db.Column(db.String)
 
