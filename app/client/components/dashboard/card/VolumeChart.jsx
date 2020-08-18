@@ -12,7 +12,8 @@ import {
   hexToRgb,
   toTitleCase,
   replaceUnderscores,
-  get_zero_filled_values
+  get_zero_filled_values,
+  toDollars
 } from "../../../utils";
 
 import LoadingSpinner from "../../loadingSpinner.jsx";
@@ -166,9 +167,16 @@ class VolumeChart extends React.Component {
 
     let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
     const datasets = possibleTimeseriesKeys.map((key, index) => {
+      const timeseries = data.timeseries[key].map(a => {
+        if (data.type.type == "currency") {
+          a.value = toDollars(a.value);
+        }
+        return a;
+      });
+
       const zero_filled_data = get_zero_filled_values(
         "value",
-        data.timeseries[key],
+        timeseries,
         date_array
       );
 

@@ -15,7 +15,7 @@ import {
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-import { replaceUnderscores, toTitleCase } from "../../../utils";
+import { replaceUnderscores, toTitleCase, toDollars } from "../../../utils";
 
 import "./Tabs.css";
 
@@ -67,13 +67,18 @@ export default class CustomTabs extends React.Component {
             percentChange = Math.round((endValue / startValue - 1) * 100);
           }
 
+          const total =
+            metrics[tsName].type.type == "currency"
+              ? toDollars(metrics[tsName].aggregate.total)
+              : metrics[tsName].aggregate.total;
+
           return (
             <TabPane
               key={tsName}
               tab={
                 <Statistic
                   title={toTitleCase(replaceUnderscores(tsLabel))}
-                  value={metrics[tsName].aggregate.total}
+                  value={total}
                   suffix={suffix}
                   precision={metrics[tsName].type.display_decimals}
                   prefix={
