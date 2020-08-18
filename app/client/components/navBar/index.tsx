@@ -23,6 +23,7 @@ import { replaceSpaces } from "../../utils";
 import OrgSwitcher from "./OrgSwitcher";
 import { Organisation } from "../../reducers/organisation/types";
 import { LoginState } from "../../reducers/auth/loginReducer";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 interface StateProps {
   loggedIn: boolean;
@@ -36,12 +37,14 @@ interface DispatchProps {}
 
 interface ComponentProps {
   pathname: string;
+  isMobile: boolean;
+  onCollapse: (collapsed: boolean) => any;
+  collapsed: boolean;
 }
 
 const initialState = Object.freeze({
   iconURL: "/static/media/sempo_icon.svg",
-  isOrgSwitcherActive: false,
-  collapsed: false
+  isOrgSwitcherActive: false
 });
 
 type Props = DispatchProps & StateProps & ComponentProps;
@@ -90,21 +93,28 @@ class NavBar extends React.Component<Props, State> {
     img.src = url;
   }
 
-  onCollapse = (collapsed: boolean) => {
-    this.setState({ collapsed });
-  };
-
   render() {
-    let { loggedIn, pathname } = this.props;
-    let { iconURL, collapsed } = this.state;
+    let { loggedIn, pathname, isMobile, collapsed } = this.props;
+    let { iconURL } = this.state;
 
     let activePath = pathname && "/" + pathname.split("/")[1];
 
     if (loggedIn) {
       return (
-        <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
+        <Sider
+          collapsible={!isMobile}
+          collapsed={collapsed}
+          onCollapse={collapsed => this.props.onCollapse(collapsed)}
+          breakpoint={isMobile ? "md" : undefined}
+          collapsedWidth={isMobile ? "0" : undefined}
+          style={{ position: "fixed", zIndex: 99, height: "100%" }}
+        >
           <OrgSwitcher icon={iconURL} collapsed={collapsed}></OrgSwitcher>
-          <Menu theme="dark" selectedKeys={[activePath]} mode="vertical">
+          <Menu
+            theme="dark"
+            selectedKeys={[activePath]}
+            mode={isMobile ? "inline" : "vertical"}
+          >
             <SubMenu
               key="sub1"
               icon={<DesktopOutlined translate={""} />}
@@ -137,12 +147,16 @@ class NavBar extends React.Component<Props, State> {
 
           <Menu
             theme="dark"
-            mode="vertical"
-            style={{
-              position: "fixed",
-              bottom: "60px",
-              width: collapsed ? 80 : 200
-            }}
+            mode={isMobile ? "inline" : "vertical"}
+            style={
+              isMobile
+                ? undefined
+                : {
+                    position: "fixed",
+                    bottom: "60px",
+                    width: collapsed ? 80 : 200
+                  }
+            }
             selectable={false}
           >
             <SubMenu
@@ -179,4 +193,6 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   };
 };
 
-export default connect(mapStateToProps)(NavBar);
+export default connect(mapStateToProps)(
+  withMediaQuery([isMobileQuery])(NavBar)
+);

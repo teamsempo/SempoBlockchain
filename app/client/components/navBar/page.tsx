@@ -3,6 +3,8 @@ import { Layout, Typography } from "antd";
 import { CenterLoadingSideBarActive } from "../styledElements";
 
 import NavBar from "../navBar";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
+
 import IntercomSetup from "../intercom/IntercomSetup";
 import MessageBar from "../messageBar";
 import ErrorBoundary from "../ErrorBoundary";
@@ -17,18 +19,26 @@ interface OuterProps {
   footer?: boolean;
   isAntDesign?: boolean;
   title?: string;
+  isMobile?: boolean;
   component?: React.ComponentClass | React.FunctionComponent;
 }
 
 const Page: React.FunctionComponent<OuterProps> = props => {
+  const [collapsed, setCollapsed] = React.useState(false);
+
   const {
     footer = true,
     isAntDesign = false,
     noNav,
     location,
     title,
+    isMobile = false,
     component: Component = React.Component
   } = props;
+
+  let onCollapse = (collapsed: boolean) => {
+    setCollapsed(collapsed);
+  };
 
   return (
     <ErrorBoundary>
@@ -36,9 +46,45 @@ const Page: React.FunctionComponent<OuterProps> = props => {
       <MessageBar />
 
       <Layout style={{ minHeight: "100vh" }}>
-        {noNav ? null : <NavBar pathname={location.pathname} />}
+        {noNav ? null : (
+          <NavBar
+            pathname={location.pathname}
+            onCollapse={onCollapse}
+            collapsed={collapsed}
+          />
+        )}
 
-        <Layout className="site-layout">
+        <div
+          onClick={() => setCollapsed(true)}
+          style={
+            noNav
+              ? undefined
+              : isMobile
+              ? collapsed
+                ? undefined
+                : {
+                    height: "100%",
+                    width: "100%",
+                    backgroundColor: "rgba(0,0,0,.45)",
+                    position: "fixed",
+                    zIndex: 1
+                  }
+              : undefined
+          }
+        />
+
+        <Layout
+          className="site-layout"
+          style={
+            noNav
+              ? undefined
+              : isMobile
+              ? undefined
+              : collapsed
+              ? { marginLeft: "80px" }
+              : { marginLeft: "200px" }
+          }
+        >
           {title ? (
             <Header className="site-layout-background" style={{ padding: 0 }}>
               <Title>{title}</Title>
@@ -63,4 +109,4 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     </ErrorBoundary>
   );
 };
-export default Page;
+export default withMediaQuery([isMobileQuery])(Page);
