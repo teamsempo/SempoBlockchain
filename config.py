@@ -135,6 +135,7 @@ TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
+ALLOW_SELF_SIGN_UP = config_parser['APP'].getboolean('ALLOW_SELF_SIGN_UP') or False
 
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
 

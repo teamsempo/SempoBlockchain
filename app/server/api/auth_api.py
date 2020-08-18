@@ -342,7 +342,7 @@ class LoginAPI(MethodView):
                 user = User.query.filter_by(phone=phone).execution_options(show_all=True).first()
 
         # mobile user doesn't exist so default to creating a new wallet!
-        if user is None and phone:
+        if user is None and phone and current_app.config['ALLOW_SELF_SIGN_UP']:
             # this is a registration from a mobile device THUS a vendor or recipient.
             response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
                 dict(phone=phone, deviceInfo=post_data.get('deviceInfo')),
