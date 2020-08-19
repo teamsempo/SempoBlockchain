@@ -5,14 +5,10 @@
 import React from "react";
 
 import { connect } from "react-redux";
-import moment from "moment";
 
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 import { Card, Divider } from "antd";
-
-import { LoadMetricAction } from "../../reducers/metric/actions";
-import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
@@ -20,10 +16,6 @@ import CustomTabs from "./card/CustomTabs";
 import DateRangeSelector from "./dateRangeSelector";
 import FilterModule from "../filterModule/FilterModule";
 import LoadingSpinner from "../loadingSpinner.jsx";
-
-import { reduxState } from "./FakeState";
-
-const dateFormat = "DD/MM/YYYY";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -101,7 +93,7 @@ class MetricsCard extends React.Component {
               style={{
                 height: this.props.chartHeight - 50,
                 padding: "0 1em",
-                margin: isMobile ? "-3em0" : "0 0 3em",
+                margin: isMobile ? "-3em 0" : "0 0 3em",
                 transform: isMobile ? "rotate(90deg)" : null
               }}
             />
@@ -160,4 +152,4 @@ class MetricsCard extends React.Component {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(MetricsCard);
+)(withMediaQuery([isMobileQuery])(MetricsCard));
