@@ -393,7 +393,7 @@ def create_user_response_object(user, auth_token, message):
         'server_time': int(time.time() * 1000),
         'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
         'pusher_key': current_app.config['PUSHER_KEY'],
-        'currency_decimals': display_decimals,
+        'display_decimals': display_decimals,
         'currency_name': currency_symbol,  # todo(mobile-api): rename currency_name to currency_symbol
         'currency_conversion_rate': conversion_rate,
         'secret': user.secret,
