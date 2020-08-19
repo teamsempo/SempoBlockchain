@@ -13,7 +13,7 @@ from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
-from server.utils.misc import decrypt_string
+from server.utils.misc import decrypt_string, attach_host
 
 import random
 
@@ -35,7 +35,7 @@ class RefreshTokenAPI(MethodView):
             # Update the last_seen TS for this user
             g.user.update_last_seen_ts()
 
-            return make_response(jsonify(response_object)), 200
+            return make_response(jsonify(attach_host(response_object))), 200
 
         except Exception as e:
 
@@ -72,7 +72,7 @@ class RegisterAPI(MethodView):
             if response_code == 200:
                 db.session.commit()
 
-            return make_response(jsonify(response_object)), response_code
+            return make_response(jsonify(attach_host(response_object))), response_code
 
         email_ok = False
 
@@ -170,7 +170,7 @@ class RegisterAPI(MethodView):
 
             db.session.commit()
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(attach_host(response_object))), 201
 
         activation_token = user.encode_single_use_JWS('A')
 
@@ -184,7 +184,7 @@ class RegisterAPI(MethodView):
             'message': 'Successfully registered. You must activate your email.',
         }
 
-        return make_response(jsonify(response_object)), 201
+        return make_response(jsonify(attach_host(response_object))), 201
 
 
 class ActivateUserAPI(MethodView):
@@ -249,7 +249,7 @@ class ActivateUserAPI(MethodView):
 
             db.session.commit()
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(attach_host(response_object))), 201
 
         else:
             response_object = {
@@ -301,7 +301,7 @@ class LoginAPI(MethodView):
             challenge[0]: challenge[1],
             # 'metadata': {'user_agent': user_agent, 'ip': ip_address, 'otherip': ip, 'proxies': proxies},
         }
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
     def post(self):
         # There is an unique case where users are using their mobile number from the App to either login or register
@@ -318,6 +318,8 @@ class LoginAPI(MethodView):
         email = post_data.get('username') or post_data.get('email')
         password = post_data.get('password')
         tfa_token = post_data.get('tfa_token')
+
+        password_empty = password == '' or password is None
 
         # First try to match email
         if email:
@@ -354,7 +356,7 @@ class LoginAPI(MethodView):
 
             return make_response(jsonify(response_object)), response_code
 
-        if user and user.is_activated and post_data.get('phone') and (password == '' or password is None):
+        if user and user.is_activated and post_data.get('phone') and password_empty:
             # user already exists, is activated. no password provided, thus request PIN screen.
             # todo: this should check if device exists, if no, resend OTP to verify login is real.
             response_object = {
@@ -362,7 +364,7 @@ class LoginAPI(MethodView):
                 'login_with_pin': True,
                 'message': 'Login with PIN'
             }
-            return make_response(jsonify(response_object)), 200
+            return make_response(jsonify(attach_host(response_object))), 200
 
         if not (email or post_data.get('phone')):
             response_object = {
@@ -379,7 +381,7 @@ class LoginAPI(MethodView):
                     'pin_must_be_set': True,
                     'message': 'Please set your pin.'
                 }
-                return make_response(jsonify(response_object)), 200
+                return make_response(jsonify(attach_host(response_object))), 200
 
             if not user.is_phone_verified:
                 if user.is_self_sign_up:
@@ -387,8 +389,20 @@ class LoginAPI(MethodView):
                     user.set_pin(None, False)  # resets PIN
                     UserUtils.send_one_time_code(phone=phone, user=user)
                 db.session.commit()
+
+                if not password_empty:
+                    # The user provided a password, so probably not going through incremental login
+                    # This is a hacky way to get past the incremental-login multi-org split
+                    response_object = {
+                        'status': 'fail',
+                        'otp_verify': True,
+                        'message': 'Please verify phone number.',
+                        'error_message': 'Incorrect One Time Code.'
+                    }
+                    return make_response(jsonify(attach_host(response_object))), 200
+
                 response_object = {'message':  'Please verify phone number.', 'otp_verify': True}
-                return make_response(jsonify(response_object)), 200
+                return make_response(jsonify(attach_host(response_object))), 200
 
         try:
 
@@ -439,7 +453,7 @@ class LoginAPI(MethodView):
 
             db.session.commit()
 
-            return make_response(jsonify(response_object)), 200
+            return make_response(jsonify(attach_host(response_object))), 200
 
         except Exception as e:
             sentry_sdk.capture_exception(e)
@@ -471,13 +485,13 @@ class LogoutAPI(MethodView):
                         'status': 'success',
                         'message': 'Successfully logged out.'
                     }
-                    return make_response(jsonify(response_object)), 200
+                    return make_response(jsonify(attach_host(response_object))), 200
                 except Exception as e:
                     response_object = {
                         'status': 'fail',
                         'message': e
                     }
-                    return make_response(jsonify(response_object)), 200
+                    return make_response(jsonify(attach_host(response_object))), 200
             else:
                 response_object = {
                     'status': 'fail',
@@ -524,7 +538,7 @@ class RequestPasswordResetEmailAPI(MethodView):
             'message': 'Reset email sent'
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
 
 class ResetPasswordAPI(MethodView):
@@ -587,7 +601,7 @@ class ResetPasswordAPI(MethodView):
 
             db.session.commit()
 
-            return make_response(jsonify(response_object)), 200
+            return make_response(jsonify(attach_host(response_object))), 200
 
         # Check authorisation using regular auth
         elif auth_header and auth_header != 'null' and old_password:
@@ -677,7 +691,7 @@ class ResetPasswordAPI(MethodView):
             'message': 'Password changed, please log in'
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
 
 class PermissionsAPI(MethodView):
@@ -718,7 +732,7 @@ class PermissionsAPI(MethodView):
             },
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
@@ -767,7 +781,7 @@ class PermissionsAPI(MethodView):
             'message': 'An invite has been sent!',
         }
 
-        return make_response(jsonify(response_object)), 201
+        return make_response(jsonify(attach_host(response_object))), 201
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self):
@@ -799,7 +813,9 @@ class PermissionsAPI(MethodView):
 
             send_invite_email(invite, organisation)
 
-            return make_response(jsonify({'message': 'An invite has been re-sent!'})), 200
+            response_object = {'message': 'An invite has been re-sent!'}
+
+            return make_response(jsonify(attach_host(response_object))), 200
 
         else:
             if not user_id:
@@ -834,7 +850,7 @@ class PermissionsAPI(MethodView):
                 }
             }
 
-            return make_response(jsonify(response_object)), 200
+            return make_response(jsonify(attach_host(response_object))), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def delete(self):
@@ -862,7 +878,7 @@ class BlockchainKeyAPI(MethodView):
             'address': current_app.config['MASTER_WALLET_ADDRESS']
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
 
 class ExternalCredentialsAPI(MethodView):
@@ -874,7 +890,7 @@ class ExternalCredentialsAPI(MethodView):
             'password': g.active_organisation.external_auth_password
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
 
 class TwoFactorAuthAPI(MethodView):
@@ -885,7 +901,7 @@ class TwoFactorAuthAPI(MethodView):
             'data': {"tfa_url": tfa_url}
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
     @requires_auth(ignore_tfa_requirement=True)
     def post(self):
@@ -909,7 +925,7 @@ class TwoFactorAuthAPI(MethodView):
                 'message': "OTP must be a 6 digit numeric string"
             }
 
-            return make_response(jsonify(response_object)), 400
+            return make_response(jsonify(attach_host(response_object))), 400
 
         if user.validate_OTP(otp_token):
             tfa_auth_token = user.encode_TFA_token(otp_expiry_interval)
@@ -924,7 +940,7 @@ class TwoFactorAuthAPI(MethodView):
 
                 response_object['tfa_auth_token'] = tfa_auth_token.decode()
 
-                return make_response(jsonify(response_object)), 200
+                return make_response(jsonify(attach_host(response_object))), 200
 
         response_object = {
             'status': "Failed",
@@ -941,7 +957,7 @@ class CheckBasicAuth(MethodView):
             'status': 'success',
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
 
 class CheckTokenAuth(MethodView):
@@ -951,7 +967,7 @@ class CheckTokenAuth(MethodView):
             'status': 'success',
         }
 
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(attach_host(response_object))), 200
 
 
 
