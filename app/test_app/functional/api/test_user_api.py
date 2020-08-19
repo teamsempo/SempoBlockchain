@@ -1,12 +1,14 @@
 import pytest, json, time
 from faker.providers import phone_number
 from faker import Faker
+from random import randint
 
 from server import db
 from server.utils.auth import get_complete_auth_token
 from server.utils.phone import proccess_phone_number
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User
+from server.models.transfer_card import TransferCard
 from server.utils.location import async_set_user_gps_from_location
 
 fake = Faker()
@@ -29,15 +31,17 @@ def mock_async_set_user_gps_from_location(mocker):
     return fn_inputs
 
 
-@pytest.mark.parametrize("user_phone_accessor, phone, business_usage_name, referred_by, "
-                         "initial_disbursement, tier, status_code", [
-                             (lambda o: o.phone, None, 'Fuel/Energy', '+61401391419', None, 'superadmin', 400),
-                             (lambda o: o.phone, fake.msisdn(), 'Fuel/Energy', fake.msisdn(), 0, 'superadmin', 200),
-                             (lambda o: o.phone, fake.msisdn(), 'Fuel/Energy', fake.msisdn(), None, 'superadmin', 200),
-                             (lambda o: o.phone, fake.msisdn(), 'Food/Water', fake.msisdn(), None, 'view', 403)
-])
+@pytest.mark.parametrize("user_phone_accessor, phone, use_card, business_usage_name, referred_by, "
+                         "initial_disbursement, tier, status_code",
+                         [
+                             (lambda o: o.phone, None, False, 'Fuel/Energy', '+61401391419', None, 'superadmin', 400),
+                             (lambda o: o.phone, None, True, 'Fuel/Energy', '+61401391419', None, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), False, 'Fuel/Energy', fake.msisdn(), 0, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), False, 'Fuel/Energy', fake.msisdn(), None, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), False, 'Food/Water', fake.msisdn(), None, 'view', 403)
+                         ])
 def test_create_user(test_client, authed_sempo_admin_user, init_database, create_transfer_account_user,
-                     mock_async_set_user_gps_from_location, user_phone_accessor, phone,
+                     mock_async_set_user_gps_from_location, user_phone_accessor, phone, use_card,
                      business_usage_name, referred_by, initial_disbursement, tier, status_code):
 
     if tier:
@@ -50,13 +54,7 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
     create_transfer_account_user.phone = referred_by
     user_phone_accessor(create_transfer_account_user)
 
-    response = test_client.post(
-        "/api/v1/user/",
-        headers=dict(
-            Authorization=auth,
-            Accept='application/json'
-        ),
-        json={
+    payload = {
             'first_name': 'John',
             'last_name': 'Smith',
             'bio': 'EasyMart',
@@ -69,7 +67,25 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
             'referred_by': user_phone_accessor(create_transfer_account_user)
-        })
+        }
+
+    if use_card:
+        public_serial_number = f'{randint(0,999999):06}'
+        new_card = TransferCard(public_serial_number=public_serial_number)
+
+        init_database.session.add(new_card)
+
+        init_database.session.commit()
+
+        payload['public_serial_number'] = public_serial_number
+
+    response = test_client.post(
+        "/api/v1/user/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ),
+        json=payload)
     
     assert response.status_code == status_code
     if response.status_code == 200:
