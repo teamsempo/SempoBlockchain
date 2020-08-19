@@ -15,7 +15,7 @@ import {
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-import { replaceUnderscores, toTitleCase, toDollars } from "../../../utils";
+import { replaceUnderscores, toTitleCase, toCurrency } from "../../../utils";
 
 import "./Tabs.css";
 
@@ -69,7 +69,7 @@ export default class CustomTabs extends React.Component {
 
           const total =
             metrics[tsName].type.type == "currency"
-              ? toDollars(metrics[tsName].aggregate.total)
+              ? toCurrency(metrics[tsName].aggregate.total)
               : metrics[tsName].aggregate.total;
 
           return (

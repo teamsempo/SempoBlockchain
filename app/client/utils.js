@@ -40,7 +40,7 @@ export function formatMoney(
   }
 }
 
-export const toDollars = amount => {
+export const toCurrency = amount => {
   return Math.round((amount / 100) * 100) / 100;
 };
 
