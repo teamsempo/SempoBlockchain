@@ -40,6 +40,10 @@ export function formatMoney(
   }
 }
 
+export const toDollars = amount => {
+  return Math.round((amount / 100) * 100) / 100;
+};
+
 const overwriteMerge = (destinationArray, sourceArray) => sourceArray;
 
 export function DEEEEEEP(parent_object, child_object_to_add) {
