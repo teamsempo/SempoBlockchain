@@ -342,7 +342,7 @@ class LoginAPI(MethodView):
                 user = User.query.filter_by(phone=phone).execution_options(show_all=True).first()
 
         # mobile user doesn't exist so default to creating a new wallet!
-        if user is None and phone:
+        if user is None and phone and current_app.config['ALLOW_SELF_SIGN_UP']:
             # this is a registration from a mobile device THUS a vendor or recipient.
             response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
                 dict(phone=phone, deviceInfo=post_data.get('deviceInfo')),
@@ -354,7 +354,7 @@ class LoginAPI(MethodView):
 
             return make_response(jsonify(response_object)), response_code
 
-        if user and user.is_activated and post_data.get('phone') and (password == ''):
+        if user and user.is_activated and post_data.get('phone') and (password == '' or password is None):
             # user already exists, is activated. no password provided, thus request PIN screen.
             # todo: this should check if device exists, if no, resend OTP to verify login is real.
             response_object = {
@@ -392,7 +392,7 @@ class LoginAPI(MethodView):
 
         try:
 
-            if not user or not user.verify_password(password):
+            if not (user and password and user.verify_password(password)):
                 response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
