@@ -79,6 +79,8 @@ class OrganisationAPI(MethodView):
         if default_lng is not None:
             organisation.default_lng = default_lng
 
+        # Add role append logic
+
         response_object = {
             'message': f'Organisation {organisation_id} successfully updated',
             'data': {'organisation': organisation_schema.dump(organisation).data}
