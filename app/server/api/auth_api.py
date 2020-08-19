@@ -396,6 +396,7 @@ class LoginAPI(MethodView):
                     response_object = {
                         'status': 'fail',
                         'otp_verify': True,
+                        'message': 'Please verify phone number.',
                         'error_message': 'Incorrect One Time Code.'
                     }
                     return make_response(jsonify(attach_host(response_object))), 200
