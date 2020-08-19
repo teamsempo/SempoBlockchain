@@ -70,13 +70,12 @@ class Metric(object):
                 raise Exception(f'{self.value_type} not a valid metric type!')
             result['type'] = {
                 'value_type': self.value_type,
-                # change this to self.token.display_decimals once #251 is merged
                 'display_decimals': 2 if self.value_type == COUNT_AVERAGE else 0
             }
             if self.token:
                 result['type']['currency_name'] = self.token.name
                 result['type']['currency_symbol'] = self.token.symbol
-                result['type']['display_decimals'] = 2 # change this to self.token.display_decimals once #251 is merged
+                result['type']['display_decimals'] = self.token.display_decimals if self.token.display_decimals else 0
             if not dont_include_timeseries:
                 result['timeseries'] = results['query']
             if self.aggregated_query:
