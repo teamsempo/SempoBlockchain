@@ -47,7 +47,7 @@
     },
     "type": {
       "display_decimals": 0,
-      "type": "count"
+      "value_type": "count"
     }
   },
   "mandatory_filter": {},
@@ -82,7 +82,7 @@
     },
     "type": {
       "display_decimals": 0,
-      "type": "count"
+      "value_type": "count"
     }
   }
 }
