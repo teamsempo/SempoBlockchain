@@ -3,11 +3,6 @@ from faker.providers import phone_number
 from faker import Faker
 from functools import partial
 
-fake = Faker()
-fake.add_provider(phone_number)
-phone = partial(fake.msisdn)
-
-
 def test_request_api_token_golden_path_success(
         test_client,
         mock_sms_apis,
