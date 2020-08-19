@@ -16,6 +16,8 @@ import {
   toCurrency
 } from "../../../utils";
 
+import { VALUE_TYPES } from "../../../constants";
+
 import LoadingSpinner from "../../loadingSpinner.jsx";
 
 const mapStateToProps = state => {
@@ -168,7 +170,7 @@ class VolumeChart extends React.Component {
     let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
     const datasets = possibleTimeseriesKeys.map((key, index) => {
       const timeseries = data.timeseries[key].map(a => {
-        if (data.type.type == "currency") {
+        if (data.type.value_type == VALUE_TYPES.CURRENCY) {
           a.value = toCurrency(a.value);
         }
         return a;

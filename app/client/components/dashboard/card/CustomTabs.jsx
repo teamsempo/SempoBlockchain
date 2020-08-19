@@ -12,6 +12,8 @@ import {
   MinusOutlined
 } from "@ant-design/icons";
 
+import { VALUE_TYPES } from "../../../constants";
+
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
@@ -68,7 +70,7 @@ export default class CustomTabs extends React.Component {
           }
 
           const total =
-            metrics[tsName].type.type == "currency"
+            metrics[tsName].type.value_type == VALUE_TYPES.CURRENCY
               ? toCurrency(metrics[tsName].aggregate.total)
               : metrics[tsName].aggregate.total;
 

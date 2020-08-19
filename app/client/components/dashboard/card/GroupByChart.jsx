@@ -7,6 +7,7 @@ import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
 import { toTitleCase, replaceUnderscores, toCurrency } from "../../../utils";
+import { VALUE_TYPES } from "../../../constants";
 
 const mapStateToProps = state => {
   return {
@@ -21,7 +22,7 @@ class GroupByChart extends React.Component {
     const aggregate = this.props.data.aggregate;
     const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
     var aggregateData = aggregate ? Object.values(aggregate) : [];
-    if (this.props.data.type.type == "currency") {
+    if (this.props.data.type.value_type == VALUE_TYPES.CURRENCY) {
       aggregateData = aggregateData.map(a => toCurrency(a));
     }
 
