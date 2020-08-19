@@ -70,6 +70,7 @@ class Metric(object):
                 raise Exception(f'{self.value_type} not a valid metric type!')
             result['type'] = {
                 'type': self.value_type,
+                # change this to self.token.display_decimals once #251 is merged
                 'display_decimals': 2 if self.value_type == COUNT_AVERAGE else 0
             }
             if self.token:
