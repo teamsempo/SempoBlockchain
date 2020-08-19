@@ -40,7 +40,7 @@ class BeneficiaryLiveFeed extends React.Component {
         <Card
           title="Live Feed"
           bordered={false}
-          bodyStyle={{ height: "140px", overflow: "scroll" }}
+          bodyStyle={{ height: "140px", overflowY: "scroll" }}
           style={{ width: "100%" }}
         >
           <LiveFeed>
@@ -277,7 +277,6 @@ export default connect(
 )(BeneficiaryLiveFeed);
 
 const LiveFeed = styled.div`
-  overflow-y: scroll;
   margin: -24px 0;
 `;
 

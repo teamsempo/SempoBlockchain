@@ -1,6 +1,6 @@
 {
   "name": "SempoBlockchain",
-  "version": "1.2.8",
+  "version": "1.2.12",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
@@ -88,7 +88,7 @@
     "@sentry/browser": "^4.2.3",
     "antd": "^4.4.2",
     "chart.js": "^2.7.2",
-    "deck.gl": "^8.2.2",
+    "deck.gl": "5.1.4",
     "deepmerge": "^2.2.1",
     "history": "^4.7.2",
     "hoist-non-react-statics": "^3.3.2",

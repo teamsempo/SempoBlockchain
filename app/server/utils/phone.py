@@ -89,14 +89,15 @@ def _send_at_message(to_phone, message):
                 [to_phone])
 
 def send_message(to_phone, message):
-    if current_app.config['IS_TEST'] or current_app.config['IS_PRODUCTION']:
-        channel = channel_for_number(to_phone)
-        print(f'Sending SMS via {channel}')
-        if channel == ChannelType.TWILIO:
-            _send_twilio_message.submit(to_phone, message)
-        if channel == ChannelType.MESSAGEBIRD:
-            _send_messagebird_message.submit(to_phone, message)
-        if channel == ChannelType.AFRICAS_TALKING:
-            _send_at_message.submit(to_phone, message)
-    else:
-        print(f'"IS NOT PRODUCTION", not sending SMS:\n{message}')
+    if to_phone:
+        if current_app.config['IS_TEST'] or current_app.config['IS_PRODUCTION']:
+            channel = channel_for_number(to_phone)
+            print(f'Sending SMS via {channel}')
+            if channel == ChannelType.TWILIO:
+                _send_twilio_message.submit(to_phone, message)
+            if channel == ChannelType.MESSAGEBIRD:
+                _send_messagebird_message.submit(to_phone, message)
+            if channel == ChannelType.AFRICAS_TALKING:
+                _send_at_message.submit(to_phone, message)
+        else:
+            print(f'"IS NOT PRODUCTION", not sending SMS:\n{message}')

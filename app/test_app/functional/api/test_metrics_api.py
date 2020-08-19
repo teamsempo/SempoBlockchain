@@ -8,6 +8,7 @@ from server import db
 import json
 import os
 from datetime import datetime, timedelta
+from dateutil.parser import isoparse
 
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
@@ -288,6 +289,9 @@ def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
         metric_type, params, status_code, requested_metric, group_by, output_file
 ):
+    def ts_sort(ts):
+        return sorted(ts, key=lambda item: isoparse(item['date']))
+
     def get_metrics(metric_type):
         p = f'&params={params}' if params else ''
         rm = f'&requested_metric={requested_metric}' if requested_metric else ''
@@ -316,5 +320,7 @@ def test_get_summed_metrics(
                 assert returned_stats[do]['type'] == desired_output[do]['type']
                 assert returned_stats[do]['aggregate'] == desired_output[do]['aggregate']
                 for timeseries_category in returned_stats[do]['timeseries']:
+                    sorted_returned_stats = ts_sort(returned_stats[do]['timeseries'][timeseries_category])
+                    sorted_desired_stats = ts_sort(desired_output[do]['timeseries'][timeseries_category])
                     for idx in range(len(returned_stats[do]['timeseries'][timeseries_category])):
                         assert returned_stats[do]['timeseries'][timeseries_category][idx]['value'] == desired_output[do]['timeseries'][timeseries_category][idx]['value']
