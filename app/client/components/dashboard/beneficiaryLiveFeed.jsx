@@ -56,8 +56,9 @@ class BeneficiaryLiveFeed extends React.Component {
                 let sender_transfer_account =
                   transferAccounts.byId[transfer.sender_transfer_account_id];
                 let sender_blockchain_address =
-                  sender_transfer_account &&
-                  sender_transfer_account.blockchain_address;
+                  (sender_transfer_account &&
+                    sender_transfer_account.blockchain_address) ||
+                  "";
 
                 if (
                   transfer.recipient_user !== null &&
