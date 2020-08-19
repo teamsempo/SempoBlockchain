@@ -109,7 +109,7 @@ class VolumeChart extends React.Component {
         display: false
       },
       tooltips: {
-        mode: "nearest",
+        mode: "x",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
         cornerRadius: 1
       },
