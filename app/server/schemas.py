@@ -392,6 +392,8 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
+    valid_roles = fields.Raw()
+
     require_transfer_card = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
     country_code = fields.Function(lambda obj: str(obj.country_code))

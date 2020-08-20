@@ -1,6 +1,7 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import type_coerce
 import pendulum
 import secrets
 
@@ -11,7 +12,7 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
 from server.utils.misc import encrypt_string
-from server.constants import ISO_COUNTRIES
+from server.constants import ISO_COUNTRIES, ACCESS_ROLES
 
 
 class Organisation(ModelBase):
@@ -26,8 +27,8 @@ class Organisation(ModelBase):
 
     external_auth_username = db.Column(db.String)
 
-    valid_roles = db.Column(JSONB)
-    
+    valid_roles = db.Column(ARRAY(db.String, dimensions=1))
+
     _external_auth_password = db.Column(db.String)
 
     default_lat = db.Column(db.Float())
@@ -159,7 +160,7 @@ class Organisation(ModelBase):
     
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
         self.external_auth_password = secrets.token_hex(16)
-
+        self.valid_roles = list(ACCESS_ROLES.keys())
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():
                 raise Exception("A master organisation already exists")

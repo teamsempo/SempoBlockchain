@@ -89,7 +89,8 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         transfer_account_name: form.transferAccountName,
         location: form.location,
         business_usage_name: businessUsage,
-        referred_by: form.referredBy
+        referred_by: form.referredBy,
+        account_types: form.accountTypes
       }
     });
   }

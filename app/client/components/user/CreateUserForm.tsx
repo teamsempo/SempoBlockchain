@@ -11,6 +11,8 @@ import { TransferUsage } from "../../reducers/transferUsage/types";
 import { Organisation } from "../../reducers/organisation/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import { TransferAccountTypes } from "../transferAccount/types";
+import { Select } from "antd";
+const { Option } = Select;
 
 export interface ICreateUser {
   firstName?: string;
@@ -25,6 +27,7 @@ export interface ICreateUser {
   businessUsage?: string;
   usageOtherSpecific?: string;
   accountType: any[TransferAccountTypes];
+  accountTypes: TransferAccountTypes[];
 }
 
 export interface ICreateVendor {
@@ -49,6 +52,7 @@ interface OuterProps {
 
 interface StateProps {
   accountType: any[TransferAccountTypes];
+  accountTypes: TransferAccountTypes[];
   businessUsageValue?: string;
   activeOrganisation: Organisation;
   defaultDisbursement: any;
@@ -103,10 +107,10 @@ class CreateUserForm extends React.Component<
       businessUsageValue,
       transferUsages,
       accountType,
+      accountTypes,
       defaultDisbursement
     } = this.props;
 
-    let accountTypes = Object.keys(TransferAccountTypes);
     let selectedAccountTypeForm;
     let initialDisbursementAmount;
     let businessUsage;
@@ -201,9 +205,20 @@ class CreateUserForm extends React.Component<
             <SelectField
               name="accountType"
               label={"Account Type"}
-              options={accountTypes}
+              options={Object.keys(TransferAccountTypes)}
               hideNoneOption={true}
             />
+            <Select
+              mode="multiple"
+              defaultValue="USER"
+              style={{ width: "250px" }}
+            >
+              {activeOrganisation.valid_roles.map(role => (
+                <Option value={role} key={role}>
+                  {role}
+                </Option>
+              ))}
+            </Select>
             <InputField name="publicSerialNumber" label={"ID Number"}>
               {/*
                 // @ts-ignore */}
@@ -255,6 +270,7 @@ export default connect(
     const selector = formValueSelector("createUser");
     return {
       accountType: selector(state, "accountType"),
+      accountTypes: selector(state, "accountTypes"),
       businessUsageValue: selector(state, "businessUsage"),
       // @ts-ignore
       activeOrganisation: state.organisations.byId[state.login.organisationId],

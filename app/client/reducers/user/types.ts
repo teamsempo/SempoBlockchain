@@ -1,3 +1,5 @@
+import { TransferAccountTypes } from "../../components/transferAccount/types";
+
 export enum UserListActionTypes {
   DEEP_UPDATE_USER_LIST = "DEEP_UPDATE_USER_LIST",
   UPDATE_USER_LIST = "UPDATE_USER_LIST"
@@ -22,6 +24,7 @@ export interface User {
   business_usage_name?: string;
   referred_by?: string;
   one_time_code?: string;
+  account_types?: TransferAccountTypes[];
 }
 
 export interface CreateUser extends User {
