@@ -38,14 +38,16 @@ def calculate_transfer_stats(
     token_id = None):
 
     # Handle a situation where multi_org is used with orgs with different tokens
+    # Also get the active token object so we can pass the currency name in the API
     tokens_to_orgs = {}
     mandatory_filter = {}
     organisations = [Organisation.query.get(o) for o in g.get('query_organisations', [])]
     tokens = [o.token for o in organisations]
     for o in organisations:
-        if o.token not in tokens_to_orgs:
-            tokens_to_orgs[o.token] = []
-        tokens_to_orgs[o.token].append(o)
+        token = o.token
+        if token not in tokens_to_orgs:
+            tokens_to_orgs[token] = []
+        tokens_to_orgs[token].append(o)
     if len(tokens_to_orgs) > 1:
         if not token_id:
             token, orgs = next(iter(tokens_to_orgs.items()))
@@ -61,6 +63,9 @@ def calculate_transfer_stats(
                 'options': [{'id': t.id, 'name':t.name} for t in tokens]
             }
         }
+    if not organisations:
+        org = g.active_organisation
+        token = org.token
 
     # Build date filters for each metricable table
     date_filters_dict = {}
@@ -110,11 +115,11 @@ def calculate_transfer_stats(
 
     # Determines which metrics the user is asking for, and calculate them
     if metric_type == metrics_const.TRANSFER:
-        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics
     elif metric_type == metrics_const.USER:
         metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
     else:
-        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
     
     # Ensure that the metric requested by the user is available
     availible_metrics = [m.metric_name for m in metrics_list]

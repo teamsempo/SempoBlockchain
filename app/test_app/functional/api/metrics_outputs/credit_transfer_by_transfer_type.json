@@ -44,6 +44,12 @@
           "value": 100
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "daily_disbursement_volume": {
@@ -70,6 +76,12 @@
           "value": 700
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "daily_transaction_count": {
@@ -96,6 +108,10 @@
           "value": 1
         }
       ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
     }
   },
   "daily_transaction_volume": {
@@ -141,6 +157,12 @@
           "value": 100
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "exhausted_balance": 0,
@@ -174,6 +196,10 @@
           "value": 0.14285714285714285
         }
       ]
+    },
+    "type": {
+      "display_decimals": 2,
+      "value_type": "count_average"
     }
   },
   "transfer_amount_per_user": {
@@ -200,6 +226,12 @@
           "value": 14.285714285714286
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "users_who_made_purchase": {
@@ -245,6 +277,10 @@
           "value": 1
         }
       ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
     }
   }
 }
