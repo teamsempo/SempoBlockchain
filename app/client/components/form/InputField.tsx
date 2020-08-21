@@ -13,6 +13,8 @@ interface InputFieldJson {
   placeholder?: string;
   isRequired?: boolean;
   isPhoneNumber?: boolean;
+  isMultipleChoice?: boolean;
+  options?: string[];
   isNotOther?: boolean;
   isNumber?: boolean;
   children?: React.ReactNode;
@@ -24,6 +26,8 @@ export default function InputField(props: InputFieldJson) {
     label,
     isRequired,
     isPhoneNumber,
+    isMultipleChoice,
+    options,
     isNotOther,
     isNumber,
     placeholder,
@@ -50,10 +54,12 @@ export default function InputField(props: InputFieldJson) {
     <Field
       name={name}
       component={AdaptedInput}
+      options={options}
       type={type || "text"}
       placeholder={placeholder}
       validate={validate}
       isRequired={isRequired}
+      isMultipleChoice={isMultipleChoice}
       label={label}
       disabled={disabled}
       children={children}

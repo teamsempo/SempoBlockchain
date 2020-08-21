@@ -10,10 +10,8 @@ class MeOrganisationAPI(MethodView):
     def get(self):
 
         organisation = g.active_organisation
-
         if not organisation.valid_roles:
-            organisation.valid_roles = ACCESS_ROLES.keys()
-
+            organisation.valid_roles = list(ACCESS_ROLES.keys())
         serialised_data = me_organisation_schema.dump(organisation).data
 
         response_object = {

@@ -69,6 +69,8 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
       this.setState({ accountType: form.accountType });
     }
 
+    const accountTypes = form.accountTypes.map(o => Object.values(o).pop());
+
     this.props.createUser({
       body: {
         first_name: form.firstName,
@@ -90,7 +92,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         location: form.location,
         business_usage_name: businessUsage,
         referred_by: form.referredBy,
-        account_types: form.accountTypes
+        account_types: accountTypes
       }
     });
   }
