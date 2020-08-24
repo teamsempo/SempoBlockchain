@@ -14,7 +14,7 @@ CONFIG_DIR = os.path.abspath(RELATIVE_CONFIG_DIR)
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
-BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
+BUILD_HASH = os.environ.get('GIT_HASH') or 'None'
 
 logg.info('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
 logg.info('with BUILD_HASH: ' + BUILD_HASH)
@@ -136,7 +136,9 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
 
+
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
+THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS = int(config_parser['APP'].get('THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS', '5'))
 
 TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
 PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')
@@ -151,6 +153,8 @@ BASIC_AUTH_CREDENTIALS = {
 }
 
 REDIS_URL = 'redis://' + config_parser['REDIS']['URI']
+# Allows us to manually cycle the redbeat lock in the case of a bad shutdown without needing to directly modify redis
+REDBEAT_LOCK_ID = os.environ.get('REDBEAT_LOCK_ID', '1')
 
 DATABASE_USER = os.environ.get("DATABASE_USER") or secrets_parser['DATABASE'].get('user') \
                 or '{}_{}'.format(common_secrets_parser['DATABASE']['user'], DEPLOYMENT_NAME.replace("-", "_"))

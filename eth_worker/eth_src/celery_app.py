@@ -53,7 +53,10 @@ ETH_CHECK_TRANSACTION_BASE_TIME = config.ETH_CHECK_TRANSACTION_BASE_TIME
 app = Celery('tasks',
              broker=config.REDIS_URL,
              backend=config.REDIS_URL,
-             task_serializer='json')
+             task_serializer='json'
+             )
+
+app.conf.redbeat_lock_key = f'redbeat:lock:{config.REDBEAT_LOCK_INSTANCE}'
 
 app.conf.beat_schedule = {
     "maintain_eth_balances": {
@@ -64,9 +67,10 @@ app.conf.beat_schedule = {
 app.conf.beat_schedule = {
     'third-party-transaction-sync': {
         'task': celery_utils.eth_endpoint('synchronize_third_party_transactions'),
-        'schedule': 30, # Every 30 seconds
+        'schedule': config.THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS, # Every 5 seconds by default
     }
 }
+
 w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 w3_websocket = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
@@ -107,3 +111,6 @@ processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
 processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
 
 import celery_tasks
+
+
+import redbeat
