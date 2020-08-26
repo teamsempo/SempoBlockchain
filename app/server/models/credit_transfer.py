@@ -145,7 +145,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             CreditTransfer.query.filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
         )
 
-        # Query for finding most_recent_out_of_batch_send
+        # Query for finding the most recent transfer sent by the sending account that isn't from the same batch uuid
+        # that of the transfer in question
         most_recent_out_of_batch_send = (
             complete_transfer_base_query
                 .order_by(CreditTransfer.id.desc())
@@ -158,29 +159,38 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         )
 
         # Base query for finding more_recent_receives
-        base_pr_query = (
+        base_receives_query = (
             complete_transfer_base_query
                 .filter(CreditTransfer.recipient_transfer_account == self.sender_transfer_account)
         )
 
-        # It's possible that "most_recent_out_of_batch_send" doesn't exist. In that case we search for all receives
         if most_recent_out_of_batch_send:
-            more_recent_receives = base_pr_query.filter(CreditTransfer.id > most_recent_out_of_batch_send.id).all()
+            # If most_recent_out_of_batch_send exists, find all receive transfers since it.
+            more_recent_receives = base_receives_query.filter(CreditTransfer.id > most_recent_out_of_batch_send.id).all()
 
+            # Required priors are then the out of batch send plus these receive transfers
             required_priors = more_recent_receives + [most_recent_out_of_batch_send]
+
+            # Edge case handle: if most_recent_out_of_batch_send is a batch member, the whole batch are priors as well
+            if most_recent_out_of_batch_send.batch_uuid is not None:
+                same_batch_priors = complete_transfer_base_query.filter(
+                    CreditTransfer.batch_uuid == most_recent_out_of_batch_send.batch_uuid
+                ).all()
+
+                required_priors = required_priors + same_batch_priors
+
         else:
-            required_priors = base_pr_query.all()
+            # Otherwise, return all receives, which are all our required priors
+            required_priors = base_receives_query.all()
 
-        # Lastly, edge case handle: if most_recent_out_of_batch_send is a batch member, the whole batch are priors
-        if most_recent_out_of_batch_send and most_recent_out_of_batch_send.batch_uuid is not None:
-            same_batch_priors = complete_transfer_base_query.filter(
-                CreditTransfer.batch_uuid == most_recent_out_of_batch_send.batch_uuid
-            ).all()
+        # Remove any possible duplicates
+        required_priors = list(set(required_priors))
 
-            required_priors = required_priors + same_batch_priors
+        # Filter out any transfers that we already know are complete - there's no reason to create an extra dep
+        # We don't do this inside the Alchemy queries because we need the completed priors to calculate other priors
+        required_priors = [prior for prior in required_priors if prior.blockchain_status != BlockchainStatus.SUCCESS]
 
-        # Return the set to remove any possible duplicates
-        return set(required_priors)
+        return required_priors
 
     def resolve_as_complete_with_existing_blockchain_transaction(self, transaction_hash):
 
