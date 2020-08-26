@@ -1,16 +1,14 @@
 import pytest
 
+from utils import keypair
+
 from mocks import MockUnbuiltTransaction
 
 
 def test_get_gas_price(processor):
     assert processor._get_gas_price() == 100
 
-# def test_call_contract_function(processor):
-#     processor.call_contract_function()
 
-
-# Actually
 def test_calculate_nonce(dummy_transaction, second_dummy_transaction, noncer, processor):
     wallet = dummy_transaction.signing_wallet
 
@@ -57,45 +55,37 @@ def test_compile_transaction_metadata(dummy_transaction, processor, unbuilt_tran
                 gas_price=gas_price
             )
 
-# def test_process_send_eth_transaction(processor, dummy_transaction, monkeypatch):
-#
-#     processor.process_send_eth_transaction(
-#         dummy_transaction.id, address, 123
-#     )
 
-# @pytest.fixture()
-# def mock(mocker):
-#     # Always patch out all sms sending apis because we don't want to spam messages with our tests!!
-#     messages = []
-#     def mock_sms_api(phone, message):
-#         messages.append({'phone': phone, 'message': message})
-#
-#     mocker.patch('server.utils.phone._send_twilio_message.submit', mock_sms_api)
-#     mocker.patch('server.utils.phone._send_messagebird_message.submit', mock_sms_api)
-#     mocker.patch('server.utils.phone._send_at_message.submit', mock_sms_api)
-#
-#     return messages
+def test_hash_saved_before_transaction_sent(dummy_transaction, processor, mocker):
+    """
+    Ensures that we save transaction hash to DB beforehand to guarantee that there won't be a race condition against
+    sync event listeners - this could result in transaction duplication
+    """
 
+    hash_has_been_saved = False
+    transaction_sent = False
 
-# @pytest.mark.parametrize("tier, status_code", [
-#     ("subadmin", 403),
-#     ("admin", 200),
-# ])
-# def test_send_eth():
-#
-#     if tier:
-#         authed_sempo_admin_user.set_held_role('ADMIN', tier)
-#         auth = get_complete_auth_token(authed_sempo_admin_user)
-#     else:
-#         auth = None
-#
-#     response = test_client.get(
-#         '/api/v1/filters/',
-#         headers=dict(
-#             Authorization=auth,
-#             Accept='application/json'
-#         ))
-#     assert response.status_code == status_code
-#
-#     if status_code == 200:
-#         assert isinstance(response.json['data']['filters'], list)
+    def update_transaction_data(id, data):
+        nonlocal hash_has_been_saved
+        if data.get('hash') is not None:
+            hash_has_been_saved = True
+
+    def send_signed_transaction(txn, id):
+        nonlocal hash_has_been_saved
+        nonlocal transaction_sent
+        assert hash_has_been_saved
+        transaction_sent = True
+
+    mocker.patch.object(processor.persistence, 'update_transaction_data', update_transaction_data)
+    mocker.patch.object(processor, '_send_signed_transaction', send_signed_transaction)
+
+    to_add = keypair()['address']
+
+    partial_txn_dict = {
+        'to': to_add,
+        'value': 234
+    }
+
+    processor._process_transaction(dummy_transaction.id, partial_txn_dict=partial_txn_dict, gas_limit=100000)
+
+    assert transaction_sent

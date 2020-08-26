@@ -61,7 +61,6 @@ def test_proccess_deploy_contract_transaction(processor, dummy_transaction, mock
         'to': b''
     }
 
-
 @pytest.mark.xfail(reason="Mocking out 'call' is a pain, so not working yet")
 def test_call_contract_function(processor, mock_txn_send):
     call_data = processor.call_contract_function(

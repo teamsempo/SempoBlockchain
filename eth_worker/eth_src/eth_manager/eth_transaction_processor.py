@@ -128,9 +128,6 @@ class EthTransactionProcessor(object):
             private_key=signing_wallet_obj.private_key
         )
 
-        self._send_signed_transaction(signed_transaction, transaction_id)
-
-        # If we've made it this far, the nonce will(?) be consumed
         transaction_data = {
             'hash': signed_transaction.hash.hex(),
             'nonce': metadata['nonce'],
@@ -138,7 +135,14 @@ class EthTransactionProcessor(object):
             'nonce_consumed': True
         }
 
+        # Save transaction hash to DB beforehand to guarantee that there won't be a race condition against
+        # sync event listeners - this could result in transaction duplication
         self.persistence.update_transaction_data(transaction_id, transaction_data)
+
+        self._send_signed_transaction(signed_transaction, transaction_id)
+
+        # If we've made it this far, the nonce will(?) be consumed
+        self.persistence.update_transaction_data(transaction_id, {'nonce_consumed': True})
 
         return transaction_id
 
