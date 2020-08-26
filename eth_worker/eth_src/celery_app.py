@@ -56,7 +56,7 @@ app = Celery('tasks',
              task_serializer='json'
              )
 
-app.conf.redbeat_lock_key = f'redbeat:lock:{config.REDBEAT_LOCK_INSTANCE}'
+app.conf.redbeat_lock_key = f'redbeat:lock:{config.REDBEAT_LOCK_ID}'
 
 app.conf.beat_schedule = {
     "maintain_eth_balances": {
