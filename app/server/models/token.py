@@ -21,6 +21,7 @@ class Token(ModelBase):
     name = db.Column(db.String)
     symbol = db.Column(db.String)
     _decimals = db.Column(db.Integer)
+    display_decimals = db.Column(db.Integer, default=2)
 
     token_type = db.Column(db.Enum(TokenType))
 

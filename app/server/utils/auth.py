@@ -348,9 +348,8 @@ def get_user_organisations(user):
     return organisations
 
 
-def get_denominations():
-    currency_name = current_app.config['CURRENCY_NAME']
-    return DENOMINATION_DICT.get(currency_name, {})
+def get_denominations(currency_symbol=None):
+    return DENOMINATION_DICT.get(currency_symbol, {})
 
 
 def create_user_response_object(user, auth_token, message):
@@ -363,12 +362,12 @@ def create_user_response_object(user, auth_token, message):
         usd_to_satoshi_rate = None
 
     conversion_rate = 1
-    currency_name = current_app.config['CURRENCY_NAME']
+    currency_symbol = user.default_organisation.token.symbol if user.default_organisation and user.default_organisation.token else None
+    display_decimals = user.default_organisation.token.display_decimals if user.default_organisation and user.default_organisation.token else None
     if user.default_currency:
         conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
         if conversion is not None:
             conversion_rate = conversion.rate
-            currency_name = user.default_currency
 
     transfer_usages = []
     usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).limit(11).all()
@@ -394,15 +393,14 @@ def create_user_response_object(user, auth_token, message):
         'server_time': int(time.time() * 1000),
         'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
         'pusher_key': current_app.config['PUSHER_KEY'],
-        # todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
-        'currency_decimals': current_app.config['CURRENCY_DECIMALS'],
-        'currency_name': currency_name,
+        'display_decimals': display_decimals,
+        'currency_symbol': currency_symbol,
         'currency_conversion_rate': conversion_rate,
         'secret': user.secret,
         'first_name': user.first_name,
         'last_name': user.last_name,
         'deployment_name': current_app.config['DEPLOYMENT_NAME'],
-        'denominations': get_denominations(),
+        'denominations': get_denominations(currency_symbol=currency_symbol),
         'terms_accepted': user.terms_accepted,
         'request_feedback_questions': request_feedback_questions(user),
         'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],

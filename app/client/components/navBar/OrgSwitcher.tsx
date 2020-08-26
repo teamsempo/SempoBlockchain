@@ -4,15 +4,22 @@
 
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { NavLink } from "react-router-dom";
 import { SVG, StyledLogoLink } from "./styles";
 import styled from "styled-components";
 import { Menu, Dropdown } from "antd";
-import { DownOutlined, LinkOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  UserAddOutlined,
+  SettingOutlined
+} from "@ant-design/icons";
 
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 import { LoginAction } from "../../reducers/auth/actions";
 import { Organisation } from "../../reducers/organisation/types";
+
+import { IntercomChat } from "../intercom/IntercomChat";
 
 interface Props {
   icon: string;
@@ -57,7 +64,10 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
 
   let menu = (
     <Menu
-      style={{ width: "200px", margin: props.collapsed ? "0 1em" : "0" }}
+      style={{
+        width: "200px",
+        margin: props.collapsed ? "0 1em" : "0"
+      }}
       selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
     >
       <Menu.ItemGroup title="Your Organisations">
@@ -70,16 +80,28 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
-      <Menu.Item key="support">
-        <a href="https://help.withsempo.com/" target="_blank">
-          Support <LinkOutlined translate={""} />
-        </a>
+      <Menu.Item key="chat">
+        <IntercomChat />
+      </Menu.Item>
+      <Menu.Item key="settings">
+        <NavLink to="/settings/organisation">
+          <SettingOutlined translate={""} /> Organisation Settings
+        </NavLink>
+      </Menu.Item>
+      <Menu.Item key="invite">
+        <NavLink to="/settings/invite">
+          <UserAddOutlined translate={""} /> Invite User
+        </NavLink>
       </Menu.Item>
     </Menu>
   );
 
   return (
-    <Dropdown overlay={menu} trigger={["click"]}>
+    <Dropdown
+      overlay={menu}
+      trigger={["click"]}
+      overlayStyle={{ position: "fixed" }}
+    >
       <a onClick={e => e.preventDefault()}>
         <div
           style={{

@@ -31,21 +31,23 @@ def calculate_transfer_stats(
     end_date=None,
     user_filter={},
     metric_type=metrics_const.ALL,
+    requested_metric=metrics_const.ALL,
     disable_cache: bool = False,
     timeseries_unit = metrics_const.DAY,
     group_by = None,
     token_id = None):
 
     # Handle a situation where multi_org is used with orgs with different tokens
+    # Also get the active token object so we can pass the currency name in the API
     tokens_to_orgs = {}
     mandatory_filter = {}
     organisations = [Organisation.query.get(o) for o in g.get('query_organisations', [])]
     tokens = [o.token for o in organisations]
     for o in organisations:
-        if o.token not in tokens_to_orgs:
-            tokens_to_orgs[o.token] = []
-        tokens_to_orgs[o.token].append(o)
-
+        token = o.token
+        if token not in tokens_to_orgs:
+            tokens_to_orgs[token] = []
+        tokens_to_orgs[token].append(o)
     if len(tokens_to_orgs) > 1:
         if not token_id:
             token, orgs = next(iter(tokens_to_orgs.items()))
@@ -61,42 +63,76 @@ def calculate_transfer_stats(
                 'options': [{'id': t.id, 'name':t.name} for t in tokens]
             }
         }
+    if not organisations:
+        org = g.active_organisation
+        token = org.token
 
-    date_filters = []
+    # Build date filters for each metricable table
+    date_filters_dict = {}
     if start_date is not None and end_date is not None:
-        date_filters.append(CreditTransfer.created >= start_date)
-        date_filters.append(CreditTransfer.created <= end_date)
+        date_filters_dict[CreditTransfer] = []
+        date_filters_dict[User] = []
+        date_filters_dict[TransferAccount] = []
+        if start_date:
+            date_filters_dict[CreditTransfer].append(CreditTransfer.created >= start_date)
+            date_filters_dict[User].append(User.created >= start_date)
+            date_filters_dict[TransferAccount].append(TransferAccount.created >= start_date)
+        if end_date:
+            # If an end_date is specified, add one day. This is because the end date will be midnight of the day 
+            # we want to filter to. We want data up to midnight of the following day!
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)  
+            date_filters_dict[CreditTransfer].append(CreditTransfer.created <= end_date)
+            date_filters_dict[User].append(User.created <= end_date)
+            date_filters_dict[TransferAccount].append(TransferAccount.created <= end_date)
 
     # Disable cache if any filters are being used, or explicitly requested
     enable_cache = True
-    if user_filter or date_filters or disable_cache or timeseries_unit != metrics_const.DAY:
+    if user_filter or date_filters_dict or disable_cache or timeseries_unit != metrics_const.DAY:
         enable_cache = False
 
     group_strategy = group.GROUP_TYPES[group_by]
 
     # We use total_users ungrouped if we are grouping OR filtering the population by a non-user-based attribute
-    # We also don't send total_users_timeseries date filters, since it needs to use all users through history to
+    # We also only send the end_date of the date filters, since it needs to use all previous users through history to
     # aggregate current numbers correctly
-    groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
-    for f in user_filter or []:
-        groups_and_filters_tables.append(f)
-    if set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
+    population_date_filter = {}
+    if end_date:
+        population_date_filter[User] = [User.created <= end_date]
+
+    if group_strategy:
+        groups_and_filters_tables = [group_strategy.group_object_model.__tablename__]
+        for f in user_filter or []:
+            groups_and_filters_tables.append(f)
+
+    total_users = {}
+    if group_strategy and set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
         total_users_stats = TotalUsers(group_strategy, timeseries_unit)
-        total_users = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters=[], enable_caching=enable_cache)
+        total_users[metrics_const.GROUPED] = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filters_dict=population_date_filter, enable_caching=enable_cache)
+        total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters_dict=population_date_filter, enable_caching=enable_cache)
     else:
         total_users_stats = TotalUsers(group.GROUP_TYPES[metrics_const.GENDER], timeseries_unit)
-        total_users = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters=[], enable_caching=enable_cache)
+        total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filters_dict=population_date_filter, enable_caching=enable_cache)
 
+    # Determines which metrics the user is asking for, and calculate them
     if metric_type == metrics_const.TRANSFER:
-        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics
     elif metric_type == metrics_const.USER:
         metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
     else:
-        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
+    
+    # Ensure that the metric requested by the user is available
+    availible_metrics = [m.metric_name for m in metrics_list]
+    availible_metrics.append(metrics_const.ALL)
+    if requested_metric not in availible_metrics:
+        raise Exception(f'{requested_metric} is not an availible metric of type {metric_type}. Please choose one of the following: {", ".join(availible_metrics)}')
 
     data = {}
     for metric in metrics_list:
-        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters=date_filters, enable_caching=enable_cache, population_query_result=total_users)
+        dont_include_timeseries = True
+        if requested_metric in [metric.metric_name, metrics_const.ALL]:
+            dont_include_timeseries = False
+        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, date_filters_dict=date_filters_dict, enable_caching=enable_cache, population_query_result=total_users, dont_include_timeseries=dont_include_timeseries)
 
     data['mandatory_filter'] = mandatory_filter
 
@@ -105,8 +141,6 @@ def calculate_transfer_stats(
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
 
     try:
-        # data['master_wallet_balance'] = 0
-
         data['master_wallet_balance'] = max(g.active_organisation.org_level_transfer_account.balance, 0)
     except:
         data['master_wallet_balance'] = 0

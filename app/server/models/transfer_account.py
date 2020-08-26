@@ -31,10 +31,10 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     name            = db.Column(db.String())
     _balance_wei    = db.Column(db.Numeric(27), default=0)
     # The purpose of the balance offset is to allow the master wallet to be seeded at
-    # initial deploy time. Since balance is calculated by subtracting total credits from 
-    # total debits, without a balance offset we'd be stuck in a zero-sum system with no 
-    # mechanism to have initial funds. It's essentially an app-level analogy to minting 
-    # which happens on the chain. 
+    # initial deploy time. Since balance is calculated by subtracting total credits from
+    # total debits, without a balance offset we'd be stuck in a zero-sum system with no
+    # mechanism to have initial funds. It's essentially an app-level analogy to minting
+    # which happens on the chain.
     _balance_offset_wei    = db.Column(db.Numeric(27), default=0)
     blockchain_address = db.Column(db.String())
 
@@ -212,38 +212,29 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     def approve_and_disburse(self, initial_disbursement=None):
         from server.utils.access_control import AccessControl
-
-        active_org = getattr(g, 'active_organisation', self.primary_user.default_organisation)
         admin = getattr(g, 'user', None)
-        auto_resolve = initial_disbursement == active_org.default_disbursement
 
         if not self.is_approved and admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
             self.is_approved = True
 
         if self.is_beneficiary:
-            # TODO: make this more robust
-            # approve_and_disburse might be called for a second time to disburse
-            # so first check that no credit transfer have already been received
-            if len(self.credit_receives) < 1:
-                # make initial disbursement
-                disbursement = self._make_initial_disbursement(initial_disbursement, auto_resolve)
-                return disbursement
+            disbursement = self._make_initial_disbursement(initial_disbursement)
+            return disbursement
 
-            elif len(self.credit_receives) == 1:
-                # else likely initial disbursement received, check if DISBURSEMENT and PENDING and resolve if default
-
-                disbursement = self.credit_receives[0]
-                if disbursement.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT and disbursement.transfer_status == TransferStatusEnum.PENDING and auto_resolve:
-                    disbursement.resolve_as_complete_and_trigger_blockchain()
-                    return disbursement
-
-    def _make_initial_disbursement(self, initial_disbursement, auto_resolve=False):
+    def _make_initial_disbursement(self, initial_disbursement=None, auto_resolve=False):
         from server.utils.credit_transfer import make_payment_transfer
 
         active_org = getattr(g, 'active_organisation', Organisation.master_organisation())
-        initial_disbursement = initial_disbursement or active_org.default_disbursement
+        if initial_disbursement is None:
+            # initial disbursement defaults to None. If initial_disbursement is set then skip this section.
+            # If none, then we want to see if the active_org has a default disbursement amount
+            initial_disbursement = active_org.default_disbursement
         if not initial_disbursement:
+            # if initial_disbursement is still none, then we don't want to create a transfer.
             return None
+
+        if initial_disbursement == active_org.default_disbursement:
+            auto_resolve = True
 
         user_id = get_authorising_user_id()
         if user_id is not None:

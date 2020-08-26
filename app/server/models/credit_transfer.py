@@ -95,6 +95,26 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def transfer_amount(self, val):
         self._transfer_amount_wei = val * int(1e16)
 
+    @hybrid_property
+    def public_transfer_type(self):
+        if self.transfer_type == TransferTypeEnum.PAYMENT:
+            if self.transfer_subtype == TransferSubTypeEnum.STANDARD or None:
+                return TransferTypeEnum.PAYMENT
+            else:
+                return self.transfer_subtype
+        else:
+            return self.transfer_type
+
+    @public_transfer_type.expression
+    def public_transfer_type(cls):
+        from sqlalchemy import case, cast, String
+        return case([
+                (cls.transfer_subtype == TransferSubTypeEnum.STANDARD, cast(cls.transfer_type, String)),
+                (cls.transfer_type == TransferTypeEnum.PAYMENT, cast(cls.transfer_subtype, String)),
+            ],
+            else_ = cast(cls.transfer_type, String)
+        )
+
     def send_blockchain_payload_to_worker(self, is_retry=False, queue='high-priority'):
         sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
         recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()

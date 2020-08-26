@@ -27,7 +27,7 @@ from server.utils.phone import send_message
 from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 from server.utils.misc import rounded_dollars
 
 
@@ -704,18 +704,16 @@ def send_terms_message_if_required(user):
         user.seen_latest_terms = True
 
 
-
-def send_onboarding_message(to_phone, first_name, credits, one_time_code):
+def send_onboarding_message(to_phone, first_name, amount, currency_name, one_time_code):
     if to_phone:
         receiver_message = '{}, you have been registered for {}. You have {} {}. Your one-time code is {}. ' \
                            'Download Sempo for Android: https://bit.ly/2UVZLqf' \
             .format(
             first_name,
             current_app.config['PROGRAM_NAME'],
-            credits if not None else 0,
-            current_app.config['CURRENCY_NAME'],
+            amount if not None else 0,
+            currency_name,
             one_time_code,
-            current_app.config['CURRENCY_NAME']
         )
 
         send_message(to_phone, receiver_message)
