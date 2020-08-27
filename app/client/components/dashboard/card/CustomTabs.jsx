@@ -11,10 +11,12 @@ import {
   MinusOutlined
 } from "@ant-design/icons";
 
+import { VALUE_TYPES } from "../../../constants";
+
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-import { replaceUnderscores } from "../../../utils";
+import { replaceUnderscores, toTitleCase, toCurrency } from "../../../utils";
 
 import "./Tabs.css";
 import { TooltipWrapper } from "../TooltipWrapper";
@@ -43,7 +45,9 @@ export default class CustomTabs extends React.Component {
             startValue += timeseries[key][0].value;
             endValue += timeseries[key][timeseries[key].length - 1].value;
           });
-
+          let suffix = metrics[tsName].type.currency_symbol
+            ? " " + metrics[tsName].type.currency_symbol
+            : "";
           let color;
           let arrow;
           if (endValue > startValue) {
@@ -66,6 +70,11 @@ export default class CustomTabs extends React.Component {
             percentChange = Math.round((endValue / startValue - 1) * 100);
           }
 
+          const total =
+            metrics[tsName].type.value_type == VALUE_TYPES.CURRENCY
+              ? toCurrency(metrics[tsName].aggregate.total)
+              : metrics[tsName].aggregate.total;
+
           return (
             <TabPane
               key={tsName}
@@ -77,8 +86,9 @@ export default class CustomTabs extends React.Component {
                       prompt={tsPrompt}
                     />
                   }
-                  value={metrics[tsName].aggregate.total}
-                  precision={2}
+                  value={total}
+                  suffix={suffix}
+                  precision={metrics[tsName].type.display_decimals}
                   prefix={
                     <div
                       style={{
