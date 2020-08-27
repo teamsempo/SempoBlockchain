@@ -194,7 +194,7 @@ class TransferAccountList extends React.Component {
     var filteredData =
       this.props.item_list !== undefined ? this.props.item_list : null;
 
-    if (account_type === TransferAccountTypes.USER) {
+    if (account_type === TransferAccountTypes.BENEFICIARY) {
       filteredData = filteredData.filter(account => account.is_beneficiary);
     } else if (
       account_type === TransferAccountTypes.VENDOR ||

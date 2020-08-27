@@ -252,7 +252,7 @@ class AdminUserList extends React.Component {
       return (
         <Wrapper>
           <TopRow>
-            <ModuleHeader>USERS</ModuleHeader>
+            <ModuleHeader>Admins</ModuleHeader>
             <div>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
@@ -264,7 +264,7 @@ class AdminUserList extends React.Component {
                     height: "25px"
                   }}
                 >
-                  + New User
+                  + New Admin
                 </StyledButton>
               </UploadButtonWrapper>
             </div>

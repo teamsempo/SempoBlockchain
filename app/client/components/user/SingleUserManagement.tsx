@@ -87,7 +87,7 @@ class SingleUserManagement extends React.Component<Props> {
   onDeleteUser() {
     const { selectedUser } = this.props;
     let del = window.prompt(
-      `Are you sure you wish to delete user "${selectedUser.first_name} ${selectedUser.last_name}"? This action cannot be undone. Type DELETE to confirm`
+      `Are you sure you wish to delete participant "${selectedUser.first_name} ${selectedUser.last_name}"? This action cannot be undone. Type DELETE to confirm`
     );
     if (del === "DELETE") {
       this.props.deleteUser({ path: selectedUser.id });
