@@ -150,11 +150,11 @@ class DashboardPage extends React.Component {
                 defaultTimeSeries="all_payments_volume"
                 filterObject="credit_transfer"
                 timeSeriesNameLabels={[
-                  ["all_payments_volume", "Volume", "Total payment volume"],
+                  ["all_payments_volume", "Volume", "Total amount transferred"],
                   [
                     "daily_transaction_count",
-                    "Transaction Count",
-                    "Number of transactions"
+                    "Transfer Count",
+                    "Total number of transfers"
                   ],
                   [
                     "users_who_made_purchase",
@@ -164,7 +164,7 @@ class DashboardPage extends React.Component {
                   [
                     "transfer_amount_per_user",
                     "Volume Per User",
-                    "Average transfer amount per user"
+                    "Average amount transferred per user"
                   ],
                   [
                     "trades_per_user",
@@ -182,14 +182,10 @@ class DashboardPage extends React.Component {
                 timeSeriesNameLabels={[
                   [
                     "active_users",
-                    "Active",
+                    "Active Users",
                     "Number of unique users sent or received a transfer"
                   ],
-                  [
-                    "users_created",
-                    "New",
-                    "Number of new users sent or received a transfer"
-                  ]
+                  ["users_created", "New Users", "Number of new users created"]
                 ]}
               />
             </Space>
