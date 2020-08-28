@@ -7,6 +7,7 @@ import { Space, Select } from "antd";
 
 const { Option } = Select;
 import { connect } from "react-redux";
+import { getChannel, subscribe } from "pusher-redux";
 
 import { LoadMetricAction } from "../../reducers/metric/actions";
 import styled from "styled-components";
@@ -19,12 +20,15 @@ import {
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 import { TooltipWrapper } from "../dashboard/TooltipWrapper";
+import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
 
 const mapStateToProps = (state, ownProps) => {
   return {
+    login: state.login,
     allowedFilters: state.allowedFilters[ownProps.filterObject].allowed.filters,
     allowedGroups: state.allowedFilters[ownProps.filterObject].allowed.groups,
-    loadStatus: state.allowedFilters[ownProps.filterObject].loadStatus
+    loadStatus: state.allowedFilters[ownProps.filterObject].loadStatus,
+    creditTransfers: state.creditTransfers
   };
 };
 
@@ -50,15 +54,19 @@ class FilterModule extends React.Component {
     };
 
     this.props.loadAllowedFilters(this.props.filterObject);
-
-    console.log("Default groupby is", props.defaultGroupBy);
   }
 
   componentDidMount() {
     this.loadMetricsWithParams();
+
+    let login = this.props.login;
+    let channel_name = window.PUSHER_ENV_CHANNEL + "-" + login.organisationId;
+    let channel = getChannel(channel_name);
+    channel.bind(this.props.filterObject, () => this.loadMetricsWithParams());
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
+    //Refresh Data if the date range changes or if the transfer list changes (normally from pusher)
     if (prevProps.dateRange !== this.props.dateRange) {
       this.loadMetricsWithParams();
     }
