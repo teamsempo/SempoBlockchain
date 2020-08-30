@@ -189,13 +189,16 @@ class BeneficiaryLiveFeed extends React.Component {
                     <UserWrapper key={transfer.id}>
                       <UserSVG src="/static/media/transfer.svg" />
                       <UserGroup>
-                        <ClickableTopText
-                          onClick={() =>
-                            this.navigateToAccount(transferAccountId)
-                          }
-                        >
-                          {sender_user_name} transferred
-                        </ClickableTopText>
+                        <TopText>
+                          <ClickableTopText
+                            onClick={() =>
+                              this.navigateToAccount(transferAccountId)
+                            }
+                          >
+                            {sender_user_name}
+                          </ClickableTopText>
+                          sent
+                        </TopText>
                         <BottomText>
                           <DarkHighlight>{transferFromMoney}</DarkHighlight> to
                           <ClickableHighlight
@@ -282,7 +285,7 @@ const LiveFeed = styled.div`
 
 const UserWrapper = styled.div`
   display: flex;
-  margin: 1em 0;
+  margin: 0.8em 0;
   justify-content: center;
 `;
 
@@ -300,22 +303,21 @@ const UserGroup = styled.div`
 `;
 
 const TopText = styled.h5`
-  margin: 2px;
+  margin: 0px;
   font-size: 12px;
   color: #4a4a4a;
   font-weight: 300;
 `;
 
-const ClickableTopText = styled.h5`
-  margin: 2px;
-  font-size: 12px;
+const ClickableTopText = styled.span`
+  margin: 3px;
   color: #2d9ea0;
   font-weight: 600;
   cursor: pointer;
 `;
 
 const BottomText = styled.div`
-  margin: 2px;
+  margin: 0px;
   font-size: 15px;
   font-weight: 300;
 `;
