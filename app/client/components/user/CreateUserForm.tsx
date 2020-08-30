@@ -72,7 +72,7 @@ class CreateUserForm extends React.Component<
   componentDidMount() {
     const { defaultDisbursement } = this.props;
     this.props.initialize({
-      accountType: TransferAccountTypes.USER.toLowerCase(),
+      accountType: TransferAccountTypes.BENEFICIARY.toLowerCase(),
       gender: "female",
       initialDisbursement: defaultDisbursement
     });
@@ -152,7 +152,7 @@ class CreateUserForm extends React.Component<
       }
     }
 
-    if (accountType === TransferAccountTypes.USER.toLowerCase()) {
+    if (accountType === TransferAccountTypes.BENEFICIARY.toLowerCase()) {
       //  USER
       selectedAccountTypeForm = (
         <>

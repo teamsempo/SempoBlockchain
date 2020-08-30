@@ -201,7 +201,8 @@ class TransferAccountManager extends React.Component {
       this.props.transferAccount.blockchain_address;
 
     if (is_beneficiary) {
-      accountTypeName = TransferAccountTypes.USER || window.BENEFICIARY_TERM;
+      accountTypeName =
+        TransferAccountTypes.BENEFICIARY || window.BENEFICIARY_TERM;
       icon = "/static/media/user.svg";
     } else if (is_vendor) {
       accountTypeName = TransferAccountTypes.VENDOR;

@@ -96,7 +96,9 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
 
   render() {
     const accountType = this.state.accountType;
-    const transferAccountType = accountType ? toTitleCase(accountType) : "user";
+    const transferAccountType = accountType
+      ? toTitleCase(accountType)
+      : "participant";
     const { one_time_code, is_external_wallet } = this.props.users.createStatus;
 
     if (one_time_code !== null) {
@@ -104,7 +106,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         return (
           <div>
             <ModuleHeader>
-              Successfully Created External Wallet User
+              Successfully Created External Wallet Participant
             </ModuleHeader>
             <div style={{ padding: "0 1em 1em" }}>
               <p>
