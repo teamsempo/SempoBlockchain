@@ -62,7 +62,9 @@ class FilterModule extends React.Component {
     let login = this.props.login;
     let channel_name = window.PUSHER_ENV_CHANNEL + "-" + login.organisationId;
     let channel = getChannel(channel_name);
-    channel.bind(this.props.filterObject, () => this.loadMetricsWithParams());
+    if (channel) {
+      channel.bind(this.props.filterObject, () => this.loadMetricsWithParams());
+    }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
