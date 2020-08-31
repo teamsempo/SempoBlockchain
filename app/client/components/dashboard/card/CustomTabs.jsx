@@ -97,10 +97,10 @@ export default class CustomTabs extends React.Component {
                         marginRight: 12
                       }}
                     >
-                      {arrow}
-                      <Text style={{ color: color, fontSize: 12 }}>
-                        {percentChange}%
-                      </Text>
+                      {/*{arrow}*/}
+                      {/*<Text style={{ color: color, fontSize: 12 }}>*/}
+                      {/*{percentChange}%*/}
+                      {/*</Text>*/}
                     </div>
                   }
                 />
