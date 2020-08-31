@@ -546,7 +546,6 @@ class SQLPersistenceInterface(object):
         
         last_time_synchronized = self.session.query(SynchronizationFilter.contract_address, SynchronizationFilter.updated).all()
 
-        self.get_failed_callbacks()
         return {
             'unsynchronized_transaction_count': __query_tuple_list_to_dict__(unsynchronized_transaction_count),
             'synchronized_transaction_count': __query_tuple_list_to_dict__(synchronized_transaction_count),

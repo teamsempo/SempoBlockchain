@@ -77,8 +77,8 @@ class BlockchainTasker(object):
     def force_fetch_block_range(self, filter_address, floor, ceiling):
         return self._execute_synchronous_celery(self._eth_endpoint('force_fetch_block_range'), { 'filter_address': filter_address, 'floor': floor, 'ceiling': ceiling })
 
-    def force_recall_webook(self, transaction_hash):
-        return self._execute_synchronous_celery(self._eth_endpoint('force_recall_webook'), { 'transaction_hash': transaction_hash })
+    def force_recall_webhook(self, transaction_hash):
+        return self._execute_synchronous_celery(self._eth_endpoint('force_recall_webhook'), { 'transaction_hash': transaction_hash })
 
     def get_third_party_sync_metrics(self):
         return self._execute_synchronous_celery(self._eth_endpoint('get_third_party_sync_metrics'), {})

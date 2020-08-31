@@ -145,7 +145,7 @@ class MockBlockchainTasker(object):
         return MockBlockchainTasker._generic_task()
 
     @staticmethod
-    def force_recall_webook(*args, **kwargs):
+    def force_recall_webhook(*args, **kwargs):
         return MockBlockchainTasker._generic_task()
 
     @staticmethod

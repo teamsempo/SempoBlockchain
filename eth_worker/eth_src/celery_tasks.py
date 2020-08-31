@@ -89,7 +89,7 @@ def force_fetch_block_range(self, filter_address, floor, ceiling):
     return blockchain_sync.force_fetch_block_range(filter_address, floor, ceiling)
 
 @app.task(**base_task_config)
-def force_recall_webook(self, transaction_hash):
+def force_recall_webhook(self, transaction_hash):
     return blockchain_sync.force_recall_webhook(transaction_hash)
 
 

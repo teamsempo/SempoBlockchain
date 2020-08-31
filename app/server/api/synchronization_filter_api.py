@@ -72,7 +72,7 @@ class SynchronizationFilterRecallWebhookAPI(MethodView):
         transaction_hash - Hash for the transaction you want to resync!
         """
         transaction_hash = request.args.get('transaction_hash')
-        bt.force_recall_webook(transaction_hash)
+        bt.force_recall_webhook(transaction_hash)
         
 
 synchronization_filter_blueprint.add_url_rule(
