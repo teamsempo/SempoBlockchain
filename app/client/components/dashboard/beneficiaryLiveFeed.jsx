@@ -40,7 +40,7 @@ class BeneficiaryLiveFeed extends React.Component {
         <Card
           title="Live Feed"
           bordered={false}
-          bodyStyle={{ height: "140px", overflow: "scroll" }}
+          bodyStyle={{ height: "140px", overflowY: "scroll" }}
           style={{ width: "100%" }}
         >
           <LiveFeed>
@@ -50,13 +50,15 @@ class BeneficiaryLiveFeed extends React.Component {
                 let recipient_transfer_account =
                   transferAccounts.byId[transfer.recipient_transfer_account_id];
                 let recipient_blockchain_address =
-                  recipient_transfer_account &&
-                  recipient_transfer_account.blockchain_address;
+                  (recipient_transfer_account &&
+                    recipient_transfer_account.blockchain_address) ||
+                  "";
                 let sender_transfer_account =
                   transferAccounts.byId[transfer.sender_transfer_account_id];
                 let sender_blockchain_address =
-                  sender_transfer_account &&
-                  sender_transfer_account.blockchain_address;
+                  (sender_transfer_account &&
+                    sender_transfer_account.blockchain_address) ||
+                  "";
 
                 if (
                   transfer.recipient_user !== null &&
@@ -275,7 +277,6 @@ export default connect(
 )(BeneficiaryLiveFeed);
 
 const LiveFeed = styled.div`
-  overflow-y: scroll;
   margin: -24px 0;
 `;
 

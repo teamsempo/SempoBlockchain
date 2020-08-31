@@ -248,7 +248,7 @@ class Setup(object):
 
     def bind_user_to_organsation_as_admin(self, user_id, organisation_id):
 
-        r = requests.put(url=self.api_host + 'organisation/' + str(organisation_id) + '/users',
+        r = requests.put(url=self.api_host + 'organisation/' + str(organisation_id) + '/users/',
                          headers=dict(Authorization=self.api_token, Accept='application/json'),
                          json={
                              'user_ids': [user_id],

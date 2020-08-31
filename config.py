@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.4.21'  # Remember to bump this in every PR
+VERSION = '1.5.5'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -118,9 +118,6 @@ if IS_PRODUCTION is None:
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
 
-# todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
-CURRENCY_NAME       = config_parser['APP']['CURRENCY_NAME']
-CURRENCY_DECIMALS   = int(config_parser['APP']['CURRENCY_DECIMALS'])
 APP_HOST            = config_parser['APP']['APP_HOST']
 BENEFICIARY_TERM    = config_parser['APP']['BENEFICIARY_TERM']
 BENEFICIARY_TERM_PLURAL = config_parser['APP']['BENEFICIARY_TERM_PLURAL']
@@ -135,6 +132,7 @@ TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
+ALLOW_SELF_SIGN_UP = config_parser['APP'].getboolean('ALLOW_SELF_SIGN_UP') or False
 
 
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')

@@ -8,3 +8,9 @@ export const USER_FILTER_TYPE = {
 export const USER_FILTER_ATTRIBUTE = {
   BALANCE: "rounded_account_balance"
 };
+
+export const VALUE_TYPES = {
+  COUNT: "count",
+  COUNT_AVERAGE: "count_average",
+  CURRENCY: "currency"
+};

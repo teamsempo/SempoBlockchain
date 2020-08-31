@@ -145,3 +145,13 @@ class AttributeDictProccessor(object):
 
     def __init__(self, attribute_dict: dict):
         self.attribute_dict = attribute_dict
+
+
+from typing import Dict
+from flask import current_app
+
+
+def attach_host(response: Dict) -> Dict:
+    response['host_url'] = current_app.config['APP_HOST']
+
+    return response
