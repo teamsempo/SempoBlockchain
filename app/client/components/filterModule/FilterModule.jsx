@@ -3,9 +3,8 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import { Space, Select, Typography } from "antd";
+import { Space, Select } from "antd";
 
-const { Text } = Typography;
 const { Option } = Select;
 import { connect } from "react-redux";
 
@@ -19,6 +18,7 @@ import {
 } from "../../utils";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
+import { TooltipWrapper } from "../dashboard/TooltipWrapper";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -82,6 +82,7 @@ class FilterModule extends React.Component {
     let { encoded_filters, groupBy } = this.state;
     let { dateRange } = this.props;
     let params = {};
+    let apiDateFormat = "YYYY-MM-DD";
 
     params.metric_type = this.props.filterObject;
 
@@ -95,10 +96,10 @@ class FilterModule extends React.Component {
       params.group_by = groupBy;
     }
     if (dateRange && dateRange[0]) {
-      params.start_date = dateRange[0] && dateRange[0].toISOString();
+      params.start_date = dateRange[0] && dateRange[0].format(apiDateFormat);
     }
     if (dateRange && dateRange[1]) {
-      params.end_date = dateRange[1] && dateRange[1].toISOString();
+      params.end_date = dateRange[1] && dateRange[1].format(apiDateFormat);
     }
 
     this.props.loadMetrics(params);
@@ -113,7 +114,10 @@ class FilterModule extends React.Component {
 
     let groupByModule = (
       <Space size={"middle"}>
-        <Text>Group By:</Text>
+        <TooltipWrapper
+          label={"Group By:"}
+          prompt={"Group data by custom attributes"}
+        />
         <Select
           defaultValue={defaultGroupBy}
           style={{ width: 200 }}
@@ -134,11 +138,17 @@ class FilterModule extends React.Component {
 
     return (
       <FilterContainer isMobile={isMobile}>
-        <Filter
-          label={"Filter by user:"}
-          possibleFilters={this.props.allowedFilters}
-          onFiltersChanged={this.onFiltersChanged}
-        />
+        <Space>
+          <TooltipWrapper
+            label={"Filters:"}
+            prompt={"Filter data by custom attributes"}
+          />
+          <Filter
+            label={"Filter by user:"}
+            possibleFilters={this.props.allowedFilters}
+            onFiltersChanged={this.onFiltersChanged}
+          />
+        </Space>
         {groupByModule}
       </FilterContainer>
     );
@@ -157,4 +167,4 @@ const FilterContainer = styled.div`
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(FilterModule);
+)(withMediaQuery([isMobileQuery])(FilterModule));

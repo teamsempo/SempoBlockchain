@@ -8,6 +8,7 @@ from server import db
 import json
 import os
 from datetime import datetime, timedelta
+from dateutil.parser import isoparse
 
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
@@ -152,80 +153,137 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
             assert response.json['data']['filters'] == filters.ALL_FILTERS
 
 base_participant = {
-    'data':
-    {'transfer_stats':
-        {'active_filters': [],
-        'active_group_by': 'account_type',
-        'active_users': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'mandatory_filter': {},
-        'master_wallet_balance': 0,
-        'total_beneficiaries': 0,
-        'total_users': 0,
-        'total_vendors': 0,
-        'users_created': {'aggregate': {'total': 1},
-        'timeseries': {}}}},
-        'message': 'Successfully Loaded.',
+    'data': 
+        {'transfer_stats': 
+            {'active_filters': [], 
+            'active_group_by': 'account_type', 
+            'active_users': 
+                {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+            'mandatory_filter': {}, 
+            'master_wallet_balance': 0, 
+            'total_beneficiaries': 0, 
+            'total_users': 0, 
+            'total_vendors': 0, 
+            'users_created': 
+                {'aggregate': {'total': 1}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
+            'message': 'Successfully Loaded.', 
+            'status': 'success'
+        }
+
+
+base_all = {
+    'data': 
+        {'transfer_stats': 
+        {'active_filters': [], 
+        'active_group_by': 'account_type', 
+        'active_users': {'aggregate': {'total': 0}, 
+        'timeseries': {}, 
+        'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'all_payments_volume': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+        'daily_disbursement_volume': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+        'daily_transaction_count': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'daily_transaction_volume': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+        'exhausted_balance': 0, 
+        'has_transferred_count': 0, 
+        'mandatory_filter': {}, 
+        'master_wallet_balance': 0, 
+        'total_beneficiaries': 0, 
+        'total_distributed': 0.0, 
+        'total_exchanged': 0.0, 
+        'total_spent': 0.0, 
+        'total_users': 0, 
+        'total_vendors': 0, 
+        'trades_per_user': 
+            {'aggregate': {'total': 0.0}, 'timeseries': {}, 'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 
+        'transfer_amount_per_user': 
+            {'aggregate': {'total': 0.0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+        'users_created': 
+            {'aggregate': {'total': 1}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'users_who_made_purchase': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
+        'message': 'Successfully Loaded.', 
         'status': 'success'
-}
+    }
+
+base_all_zero_decimals = {
+    'data':
+        {'transfer_stats': 
+        {'active_filters': [], 
+        'active_group_by': 'account_type', 
+        'active_users': {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'all_payments_volume': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 0, 'value_type': 'currency'}}, 
+        'daily_disbursement_volume': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 0, 'value_type': 'currency'}}, 
+        'daily_transaction_count': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'daily_transaction_volume': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 0, 'value_type': 'currency'}}, 
+        'exhausted_balance': 0, 
+        'has_transferred_count': 0, 
+        'mandatory_filter': {}, 
+        'master_wallet_balance': 0.0, 
+        'total_beneficiaries': 0, 
+        'total_distributed': 0.0, 
+        'total_exchanged': 0.0, 
+        'total_spent': 0.0, 
+        'total_users': 0, 
+        'total_vendors': 0, 
+        'trades_per_user': 
+            {'aggregate': {'total': 0.0}, 'timeseries': {}, 'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 
+        'transfer_amount_per_user': 
+            {'aggregate': {'total': 0.0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 0, 'value_type': 'currency'}}, 
+        'users_created': 
+            {'aggregate': {'total': 1}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'users_who_made_purchase': 
+            {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
+        'message': 'Successfully Loaded.', 
+        'status': 'success'
+    }
 
 
-base_all = {'data':
-    {'transfer_stats':
-        {'active_filters': [],
-        'active_group_by': 'account_type',
-        'active_users': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'all_payments_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'daily_disbursement_volume': {'aggregate': {'total': 0},'timeseries': {}},
-        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'daily_transaction_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'users_who_made_purchase': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'exhausted_balance': 0,
-        'has_transferred_count': 0,
-        'mandatory_filter': {},
-        'master_wallet_balance': 0,
-        'total_beneficiaries': 0,
-        'total_distributed': 0.0,
-        'total_exchanged': 0.0,
-        'total_spent': 0.0,
-        'total_users': 0,
-        'total_vendors': 0,
-        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'users_created': {'aggregate': {'total': 1}, 'timeseries': {}}}},
-        'message': 'Successfully Loaded.',
-        'status': 'success'}
+base_transfer = {'data': 
+    {'transfer_stats': 
+    {'active_filters': [], 
+    'active_group_by': 'account_type', 
+    'all_payments_volume': 
+        {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+    'daily_disbursement_volume': 
+        {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+    'daily_transaction_count': 
+        {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+    'daily_transaction_volume': 
+        {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}},
+    'exhausted_balance': 0, 
+    'has_transferred_count': 0, 
+    'mandatory_filter': {}, 
+    'master_wallet_balance': 0, 
+    'total_distributed': 0.0, 
+    'total_exchanged': 0.0, 
+    'total_spent': 0.0, 
+    'trades_per_user': 
+        {'aggregate': {'total': 0.0}, 'timeseries': {}, 'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 
+    'transfer_amount_per_user': 
+        {'aggregate': {'total': 0.0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+    'users_who_made_purchase': 
+        {'aggregate': {'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
+    'message': 'Successfully Loaded.', 
+    'status': 'success'}
 
-
-base_transfer = {'data':
-    {'transfer_stats':
-        {'active_filters': [],
-        'active_group_by': 'account_type',
-        'all_payments_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'daily_disbursement_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'daily_transaction_count': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'daily_transaction_volume': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'users_who_made_purchase': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'exhausted_balance': 0,
-        'has_transferred_count': 0,
-        'mandatory_filter': {},
-        'master_wallet_balance': 0,
-        'total_distributed': 0.0,
-        'total_exchanged': 0.0,
-        'total_spent': 0.0,
-        'trades_per_user': {'aggregate': {'total': 0}, 'timeseries': {}},
-        'transfer_amount_per_user': {'aggregate': {'total': 0}, 'timeseries': {}}}},
-        'message': 'Successfully Loaded.',
-        'status': 'success'}
-
-
-@pytest.mark.parametrize("metric_type, status_code", [
-    ("user", 200),
-    ("all", 200),
-    ("credit_transfer", 200),
-    ("notarealmetrictype", 500),
+@pytest.mark.parametrize("metric_type, status_code, display_decimals", [
+    ("user", 200, 2),
+    ("all", 200, 2),
+    ("all", 200, 0),
+    ("credit_transfer", 200, 2),
+    ("notarealmetrictype", 500, 2),
 ])
 def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reserve_token, create_organisation,
-                             metric_type, status_code):
+                             metric_type, status_code, display_decimals):
+    create_organisation.token.display_decimals = display_decimals
     def get_metrics(metric_type):
         return test_client.get(
             f'/api/v1/metrics/?metric_type={metric_type}&disable_cache=True&org={create_organisation.id}&group_by=account_type',
@@ -245,8 +303,10 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         returned_stats['master_wallet_balance'] = 0
     if metric_type == 'credit_transfer':
         assert response.json == base_transfer
-    elif metric_type == 'all':
+    elif metric_type == 'all' and display_decimals == 2:
         assert response.json == base_all
+    elif metric_type == 'all' and display_decimals == 0:
+        assert response.json == base_all_zero_decimals
     elif metric_type == 'user':
         assert response.json == base_participant
 
@@ -270,6 +330,9 @@ def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
         metric_type, params, status_code, requested_metric, group_by, output_file
 ):
+    def ts_sort(ts):
+        return sorted(ts, key=lambda item: isoparse(item['date']))
+
     def get_metrics(metric_type):
         p = f'&params={params}' if params else ''
         rm = f'&requested_metric={requested_metric}' if requested_metric else ''
@@ -295,7 +358,10 @@ def test_get_summed_metrics(
             if not isinstance(desired_output[do], dict) or "timeseries" not in desired_output[do]:
                 assert returned_stats[do] == desired_output[do]
             else:
+                assert returned_stats[do]['type'] == desired_output[do]['type']
                 assert returned_stats[do]['aggregate'] == desired_output[do]['aggregate']
                 for timeseries_category in returned_stats[do]['timeseries']:
+                    sorted_returned_stats = ts_sort(returned_stats[do]['timeseries'][timeseries_category])
+                    sorted_desired_stats = ts_sort(desired_output[do]['timeseries'][timeseries_category])
                     for idx in range(len(returned_stats[do]['timeseries'][timeseries_category])):
                         assert returned_stats[do]['timeseries'][timeseries_category][idx]['value'] == desired_output[do]['timeseries'][timeseries_category][idx]['value']

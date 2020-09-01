@@ -12,8 +12,11 @@ import {
   hexToRgb,
   toTitleCase,
   replaceUnderscores,
-  get_zero_filled_values
+  get_zero_filled_values,
+  toCurrency
 } from "../../../utils";
+
+import { VALUE_TYPES } from "../../../constants";
 
 import LoadingSpinner from "../../loadingSpinner.jsx";
 
@@ -42,6 +45,7 @@ class VolumeChart extends React.Component {
       pointHoverBackgroundColor: color,
       pointHoverBorderColor: color,
       pointHoverBorderWidth: 2,
+      borderWidth: 2,
       pointRadius: 1,
       pointHitRadius: 10,
       data: dataset
@@ -56,7 +60,7 @@ class VolumeChart extends React.Component {
   }
 
   render() {
-    let { selected, data } = this.props;
+    let { selected, data, filter_dates } = this.props;
 
     if (!(data && data.timeseries)) {
       return (
@@ -74,6 +78,16 @@ class VolumeChart extends React.Component {
     let all_dates = Object.values(data.timeseries)
       .flat()
       .map(data => new Date(data.date));
+
+    // Handles cases where start or end dates don't have any timeseries data
+    if (filter_dates) {
+      all_dates = all_dates.concat(
+        filter_dates
+          .filter(date => date != null)
+          .map(date => date.startOf("day"))
+      );
+    }
+
     let minDate = new Date(Math.min.apply(null, all_dates));
     let maxDate = new Date(Math.max.apply(null, all_dates));
 
@@ -98,7 +112,7 @@ class VolumeChart extends React.Component {
         display: false
       },
       tooltips: {
-        mode: "x",
+        mode: "nearest",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
         cornerRadius: 1
       },
@@ -159,25 +173,36 @@ class VolumeChart extends React.Component {
       "#FF764D",
       "#CB5188",
       "#62508E",
+      "#508E79",
       "#2E4A7A",
       "#F05B6F",
-      "#995194"
+      "#995194",
+      "#57AA65",
+      "#FF9C22",
+      "#42B1B1",
+      "#555555"
     ];
 
     let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
     const datasets = possibleTimeseriesKeys.map((key, index) => {
+      const timeseries = data.timeseries[key].map(a => {
+        if (data.type.value_type == VALUE_TYPES.CURRENCY) {
+          a.value = toCurrency(a.value);
+        }
+        return a;
+      });
+
       const zero_filled_data = get_zero_filled_values(
         "value",
-        data.timeseries[key],
+        timeseries,
         date_array
       );
 
-      return this.construct_dataset_object(
-        index,
-        key,
-        color_scheme[index],
-        zero_filled_data
-      );
+      let color = color_scheme[index]
+        ? color_scheme[index]
+        : color_scheme[color_scheme.length - 1];
+
+      return this.construct_dataset_object(index, key, color, zero_filled_data);
     });
 
     var chartData = {
@@ -187,8 +212,13 @@ class VolumeChart extends React.Component {
 
     return (
       <div>
-        <div style={{ height: "200px" }}>
-          <Line data={chartData} height={200} options={options} redraw />
+        <div style={{ height: `${this.props.chartHeight}px` }}>
+          <Line
+            data={chartData}
+            height={this.props.chartHeight}
+            options={options}
+            redraw
+          />
         </div>
       </div>
     );

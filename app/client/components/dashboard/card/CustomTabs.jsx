@@ -3,7 +3,6 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import PropTypes from "prop-types";
 
 import { Tabs, Statistic, Typography } from "antd";
 import {
@@ -12,12 +11,15 @@ import {
   MinusOutlined
 } from "@ant-design/icons";
 
+import { VALUE_TYPES } from "../../../constants";
+
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-import { replaceUnderscores, toTitleCase } from "../../../utils";
+import { replaceUnderscores, toTitleCase, toCurrency } from "../../../utils";
 
 import "./Tabs.css";
+import { TooltipWrapper } from "../TooltipWrapper";
 
 export default class CustomTabs extends React.Component {
   render() {
@@ -34,6 +36,7 @@ export default class CustomTabs extends React.Component {
         {timeSeriesNameLabels.map((ts, i) => {
           let tsName = ts[0];
           let tsLabel = ts[1];
+          let tsPrompt = ts[2];
 
           const timeseries = metrics[tsName].timeseries;
           let startValue = 0;
@@ -42,7 +45,9 @@ export default class CustomTabs extends React.Component {
             startValue += timeseries[key][0].value;
             endValue += timeseries[key][timeseries[key].length - 1].value;
           });
-
+          let suffix = metrics[tsName].type.currency_symbol
+            ? " " + metrics[tsName].type.currency_symbol
+            : "";
           let color;
           let arrow;
           if (endValue > startValue) {
@@ -65,14 +70,25 @@ export default class CustomTabs extends React.Component {
             percentChange = Math.round((endValue / startValue - 1) * 100);
           }
 
+          const total =
+            metrics[tsName].type.value_type == VALUE_TYPES.CURRENCY
+              ? toCurrency(metrics[tsName].aggregate.total)
+              : metrics[tsName].aggregate.total;
+
           return (
             <TabPane
               key={tsName}
               tab={
                 <Statistic
-                  title={toTitleCase(replaceUnderscores(tsLabel))}
-                  value={metrics[tsName].aggregate.total}
-                  precision={2}
+                  title={
+                    <TooltipWrapper
+                      label={replaceUnderscores(tsLabel)}
+                      prompt={tsPrompt}
+                    />
+                  }
+                  value={total}
+                  suffix={suffix}
+                  precision={metrics[tsName].type.display_decimals}
                   prefix={
                     <div
                       style={{
@@ -96,8 +112,3 @@ export default class CustomTabs extends React.Component {
     );
   }
 }
-//
-// Tabs.PropTypes = {
-//   possibleTimeseries: PropTypes.arrayOf(PropTypes.string),
-//   changeTimeseries: () => fn()
-// };

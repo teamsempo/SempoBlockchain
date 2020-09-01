@@ -26,7 +26,7 @@ export default function KoboCredentials() {
       })
       .then(handled => {
         setUsername(handled.username);
-        setUsername(handled.password);
+        setPassword(handled.password);
       })
       .catch(error => {
         throw error;

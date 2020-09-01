@@ -3,66 +3,85 @@
   "active_group_by": "transfer_type",
   "all_payments_volume": {
     "aggregate": {
-      "PAYMENT": 1687,
+      "DISBURSEMENT": 1517,
+      "PAYMENT": 170,
       "total": 1687
     },
     "timeseries": {
-      "PAYMENT": [
+      "DISBURSEMENT": [
         {
-          "date": "2020-07-18T00:00:00",
+          "date": "2020-07-23T00:00:00",
           "value": 406
         },
         {
-          "date": "2020-07-30T00:00:00",
+          "date": "2020-08-04T00:00:00",
           "value": 201
         },
         {
-          "date": "2020-08-01T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-08-03T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-08-05T00:00:00",
+          "date": "2020-08-10T00:00:00",
           "value": 210
         },
         {
+          "date": "2020-08-12T00:00:00",
+          "value": 700
+        }
+      ],
+      "PAYMENT": [
+        {
           "date": "2020-08-06T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-08-08T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-08-11T00:00:00",
           "value": 30
         },
         {
-          "date": "2020-08-07T00:00:00",
-          "value": 800
+          "date": "2020-08-12T00:00:00",
+          "value": 100
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "daily_disbursement_volume": {
     "aggregate": {
-      "PAYMENT": 1517,
+      "DISBURSEMENT": 1517,
       "total": 1517
     },
     "timeseries": {
-      "PAYMENT": [
+      "DISBURSEMENT": [
         {
-          "date": "2020-07-18T00:00:00",
+          "date": "2020-07-23T00:00:00",
           "value": 406
         },
         {
-          "date": "2020-07-30T00:00:00",
+          "date": "2020-08-04T00:00:00",
           "value": 201
         },
         {
-          "date": "2020-08-05T00:00:00",
+          "date": "2020-08-10T00:00:00",
           "value": 210
         },
         {
-          "date": "2020-08-07T00:00:00",
+          "date": "2020-08-12T00:00:00",
           "value": 700
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "daily_transaction_count": {
@@ -73,60 +92,77 @@
     "timeseries": {
       "PAYMENT": [
         {
-          "date": "2020-08-01T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-03T00:00:00",
-          "value": 1
-        },
-        {
           "date": "2020-08-06T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-08T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-11T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-08-07T00:00:00",
+          "date": "2020-08-12T00:00:00",
           "value": 1
         }
       ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
     }
   },
   "daily_transaction_volume": {
     "aggregate": {
-      "PAYMENT": 1687,
+      "DISBURSEMENT": 1517,
+      "PAYMENT": 170,
       "total": 1687
     },
     "timeseries": {
-      "PAYMENT": [
+      "DISBURSEMENT": [
         {
-          "date": "2020-07-18T00:00:00",
+          "date": "2020-07-23T00:00:00",
           "value": 406
         },
         {
-          "date": "2020-07-30T00:00:00",
+          "date": "2020-08-04T00:00:00",
           "value": 201
         },
         {
-          "date": "2020-08-01T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-08-03T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-08-05T00:00:00",
+          "date": "2020-08-10T00:00:00",
           "value": 210
         },
         {
+          "date": "2020-08-12T00:00:00",
+          "value": 700
+        }
+      ],
+      "PAYMENT": [
+        {
           "date": "2020-08-06T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-08-08T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-08-11T00:00:00",
           "value": 30
         },
         {
-          "date": "2020-08-07T00:00:00",
-          "value": 800
+          "date": "2020-08-12T00:00:00",
+          "value": 100
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "exhausted_balance": 0,
@@ -144,22 +180,26 @@
     "timeseries": {
       "PAYMENT": [
         {
-          "date": "2020-08-01T00:00:00",
-          "value": 0.5
-        },
-        {
-          "date": "2020-08-03T00:00:00",
-          "value": 0.3333333333333333
-        },
-        {
           "date": "2020-08-06T00:00:00",
           "value": 0.5
         },
         {
-          "date": "2020-08-07T00:00:00",
+          "date": "2020-08-08T00:00:00",
+          "value": 0.3333333333333333
+        },
+        {
+          "date": "2020-08-11T00:00:00",
+          "value": 0.5
+        },
+        {
+          "date": "2020-08-12T00:00:00",
           "value": 0.14285714285714285
         }
       ]
+    },
+    "type": {
+      "display_decimals": 2,
+      "value_type": "count_average"
     }
   },
   "transfer_amount_per_user": {
@@ -170,60 +210,77 @@
     "timeseries": {
       "PAYMENT": [
         {
-          "date": "2020-08-01T00:00:00",
+          "date": "2020-08-06T00:00:00",
           "value": 10
         },
         {
-          "date": "2020-08-03T00:00:00",
+          "date": "2020-08-08T00:00:00",
           "value": 6.666666666666667
         },
         {
-          "date": "2020-08-06T00:00:00",
+          "date": "2020-08-11T00:00:00",
           "value": 7.5
         },
         {
-          "date": "2020-08-07T00:00:00",
+          "date": "2020-08-12T00:00:00",
           "value": 14.285714285714286
         }
       ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
     }
   },
   "users_who_made_purchase": {
     "aggregate": {
-      "PAYMENT": 6,
+      "DISBURSEMENT": 1,
+      "PAYMENT": 5,
       "total": 6
     },
     "timeseries": {
+      "DISBURSEMENT": [
+        {
+          "date": "2020-07-23T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-04T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-10T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-12T00:00:00",
+          "value": 1
+        }
+      ],
       "PAYMENT": [
         {
-          "date": "2020-07-18T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-07-30T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-01T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-03T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-08-05T00:00:00",
-          "value": 1
-        },
-        {
           "date": "2020-08-06T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-08T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-08-11T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-08-07T00:00:00",
-          "value": 2
+          "date": "2020-08-12T00:00:00",
+          "value": 1
         }
       ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
     }
   }
 }

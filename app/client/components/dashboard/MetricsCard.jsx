@@ -5,14 +5,10 @@
 import React from "react";
 
 import { connect } from "react-redux";
-import moment from "moment";
 
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 import { Card, Divider } from "antd";
-
-import { LoadMetricAction } from "../../reducers/metric/actions";
-import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
@@ -20,10 +16,6 @@ import CustomTabs from "./card/CustomTabs";
 import DateRangeSelector from "./dateRangeSelector";
 import FilterModule from "../filterModule/FilterModule";
 import LoadingSpinner from "../loadingSpinner.jsx";
-
-import { reduxState } from "./FakeState";
-
-const dateFormat = "DD/MM/YYYY";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -82,19 +74,26 @@ class MetricsCard extends React.Component {
               alignItems: "center"
             }}
           >
-            <div style={{ height: 200, width: isMobile ? "100%" : "60%" }}>
+            <div
+              style={{
+                height: this.props.chartHeight,
+                width: isMobile ? "100%" : "60%"
+              }}
+            >
               <VolumeChart
+                chartHeight={this.props.chartHeight}
                 data={selectedData}
                 selected={this.state.selectedTimeSeries}
+                filter_dates={this.state.dateRange}
               />
             </div>
 
             <img
               src="/static/media/BigArrow.svg"
               style={{
-                height: 150,
+                height: this.props.chartHeight - 50,
                 padding: "0 1em",
-                margin: isMobile ? "-3em0" : "0 0 3em",
+                margin: isMobile ? "-3em 0" : "0 0 3em",
                 transform: isMobile ? "rotate(90deg)" : null
               }}
             />
@@ -102,11 +101,12 @@ class MetricsCard extends React.Component {
             {/*  need to offset the arrow width + padding */}
             <div
               style={{
-                height: 200,
+                height: this.props.chartHeight,
                 width: isMobile ? "100%" : "calc(40% - 2em - 22px)"
               }}
             >
               <GroupByChart
+                chartHeight={this.props.chartHeight}
                 data={selectedData}
                 selected={this.state.selectedTimeSeries}
               />
@@ -152,4 +152,4 @@ class MetricsCard extends React.Component {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(MetricsCard);
+)(withMediaQuery([isMobileQuery])(MetricsCard));

@@ -241,10 +241,12 @@ class TransferAccountManager extends React.Component {
               <span style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
                 <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
                   <a href={tracker_link} target="_blank">
-                    {this.props.transferAccount.blockchain_address.substring(
-                      2,
-                      7
-                    ) + "..."}
+                    {this.props.transferAccount.blockchain_address
+                      ? this.props.transferAccount.blockchain_address.substring(
+                          2,
+                          7
+                        ) + "..."
+                      : ""}
                   </a>
                 </p>
               </span>

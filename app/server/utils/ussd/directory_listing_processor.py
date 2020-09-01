@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 
 from server import db
 from server.utils.phone import send_message
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 from server.models.user import User
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage

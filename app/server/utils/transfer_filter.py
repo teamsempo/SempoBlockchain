@@ -11,6 +11,7 @@ from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from sqlalchemy.sql.expression import cast
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 MALE = 'male'
 FEMALE = 'female'

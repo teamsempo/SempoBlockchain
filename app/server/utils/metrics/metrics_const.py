@@ -59,3 +59,9 @@ UNGROUPED = 'ungrouped'
 
 # Misc Values
 GROUPED = 'grouped'
+
+# Metric types
+COUNT = 'count'
+COUNT_AVERAGE = 'count_average'
+CURRENCY = 'currency'
+VALUE_TYPES = [COUNT, COUNT_AVERAGE, CURRENCY]

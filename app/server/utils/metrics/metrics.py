@@ -39,14 +39,16 @@ def calculate_transfer_stats(
     token_id = None):
 
     # Handle a situation where multi_org is used with orgs with different tokens
+    # Also get the active token object so we can pass the currency name in the API
     tokens_to_orgs = {}
     mandatory_filter = {}
     organisations = [Organisation.query.get(o) for o in g.get('query_organisations', [])]
     tokens = [o.token for o in organisations]
     for o in organisations:
-        if o.token not in tokens_to_orgs:
-            tokens_to_orgs[o.token] = []
-        tokens_to_orgs[o.token].append(o)
+        token = o.token
+        if token not in tokens_to_orgs:
+            tokens_to_orgs[token] = []
+        tokens_to_orgs[token].append(o)
     if len(tokens_to_orgs) > 1:
         if not token_id:
             token, orgs = next(iter(tokens_to_orgs.items()))
@@ -62,6 +64,9 @@ def calculate_transfer_stats(
                 'options': [{'id': t.id, 'name':t.name} for t in tokens]
             }
         }
+    if not organisations:
+        org = g.active_organisation
+        token = org.token
 
     # Build date filters for each metricable table
     date_filters_dict = {}
@@ -74,6 +79,9 @@ def calculate_transfer_stats(
             date_filters_dict[User].append(User.created >= start_date)
             date_filters_dict[TransferAccount].append(TransferAccount.created >= start_date)
         if end_date:
+            # If an end_date is specified, add one day. This is because the end date will be midnight of the day 
+            # we want to filter to. We want data up to midnight of the following day!
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)  
             date_filters_dict[CreditTransfer].append(CreditTransfer.created <= end_date)
             date_filters_dict[User].append(User.created <= end_date)
             date_filters_dict[TransferAccount].append(TransferAccount.created <= end_date)
@@ -108,11 +116,11 @@ def calculate_transfer_stats(
 
     # Determines which metrics the user is asking for, and calculate them
     if metric_type == metrics_const.TRANSFER:
-        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics
     elif metric_type == metrics_const.USER:
         metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
     else:
-        metrics_list = TransferStats(group_strategy, timeseries_unit).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
     
     # Ensure that the metric requested by the user is available
     availible_metrics = [m.metric_name for m in metrics_list]
@@ -134,8 +142,6 @@ def calculate_transfer_stats(
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
 
     try:
-        # data['master_wallet_balance'] = 0
-
         data['master_wallet_balance'] = max(g.active_organisation.org_level_transfer_account.balance, 0)
     except:
         data['master_wallet_balance'] = 0

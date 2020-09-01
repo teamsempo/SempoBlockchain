@@ -6,7 +6,8 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
-import { toTitleCase, replaceUnderscores } from "../../../utils";
+import { toTitleCase, replaceUnderscores, toCurrency } from "../../../utils";
+import { VALUE_TYPES } from "../../../constants";
 
 const mapStateToProps = state => {
   return {
@@ -20,7 +21,10 @@ class GroupByChart extends React.Component {
 
     const aggregate = this.props.data.aggregate;
     const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
-    const aggregateData = aggregate ? Object.values(aggregate) : [];
+    var aggregateData = aggregate ? Object.values(aggregate) : [];
+    if (this.props.data.type.value_type == VALUE_TYPES.CURRENCY) {
+      aggregateData = aggregateData.map(a => toCurrency(a));
+    }
 
     const labelString = selected
       ? selected.includes("volume")
@@ -85,9 +89,14 @@ class GroupByChart extends React.Component {
             "#FF764D",
             "#CB5188",
             "#62508E",
+            "#508E79",
             "#2E4A7A",
             "#F05B6F",
-            "#995194"
+            "#995194",
+            "#57AA65",
+            "#FF9C22",
+            "#42B1B1",
+            "#555555"
           ],
           data: aggregateData
         }
@@ -95,8 +104,12 @@ class GroupByChart extends React.Component {
     };
     return (
       <div>
-        <div style={{ height: "200px" }}>
-          <HorizontalBar data={data} height={200} options={options} />
+        <div style={{ height: `${this.props.chartHeight}px` }}>
+          <HorizontalBar
+            data={data}
+            height={this.props.chartHeight}
+            options={options}
+          />
         </div>
       </div>
     );
