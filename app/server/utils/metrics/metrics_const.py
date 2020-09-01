@@ -47,7 +47,6 @@ TIMESERIES_ACTIONS = [
 ]
 
 # Group by values
-GENDER = 'gender'
 LOCATION = 'location'
 TRANSFER_TYPE = 'transfer_type'
 TRANSFER_MODE = 'transfer_mode'
@@ -57,17 +56,6 @@ TRANSFER_STATUS = 'transfer_status'
 TRANSFER_USAGE = 'transfer_usage'
 UNGROUPED = 'ungrouped'
 
-GROUP_BY_TYPES = [
-    GENDER, 
-    LOCATION,
-    TRANSFER_TYPE, 
-    TRANSFER_MODE, 
-    ACCOUNT_TYPE, 
-    TRANSFER_SUBTYPE, 
-    TRANSFER_STATUS, 
-    TRANSFER_USAGE, 
-    UNGROUPED
-]
 
 # Misc Values
 GROUPED = 'grouped'
