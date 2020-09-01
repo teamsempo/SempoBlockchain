@@ -98,7 +98,7 @@ def encrypt_string(raw_string):
 class AttributeDictProccessor(object):
 
     def force_attribute_dict_keys_to_lowercase(self):
-        return dict(zip(map(str.lower, self.attribute_dict.keys()), self.attribute_dict.values()))
+        self.attribute_dict = dict(zip(map(str.lower, self.attribute_dict.keys()), self.attribute_dict.values()))
 
     def strip_kobo_preslashes(self):
         self.attribute_dict = dict(zip(map(lambda key: key[self._return_index_of_slash_or_neg1(key) + 1:], self.attribute_dict.keys()),
