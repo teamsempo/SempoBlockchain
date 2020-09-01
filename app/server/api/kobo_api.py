@@ -46,13 +46,3 @@ user_kobo_blueprint.add_url_rule(
     methods=['POST'],
     defaults={'user_id': None}
 )
-
-
-# add Rules for API Endpoints
-
-user_kobo_blueprint.add_url_rule(
-    '/kobo/user',
-    view_func=UserKoboAPI.as_view('user_kobo_view'),
-    methods=['POST'],
-    defaults={'user_id': None}
-)
