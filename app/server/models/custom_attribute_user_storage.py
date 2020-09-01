@@ -2,6 +2,10 @@ from server import db
 from server.models.utils import ModelBase
 from sqlalchemy import cast
 
+from sqlalchemy import func
+
+from server.models.custom_attribute import CustomAttribute
+
 class CustomAttributeUserStorage(ModelBase):
     __tablename__ = 'custom_attribute_user_storage'
 
@@ -18,9 +22,14 @@ class CustomAttributeUserStorage(ModelBase):
         # Get all possible options for those attributes
         attribute_options = {}
         for a in attributes:
-            attribute_options[a] = [
-                u[0].replace('"', '') for u in db.session.query(cast(CustomAttributeUserStorage.value, db.String))
-                .filter(CustomAttributeUserStorage.name == a)
-                .distinct()
-            ]
+            exists = db.session.query(CustomAttribute.id).filter(
+                func.lower(CustomAttribute.name) == func.lower(a)).scalar() is not None
+
+            if exists:
+
+                attribute_options[a] = [
+                    u[0].replace('"', '') for u in db.session.query(cast(CustomAttributeUserStorage.value, db.String))
+                    .filter(CustomAttributeUserStorage.name == a)
+                    .distinct()
+                ]
         return attribute_options
