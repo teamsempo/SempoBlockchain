@@ -221,7 +221,7 @@ organisation_blueprint.add_url_rule(
 )
 
 organisation_blueprint.add_url_rule(
-    '/organisation/<int:organisation_id>/users',
+    '/organisation/<int:organisation_id>/users/',
     view_func=OrganisationUserAPI.as_view('organisation_user_view'),
     methods=['PUT'],
 )
