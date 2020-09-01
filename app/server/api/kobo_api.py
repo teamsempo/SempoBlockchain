@@ -27,16 +27,25 @@ class UserKoboAPI(MethodView):
 
         post_data = UserUtils.extract_kobo_custom_attributes(post_data)
 
-        #  TODO: Kobo should have a more intelligent way of specifying the organisation
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
-            organisation=g.user.fallback_active_organisation()
+            organisation=g.active_organisation
         )
 
         if response_code == 200:
             db.session.commit()
 
         return make_response(jsonify(response_object)), response_code
+
+
+# add Rules for API Endpoints
+
+user_kobo_blueprint.add_url_rule(
+    '/kobo/user',
+    view_func=UserKoboAPI.as_view('user_kobo_view'),
+    methods=['POST'],
+    defaults={'user_id': None}
+)
 
 
 # add Rules for API Endpoints
