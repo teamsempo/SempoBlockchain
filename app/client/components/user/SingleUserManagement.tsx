@@ -16,6 +16,7 @@ import {
   ResetPinPayload,
   DeleteUserPayload
 } from "../../reducers/user/types";
+import { any } from "prop-types";
 
 interface DispatchProps {
   editUser: (body: User, path: number) => EditUserAction;
@@ -56,7 +57,6 @@ class SingleUserManagement extends React.Component<Props> {
       (attr_dict as attr_dict)[key] = form[key];
       return attr_dict;
     });
-
     this.props.editUser(
       {
         first_name: form.firstName,
@@ -64,11 +64,7 @@ class SingleUserManagement extends React.Component<Props> {
         public_serial_number: form.publicSerialNumber,
         phone: form.phone,
         location: form.location,
-        is_vendor:
-          form.accountType === TransferAccountTypes.VENDOR ||
-          form.accountType === TransferAccountTypes.CASHIER,
-        is_tokenagent: form.accountType === TransferAccountTypes.TOKENAGENT,
-        is_groupaccount: form.accountType === TransferAccountTypes.GROUPACCOUNT,
+        account_types: form.accountTypes.map(o => Object.values(o).pop()),
         referred_by: form.referredBy,
         custom_attributes: attr_dict,
         business_usage_name: businessUsage

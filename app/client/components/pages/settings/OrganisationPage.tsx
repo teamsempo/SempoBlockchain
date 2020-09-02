@@ -21,6 +21,7 @@ interface StateProps {
 
 interface IState {
   isoCountries: null;
+  roles: null;
 }
 
 type IProps = DispatchProps & StateProps;
@@ -29,15 +30,16 @@ class OrganisationPage extends React.Component<IProps, IState> {
   constructor(props: IProps) {
     super(props);
     this.state = {
-      isoCountries: null
+      isoCountries: null,
+      roles: null
     };
   }
 
   componentWillMount() {
-    this.getIsoCountries();
+    this.getConstants();
   }
 
-  getIsoCountries() {
+  getConstants() {
     //todo: refactor into a platform wide CONSTANTS reducer
     const query_string = generateQueryString();
     var URL = `/api/v1/organisation/constants/${query_string}`;
@@ -63,7 +65,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
         }
         //@ts-ignore
         this.setState({
-          isoCountries: isoCountriesOptions
+          isoCountries: isoCountriesOptions,
+          roles: handled.data.roles
         });
       })
       .catch((error: any) => {
@@ -77,7 +80,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
       {
         country_code: form.countryCode,
         default_disbursement: form.defaultDisbursement * 100,
-        require_transfer_card: form.requireTransferCard
+        require_transfer_card: form.requireTransferCard,
+        account_types: form.accountTypes.map(o => Object.values(o).pop())
         // default_lat: null,
         // default_lng: null
       },
@@ -98,6 +102,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
                 activeOrganisation={this.props.activeOrganisation}
                 organisations={this.props.organisations}
                 isoCountries={this.state.isoCountries}
+                roles={this.state.roles}
                 onSubmit={(form: IOrganisationSettings) => this.onSubmit(form)}
               />
             ) : (

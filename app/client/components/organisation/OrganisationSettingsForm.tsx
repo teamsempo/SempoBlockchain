@@ -13,6 +13,7 @@ export interface IOrganisationSettings {
   defaultDisbursement: number;
   requireTransferCard: boolean;
   countryCode: string;
+  accountTypes: [];
 }
 
 interface StateProps {}
@@ -21,6 +22,7 @@ interface OuterProps {
   isoCountries: [];
   organisations: any;
   activeOrganisation: Organisation | any;
+  roles: [];
 }
 
 type Props = OuterProps & StateProps;
@@ -42,13 +44,15 @@ class OrganisationSettingForm extends React.Component<
     this.props.initialize({
       defaultDisbursement: activeOrganisation.default_disbursement / 100,
       requireTransferCard: activeOrganisation.require_transfer_card,
-      countryCode: countryCode.toLowerCase()
+      countryCode: countryCode.toLowerCase(),
+      accountTypes: activeOrganisation.valid_roles.map((role: String) => {
+        return { value: role, label: role };
+      })
     });
   }
 
   render() {
-    const { isoCountries, activeOrganisation } = this.props;
-
+    const { isoCountries, activeOrganisation, roles } = this.props;
     return (
       <form onSubmit={this.props.handleSubmit}>
         <InputField
@@ -64,6 +68,13 @@ class OrganisationSettingForm extends React.Component<
         </InputField>
 
         <InputField
+          name="accountTypes"
+          label={"Account Types"}
+          isMultipleChoice={true}
+          options={roles}
+        />
+
+        <InputField
           name="requireTransferCard"
           label="Require Transfer Card"
           type="checkbox"
@@ -77,6 +88,7 @@ class OrganisationSettingForm extends React.Component<
           isRequired
           hideNoneOption={true}
         />
+
         <ErrorMessage>{this.props.organisations.editStatus.error}</ErrorMessage>
         {/*
         // @ts-ignore */}

@@ -415,6 +415,8 @@ def proccess_create_or_modify_user_request(
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
+    account_types = attribute_dict.get('account_types', [])
+
     referred_by = attribute_dict.get('referred_by')
 
     blockchain_address = attribute_dict.get('blockchain_address')
@@ -475,13 +477,13 @@ def proccess_create_or_modify_user_request(
 
     is_vendor = attribute_dict.get('is_vendor', None)
     if is_vendor is None:
-        is_vendor = attribute_dict.get('vendor', False)
+        is_vendor = 'VENDOR' in account_types or attribute_dict.get('vendor', False)
 
-    is_tokenagent = attribute_dict.get('is_tokenagent', False)
-    is_groupaccount = attribute_dict.get('is_groupaccount', False)
+    is_tokenagent = 'TOKEN_AGENT' in account_types or attribute_dict.get('is_tokenagent', False)
+    is_groupaccount = 'GROUP_ACCOUNT' in account_types or attribute_dict.get('is_groupaccount', False)
 
     # is_beneficiary defaults to the opposite of is_vendor
-    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
+    is_beneficiary = 'BENEFICIARY' in account_types or attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
 
     if current_app.config['IS_USING_BITCOIN']:
         try:

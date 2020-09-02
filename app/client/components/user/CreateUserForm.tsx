@@ -24,7 +24,6 @@ export interface ICreateUser {
   location?: string;
   businessUsage?: string;
   usageOtherSpecific?: string;
-  accountType: any[TransferAccountTypes];
   accountTypes: object[];
 }
 
@@ -45,11 +44,9 @@ export type ICreateUserUpdate = ICreateUser & ICreateVendor;
 interface OuterProps {
   users: any;
   transferUsages: TransferUsage[];
-  transferAccountType: string;
 }
 
 interface StateProps {
-  accountType: any[TransferAccountTypes];
   accountTypes: TransferAccountTypes[];
   businessUsageValue?: string;
   activeOrganisation: Organisation;
@@ -75,7 +72,6 @@ class CreateUserForm extends React.Component<
   componentDidMount() {
     const { defaultDisbursement } = this.props;
     this.props.initialize({
-      accountType: TransferAccountTypes.USER.toLowerCase(),
       accountTypes: [{ value: "USER", label: "USER" }],
       gender: "female",
       initialDisbursement: defaultDisbursement
@@ -106,7 +102,6 @@ class CreateUserForm extends React.Component<
       activeOrganisation,
       businessUsageValue,
       transferUsages,
-      accountType,
       accountTypes,
       defaultDisbursement,
       validRoles
@@ -195,23 +190,17 @@ class CreateUserForm extends React.Component<
         </div>
       );
     }
-    if (accountTypesList.includes(TransferAccountTypes.TOKENAGENT)) {
+    if (accountTypesList.includes(TransferAccountTypes.TOKEN_AGENT)) {
       //  SUPERVENDOR
       selectedTokenAgentForm = <></>;
     }
 
     return (
       <div>
-        <ModuleHeader>Create a {accountType} account</ModuleHeader>
+        <ModuleHeader>Create an account</ModuleHeader>
 
         <div style={{ padding: "1em" }}>
           <form onSubmit={this.props.handleSubmit}>
-            <SelectField
-              name="accountType"
-              label={"Account Type"}
-              options={Object.keys(TransferAccountTypes)}
-              hideNoneOption={true}
-            />
             <InputField
               {...accountTypes}
               name="accountTypes"
@@ -267,7 +256,6 @@ export default connect(
     // @ts-ignore
     console.log(state.organisations.byId[state.login.organisationId]);
     return {
-      accountType: selector(state, "accountType"),
       accountTypes: selector(state, "accountTypes"),
       businessUsageValue: selector(state, "businessUsage"),
       // @ts-ignore
@@ -276,9 +264,9 @@ export default connect(
         // @ts-ignore
         state.organisations.byId[state.login.organisationId]
           .default_disbursement / 100,
-      // @ts-ignore
       validRoles:
-        state.organisations.byId[state.login.organisationId].valid_roles
+        // @ts-ignore
+        state.organisations.byId[state.login.organisationId].valid_roles || []
     };
   }
 )(CreateUserFormReduxForm);

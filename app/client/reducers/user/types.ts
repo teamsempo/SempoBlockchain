@@ -15,9 +15,6 @@ export interface User {
   lng?: string;
   location?: string;
   is_vendor?: boolean;
-  is_beneficiary?: boolean;
-  is_groupaccount?: boolean;
-  is_tokenagent?: boolean;
   is_disabled?: boolean;
   custom_attributes?: object;
   public_serial_number?: string;

@@ -201,9 +201,9 @@ class TransferAccountList extends React.Component {
       account_type === TransferAccountTypes.CASHIER
     ) {
       filteredData = filteredData.filter(account => account.is_vendor);
-    } else if (account_type === TransferAccountTypes.TOKENAGENT) {
+    } else if (account_type === TransferAccountTypes.TOKEN_AGENT) {
       filteredData = filteredData.filter(account => account.is_tokenagent);
-    } else if (account_type === TransferAccountTypes.GROUPACCOUNT) {
+    } else if (account_type === TransferAccountTypes.GROUP_ACCOUNT) {
       filteredData = filteredData.filter(account => account.is_groupaccount);
     }
 

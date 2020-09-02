@@ -21,6 +21,7 @@ import InputField from "../form/InputField";
 import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
+import { Organisation } from "../../reducers/organisation/types";
 import { TransferAccountTypes } from "../transferAccount/types";
 import QrReadingModal from "../qrReadingModal";
 import { replaceUnderscores } from "../../utils";
@@ -37,7 +38,7 @@ export interface IEditUser {
   usageOtherSpecific?: string;
   oneTimeCode: number;
   failedPinAttempts: number;
-  accountType: TransferAccountTypes;
+  accountTypes: object[];
   [key: string]: any;
 }
 
@@ -52,6 +53,7 @@ interface OuterProps {
 interface StateProps {
   accountType: TransferAccountTypes;
   businessUsageValue?: string;
+  activeOrganisation: Organisation;
 }
 
 type Props = OuterProps & StateProps;
@@ -74,7 +76,7 @@ class EditUserForm extends React.Component<
   InjectedFormProps<IEditUser, Props> & Props
 > {
   _updateForm() {
-    let account_type;
+    let account_types = [];
     let { selectedUser, transferUsages } = this.props;
     let transferUsage = transferUsages.filter(
       t => t.id === selectedUser.business_usage_id
@@ -83,14 +85,20 @@ class EditUserForm extends React.Component<
     let customAttributes = selectedUser && selectedUser.custom_attributes;
 
     if (selectedUser.is_beneficiary) {
-      account_type = TransferAccountTypes.USER;
-    } else if (selectedUser.is_vendor) {
-      account_type = TransferAccountTypes.VENDOR;
-    } else if (selectedUser.is_tokenagent) {
-      account_type = TransferAccountTypes.TOKENAGENT;
-    } else if (selectedUser.is_groupaccount) {
-      account_type = TransferAccountTypes.GROUPACCOUNT;
+      account_types.push(TransferAccountTypes.USER);
     }
+    if (selectedUser.is_vendor) {
+      account_types.push(TransferAccountTypes.VENDOR);
+    }
+    if (selectedUser.is_tokenagent) {
+      account_types.push(TransferAccountTypes.TOKEN_AGENT);
+    }
+    if (selectedUser.is_groupaccount) {
+      account_types.push(TransferAccountTypes.GROUP_ACCOUNT);
+    }
+    account_types = account_types.map((role: String) => {
+      return { value: role, label: role };
+    });
 
     let custom_attr_keys = customAttributes && Object.keys(customAttributes);
     let attr_dict = {};
@@ -105,7 +113,7 @@ class EditUserForm extends React.Component<
       publicSerialNumber: selectedUser.public_serial_number,
       phone: selectedUser.phone,
       location: selectedUser.location,
-      accountType: account_type,
+      accountTypes: account_types,
       oneTimeCode: selectedUser.one_time_code,
       failedPinAttempts: selectedUser.failed_pin_attempts,
       businessUsage: transferUsageName,
@@ -153,7 +161,7 @@ class EditUserForm extends React.Component<
       t => t.id === selectedUser.business_usage_id
     )[0];
 
-    let accountTypes = Object.keys(TransferAccountTypes);
+    let validRoles = this.props.activeOrganisation.valid_roles;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
     let businessUsageName = transferUsage && transferUsage.name;
 
@@ -280,15 +288,12 @@ class EditUserForm extends React.Component<
                 <SubRow>
                   <InputField name="location" label="Location" />
                 </SubRow>
-                <SubRow>
-                  <SelectField
-                    name="accountType"
-                    label="Account Type"
-                    options={accountTypes}
-                    hideNoneOption={true}
-                    isLowercase={false}
-                  />
-                </SubRow>
+                <InputField
+                  name="accountTypes"
+                  label={"Account Types"}
+                  isMultipleChoice={true}
+                  options={validRoles}
+                />
               </Row>
               <Row>
                 {selectedUser.one_time_code !== "" ? (
@@ -393,7 +398,9 @@ export default connect(
     const selector = formValueSelector("editUser");
     return {
       accountType: selector(state, "accountType"),
-      businessUsageValue: selector(state, "businessUsage")
+      businessUsageValue: selector(state, "businessUsage"),
+      // @ts-ignore
+      activeOrganisation: state.organisations.byId[state.login.organisationId]
     };
   }
 )(EditUserFormReduxForm);

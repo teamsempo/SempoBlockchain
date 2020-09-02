@@ -400,9 +400,9 @@ class OrganisationSchema(SchemaBase):
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
-    users               = fields.Nested('server.schemas.UserSchema', many=True)
-    transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
-    credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
+    #users               = fields.Nested('server.schemas.UserSchema', many=True)
+    #transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
+    #credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
 
 class TransferUsageSchema(Schema):
