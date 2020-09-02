@@ -253,8 +253,6 @@ const CreateUserFormReduxForm = reduxForm<ICreateUser, Props>({
 export default connect(
   (state: ReduxState): StateProps => {
     const selector = formValueSelector("createUser");
-    // @ts-ignore
-    console.log(state.organisations.byId[state.login.organisationId]);
     return {
       accountTypes: selector(state, "accountTypes"),
       businessUsageValue: selector(state, "businessUsage"),
