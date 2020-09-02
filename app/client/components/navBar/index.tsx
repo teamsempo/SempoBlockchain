@@ -67,11 +67,7 @@ class NavBar extends React.Component<Props, State> {
 
     //TODO: Allow setting of region for this
     let s3_region = "https://sempo-logos.s3-ap-southeast-2.amazonaws.com";
-    let custom_url = `${s3_region}/${orgName}.${
-      deploymentName === "dev" ? "svg" : "png"
-    }`;
-
-    console.log("Custom URL is", custom_url);
+    let custom_url = `${s3_region}/${orgName}.png`;
 
     this.imageExists(custom_url, exists => {
       if (exists) {
