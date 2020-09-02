@@ -54,7 +54,6 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         usdToSatoshiRate: action.payload.usdToSatoshiRate,
         tfaURL: null,
         tfaFailure: false
-        // Add roles here
       };
     case LoginActionTypes.LOGIN_PARTIAL:
       return {
