@@ -88,8 +88,7 @@ class Groups(object):
         fixed_groups = {
             UNGROUPED: None,
             LOCATION: Group('Location', User, User._location),
-            TRANSFER_TYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.transfer_type),
-            TRANSFER_SUBTYPE: Group('Transfer Subtype', CreditTransfer, CreditTransfer.transfer_subtype),
+            TRANSFER_TYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.public_transfer_type),
             TRANSFER_STATUS: Group('Transfer Status', CreditTransfer, CreditTransfer.transfer_status),
             TRANSFER_MODE: Group('Transfer Mode', CreditTransfer, CreditTransfer.transfer_mode),
             ACCOUNT_TYPE: Group('Account Type', TransferAccount, TransferAccount.account_type),
