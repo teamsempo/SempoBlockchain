@@ -26,5 +26,6 @@ def test_index(test_client):
     assert config.MASTER_WALLET_ADDRESS.encode() in response.data
     assert config.ETH_CONTRACT_ADDRESS.encode() in response.data
 
-    # correct JS bundle
-    assert get_js_bundle_filename().encode() in response.data
+    # correct JS bundles
+    assert get_js_bundle_filename('main.bundle.*.js').encode() in response.data
+    assert get_js_bundle_filename('vendors~main.bundle.*.js').encode() in response.data
