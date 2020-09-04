@@ -264,7 +264,7 @@ def test_create_user_via_kobo(test_client, init_database, authed_sempo_admin_use
     basic_auth = 'Basic ' + base64.b64encode(
         bytes(org.external_auth_username + ":" + org.external_auth_password, 'ascii')).decode('ascii')
 
-    phone = '+' + fake.msisdn()
+    phone = '+61400000999'
 
     payload = {
         "_id": 119743701,
@@ -294,7 +294,7 @@ def test_create_user_via_kobo(test_client, init_database, authed_sempo_admin_use
     }
 
     response = test_client.post(
-        "/api/v1/user/",
+        "/api/v1/user/?preprocess=true",
         headers=dict(
             Authorization=basic_auth,
             Accept='application/json'
