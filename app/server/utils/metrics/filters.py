@@ -126,7 +126,6 @@ def _apply_ca_filters(query, filters, user_join_condition):
 
             if comparator == 'EQ':
                 val = val if isinstance(val, list) else [val]
-                val = [f'\"{element}\"' for element in val] # needs ot be in form '"{item}"' for json string match
                 to_batch.append(pivot.c[column].in_(val))
             elif comparator == 'GT':
                to_batch.append(pivot.c[column] > val)
