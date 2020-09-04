@@ -22,14 +22,9 @@ class CustomAttributeUserStorage(ModelBase):
         # Get all possible options for those attributes
         attribute_options = {}
         for a in attributes:
-            exists = db.session.query(CustomAttribute.id).filter(
-                func.lower(CustomAttribute.name) == func.lower(a)).scalar() is not None
-
-            if exists:
-
-                attribute_options[a] = [
-                    u[0].replace('"', '') for u in db.session.query(cast(CustomAttributeUserStorage.value, db.String))
+            attribute_options[a] = [
+                u[0].replace('"', '') for u in db.session.query(cast(CustomAttributeUserStorage.value, db.String))
                     .filter(CustomAttributeUserStorage.name == a)
                     .distinct()
-                ]
+            ]
         return attribute_options
