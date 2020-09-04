@@ -74,10 +74,7 @@ class Group(object):
         self.group_object_model = group_object_model
         self.group_by_column = group_by_column
         self.custom_attribute_field_name = custom_attribute_field_name
-        print(name)
-        print(group_object_model)
-        print(group_by_column)
-        print(custom_attribute_field_name)
+
 # Builds Group objects for all custom attributes in the database
 def get_custom_attribute_groups():
     # Get all custom attributes and options
