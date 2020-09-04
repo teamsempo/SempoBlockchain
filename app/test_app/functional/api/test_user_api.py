@@ -2,6 +2,9 @@ import pytest, json, time
 from faker.providers import phone_number
 from faker import Faker
 from random import randint
+import base64
+
+
 
 from server import db
 from server.utils.auth import get_complete_auth_token
@@ -9,7 +12,7 @@ from server.utils.phone import proccess_phone_number
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.transfer_card import TransferCard
-from server.utils.location import async_set_user_gps_from_location
+from server.models.organisation import Organisation
 
 fake = Faker()
 fake.add_provider(phone_number)
@@ -253,16 +256,6 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
     assert response.status_code == 200
     users_list = response.json['data']['users']
     assert get_transfer_account_ids(users_list) == [5, 4, 3, 1]
-
-import base64
-
-from faker.providers import phone_number
-from faker import Faker
-
-from server.models.organisation import Organisation
-
-fake = Faker()
-fake.add_provider(phone_number)
 
 def test_create_user_via_kobo(test_client, init_database, authed_sempo_admin_user):
 
