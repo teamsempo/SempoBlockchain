@@ -90,7 +90,7 @@ def create_app():
         if not db.session.query(CustomAttribute).first():
             print('Old style custom attributes still present. Migrating to new custom attributes scheme!')
             attributes = db.session.query(CustomAttributeUserStorage).all()
-            attribute_cache = {} # Save name:attribute mapping so we don't have to query for it userCount times
+            attribute_cache = {} # Save { name : attribute } mapping so we don't have to query for it userCount times
             for user_attr in attributes:
                 if not user_attr.custom_attribute:
                     if user_attr.name not in attribute_cache:

@@ -7,7 +7,6 @@ from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
-from server.constants import GE_FILTER_ATTRIBUTES
 from server.exceptions import SubexchangeNotFound
 
 
@@ -79,9 +78,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
-            # todo: is there a reason only GE attributes are returned??
-            if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
-                parsed_dict[attribute.name] = attribute.value.strip('"')
+            parsed_dict[attribute.key] = attribute.value
 
         return parsed_dict
 
