@@ -9,6 +9,9 @@ from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.auth import multi_org
+from server.utils.attribute_preprocessor import standard_user_preprocess
+
+from server.constants import CREATE_USER_SETTINGS
 
 from server.exceptions import ResourceAlreadyDeletedError, TransferAccountDeletionError
 
@@ -125,9 +128,14 @@ class UserAPI(MethodView):
     def post(self, user_id):
 
         post_data = request.get_json()
+        preprocess = request.args.get('preprocess', '').lower() == 'true'  #Defaults to false
+
         organisation = g.get('active_organisation')
         if organisation is None:
             return make_response(jsonify({'message': 'Organisation must be set'})), 400
+
+        if preprocess:
+            post_data = standard_user_preprocess(post_data, CREATE_USER_SETTINGS)
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
