@@ -6,8 +6,13 @@ from server.models.settings import Settings
 from server.models.attribute_map import AttributeMap
 
 def standard_user_preprocess(attribute_dict, SETTINGS):
+    """
+    The standard flow when preprocessing user data. Note: order is carefully chosen
+    eg data is unwrapped before any other processing
+    """
     return pipe(
         attribute_dict,
+        unwrap_data,
         map_attribute_keys,
         filter_out_kobo_meta_attributes,
         filter_out_underscore_prefixed_attributes,
@@ -20,7 +25,26 @@ def standard_user_preprocess(attribute_dict, SETTINGS):
     )
 
 
+def unwrap_data(attribute_dict):
+    """
+    Allows the use of wrapped data payloads by taking the contents of _data and moving it up a level.
+    This is useful for setting default values in the wrapper in tools such as Kobo toolbox.
+    In the event of a conflict between two levels, the wrapped data takes priority.
+    {'is_vendor': True, '_data': {'first_name': 'Alice'}} -> {'is_vendor': True, 'first_name': 'Alice'}
+    """
+    _data = attribute_dict.get('_data')
+    if isinstance(_data, dict):
+        attribute_dict = {**attribute_dict, **_data}
+        attribute_dict.pop('_data')
+
+    return attribute_dict
+
+
 def map_attribute_keys(attribute_dict):
+    """
+    Allows custom re-mapping of keys.
+    {'your_first_name': 'Alice'} -> {'first_name': 'Alice}
+    """
     map_values = AttributeMap.query.all()
     map_dict = {}
     for mval in map_values:

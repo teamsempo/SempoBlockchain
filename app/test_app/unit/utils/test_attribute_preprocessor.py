@@ -26,6 +26,13 @@ def create_setting(create_organisation, init_database):
     init_database.session.add(s)
     init_database.session.commit()
 
+@pytest.mark.parametrize('in_data, out_data', [
+    ({'is_vendor': True, '_data': {'first_name': 'Alice'}}, {'is_vendor': True, 'first_name': 'Alice'}),
+    ({'is_vendor': True, 'first_name': 'Alice'}, {'is_vendor': True, 'first_name': 'Alice'}),
+    ({'is_vendor': True, '_data': {'is_vendor': False}}, {'is_vendor': False})
+])
+def test_unwrap_data(in_data, out_data):
+    assert out_data == ap.unwrap_data(in_data)
 
 @pytest.mark.parametrize('in_data, out_data', [
     ({'your_first_name': 'bar'}, {'first_name': 'bar'}),
