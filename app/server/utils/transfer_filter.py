@@ -74,6 +74,12 @@ class Filters(object):
                 'type': TransferFilterEnum.DISCRETE,
                 'values' : [u._location for u in db.session.query(User._location).distinct()]
             },
+            'public_transfer_type': {
+                'name': "Transfer Type",
+                'table': CreditTransfer.__tablename__,
+                'type': TransferFilterEnum.DISCRETE,
+                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
+            },
             'rounded_account_balance': {
                 'name': "Balance",
                 'table': TransferAccount.__tablename__,
