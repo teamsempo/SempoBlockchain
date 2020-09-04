@@ -84,28 +84,31 @@ def create_app():
         print('Unable to automatically create filters')
 
     # If it hasn't been done before, migrate from the old custom attribute scheme to the new one
-    with app.app_context():
-        from server.models.custom_attribute import CustomAttribute
-        from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
-        if not db.session.query(CustomAttribute).first():
-            print('Old style custom attributes still present. Migrating to new custom attributes scheme!')
-            attributes = db.session.query(CustomAttributeUserStorage).all()
-            attribute_cache = {} # Save { name : attribute } mapping so we don't have to query for it userCount times
-            for user_attr in attributes:
-                if not user_attr.custom_attribute:
-                    if user_attr.name not in attribute_cache:
-                        custom_attribute = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
-                        if not custom_attribute:
-                            user_attr.custom_attribute = CustomAttribute()
-                            user_attr.custom_attribute.name = user_attr.name
-                            db.session.add(user_attr.custom_attribute)
-    
-                        attribute_cache[user_attr.name] = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
-                    custom_attribute = attribute_cache[user_attr.name]
-                    user_attr.custom_attribute = custom_attribute
-                    user_attr.value = user_attr.value.strip('"')
-            db.session.commit()
+    try:
+        with app.app_context():
+            from server.models.custom_attribute import CustomAttribute
+            from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+            if not db.session.query(CustomAttribute).first():
+                print('Old style custom attributes still present. Migrating to new custom attributes scheme!')
+                attributes = db.session.query(CustomAttributeUserStorage).all()
+                attribute_cache = {} # Save { name : attribute } mapping so we don't have to query for it userCount times
+                for user_attr in attributes:
+                    if not user_attr.custom_attribute:
+                        if user_attr.name not in attribute_cache:
+                            custom_attribute = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
+                            if not custom_attribute:
+                                user_attr.custom_attribute = CustomAttribute()
+                                user_attr.custom_attribute.name = user_attr.name
+                                db.session.add(user_attr.custom_attribute)
 
+                            attribute_cache[user_attr.name] = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
+                        custom_attribute = attribute_cache[user_attr.name]
+                        user_attr.custom_attribute = custom_attribute
+                        user_attr.value = user_attr.value.strip('"')
+                db.session.commit()
+    except:
+        print('Unable to automatically migrate to new-style custom attributes')
+    
     return app
 
 def register_extensions(app):
