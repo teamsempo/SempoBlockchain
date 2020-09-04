@@ -21,11 +21,11 @@ def all_auth_roles_and_tiers_combos():
     return [(key, value) for key in ACCESS_ROLES.keys() for value in ACCESS_ROLES[key]]
 
 
-def interal_auth_username():
+def internal_auth_username():
     return config.INTERNAL_AUTH_USERNAME
 
 
-def interal_auth_password():
+def internal_auth_password():
     return config.INTERNAL_AUTH_PASSWORD
 
 
@@ -412,7 +412,7 @@ def test_reset_password_used_token(test_client, authed_sempo_admin_user):
     assert response.json['message'] == 'Token already used'
 
 @pytest.mark.parametrize("username,password,status_code", [
-    (interal_auth_username, interal_auth_password, 200),
+    (internal_auth_username, internal_auth_password, 200),
     (external_auth_username, external_auth_password, 200),
     (fake_username, fake_password, 401),
     (None, None, 401)
@@ -437,7 +437,7 @@ def test_basic_auth(test_client, authed_sempo_admin_user, username, password, st
     assert response.status_code == status_code
 
 @pytest.mark.parametrize("username,password,status_code", [
-    (interal_auth_username, interal_auth_password, 401),
+    (internal_auth_username, internal_auth_password, 401),
     (external_auth_username, external_auth_password, 401),
     (fake_username, fake_password, 401),
     (None, None, 401)
@@ -462,7 +462,7 @@ def test_correctly_reject_basic_auth(test_client, authed_sempo_admin_user, usern
     assert response.status_code == status_code
 
 @pytest.mark.parametrize("username,password,status_code", [
-    (interal_auth_username, interal_auth_password, 200),
+    (internal_auth_username, internal_auth_password, 200),
     (external_auth_username, external_auth_password, 200),
     (fake_username, fake_password, 401),
     (None, None, 401)
