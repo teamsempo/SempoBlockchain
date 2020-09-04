@@ -8,7 +8,7 @@ class CustomAttributeUserStorage(ModelBase):
     __tablename__ = 'custom_attribute_user_storage'
 
     custom_attribute_id = db.Column(db.Integer, db.ForeignKey('custom_attribute.id'))
-    custom_attribute = db.relationship("CustomAttribute", back_populates="attributes", lazy='joined')
+    custom_attribute = db.relationship("CustomAttribute", back_populates="attributes")
 
     name = db.Column(db.String) # Deprecated for key
     value = db.Column(db.String)

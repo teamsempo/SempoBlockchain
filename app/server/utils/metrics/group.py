@@ -8,6 +8,7 @@ from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.utils import credit_transfer_transfer_usage_association_table
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+from server.models.custom_attribute import CustomAttribute
 from server.utils.metrics.metrics_const import *
 
 
@@ -18,14 +19,16 @@ group_joining_strategies = {
         TransferAccount.__tablename__: lambda query : query.join(TransferAccount, TransferAccount.id == CreditTransfer.sender_transfer_account_id),
         CustomAttributeUserStorage.__tablename__: lambda query, name : query.join(User, CreditTransfer.sender_user_id == User.id)\
                                                                     .join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
-                                                                    .filter(CustomAttributeUserStorage.name == name),
+                                                                    .join(CustomAttribute, CustomAttribute.id == CustomAttributeUserStorage.custom_attribute_id)\
+                                                                    .filter(CustomAttribute.name == name),
         TransferUsage.__tablename__: lambda query : query.join(credit_transfer_transfer_usage_association_table, 
                                     credit_transfer_transfer_usage_association_table.c.credit_transfer_id == CreditTransfer.id)\
                                     .join(TransferUsage, credit_transfer_transfer_usage_association_table.c.transfer_usage_id == TransferUsage.id)    
     },
     User.__tablename__: {
         CustomAttributeUserStorage.__tablename__: lambda query, name : query.join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
-                                                                    .filter(CustomAttributeUserStorage.name == name),
+                                                                    .join(CustomAttribute, CustomAttribute.id == CustomAttributeUserStorage.custom_attribute_id)\
+                                                                    .filter(CustomAttribute.name == name),
         TransferAccount.__tablename__: lambda query : query.join(TransferAccount, TransferAccount.id == User.default_transfer_account_id),
     }
 }
@@ -71,7 +74,10 @@ class Group(object):
         self.group_object_model = group_object_model
         self.group_by_column = group_by_column
         self.custom_attribute_field_name = custom_attribute_field_name
-
+        print(name)
+        print(group_object_model)
+        print(group_by_column)
+        print(custom_attribute_field_name)
 # Builds Group objects for all custom attributes in the database
 def get_custom_attribute_groups():
     # Get all custom attributes and options
