@@ -21,7 +21,7 @@ class CustomAttributeUserStorage(ModelBase):
         return self.custom_attribute.name
 
     @staticmethod
-    def get_attributes_and_options():      
+    def get_attributes_and_options():
         # Get all custom attributes
         attributes = db.session.query(CustomAttribute).all()
         attribute_options = {}
