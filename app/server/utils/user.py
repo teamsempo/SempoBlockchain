@@ -326,14 +326,16 @@ def set_custom_attributes(attribute_dict, user):
             db.session.add(custom_attribute)
 
         # Put validation logic here!
-
+        value = attribute_dict['custom_attributes'][key]
+        value = custom_attribute.clean_and_validate_custom_attribute(value)
+        
         to_remove = list(filter(lambda a: a.custom_attribute.name == key, custom_attributes))
         for r in to_remove:
             custom_attributes.remove(r)
             db.session.delete(r)
 
         custom_attribute = CustomAttributeUserStorage(
-            custom_attribute=custom_attribute, value=attribute_dict['custom_attributes'][key])
+            custom_attribute=custom_attribute, value=value)
 
         custom_attributes.append(custom_attribute)
     custom_attributes = set_attachments(

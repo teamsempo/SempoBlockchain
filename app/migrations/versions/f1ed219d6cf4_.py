@@ -1,4 +1,4 @@
-"""empty message
+"""Start using the custom_attribute table
 
 Revision ID: f1ed219d6cf4
 Revises: 917051c561c8
