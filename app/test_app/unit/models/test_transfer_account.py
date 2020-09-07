@@ -82,10 +82,11 @@ def test_balance_handles_pending_complete_statuses(new_credit_transfer):
     sta.set_balance_offset(10000)
     rta.set_balance_offset(10000)
 
-    assert sta.balance == 9000
+    assert sta.balance == 9400   #+400 from original disbursement. once again, not super unity unit tests
     assert rta.balance == 10000
 
     new_credit_transfer.resolve_as_complete()
 
-    assert sta.balance == 9000
+    assert sta.balance == 9400
     assert rta.balance == 11000
+
