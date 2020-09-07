@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
 from server import db
@@ -6,8 +6,7 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 from server.models.utils import paginate_query
 from server.models.user import User
-from server.models.attribute_map import AttributeMap
-from server.schemas import organisation_schema, organisations_schema, attribute_maps_schema
+from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
 from server.constants import ISO_COUNTRIES
@@ -204,46 +203,6 @@ class OrganisationConstantsAPI(MethodView):
         response_object = {
             'message': 'Organisation constants',
             'data': {'iso_countries': ISO_COUNTRIES}
-        }
-        return make_response(jsonify(response_object)), 200
-
-class AttributeMapAPI(MethodView):
-
-    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
-    def get(self):
-
-        attribute_maps = AttributeMap.query.filter_by(organisation=g.active_organisation).all()
-
-        response_object = {
-            'data': {'organisations': attribute_maps_schema.dump(attribute_maps).data}
-        }
-        return make_response(jsonify(response_object)), 200
-
-    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
-    def post(self):
-        data = request.get_json()
-
-        input_name = data.get('input_name', '')
-        output_name = data.get('output_name', '')
-
-        if input_name == '' or output_name == '':
-            response_object = {
-                'message': 'Attribute names must be defined'
-            }
-            return make_response(jsonify(response_object)), 400
-
-        existing_map = AttributeMap.query.filter_by(input_name=input_name).first()
-
-        if existing_map:
-            existing_map.output_name = output_name
-        else:
-            am = AttributeMap(input_name, output_name, g.active_organisation)
-            db.session.add(am)
-
-        db.session.commit()
-
-        response_object = {
-            'message': 'Attributed Added'
         }
         return make_response(jsonify(response_object)), 200
 

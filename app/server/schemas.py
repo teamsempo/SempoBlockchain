@@ -488,7 +488,9 @@ me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
 
+attribute_map_schema = AttributeMapSchema()
 attribute_maps_schema = AttributeMapSchema(many=True)
+
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)

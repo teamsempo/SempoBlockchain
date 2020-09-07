@@ -1,5 +1,5 @@
-"""empty message
-
+"""
+Adding attribute map table
 Revision ID: 5f2310283ee0
 Revises: 2c3f97929457
 Create Date: 2020-09-04 18:57:09.532460
