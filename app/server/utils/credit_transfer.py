@@ -442,7 +442,7 @@ def check_for_any_valid_hash(transfer_amount, transfer_account_id, user_secret, 
     # How many seconds each hash lasts for
     time_interval = 5
     # How far in seconds from current time a valid hash can be
-    time_tolerance = 30000
+    time_tolerance = 30
 
     current_unix_time = int(time.time() * 1000)
 
