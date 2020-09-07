@@ -53,8 +53,7 @@ class AttributeMapAPI(MethodView):
         if existing_map:
             existing_map.output_name = output_name
         else:
-            am = AttributeMap(input_name, output_name)
-            am.organisation = g.active_organisation
+            am = AttributeMap(input_name, output_name, g.active_organisation)
             db.session.add(am)
 
         db.session.commit()

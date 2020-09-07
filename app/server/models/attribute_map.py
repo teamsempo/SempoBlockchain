@@ -7,6 +7,7 @@ class AttributeMap(OneOrgBase, ModelBase):
     input_name = db.Column(db.String(), nullable=False)
     output_name = db.Column(db.String(), nullable=False)
 
-    def __init__(self, input_name, output_name):
+    def __init__(self, input_name, output_name, organisation):
         self.input_name = input_name
         self.output_name = output_name
+        self.organisation = organisation
