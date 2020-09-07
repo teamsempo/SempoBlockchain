@@ -158,7 +158,7 @@ def test_liquidtoken_min_send_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_amount = 1500
-    new_credit_transfer.sender_transfer_account.set_balance_offset(5000)
+    new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(MinimumSentLimitError):
@@ -177,7 +177,7 @@ def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer)
     other_new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     other_new_credit_transfer.token.token_type = token.TokenType.LIQUID
     other_new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-    other_new_credit_transfer.sender_transfer_account.set_balance_offset(2000)
+    other_new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     other_new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(TransferCountLimitError):
@@ -219,7 +219,7 @@ def test_liquidtoken_max_amount_limit(new_credit_transfer):
         new_credit_transfer.check_sender_transfer_limits()
 
     new_credit_transfer.exclude_from_limit_calcs = True
-    
+
     LIMIT_IMPLEMENTATIONS.pop(-1)
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(new_credit_transfer):
