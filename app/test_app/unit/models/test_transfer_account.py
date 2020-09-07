@@ -70,3 +70,22 @@ def test_get_balance(create_transfer_account):
 
     create_transfer_account._balance_wei = int(123e16)
     assert create_transfer_account.balance == 123
+
+def test_balance_handles_pending_complete_statuses(new_credit_transfer):
+    """
+    Make sure that pending transfers are deducted from the sender's balance, but NOT added to the recipient's,
+    while complete transfers are deducted from the sender's AND added to the recipient's
+    """
+    sta = new_credit_transfer.sender_transfer_account
+    rta = new_credit_transfer.recipient_transfer_account
+
+    sta.set_balance_offset(10000)
+    rta.set_balance_offset(10000)
+
+    assert sta.balance == 9000
+    assert rta.balance == 10000
+
+    new_credit_transfer.resolve_as_complete()
+
+    assert sta.balance == 9000
+    assert rta.balance == 11000

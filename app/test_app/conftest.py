@@ -131,6 +131,7 @@ def create_transfer_account_user(test_client, init_database, create_organisation
     db.session.commit()
     return user
 
+create_transfer_account_user2 = create_transfer_account_user
 
 @pytest.fixture(scope='function')
 def create_transfer_account_user_function(test_client, init_database, create_organisation):
@@ -178,7 +179,7 @@ def new_disbursement(create_transfer_account_user):
 
 
 @pytest.fixture(scope='function')
-def new_credit_transfer(create_transfer_account_user, external_reserve_token):
+def new_credit_transfer(create_transfer_account_user, create_transfer_account_user2, external_reserve_token):
     from server.models.credit_transfer import CreditTransfer
     from uuid import uuid4
 
@@ -186,7 +187,7 @@ def new_credit_transfer(create_transfer_account_user, external_reserve_token):
         amount=1000,
         token=external_reserve_token,
         sender_user=create_transfer_account_user,
-        recipient_user=create_transfer_account_user,
+        recipient_user=create_transfer_account_user2,
         transfer_type=TransferTypeEnum.PAYMENT,
         transfer_subtype=TransferSubTypeEnum.STANDARD,
         uuid=str(uuid4())
