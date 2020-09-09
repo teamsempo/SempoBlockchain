@@ -66,14 +66,6 @@ class ExportManager extends React.Component {
   }
 
   attemptNewExport() {
-    if (this.state.account_type === "VENDOR") {
-      var user_type = "vendor";
-    } else if (this.state.account_type === "SELECTED") {
-      user_type = "selected";
-    } else {
-      user_type = "beneficiary";
-    }
-
     if (this.state.customExportCycle === true) {
       var payable_period_start_date = this.state.startDate;
       var payable_period_end_date = this.state.endDate;
@@ -85,7 +77,7 @@ class ExportManager extends React.Component {
     this.props.newExport({
       export_type: "",
       include_transfers: this.state.includeTransfers,
-      user_type: user_type,
+      user_type: this.state.account_type.toLowerCase(),
       date_range: this.state.date_range,
       payable_period_start_date: payable_period_start_date,
       payable_period_end_date: payable_period_end_date,
@@ -153,6 +145,9 @@ class ExportManager extends React.Component {
               </option>
               <option name="account_type" value="SELECTED">
                 SELECTED
+              </option>
+              <option name="account_type" value="ALL">
+                ALL
               </option>
             </StyledSelect>
           </div>

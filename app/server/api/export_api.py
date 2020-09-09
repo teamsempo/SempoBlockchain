@@ -16,6 +16,7 @@ from server.utils.amazon_ses import send_export_email
 
 export_blueprint = Blueprint('export', __name__)
 
+
 class ExportAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
@@ -41,8 +42,12 @@ class ExportAPI(MethodView):
             {'header': 'First Name',            'query_type': 'custom', 'query': 'first_name'},
             {'header': 'Last Name',             'query_type': 'custom', 'query': 'last_name'},
             {'header': 'Created (UTC)',         'query_type': 'db',     'query': 'created'},
-            {'header': 'Is Approved?',          'query_type': 'db',     'query': 'is_approved'},
+            {'header': 'Approved', 'query_type': 'db', 'query': 'is_approved'},
+            {'header': 'Beneficiary', 'query_type': 'custom', 'query': 'has_beneficiary_role'},
+            {'header': 'Vendor', 'query_type': 'custom', 'query': 'has_vendor_role'},
             {'header': 'Current Balance',       'query_type': 'custom', 'query': 'balance'},
+            {'header': 'Amount Received', 'query_type': 'custom', 'query': 'received'},
+            {'header': 'Amount Sent', 'query_type': 'custom', 'query': 'sent'}
             # {'header': 'Prev. Period Payable',  'query_type': 'custom', 'query': 'prev_period_payable'},
             # {'header': 'Total Payable',         'query_type': 'custom', 'query': 'total_payable'},
         ]
@@ -108,9 +113,11 @@ class ExportAPI(MethodView):
             user_accounts = User.query.filter(user_filter==True).all()
         elif user_type == 'selected':
             user_accounts = User.query.filter(User.transfer_account_id.in_(selected)).all()
+        elif user_type == 'all':
+            user_accounts = User.query.filter(
+                or_(User.has_beneficiary_role == True, User.has_vendor_role == True)).all()
 
         if user_accounts is not None:
-            # TODO: fix export
             for index, user_account in enumerate(user_accounts):
                 transfer_account = user_account.transfer_account
 
@@ -129,6 +136,26 @@ class ExportAPI(MethodView):
 
                         elif column['query'] == 'balance':
                             cell_contents = getattr(transfer_account, column['query'])/100
+
+                        elif column['query'] == 'has_beneficiary_role':
+                            cell_contents = "{0}".format(transfer_account.primary_user.has_beneficiary_role)
+
+                        elif column['query'] == 'has_vendor_role':
+                            cell_contents = "{0}".format(transfer_account.primary_user.has_vendor_role)
+
+                        elif column['query'] == 'received':
+                            received_amount = 0
+                            for transaction in transfer_account.credit_receives:
+                                received_amount += transaction.transfer_amount
+
+                            cell_contents = received_amount / 100
+
+                        elif column['query'] == 'sent':
+                            sent_amount = 0
+                            for transaction in transfer_account.credit_sends:
+                                sent_amount += transaction.transfer_amount
+
+                            cell_contents = sent_amount / 100
 
                         elif column['query'] == 'prev_period_payable':
 
