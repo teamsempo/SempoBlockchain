@@ -21,16 +21,17 @@ class TotalUsers(metric_group.MetricGroup):
         self.metrics = []
 
         # Special case query-- this is just used to calculate grouped per_user
-        total_users_grouped_timeseries_query = db.session.query(func.count(User.id).label('volume'),
-                func.date_trunc(self.timeseries_unit, User.created).label('date'), group_strategy.group_by_column).group_by(func.date_trunc(self.timeseries_unit, User.created))
-        self.total_users_grouped_timeseries = metric.Metric(
-            metric_name='total_population_grouped',
-            query=group_strategy.build_query_group_by_with_join(total_users_grouped_timeseries_query, User),
-            object_model=User,
-            stock_filters=[],
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
-            filterable_by=self.filterable_attributes,
-            query_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
+        if group_strategy:
+            total_users_grouped_timeseries_query = db.session.query(func.count(User.id).label('volume'),
+                    func.date_trunc(self.timeseries_unit, User.created).label('date'), group_strategy.group_by_column).group_by(func.date_trunc(self.timeseries_unit, User.created))
+            self.total_users_grouped_timeseries = metric.Metric(
+                metric_name='total_population_grouped',
+                query=group_strategy.build_query_group_by_with_join(total_users_grouped_timeseries_query, User),
+                object_model=User,
+                stock_filters=[],
+                caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+                filterable_by=self.filterable_attributes,
+                query_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
 
         # Special case query-- this is just used to calculate ungrouped per_user
         total_users_timeseries_query = db.session.query(func.count(User.id).label('volume'),
