@@ -1,5 +1,6 @@
 import pytest
 from server.utils import attribute_preprocessor as ap
+from server.utils.auth import show_all
 
 
 @pytest.fixture(scope='module')
@@ -17,6 +18,7 @@ def create_map(create_organisation, init_database):
     return attribute_map
 
 @pytest.fixture(scope='module')
+@show_all
 def create_setting(create_organisation, init_database):
     from server.models.settings import Settings
 
@@ -40,6 +42,7 @@ def test_unwrap_data(in_data, out_data):
     ({'bar': 'your_first_name'}, {'bar': 'your_first_name'}),
     ({'your_first_name': 'more_than_foo'}, {'first_name': 'more_than_foo'}),
 ])
+@show_all
 def test_map_attribute_keys(create_map, in_data, out_data):
     assert out_data == ap.map_attribute_keys(in_data)
 
@@ -117,7 +120,7 @@ def test_strip_weirdspace_characters(in_data, out_data):
 def test_attempt_to_truthy_values(in_data, out_data):
     assert out_data == ap.attempt_to_truthy_values(in_data)
 
-
+@show_all
 def test_attribute_processor_piping(create_map, create_setting):
 
     data = {
