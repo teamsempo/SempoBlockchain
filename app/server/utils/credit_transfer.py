@@ -511,9 +511,13 @@ def _check_recent_transaction_sync_status(interval_time, time_to_error):
     
     if failed_transactions:
         raise Exception(f'Warning! The following transactions were successfully completed, but did not appear in third party sync: {failed_transactions}')
-
-
+    
+    return failed_transactions
+    
+# Checks to see if any transactions within a certian window should have received a third 
+# party transaction sync, but have not yet. 
 def check_recent_transaction_sync_status(interval_time, time_to_error):
+    # Create app and get context, since this is running in new background processes on a timer!
     from server import create_app
     app = create_app(skip_create_filters=True)
     with app.app_context():

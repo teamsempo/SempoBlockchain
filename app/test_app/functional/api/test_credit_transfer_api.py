@@ -117,7 +117,7 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
         assert isinstance(response.json['data']['credit_transfers'], list)
 
 
-def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_admin_user, create_organisation):
+def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_admin_user, create_organisation, new_credit_transfer):
     # For this, we want to test 5 permutations of third-party transactions to add:
     # 1. Existing User A -> Existing User B
     # 2. Existing User A -> Stranger A
@@ -128,7 +128,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     # (Do nothing-- we don't care about transfers between strangers who aren't members)
     # 7. Stranger C -> Stranger D To ensure we're not tracking transactions between strangers who are NOT in the system
     # (Do nothing-- we don't care about transfers between strangers who aren't members)
-
+    # 8. Existing Credit Transfer. 200 response, and received_third_party_sync becomes True 
     send_to_worker_called = []
     def mock_send_blockchain_payload_to_worker(is_retry=False, queue='high_priority'):
         send_to_worker_called.append([is_retry, queue])
@@ -250,6 +250,16 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     resp = post_to_credit_transfer_internal(fake_user_c_address, fake_user_d_address, made_up_hash, 100, token.address)
     assert resp.json['message'] == 'No existing users involved in this transfer'
 
+    # 8. Existing Credit Transfer-- received_third_party_sync becomes True!
+    made_up_hash = '0x3333b33f13288396649ed2fa2b7e0a944123b65cfab2c4b1435c81bb16697ecb'
+    new_credit_transfer.sender_transfer_account_id = existing_user_a.id
+    new_credit_transfer.sender_transfer_account_id = existing_user_b.id
+    new_credit_transfer.blockchain_hash = made_up_hash
+    db.session.commit()
+    assert new_credit_transfer.received_third_party_sync == False
+    resp = post_to_credit_transfer_internal(fake_user_a_address, fake_user_b_address, made_up_hash, 100, token.address)
+    assert new_credit_transfer.received_third_party_sync == True
+
     # Make sure we're not sending any of the tranfers off to the blockchain
     assert len(send_to_worker_called) == 0
     from flask import g
@@ -257,7 +267,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
 
 def test_force_third_party_transaction_sync():
     if will_func_test_blockchain():
-        task_uuid = bt.force_third_party_transaction_sync()
+        task_uuid = bt.force_third_party_transaction_()
         bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
 
 @pytest.mark.parametrize("is_bulk, invert_recipient_list, transfer_amount, transfer_type, status_code", [
