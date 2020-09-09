@@ -203,6 +203,13 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
     assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
 
+    # Check that a blockchain task isn't created for outside transactions 
+    assert transfer.blockchain_task_uuid == None
+    # Check that a transfer made through TX sync can't be resolved as completed
+    with pytest.raises(Exception):
+        transfer.resolve_as_complete()
+
+
     # 3. Existing User A -> Stranger A (to ensure we don't give Stranger A two ghost accounts)
     made_up_hash = '0x000011112322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
 
