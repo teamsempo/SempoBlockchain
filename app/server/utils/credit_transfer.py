@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+from datetime import datetime, timedelta
 import time
 from flask import make_response, jsonify, current_app
 import sentry_sdk
@@ -22,8 +23,7 @@ from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher_utils
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
-
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum, BlockchainStatus
 
 def cents_to_dollars(amount_cents):
     return float(amount_cents) / 100
@@ -489,3 +489,32 @@ def check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret,
     valid_hmac = truncated_hmac_string == hash_to_check
 
     return valid_hash or valid_hmac
+
+def _check_recent_transaction_sync_status(interval_time, time_to_error):
+    # For interval_time = 5s, and time_to_error = 1 hour:
+    # We want the start_time to be 1:00:05 ago
+    # We want the end_time to be 1:00:00 ago
+    # It's a rolling window in the past from between when something becomes an error, and when we last checked
+    start_time = datetime.utcnow() - timedelta(seconds = interval_time) - timedelta(seconds = time_to_error)
+    end_time = datetime.utcnow() - timedelta(seconds = time_to_error)
+
+    transactions_in_window = CreditTransfer.query\
+        .filter(CreditTransfer.updated >= start_time, CreditTransfer.updated <= end_time)\
+        .execution_options(show_all=True)
+    
+    # Narrow down to transactions which weren't third party synchronized, but were
+    # first party synchronized
+    failed_transactions = transactions_in_window\
+        .filter(CreditTransfer.received_third_party_sync == False)\
+        .filter(CreditTransfer.blockchain_status == BlockchainStatus.SUCCESS)\
+        .all()
+    
+    if failed_transactions:
+        raise Exception(f'Warning! The following transactions were successfully completed, but did not appear in third party sync: {failed_transactions}')
+
+
+def check_recent_transaction_sync_status(interval_time, time_to_error):
+    from server import create_app
+    app = create_app(skip_create_filters=True)
+    with app.app_context():
+        _check_recent_transaction_sync_status(interval_time, time_to_error)

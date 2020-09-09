@@ -88,12 +88,10 @@ class BlockchainSyncer(object):
     # Creates database object for transaction
     # Calls webhook
     # Sets sync status (whether or not webhook was successful)
-    # Fallback if something goes wrong at this level: `is_synchronized_with_app` flag. Can batch unsynced stuff
     def handle_event(self, transaction, filter):
-        # Check if transaction already exists (I.e. already synchronized, or first party transactions)
         transaction_object = self.persistence.get_transaction(hash=transaction.transactionHash.hex())
-        if transaction_object and transaction_object.is_synchronized_with_app:
-            return True
+        # If transaction doesn't exist, make it. Even if it does exist, and it's synchronized via first-party sync
+        # we still want to send it with third-party (here) as insurance that tx sync is running correctly.
         if not transaction_object:
             transaction_object = self.persistence.create_external_transaction(
                 status = 'SUCCESS',
