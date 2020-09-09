@@ -1,0 +1,5 @@
+.ant-layout-sider ant-layout-sider-dark {
+  position: fixed;
+  z-index: 99;
+  height: 100%;
+}

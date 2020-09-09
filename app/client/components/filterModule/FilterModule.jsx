@@ -3,9 +3,8 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import { Space, Select, Typography } from "antd";
+import { Space, Select } from "antd";
 
-const { Text } = Typography;
 const { Option } = Select;
 import { connect } from "react-redux";
 
@@ -19,6 +18,7 @@ import {
 } from "../../utils";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
+import { TooltipWrapper } from "../dashboard/TooltipWrapper";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -114,7 +114,10 @@ class FilterModule extends React.Component {
 
     let groupByModule = (
       <Space size={"middle"}>
-        <Text>Group By:</Text>
+        <TooltipWrapper
+          label={"Group By:"}
+          prompt={"Group data by custom attributes"}
+        />
         <Select
           defaultValue={defaultGroupBy}
           style={{ width: 200 }}
@@ -136,7 +139,10 @@ class FilterModule extends React.Component {
     return (
       <FilterContainer isMobile={isMobile}>
         <Space>
-          <Text>Filters:</Text>
+          <TooltipWrapper
+            label={"Filters:"}
+            prompt={"Filter data by custom attributes"}
+          />
           <Filter
             label={"Filter by user:"}
             possibleFilters={this.props.allowedFilters}
@@ -161,4 +167,4 @@ const FilterContainer = styled.div`
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(FilterModule);
+)(withMediaQuery([isMobileQuery])(FilterModule));
