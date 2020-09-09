@@ -52,7 +52,7 @@ class Filters(object):
     @property
     def ALL_FILTERS(self):
         fixed_filters = {
-            'transfer_amount': {
+            'rounded_transfer_amount': {
                 'name': 'Transfer Amount',
                 'table': CreditTransfer.__tablename__,
                 'type': TransferFilterEnum.INT_RANGE
