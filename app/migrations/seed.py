@@ -384,7 +384,7 @@ def create_float_wallet(app):
 
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
-    current_app = create_app()
+    current_app = create_app(skip_create_filters=True)
     ctx = current_app.app_context()
     ctx.push()
 

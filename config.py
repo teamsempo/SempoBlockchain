@@ -135,7 +135,9 @@ TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
-
+VERIFY_THIRD_PARTY_SYNC = config_parser['APP'].getboolean('verify_third_party_sync', True)
+TIME_TO_RAISE_THIRD_PARTY_SYNC_ERROR = int(config_parser['APP'].get('time_to_raise_third_party_sync_error', 1800))
+THIRD_PARTY_SYNC_RECHECK_INTERVAL = int(config_parser['APP'].get('third_party_sync_recheck_interval', 120))
 
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
 THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS = int(config_parser['APP'].get('THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS', '5'))
