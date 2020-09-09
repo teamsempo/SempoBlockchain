@@ -112,5 +112,4 @@ processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
 
 import celery_tasks
 
-
 import redbeat
