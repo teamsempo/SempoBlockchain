@@ -260,17 +260,19 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     @location.setter
     def location(self, location):
-        from server.utils.location import async_set_user_gps_from_location
 
         self._location = location
 
-        if location is not None and location is not '':
+    def attempt_update_gps_location(self):
+        from server.utils.location import async_set_user_gps_from_location
+
+        if self._location is not None and self._location is not '':
             # Delay execution until after request to avoid race condition with db
             # We still need to flush to get user id though
             db.session.flush()
             add_after_request_executor_job(
                 async_set_user_gps_from_location,
-                kwargs={'user_id': self.id, 'location': location}
+                kwargs={'user_id': self.id, 'location': self._location}
             )
 
     @hybrid_property
