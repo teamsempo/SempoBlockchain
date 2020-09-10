@@ -13,6 +13,12 @@ class SynchronizationFilterAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
+        call = post_data.get('call')
+
+        #if call == ''
+        # add_transaction_filter
+        # refetch_block_range
+        # recall_webhook
         contract_address = post_data.get('contract_address')
         contract_type = post_data.get('contract_type')
         filter_parameters = post_data.get('filter_parameters') 
