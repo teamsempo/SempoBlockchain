@@ -120,10 +120,10 @@ class DashboardPage extends React.Component {
               <Default>
                 <div style={{ marginBottom: "-16px" }}>
                   <Row gutter={16}>
-                    <Col span={16}>
+                    <Col span={14}>
                       <MasterWalletCard />
                     </Col>
-                    <Col span={8}>
+                    <Col span={10}>
                       <BeneficiaryLiveFeed />
                     </Col>
                   </Row>
@@ -150,11 +150,27 @@ class DashboardPage extends React.Component {
                 defaultTimeSeries="all_payments_volume"
                 filterObject="credit_transfer"
                 timeSeriesNameLabels={[
-                  ["all_payments_volume", "Volume"],
-                  ["daily_transaction_count", "Transaction Count"],
-                  ["users_who_made_purchase", "Unique Users"],
-                  ["transfer_amount_per_user", "Volume Per User"],
-                  ["trades_per_user", "Count Per User"]
+                  ["all_payments_volume", "Volume", "Total amount transferred"],
+                  [
+                    "daily_transaction_count",
+                    "Transfer Count",
+                    "Total number of transfers"
+                  ],
+                  [
+                    "users_who_made_purchase",
+                    "Unique Users",
+                    "Unique users who have sent or received a transfer"
+                  ],
+                  [
+                    "transfer_amount_per_user",
+                    "Volume Per User",
+                    "Average amount transferred per user"
+                  ],
+                  [
+                    "trades_per_user",
+                    "Count Per User",
+                    "Average number of transfers per user"
+                  ]
                 ]}
               />
               <MetricsCard
@@ -164,8 +180,12 @@ class DashboardPage extends React.Component {
                 defaultTimeSeries="active_users"
                 filterObject="user"
                 timeSeriesNameLabels={[
-                  ["active_users", "Active"],
-                  ["users_created", "New"]
+                  [
+                    "active_users",
+                    "Active Users",
+                    "Number of unique users sent or received a transfer"
+                  ],
+                  ["users_created", "New Users", "Number of new users created"]
                 ]}
               />
             </Space>

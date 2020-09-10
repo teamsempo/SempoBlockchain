@@ -359,7 +359,7 @@ class EditUserForm extends React.Component<
                 <TopRow>
                   <ModuleHeader>OTHER ATTRIBUTES</ModuleHeader>
                 </TopRow>
-                <Row style={{ margin: "0em 1em" }}>
+                <Row style={{ margin: "0em 1em", flexWrap: "wrap" }}>
                   {custom_attribute_list || null}
                 </Row>
                 <Row style={{ margin: "0em 1em" }}>

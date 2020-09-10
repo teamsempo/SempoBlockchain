@@ -34,68 +34,79 @@ class TransferFilterEnum:
     DISCRETE        = "discrete"
     BOOLEAN_MAPPING = "boolean_mapping"
 
+def get_custom_attribute_filters():
+    # Get all custom attributes and options
+    attribute_options = CustomAttributeUserStorage.get_attributes_and_options()
+    # Build those into filters objects
+    filters = {}
+    for ao in attribute_options:
+        filters[ao] = {
+            'name': ao.capitalize(),
+            'table': CustomAttributeUserStorage.__tablename__,
+            'type': TransferFilterEnum.DISCRETE,
+            'values': attribute_options[ao]
+        }
+    return filters
+
 class Filters(object):
     @property
     def ALL_FILTERS(self):
-        return {
-        'transfer_amount': {
-            'name': 'Transfer Amount',
-            'table': CreditTransfer.__tablename__,
-            'type': TransferFilterEnum.INT_RANGE
-        },
-        'created': {
-            'name': "Created",
-            'table': User.__tablename__,
-            'type' : TransferFilterEnum.DATE_RANGE,
-        },
-        'user_type': {
-            'name': "User Type",
-            'table': User.__tablename__,
-            'type': TransferFilterEnum.BOOLEAN_MAPPING,
-            'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
-        },
-        'public_transfer_type': {
-            'name': "Transfer Type",
-            'table': CreditTransfer.__tablename__,
-            'type': TransferFilterEnum.DISCRETE,
-            'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
-        }, 
-        'gender': {
-            'name': "Gender",
-            'table': CustomAttributeUserStorage.__tablename__,
-            'type': TransferFilterEnum.DISCRETE,
-            'values' : [MALE, FEMALE]
-        },
-        '_location': {
-            'name': "Location",
-            'table': User.__tablename__,
-            'type': TransferFilterEnum.DISCRETE,
-            'values' : [u._location for u in db.session.query(User._location).distinct()]
-        },
-        'rounded_account_balance': {
-            'name': "Balance",
-            'table': TransferAccount.__tablename__,
-            'type' : TransferFilterEnum.INT_RANGE
+        fixed_filters = {
+            'rounded_transfer_amount': {
+                'name': 'Transfer Amount',
+                'table': CreditTransfer.__tablename__,
+                'type': TransferFilterEnum.INT_RANGE
+            },
+            'created': {
+                'name': "Created",
+                'table': User.__tablename__,
+                'type' : TransferFilterEnum.DATE_RANGE,
+            },
+            'user_type': {
+                'name': "User Type",
+                'table': User.__tablename__,
+                'type': TransferFilterEnum.BOOLEAN_MAPPING,
+                'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
+            },
+            '_location': {
+                'name': "Location",
+                'table': User.__tablename__,
+                'type': TransferFilterEnum.DISCRETE,
+                'values' : [u._location for u in db.session.query(User._location).distinct()]
+            },
+            'public_transfer_type': {
+                'name': "Transfer Type",
+                'table': CreditTransfer.__tablename__,
+                'type': TransferFilterEnum.DISCRETE,
+                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
+            },
+            'rounded_account_balance': {
+                'name': "Balance",
+                'table': TransferAccount.__tablename__,
+                'type' : TransferFilterEnum.INT_RANGE
+            }
         }
-    }
+        custom_attribute_filters = get_custom_attribute_filters()
+        return {**custom_attribute_filters, **fixed_filters}
+
     @property
     def TRANSFER_FILTERS(self): return self.ALL_FILTERS
     
     @property
     def USER_FILTERS(self): 
         all_filters = self.ALL_FILTERS
-        return {
+        fixed_filters = {
             'created': all_filters['created'],
             'user_type': all_filters['user_type'],
-            'gender': all_filters['gender'],
             '_location': all_filters['_location'],
             'rounded_account_balance': all_filters['rounded_account_balance']
         }
+        custom_attribute_filters = get_custom_attribute_filters()
+        return {**custom_attribute_filters, **fixed_filters}
 
 # will return a dictionary with table names as keys
 # values will be a dictionary of array of tuples
 # values on the outer array should be AND'd together
-
 def process_transfer_filters(encoded_filters):
     # parse and prepare filters for calculating transfer stats
     if (encoded_filters is None):
