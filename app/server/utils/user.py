@@ -509,7 +509,7 @@ def proccess_create_or_modify_user_request(
     is_tokenagent = attribute_dict.get('is_tokenagent', False)
     is_groupaccount = attribute_dict.get('is_groupaccount', False)
 
-    #is_beneficiary defaults to the opposite of is_vendor
+    # is_beneficiary defaults to the opposite of is_vendor
     is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
 
     if current_app.config['IS_USING_BITCOIN']:
