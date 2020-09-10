@@ -11,6 +11,7 @@ from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
 from server.constants import ISO_COUNTRIES
 
+
 organisation_blueprint = Blueprint('organisation', __name__)
 
 

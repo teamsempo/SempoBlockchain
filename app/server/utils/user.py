@@ -20,11 +20,9 @@ from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
-from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app
 from server.utils.phone import send_message
-from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.internationalization import i18n_for
@@ -302,16 +300,6 @@ def save_device_info(device_info, user):
         db.session.add(device)
 
         return device
-
-
-def extract_kobo_custom_attributes(post_data):
-    custom_attributes = {}
-    for key in post_data.keys():
-        if key[0] != '_':
-            if key not in KOBO_META_ATTRIBUTES and key not in DEFAULT_ATTRIBUTES:
-                custom_attributes[key] = post_data[key]
-    post_data['custom_attributes'] = custom_attributes
-    return post_data
 
 
 def set_custom_attributes(attribute_dict, user):
