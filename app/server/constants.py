@@ -22,26 +22,19 @@ ACCESS_ROLES = {
 
 ALLOWED_BLOCKCHAIN_ADDRESS_TYPES = ["TRANSFER_ACCOUNT", "MASTER", "BITCOIN_MASTER", "EXTERNAL"]
 
-KOBO_META_ATTRIBUTES = ['meta/instanceid', 'end', 'start', 'formhub/uuid', 'username']
+KOBO_META_ATTRIBUTES = ['meta/instanceID', 'end', 'start', 'formhub/uuid', 'username']
 
 CREATE_USER_SETTINGS = [
     'use_last_4_digits_of_id_as_initial_pin'
 ]
 
 DEFAULT_ATTRIBUTES = ['email', 'phone', 'blockchain_address', 'public_serial_number',
+                      'custom_attributes',
                       'location', 'use_precreated_pin',
                       'transfer_account_name', 'primary_user_identifier',
                       'first_name', 'last_name', 'preferred_language',
                       'initial_disbursement', 'is_vendor', 'is_beneficiary', 'business_usage_id',
                       'existing_vendor_phone', 'existing_vendor_pin', 'use_last_4_digits_of_id_as_initial_pin']
-
-GE_FILTER_ATTRIBUTES = [
-    'gender',
-    'GE_wallet_address',
-    'bio',
-    'GE_community_token_id'
-]
-
 
 SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES = [
     # (attribute_name, display name)
