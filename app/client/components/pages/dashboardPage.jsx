@@ -120,10 +120,10 @@ class DashboardPage extends React.Component {
               <Default>
                 <div style={{ marginBottom: "-16px" }}>
                   <Row gutter={16}>
-                    <Col span={16}>
+                    <Col span={14}>
                       <MasterWalletCard />
                     </Col>
-                    <Col span={8}>
+                    <Col span={10}>
                       <BeneficiaryLiveFeed />
                     </Col>
                   </Row>
