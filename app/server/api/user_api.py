@@ -126,9 +126,19 @@ class UserAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external',))
     def post(self, user_id):
+        """
+        :arg preprocess: whether the data should be cleaned before attempting to create a user - for example converting
+        keys such as "Phone" to "phone". Useful for third-party webhooks where we don't necessarily have a lot of
+        control over how the user will specify fields.
+        :arg allow_as_update: Whether to return an error when the user already exists for the supplied IDs,
+        or instead update the existing user as a PUT request would.  Useful for third-party webhooks where
+        PUT requests aren't supported.
+        """
 
         post_data = request.get_json()
+
         preprocess = request.args.get('preprocess', '').lower() == 'true'  #Defaults to false
+        allow_as_update = request.args.get('allow_as_update', '').lower() == 'true' #Defaults to false
 
         organisation = g.get('active_organisation')
         if organisation is None:
@@ -139,7 +149,8 @@ class UserAPI(MethodView):
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             post_data,
-            organisation=organisation
+            organisation=organisation,
+            allow_existing_user_modify=allow_as_update
         )
 
         if response_code == 200:

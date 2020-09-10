@@ -108,7 +108,6 @@ def find_user_from_public_identifier(*public_identifiers):
 def update_transfer_account_user(user,
                                  first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
-                                 location=None, lat=None, lng=None,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
                                  is_beneficiary=False,
@@ -133,13 +132,6 @@ def update_transfer_account_user(user,
         user.default_transfer_account.transfer_card = transfer_card
     else:
         transfer_card = None
-
-    if location:
-        user.location = location
-    if lat:
-        user.lat = lat
-    if lng:
-        user.lng = lng
 
     if default_organisation_id:
         user.default_organisation_id = default_organisation_id
@@ -184,7 +176,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
-                                 lat=None, lng=None,
                                  use_precreated_pin=False,
                                  use_last_4_digits_of_id_as_initial_pin=False,
                                  existing_transfer_account=None,
@@ -195,9 +186,9 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_self_sign_up=False,
                                  business_usage=None,
                                  initial_disbursement=None):
+
     user = User(first_name=first_name,
                 last_name=last_name,
-                lat=lat, lng=lng,
                 preferred_language=preferred_language,
                 blockchain_address=blockchain_address,
                 phone=phone,
@@ -364,6 +355,33 @@ def set_attachments(attribute_dict, user, custom_attributes):
 
     return custom_attributes
 
+def update_location(user, location, geo_location):
+
+    if geo_location:
+        try:
+            geo = geo_location.split(' ')
+            lat = float(geo[0])
+            lng = float(geo[1])
+        except (SyntaxError, IndexError, ValueError):
+            lat = None
+            lng = None
+
+    else:
+        lat = None
+        lng = None
+
+    # Set the location, only updating the latlng if it hasn't been explicitly provided
+    if lat and lng:
+        user.lat = lat
+        user.lng = lng
+        if location:
+            user.location = location
+
+    else:
+        if location:
+            user.location = location
+            user.attempt_update_gps_location()
+
 
 def send_one_time_code(phone, user):
     try:
@@ -380,7 +398,7 @@ def proccess_create_or_modify_user_request(
         organisation=None,
         allow_existing_user_modify=False,
         is_self_sign_up=False,
-        modify_only=False,
+        modify_only=False
 ):
     """
     Takes a create or modify user request and determines the response. Normally what's in the top level API function,
@@ -390,8 +408,9 @@ def proccess_create_or_modify_user_request(
 
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
-    :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
+    :param allow_existing_user_modify: whether to return an error when the user already exists for the supplied IDs
     :param is_self_sign_up: does the request come from the register api?
+    :param modify_only: whether to allow the creation of a  new user
     :return: An http response
     """
 
@@ -431,14 +450,7 @@ def proccess_create_or_modify_user_request(
     location = attribute_dict.get('location')  # address location
     geo_location = attribute_dict.get('geo_location')  # geo location as str of lat, lng
 
-    if geo_location:
-        geo = geo_location.split(' ')
-        lat = geo[0]
-        lng = geo[1]
-    else:
-        # TODO: Work out how this passed tests when this wasn't definied properly!?!
-        lat = None
-        lng = None
+
 
     use_precreated_pin = attribute_dict.get('use_precreated_pin')
     use_last_4_digits_of_id_as_initial_pin = attribute_dict.get(
@@ -573,7 +585,6 @@ def proccess_create_or_modify_user_request(
                 preferred_language=preferred_language,
                 phone=phone,
                 email=email,
-                location=location,
                 public_serial_number=public_serial_number,
                 use_precreated_pin=use_precreated_pin,
                 existing_transfer_account=existing_transfer_account,
@@ -583,6 +594,8 @@ def proccess_create_or_modify_user_request(
                 is_groupaccount=is_groupaccount,
                 business_usage=business_usage
             )
+
+            update_location(user, location, geo_location)
 
             if referred_by_user:
                 user.referred_by.clear()  # otherwise prior referrals will remain...
@@ -613,7 +626,6 @@ def proccess_create_or_modify_user_request(
         organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
-        lat=lat, lng=lng,
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
@@ -621,6 +633,8 @@ def proccess_create_or_modify_user_request(
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
         business_usage=business_usage, initial_disbursement=initial_disbursement)
+
+    update_location(user, location, geo_location)
 
     if referred_by_user:
         user.referred_by.append(referred_by_user)
@@ -639,9 +653,6 @@ def proccess_create_or_modify_user_request(
     send_onboarding_sms_messages(user)
     # Location fires an async task that needs to know user ID
     db.session.flush()
-
-    if location:
-        user.location = location
 
     if phone:
         if is_self_sign_up:
