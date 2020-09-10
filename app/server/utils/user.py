@@ -355,13 +355,14 @@ def set_attachments(attribute_dict, user, custom_attributes):
 
     return custom_attributes
 
-def update_location(user, location, geo_location):
 
-    if geo_location:
+def set_location_conditionally(user, location, gps_location):
+
+    if gps_location:
         try:
-            geo = geo_location.split(' ')
-            lat = float(geo[0])
-            lng = float(geo[1])
+            gps = gps_location.split(' ')
+            lat = float(gps[0])
+            lng = float(gps[1])
         except (SyntaxError, IndexError, ValueError):
             lat = None
             lng = None
@@ -448,9 +449,9 @@ def proccess_create_or_modify_user_request(
                             or attribute_dict.get('payment_card_barcode'))
 
     location = attribute_dict.get('location')  # address location
-    geo_location = attribute_dict.get('geo_location')  # geo location as str of lat, lng
 
-
+    # Yes, we know "GPS" refers to a technology, but "gps_location" is less ambiguous for end users than "geo_location"
+    gps_location = attribute_dict.get('gps_location')  # geo location as str of lat, lng
 
     use_precreated_pin = attribute_dict.get('use_precreated_pin')
     use_last_4_digits_of_id_as_initial_pin = attribute_dict.get(
@@ -595,7 +596,7 @@ def proccess_create_or_modify_user_request(
                 business_usage=business_usage
             )
 
-            update_location(user, location, geo_location)
+            set_location_conditionally(user, location, gps_location)
 
             if referred_by_user:
                 user.referred_by.clear()  # otherwise prior referrals will remain...
@@ -634,7 +635,7 @@ def proccess_create_or_modify_user_request(
         is_self_sign_up=is_self_sign_up,
         business_usage=business_usage, initial_disbursement=initial_disbursement)
 
-    update_location(user, location, geo_location)
+    set_location_conditionally(user, location, gps_location)
 
     if referred_by_user:
         user.referred_by.append(referred_by_user)

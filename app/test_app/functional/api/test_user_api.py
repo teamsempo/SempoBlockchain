@@ -20,7 +20,6 @@ fake.add_provider(phone_number)
 
 @pytest.fixture(scope='function')
 def mock_async_set_user_gps_from_location(mocker):
-    # Always patch out all sms sending apis because we don't want to spam messages with our tests!!
     fn_inputs = []
 
     class Mock:
@@ -34,18 +33,18 @@ def mock_async_set_user_gps_from_location(mocker):
     return fn_inputs
 
 
-@pytest.mark.parametrize("user_phone_accessor, phone, use_card, business_usage_name, referred_by, "
+@pytest.mark.parametrize("user_phone_accessor, phone, use_card, business_usage_name, gps_location, referred_by, "
                          "initial_disbursement, tier, status_code",
                          [
-                             (lambda o: o.phone, None, False, 'Fuel/Energy', '+61401391419', None, 'superadmin', 400),
-                             (lambda o: o.phone, None, True, 'Fuel/Energy', '+61401391419', None, 'superadmin', 200),
-                             (lambda o: o.phone, fake.msisdn(), False, 'Fuel/Energy', fake.msisdn(), 0, 'superadmin', 200),
-                             (lambda o: o.phone, fake.msisdn(), False, 'Fuel/Energy', fake.msisdn(), None, 'superadmin', 200),
-                             (lambda o: o.phone, fake.msisdn(), False, 'Food/Water', fake.msisdn(), None, 'view', 403)
+                             (lambda o: o.phone, None, False, 'Fuel/Energy', None, '+61401391419', None, 'superadmin', 400),
+                             (lambda o: o.phone, None, True, 'Fuel/Energy', '12.02 -15.04 otheruselessdata!##', '+61401391419', None, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), False, 'Fuel/Energy', None, fake.msisdn(), 0, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), False, 'Fuel/Energy', None, fake.msisdn(), None, 'superadmin', 200),
+                             (lambda o: o.phone, fake.msisdn(), False, 'Food/Water', None, fake.msisdn(), None, 'view', 403)
                          ])
 def test_create_user(test_client, authed_sempo_admin_user, init_database, create_transfer_account_user,
                      mock_async_set_user_gps_from_location, user_phone_accessor, phone, use_card,
-                     business_usage_name, referred_by, initial_disbursement, tier, status_code):
+                     business_usage_name, referred_by, gps_location, initial_disbursement, tier, status_code):
 
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)
@@ -71,6 +70,9 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             'business_usage_name': business_usage_name,
             'referred_by': user_phone_accessor(create_transfer_account_user)
         }
+
+    if gps_location:
+        payload['gps_location'] = gps_location
 
     if use_card:
         public_serial_number = f'{randint(0,999999):06}'
@@ -114,20 +116,16 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             assert data['user']['transfer_accounts'][0]['balance'] == db_user.default_organisation.default_disbursement
 
         # Checks that we're calling the gps location fetching job, and passing the right data to it
-        # Used in lieu of the test below working
         fn_inputs = mock_async_set_user_gps_from_location
-        args, kwargs = fn_inputs[-1]
-        assert kwargs == {'user_id': data['user']['id'], 'location': 'Elwood'}
 
-        # TODO: Work out why the latlng remains none even though it definitely makes it into db
-        # # Done async, so sleep to prevent race on this check
-        # time.sleep(0.5)
-        # # Commit to avoid stale data
-        # init_database.session.commit()
-        # db_user = init_database.session.query(User).get(data['user']['id'])
-        # assert db_user.lat == -37.81
-        # assert db_user.lng == 144.97
-        #
+        if gps_location:
+            assert data['user']['lat'] == 12.02
+            assert data['user']['lng'] == -15.04
+            assert len(fn_inputs) == 0
+
+        else:
+            args, kwargs = fn_inputs[-1]
+            assert kwargs == {'user_id': data['user']['id'], 'location': 'Elwood'}
 
 
 @pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, tier, status_code", [
