@@ -98,10 +98,10 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
               Successfully Created External Wallet User
             </ModuleHeader>
             <div style={{ padding: "0 1em 1em" }}>
-              <p>You can now send funds to the user's wallet.</p>
+              <p>You can now send funds to the participant's wallet.</p>
 
               <StyledButton onClick={() => this.resetCreateUser()}>
-                Add another account
+                Add another participant
               </StyledButton>
             </div>
           </div>
@@ -116,12 +116,12 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
               </p>
 
               <p>
-                Show the user their one time code now. They will be able to
-                instantly and securely log in via the android app.
+                Show the participant their one time code now. They will be able
+                to instantly and securely log in via the android app.
               </p>
 
               <StyledButton onClick={() => this.resetCreateUser()}>
-                Add another account
+                Add another participant
               </StyledButton>
             </div>
           </div>

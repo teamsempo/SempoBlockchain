@@ -72,7 +72,7 @@ class CreateUserForm extends React.Component<
   componentDidMount() {
     const { defaultDisbursement } = this.props;
     this.props.initialize({
-      accountTypes: [{ value: "USER", label: "USER" }],
+      accountTypes: [{ value: "beneficiary", label: "beneficiary" }],
       gender: "female",
       initialDisbursement: defaultDisbursement
     });

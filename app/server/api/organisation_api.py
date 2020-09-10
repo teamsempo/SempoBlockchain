@@ -9,7 +9,7 @@ from server.models.user import User
 from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
-from server.constants import ISO_COUNTRIES, ASSIGNABLE_ROLES
+from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
 
 organisation_blueprint = Blueprint('organisation', __name__)
 
@@ -63,7 +63,7 @@ class OrganisationAPI(MethodView):
         account_types = put_data.get('account_types', [])
 
         for at in account_types:
-            if at not in ASSIGNABLE_ROLES:
+            if at not in ASSIGNABLE_TIERS.keys():
                 raise Exception(f'{at} not an assignable role')
         
         if organisation_id is None:
@@ -210,7 +210,7 @@ class OrganisationConstantsAPI(MethodView):
             'message': 'Organisation constants',
             'data': {
                 'iso_countries': ISO_COUNTRIES,
-                'roles': ASSIGNABLE_ROLES
+                'roles': list(ASSIGNABLE_TIERS.keys())
                 }
         }
         return make_response(jsonify(response_object)), 200
