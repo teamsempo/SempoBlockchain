@@ -11,6 +11,7 @@ from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
 from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
 
+
 organisation_blueprint = Blueprint('organisation', __name__)
 
 
@@ -231,7 +232,7 @@ organisation_blueprint.add_url_rule(
 )
 
 organisation_blueprint.add_url_rule(
-    '/organisation/<int:organisation_id>/users',
+    '/organisation/<int:organisation_id>/users/',
     view_func=OrganisationUserAPI.as_view('organisation_user_view'),
     methods=['PUT'],
 )
