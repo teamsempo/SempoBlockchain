@@ -133,28 +133,36 @@ class UserAPI(MethodView):
         :arg allow_as_update: Whether to return an error when the user already exists for the supplied IDs,
         or instead update the existing user as a PUT request would.  Useful for third-party webhooks where
         PUT requests aren't supported.
+        :arg: return_raw_on_error: whether to return the raw input data on an error - useful for diagnosing what a
+        webhook actually tried to submit
         """
 
-        post_data = request.get_json()
+        raw_data = request.get_json()
 
         preprocess = request.args.get('preprocess', '').lower() == 'true'  #Defaults to false
         allow_as_update = request.args.get('allow_as_update', '').lower() == 'true' #Defaults to false
+        return_raw_on_error = request.args.get('return_raw_on_error', '').lower() == 'true' #Defaults to false
 
         organisation = g.get('active_organisation')
         if organisation is None:
             return make_response(jsonify({'message': 'Organisation must be set'})), 400
 
         if preprocess:
-            post_data = standard_user_preprocess(post_data, CREATE_USER_SETTINGS)
+            data = standard_user_preprocess(raw_data, CREATE_USER_SETTINGS)
+        else:
+            data = raw_data
 
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
-            post_data,
+            data,
             organisation=organisation,
             allow_existing_user_modify=allow_as_update
         )
 
         if response_code == 200:
             db.session.commit()
+
+        elif return_raw_on_error:
+            response_object['raw_data'] = raw_data
 
         return make_response(jsonify(response_object)), response_code
 
