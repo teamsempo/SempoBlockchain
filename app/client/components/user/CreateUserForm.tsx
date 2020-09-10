@@ -157,12 +157,10 @@ class CreateUserForm extends React.Component<
     const accountTypesList = (accountTypes || []).map(o =>
       Object.values(o).pop()
     );
-    if (accountTypesList.includes(TransferAccountTypes.USER)) {
-      //  USER
+    if (accountTypesList.includes("beneficiary")) {
       selectedUserForm = <>{initialDisbursementAmount}</>;
     }
-    if (accountTypesList.includes(TransferAccountTypes.CASHIER)) {
-      //  CASHIER
+    if (accountTypesList.includes("cashier")) {
       selectedCashierForm = (
         <div>
           <div>
@@ -181,8 +179,11 @@ class CreateUserForm extends React.Component<
         </div>
       );
     }
-    if (accountTypesList.includes(TransferAccountTypes.VENDOR)) {
-      //  VENDOR
+    if (
+      accountTypesList.includes("vendor") ||
+      accountTypesList.includes("cashier") ||
+      accountTypesList.includes("supervendor")
+    ) {
       selectedVendorForm = (
         <div>
           {businessUsage}
@@ -190,8 +191,7 @@ class CreateUserForm extends React.Component<
         </div>
       );
     }
-    if (accountTypesList.includes(TransferAccountTypes.TOKEN_AGENT)) {
-      //  SUPERVENDOR
+    if (accountTypesList.includes("token_agent")) {
       selectedTokenAgentForm = <></>;
     }
 

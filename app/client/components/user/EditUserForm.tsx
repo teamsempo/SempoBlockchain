@@ -84,19 +84,8 @@ class EditUserForm extends React.Component<
     let transferUsageName = transferUsage && transferUsage.name;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
 
-    if (selectedUser.is_beneficiary) {
-      account_types.push(TransferAccountTypes.USER);
-    }
-    if (selectedUser.is_vendor) {
-      account_types.push(TransferAccountTypes.VENDOR);
-    }
-    if (selectedUser.is_tokenagent) {
-      account_types.push(TransferAccountTypes.TOKEN_AGENT);
-    }
-    if (selectedUser.is_groupaccount) {
-      account_types.push(TransferAccountTypes.GROUP_ACCOUNT);
-    }
-    account_types = account_types.map((role: String) => {
+    account_types = Object.values(selectedUser.roles);
+    account_types = account_types.map((role: any) => {
       return { value: role, label: role };
     });
 
