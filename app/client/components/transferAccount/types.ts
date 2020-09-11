@@ -1,5 +1,5 @@
 export enum TransferAccountTypes {
-  USER = "USER",
+  BENEFICIARY = "BENEFICIARY",
   CASHIER = "CASHIER",
   VENDOR = "VENDOR",
   TOKENAGENT = "TOKENAGENT",
