@@ -95,7 +95,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         return (
           <div>
             <ModuleHeader>
-              Successfully Created External Wallet User
+              Successfully Created External Wallet Participant
             </ModuleHeader>
             <div style={{ padding: "0 1em 1em" }}>
               <p>You can now send funds to the participant's wallet.</p>

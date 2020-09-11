@@ -346,7 +346,7 @@ class EditUserForm extends React.Component<
                       height: "25px"
                     }}
                     isLoading={users.deleteStatus.isRequesting}
-                    buttonText="Delete User"
+                    buttonText="Delete Participant"
                   />
                 </SubRow>
               </Row>
