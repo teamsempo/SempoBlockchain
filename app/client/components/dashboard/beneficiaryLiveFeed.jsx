@@ -62,7 +62,8 @@ class BeneficiaryLiveFeed extends React.Component {
       borderColor: "#4a4a4a",
       borderTop: "1px solid",
       borderTopWidth: "1px",
-      borderTopStyle: "solid"
+      borderTopStyle: "solid",
+      paddingBottom: "60px"
     };
 
     if (Object.keys(creditTransferList).length == 0) {
@@ -210,7 +211,7 @@ class BeneficiaryLiveFeed extends React.Component {
                     <UserWrapper
                       key={transfer.id}
                       style={{
-                        margin: expanded ? "margin: 1.6em 0" : "margin: 0.8em 0"
+                        margin: expanded ? "margin: 2.4em 0" : "margin: 0.8em 0"
                       }}
                     >
                       <UserSVG src="/static/media/exchange.svg" />
@@ -243,10 +244,11 @@ class BeneficiaryLiveFeed extends React.Component {
                           >
                             {sender_user_name}
                           </ClickableTopText>
-                          sent
+                          paid
                         </TopText>
                         <BottomText>
-                          <DarkHighlight>{transferFromMoney}</DarkHighlight> to
+                          <DarkHighlight>{transferFromMoney}</DarkHighlight> to{" "}
+                          {expanded ? <br /> : <span />}
                           <ClickableHighlight
                             style={{ color: expanded ? "#d0a45d" : "#edcba2" }}
                             onClick={() =>
@@ -358,7 +360,7 @@ const TopText = styled.h5`
 `;
 
 const ClickableTopText = styled.span`
-  margin: 3px;
+  margin-right: 3px;
   color: #2d9ea0;
   font-weight: 600;
   cursor: pointer;

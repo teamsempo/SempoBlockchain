@@ -117,7 +117,7 @@ class DashboardPage extends React.Component {
     let expanded = false;
 
     let metrics = (
-      <div>
+      <React.Fragment>
         <MetricsCard
           chartHeight={250}
           cardTitle="Transfers"
@@ -163,7 +163,7 @@ class DashboardPage extends React.Component {
             ["users_created", "New Users", "Number of new users created"]
           ]}
         />
-      </div>
+      </React.Fragment>
     );
 
     if (this.props.creditTransfers.loadStatus.isRequesting === true) {
@@ -183,7 +183,7 @@ class DashboardPage extends React.Component {
             <div className="site-card-wrapper">
               <div style={{ marginBottom: "-16px" }}>
                 <Row gutter={16}>
-                  <Col span={16}>
+                  <Col span={17}>
                     <Space
                       direction="vertical"
                       style={{ width: "100%" }}
@@ -193,7 +193,7 @@ class DashboardPage extends React.Component {
                       {metrics}
                     </Space>
                   </Col>
-                  <Col span={8}>
+                  <Col span={7}>
                     <BeneficiaryLiveFeed
                       expanded={this.state.liveFeedExpanded}
                       handleExpandToggle={() => this.handleExpandToggle()}
@@ -237,7 +237,10 @@ class DashboardPage extends React.Component {
                         <MasterWalletCard />
                       </Col>
                       <Col style={{ width: "100%" }}>
-                        <BeneficiaryLiveFeed />
+                        <BeneficiaryLiveFeed
+                          expanded={this.state.liveFeedExpanded}
+                          handleExpandToggle={() => this.handleExpandToggle()}
+                        />
                       </Col>
                     </Row>
                   </div>
