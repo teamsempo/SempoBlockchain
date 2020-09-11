@@ -83,7 +83,7 @@ class EditUserForm extends React.Component<
     let customAttributes = selectedUser && selectedUser.custom_attributes;
 
     if (selectedUser.is_beneficiary) {
-      account_type = TransferAccountTypes.USER;
+      account_type = TransferAccountTypes.BENEFICIARY;
     } else if (selectedUser.is_vendor) {
       account_type = TransferAccountTypes.VENDOR;
     } else if (selectedUser.is_tokenagent) {
@@ -152,6 +152,8 @@ class EditUserForm extends React.Component<
     let transferUsage = transferUsages.filter(
       t => t.id === selectedUser.business_usage_id
     )[0];
+
+    console.log("Transfer Account Types", TransferAccountTypes);
 
     let accountTypes = Object.keys(TransferAccountTypes);
     let customAttributes = selectedUser && selectedUser.custom_attributes;
@@ -352,7 +354,7 @@ class EditUserForm extends React.Component<
                       height: "25px"
                     }}
                     isLoading={users.deleteStatus.isRequesting}
-                    buttonText="Delete User"
+                    buttonText="Delete Participant"
                   />
                 </SubRow>
               </Row>
