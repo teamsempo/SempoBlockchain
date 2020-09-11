@@ -7,7 +7,6 @@ from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
-from server.constants import GE_FILTER_ATTRIBUTES
 from server.exceptions import SubexchangeNotFound
 
 
@@ -79,9 +78,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
-            # todo: is there a reason only GE attributes are returned??
-            if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
-                parsed_dict[attribute.name] = attribute.value.strip('"')
+            parsed_dict[attribute.name] = attribute.value.strip('"')
 
         return parsed_dict
 
@@ -417,6 +414,11 @@ class SynchronizationFilterSchema(Schema):
     created                     = fields.DateTime(dump_only=True)
     updated                     = fields.DateTime(dump_only=True)
 
+class AttributeMapSchema(Schema):
+    input_name                  = fields.Str()
+    output_name                 = fields.Str()
+
+
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
 
@@ -485,6 +487,10 @@ kyc_application_state_schema = KycApplicationSchema(
 me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
+
+attribute_map_schema = AttributeMapSchema()
+attribute_maps_schema = AttributeMapSchema(many=True)
+
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)

@@ -2963,6 +2963,89 @@
         }
       ],
       "protocolProfileBehavior": {}
+    },
+    {
+      "name": "Mock Data API",
+      "item": [
+        {
+          "name": "Create Mock Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"number_of_users\": 3,\n    \"number_of_transfers\": 20,\n    \"number_of_days\": 15,\n    \"safety_check\": 3\n}"
+            },
+            "url": {
+              "raw": "{{HOST}}/api/v1/mock_data/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "mock_data", ""]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"number_of_users\": 3,\n    \"number_of_transfers\": 20,\n    \"number_of_days\": 15,\n    \"safety_check\": 3\n}"
+                },
+                "url": {
+                  "raw": "{{HOST}}/api/v1/mock_data/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "mock_data", ""]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 09 Sep 2020 01:35:07 GMT"
+                },
+                {
+                  "key": "Server",
+                  "value": "nginx/1.17.8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "22"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"success\"\n}"
+            }
+          ]
+        }
+      ],
+      "protocolProfileBehavior": {}
     }
   ],
   "auth": {

@@ -16,16 +16,16 @@ group_joining_strategies = {
     CreditTransfer.__tablename__: {
         User.__tablename__: lambda query : query.join(User, User.id == CreditTransfer.sender_user_id),
         TransferAccount.__tablename__: lambda query : query.join(TransferAccount, TransferAccount.id == CreditTransfer.sender_transfer_account_id),
-        CustomAttributeUserStorage.__tablename__: lambda query : query.join(User, CreditTransfer.sender_user_id == User.id)\
+        CustomAttributeUserStorage.__tablename__: lambda query, name : query.join(User, CreditTransfer.sender_user_id == User.id)\
                                                                     .join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
-                                                                    .filter(CustomAttributeUserStorage.name == 'gender'),
+                                                                    .filter(CustomAttributeUserStorage.name == name),
         TransferUsage.__tablename__: lambda query : query.join(credit_transfer_transfer_usage_association_table, 
                                     credit_transfer_transfer_usage_association_table.c.credit_transfer_id == CreditTransfer.id)\
                                     .join(TransferUsage, credit_transfer_transfer_usage_association_table.c.transfer_usage_id == TransferUsage.id)    
     },
     User.__tablename__: {
-        CustomAttributeUserStorage.__tablename__: lambda query : query.join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
-                                                                    .filter(CustomAttributeUserStorage.name == 'gender'),
+        CustomAttributeUserStorage.__tablename__: lambda query, name : query.join(CustomAttributeUserStorage, User.id == CustomAttributeUserStorage.user_id)\
+                                                                    .filter(CustomAttributeUserStorage.name == name),
         TransferAccount.__tablename__: lambda query : query.join(TransferAccount, TransferAccount.id == User.default_transfer_account_id),
     }
 }
@@ -42,7 +42,11 @@ class Group(object):
         grouped_query = query.group_by(self.group_by_column)
         if query_object_model.__tablename__ != self.group_object_model.__tablename__:
             try:
-                return group_joining_strategies[query_object_model.__tablename__][self.group_object_model.__tablename__](grouped_query)
+                if self.custom_attribute_field_name:
+                    args = (grouped_query, self.custom_attribute_field_name)
+                else:
+                    args = (grouped_query,)
+                return group_joining_strategies[query_object_model.__tablename__][self.group_object_model.__tablename__](*args)
             except KeyError:
                 raise Exception(f'No strategy to join tables {query_object_model.__tablename__} and {self.group_object_model.__tablename__}')
         return grouped_query
@@ -56,7 +60,8 @@ class Group(object):
     def __init__(self,
                 name,
                 group_object_model,
-                group_by_column):
+                group_by_column,
+                custom_attribute_field_name = None):
         """
         :param name: The title of the group
         :param group_object_model: The object model of the thing we're grouping by
@@ -65,26 +70,45 @@ class Group(object):
         self.name = name
         self.group_object_model = group_object_model
         self.group_by_column = group_by_column
+        self.custom_attribute_field_name = custom_attribute_field_name
 
+# Builds Group objects for all custom attributes in the database
+def get_custom_attribute_groups():
+    # Get all custom attributes and options
+    attribute_options = CustomAttributeUserStorage.get_attributes_and_options()
+    # Build those into group objects
+    groups = {}
+    for ao in attribute_options:
+        groups[ao] = Group(ao.capitalize(), CustomAttributeUserStorage, CustomAttributeUserStorage.value, ao)
+    return groups
 
-GROUP_TYPES = {
-    UNGROUPED: None,
-    GENDER: Group('Gender', CustomAttributeUserStorage, CustomAttributeUserStorage.value),
-    LOCATION: Group('Location', User, User._location),
-    TRANSFER_TYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.public_transfer_type),
-    TRANSFER_STATUS: Group('Transfer Status', CreditTransfer, CreditTransfer.transfer_status),
-    TRANSFER_MODE: Group('Transfer Mode', CreditTransfer, CreditTransfer.transfer_mode),
-    ACCOUNT_TYPE: Group('Account Type', TransferAccount, TransferAccount.account_type),
-    TRANSFER_USAGE: Group('Transfer Usages', TransferUsage, TransferUsage._name),
-}
+class Groups(object):
+    @property
+    def GROUP_TYPES(self):
+        fixed_groups = {
+            UNGROUPED: None,
+            LOCATION: Group('Location', User, User._location),
+            TRANSFER_TYPE: Group('Transfer Type', CreditTransfer, CreditTransfer.public_transfer_type),
+            TRANSFER_STATUS: Group('Transfer Status', CreditTransfer, CreditTransfer.transfer_status),
+            TRANSFER_MODE: Group('Transfer Mode', CreditTransfer, CreditTransfer.transfer_mode),
+            ACCOUNT_TYPE: Group('Account Type', TransferAccount, TransferAccount.account_type),
+            TRANSFER_USAGE: Group('Transfer Usages', TransferUsage, TransferUsage._name),
+        }
+        custom_attribute_groups = get_custom_attribute_groups()
+        return {**fixed_groups, **custom_attribute_groups}
 
-# Transfers can handle ALL groups!
-TRANSFER_GROUPS = GROUP_TYPES
+    # Transfers can handle ALL groups!
+    @property
+    def TRANSFER_GROUPS(self):
+        return self.GROUP_TYPES
 
-# Users can only use ones with TransferAccount and CustomAttributeUserStorage
-USER_GROUPS = {
-    GENDER: GROUP_TYPES[GENDER],
-    ACCOUNT_TYPE: GROUP_TYPES[ACCOUNT_TYPE],
-    LOCATION: GROUP_TYPES[LOCATION],
-    UNGROUPED: None,
-}
+    # Users can only use ones with TransferAccount and CustomAttributeUserStorage
+    @property
+    def USER_GROUPS(self):
+        fixed_groups = {
+            ACCOUNT_TYPE: self.GROUP_TYPES[ACCOUNT_TYPE],
+            LOCATION: self.GROUP_TYPES[LOCATION],
+            UNGROUPED: None,
+        }
+        custom_attribute_groups = get_custom_attribute_groups()
+        return {**fixed_groups, **custom_attribute_groups}

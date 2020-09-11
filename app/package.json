@@ -1,6 +1,6 @@
 {
   "name": "SempoBlockchain",
-  "version": "1.2.14",
+  "version": "1.2.16",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
@@ -76,6 +76,7 @@
     "style-loader": "^1.2.1",
     "ts-import-plugin": "^1.6.6",
     "ts-jest": "^25.2.1",
+    "ts-loader": "^8.0.3",
     "typescript": "^3.7.4",
     "uglifyjs-webpack-plugin": "^2.0.1",
     "webpack": "^4.41.5",

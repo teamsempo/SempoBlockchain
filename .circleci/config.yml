@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - move-away-from-gevent
+                - fix-db-issue
           requires:
             - build
             #- test:backend
