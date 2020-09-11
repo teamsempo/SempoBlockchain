@@ -195,6 +195,8 @@ class CreateUserForm extends React.Component<
       selectedTokenAgentForm = <></>;
     }
 
+    console.log("valid roles are", validRoles);
+
     return (
       <div>
         <ModuleHeader>Create an account</ModuleHeader>
@@ -207,6 +209,7 @@ class CreateUserForm extends React.Component<
               label={"Account Types"}
               isMultipleChoice={true}
               options={validRoles}
+              style={{ minWidth: "200px" }}
             />
             <InputField name="publicSerialNumber" label={"ID Number"}>
               {/*
