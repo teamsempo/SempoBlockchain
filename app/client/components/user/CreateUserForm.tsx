@@ -154,9 +154,8 @@ class CreateUserForm extends React.Component<
     let selectedCashierForm = <></>;
     let selectedVendorForm = <></>;
     let selectedTokenAgentForm = <></>;
-    const accountTypesList = (accountTypes || []).map(o =>
-      Object.values(o).pop()
-    );
+    const accountTypesList = accountTypes || [];
+    console.log(accountTypes);
     if (accountTypesList.includes("beneficiary")) {
       selectedUserForm = <>{initialDisbursementAmount}</>;
     }
