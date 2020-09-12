@@ -1,11 +1,10 @@
 import React from "react";
 import { Select } from "antd";
+
 const { Option } = Select;
 
 export const MultipleChoice = (props: any) => {
   const { name, input, options, style } = props;
-
-  console.log("options are", options);
 
   const parsedOptions = options.map((option: string) => (
     <Option key={option} value={option}>
@@ -19,9 +18,9 @@ export const MultipleChoice = (props: any) => {
       allowClear
       style={style}
       placeholder="Please select"
-      defaultValue={[options[0]]}
       onChange={value => input.onChange(value)}
       onBlur={() => input.onBlur(input.value)}
+      value={input.value}
     >
       {parsedOptions}
     </Select>

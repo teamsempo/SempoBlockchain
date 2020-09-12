@@ -22,7 +22,6 @@ import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import { Organisation } from "../../reducers/organisation/types";
-import { TransferAccountTypes } from "../transferAccount/types";
 import QrReadingModal from "../qrReadingModal";
 import { replaceUnderscores } from "../../utils";
 
@@ -38,7 +37,7 @@ export interface IEditUser {
   usageOtherSpecific?: string;
   oneTimeCode: number;
   failedPinAttempts: number;
-  accountTypes: object[];
+  accountTypes: string[];
   [key: string]: any;
 }
 
@@ -51,7 +50,7 @@ interface OuterProps {
 }
 
 interface StateProps {
-  accountType: TransferAccountTypes;
+  accountTypes: string[];
   businessUsageValue?: string;
   activeOrganisation: Organisation;
 }
@@ -84,10 +83,8 @@ class EditUserForm extends React.Component<
     let transferUsageName = transferUsage && transferUsage.name;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
 
-    account_types = Object.values(selectedUser.roles);
-    account_types = account_types.map((role: any) => {
-      return { value: role, label: role };
-    });
+    account_types = Object.values(selectedUser.roles || []);
+    account_types = account_types.map((role: any) => role);
 
     let custom_attr_keys = customAttributes && Object.keys(customAttributes);
     let attr_dict = {};
@@ -144,7 +141,8 @@ class EditUserForm extends React.Component<
       selectedUser,
       transferUsages,
       businessUsageValue,
-      users
+      users,
+      accountTypes
     } = this.props;
     let transferUsage = transferUsages.filter(
       t => t.id === selectedUser.business_usage_id
@@ -278,10 +276,12 @@ class EditUserForm extends React.Component<
                   <InputField name="location" label="Location" />
                 </SubRow>
                 <InputField
+                  {...accountTypes}
                   name="accountTypes"
                   label={"Account Types"}
                   isMultipleChoice={true}
                   options={validRoles}
+                  style={{ minWidth: "200px" }}
                 />
               </Row>
               <Row>
@@ -386,7 +386,7 @@ export default connect(
   (state: ReduxState): StateProps => {
     const selector = formValueSelector("editUser");
     return {
-      accountType: selector(state, "accountType"),
+      accountTypes: selector(state, "accountTypes"),
       businessUsageValue: selector(state, "businessUsage"),
       // @ts-ignore
       activeOrganisation: state.organisations.byId[state.login.organisationId]

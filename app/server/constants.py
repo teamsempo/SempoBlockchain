@@ -22,10 +22,10 @@ ACCESS_ROLES = {
 }
 
 ASSIGNABLE_TIERS = {
+    'beneficiary': 'BENEFICIARY',
     'supervendor': 'VENDOR',
     'vendor': 'VENDOR',
     'cashier': 'VENDOR',
-    'beneficiary': 'BENEFICIARY',
     'token_agent': 'TOKEN_AGENT',
     'group_account': 'GROUP_ACCOUNT',
 }

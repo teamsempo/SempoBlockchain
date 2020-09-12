@@ -19,6 +19,7 @@ interface InputFieldJson {
   isNumber?: boolean;
   children?: React.ReactNode;
   style?: any;
+  defaultValue?: string[];
 }
 
 export default function InputField(props: InputFieldJson) {
@@ -35,7 +36,8 @@ export default function InputField(props: InputFieldJson) {
     type,
     disabled,
     children,
-    style
+    style,
+    defaultValue
   } = props;
 
   let validate = [];
@@ -67,6 +69,7 @@ export default function InputField(props: InputFieldJson) {
       children={children}
       isPhoneNumber={isPhoneNumber}
       style={style}
+      defaultValue={defaultValue}
     />
   );
 }

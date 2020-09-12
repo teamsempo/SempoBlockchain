@@ -82,7 +82,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         location: form.location,
         business_usage_name: businessUsage,
         referred_by: form.referredBy,
-        account_types: accountTypes
+        account_types: form.accountTypes
       }
     });
   }
