@@ -81,7 +81,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
         country_code: form.countryCode,
         default_disbursement: form.defaultDisbursement * 100,
         require_transfer_card: form.requireTransferCard,
-        account_types: form.accountTypes.map(o => Object.values(o).pop())
+        account_types: form.accountTypes
         // default_lat: null,
         // default_lng: null
       },

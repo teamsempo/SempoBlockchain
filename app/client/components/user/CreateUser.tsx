@@ -82,7 +82,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         location: form.location,
         business_usage_name: businessUsage,
         referred_by: form.referredBy,
-        account_types: accountTypes
+        account_types: form.accountTypes
       }
     });
   }
@@ -95,7 +95,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         return (
           <div>
             <ModuleHeader>
-              Successfully Created External Wallet User
+              Successfully Created External Wallet Participant
             </ModuleHeader>
             <div style={{ padding: "0 1em 1em" }}>
               <p>You can now send funds to the participant's wallet.</p>

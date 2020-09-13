@@ -13,10 +13,12 @@ export interface IOrganisationSettings {
   defaultDisbursement: number;
   requireTransferCard: boolean;
   countryCode: string;
-  accountTypes: [];
+  accountTypes: string[];
 }
 
-interface StateProps {}
+interface StateProps {
+  accountTypes: string[];
+}
 
 interface OuterProps {
   isoCountries: [];
@@ -42,12 +44,10 @@ class OrganisationSettingForm extends React.Component<
       ) || "";
 
     this.props.initialize({
+      accountTypes: activeOrganisation.valid_roles,
       defaultDisbursement: activeOrganisation.default_disbursement / 100,
       requireTransferCard: activeOrganisation.require_transfer_card,
-      countryCode: countryCode.toLowerCase(),
-      accountTypes: activeOrganisation.valid_roles.map((role: String) => {
-        return { value: role, label: role };
-      })
+      countryCode: countryCode.toLowerCase()
     });
   }
 
@@ -68,10 +68,12 @@ class OrganisationSettingForm extends React.Component<
         </InputField>
 
         <InputField
+          {...activeOrganisation.valid_roles}
           name="accountTypes"
           label={"Account Types"}
           isMultipleChoice={true}
           options={roles}
+          style={{ minWidth: "200px" }}
         />
 
         <InputField

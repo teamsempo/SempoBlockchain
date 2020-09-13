@@ -12,7 +12,7 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
 from server.utils.misc import encrypt_string
-from server.constants import ISO_COUNTRIES, ACCESS_ROLES
+from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
 
 
 class Organisation(ModelBase):
@@ -163,7 +163,7 @@ class Organisation(ModelBase):
     
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
         self.external_auth_password = secrets.token_hex(16)
-        self.valid_roles = valid_roles or list(ACCESS_ROLES.keys())
+        self.valid_roles = valid_roles or list(ASSIGNABLE_TIERS.keys())
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():
                 raise Exception("A master organisation already exists")

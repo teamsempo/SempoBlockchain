@@ -24,7 +24,7 @@ export interface ICreateUser {
   location?: string;
   businessUsage?: string;
   usageOtherSpecific?: string;
-  accountTypes: object[];
+  accountTypes: string[];
 }
 
 export interface ICreateVendor {
@@ -47,7 +47,7 @@ interface OuterProps {
 }
 
 interface StateProps {
-  accountTypes: TransferAccountTypes[];
+  accountTypes: string[];
   businessUsageValue?: string;
   activeOrganisation: Organisation;
   defaultDisbursement: any;
@@ -70,9 +70,9 @@ class CreateUserForm extends React.Component<
   InjectedFormProps<ICreateUser, Props> & Props
 > {
   componentDidMount() {
-    const { defaultDisbursement } = this.props;
+    const { defaultDisbursement, validRoles } = this.props;
     this.props.initialize({
-      accountTypes: [{ value: "beneficiary", label: "beneficiary" }],
+      accountTypes: [validRoles[0]],
       gender: "female",
       initialDisbursement: defaultDisbursement
     });
@@ -154,9 +154,8 @@ class CreateUserForm extends React.Component<
     let selectedCashierForm = <></>;
     let selectedVendorForm = <></>;
     let selectedTokenAgentForm = <></>;
-    const accountTypesList = (accountTypes || []).map(o =>
-      Object.values(o).pop()
-    );
+    const accountTypesList = accountTypes || [];
+    console.log(accountTypes);
     if (accountTypesList.includes("beneficiary")) {
       selectedUserForm = <>{initialDisbursementAmount}</>;
     }
@@ -207,6 +206,7 @@ class CreateUserForm extends React.Component<
               label={"Account Types"}
               isMultipleChoice={true}
               options={validRoles}
+              style={{ minWidth: "200px" }}
             />
             <InputField name="publicSerialNumber" label={"ID Number"}>
               {/*

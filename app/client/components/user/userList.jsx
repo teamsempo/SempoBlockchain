@@ -67,7 +67,7 @@ class UserList extends React.Component {
         <Wrapper>
           <ModuleBox>
             <TopRow>
-              <ModuleHeader>Users</ModuleHeader>
+              <ModuleHeader>Participants</ModuleHeader>
             </TopRow>
             <ReactTable
               columns={[

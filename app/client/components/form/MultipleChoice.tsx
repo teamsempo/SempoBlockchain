@@ -1,22 +1,28 @@
-import Select from "react-select";
 import React from "react";
+import { Select } from "antd";
+
+const { Option } = Select;
 
 export const MultipleChoice = (props: any) => {
-  const { name, input, options } = props;
+  const { name, input, options, style } = props;
 
-  const parsedOptions = options.map((option: string) => ({
-    value: option,
-    label: option
-  }));
+  const parsedOptions = options.map((option: string) => (
+    <Option key={option} value={option}>
+      {option}
+    </Option>
+  ));
+
   return (
     <Select
-      {...input}
-      name={name}
-      defaultValue={[parsedOptions[0]]}
-      options={parsedOptions}
-      isMulti={true}
+      mode="multiple"
+      allowClear
+      style={style}
+      placeholder="Please select"
       onChange={value => input.onChange(value)}
       onBlur={() => input.onBlur(input.value)}
-    />
+      value={input.value}
+    >
+      {parsedOptions}
+    </Select>
   );
 };
