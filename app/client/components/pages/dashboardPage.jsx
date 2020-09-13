@@ -138,12 +138,12 @@ class DashboardPage extends React.Component {
             ],
             [
               "transfer_amount_per_user",
-              "Volume Per Participants",
+              "Average Volume",
               "Average amount transferred per participant"
             ],
             [
               "trades_per_user",
-              "Count Per Participants",
+              "Average Count",
               "Average number of transfers per participant"
             ]
           ]}
