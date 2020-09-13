@@ -133,18 +133,18 @@ class DashboardPage extends React.Component {
             ],
             [
               "users_who_made_purchase",
-              "Unique Users",
-              "Unique users who have sent or received a transfer"
+              "Unique Participants",
+              "Unique participants who have sent or received a transfer"
             ],
             [
               "transfer_amount_per_user",
-              "Volume Per User",
-              "Average amount transferred per user"
+              "Volume Per Participants",
+              "Average amount transferred per participant"
             ],
             [
               "trades_per_user",
-              "Count Per User",
-              "Average number of transfers per user"
+              "Count Per Participants",
+              "Average number of transfers per participant"
             ]
           ]}
         />
@@ -157,10 +157,14 @@ class DashboardPage extends React.Component {
           timeSeriesNameLabels={[
             [
               "active_users",
-              "Active Users",
-              "Number of unique users sent or received a transfer"
+              "Active Participants",
+              "Number of unique participants who have sent or received a transfer"
             ],
-            ["users_created", "New Users", "Number of new users created"]
+            [
+              "users_created",
+              "New Participants",
+              "Number of new participants created"
+            ]
           ]}
         />
       </React.Fragment>

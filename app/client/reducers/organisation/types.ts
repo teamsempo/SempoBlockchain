@@ -1,3 +1,5 @@
+import { TransferAccountTypes } from "../../components/transferAccount/types";
+
 export interface Organisation {
   id: number;
   name: string;
@@ -7,6 +9,7 @@ export interface Organisation {
   require_transfer_card: boolean;
   default_disbursement: number;
   country_code: string;
+  valid_roles: TransferAccountTypes[];
 }
 
 export interface OrganisationByIDs {

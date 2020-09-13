@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 import datetime
-import orjson
+import json
 
 from server import db
 from server.models.utils import paginate_query
@@ -73,12 +73,10 @@ class TransferAccountAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
-                'query_time': datetime.datetime.utcnow(),
+                'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
                 'data': {'transfer_accounts': result.data}
             }
-
-            bytes_data = orjson.dumps(response_object)
-            return make_response(bytes_data, 200)
+            return make_response(json.dumps(response_object), 200)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, transfer_account_id):

@@ -44,7 +44,7 @@ import { ReduxState } from "../reducers/rootReducer";
 import { TransferAccountByIDs } from "../reducers/transferAccount/types";
 
 function* updateStateFromUser(data: UserData) {
-  //Schema expects a list of credit transfer objects
+  //Schema expects a list of complete user objects
   if (data.users) {
     var user_list = data.users;
   } else {
@@ -55,7 +55,7 @@ function* updateStateFromUser(data: UserData) {
 
   const users = normalizedData.entities.users;
 
-  yield put(UserListAction.deepUpdateUserList(users));
+  yield put(UserListAction.updateUserList(users));
 }
 
 function* loadUser(
@@ -89,6 +89,8 @@ function* editUser(
 ) {
   try {
     const edit_response = yield call(editUserAPI, action.payload);
+
+    console.log("updating state from user");
 
     yield call(updateStateFromUser, edit_response.data);
 
@@ -139,7 +141,7 @@ function* deleteUser(
     let users = { ...userState };
     delete users[action.payload.path];
 
-    yield put(UserListAction.updateUserList(users));
+    yield put(UserListAction.replaceUserList(users));
     yield put(TransferAccountAction.updateTransferAccounts(transferAccounts));
 
     yield put(

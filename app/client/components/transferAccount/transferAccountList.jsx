@@ -194,16 +194,16 @@ class TransferAccountList extends React.Component {
     var filteredData =
       this.props.item_list !== undefined ? this.props.item_list : null;
 
-    if (account_type === TransferAccountTypes.USER) {
+    if (account_type === TransferAccountTypes.BENEFICIARY) {
       filteredData = filteredData.filter(account => account.is_beneficiary);
     } else if (
       account_type === TransferAccountTypes.VENDOR ||
       account_type === TransferAccountTypes.CASHIER
     ) {
       filteredData = filteredData.filter(account => account.is_vendor);
-    } else if (account_type === TransferAccountTypes.TOKENAGENT) {
+    } else if (account_type === TransferAccountTypes.TOKEN_AGENT) {
       filteredData = filteredData.filter(account => account.is_tokenagent);
-    } else if (account_type === TransferAccountTypes.GROUPACCOUNT) {
+    } else if (account_type === TransferAccountTypes.GROUP_ACCOUNT) {
       filteredData = filteredData.filter(account => account.is_groupaccount);
     }
 
