@@ -1,8 +1,9 @@
 import { TransferAccountTypes } from "../../components/transferAccount/types";
 
 export enum UserListActionTypes {
-  DEEP_UPDATE_USER_LIST = "DEEP_UPDATE_USER_LIST",
-  UPDATE_USER_LIST = "UPDATE_USER_LIST"
+  REPLACE_USER_LIST = "REPLACE_USER_LIST", //Replaces the existing user list with the new one supplied
+  UPDATE_USER_LIST = "UPDATE_USER_LIST", //Updates the existing user list by merging with the new one, overwriting new user data on a collision
+  DEEP_UPDATE_USER_LIST = "DEEP_UPDATE_USER_LIST" //Updates the existing user list by merging with the new one, merging user data as well
 }
 
 export interface User {
