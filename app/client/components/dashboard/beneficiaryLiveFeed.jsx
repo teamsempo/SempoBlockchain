@@ -197,7 +197,7 @@ class BeneficiaryLiveFeed extends React.Component {
                           >
                             {sender_user_name}
                           </ClickableTopText>
-                          sent
+                          paid
                         </TopText>
                         <BottomText>
                           <DarkHighlight>{transferFromMoney}</DarkHighlight> to
