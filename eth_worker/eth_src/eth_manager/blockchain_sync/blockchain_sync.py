@@ -68,7 +68,7 @@ class BlockchainSyncer(object):
                     self.persistence.set_filter_max_block(f.id, latest_block)
             finally:
                 if have_lock:
-                    lock.reacquire()
+                    lock.release()
         return True
 
     # Gets history for given range, and runs handle_event on all of them
