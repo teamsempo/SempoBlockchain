@@ -178,15 +178,17 @@ class BlockchainSyncer(object):
 
     def force_recall_webhook(self, transaction_hash):
         transaction = self.persistence.get_transaction_by_hash(transaction_hash)
-        webook_resp = self.call_webhook(transaction)
-        # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
-        # in order to be retryable later
-        if webook_resp.ok:
-            self.persistence.mark_transaction_as_completed(transaction)
-            return 'Success'
+        if transaction:
+            webook_resp = self.call_webhook(transaction)
+            # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
+            # in order to be retryable later
+            if webook_resp.ok:
+                self.persistence.mark_transaction_as_completed(transaction)
+                return 'Success'
+            else:
+                raise Exception(f'Force recall webook failed for {transaction_hash}')
         else:
-            raise Exception(f'Force recall webook failed for {transaction_hash}')
-
+            return f'Transaction {transaction_hash} not found!'
 
     def __init__(self, w3_websocket, red, persistence):
 
