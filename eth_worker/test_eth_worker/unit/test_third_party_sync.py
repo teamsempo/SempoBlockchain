@@ -175,6 +175,7 @@ class TestModels:
 
         # from celery_app import persistence_module as pm
         pm = persistence_module
+        mocker.patch.object(pm, 'get_transaction', lambda hash: tx)	
         mocker.patch.object(pm, 'create_external_transaction', lambda *args, **kwargs: tx)
         mark_as_completed_mock = mocker.patch.object(pm, 'mark_transaction_as_completed')
 
