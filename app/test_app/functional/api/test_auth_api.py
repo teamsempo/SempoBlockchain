@@ -207,23 +207,26 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     assert response.status_code == 200
     assert BlacklistToken.check_blacklist(auth_token) is True
 
-    @pytest.mark.parametrize("email, tier, status_code", [
-        ("test@test.com","admin",201),
-        ("tristan@withsempo.com","admin", 403),
-    ])
-    def test_add_user_to_whitelist(test_client, authed_sempo_admin_user, email, tier, status_code):
-        """
-        GIVEN a Flask application
-        WHEN the '/api/auth/permissions/' api is posted to (POST)
-        THEN check the response
-        """
 
-        auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-        register_response = test_client.post('/api/v1/auth/permissions/',
-                                             headers=dict(Authorization=auth_token, Accept='application/json'),
-                                             data=json.dumps(dict(email=email, tier=tier)),
-                                             content_type='application/json', follow_redirects=True)
-        assert register_response.status_code == status_code
+@pytest.mark.parametrize("admin_tier, email, invite_tier, status_code", [
+    ("superadmin", "test@test.com", "admin", 201),
+    ("superadmin", "tristan@withsempo.com", "admin", 403),
+    ("admin", "tristan@withsempo.com", "superadmin", 400),  # admin users can't invite superadmins
+])
+def test_add_user_to_whitelist(test_client, authed_sempo_admin_user, admin_tier, email, invite_tier, status_code):
+    """
+    GIVEN a Flask application
+    WHEN the '/api/auth/permissions/' api is posted to (POST)
+    THEN check the response
+    """
+
+    authed_sempo_admin_user.set_held_role('ADMIN', admin_tier)
+    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
+    register_response = test_client.post('/api/v1/auth/permissions/',
+                                         headers=dict(Authorization=auth_token, Accept='application/json'),
+                                         data=json.dumps(dict(email=email, tier=invite_tier)),
+                                         content_type='application/json', follow_redirects=True)
+    assert register_response.status_code == status_code
 
 
 @pytest.mark.parametrize("email,status_code", [
