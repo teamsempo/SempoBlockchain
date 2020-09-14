@@ -211,7 +211,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
 @pytest.mark.parametrize("admin_tier, email, invite_tier, status_code", [
     ("superadmin", "test@test.com", "admin", 201),
     ("superadmin", "tristan@withsempo.com", "admin", 403),
-    ("admin", "tristan+1@withsempo.com", "superadmin", 400),  # admin users can't invite superadmins
+    ("admin", "test+1@test.com", "superadmin", 400),  # admin users can't invite superadmins
 ])
 def test_add_user_to_whitelist(test_client, authed_sempo_admin_user, admin_tier, email, invite_tier, status_code):
     """
