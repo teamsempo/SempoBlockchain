@@ -274,7 +274,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
 
 def test_force_third_party_transaction_sync():
     if will_func_test_blockchain():
-        task_uuid = bt.force_third_party_transaction_()
+        task_uuid = bt.force_third_party_transaction_sync()
         bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
 
 @pytest.mark.parametrize("is_bulk, invert_recipient_list, transfer_amount, transfer_type, status_code", [
