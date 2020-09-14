@@ -5,7 +5,7 @@ import { useIntercom } from "react-use-intercom";
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 
-const IntercomSetup: React.FunctionComponent = () => {
+const IntercomSetup: React.FunctionComponent = props => {
   const { boot } = useIntercom();
   const loggedIn: boolean = useSelector(
     (state: ReduxState) => state.login.userId !== null
@@ -33,7 +33,8 @@ const IntercomSetup: React.FunctionComponent = () => {
       email: userEmail,
       company: {
         companyId: companyId,
-        name: activeOrganisation && activeOrganisation.name
+        name: activeOrganisation && activeOrganisation.name,
+        subdomain: window.DEPLOYMENT_NAME
       },
       // Intercom Messenger Props
       hideDefaultLauncher: true
