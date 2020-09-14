@@ -208,10 +208,10 @@ class TransferAccountManager extends React.Component {
       accountTypeName = TransferAccountTypes.VENDOR;
       icon = "/static/media/store.svg";
     } else if (is_groupaccount) {
-      accountTypeName = TransferAccountTypes.GROUPACCOUNT;
+      accountTypeName = TransferAccountTypes.GROUP_ACCOUNT;
       icon = "/static/media/groupaccount.svg";
     } else if (is_tokenagent) {
-      accountTypeName = TransferAccountTypes.TOKENAGENT;
+      accountTypeName = TransferAccountTypes.TOKEN_AGENT;
       icon = "/static/media/tokenagent.svg";
     }
 
