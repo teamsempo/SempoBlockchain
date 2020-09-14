@@ -84,12 +84,20 @@ class BlockchainSyncer(object):
         for event in transaction_history:
             self.handle_event(event, filter)
         return 'Success'
+
     # Processes newly found transaction event
     # Creates database object for transaction
     # Calls webhook
     # Sets sync status (whether or not webhook was successful)
     def handle_event(self, transaction, filter):
         transaction_object = self.persistence.get_transaction(hash=transaction.transactionHash.hex())
+        print('aaaa')
+        print('aaaa')
+        print('aaaa')
+        print('aaaa')
+        print(transaction)
+        print(transaction_object)
+        print(transaction.args)
         # If transaction doesn't exist, make it. Even if it does exist, and it's synchronized via first-party sync
         # we still want to send it with third-party (here) as insurance that tx sync is running correctly.
         if not transaction_object:
