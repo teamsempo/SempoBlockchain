@@ -1,6 +1,6 @@
 {
   "name": "SempoBlockchain",
-  "version": "1.2.16",
+  "version": "1.2.17",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
@@ -42,6 +42,7 @@
     "@types/react-redux": "^7.1.8",
     "@types/react-responsive": "^8.0.2",
     "@types/react-router-dom": "^5.1.5",
+    "@types/react-select": "^3.0.19",
     "@types/redux-form": "^8.2.5",
     "@webpack-cli/migrate": "^0.1.9",
     "awesome-typescript-loader": "^5.2.1",
@@ -71,6 +72,7 @@
     "less-vars-to-js": "^1.3.0",
     "moment-locales-webpack-plugin": "^1.0.7",
     "pretty-quick": "^2.0.1",
+    "react-select": "^3.1.0",
     "react-test-renderer": "^16.12.0",
     "redux-mock-store": "^1.5.3",
     "style-loader": "^1.2.1",

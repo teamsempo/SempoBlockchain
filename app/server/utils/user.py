@@ -20,6 +20,7 @@ from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
+from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES, ASSIGNABLE_TIERS
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app
 from server.utils.phone import send_message
@@ -110,6 +111,7 @@ def update_transfer_account_user(user,
                                  phone=None, email=None, public_serial_number=None,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
+                                 roles=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
@@ -149,23 +151,27 @@ def update_transfer_account_user(user,
     user.remove_all_held_roles()
     flag_modified(user, '_held_roles')
 
-    if not is_vendor:
-        vendor_tier = None
-    elif existing_transfer_account:
-        vendor_tier = 'vendor'
+    if roles:
+        for role in roles:
+            user.set_held_role(role[0], role[1])
     else:
-        vendor_tier = 'supervendor'
+        if not is_vendor:
+            vendor_tier = None
+        elif existing_transfer_account:
+            vendor_tier = 'vendor'
+        else:
+            vendor_tier = 'supervendor'
 
-    user.set_held_role('VENDOR', vendor_tier)
+        user.set_held_role('VENDOR', vendor_tier)
 
-    if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'token_agent')
+        if is_tokenagent:
+            user.set_held_role('TOKEN_AGENT', 'token_agent')
 
-    if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'group_account')
+        if is_groupaccount:
+            user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
-    if is_beneficiary:
-        user.set_held_role('BENEFICIARY', 'beneficiary')
+        if is_beneficiary:
+            user.set_held_role('BENEFICIARY', 'beneficiary')
 
     return user
 
@@ -179,6 +185,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  use_precreated_pin=False,
                                  use_last_4_digits_of_id_as_initial_pin=False,
                                  existing_transfer_account=None,
+                                 roles=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
@@ -215,23 +222,27 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     user.set_pin(precreated_pin, is_activated)
 
-    if not is_vendor:
-        vendor_tier = None
-    elif existing_transfer_account:
-        vendor_tier = 'vendor'
+    if roles:
+        for role in roles:
+            user.set_held_role(role[0], role[1])
     else:
-        vendor_tier = 'supervendor'
+        if not is_vendor:
+            vendor_tier = None
+        elif existing_transfer_account:
+            vendor_tier = 'vendor'
+        else:
+            vendor_tier = 'supervendor'
 
-    user.set_held_role('VENDOR', vendor_tier)
+        user.set_held_role('VENDOR', vendor_tier)
 
-    if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'token_agent')
+        if is_tokenagent:
+            user.set_held_role('TOKEN_AGENT', 'token_agent')
 
-    if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'group_account')
+        if is_groupaccount:
+            user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
-    if is_beneficiary:
-        user.set_held_role('BENEFICIARY', 'beneficiary')
+        if is_beneficiary:
+            user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if not organisation:
         organisation = Organisation.master_organisation()
@@ -423,6 +434,8 @@ def proccess_create_or_modify_user_request(
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
 
+    account_types = attribute_dict.get('account_types', [])
+
     referred_by = attribute_dict.get('referred_by')
 
     blockchain_address = attribute_dict.get('blockchain_address')
@@ -473,6 +486,23 @@ def proccess_create_or_modify_user_request(
     primary_user_pin = attribute_dict.get('primary_user_pin')
 
     initial_disbursement = attribute_dict.get('initial_disbursement', None)
+
+    roles_to_set = []
+    for at in account_types:
+        if at not in g.active_organisation.valid_roles:
+            raise Exception(f'{at} not a valid role for this organisation. Please choose one of the following: {g.active_organisation.valid_roles}')
+        roles_to_set.append((ASSIGNABLE_TIERS[at], at))
+
+    is_vendor = attribute_dict.get('is_vendor', None)
+    if is_vendor is None:
+        is_vendor = 'VENDOR' in account_types or attribute_dict.get('vendor', False)
+
+    is_tokenagent = 'TOKEN_AGENT' in account_types or attribute_dict.get('is_tokenagent', False)
+    is_groupaccount = 'GROUP_ACCOUNT' in account_types or attribute_dict.get('is_groupaccount', False)
+
+    # is_beneficiary defaults to the opposite of is_vendor
+    is_beneficiary = 'BENEFICIARY' in account_types or attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
+
 
     is_vendor = attribute_dict.get('is_vendor', None)
     if is_vendor is None:
@@ -589,6 +619,7 @@ def proccess_create_or_modify_user_request(
                 public_serial_number=public_serial_number,
                 use_precreated_pin=use_precreated_pin,
                 existing_transfer_account=existing_transfer_account,
+                roles=roles_to_set,
                 is_beneficiary=is_beneficiary,
                 is_vendor=is_vendor,
                 is_tokenagent=is_tokenagent,
@@ -630,6 +661,7 @@ def proccess_create_or_modify_user_request(
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
+        roles=roles_to_set,
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,

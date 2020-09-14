@@ -9,7 +9,7 @@ from server.models.user import User
 from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
-from server.constants import ISO_COUNTRIES
+from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
 
 
 organisation_blueprint = Blueprint('organisation', __name__)
@@ -61,7 +61,12 @@ class OrganisationAPI(MethodView):
         require_transfer_card = put_data.get('require_transfer_card')
         default_lat = put_data.get('default_lat')
         default_lng = put_data.get('default_lng')
+        account_types = put_data.get('account_types', [])
 
+        for at in account_types:
+            if at not in ASSIGNABLE_TIERS.keys():
+                raise Exception(f'{at} not an assignable role')
+        
         if organisation_id is None:
             return make_response(jsonify({'message': 'No organisation ID provided'})), 400
 
@@ -69,6 +74,8 @@ class OrganisationAPI(MethodView):
         if organisation is None:
             return make_response(jsonify({'message': f'No organisation found for ID: {organisation_id}'})), 404
 
+        if account_types is not None:
+            organisation.valid_roles = account_types
         if default_disbursement is not None:
             organisation.default_disbursement = default_disbursement
         if country_code is not None:
@@ -202,7 +209,10 @@ class OrganisationConstantsAPI(MethodView):
     def get(self):
         response_object = {
             'message': 'Organisation constants',
-            'data': {'iso_countries': ISO_COUNTRIES}
+            'data': {
+                'iso_countries': ISO_COUNTRIES,
+                'roles': list(ASSIGNABLE_TIERS.keys())
+                }
         }
         return make_response(jsonify(response_object)), 200
 
