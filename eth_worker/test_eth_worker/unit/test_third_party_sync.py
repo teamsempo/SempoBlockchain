@@ -161,17 +161,6 @@ class TestModels:
             '0x3333333333333333333333333', 
             10
         )
-        # from celery_app import persistence_module as pm
-        pm = persistence_module
-        mocker.patch.object(pm, 'get_transaction', lambda hash: t)
-        mocker.patch.object(pm, 'create_external_transaction', lambda *args, **kwargs: tx)
-        mark_as_completed_mock = mocker.patch.object(pm, 'mark_transaction_as_completed')
-
-        result = blockchain_sync.handle_event(t, filt)
-        assert result == True
-
-
-        # If the webhook call doesn't work, it does not call mark_as_completed
         tx = BlockchainTransaction(
            _status = 'PENDING',
            block = 10,
@@ -183,6 +172,16 @@ class TestModels:
            amount = 10,
            is_third_party_transaction = True
         )
+
+        # from celery_app import persistence_module as pm
+        pm = persistence_module
+        mocker.patch.object(pm, 'create_external_transaction', lambda *args, **kwargs: tx)
+        mark_as_completed_mock = mocker.patch.object(pm, 'mark_transaction_as_completed')
+
+        result = blockchain_sync.handle_event(t, filt)
+        assert result == True
+
+        # If the webhook call doesn't work, it does not call mark_as_completed
         def check_correct_webhook_call_fail(transaction):
             assert transaction == tx
             resp = RequestsResp()
