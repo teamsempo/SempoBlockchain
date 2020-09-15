@@ -692,7 +692,9 @@ def proccess_create_or_modify_user_request(
             first_name=attribute_dict.get('secondary_user_first_name'),
             last_name=attribute_dict.get('secondary_user_last_name'),
             phone=attribute_dict.get('secondary_user_phone'),
-            existing_transfer_account=user.default_transfer_account
+            existing_transfer_account=user.default_transfer_account,
+            is_beneficiary=is_beneficiary, is_vendor=is_vendor,
+            is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount
         )
 
     if phone:
