@@ -687,6 +687,14 @@ def proccess_create_or_modify_user_request(
     # Location fires an async task that needs to know user ID
     db.session.flush()
 
+    if attribute_dict.get('secondary_user_first_name'):
+        create_transfer_account_user(
+            first_name=attribute_dict.get('secondary_user_first_name'),
+            last_name=attribute_dict.get('secondary_user_last_name'),
+            phone=attribute_dict.get('secondary_user_phone'),
+            existing_transfer_account=user.default_transfer_account
+        )
+
     if phone:
         if is_self_sign_up:
             send_one_time_code(phone=phone, user=user)

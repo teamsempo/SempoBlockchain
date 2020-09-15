@@ -13,7 +13,12 @@ class TransferCardAPI(MethodView):
     @requires_auth
     def get(self):
 
-        transfer_cards = TransferCard.query.all()
+        only_loaded = request.args.get('only_active', 'true').lower() == 'true'
+
+        if only_loaded:
+            transfer_cards = TransferCard.query.filter(TransferCard.amount_loaded_signature != None).all()
+        else:
+            transfer_cards = TransferCard.query.all()
 
         response_object = {
             'message': 'Successfully loaded transfer_cards',

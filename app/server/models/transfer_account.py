@@ -1,6 +1,7 @@
 from typing import Optional, Union
 from decimal import Decimal
 import datetime, enum
+import math
 from sqlalchemy.sql import func
 from flask import g
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -158,14 +159,9 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     def primary_user(self):
         if len(self.users) == 0:
             return None
-        return self.users[0]
-        # users = User.query.execution_options(show_all=True) \
-        #     .filter(User.transfer_accounts.any(TransferAccount.id.in_([self.id]))).all()
-        # if len(users) == 0:
-        #     # This only happens when we've unbound a user from a transfer account by manually editing the db
-        #     return None
-        #
-        # return sorted(users, key=lambda user: user.created)[0]
+
+        # Primary user is just the oldest user
+        return sorted(self.users, key=lambda user: user.id or math.inf)[0]
 
     @hybrid_property
     def primary_user_id(self):

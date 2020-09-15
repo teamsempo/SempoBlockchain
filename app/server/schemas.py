@@ -312,9 +312,31 @@ class TransferCardSchema(SchemaBase):
 
     user                    = fields.Nested(UserSchema, only=('first_name', 'last_name'))
 
+    users = fields.Method('get_users')
+
+    # users                    = fields.Nested(
+    #     TransferAccountSchema,
+    #     attribute='transfer_account',
+    #     only=('transfer_account.users.first_name', 'transfer_account.users.last_name')
+    # )
+
+
     def get_symbol(self, obj):
         try:
             return obj.transfer_account.token.symbol
+        except Exception as e:
+            return None
+
+    def get_users(self, obj):
+        users = []
+        try:
+            for user in obj.transfer_account.users:
+                users.append({
+                    'first_name': user.first_name,
+                    'last_name': user.last_name
+                })
+
+            return users
         except Exception as e:
             return None
 
@@ -471,7 +493,7 @@ synchronization_filter_schema = SynchronizationFilterSchema()
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
-transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
+transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created", "user"))
 
 uploaded_resource_schema = UploadedResourceSchema()
 
