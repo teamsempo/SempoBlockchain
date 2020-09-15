@@ -355,6 +355,8 @@ POLIPAYMENTS_HOST = config_parser['POLIPAYMENTS']['host']
 POLIPAYMENTS_MERCHANT = common_secrets_parser['POLIPAYMENTS']['merchant_code']
 POLIPAYMENTS_AUTH     = common_secrets_parser['POLIPAYMENTS']['auth_code']
 
+IPDATA_KEY = common_secrets_parser['IPDATA']['key']
+
 try:
     NAMESCAN_KEY    = common_secrets_parser['NAMESCAN']['key']
 except KeyError:

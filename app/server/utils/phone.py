@@ -5,13 +5,15 @@ from phonenumbers.phonenumberutil import NumberParseException
 
 from flask import current_app, g
 from server import twilio_client, messagebird_client, africastalking_client, executor
+from server.utils.ip_address import get_ip_data
 
-def proccess_phone_number(phone_number, region=None, ignore_region=False):
+def proccess_phone_number(phone_number, region=None, ignore_region=False, ip_address=None):
     """
     Parse any given phone number.
     :param phone_number: int
     :param region: ISO 3166-1 alpha-2 codes
     :param ignore_region: Boolean. True returns original phone
+    :param ip_address: Can be to look up the region if it's not provided
     :return:
     """
     from server.models.organisation import Organisation
@@ -21,6 +23,9 @@ def proccess_phone_number(phone_number, region=None, ignore_region=False):
 
     if ignore_region:
         return phone_number
+
+    if region is None and ip_address:
+        region = get_ip_data(ip_address, ['country_code']).get('country_code')
 
     if region is None:
         try:

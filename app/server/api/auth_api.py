@@ -14,6 +14,8 @@ from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
 from server.utils.misc import decrypt_string, attach_host
+from server.utils.ip_address import get_ip_data
+
 
 import random
 
@@ -335,7 +337,11 @@ class LoginAPI(MethodView):
         # Now try to match the phone
         if not user:
             try:
-                phone = proccess_phone_number(post_data.get('phone'), region=post_data.get('region'))
+                phone = proccess_phone_number(
+                    post_data.get('phone'),
+                    region=post_data.get('region'),
+                    ip_address=post_data.get('ip_address')
+                )
             except NumberParseException as e:
                 response_object = {'message': 'Invalid Phone Number: ' + str(e)}
                 return make_response(jsonify(response_object)), 401
