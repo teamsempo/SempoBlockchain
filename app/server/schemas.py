@@ -51,6 +51,7 @@ class UserSchema(SchemaBase):
     is_activated            = fields.Boolean()
     is_disabled             = fields.Boolean()
 
+    roles                   = fields.Dict(keys=fields.Str(), values=fields.Str())
     is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_tokenagent           = fields.Boolean(attribute='has_token_agent_role')
@@ -389,15 +390,17 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
+    valid_roles = fields.Raw()
+
     require_transfer_card = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
     country_code = fields.Function(lambda obj: str(obj.country_code))
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
-    users               = fields.Nested('server.schemas.UserSchema', many=True)
-    transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
-    credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
+    #users               = fields.Nested('server.schemas.UserSchema', many=True)
+    #transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
+    #credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
 
 class TransferUsageSchema(Schema):
