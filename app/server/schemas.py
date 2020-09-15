@@ -314,13 +314,6 @@ class TransferCardSchema(SchemaBase):
 
     users = fields.Method('get_users')
 
-    # users                    = fields.Nested(
-    #     TransferAccountSchema,
-    #     attribute='transfer_account',
-    #     only=('transfer_account.users.first_name', 'transfer_account.users.last_name')
-    # )
-
-
     def get_symbol(self, obj):
         try:
             return obj.transfer_account.token.symbol
