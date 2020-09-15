@@ -70,13 +70,14 @@ class Metric(object):
                 date_filter_attribute = date_filter_attributes[self.object_model]
                 # If a user provided end-date goes past today, just use today. Also if the user doesn't provide a day
                 # also use today
-                if not end_date or datetime.datetime.strptime(end_date, "%Y-%m-%d") > datetime.datetime.now():
-                    last_day = datetime.datetime.now()
+                today = datetime.datetime.now().replace(minute=0, hour=0, second=0, microsecond=0)
+                if not end_date or datetime.datetime.strptime(end_date, "%Y-%m-%d") > today:
+                    last_day = today
                 else:
                     last_day = datetime.datetime.strptime(end_date, "%Y-%m-%d")
                 if not start_date:
                     # Get first date where data is present if no other date is given
-                    first_day = db.session.query(db.func.min(date_filter_attribute)).scalar() or datetime.datetime.now()
+                    first_day = db.session.query(db.func.min(date_filter_attribute)).scalar() or today
                 else:
                     first_day = datetime.datetime.strptime(start_date, "%Y-%m-%d")
 
