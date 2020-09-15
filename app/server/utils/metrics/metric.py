@@ -4,27 +4,36 @@
 
 from server.utils.metrics import filters, metrics_cache, postprocessing_actions, group
 from server.utils.metrics.metrics_const import *
+import datetime
+from server import db
 
 class Metric(object):
-    def execute_query(self, user_filters: dict = None, date_filters_dict=None, enable_caching=True, population_query_result=False, dont_include_timeseries=False):
+    def execute_query(self, user_filters: dict = None, date_filter_attributes=None, enable_caching=True, population_query_result=False, dont_include_timeseries=False, start_date=None, end_date=None):
         """
         :param user_filters: dict of filters to apply to all metrics
-        :param date_filters_dict: lookup table linking object models to their date filters (if applicable)  
+        :param date_filter_attributes: lookup table indicating which row to use when filtering by date  
         :param enable_caching: set to False if you don't want the query result to be cached
         :param population_query_result: This is a representation of the number of users over time, used in 
             post-processing of certian metrics. See postprocessing_actions.py for more details.
         :param dont_include_timeseries: if true, this skips calculating timeseries data and only fetches
              aggregated_query and total_query
+        :param start_date: Start date for metrics queries (for calculating percent change within date range)
+        :param End_date: End date for metrics queries (for calculating percent change within date range)
         """
-        actions = { 'query': self.query_actions, 'aggregated_query': self.aggregated_query_actions, 'total_query': self.total_query_actions }
+        actions = {'query': self.query_actions, 
+                    'aggregated_query': self.aggregated_query_actions, 
+                    'total_query': self.total_query_actions,
+                    'start_day_query': self.total_query_actions,
+                    'end_day_query': self.total_query_actions
+                }
 
         # Build the dict of queries to execute. Ungrouped metrics don't have aggregated queries,
         # and sometimes we only want aggregates and totals (based on dont_include_timeseries)
         if self.is_timeseries:
             if dont_include_timeseries:
-                queries = { 'total_query': self.total_query }
+                queries = { 'total_query': self.total_query, 'start_day_query': self.total_query, 'end_day_query': self.total_query }
             else:   
-                queries = { 'query': self.query, 'total_query': self.total_query }
+                queries = { 'query': self.query, 'total_query': self.total_query, 'start_day_query': self.total_query, 'end_day_query': self.total_query }
             if self.aggregated_query:
                 queries['aggregated_query'] = self.aggregated_query
             if None in queries.values():
@@ -44,11 +53,40 @@ class Metric(object):
             for f in user_filters or []:
                 if f not in self.filterable_by:
                     raise Exception(f'{self.metric_name} not filterable by {f}')
+
             # Apply the applicable date filters
             if DATE in self.filterable_by or []:
-                if date_filters_dict:
-                    date_filters = date_filters_dict[self.object_model]
+                if start_date or end_date:
+                    date_filter_attribute = date_filter_attributes[self.object_model]
+                    date_filters = []
+                    if start_date:
+                        date_filters.append(date_filter_attribute >= start_date)
+                    if end_date:
+                        date_filters.append(date_filter_attribute <=  datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)  )
                     filtered_query = filtered_query.filter(*date_filters)
+
+            # Handle start_day and end_day queries so we can have a percentage change for the whole day range
+            if query in ['start_day_query', 'end_day_query']:
+                date_filter_attribute = date_filter_attributes[self.object_model]
+                # If a user provided end-date goes past today, just use today. Also if the user doesn't provide a day
+                # also use today
+                if not end_date or datetime.datetime.strptime(end_date, "%Y-%m-%d") > datetime.datetime.now():
+                    last_day = datetime.datetime.now()
+                else:
+                    last_day = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+                if not start_date:
+                    # Get first date where data is present if no other date is given
+                    first_day = db.session.query(db.func.min(date_filter_attribute)).scalar() or datetime.datetime.now()
+                else:
+                    first_day = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+
+                day = first_day if query == 'start_day_query' else last_day
+
+                date_filters = []
+                # To filter for items on day n, we have to filter between day n and day n+1
+                date_filters.append(date_filter_attribute >= day)
+                date_filters.append(date_filter_attribute <=  day + datetime.timedelta(days=1)  )
+                filtered_query = filtered_query.filter(*date_filters)
 
             if not self.bypass_user_filters:
                 filtered_query = filters.apply_filters(filtered_query, user_filters, self.object_model)
@@ -66,6 +104,15 @@ class Metric(object):
 
         if self.is_timeseries:
             result = {}
+            # Get percentage change between first and last date
+            start_value = results['start_day_query'] if 'start_day_query' in results else 0
+            end_value = results['end_day_query'] if 'end_day_query' in results else 0
+            try:
+                increase = float(end_value) - float(start_value)
+                percent_change = (increase / float(start_value)) * 100
+            except ZeroDivisionError:
+                percent_change = None 
+
             if self.value_type not in VALUE_TYPES:
                 raise Exception(f'{self.value_type} not a valid metric type!')
             result['type'] = {
@@ -81,8 +128,9 @@ class Metric(object):
             if self.aggregated_query:
                 result['aggregate'] = results['aggregated_query']
                 result['aggregate']['total'] = results['total_query']
+                result['aggregate']['percent_change'] = percent_change
             else:
-                result['aggregate'] = {'total': results['total_query']}
+                result['aggregate'] = {'total': results['total_query'], 'percent_change': percent_change}
             return result
         else:
             return results['query']
