@@ -743,6 +743,13 @@ class PermissionsAPI(MethodView):
         tier = post_data.get('tier')
         organisation_id = post_data.get('organisation_id', None)
 
+        if not (email and tier):
+            response_object = {'message': 'No email or tier provided'}
+            return make_response(jsonify(response_object)), 400
+
+        if not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', tier):
+            return make_response(jsonify({'message': f'User does not have permission to invite {tier}'})), 400
+
         if organisation_id and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
             response_object = {'message': 'Not Authorised to set organisation ID'}
             return make_response(jsonify(response_object)), 401
@@ -761,10 +768,6 @@ class PermissionsAPI(MethodView):
 
         if email_exists:
             response_object = {'message': 'Email already on whitelist.'}
-            return make_response(jsonify(response_object)), 400
-
-        if not (email and tier):
-            response_object = {'message': 'No email or tier provided'}
             return make_response(jsonify(response_object)), 400
 
         invite = EmailWhitelist(email=email,
