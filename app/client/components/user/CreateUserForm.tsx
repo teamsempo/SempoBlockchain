@@ -24,7 +24,7 @@ export interface ICreateUser {
   location?: string;
   businessUsage?: string;
   usageOtherSpecific?: string;
-  accountType: any[TransferAccountTypes];
+  accountTypes: string[];
 }
 
 export interface ICreateVendor {
@@ -44,14 +44,14 @@ export type ICreateUserUpdate = ICreateUser & ICreateVendor;
 interface OuterProps {
   users: any;
   transferUsages: TransferUsage[];
-  transferAccountType: string;
 }
 
 interface StateProps {
-  accountType: any[TransferAccountTypes];
+  accountTypes: string[];
   businessUsageValue?: string;
   activeOrganisation: Organisation;
   defaultDisbursement: any;
+  validRoles: TransferAccountTypes[];
 }
 
 type Props = OuterProps & StateProps;
@@ -70,9 +70,9 @@ class CreateUserForm extends React.Component<
   InjectedFormProps<ICreateUser, Props> & Props
 > {
   componentDidMount() {
-    const { defaultDisbursement } = this.props;
+    const { defaultDisbursement, validRoles } = this.props;
     this.props.initialize({
-      accountType: TransferAccountTypes.BENEFICIARY.toLowerCase(),
+      accountTypes: [validRoles[0]],
       gender: "female",
       initialDisbursement: defaultDisbursement
     });
@@ -102,12 +102,10 @@ class CreateUserForm extends React.Component<
       activeOrganisation,
       businessUsageValue,
       transferUsages,
-      accountType,
-      defaultDisbursement
+      accountTypes,
+      defaultDisbursement,
+      validRoles
     } = this.props;
-
-    let accountTypes = Object.keys(TransferAccountTypes);
-    let selectedAccountTypeForm;
     let initialDisbursementAmount;
     let businessUsage;
 
@@ -152,17 +150,17 @@ class CreateUserForm extends React.Component<
       }
     }
 
-    if (accountType === TransferAccountTypes.BENEFICIARY.toLowerCase()) {
-      //  USER
-      selectedAccountTypeForm = (
-        <>
-          {/*{businessUsage}*/}
-          {initialDisbursementAmount}
-        </>
-      );
-    } else if (accountType === TransferAccountTypes.CASHIER.toLowerCase()) {
-      //  CASHIER
-      selectedAccountTypeForm = (
+    let selectedUserForm = <></>;
+    let selectedCashierForm = <></>;
+    let selectedVendorForm = <></>;
+    let selectedTokenAgentForm = <></>;
+    const accountTypesList = accountTypes || [];
+    console.log(accountTypes);
+    if (accountTypesList.includes("beneficiary")) {
+      selectedUserForm = <>{initialDisbursementAmount}</>;
+    }
+    if (accountTypesList.includes("cashier")) {
+      selectedCashierForm = (
         <div>
           <div>
             To create a cashier account, enter the <strong>vendor's</strong>{" "}
@@ -179,30 +177,36 @@ class CreateUserForm extends React.Component<
           />
         </div>
       );
-    } else if (accountType === TransferAccountTypes.VENDOR.toLowerCase()) {
-      //  VENDOR
-      selectedAccountTypeForm = (
+    }
+    if (
+      accountTypesList.includes("vendor") ||
+      accountTypesList.includes("cashier") ||
+      accountTypesList.includes("supervendor")
+    ) {
+      selectedVendorForm = (
         <div>
           {businessUsage}
           <InputField name="transferAccountName" label={"Store Name"} />
         </div>
       );
-    } else if (accountType === TransferAccountTypes.TOKENAGENT.toLowerCase()) {
-      //  SUPERVENDOR
-      selectedAccountTypeForm = <></>;
+    }
+    if (accountTypesList.includes("token_agent")) {
+      selectedTokenAgentForm = <></>;
     }
 
     return (
       <div>
-        <ModuleHeader>Create a {accountType} account</ModuleHeader>
+        <ModuleHeader>Create an account</ModuleHeader>
 
         <div style={{ padding: "1em" }}>
           <form onSubmit={this.props.handleSubmit}>
-            <SelectField
-              name="accountType"
-              label={"Account Type"}
-              options={accountTypes}
-              hideNoneOption={true}
+            <InputField
+              {...accountTypes}
+              name="accountTypes"
+              label={"Account Types"}
+              isMultipleChoice={true}
+              options={validRoles}
+              style={{ minWidth: "200px" }}
             />
             <InputField name="publicSerialNumber" label={"ID Number"}>
               {/*
@@ -223,15 +227,11 @@ class CreateUserForm extends React.Component<
               options={["Female", "Male", "Other"]}
               hideNoneOption={true}
             />
-            {/*<InputField*/}
-            {/*name="referredBy"*/}
-            {/*label={"Referred by user phone number"}*/}
-            {/*isPhoneNumber*/}
-            {/*/>*/}
-            {selectedAccountTypeForm}
+            {selectedUserForm}
+            {selectedCashierForm}
+            {selectedVendorForm}
+            {selectedTokenAgentForm}
             <ErrorMessage>{this.props.users.createStatus.error}</ErrorMessage>
-            {/*
-                // @ts-ignore */}
             <AsyncButton
               type="submit"
               isLoading={this.props.users.createStatus.isRequesting}
@@ -254,14 +254,17 @@ export default connect(
   (state: ReduxState): StateProps => {
     const selector = formValueSelector("createUser");
     return {
-      accountType: selector(state, "accountType"),
+      accountTypes: selector(state, "accountTypes"),
       businessUsageValue: selector(state, "businessUsage"),
       // @ts-ignore
       activeOrganisation: state.organisations.byId[state.login.organisationId],
       defaultDisbursement:
         // @ts-ignore
         state.organisations.byId[state.login.organisationId]
-          .default_disbursement / 100
+          .default_disbursement / 100,
+      validRoles:
+        // @ts-ignore
+        state.organisations.byId[state.login.organisationId].valid_roles || []
     };
   }
 )(CreateUserFormReduxForm);

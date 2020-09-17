@@ -197,7 +197,7 @@ class BeneficiaryLiveFeed extends React.Component {
                           >
                             {sender_user_name}
                           </ClickableTopText>
-                          sent
+                          paid
                         </TopText>
                         <BottomText>
                           <DarkHighlight>{transferFromMoney}</DarkHighlight> to
@@ -221,7 +221,12 @@ class BeneficiaryLiveFeed extends React.Component {
                     <UserWrapper key={transfer.id}>
                       <UserSVG src="/static/media/disbursement.svg" />
                       <UserGroup>
-                        <TopText>Disbursement of</TopText>
+                        <TopText>
+                          <NonClickableTopText>
+                            {transfer.authorising_user_email}
+                          </NonClickableTopText>{" "}
+                          disbursed
+                        </TopText>
                         <BottomText>
                           <DarkHighlight>{transferFromMoney}</DarkHighlight> to
                           <ClickableHighlight
@@ -247,9 +252,15 @@ class BeneficiaryLiveFeed extends React.Component {
                         src="/static/media/disbursement.svg"
                       />
                       <UserGroup>
-                        <TopText>Withdrawal of</TopText>
+                        <TopText>
+                          <NonClickableTopText>
+                            {transfer.authorising_user_email}
+                          </NonClickableTopText>{" "}
+                          reclaimed
+                        </TopText>
                         <BottomText>
-                          <DarkHighlight>{transferFromMoney}</DarkHighlight> by
+                          <DarkHighlight>{transferFromMoney}</DarkHighlight>{" "}
+                          from
                           <ClickableHighlight
                             onClick={() =>
                               this.navigateToAccount(transferAccountId)
@@ -314,6 +325,11 @@ const ClickableTopText = styled.span`
   color: #2d9ea0;
   font-weight: 600;
   cursor: pointer;
+`;
+
+const NonClickableTopText = styled(ClickableTopText)`
+  font-weight: 300;
+  cursor: auto;
 `;
 
 const BottomText = styled.div`

@@ -20,6 +20,15 @@ ACCESS_ROLES = {
     'GROUP_ACCOUNT': POSSIBLE_GROUP_ACCOUNTS
 }
 
+ASSIGNABLE_TIERS = {
+    'beneficiary': 'BENEFICIARY',
+    'supervendor': 'VENDOR',
+    'vendor': 'VENDOR',
+    'cashier': 'VENDOR',
+    'token_agent': 'TOKEN_AGENT',
+    'group_account': 'GROUP_ACCOUNT',
+}
+
 ALLOWED_BLOCKCHAIN_ADDRESS_TYPES = ["TRANSFER_ACCOUNT", "MASTER", "BITCOIN_MASTER", "EXTERNAL"]
 
 KOBO_META_ATTRIBUTES = ['meta/instanceID', 'end', 'start', 'formhub/uuid', 'username']
