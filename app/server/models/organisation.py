@@ -1,5 +1,7 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import type_coerce
 import pendulum
 import secrets
 
@@ -10,7 +12,7 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
 from server.utils.misc import encrypt_string
-from server.constants import ISO_COUNTRIES
+from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
 
 
 class Organisation(ModelBase):
@@ -24,7 +26,9 @@ class Organisation(ModelBase):
     name                = db.Column(db.String)
 
     external_auth_username = db.Column(db.String)
-    
+
+    valid_roles = db.Column(ARRAY(db.String, dimensions=1))
+
     _external_auth_password = db.Column(db.String)
 
     default_lat = db.Column(db.Float())
@@ -128,6 +132,9 @@ class Organisation(ModelBase):
     kyc_applications = db.relationship('KycApplication', backref='organisation',
                                        lazy=True, foreign_keys='KycApplication.organisation_id')
 
+    attribute_maps = db.relationship('AttributeMap', backref='organisation',
+                                       lazy=True, foreign_keys='AttributeMap.organisation_id')
+
     custom_welcome_message_key = db.Column(db.String)
 
     @staticmethod
@@ -151,12 +158,12 @@ class Organisation(ModelBase):
         self.token = token
         self._setup_org_transfer_account()
 
-    def __init__(self, token=None, is_master=False, **kwargs):
+    def __init__(self, token=None, is_master=False, valid_roles=None, **kwargs):
         super(Organisation, self).__init__(**kwargs)
     
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
         self.external_auth_password = secrets.token_hex(16)
-
+        self.valid_roles = valid_roles or list(ASSIGNABLE_TIERS.keys())
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():
                 raise Exception("A master organisation already exists")
