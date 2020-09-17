@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - fix-db-issue
+                - peer-to-peer-fix
           requires:
             - build
             #- test:backend
