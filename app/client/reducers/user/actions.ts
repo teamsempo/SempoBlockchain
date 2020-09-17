@@ -16,6 +16,8 @@ import {
 import { createAction, ActionsUnion } from "../../reduxUtils";
 
 export const UserListAction = {
+  replaceUserList: (users: UserByIDs) =>
+    createAction(UserListActionTypes.REPLACE_USER_LIST, users),
   updateUserList: (users: UserByIDs) =>
     createAction(UserListActionTypes.UPDATE_USER_LIST, users),
   deepUpdateUserList: (users: UserByIDs) =>

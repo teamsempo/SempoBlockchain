@@ -96,6 +96,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self._transfer_amount_wei = val * int(1e16)
 
     @hybrid_property
+    def rounded_transfer_amount(self):
+        return (self._transfer_amount_wei or 0) / int(1e18)
+
+    @hybrid_property
     def public_transfer_type(self):
         if self.transfer_type == TransferTypeEnum.PAYMENT:
             if self.transfer_subtype == TransferSubTypeEnum.STANDARD or None:

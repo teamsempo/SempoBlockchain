@@ -21,7 +21,7 @@ import InputField from "../form/InputField";
 import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
-import { TransferAccountTypes } from "../transferAccount/types";
+import { Organisation } from "../../reducers/organisation/types";
 import QrReadingModal from "../qrReadingModal";
 import { replaceUnderscores } from "../../utils";
 
@@ -37,7 +37,7 @@ export interface IEditUser {
   usageOtherSpecific?: string;
   oneTimeCode: number;
   failedPinAttempts: number;
-  accountType: TransferAccountTypes;
+  accountTypes: string[];
   [key: string]: any;
 }
 
@@ -50,8 +50,9 @@ interface OuterProps {
 }
 
 interface StateProps {
-  accountType: TransferAccountTypes;
+  accountTypes: string[];
   businessUsageValue?: string;
+  activeOrganisation: Organisation;
 }
 
 type Props = OuterProps & StateProps;
@@ -74,7 +75,7 @@ class EditUserForm extends React.Component<
   InjectedFormProps<IEditUser, Props> & Props
 > {
   _updateForm() {
-    let account_type;
+    let account_types = [];
     let { selectedUser, transferUsages } = this.props;
     let transferUsage = transferUsages.filter(
       t => t.id === selectedUser.business_usage_id
@@ -82,15 +83,8 @@ class EditUserForm extends React.Component<
     let transferUsageName = transferUsage && transferUsage.name;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
 
-    if (selectedUser.is_beneficiary) {
-      account_type = TransferAccountTypes.USER;
-    } else if (selectedUser.is_vendor) {
-      account_type = TransferAccountTypes.VENDOR;
-    } else if (selectedUser.is_tokenagent) {
-      account_type = TransferAccountTypes.TOKENAGENT;
-    } else if (selectedUser.is_groupaccount) {
-      account_type = TransferAccountTypes.GROUPACCOUNT;
-    }
+    account_types = Object.values(selectedUser.roles || []);
+    account_types = account_types.map((role: any) => role);
 
     let custom_attr_keys = customAttributes && Object.keys(customAttributes);
     let attr_dict = {};
@@ -105,7 +99,7 @@ class EditUserForm extends React.Component<
       publicSerialNumber: selectedUser.public_serial_number,
       phone: selectedUser.phone,
       location: selectedUser.location,
-      accountType: account_type,
+      accountTypes: account_types,
       oneTimeCode: selectedUser.one_time_code,
       failedPinAttempts: selectedUser.failed_pin_attempts,
       businessUsage: transferUsageName,
@@ -147,13 +141,14 @@ class EditUserForm extends React.Component<
       selectedUser,
       transferUsages,
       businessUsageValue,
-      users
+      users,
+      accountTypes
     } = this.props;
     let transferUsage = transferUsages.filter(
       t => t.id === selectedUser.business_usage_id
     )[0];
 
-    let accountTypes = Object.keys(TransferAccountTypes);
+    let validRoles = this.props.activeOrganisation.valid_roles;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
     let businessUsageName = transferUsage && transferUsage.name;
 
@@ -280,15 +275,14 @@ class EditUserForm extends React.Component<
                 <SubRow>
                   <InputField name="location" label="Location" />
                 </SubRow>
-                <SubRow>
-                  <SelectField
-                    name="accountType"
-                    label="Account Type"
-                    options={accountTypes}
-                    hideNoneOption={true}
-                    isLowercase={false}
-                  />
-                </SubRow>
+                <InputField
+                  {...accountTypes}
+                  name="accountTypes"
+                  label={"Account Types"}
+                  isMultipleChoice={true}
+                  options={validRoles}
+                  style={{ minWidth: "200px" }}
+                />
               </Row>
               <Row>
                 {selectedUser.one_time_code !== "" ? (
@@ -352,7 +346,7 @@ class EditUserForm extends React.Component<
                       height: "25px"
                     }}
                     isLoading={users.deleteStatus.isRequesting}
-                    buttonText="Delete User"
+                    buttonText="Delete Participant"
                   />
                 </SubRow>
               </Row>
@@ -365,7 +359,7 @@ class EditUserForm extends React.Component<
                 <TopRow>
                   <ModuleHeader>OTHER ATTRIBUTES</ModuleHeader>
                 </TopRow>
-                <Row style={{ margin: "0em 1em" }}>
+                <Row style={{ margin: "0em 1em", flexWrap: "wrap" }}>
                   {custom_attribute_list || null}
                 </Row>
                 <Row style={{ margin: "0em 1em" }}>
@@ -392,8 +386,10 @@ export default connect(
   (state: ReduxState): StateProps => {
     const selector = formValueSelector("editUser");
     return {
-      accountType: selector(state, "accountType"),
-      businessUsageValue: selector(state, "businessUsage")
+      accountTypes: selector(state, "accountTypes"),
+      businessUsageValue: selector(state, "businessUsage"),
+      // @ts-ignore
+      activeOrganisation: state.organisations.byId[state.login.organisationId]
     };
   }
 )(EditUserFormReduxForm);

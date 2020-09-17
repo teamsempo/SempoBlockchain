@@ -20,11 +20,10 @@ from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.blockchain_address import BlockchainAddress
 from server.schemas import user_schema
-from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES
+from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES, ASSIGNABLE_TIERS
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app
 from server.utils.phone import send_message
-from server.utils import credit_transfer as CreditTransferUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.internationalization import i18n_for
@@ -110,9 +109,9 @@ def find_user_from_public_identifier(*public_identifiers):
 def update_transfer_account_user(user,
                                  first_name=None, last_name=None, preferred_language=None,
                                  phone=None, email=None, public_serial_number=None,
-                                 location=None, lat=None, lng=None,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
+                                 roles=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
@@ -136,13 +135,6 @@ def update_transfer_account_user(user,
     else:
         transfer_card = None
 
-    if location:
-        user.location = location
-    if lat:
-        user.lat = lat
-    if lng:
-        user.lng = lng
-
     if default_organisation_id:
         user.default_organisation_id = default_organisation_id
 
@@ -159,23 +151,27 @@ def update_transfer_account_user(user,
     user.remove_all_held_roles()
     flag_modified(user, '_held_roles')
 
-    if not is_vendor:
-        vendor_tier = None
-    elif existing_transfer_account:
-        vendor_tier = 'vendor'
+    if roles:
+        for role in roles:
+            user.set_held_role(role[0], role[1])
     else:
-        vendor_tier = 'supervendor'
+        if not is_vendor:
+            vendor_tier = None
+        elif existing_transfer_account:
+            vendor_tier = 'vendor'
+        else:
+            vendor_tier = 'supervendor'
 
-    user.set_held_role('VENDOR', vendor_tier)
+        user.set_held_role('VENDOR', vendor_tier)
 
-    if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'token_agent')
+        if is_tokenagent:
+            user.set_held_role('TOKEN_AGENT', 'token_agent')
 
-    if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'group_account')
+        if is_groupaccount:
+            user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
-    if is_beneficiary:
-        user.set_held_role('BENEFICIARY', 'beneficiary')
+        if is_beneficiary:
+            user.set_held_role('BENEFICIARY', 'beneficiary')
 
     return user
 
@@ -186,10 +182,10 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  token=None,
                                  blockchain_address=None,
                                  transfer_account_name=None,
-                                 lat=None, lng=None,
                                  use_precreated_pin=False,
                                  use_last_4_digits_of_id_as_initial_pin=False,
                                  existing_transfer_account=None,
+                                 roles=None,
                                  is_beneficiary=False,
                                  is_vendor=False,
                                  is_tokenagent=False,
@@ -197,9 +193,9 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  is_self_sign_up=False,
                                  business_usage=None,
                                  initial_disbursement=None):
+
     user = User(first_name=first_name,
                 last_name=last_name,
-                lat=lat, lng=lng,
                 preferred_language=preferred_language,
                 blockchain_address=blockchain_address,
                 phone=phone,
@@ -226,23 +222,27 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
 
     user.set_pin(precreated_pin, is_activated)
 
-    if not is_vendor:
-        vendor_tier = None
-    elif existing_transfer_account:
-        vendor_tier = 'vendor'
+    if roles:
+        for role in roles:
+            user.set_held_role(role[0], role[1])
     else:
-        vendor_tier = 'supervendor'
+        if not is_vendor:
+            vendor_tier = None
+        elif existing_transfer_account:
+            vendor_tier = 'vendor'
+        else:
+            vendor_tier = 'supervendor'
 
-    user.set_held_role('VENDOR', vendor_tier)
+        user.set_held_role('VENDOR', vendor_tier)
 
-    if is_tokenagent:
-        user.set_held_role('TOKEN_AGENT', 'token_agent')
+        if is_tokenagent:
+            user.set_held_role('TOKEN_AGENT', 'token_agent')
 
-    if is_groupaccount:
-        user.set_held_role('GROUP_ACCOUNT', 'group_account')
+        if is_groupaccount:
+            user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
-    if is_beneficiary:
-        user.set_held_role('BENEFICIARY', 'beneficiary')
+        if is_beneficiary:
+            user.set_held_role('BENEFICIARY', 'beneficiary')
 
     if not organisation:
         organisation = Organisation.master_organisation()
@@ -302,16 +302,6 @@ def save_device_info(device_info, user):
         db.session.add(device)
 
         return device
-
-
-def extract_kobo_custom_attributes(post_data):
-    custom_attributes = {}
-    for key in post_data.keys():
-        if key[0] != '_':
-            if key not in KOBO_META_ATTRIBUTES and key not in DEFAULT_ATTRIBUTES:
-                custom_attributes[key] = post_data[key]
-    post_data['custom_attributes'] = custom_attributes
-    return post_data
 
 
 def set_custom_attributes(attribute_dict, user):
@@ -377,6 +367,34 @@ def set_attachments(attribute_dict, user, custom_attributes):
     return custom_attributes
 
 
+def set_location_conditionally(user, location, gps_location):
+
+    if gps_location:
+        try:
+            gps = gps_location.split(' ')
+            lat = float(gps[0])
+            lng = float(gps[1])
+        except (SyntaxError, IndexError, ValueError):
+            lat = None
+            lng = None
+
+    else:
+        lat = None
+        lng = None
+
+    # Set the location, only updating the latlng if it hasn't been explicitly provided
+    if lat and lng:
+        user.lat = lat
+        user.lng = lng
+        if location:
+            user.location = location
+
+    else:
+        if location:
+            user.location = location
+            user.attempt_update_gps_location()
+
+
 def send_one_time_code(phone, user):
     try:
         send_phone_verification_message(
@@ -392,7 +410,7 @@ def proccess_create_or_modify_user_request(
         organisation=None,
         allow_existing_user_modify=False,
         is_self_sign_up=False,
-        modify_only=False,
+        modify_only=False
 ):
     """
     Takes a create or modify user request and determines the response. Normally what's in the top level API function,
@@ -402,8 +420,9 @@ def proccess_create_or_modify_user_request(
 
     :param attribute_dict: attributes that can be supplied by the request maker
     :param organisation:  what organisation the request maker belongs to. The created user is bound to the same org
-    :param allow_existing_user_modify: whether to return and error when the user already exists for the supplied IDs
+    :param allow_existing_user_modify: whether to return an error when the user already exists for the supplied IDs
     :param is_self_sign_up: does the request come from the register api?
+    :param modify_only: whether to allow the creation of a  new user
     :return: An http response
     """
 
@@ -414,6 +433,8 @@ def proccess_create_or_modify_user_request(
 
     email = attribute_dict.get('email')
     phone = attribute_dict.get('phone')
+
+    account_types = attribute_dict.get('account_types', [])
 
     referred_by = attribute_dict.get('referred_by')
 
@@ -441,16 +462,9 @@ def proccess_create_or_modify_user_request(
                             or attribute_dict.get('payment_card_barcode'))
 
     location = attribute_dict.get('location')  # address location
-    geo_location = attribute_dict.get('geo_location')  # geo location as str of lat, lng
 
-    if geo_location:
-        geo = geo_location.split(' ')
-        lat = geo[0]
-        lng = geo[1]
-    else:
-        # TODO: Work out how this passed tests when this wasn't definied properly!?!
-        lat = None
-        lng = None
+    # Yes, we know "GPS" refers to a technology, but "gps_location" is less ambiguous for end users than "geo_location"
+    gps_location = attribute_dict.get('gps_location')  # geo location as str of lat, lng
 
     use_precreated_pin = attribute_dict.get('use_precreated_pin')
     use_last_4_digits_of_id_as_initial_pin = attribute_dict.get(
@@ -472,6 +486,23 @@ def proccess_create_or_modify_user_request(
     primary_user_pin = attribute_dict.get('primary_user_pin')
 
     initial_disbursement = attribute_dict.get('initial_disbursement', None)
+
+    roles_to_set = []
+    for at in account_types:
+        if at not in g.active_organisation.valid_roles:
+            raise Exception(f'{at} not a valid role for this organisation. Please choose one of the following: {g.active_organisation.valid_roles}')
+        roles_to_set.append((ASSIGNABLE_TIERS[at], at))
+
+    is_vendor = attribute_dict.get('is_vendor', None)
+    if is_vendor is None:
+        is_vendor = 'VENDOR' in account_types or attribute_dict.get('vendor', False)
+
+    is_tokenagent = 'TOKEN_AGENT' in account_types or attribute_dict.get('is_tokenagent', False)
+    is_groupaccount = 'GROUP_ACCOUNT' in account_types or attribute_dict.get('is_groupaccount', False)
+
+    # is_beneficiary defaults to the opposite of is_vendor
+    is_beneficiary = 'BENEFICIARY' in account_types or attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
+
 
     is_vendor = attribute_dict.get('is_vendor', None)
     if is_vendor is None:
@@ -585,16 +616,18 @@ def proccess_create_or_modify_user_request(
                 preferred_language=preferred_language,
                 phone=phone,
                 email=email,
-                location=location,
                 public_serial_number=public_serial_number,
                 use_precreated_pin=use_precreated_pin,
                 existing_transfer_account=existing_transfer_account,
+                roles=roles_to_set,
                 is_beneficiary=is_beneficiary,
                 is_vendor=is_vendor,
                 is_tokenagent=is_tokenagent,
                 is_groupaccount=is_groupaccount,
                 business_usage=business_usage
             )
+
+            set_location_conditionally(user, location, gps_location)
 
             if referred_by_user:
                 user.referred_by.clear()  # otherwise prior referrals will remain...
@@ -625,14 +658,16 @@ def proccess_create_or_modify_user_request(
         organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
-        lat=lat, lng=lng,
         use_precreated_pin=use_precreated_pin,
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
+        roles=roles_to_set,
         is_beneficiary=is_beneficiary, is_vendor=is_vendor,
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
         business_usage=business_usage, initial_disbursement=initial_disbursement)
+
+    set_location_conditionally(user, location, gps_location)
 
     if referred_by_user:
         user.referred_by.append(referred_by_user)
@@ -651,9 +686,6 @@ def proccess_create_or_modify_user_request(
     send_onboarding_sms_messages(user)
     # Location fires an async task that needs to know user ID
     db.session.flush()
-
-    if location:
-        user.location = location
 
     if phone:
         if is_self_sign_up:
