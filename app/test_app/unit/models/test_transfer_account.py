@@ -107,9 +107,11 @@ def test_total_sent_amounts(new_credit_transfer):
 
 def test_total_received_amounts(new_credit_transfer):
     """
-    Test the total sent amounts account for pending/complete state changes appropriately
+    Test the total received amounts account for pending/complete state changes appropriately
+
     """
-    ta = new_credit_transfer.recipient_transfer_accont
+
+    ta = new_credit_transfer.recipient_transfer_account
 
     assert ta.total_received_incl_pending_wei == 10000000000000000000
     assert ta.total_received_complete_only_wei == 0
