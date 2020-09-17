@@ -470,7 +470,7 @@ def test_client():
 
 
 @pytest.fixture(scope='module')
-def init_database():
+def init_database(test_client):
     # Create the database and the database table
 
     with current_app.app_context():
