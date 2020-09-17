@@ -201,16 +201,17 @@ class TransferAccountManager extends React.Component {
       this.props.transferAccount.blockchain_address;
 
     if (is_beneficiary) {
-      accountTypeName = TransferAccountTypes.USER || window.BENEFICIARY_TERM;
+      accountTypeName =
+        TransferAccountTypes.BENEFICIARY || window.BENEFICIARY_TERM;
       icon = "/static/media/user.svg";
     } else if (is_vendor) {
       accountTypeName = TransferAccountTypes.VENDOR;
       icon = "/static/media/store.svg";
     } else if (is_groupaccount) {
-      accountTypeName = TransferAccountTypes.GROUPACCOUNT;
+      accountTypeName = TransferAccountTypes.GROUP_ACCOUNT;
       icon = "/static/media/groupaccount.svg";
     } else if (is_tokenagent) {
-      accountTypeName = TransferAccountTypes.TOKENAGENT;
+      accountTypeName = TransferAccountTypes.TOKEN_AGENT;
       icon = "/static/media/tokenagent.svg";
     }
 

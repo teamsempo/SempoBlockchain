@@ -7,7 +7,6 @@ from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
-from server.constants import GE_FILTER_ATTRIBUTES
 from server.exceptions import SubexchangeNotFound
 
 
@@ -52,6 +51,7 @@ class UserSchema(SchemaBase):
     is_activated            = fields.Boolean()
     is_disabled             = fields.Boolean()
 
+    roles                   = fields.Dict(keys=fields.Str(), values=fields.Str())
     is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_tokenagent           = fields.Boolean(attribute='has_token_agent_role')
@@ -79,9 +79,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
-            # todo: is there a reason only GE attributes are returned??
-            if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
-                parsed_dict[attribute.name] = attribute.value.strip('"')
+            parsed_dict[attribute.name] = attribute.value.strip('"')
 
         return parsed_dict
 
@@ -392,15 +390,17 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
+    valid_roles = fields.Raw()
+
     require_transfer_card = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
     country_code = fields.Function(lambda obj: str(obj.country_code))
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
-    users               = fields.Nested('server.schemas.UserSchema', many=True)
-    transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
-    credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
+    #users               = fields.Nested('server.schemas.UserSchema', many=True)
+    #transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
+    #credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
 
 class TransferUsageSchema(Schema):
@@ -416,6 +416,11 @@ class SynchronizationFilterSchema(Schema):
     filter_type                 = fields.Str()
     created                     = fields.DateTime(dump_only=True)
     updated                     = fields.DateTime(dump_only=True)
+
+class AttributeMapSchema(Schema):
+    input_name                  = fields.Str()
+    output_name                 = fields.Str()
+
 
 user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
@@ -485,6 +490,10 @@ kyc_application_state_schema = KycApplicationSchema(
 me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
+
+attribute_map_schema = AttributeMapSchema()
+attribute_maps_schema = AttributeMapSchema(many=True)
+
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)

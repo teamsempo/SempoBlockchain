@@ -364,4 +364,4 @@ def test_get_summed_metrics(
                     sorted_returned_stats = ts_sort(returned_stats[do]['timeseries'][timeseries_category])
                     sorted_desired_stats = ts_sort(desired_output[do]['timeseries'][timeseries_category])
                     for idx in range(len(returned_stats[do]['timeseries'][timeseries_category])):
-                        assert returned_stats[do]['timeseries'][timeseries_category][idx]['value'] == desired_output[do]['timeseries'][timeseries_category][idx]['value']
+                        assert sorted_returned_stats[idx]['value'] == sorted_desired_stats[idx]['value']
