@@ -249,6 +249,12 @@ class MeCreditTransferAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 400
 
+        if my_transfer_account not in g.user.transfer_accounts:
+            response_object = {
+                'message': 'Transfer account provided does not belong to user',
+            }
+            return make_response(jsonify(response_object)), 401
+
         if is_sending:
             send_user = g.user
             send_transfer_account = my_transfer_account
