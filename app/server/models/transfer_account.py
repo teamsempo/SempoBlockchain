@@ -105,6 +105,10 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         return float_wallet
 
     @property
+    def unrounded_balance(self):
+        return Decimal(self._balance_wei or 0) / Decimal(1e16)
+
+    @property
     def balance(self):
         # division/multipication by int(1e16) occurs  because
         # the db stores amounts in integer WEI: 1 BASE-UNIT (ETH/USD/ETC) * 10^18
@@ -223,7 +227,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
             # if initial_disbursement is still none, then we don't want to create a transfer.
             return None
 
-        if initial_disbursement == active_org.default_disbursement:
+        if initial_disbursement <= active_org.default_disbursement:
             auto_resolve = True
 
         user_id = get_authorising_user_id()

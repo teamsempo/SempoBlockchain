@@ -139,7 +139,8 @@ def make_blockchain_transfer(transfer_amount,
                              require_sufficient_balance=False,
                              automatically_resolve_complete=True,
                              uuid=None,
-                             existing_blockchain_txn=False
+                             existing_blockchain_txn=False,
+                             transfer_type=TransferTypeEnum.PAYMENT
                              ):
     send_address_obj = create_address_object_if_required(send_address)
     receive_address_obj = create_address_object_if_required(receive_address)
@@ -169,7 +170,7 @@ def make_blockchain_transfer(transfer_amount,
     transfer.sender_blockchain_address = send_address_obj
     transfer.recipient_blockchain_address = receive_address_obj
 
-    transfer.transfer_type = TransferTypeEnum.PAYMENT
+    transfer.transfer_type = transfer_type
 
     if uuid:
         transfer.uuid = uuid
@@ -195,7 +196,9 @@ def make_payment_transfer(transfer_amount,
                           uuid=None,
                           transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
                           is_ghost_transfer=False,
-                          queue='high-priority'):
+                          queue='high-priority',
+                          transfer_type=TransferTypeEnum.PAYMENT
+                          ):
     """
     This is used for internal transfers between Sempo wallets.
     :param transfer_amount:
@@ -240,7 +243,7 @@ def make_payment_transfer(transfer_amount,
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
-                              transfer_type=TransferTypeEnum.PAYMENT,
+                              transfer_type=transfer_type,
                               transfer_subtype=transfer_subtype,
                               transfer_mode=transfer_mode,
                               is_ghost_transfer=is_ghost_transfer)

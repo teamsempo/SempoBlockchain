@@ -1,5 +1,6 @@
 import datetime
 from typing import List
+from decimal import Decimal
 
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app, g
@@ -210,7 +211,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         return relevant_transfer_limits
 
     def check_sender_has_sufficient_balance(self):
-        return self.sender_user and self.sender_transfer_account.balance - self.transfer_amount >= 0
+        return self.sender_user and self.sender_transfer_account.unrounded_balance - Decimal(self.transfer_amount) >= 0
 
     def check_sender_is_approved(self):
         return self.sender_user and self.sender_transfer_account.is_approved
