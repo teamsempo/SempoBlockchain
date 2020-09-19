@@ -3,6 +3,7 @@ from flask.views import MethodView
 from flask import g
 
 from server.models.transfer_account import TransferAccount, TransferAccountType
+from server.models.credit_transfer import CreditTransfer
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.transfer_enums import TransferModeEnum
 from server.utils.auth import requires_auth
@@ -11,6 +12,7 @@ from server import db
 import json
 import csv
 import io
+import codecs
 from decimal import Decimal
 
 vendor_payout = Blueprint('vendor_payout', __name__)
@@ -109,12 +111,29 @@ class GetVendorPayoutAPI(MethodView):
 class ProcessVendorPayout(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
-        f = request.files['file']
-        csv_file = f.read()
-        a = csv.DictReader(csv_file.splitlines(), skipinitialspace=True)
-        print(a)  
-        for line in a:
-            print(a)
+        flask_file = request.files['file']
+        if not flask_file:
+            raise Exception('Please provide a CSV file')
+
+        data = []
+        stream = codecs.iterdecode(flask_file.stream, 'utf-8')
+        reader = csv.DictReader(stream)
+
+        for line in reader:
+            vendor = db.session.query(TransferAccount).filter(TransferAccount.id == line['ID']).first()
+            if not vendor.is_vendor:
+                raise Exception(f'{vendor} is not a vendor!')
+            transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == line['Transaction ID']).first()
+            if not transfer:
+                raise Exception(f'Tranfer with ID {line["Transaction ID"]} not found!')
+            if float(transfer.transfer_amount) != float(line["Amount Due Today"]):
+                raise Exception(f'Invalid transfer amount!')
+        #f = request.files['file']
+        #csv_file = f.read()
+        #a = csv.DictReader(csv_file.splitlines(), skipinitialspace=True)
+        #print(a)  
+        #for line in a:
+        #    print(a)
         return "ayy"
 
 # Semi-counter intuitive, but something which "gets" is posting because of the side effects
