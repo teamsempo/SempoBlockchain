@@ -39,7 +39,7 @@ CREATE_USER_SETTINGS = [
 
 DEFAULT_ATTRIBUTES = ['email', 'phone', 'blockchain_address', 'public_serial_number',
                       'custom_attributes',
-                      'location', 'geo_location',
+                      'location', 'gps_location',
                       'use_precreated_pin',
                       'transfer_account_name', 'primary_user_identifier',
                       'first_name', 'last_name', 'preferred_language',
