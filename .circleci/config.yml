@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - fix-db-issue
+                - live-feed-extension
           requires:
             - build
             #- test:backend

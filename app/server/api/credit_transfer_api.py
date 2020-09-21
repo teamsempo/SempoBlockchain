@@ -453,7 +453,10 @@ class InternalCreditTransferAPI(MethodView):
         else:
             token = Token.query.filter_by(address=contract_address).first()
             maybe_sender_transfer_account = TransferAccount.query.execution_options(show_all=True).filter_by(blockchain_address=sender_blockchain_address).first()
+            maybe_sender_user = maybe_sender_transfer_account.users[0] if maybe_sender_transfer_account and len(maybe_sender_transfer_account.users) == 1 else None
+
             maybe_recipient_transfer_account = TransferAccount.query.execution_options(show_all=True).filter_by(blockchain_address=recipient_blockchain_address).first()
+            maybe_recipient_user = maybe_recipient_transfer_account.users[0] if maybe_recipient_transfer_account and len(maybe_recipient_transfer_account.users) == 1 else None
 
             # Case 2: Two non-sempo users making a trade on our token. We don't have to track this!
             if not maybe_recipient_transfer_account and not maybe_sender_transfer_account:
@@ -482,6 +485,8 @@ class InternalCreditTransferAPI(MethodView):
                     sender_transfer_account=send_transfer_account,
                     recipient_transfer_account=receive_transfer_account,
                     transfer_type=TransferTypeEnum.PAYMENT,
+                    sender_user=maybe_sender_user,
+                    recipient_user=maybe_recipient_user,
                 )
 
                 transfer.resolve_as_complete_with_existing_blockchain_transaction(

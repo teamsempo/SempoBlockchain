@@ -24,8 +24,6 @@ interface OuterProps {
 }
 
 const Page: React.FunctionComponent<OuterProps> = props => {
-  const [collapsed, setCollapsed] = React.useState(false);
-
   const {
     footer = true,
     isAntDesign = false,
@@ -36,8 +34,18 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     component: Component = React.Component
   } = props;
 
+  const [collapsed, setCollapsed] = React.useState(false);
+
+  React.useEffect(() => {
+    let sideBarCollapsedString = localStorage.getItem("sideBarCollapsed");
+    if (sideBarCollapsedString) {
+      setCollapsed(localStorage.getItem("sideBarCollapsed") === "true");
+    }
+  }, []);
+
   let onCollapse = (collapsed: boolean) => {
     setCollapsed(collapsed);
+    localStorage.setItem("sideBarCollapsed", collapsed.toString());
   };
 
   return (
