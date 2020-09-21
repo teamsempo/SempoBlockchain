@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import or_, not_
 import json
+from uuid import uuid4
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
@@ -224,6 +225,8 @@ class CreditTransferAPI(MethodView):
 
         if recipient_transfer_accounts_ids:
             is_bulk = True
+            batch_uuid = str(uuid4())
+
 
             if transfer_type not in ["DISBURSEMENT", "BALANCE"]:
                 response_object = {
@@ -252,6 +255,7 @@ class CreditTransferAPI(MethodView):
                         response_list.append({'status': 400, 'message': str(e)})
 
         else:
+            batch_uuid = None
             try:
                 individual_sender_user = find_user_with_transfer_account_from_identifiers(
                     sender_user_id,
@@ -301,7 +305,8 @@ class CreditTransferAPI(MethodView):
                         transfer_mode=TransferModeEnum.WEB,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        queue=queue,
+                        batch_uuid=batch_uuid
                     )
 
                 elif transfer_type == 'RECLAMATION':
@@ -315,6 +320,7 @@ class CreditTransferAPI(MethodView):
                         require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve,
                         queue=queue,
+                        batch_uuid=batch_uuid
                     )
 
                 elif transfer_type == 'DISBURSEMENT':
@@ -327,7 +333,8 @@ class CreditTransferAPI(MethodView):
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                         transfer_mode=TransferModeEnum.WEB,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        queue=queue,
+                        batch_uuid=batch_uuid
                     )
 
                 elif transfer_type == 'BALANCE':
