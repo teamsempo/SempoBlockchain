@@ -62,7 +62,6 @@ class GetVendorPayoutAPI(MethodView):
         ])
 
         for v in vendors:
-            v.is_approved = True
             float_account = v.token.float_account
             transfer = make_payment_transfer(
                 Decimal(v._balance_wei or 0) / Decimal(1e16),
