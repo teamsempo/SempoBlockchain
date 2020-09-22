@@ -35,7 +35,7 @@ class Token(ModelBase):
                                          foreign_keys='TransferAccount.token_id')
 
     float_account_id = db.Column(db.Integer, db.ForeignKey(TransferAccount.id, name='float_account_relationship'))
-    float_account = db.relationship(TransferAccount, foreign_keys=[float_account_id], uselist=False)
+    float_account = db.relationship(TransferAccount, foreign_keys=[float_account_id], uselist=False, post_update=True)
 
     credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
                                         foreign_keys='CreditTransfer.token_id')

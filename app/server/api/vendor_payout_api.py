@@ -27,7 +27,7 @@ class GetVendorPayoutAPI(MethodView):
         if not isinstance(account_ids, list):
             raise Exception('accounts parameter expects a list')
         if account_ids:
-            vendors = db.session.query(TransferAccount).filter(TransferAccount.id.in_(account_ids)).all()
+            vendors = db.session.query(TransferAccount).filter(TransferAccount.account_type != TransferAccountType.FLOAT).filter(TransferAccount.id.in_(account_ids)).all()
             for vendor in vendors:
                 if not vendor.is_vendor:
                     raise Exception(f'Transfer account with id {vendor.id} not a vendor account. Please only IDs of vendor accounts')
@@ -37,14 +37,7 @@ class GetVendorPayoutAPI(MethodView):
             if list_difference:
                 raise Exception(f'Accounts {list_difference} were requested but do not exist')
         else:
-            vendors = db.session.query(TransferAccount).filter(TransferAccount.is_vendor == True).all()
-
-        # Get float wallet
-        float_wallet = TransferAccount.query.execution_options(show_all=True).filter(
-            TransferAccount.account_type == TransferAccountType.FLOAT
-        ).first()
-        if not float_wallet:
-            raise Exception(f'Float wallet does not exist')
+            vendors = db.session.query(TransferAccount).filter(TransferAccount.is_vendor == True).filter(TransferAccount.account_type != TransferAccountType.FLOAT).all()
 
         output = io.StringIO()
         writer = csv.writer(output)
@@ -72,18 +65,20 @@ class GetVendorPayoutAPI(MethodView):
             # Sending from the transfer account back to itself. This is just abecause the float account
             # does not have an attached token and I'm not sure what we're going to do with that yet
             v.is_approved = True
+            float_account = v.token.float_account
             transfer = make_payment_transfer(
                 Decimal(v._balance_wei or 0) / Decimal(1e16),
-                token=float_wallet.token,
+                token=v.token,
                 send_user=v.primary_user,
                 send_transfer_account=v,
-                receive_transfer_account=v,
+                receive_transfer_account=float_account,
                 transfer_mode=TransferModeEnum.INTERNAL,
                 automatically_resolve_complete=False,
                 require_sender_approved=False,
                 require_recipient_approved=False
             )
-
+            db.session.flush()
+            
             writer.writerow([
                 v.id,
                 v.primary_user.first_name,
@@ -100,11 +95,9 @@ class GetVendorPayoutAPI(MethodView):
                 '',
                 '',
             ])
-
         # Encode the CSV such that it can be sent as a file
         bytes_output = io.BytesIO()
         bytes_output.write(output.getvalue().encode('utf-8'))
-        # seeking was necessary. Python 3.5.2, Flask 0.12.2
         bytes_output.seek(0)
         return send_file(bytes_output, as_attachment=True, attachment_filename='vendor_payout.csv', mimetype='text/csv')
 
@@ -115,10 +108,10 @@ class ProcessVendorPayout(MethodView):
         if not flask_file:
             raise Exception('Please provide a CSV file')
 
-        data = []
         stream = codecs.iterdecode(flask_file.stream, 'utf-8')
         reader = csv.DictReader(stream)
 
+        transfers = []
         for line in reader:
             vendor = db.session.query(TransferAccount).filter(TransferAccount.id == line['ID']).first()
             if not vendor.is_vendor:
@@ -128,13 +121,42 @@ class ProcessVendorPayout(MethodView):
                 raise Exception(f'Tranfer with ID {line["Transaction ID"]} not found!')
             if float(transfer.transfer_amount) != float(line["Amount Due Today"]):
                 raise Exception(f'Invalid transfer amount!')
-        #f = request.files['file']
-        #csv_file = f.read()
-        #a = csv.DictReader(csv_file.splitlines(), skipinitialspace=True)
-        #print(a)  
-        #for line in a:
-        #    print(a)
-        return "ayy"
+            if line['Payment Has Been Made'] == 'TRUE' and line['Bank Payment Date']:
+                try:
+                    transfer.resolve_as_complete_and_trigger_blockchain()
+                except:
+                    pass
+            elif line['Payment Has Been Made'] == 'FALSE':
+                transfer.resolve_as_rejected()
+            transfers.append(transfer)
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow([
+            'ID', 
+            'First Name', 
+            'Last Name', 
+            'Transfer Created',
+            'Transfer Type',
+            'Transfer Amount',
+            'Transfer Status',
+        ])
+        for t in transfers:
+            writer.writerow([
+                t.sender_transfer_account.id,
+                t.sender_transfer_account.primary_user.first_name,
+                t.sender_transfer_account.primary_user.last_name,
+                t.created,
+                t.transfer_type,
+                t.transfer_amount,
+                t.transfer_status
+            ])
+        bytes_output = io.BytesIO()
+        bytes_output.write(output.getvalue().encode('utf-8'))
+        bytes_output.seek(0)
+        return send_file(bytes_output, as_attachment=True, attachment_filename='vendor_payout.csv', mimetype='text/csv')
+
 
 # Semi-counter intuitive, but something which "gets" is posting because of the side effects
 vendor_payout.add_url_rule(
