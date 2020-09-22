@@ -22,7 +22,9 @@ class GetVendorPayoutAPI(MethodView):
     def post(self):
         # Process post data
         post_data = request.get_json()
-        account_ids = post_data.get('accounts', [])
+        account_ids = []
+        if post_data:
+            account_ids = post_data.get('accounts', [])
 
         if not isinstance(account_ids, list):
             raise Exception('accounts parameter expects a list')
@@ -60,10 +62,6 @@ class GetVendorPayoutAPI(MethodView):
         ])
 
         for v in vendors:
-            # Cash out vendors to float wallet
-            # NOTE: MAJOR WARNING! DONT MERGE THIS YET!
-            # Sending from the transfer account back to itself. This is just abecause the float account
-            # does not have an attached token and I'm not sure what we're going to do with that yet
             v.is_approved = True
             float_account = v.token.float_account
             transfer = make_payment_transfer(
