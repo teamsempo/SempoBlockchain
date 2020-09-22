@@ -363,23 +363,23 @@ def create_master_organisation(app, reserve_token):
 
     print_section_conclusion('Done creating master organisation')
 
-def create_float_wallet(app):
-    print_section_title('Creating/Updating Float Wallet')
-    float_wallet = TransferAccount.query.execution_options(show_all=True).filter(
-        TransferAccount.account_type == TransferAccountType.FLOAT
-    ).first()
-
-    if float_wallet is None:
-        print('Creating Float Wallet')
-        float_wallet = TransferAccount(
-            private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
-            account_type=TransferAccountType.FLOAT,
-            is_approved=True
-        )
-        db.session.add(float_wallet)
-
-        db.session.commit()
-
+# Creates float transfer accounts for any transfer account that doesn't have one already
+def create_float_transfer_account(app):
+    print_section_title('Creating/Updating Float Transfer Accounts')
+    tokens = db.session.query(Token)
+    for t in tokens:
+        if t.float_account_id is None:
+            print(f'Creating Float Account for {t.name}')
+            float_transfer_account = TransferAccount(
+                private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
+                account_type=TransferAccountType.FLOAT,
+                token_id=t.id,
+                is_approved=True
+            )
+            db.session.add(float_transfer_account)
+            db.session.flush()
+            t.float_account = float_transfer_account
+            db.session.commit()
     print_section_conclusion('Done Creating/Updating Float Wallet')
 
 # from app folder: python ./migations/seed.py
@@ -394,6 +394,6 @@ if __name__ == '__main__':
     reserve_token = create_reserve_token(current_app)
     create_master_organisation(current_app, reserve_token)
 
-    create_float_wallet(current_app)
+    create_float_transfer_account(current_app)
 
     ctx.pop()

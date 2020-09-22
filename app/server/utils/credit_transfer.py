@@ -234,7 +234,7 @@ def make_payment_transfer(transfer_amount,
         receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
 
     if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
-        send_transfer_account = receive_transfer_account.get_float_transfer_account()
+        send_transfer_account = receive_transfer_account.token.float_account
 
     transfer = CreditTransfer(transfer_amount,
                               token=token,

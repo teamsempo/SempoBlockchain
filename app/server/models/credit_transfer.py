@@ -277,10 +277,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             db.session.add(self.recipient_transfer_account)
 
         if transfer_type is TransferTypeEnum.DEPOSIT:
-            self.sender_transfer_account = self.recipient_transfer_account.get_float_transfer_account()
+            self.sender_transfer_account = self.recipient_transfer_account.token.float_account
 
         if transfer_type is TransferTypeEnum.WITHDRAWAL:
-            self.recipient_transfer_account = self.sender_transfer_account.get_float_transfer_account()
+            self.recipient_transfer_account = self.sender_transfer_account.token.float_account
 
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:
             raise Exception("Tokens do not match")
