@@ -373,7 +373,7 @@ def create_float_transfer_account(app):
             float_transfer_account = TransferAccount(
                 private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
                 account_type=TransferAccountType.FLOAT,
-                token_id=t.id,
+                token=t,
                 is_approved=True
             )
             db.session.add(float_transfer_account)

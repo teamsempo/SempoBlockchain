@@ -60,7 +60,6 @@ class GetVendorPayoutAPI(MethodView):
             'Payment Has Been Made',
             'Bank Payment Date',
         ])
-
         for v in vendors:
             float_account = v.token.float_account
             transfer = make_payment_transfer(
@@ -101,13 +100,18 @@ class GetVendorPayoutAPI(MethodView):
 class ProcessVendorPayout(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
-        flask_file = request.files['file']
-        if not flask_file:
-            raise Exception('Please provide a CSV file')
-
-        stream = codecs.iterdecode(flask_file.stream, 'utf-8')
-        reader = csv.DictReader(stream)
-
+        # Handle a file upload, or CSV in JSON
+        if request.files:
+            flask_file = request.files['file']
+            stream = codecs.iterdecode(flask_file.stream, 'utf-8')
+            reader = csv.DictReader(stream)
+        else:
+            post_data = request.get_json()
+            if not post_data:
+                raise Exception('Please provide a CSV file')
+            csv_data = post_data.get('csv_data', [])
+            f = io.StringIO(csv_data)
+            reader = csv.DictReader(f)
         transfers = []
         for line in reader:
             vendor = db.session.query(TransferAccount).filter(TransferAccount.id == line['ID']).first()
@@ -118,7 +122,7 @@ class ProcessVendorPayout(MethodView):
                 raise Exception(f'Tranfer with ID {line["Transaction ID"]} not found!')
             if float(transfer.transfer_amount) != float(line["Amount Due Today"]):
                 raise Exception(f'Invalid transfer amount!')
-            if line['Payment Has Been Made'] == 'TRUE' and line['Bank Payment Date']:
+            if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
                 try:
                     transfer.resolve_as_complete_and_trigger_blockchain()
                 except:

@@ -89,7 +89,7 @@ class Token(ModelBase):
         float_transfer_account = TransferAccount(
             private_key=config.ETH_FLOAT_PRIVATE_KEY,
             account_type=TransferAccountType.FLOAT,
-            token_id=self.id,
+            token=self,
             is_approved=True
         )
         self.float_account = float_transfer_account
