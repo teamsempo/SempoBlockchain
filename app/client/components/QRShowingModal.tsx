@@ -34,7 +34,8 @@ export default class QRShowingModal extends React.Component<QrProps, QrState> {
           style={{
             margin: "0.2em",
             width: "1.4em",
-            height: "1.4em"
+            height: "1.4em",
+            cursor: "pointer"
           }}
           onClick={() => this.showModal()}
         >
