@@ -295,8 +295,8 @@ class MeExportAPI(MethodView):
             {'header': 'Transfer Amount',   'query_type': 'custom', 'query': 'transfer_amount'},
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
-            {'header': 'Transfer Type',     'query_type': 'db',     'query': 'transfer_type'},
-            {'header': 'Transfer Status',   'query_type': 'db',     'query': 'transfer_status'},
+            {'header': 'Transfer Type', 'query_type': 'enum', 'query': 'transfer_type'},
+            {'header': 'Transfer Status', 'query_type': 'enum', 'query': 'transfer_status'},
             {'header': 'Transfer Use',      'query_type': 'db',     'query': 'transfer_use'},
         ]
 
@@ -347,6 +347,9 @@ class MeExportAPI(MethodView):
                 for jindix, column in enumerate(credit_transfer_columns):
                     if column['query_type'] == 'db':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
+                    elif column['query_type'] == 'enum':
+                        enum = getattr(credit_transfer, column['query'])
+                        cell_contents = "{0}".format(enum.value)
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']) / 100)
                     else:
