@@ -18,7 +18,7 @@ from decimal import Decimal
 vendor_payout = Blueprint('vendor_payout', __name__)
 
 class GetVendorPayoutAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
         # Process post data
         post_data = request.get_json()
@@ -39,7 +39,11 @@ class GetVendorPayoutAPI(MethodView):
             if list_difference:
                 raise Exception(f'Accounts {list_difference} were requested but do not exist')
         else:
-            vendors = db.session.query(TransferAccount).filter(TransferAccount.is_vendor == True).filter(TransferAccount.account_type != TransferAccountType.FLOAT).all()
+            vendors = db.session.query(TransferAccount)\
+                .filter(TransferAccount.is_vendor == True)\
+                .filter(TransferAccount.is_ghost == False)\
+                .filter(TransferAccount.account_type != TransferAccountType.FLOAT)\
+                .all()
 
         output = io.StringIO()
         writer = csv.writer(output)
@@ -98,7 +102,7 @@ class GetVendorPayoutAPI(MethodView):
         return send_file(bytes_output, as_attachment=True, attachment_filename='vendor_payout.csv', mimetype='text/csv')
 
 class ProcessVendorPayout(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
         # Handle a file upload, or CSV in JSON
         if request.files:
