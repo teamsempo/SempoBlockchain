@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - live-feed-extension
+                - quick_login_for_card_sync
           requires:
             - build
             #- test:backend

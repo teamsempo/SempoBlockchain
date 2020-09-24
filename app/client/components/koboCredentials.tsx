@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { generateQueryString, getToken, handleResponse } from "../utils";
+import QRShowingModal from "./QRShowingModal";
 
 export default function KoboCredentials() {
   const [username, setUsername] = useState<string | null>(null);
@@ -34,10 +35,16 @@ export default function KoboCredentials() {
   }
 
   if (username) {
+    let qrData = JSON.stringify({
+      u: username,
+      p: password,
+      d: window.location.hostname
+    });
+
     return (
       <div style={{ margin: "1em" }}>
         <StyledAccountWrapper>
-          <StyledHeader>Kobo Toolbox Credentials</StyledHeader>
+          <StyledHeader>Plugin/Integration Credentials</StyledHeader>
           <StyledContent>
             <b>Username: </b>
             {username}
@@ -46,6 +53,7 @@ export default function KoboCredentials() {
             <b>Password: </b>
             {password}
           </StyledContent>
+          <QRShowingModal data={`auth:${qrData}`} />
         </StyledAccountWrapper>
       </div>
     );
