@@ -239,6 +239,9 @@ class ExportAPI(MethodView):
                     for jindix, column in enumerate(credit_transfer_columns):
                         if column['query_type'] == 'db':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
+                        elif column['query_type'] == 'enum':
+                            enum = getattr(credit_transfer, column['query'])
+                            cell_contents = "{0}".format(enum.value)
                         elif column['query'] == 'transfer_amount':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
                         else:
@@ -390,7 +393,7 @@ class MeExportAPI(MethodView):
                 'file_url': None,
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 404
 
 
 # add Rules for API Endpoints
