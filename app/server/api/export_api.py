@@ -337,7 +337,9 @@ class MeExportAPI(MethodView):
 
         else:
             # default to all credit transfers of transfer_account.id
-            credit_transfer_list = CreditTransfer.query.filter(or_(CreditTransfer.recipient_id == transfer_account.id, CreditTransfer.sender_transfer_account_id == transfer_account.id))
+            credit_transfer_list = CreditTransfer.query.filter(
+                or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))
 
         # loop over all credit transfers, create cells
         if credit_transfer_list is not None:
