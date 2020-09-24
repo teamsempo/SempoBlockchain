@@ -22,7 +22,7 @@ class TransferCardAPI(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
-    @requires_auth
+    @requires_auth(allowed_basic_auth_types=('external',))
     def post(self):
         post_data = request.get_json()
 
