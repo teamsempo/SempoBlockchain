@@ -13,6 +13,7 @@ from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import upload_local_file_to_s3
 from server.utils.date_magic import find_last_period_dates
 from server.utils.amazon_ses import send_export_email
+from server.utils.workbook import save_local_file_and_upload_to_s3
 
 export_blueprint = Blueprint('export', __name__)
 
@@ -361,21 +362,7 @@ class MeExportAPI(MethodView):
                     _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
 
         if credit_transfer_list is not None:
-            # Create local URL + save local + Upload to s3 bucket
-            local_save_directory = os.path.join(current_app.config['BASEDIR'], "tmp/")
-
-            local_save_path = os.path.join(local_save_directory, workbook_filename)
-            wb.save(filename=local_save_path)
-            file_url = upload_local_file_to_s3(local_save_path, workbook_filename)
-
-            if email:
-                send_export_email(file_url, email)
-
-            else:
-                if g.user.email is not None:
-                    send_export_email(file_url, g.user.email)
-
-            os.remove(local_save_path)
+            file_url = save_local_file_and_upload_to_s3(wb, workbook_filename, email)
 
             response_object = {
                 'status': 'success',
