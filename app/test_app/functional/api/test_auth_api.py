@@ -130,6 +130,8 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
 
 @pytest.mark.parametrize("email,password,status_code", [
     ("tristan@withsempo.com", "TestPassword", 200),
+    ("TRISTAN@withsempo.com", "TestPassword", 200),
+    ("TRISTAN@WITHSEMPO.COM", "TestPassword", 200),
     ("tristan@withsempo.com", "IncorrectTestPassword", 401),
     ("tristan+123@withsempo.com", "IncorrectTestPassword", 401),
 ])
@@ -207,24 +209,6 @@ def test_logout_api(test_client, authed_sempo_admin_user):
     assert response.status_code == 200
     assert BlacklistToken.check_blacklist(auth_token) is True
 
-    @pytest.mark.parametrize("email, tier, status_code", [
-        ("test@test.com","admin",201),
-        ("tristan@withsempo.com","admin", 403),
-    ])
-    def test_add_user_to_whitelist(test_client, authed_sempo_admin_user, email, tier, status_code):
-        """
-        GIVEN a Flask application
-        WHEN the '/api/auth/permissions/' api is posted to (POST)
-        THEN check the response
-        """
-
-        auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-        register_response = test_client.post('/api/v1/auth/permissions/',
-                                             headers=dict(Authorization=auth_token, Accept='application/json'),
-                                             data=json.dumps(dict(email=email, tier=tier)),
-                                             content_type='application/json', follow_redirects=True)
-        assert register_response.status_code == status_code
-
 
 @pytest.mark.parametrize("email,status_code", [
     ("admin@acme.org", 201),
@@ -286,6 +270,7 @@ def get_admin_default_org_id(admin_user):
 @pytest.mark.parametrize("creator_tier, email, invitee_tier, organisation_id_selector, response_code", [
     ('admin', 'foo1@acme.com', 'admin', lambda o: 2, 401),
     ('admin', 'foo1@acme.com', 'admin', lambda o: None, 201),
+    ('admin', 'foo1@acme.com', 'superadmin', lambda o: None, 400),
     ('sempoadmin', 'foo@acme.com', 'admin', lambda o: 12332, 404),
     ('sempoadmin',  None, 'admin', get_admin_default_org_id, 400),
     ('sempoadmin', 'foo@acme.com', None, get_admin_default_org_id, 400),
