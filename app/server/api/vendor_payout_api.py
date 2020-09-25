@@ -4,7 +4,7 @@ from flask import g
 
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.credit_transfer import CreditTransfer
-from server.utils.credit_transfer import make_payment_transfer
+from server.utils.credit_transfer import make_withdrawal_transfer
 from server.utils.transfer_enums import TransferModeEnum
 from server.utils.auth import requires_auth
 from server import db
@@ -65,18 +65,16 @@ class VendorPayoutAPI(MethodView):
             'Bank Payment Date',
         ])
         for v in vendors:
-            float_account = v.token.float_account
-            transfer = make_payment_transfer(
+            transfer = make_withdrawal_transfer(
                 Decimal(v._balance_wei or 0) / Decimal(1e16),
                 token=v.token,
                 send_user=v.primary_user,
-                send_transfer_account=v,
-                receive_transfer_account=float_account,
+                sender_transfer_account=v,
                 transfer_mode=TransferModeEnum.INTERNAL,
-                automatically_resolve_complete=False,
                 require_sender_approved=False,
-                require_recipient_approved=False
+                automatically_resolve_complete=False,
             )
+
             db.session.flush()
             
             writer.writerow([

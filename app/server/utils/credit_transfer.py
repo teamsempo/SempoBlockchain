@@ -306,7 +306,8 @@ def make_payment_transfer(
 
 def make_withdrawal_transfer(transfer_amount,
                              token,
-                             send_account,
+                             send_user=None,
+                             sender_transfer_account=None,
                              transfer_mode=None,
                              require_sender_approved=True,
                              require_sufficient_balance=True,
@@ -326,7 +327,7 @@ def make_withdrawal_transfer(transfer_amount,
     """
 
     transfer = CreditTransfer(transfer_amount, token,
-                              sender_user=send_account,
+                              sender_user=send_user, sender_transfer_account=sender_transfer_account,
                               uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL, transfer_mode=transfer_mode)
 
     if require_sender_approved and not transfer.check_sender_is_approved():

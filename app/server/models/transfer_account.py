@@ -248,7 +248,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     def initialise_withdrawal(self, withdrawal_amount, transfer_mode):
         from server.utils.credit_transfer import make_withdrawal_transfer
         withdrawal = make_withdrawal_transfer(withdrawal_amount,
-                                              send_account=self,
+                                              send_user=self,
                                               automatically_resolve_complete=False,
                                               transfer_mode=transfer_mode,
                                               token=self.token)

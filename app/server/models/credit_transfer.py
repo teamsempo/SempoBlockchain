@@ -278,7 +278,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             return
 
         relevant_transfer_limits = self.get_transfer_limits()
-
         for limit in relevant_transfer_limits:
 
             try:
@@ -345,8 +344,14 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.fiat_ramp = fiat_ramp
 
+        if transfer_type is TransferTypeEnum.DEPOSIT:
+            self.sender_transfer_account = self.recipient_transfer_account.token.float_account
+
+        if transfer_type is TransferTypeEnum.WITHDRAWAL:
+            self.recipient_transfer_account = self.sender_transfer_account.token.float_account
+
         try:
-            self.recipient_transfer_account = recipient_transfer_account or self._select_transfer_account(
+            self.recipient_transfer_account = recipient_transfer_account or self.recipient_transfer_account or self._select_transfer_account(
                 self.token,
                 recipient_user
             )
@@ -361,12 +366,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 is_ghost=is_ghost_transfer
             )
             db.session.add(self.recipient_transfer_account)
-
-        if transfer_type is TransferTypeEnum.DEPOSIT:
-            self.sender_transfer_account = self.recipient_transfer_account.token.float_account
-
-        if transfer_type is TransferTypeEnum.WITHDRAWAL:
-            self.recipient_transfer_account = self.sender_transfer_account.token.float_account
 
         if self.sender_transfer_account.token != self.recipient_transfer_account.token:
             raise Exception("Tokens do not match")
