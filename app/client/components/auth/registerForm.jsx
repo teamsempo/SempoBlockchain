@@ -234,7 +234,7 @@ const RegisterForm = function(props) {
         onClick={props.onClick}
         isLoading={props.isRegistering}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="REGISTER"
+        buttonText={<span>REGISTER</span>}
       />
     </div>
   );
