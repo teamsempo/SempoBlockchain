@@ -17,7 +17,7 @@ from decimal import Decimal
 
 vendor_payout = Blueprint('vendor_payout', __name__)
 
-class GetVendorPayoutAPI(MethodView):
+class VendorPayoutAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
         # Process post data
@@ -166,7 +166,7 @@ class ProcessVendorPayout(MethodView):
 # Semi-counter intuitive, but something which "gets" is posting because of the side effects
 vendor_payout.add_url_rule(
     '/get_vendor_payout/',
-    view_func=GetVendorPayoutAPI.as_view('get_vendor_payout'),
+    view_func=VendorPayoutAPI.as_view('get_vendor_payout'),
     methods=['POST']
 )
 
