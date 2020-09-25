@@ -153,9 +153,9 @@ class ProcessVendorPayout(MethodView):
                 t.sender_transfer_account.primary_user.first_name,
                 t.sender_transfer_account.primary_user.last_name,
                 t.created,
-                t.transfer_type,
+                t.transfer_type.value,
                 t.transfer_amount,
-                t.transfer_status
+                t.transfer_status.value
             ])
         bytes_output = io.BytesIO()
         bytes_output.write(output.getvalue().encode('utf-8'))
