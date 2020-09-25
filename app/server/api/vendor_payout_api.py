@@ -4,6 +4,7 @@ from flask import g
 
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.credit_transfer import CreditTransfer
+from server.models.user import User
 from server.utils.credit_transfer import make_withdrawal_transfer
 from server.utils.transfer_enums import TransferModeEnum
 from server.utils.auth import requires_auth
@@ -14,6 +15,7 @@ import csv
 import io
 import codecs
 from decimal import Decimal
+from datetime import datetime, timedelta
 
 vendor_payout = Blueprint('vendor_payout', __name__)
 
@@ -31,7 +33,7 @@ class VendorPayoutAPI(MethodView):
         if account_ids:
             vendors = db.session.query(TransferAccount).filter(TransferAccount.account_type != TransferAccountType.FLOAT).filter(TransferAccount.id.in_(account_ids)).all()
             for vendor in vendors:
-                if not vendor.is_vendor:
+                if not vendor.primary_user.has_vendor_role:
                     raise Exception(f'Transfer account with id {vendor.id} not a vendor account. Please only IDs of vendor accounts')
 
             selected_vendor_ids = [v.id for v in vendors]
@@ -39,28 +41,28 @@ class VendorPayoutAPI(MethodView):
             if list_difference:
                 raise Exception(f'Accounts {list_difference} were requested but do not exist')
         else:
-            vendors = db.session.query(TransferAccount)\
-                .filter(TransferAccount.is_vendor == True)\
-                .filter(TransferAccount.is_ghost == False)\
-                .filter(TransferAccount.account_type != TransferAccountType.FLOAT)\
+            vendor_users = db.session.query(User)\
+                .filter(User.has_vendor_role)\
                 .all()
+            vendors = [v.default_transfer_account for v in vendor_users]
+            vendors = filter(lambda vendor: not vendor.is_ghost, vendors)
 
         output = io.StringIO()
         writer = csv.writer(output)
 
         writer.writerow([
             'ID', 
-            'First Name', 
-            'Last Name', 
-            'Created', 
+            'ContactName', 
             'Current Balance', 
             'Total Sent', 
             'Total Received',
             'Approved', 
             'Beneficiary', 
-            'Vendor', 
+            'Vendor',
+            'InvoiceDate',
+            'DueDate',
             'Transaction ID',
-            'Amount Due Today',
+            'UnitAmount',
             'Payment Has Been Made',
             'Bank Payment Date',
         ])
@@ -79,15 +81,15 @@ class VendorPayoutAPI(MethodView):
             
             writer.writerow([
                 v.id,
-                v.primary_user.first_name,
-                v.primary_user.last_name,
-                v.created,
+                v.primary_user.first_name + '  ' + v.primary_user.last_name,
                 v.balance,
                 v.total_sent,
                 v.total_received,
                 v.is_approved,
-                v.is_beneficiary,
-                v.is_vendor,
+                v.primary_user.has_beneficiary_role,
+                v.primary_user.has_vendor_role,
+                datetime.today().strftime('%Y-%m-%d'),
+                (datetime.today() + timedelta(days=7)).strftime('%Y-%m-%d'),
                 transfer.id,
                 v.balance,
                 '',
@@ -117,12 +119,12 @@ class ProcessVendorPayout(MethodView):
         transfers = []
         for line in reader:
             vendor = db.session.query(TransferAccount).filter(TransferAccount.id == line['ID']).first()
-            if not vendor.is_vendor:
+            if not vendor.primary_user.has_vendor_role:
                 raise Exception(f'{vendor} is not a vendor!')
             transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == line['Transaction ID']).first()
             if not transfer:
                 raise Exception(f'Tranfer with ID {line["Transaction ID"]} not found!')
-            if float(transfer.transfer_amount) != float(line["Amount Due Today"]):
+            if float(transfer.transfer_amount) != float(line["UnitAmount"]):
                 raise Exception(f'Invalid transfer amount!')
             if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
                 try:
