@@ -54,6 +54,7 @@ export class TFAValidator extends React.Component {
   }
 
   onCodeKeyPress(e) {
+    console.log("e", e);
     var otp = e.target.value;
     if (otp.length < 7) {
       this.setState({ otp: otp, errorMessage: "" });
