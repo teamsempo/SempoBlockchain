@@ -227,9 +227,8 @@ workflows:
             branches:
               only:
                 - master
-                - peer-to-peer-fix
           requires:
             - build
-            #- test:backend
-            #- test:worker
-            #- test:frontend
+            - test:backend
+            - test:worker
+            - test:frontend
