@@ -186,7 +186,7 @@ const ResetPasswordForm = function(props) {
         onClick={props.onClick}
         isLoading={props.isRegistering}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="Change Password"
+        buttonText={<span>Change Password</span>}
       />
     </div>
   );

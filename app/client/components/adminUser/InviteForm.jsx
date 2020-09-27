@@ -121,7 +121,7 @@ const InviteForm = function(props) {
         onClick={props.onClick}
         isLoading={props.isLoggingIn}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="Invite"
+        buttonText={<span>Invite</span>}
       />
     </div>
   );

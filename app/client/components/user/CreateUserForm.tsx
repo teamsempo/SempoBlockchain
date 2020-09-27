@@ -236,7 +236,7 @@ class CreateUserForm extends React.Component<
               type="submit"
               isLoading={this.props.users.createStatus.isRequesting}
               buttonStyle={{ display: "flex" }}
-              buttonText="Submit"
+              buttonText={<span>Submit</span>}
             />
           </form>
         </div>

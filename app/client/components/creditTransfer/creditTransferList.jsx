@@ -310,7 +310,7 @@ class CreditTransferList extends React.Component {
                   height: "25px"
                 }}
                 isLoading={this.props.isApproving}
-                buttonText="NEXT"
+                buttonText={<span>NEXT</span>}
               />
               <StyledSelect
                 style={{

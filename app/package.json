@@ -1,6 +1,6 @@
 {
   "name": "SempoBlockchain",
-  "version": "1.2.18",
+  "version": "1.2.23",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
@@ -89,6 +89,7 @@
     "@ant-design/icons": "^4.2.1",
     "@babel/polyfill": "^7.0.0",
     "@sentry/browser": "^4.2.3",
+    "@types/qrcode.react": "^1.0.1",
     "antd": "^4.4.2",
     "chart.js": "^2.7.2",
     "deck.gl": "5.1.4",

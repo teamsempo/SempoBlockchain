@@ -188,7 +188,7 @@ class NewTransferManager extends React.Component {
                   height: "25px"
                 }}
               >
-                Cancel
+                <span>Cancel</span>
               </StyledButton>
             </div>
           </TopRow>
@@ -220,9 +220,16 @@ class NewTransferManager extends React.Component {
                     this.props.creditTransfers.createStatus.isRequesting
                   }
                   buttonText={
-                    (this.state.create_transfer_type === "BALANCE"
-                      ? "SET "
-                      : "CREATE ") + this.state.create_transfer_type
+                    <span>
+                      <span>
+                        {this.state.create_transfer_type === "BALANCE" ? (
+                          <span>SET </span>
+                        ) : (
+                          <span>CREATE </span>
+                        )}
+                      </span>
+                      <span>{this.state.create_transfer_type}</span>
+                    </span>
                   }
                 />
               </SubRow>

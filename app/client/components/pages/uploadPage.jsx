@@ -26,7 +26,7 @@ const uploadPage = ({ loggedIn, spreadsheetData, location }) => {
   } else {
     inner_div = (
       <PageWrapper>
-        <UploadButton uploadButtonText="Upload Spreadsheet" />
+        <UploadButton uploadButtonText={<span>Upload Spreadsheet</span>} />
       </PageWrapper>
     );
   }

@@ -239,7 +239,7 @@ class EditUserForm extends React.Component<
                       height: "25px"
                     }}
                     isLoading={users.editStatus.isRequesting}
-                    buttonText="SAVE"
+                    buttonText={<span>SAVE</span>}
                   />
                 </ButtonWrapper>
               </TopRow>
@@ -314,7 +314,7 @@ class EditUserForm extends React.Component<
                         height: "25px"
                       }}
                       isLoading={users.pinStatus.isRequesting}
-                      buttonText="Reset Pin"
+                      buttonText={<span>Reset Pin</span>}
                     />
                   </InputField>
                 </SubRow>
@@ -346,7 +346,7 @@ class EditUserForm extends React.Component<
                       height: "25px"
                     }}
                     isLoading={users.deleteStatus.isRequesting}
-                    buttonText="Delete Participant"
+                    buttonText={<span>Delete Participant</span>}
                   />
                 </SubRow>
               </Row>

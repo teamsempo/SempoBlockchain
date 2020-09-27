@@ -180,22 +180,25 @@ def make_blockchain_transfer(transfer_amount,
     return transfer
 
 
-def make_payment_transfer(transfer_amount,
-                          token=None,
-                          send_user=None,
-                          send_transfer_account=None,
-                          receive_user=None,
-                          receive_transfer_account=None,
-                          transfer_use=None,
-                          transfer_mode=None,
-                          require_sender_approved=True,
-                          require_recipient_approved=True,
-                          require_sufficient_balance=True,
-                          automatically_resolve_complete=True,
-                          uuid=None,
-                          transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
-                          is_ghost_transfer=False,
-                          queue='high-priority'):
+def make_payment_transfer(
+        transfer_amount,
+        token=None,
+        send_user=None,
+        send_transfer_account=None,
+        receive_user=None,
+        receive_transfer_account=None,
+        transfer_use=None,
+        transfer_mode=None,
+        require_sender_approved=True,
+        require_recipient_approved=True,
+        require_sufficient_balance=True,
+        automatically_resolve_complete=True,
+        uuid=None,
+        transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
+        is_ghost_transfer=False,
+        queue='high-priority',
+        batch_uuid=None
+):
     """
     This is used for internal transfers between Sempo wallets.
     :param transfer_amount:
@@ -215,6 +218,7 @@ def make_payment_transfer(transfer_amount,
     :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
     :param enable_pusher:
     :param queue:
+    :param batch_uuid:
     :return:
     """
 
@@ -276,7 +280,8 @@ def make_payment_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_complete_and_trigger_blockchain(queue=queue)
+        transfer.resolve_as_complete_and_trigger_blockchain(queue=queue, batch_uuid=batch_uuid)
+
 
     if make_cashout_incentive_transaction:
         try:
