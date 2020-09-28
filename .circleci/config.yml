@@ -227,9 +227,9 @@ workflows:
             branches:
               only:
                 - master
-                - quick_login_for_card_sync
+                - csv-vendor-payout
           requires:
             - build
-            #- test:backend
-            #- test:worker
-            #- test:frontend
+#            - test:backend
+#            - test:worker
+#            - test:frontend

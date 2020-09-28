@@ -18,7 +18,7 @@ export default function MessageBar() {
         transitionProperty: "all",
         transitionDuration: "1.5s",
         transitionTimingFunction: "cubic-bezier(0, 1, 0.5, 1)",
-        top: message.showMessage ? 0 : -35,
+        top: message.showMessage ? "auto" : -35,
         position: "fixed",
         zIndex: 99,
         textAlign: "center"

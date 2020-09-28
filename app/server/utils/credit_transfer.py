@@ -484,16 +484,13 @@ def check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret,
 
     intervaled_time = int((unix_time - (unix_time % (time_interval * 1000))) / (time_interval * 1000))
 
-    valid_hash = valid_hmac = False
+    hmac_message = str(transfer_amount) + str(transfer_account_id) + str(intervaled_time)
 
-    string_to_hash = str(transfer_amount) + str(transfer_account_id) + str(user_secret or '') + str(intervaled_time)
-    full_hashed_string = hashlib.sha256(string_to_hash.encode()).hexdigest()
-    truncated_hashed_string = full_hashed_string[0: hash_size]
-    valid_hash = truncated_hashed_string == hash_to_check
+    full_hmac_string = hmac.new(
+        user_secret.encode(),
+        hmac_message.encode(),
+        hashlib.sha256
+    ).hexdigest()
 
-    hmac_message = str(transfer_amount) + str(intervaled_time)
-    full_hmac_string = hmac.new(user_secret.encode(),hmac_message.encode(),hashlib.sha256).hexdigest()
     truncated_hmac_string = full_hmac_string[0: hash_size]
-    valid_hmac = truncated_hmac_string == hash_to_check
-
-    return valid_hash or valid_hmac
+    return truncated_hmac_string == hash_to_check

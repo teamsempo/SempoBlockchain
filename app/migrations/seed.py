@@ -272,7 +272,13 @@ def create_ussd_menus():
     print_section_conclusion('Done creating USSD Menus')
 
 
-def create_business_categories():
+def create_business_categories(only_if_none_exist=True):
+
+    if only_if_none_exist:
+        usages = db.session.query(TransferUsage).all()
+        if len(usages) > 0:
+            print("Business Categories already exist! Skipping.")
+            return
 
     print_section_title('Creating Business Categories')
     business_categories = [

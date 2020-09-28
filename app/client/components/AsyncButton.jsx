@@ -20,7 +20,9 @@ export default class AsyncButton extends React.Component {
           <div style={{ position: "absolute" }}>
             <LoadingSpinner style={{ color: "white" }} />
           </div>
-          <div style={{ opacity: 0 }}> {this.props.buttonText} </div>
+          <div style={{ opacity: 0 }}>
+            <span>{this.props.buttonText}</span>
+          </div>
         </StyledButton>
       );
     } else if (this.props.isSuccess) {
@@ -35,8 +37,7 @@ export default class AsyncButton extends React.Component {
             justifyContent: "center"
           }}
         >
-          {" "}
-          Success{" "}
+          <span> Success </span>
         </StyledButton>
       );
     }
@@ -52,8 +53,7 @@ export default class AsyncButton extends React.Component {
           justifyContent: "center"
         }}
       >
-        {" "}
-        {this.props.buttonText}{" "}
+        <span> {this.props.buttonText} </span>
       </StyledButton>
     );
   }
