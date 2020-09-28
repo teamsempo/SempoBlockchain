@@ -7,6 +7,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.utils.credit_transfer import make_withdrawal_transfer
 from server.utils.transfer_enums import TransferModeEnum
+from server.utils.credit_transfer import cents_to_dollars, dollars_to_cents
 from server.utils.auth import requires_auth
 from server import db
 
@@ -78,20 +79,20 @@ class VendorPayoutAPI(MethodView):
             )
 
             db.session.flush()
-            
+
             writer.writerow([
                 v.id,
                 v.primary_user.first_name + '  ' + v.primary_user.last_name,
-                v.balance,
-                v.total_sent,
-                v.total_received,
+                cents_to_dollars(v.balance),
+                cents_to_dollars(v.total_sent),
+                cents_to_dollars(v.total_received),
                 v.is_approved,
                 v.primary_user.has_beneficiary_role,
                 v.primary_user.has_vendor_role,
                 datetime.today().strftime('%Y-%m-%d'),
                 (datetime.today() + timedelta(days=7)).strftime('%Y-%m-%d'),
                 transfer.id,
-                v.balance,
+                cents_to_dollars(v.balance),
                 '',
                 '',
             ])
@@ -124,7 +125,7 @@ class ProcessVendorPayout(MethodView):
             transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == line['Transaction ID']).first()
             if not transfer:
                 raise Exception(f'Tranfer with ID {line["Transaction ID"]} not found!')
-            if float(transfer.transfer_amount) != float(line["UnitAmount"]):
+            if round(transfer.transfer_amount) != round(dollars_to_cents(line["UnitAmount"])):
                 raise Exception(f'Invalid transfer amount!')
             if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
                 try:
@@ -154,7 +155,7 @@ class ProcessVendorPayout(MethodView):
                 t.sender_transfer_account.primary_user.last_name,
                 t.created,
                 t.transfer_type.value,
-                t.transfer_amount,
+                cents_to_dollars(t.transfer_amount),
                 t.transfer_status.value
             ])
         bytes_output = io.BytesIO()
