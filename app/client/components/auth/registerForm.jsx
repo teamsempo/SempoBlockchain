@@ -210,6 +210,7 @@ const RegisterForm = function(props) {
           type="email"
           onKeyUp={props.onUserFieldKeyPress}
           placeholder="Email"
+          disabled={props.state.invite ? "disabled" : ""}
           style={props.state.invite ? { display: "none" } : null}
         />
 
