@@ -28,6 +28,7 @@ from server.utils.credit_transfer import (
     make_payment_transfer
 )
 from server.utils.pusher_utils import push_user_transfer_confirmation
+from server.utils.transfer_account import find_transfer_accounts_with_matching_token
 
 
 class MeCreditTransferAPI(MethodView):
@@ -81,7 +82,7 @@ class MeCreditTransferAPI(MethodView):
             use_ids = transfer_use
         transfer_mode = post_data.get('transfer_mode')
 
-        transfer_amount = round(float(post_data.get('transfer_amount', 0)),6)
+        transfer_amount = round(float(post_data.get('transfer_amount', 0)), 6)
 
         transfer_random_key = post_data.get('transfer_random_key')
 
@@ -101,6 +102,7 @@ class MeCreditTransferAPI(MethodView):
 
         is_sending = post_data.get('is_sending', False)
 
+        my_transfer_account = None
         authorised = False
         if transfer_account_id:
             counterparty_transfer_account = TransferAccount.query.get(transfer_account_id)
@@ -119,7 +121,6 @@ class MeCreditTransferAPI(MethodView):
                     }
                 }
                 return make_response(jsonify(response_object)), 201
-
 
         if qr_data:
 
@@ -156,6 +157,10 @@ class MeCreditTransferAPI(MethodView):
                         'feedback': True,
                     }
                     return make_response(jsonify(response_object)), 401
+
+            my_transfer_account = find_transfer_accounts_with_matching_token(
+                g.user, counterparty_transfer_account.token
+            )
 
             user_secret = counterparty_user.secret
 
@@ -229,19 +234,26 @@ class MeCreditTransferAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 401
 
-        if not my_transfer_account_id:
-            response_object = {
-                'message': 'You must provide your Transfer Account ID',
-            }
-            return make_response(jsonify(response_object)), 400
-
-        my_transfer_account = TransferAccount.query.get(my_transfer_account_id)
-
         if not my_transfer_account:
+            if not my_transfer_account_id:
+                response_object = {
+                    'message': 'You must provide your Transfer Account ID',
+                }
+                return make_response(jsonify(response_object)), 400
+
+            my_transfer_account = TransferAccount.query.get(my_transfer_account_id)
+
+            if not my_transfer_account:
+                response_object = {
+                    'message': 'Transfer Account not found for my_transfer_account_id {}'.format(my_transfer_account_id)
+                }
+                return make_response(jsonify(response_object)), 400
+
+        if my_transfer_account not in g.user.transfer_accounts:
             response_object = {
-                'message': 'Transfer Account not found for my_transfer_account_id {}'.format(my_transfer_account_id)
+                'message': 'Transfer account provided does not belong to user',
             }
-            return make_response(jsonify(response_object)), 400
+            return make_response(jsonify(response_object)), 401
 
         if is_sending:
             send_user = g.user
