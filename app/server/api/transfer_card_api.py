@@ -12,8 +12,18 @@ transfer_cards_blueprint = Blueprint('transfer_cards', __name__)
 class TransferCardAPI(MethodView):
     @requires_auth
     def get(self):
+        """
+        Get a list of the transfer cards on the system.
+        :arg only_loaded: only return cards that have funds loaded onto them. Prevents returning a list of 100000 cards. Defaults true.
+        :return:
+        """
 
-        transfer_cards = TransferCard.query.all()
+        only_loaded = request.args.get('only_loaded', 'true').lower() == 'true' #defaults true
+
+        if only_loaded:
+            transfer_cards = TransferCard.query.filter(TransferCard.amount_loaded_signature != None).all()
+        else:
+            transfer_cards = TransferCard.query.all()
 
         response_object = {
             'message': 'Successfully loaded transfer_cards',
