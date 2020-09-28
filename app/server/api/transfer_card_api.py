@@ -14,14 +14,15 @@ class TransferCardAPI(MethodView):
     def get(self):
         """
         Get a list of the transfer cards on the system.
-        :arg only_loaded: only return cards that have funds loaded onto them. Prevents returning a list of 100000 cards. Defaults true.
+        :arg only_bound: only return cards that have transfer accounts bound to them.
+        Prevents returning a list of 100000 cards and overwhelming low power android phones. Defaults true.
         :return:
         """
 
-        only_loaded = request.args.get('only_loaded', 'true').lower() == 'true' #defaults true
+        only_bound = request.args.get('only_bound', 'true').lower() == 'true' #defaults true
 
-        if only_loaded:
-            transfer_cards = TransferCard.query.filter(TransferCard.amount_loaded_signature != None).all()
+        if only_bound:
+            transfer_cards = TransferCard.query.filter(TransferCard.transfer_account_id != None).all()
         else:
             transfer_cards = TransferCard.query.all()
 
@@ -46,8 +47,9 @@ class TransferCardAPI(MethodView):
 
             return make_response(jsonify(response_object)), 400
 
-        public_serial_number = re.sub(r'[\t\n\r]', '', public_serial_number)
-
+        # serial numbers are case insensitive
+        public_serial_number = re.sub(r'[\t\n\r]', '', str(public_serial_number)).upper()
+        nfc_serial_number = nfc_serial_number.upper()
 
         if TransferCard.query.filter_by(public_serial_number=public_serial_number).first():
             response_object = {
