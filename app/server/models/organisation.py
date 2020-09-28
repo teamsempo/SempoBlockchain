@@ -135,6 +135,9 @@ class Organisation(ModelBase):
     attribute_maps = db.relationship('AttributeMap', backref='organisation',
                                        lazy=True, foreign_keys='AttributeMap.organisation_id')
 
+    incentives = db.relationship('Incentive', backref='organisation',
+                                           lazy=True, foreign_keys='Incentive.organisation_id')
+
     custom_welcome_message_key = db.Column(db.String)
 
     @staticmethod
