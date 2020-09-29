@@ -292,7 +292,7 @@ class MeExportAPI(MethodView):
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
             {'header': 'Transfer Type', 'query_type': 'enum', 'query': 'transfer_type'},
             {'header': 'Transfer Status', 'query_type': 'enum', 'query': 'transfer_status'},
-            {'header': 'Transfer Use',      'query_type': 'db',     'query': 'transfer_use'},
+            {'header': 'Transfer Uses',      'query_type': 'custom',  'query': 'transfer_usages'},
         ]
 
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
@@ -347,6 +347,8 @@ class MeExportAPI(MethodView):
                         cell_contents = "{0}".format(enum.value)
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']) / 100)
+                    elif  column['query'] == 'transfer_usages':
+                        cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
 
