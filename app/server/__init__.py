@@ -177,6 +177,7 @@ def register_blueprints(app):
     from server.api.metrics_api import metrics_blueprint
     from server.api.mock_data_api import mock_data_blueprint
     from server.api.attribute_map_api import attribute_map_blueprint
+    from server.api.vendor_payout_api import vendor_payout
 
     versioned_url = '/api/v1'
 
@@ -211,6 +212,7 @@ def register_blueprints(app):
     app.register_blueprint(metrics_blueprint, url_prefix=versioned_url)
     app.register_blueprint(mock_data_blueprint, url_prefix=versioned_url)
     app.register_blueprint(attribute_map_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(vendor_payout, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)

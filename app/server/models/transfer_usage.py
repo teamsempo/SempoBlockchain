@@ -67,4 +67,4 @@ class TransferUsage(ModelBase):
         return usage
 
     def __repr__(self):
-        return f'<Transfer Usage {id}: {name}>'
+        return f'<Transfer Usage {self.id}: {self.name}>'
