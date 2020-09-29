@@ -7,6 +7,7 @@ from sqlalchemy import and_, or_
 from dateutil import parser
 
 from server.models.credit_transfer import CreditTransfer
+from server.models.transfer_account import TransferAccount
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
 from server.models.user import User
 from server.utils.auth import requires_auth
@@ -53,11 +54,11 @@ class ExportAPI(MethodView):
             {'header': 'Transfer Amount',   'query_type': 'custom', 'query': 'transfer_amount'},
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
-            {'header': 'Transfer Type',     'query_type': 'db',     'query': 'transfer_type'},
-            {'header': 'Transfer Status',   'query_type': 'db',     'query': 'transfer_status'},
-            {'header': 'Transfer Use',      'query_type': 'db',     'query': 'transfer_use'},
+            {'header': 'Transfer Type',     'query_type': 'enum',   'query': 'transfer_type'},
+            {'header': 'Transfer Status',   'query_type': 'enum',   'query': 'transfer_status'},
             {'header': 'Sender ID',         'query_type': 'db',     'query': 'sender_transfer_account_id'},
             {'header': 'Recipient ID',      'query_type': 'db',     'query': 'recipient_transfer_account_id'},
+            {'header': 'Transfer Uses',     'query_type': 'custom', 'query': 'transfer_usages'},
         ]
 
         # need to add Balance (Payable)
@@ -107,8 +108,10 @@ class ExportAPI(MethodView):
 
         if user_filter is not None:
             user_accounts = User.query.filter(user_filter==True).all()
+
         elif user_type == 'selected':
-            user_accounts = User.query.filter(User.transfer_account_id.in_(selected)).all()
+            transfer_accounts = TransferAccount.query.filter(TransferAccount.id.in_(selected)).all()
+            user_accounts = [ta.primary_user for ta in transfer_accounts]
 
         if user_accounts is not None:
             # TODO: fix export
@@ -245,6 +248,8 @@ class ExportAPI(MethodView):
                             cell_contents = "{0}".format(enum.value)
                         elif column['query'] == 'transfer_amount':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
+                        elif column['query'] == 'transfer_usages':
+                            cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
                         else:
                             cell_contents = ""
 
