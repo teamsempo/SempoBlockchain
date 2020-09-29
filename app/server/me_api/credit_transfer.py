@@ -10,7 +10,8 @@ from server.exceptions import (
     NoTransferAccountError,
     UserNotFoundError,
     AccountNotApprovedError,
-    InsufficientBalanceError
+    InsufficientBalanceError,
+    IncetiveLimitExceeded
 )
 from server.models.user import User
 from server.models.transfer_card import TransferCard
@@ -102,6 +103,8 @@ class MeCreditTransferAPI(MethodView):
 
         is_sending = post_data.get('is_sending', False)
 
+        method = 'ANY'
+
         my_transfer_account = None
         authorised = False
         if transfer_account_id:
@@ -123,7 +126,7 @@ class MeCreditTransferAPI(MethodView):
                 return make_response(jsonify(response_object)), 201
 
         if qr_data:
-
+            method = 'QR'
             split_qr_data = qr_data.split('-')
 
             transfer_amount = int(split_qr_data[0])
@@ -174,6 +177,7 @@ class MeCreditTransferAPI(MethodView):
             authorised = True
 
         elif nfc_serial_number:
+            method = 'NFC'
             # We treat NFC serials differently because they're automatically authorised under the current version
             transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
 
@@ -282,8 +286,9 @@ class MeCreditTransferAPI(MethodView):
                 'feedback': True,
             }
             return make_response(jsonify(response_object)), 400
-
+        incentive_transfers = []
         try:
+            # Question: Do we want the main transfer to go through if the insentive does not? 
             transfer = make_payment_transfer(transfer_amount=transfer_amount,
                                              send_user=send_user,
                                              send_transfer_account=send_transfer_account,
@@ -292,6 +297,21 @@ class MeCreditTransferAPI(MethodView):
                                              transfer_use=transfer_use,
                                              transfer_mode=transfer_mode,
                                              uuid=uuid)
+            # Check the insentives to make sure that all of them pass, but don't actually make the payments yet (do_not_transact). 
+            # We want to make sure that all the transfers are valid before we allow them!
+            for incentive in g.active_organisation.incentives: # Do we want to use the active org, or the recipients org?
+                incentive.handle_incentive(transfer, method=method, do_not_transact = True)
+
+            for incentive in g.active_organisation.incentives:
+                incentive_transfers.append(incentive.handle_incentive(transfer, method=method))
+            
+        except IncetiveLimitExceeded as e:
+            db.session.commit()
+            response_object = {
+                'message': f'Incentive limit exceeded - {e.message}',
+                'feedback': True,
+            }           
+            return make_response(jsonify(response_object)), 400
 
         except AccountNotApprovedError as e:
             db.session.commit()
@@ -342,7 +362,8 @@ class MeCreditTransferAPI(MethodView):
             'last_name': counterparty_user.last_name,
             'feedback': True,
             'data': {
-                'credit_transfer': me_credit_transfer_schema.dump(transfer).data
+                'credit_transfer': me_credit_transfer_schema.dump(transfer).data,
+                'incentive_transfers': [me_credit_transfer_schema.dump(t).data for t in incentive_transfers]
             }
         }
 

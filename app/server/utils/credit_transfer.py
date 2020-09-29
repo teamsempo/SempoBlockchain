@@ -249,7 +249,7 @@ def make_payment_transfer(
                               transfer_mode=transfer_mode,
                               is_ghost_transfer=is_ghost_transfer)
 
-    make_cashout_incentive_transaction = False
+    make_cashout_incentive_transaction = False # is this obsolete now?
 
     if transfer_use is not None:
         for use_id in transfer_use:

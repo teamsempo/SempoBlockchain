@@ -157,6 +157,12 @@ class AccountNotApprovedError(Exception):
     def __repr__(self):
         return self.message
 
+class IncetiveLimitExceeded(Exception):
+    def __init__(self, message, is_sender=None):
+        self.message = message
+
+    def __repr__(self):
+        return self.message
 
 class InvalidTargetBalanceError(Exception):
     pass
