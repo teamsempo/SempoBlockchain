@@ -292,7 +292,7 @@ class TransferAccountManager extends React.Component {
                     isLoading={
                       this.props.transferAccounts.editStatus.isRequesting
                     }
-                    buttonText="SAVE"
+                    buttonText={<span>SAVE</span>}
                   />
                 </ButtonWrapper>
               </TopRow>

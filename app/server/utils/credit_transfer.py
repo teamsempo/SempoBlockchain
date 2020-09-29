@@ -139,7 +139,8 @@ def make_blockchain_transfer(transfer_amount,
                              require_sufficient_balance=False,
                              automatically_resolve_complete=True,
                              uuid=None,
-                             existing_blockchain_txn=False
+                             existing_blockchain_txn=False,
+                             transfer_type=TransferTypeEnum.PAYMENT
                              ):
     send_address_obj = create_address_object_if_required(send_address)
     receive_address_obj = create_address_object_if_required(receive_address)
@@ -169,7 +170,7 @@ def make_blockchain_transfer(transfer_amount,
     transfer.sender_blockchain_address = send_address_obj
     transfer.recipient_blockchain_address = receive_address_obj
 
-    transfer.transfer_type = TransferTypeEnum.PAYMENT
+    transfer.transfer_type = transfer_type
 
     if uuid:
         transfer.uuid = uuid
@@ -197,7 +198,8 @@ def make_payment_transfer(
         transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
         is_ghost_transfer=False,
         queue='high-priority',
-        batch_uuid=None
+        batch_uuid=None,
+        transfer_type=TransferTypeEnum.PAYMENT
 ):
     """
     This is used for internal transfers between Sempo wallets.
@@ -235,7 +237,7 @@ def make_payment_transfer(
         receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
 
     if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
-        send_transfer_account = receive_transfer_account.get_float_transfer_account()
+        send_transfer_account = receive_transfer_account.token.float_account
 
     transfer = CreditTransfer(transfer_amount,
                               token=token,
@@ -244,7 +246,7 @@ def make_payment_transfer(
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
-                              transfer_type=TransferTypeEnum.PAYMENT,
+                              transfer_type=transfer_type,
                               transfer_subtype=transfer_subtype,
                               transfer_mode=transfer_mode,
                               is_ghost_transfer=is_ghost_transfer)
@@ -304,7 +306,8 @@ def make_payment_transfer(
 
 def make_withdrawal_transfer(transfer_amount,
                              token,
-                             send_account,
+                             send_user=None,
+                             sender_transfer_account=None,
                              transfer_mode=None,
                              require_sender_approved=True,
                              require_sufficient_balance=True,
@@ -324,7 +327,7 @@ def make_withdrawal_transfer(transfer_amount,
     """
 
     transfer = CreditTransfer(transfer_amount, token,
-                              sender_user=send_account,
+                              sender_user=send_user, sender_transfer_account=sender_transfer_account,
                               uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL, transfer_mode=transfer_mode)
 
     if require_sender_approved and not transfer.check_sender_is_approved():
@@ -481,16 +484,13 @@ def check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret,
 
     intervaled_time = int((unix_time - (unix_time % (time_interval * 1000))) / (time_interval * 1000))
 
-    valid_hash = valid_hmac = False
+    hmac_message = str(transfer_amount) + str(transfer_account_id) + str(intervaled_time)
 
-    string_to_hash = str(transfer_amount) + str(transfer_account_id) + str(user_secret or '') + str(intervaled_time)
-    full_hashed_string = hashlib.sha256(string_to_hash.encode()).hexdigest()
-    truncated_hashed_string = full_hashed_string[0: hash_size]
-    valid_hash = truncated_hashed_string == hash_to_check
+    full_hmac_string = hmac.new(
+        user_secret.encode(),
+        hmac_message.encode(),
+        hashlib.sha256
+    ).hexdigest()
 
-    hmac_message = str(transfer_amount) + str(intervaled_time)
-    full_hmac_string = hmac.new(user_secret.encode(),hmac_message.encode(),hashlib.sha256).hexdigest()
     truncated_hmac_string = full_hmac_string[0: hash_size]
-    valid_hmac = truncated_hmac_string == hash_to_check
-
-    return valid_hash or valid_hmac
+    return truncated_hmac_string == hash_to_check
