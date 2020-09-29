@@ -105,14 +105,9 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
 
-    def get_float_transfer_account(self):
-        for transfer_account in self.organisation.transfer_accounts:
-            if transfer_account.account_type == 'FLOAT':
-                return transfer_account
-
-        float_wallet = TransferAccount.query.filter(TransferAccount.account_type == TransferAccountType.FLOAT).first()
-
-        return float_wallet
+    @property
+    def unrounded_balance(self):
+        return Decimal(self._balance_wei or 0) / Decimal(1e16)
 
     @property
     def balance(self):
@@ -233,7 +228,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
             # if initial_disbursement is still none, then we don't want to create a transfer.
             return None
 
-        if initial_disbursement == active_org.default_disbursement:
+        if initial_disbursement <= active_org.default_disbursement:
             auto_resolve = True
 
         user_id = get_authorising_user_id()
@@ -253,7 +248,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     def initialise_withdrawal(self, withdrawal_amount, transfer_mode):
         from server.utils.credit_transfer import make_withdrawal_transfer
         withdrawal = make_withdrawal_transfer(withdrawal_amount,
-                                              send_account=self,
+                                              send_user=self,
                                               automatically_resolve_complete=False,
                                               transfer_mode=transfer_mode,
                                               token=self.token)
@@ -299,9 +294,9 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         if not self.organisation:
             master_organisation = Organisation.master_organisation()
             if not master_organisation:
-                raise Exception('master_organisation not found')
-
-            self._bind_to_organisation(master_organisation)
+                print('master_organisation not found')
+            if master_organisation:
+                self._bind_to_organisation(master_organisation)
 
         if blockchain_address:
             self.blockchain_address = blockchain_address
