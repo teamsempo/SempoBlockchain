@@ -255,16 +255,7 @@ class ExportAPI(MethodView):
                 print('No Credit Transfers')
 
         if len(user_accounts) is not 0:
-            # Create local URL + save local + Upload to s3 bucket
-            local_save_directory = os.path.join(current_app.config['BASEDIR'], "tmp/")
-
-            local_save_path = os.path.join(local_save_directory, workbook_filename)
-            wb.save(filename=local_save_path)
-            file_url = upload_local_file_to_s3(local_save_path, workbook_filename)
-
-            send_export_email(file_url, g.user.email)
-
-            os.remove(local_save_path)
+            file_url = save_local_file_and_upload_to_s3(wb, workbook_filename)
 
             response_object = {
                 'message': 'Export file created.',
