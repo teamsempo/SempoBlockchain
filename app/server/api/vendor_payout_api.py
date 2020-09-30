@@ -52,7 +52,8 @@ class VendorPayoutAPI(MethodView):
         writer = csv.writer(output)
 
         writer.writerow([
-            'ID', 
+            'ID',
+            'Phone',
             'ContactName', 
             'Current Balance', 
             'Total Sent', 
@@ -82,7 +83,8 @@ class VendorPayoutAPI(MethodView):
 
             writer.writerow([
                 v.id,
-                v.primary_user.first_name + '  ' + v.primary_user.last_name,
+                v.primary_user.phone,
+                v.primary_user.first_name + ' ' + v.primary_user.last_name,
                 cents_to_dollars(v.balance),
                 cents_to_dollars(v.total_sent),
                 cents_to_dollars(v.total_received),
@@ -140,7 +142,8 @@ class ProcessVendorPayout(MethodView):
         writer = csv.writer(output)
 
         writer.writerow([
-            'ID', 
+            'ID',
+            'Phone',
             'First Name', 
             'Last Name', 
             'Transfer Created',
@@ -151,6 +154,7 @@ class ProcessVendorPayout(MethodView):
         for t in transfers:
             writer.writerow([
                 t.sender_transfer_account.id,
+                t.sender_transfer_account.primary_user.phone,
                 t.sender_transfer_account.primary_user.first_name,
                 t.sender_transfer_account.primary_user.last_name,
                 t.created,
