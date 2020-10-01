@@ -1,4 +1,4 @@
-from flask import Blueprint, request, send_file
+from flask import Blueprint, request, send_file, make_response, jsonify
 from flask.views import MethodView
 from flask import g
 
@@ -30,17 +30,30 @@ class VendorPayoutAPI(MethodView):
             account_ids = post_data.get('accounts', [])
 
         if not isinstance(account_ids, list):
-            raise Exception('accounts parameter expects a list')
+
+            response_object = {
+                'message': 'Accounts parameter expects a list',
+            }
+            return make_response(jsonify(response_object)), 400
+
         if account_ids:
             vendors = db.session.query(TransferAccount).filter(TransferAccount.account_type != TransferAccountType.FLOAT).filter(TransferAccount.id.in_(account_ids)).all()
             for vendor in vendors:
                 if not vendor.primary_user.has_vendor_role:
-                    raise Exception(f'Transfer account with id {vendor.id} not a vendor account. Please only IDs of vendor accounts')
+
+                    response_object = {
+                        'message': f'Transfer account with id {vendor.id} not a vendor account. Please only IDs of vendor accounts',
+                    }
+                    return make_response(jsonify(response_object)), 400
 
             selected_vendor_ids = [v.id for v in vendors]
             list_difference = [item for item in account_ids if item not in selected_vendor_ids]
             if list_difference:
-                raise Exception(f'Accounts {list_difference} were requested but do not exist')
+                response_object = {
+                    'message': f'Accounts {list_difference} were requested but do not exist',
+                }
+                return make_response(jsonify(response_object)), 400
+
         else:
             vendor_users = db.session.query(User)\
                 .filter(User.has_vendor_role)\
@@ -54,12 +67,12 @@ class VendorPayoutAPI(MethodView):
         writer.writerow([
             'ID',
             'Phone',
-            'ContactName', 
-            'Current Balance', 
-            'Total Sent', 
+            'ContactName',
+            'Current Balance',
+            'Total Sent',
             'Total Received',
-            'Approved', 
-            'Beneficiary', 
+            'Approved',
+            'Beneficiary',
             'Vendor',
             'InvoiceDate',
             'DueDate',
@@ -115,7 +128,11 @@ class ProcessVendorPayout(MethodView):
         else:
             post_data = request.get_json()
             if not post_data:
-                raise Exception('Please provide a CSV file')
+                response_object = {
+                    'message': 'Please provide a CSV file'
+                }
+                return make_response(jsonify(response_object)), 400
+
             csv_data = post_data.get('csv_data', [])
             f = io.StringIO(csv_data)
             reader = csv.DictReader(f)
@@ -123,15 +140,29 @@ class ProcessVendorPayout(MethodView):
         for line in reader:
             vendor = db.session.query(TransferAccount).filter(TransferAccount.id == line['ID']).first()
             if not vendor.primary_user.has_vendor_role:
-                raise Exception(f'{vendor} is not a vendor!')
+                response_object = {
+                    'message': str(f'{vendor} is not a vendor!'),
+                }
+                return make_response(jsonify(response_object)), 400
+
+
             transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == line['Transaction ID']).first()
             if not transfer:
-                raise Exception(f'Tranfer with ID {line["Transaction ID"]} not found!')
+                response_object = {
+                    'message': f'Tranfer with ID {line["Transaction ID"]} not found!'
+                }
+                return make_response(jsonify(response_object)), 400
+
             if round(transfer.transfer_amount) != round(dollars_to_cents(line["UnitAmount"])):
-                raise Exception(f'Invalid transfer amount!')
+                response_object = {
+                    'message': f'Invalid transfer amount!'
+                }
+                return make_response(jsonify(response_object)), 400
+
             if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
                 try:
                     transfer.resolve_as_complete_and_trigger_blockchain()
+
                 except:
                     pass
             elif line['Payment Has Been Made'] == 'FALSE':
