@@ -1,9 +1,12 @@
 from typing import Optional, Union
 from decimal import Decimal
 import datetime, enum
-from sqlalchemy.sql import func
 from flask import g
+
+from sqlalchemy.sql import func
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import or_
+
 from server import db, bt
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, \
     get_authorising_user_id, SoftDelete
@@ -130,34 +133,112 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         self.update_balance()
 
     def update_balance(self):
+        """
+        Update the balance of the user by calculating the difference between inbound and outbound transfers, plus an
+        offset.
+        For inbound transfers we count ONLY complete, while for outbound we count both COMPLETE and PENDING.
+        This means that users can't spend funds that are potentially:
+        - already spent
+        or
+        - from a transfer that may ultimately be rejected.
+        """
         if not self._balance_offset_wei:
             self._balance_offset_wei = 0
-        net_credit_transfer_position_wei = (self.total_received - self.total_sent) * int(1e16)
+
+        net_credit_transfer_position_wei = (
+                self.total_received_complete_only_wei - self.total_sent_incl_pending_wei
+        )
+
         self._balance_wei = net_credit_transfer_position_wei + self._balance_offset_wei
 
     @hybrid_property
     def total_sent(self):
-        amount_cents = (
-                db.session.query(
-                    func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
-                )
-                .execution_options(show_all=True)
-                .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id)
-                .first().total
-        )
-        return amount_cents or 0
+        """
+        Canonical total sent in cents, helping us to remember that sent amounts should include pending txns
+        """
+
+        total_sent_cents = self.total_sent_incl_pending_wei/int(1e16)
+
+        return total_sent_cents
 
     @hybrid_property
     def total_received(self):
-        amount_cents = (
+        """
+        Canonical total sent in cents, helping us to remember that received amounts should only include complete txns
+        """
+
+        total_received_cents = self.total_received_complete_only_wei / int(1e16)
+
+        return total_received_cents
+
+    @hybrid_property
+    def total_sent_complete_only_wei(self):
+        """
+        The total sent by an account, counting ONLY transfers that have been resolved as complete locally
+        """
+        amount = (
             db.session.query(
-                func.sum(server.models.credit_transfer.CreditTransfer.transfer_amount).label('total')
+                func.sum(server.models.credit_transfer.CreditTransfer._transfer_amount_wei).label('total')
             )
-            .execution_options(show_all=True)
-            .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id)
-            .first().total
+                .execution_options(show_all=True)
+                .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id)
+                .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+                .first().total
         )
-        return amount_cents or 0
+        return amount or 0
+
+    @hybrid_property
+    def total_received_complete_only_wei(self):
+        """
+        The total received by an account, counting ONLY transfers that have been resolved as complete
+        """
+        amount = (
+            db.session.query(
+                func.sum(server.models.credit_transfer.CreditTransfer._transfer_amount_wei).label('total')
+            )
+                .execution_options(show_all=True)
+                .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id)
+                .filter(server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
+                .first().total
+        )
+
+        return amount or 0
+
+    @hybrid_property
+    def total_sent_incl_pending_wei(self):
+        """
+        The total sent by an account, counting transfers that are either pending or complete locally
+        """
+        amount = (
+                db.session.query(
+                    func.sum(server.models.credit_transfer.CreditTransfer._transfer_amount_wei).label('total')
+                )
+                .execution_options(show_all=True)
+                .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id)
+                .filter(or_(
+                    server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+                    server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.PENDING))
+                .first().total
+        )
+        return amount or 0
+
+    @hybrid_property
+    def total_received_incl_pending_wei(self):
+        """
+        The total received by an account, counting transfers that are either pending or complete locally
+        """
+        amount = (
+            db.session.query(
+                func.sum(server.models.credit_transfer.CreditTransfer._transfer_amount_wei).label('total')
+            )
+                .execution_options(show_all=True)
+                .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id)
+                .filter(or_(
+                server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+                server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.PENDING))
+                .first().total
+        )
+        return amount or 0
 
     @hybrid_property
     def primary_user(self):

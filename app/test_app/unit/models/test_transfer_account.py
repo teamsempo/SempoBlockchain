@@ -38,7 +38,7 @@ def test_approve_vendor_transfer_account(create_transfer_account_user):
     create_transfer_account_user.transfer_account.is_vendor = True
     create_transfer_account_user.transfer_account.approve_and_disburse()
 
-    assert create_transfer_account_user.transfer_account.balance == 400
+    assert create_transfer_account_user.transfer_account.balance == 0
 
 
 def test_balance_update_with_null_offset(create_transfer_account):
@@ -70,3 +70,54 @@ def test_get_balance(create_transfer_account):
 
     create_transfer_account._balance_wei = int(123e16)
     assert create_transfer_account.balance == 123
+
+def test_balance_handles_pending_complete_statuses(new_credit_transfer):
+    """
+    Make sure that pending transfers are deducted from the sender's balance, but NOT added to the recipient's,
+    while complete transfers are deducted from the sender's AND added to the recipient's
+    """
+    sta = new_credit_transfer.sender_transfer_account
+    rta = new_credit_transfer.recipient_transfer_account
+
+    sta.set_balance_offset(10000)
+    rta.set_balance_offset(10000)
+
+    assert sta.balance == 9000
+    assert rta.balance == 10000
+
+    new_credit_transfer.resolve_as_complete()
+
+    assert sta.balance == 9000
+    assert rta.balance == 11000
+
+
+def test_total_sent_amounts(new_credit_transfer):
+    """
+    Test the total sent amounts account for pending/complete state changes appropriately
+    """
+    ta = new_credit_transfer.sender_transfer_account
+
+    assert ta.total_sent_incl_pending_wei == 10000000000000000000
+    assert ta.total_sent_complete_only_wei == 0
+
+    new_credit_transfer.resolve_as_complete()
+
+    assert ta.total_sent_incl_pending_wei == 10000000000000000000
+    assert ta.total_sent_complete_only_wei == 10000000000000000000
+
+def test_total_received_amounts(new_credit_transfer):
+    """
+    Test the total received amounts account for pending/complete state changes appropriately
+
+    """
+
+    ta = new_credit_transfer.recipient_transfer_account
+
+    assert ta.total_received_incl_pending_wei == 10000000000000000000
+    assert ta.total_received_complete_only_wei == 0
+
+    new_credit_transfer.resolve_as_complete()
+
+    assert ta.total_received_incl_pending_wei == 10000000000000000000
+    assert ta.total_received_complete_only_wei == 10000000000000000000
+
