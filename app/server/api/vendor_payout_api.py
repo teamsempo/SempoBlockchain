@@ -6,7 +6,7 @@ from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.utils.credit_transfer import make_withdrawal_transfer
-from server.utils.transfer_enums import TransferModeEnum
+from server.utils.transfer_enums import TransferModeEnum, TransferStatusEnum
 from server.utils.credit_transfer import cents_to_dollars, dollars_to_cents
 from server.utils.auth import requires_auth
 from server import db
@@ -26,8 +26,10 @@ class VendorPayoutAPI(MethodView):
         # Process post data
         post_data = request.get_json()
         account_ids = []
+        relist_existing = True
         if post_data:
             account_ids = post_data.get('accounts', [])
+            relist_existing = post_data.get('relist_existing', True)
 
         if not isinstance(account_ids, list):
             raise Exception('accounts parameter expects a list')
@@ -52,7 +54,7 @@ class VendorPayoutAPI(MethodView):
         writer = csv.writer(output)
 
         writer.writerow([
-            'ID',
+            'Vendor Account ID',
             'Phone',
             'ContactName', 
             'Current Balance', 
@@ -63,14 +65,20 @@ class VendorPayoutAPI(MethodView):
             'Vendor',
             'InvoiceDate',
             'DueDate',
-            'Transaction ID',
+            'Transfer ID',
             'UnitAmount',
             'Payment Has Been Made',
             'Bank Payment Date',
         ])
         for v in vendors:
-            withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
+            if relist_existing:
+                withdrawals = (CreditTransfer.query
+                               .filter(CreditTransfer.sender_transfer_account_id == v.id)
+                               .filter(CreditTransfer.transfer_status == TransferStatusEnum.PENDING).all())
+            else:
+                withdrawals = []
 
+            withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
             if withdrawal_amount > 0:
 
                 transfer = make_withdrawal_transfer(
@@ -85,6 +93,9 @@ class VendorPayoutAPI(MethodView):
 
                 db.session.flush()
 
+                withdrawals.append(transfer)
+
+            for w in withdrawals:
                 writer.writerow([
                     v.id,
                     v.primary_user.phone,
@@ -97,11 +108,13 @@ class VendorPayoutAPI(MethodView):
                     v.primary_user.has_vendor_role,
                     datetime.today().strftime('%Y-%m-%d'),
                     (datetime.today() + timedelta(days=7)).strftime('%Y-%m-%d'),
-                    transfer.id,
-                    cents_to_dollars(withdrawal_amount),
+                    w.id,
+                    cents_to_dollars(w.transfer_amount),
                     '',
                     '',
                 ])
+
+
         # Encode the CSV such that it can be sent as a file
         bytes_output = io.BytesIO()
         bytes_output.write(output.getvalue().encode('utf-8'))
@@ -125,28 +138,28 @@ class ProcessVendorPayout(MethodView):
             reader = csv.DictReader(f)
         transfers = []
         for line in reader:
-            vendor = db.session.query(TransferAccount).filter(TransferAccount.id == line['ID']).first()
-            if not vendor.primary_user.has_vendor_role:
-                raise Exception(f'{vendor} is not a vendor!')
             transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == line['Transaction ID']).first()
+            message = ''
             if not transfer:
-                raise Exception(f'Tranfer with ID {line["Transaction ID"]} not found!')
+                raise Exception(f'Transfer with ID {line["Transfer ID"]} not found!')
             if round(transfer.transfer_amount) != round(dollars_to_cents(line["UnitAmount"])):
                 raise Exception(f'Invalid transfer amount!')
             if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
                 try:
                     transfer.resolve_as_complete_and_trigger_blockchain()
-                except:
-                    pass
+                    message = 'Transfer Success'
+                except Exception as e:
+                    message = str(e)
             elif line['Payment Has Been Made'] == 'FALSE':
                 transfer.resolve_as_rejected()
-            transfers.append(transfer)
+                message = 'Transfer Rejected'
+            transfers.append((transfer, message))
 
         output = io.StringIO()
         writer = csv.writer(output)
 
         writer.writerow([
-            'ID',
+            'Vendor Account ID',
             'Phone',
             'First Name', 
             'Last Name', 
@@ -154,8 +167,9 @@ class ProcessVendorPayout(MethodView):
             'Transfer Type',
             'Transfer Amount',
             'Transfer Status',
+            'Message'
         ])
-        for t in transfers:
+        for t, m in transfers:
             writer.writerow([
                 t.sender_transfer_account.id,
                 t.sender_transfer_account.primary_user.phone,
@@ -164,7 +178,8 @@ class ProcessVendorPayout(MethodView):
                 t.created,
                 t.transfer_type.value,
                 cents_to_dollars(t.transfer_amount),
-                t.transfer_status.value
+                t.transfer_status.value,
+                m
             ])
         bytes_output = io.BytesIO()
         bytes_output.write(output.getvalue().encode('utf-8'))
