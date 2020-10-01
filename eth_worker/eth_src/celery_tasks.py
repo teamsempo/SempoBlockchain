@@ -144,7 +144,17 @@ def topup_wallet_if_required(self, address):
 def transact_with_contract_function(self, contract_address, function,  abi_type=None, args=None, kwargs=None,
                                     signing_address=None, encrypted_private_key=None,
                                     gas_limit=None, prior_tasks=None, reverses_task=None):
-
+    print('self.request.id')
+    print('self.request.id')
+    print('self.request.id')
+    print('self.request.id')
+    print('self.request.id')
+    print('self.request.id')
+    print('self.request.id')
+    print(self.request.id)
+    print(self.request.id)
+    print(self.request.id)
+    print(self.request.id)
     return task_manager.transact_with_contract_function(self.request.id,
                                                                 contract_address, abi_type, function, args, kwargs,
                                                                 signing_address, encrypted_private_key,

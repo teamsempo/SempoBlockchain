@@ -41,7 +41,9 @@ class TaskManager(object):
         :param reserves_task: DEPRECATED - reverses an old task
         :return: task_id
         """
-
+        print(uuid)
+        print('uuid')
+        print(uuid)
         create_kwargs = {
             'uuid': uuid,
             'contract_address': contract_address,
@@ -137,7 +139,13 @@ class TaskManager(object):
     def _create_task(self, signing_address, encrypted_private_key, create_method, create_kwargs):
 
         uuid = create_kwargs['uuid']
-
+        print('in create task')
+        print('in create task')
+        print('in create task')
+        print('in create task')
+        print('in create task')
+        print(uuid)
+        print(uuid)
         existing_task = self.persistence.get_task_from_uuid(uuid)
 
         if existing_task:
@@ -151,7 +159,12 @@ class TaskManager(object):
         create_kwargs['signing_wallet_obj'] = signing_wallet_obj
 
         task = create_method(**create_kwargs)
-
+        print('CREATED TASK UUID!!')
+        print('CREATED TASK UUID!!')
+        print('CREATED TASK UUID!!')
+        print('CREATED TASK UUID!!')
+        print(task)
+        print(task.uuid)
         self._queue_attempt_transaction(task.uuid)
 
         return task.id

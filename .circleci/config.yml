@@ -228,6 +228,7 @@ workflows:
               only:
                 - master
                 - fix-mobile-export
+                - fix-broken-callbacks
           requires:
             - build
             #- test:backend

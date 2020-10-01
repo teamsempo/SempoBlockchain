@@ -137,6 +137,10 @@ def register_blueprints(app):
             job.submit(*args, **kwargs)
 
         for transaction, queue in g.pending_transactions:
+            print('transaction')
+            print('init.py')
+            print(transaction)
+            print(transaction.blockchain_task_uuid)
             transaction.send_blockchain_payload_to_worker(queue=queue)
 
         # Push only credit transfers, not exchanges

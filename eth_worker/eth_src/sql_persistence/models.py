@@ -334,6 +334,9 @@ class SynchronizationFilter(ModelBase):
 @event.listens_for(BlockchainTransaction, 'after_update')
 def receive_after_update(mapper, connection, target):
     if target.blockchain_task and not target.is_third_party_transaction:
+        print('TARGET N TASK!')
+        print(target.blockchain_task)
+        print(target)
         post_data = {
                 'blockchain_task_uuid': target.blockchain_task.uuid,
                 'timestamp': time.time(),
