@@ -14,8 +14,10 @@ from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
+from server.utils.access_control import AccessControl
 
 from server.exceptions import (
+    TransferLimitError,
     InsufficientBalanceError,
     NoTransferAccountError,
     MinimumSentLimitError,
@@ -87,6 +89,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
+
+    def add_message(self, message):
+        dated_message = f"[{datetime.datetime.utcnow()}:: {message}]"
+        self.resolution_message = dated_message
 
     # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
@@ -239,7 +245,15 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def resolve_as_complete(self, batch_uuid=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
             raise Exception(f'Transfer resolve function called multiple times for transaction {self.id}')
-        self.check_sender_transfer_limits()
+        try:
+            self.check_sender_transfer_limits()
+        except TransferLimitError as e:
+            # Sempo admins can always bypass limits, allowing for things like emergency moving of funds etc
+            if hasattr(g, 'user') and AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'sempoadmin'}):
+                self.add_message(f'Warning: {e}')
+            else:
+                raise e
+
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
         self.update_balances()
@@ -266,8 +280,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.update_balances()
 
         if message:
-            self.resolution_message = message
-
+            self.add_message(message)
 
     def update_balances(self):
         self.sender_transfer_account.update_balance()

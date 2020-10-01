@@ -145,11 +145,21 @@ class CreditTransferAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        if action == 'COMPLETE':
-            credit_transfer.resolve_as_complete_and_trigger_blockchain()
+        try:
+            if action == 'COMPLETE':
+                credit_transfer.resolve_as_complete_and_trigger_blockchain()
 
-        elif action == 'REJECT':
-            credit_transfer.resolve_as_rejected()
+            elif action == 'REJECT':
+                credit_transfer.resolve_as_rejected()
+
+        except Exception as e:
+
+            db.session.commit()
+
+            response_object = {
+                'message': str(e),
+            }
+            return make_response(jsonify(response_object)), 400
 
         db.session.flush()
 
