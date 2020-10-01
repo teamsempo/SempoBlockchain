@@ -69,35 +69,39 @@ class VendorPayoutAPI(MethodView):
             'Bank Payment Date',
         ])
         for v in vendors:
-            transfer = make_withdrawal_transfer(
-                Decimal(v._balance_wei or 0) / Decimal(1e16),
-                token=v.token,
-                send_user=v.primary_user,
-                sender_transfer_account=v,
-                transfer_mode=TransferModeEnum.INTERNAL,
-                require_sender_approved=False,
-                automatically_resolve_complete=False,
-            )
+            withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
 
-            db.session.flush()
+            if withdrawal_amount > 0:
 
-            writer.writerow([
-                v.id,
-                v.primary_user.phone,
-                v.primary_user.first_name + ' ' + v.primary_user.last_name,
-                cents_to_dollars(v.balance),
-                cents_to_dollars(v.total_sent),
-                cents_to_dollars(v.total_received),
-                v.is_approved,
-                v.primary_user.has_beneficiary_role,
-                v.primary_user.has_vendor_role,
-                datetime.today().strftime('%Y-%m-%d'),
-                (datetime.today() + timedelta(days=7)).strftime('%Y-%m-%d'),
-                transfer.id,
-                cents_to_dollars(v.balance),
-                '',
-                '',
-            ])
+                transfer = make_withdrawal_transfer(
+                    withdrawal_amount,
+                    token=v.token,
+                    send_user=v.primary_user,
+                    sender_transfer_account=v,
+                    transfer_mode=TransferModeEnum.INTERNAL,
+                    require_sender_approved=False,
+                    automatically_resolve_complete=False,
+                )
+
+                db.session.flush()
+
+                writer.writerow([
+                    v.id,
+                    v.primary_user.phone,
+                    v.primary_user.first_name + ' ' + v.primary_user.last_name,
+                    cents_to_dollars(v.balance),
+                    cents_to_dollars(v.total_sent),
+                    cents_to_dollars(v.total_received),
+                    v.is_approved,
+                    v.primary_user.has_beneficiary_role,
+                    v.primary_user.has_vendor_role,
+                    datetime.today().strftime('%Y-%m-%d'),
+                    (datetime.today() + timedelta(days=7)).strftime('%Y-%m-%d'),
+                    transfer.id,
+                    cents_to_dollars(withdrawal_amount),
+                    '',
+                    '',
+                ])
         # Encode the CSV such that it can be sent as a file
         bytes_output = io.BytesIO()
         bytes_output.write(output.getvalue().encode('utf-8'))

@@ -16,6 +16,7 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 
 from server.exceptions import (
+    InsufficientBalanceError,
     NoTransferAccountError,
     MinimumSentLimitError,
     NoTransferAllowedLimitError,
@@ -241,8 +242,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.check_sender_transfer_limits()
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
-        self.sender_transfer_account.update_balance()
-        self.recipient_transfer_account.update_balance()
+        self.update_balances()
 
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -263,9 +263,16 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.REJECTED
+        self.update_balances()
 
         if message:
             self.resolution_message = message
+
+
+    def update_balances(self):
+        self.sender_transfer_account.update_balance()
+        self.recipient_transfer_account.update_balance()
+
 
     def get_transfer_limits(self):
         from server.utils.transfer_limits import (LIMIT_IMPLEMENTATIONS, get_applicable_transfer_limits)
@@ -326,7 +333,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  fiat_ramp=None,
                  transfer_subtype: TransferSubTypeEnum=None,
                  transfer_mode: TransferModeEnum = None,
-                 is_ghost_transfer=False):
+                 is_ghost_transfer=False,
+                 require_sufficient_balance=True):
 
         if amount < 0:
             raise Exception("Negative amount provided")
@@ -380,3 +388,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
+
+        if require_sufficient_balance and not self.check_sender_has_sufficient_balance():
+            message = "Sender {} has insufficient balance".format(sender_transfer_account)
+            self.resolve_as_rejected(message)
+            raise InsufficientBalanceError(message)
+
+        self.update_balances()
