@@ -37,7 +37,7 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
     formatted_results[1][10] = 'SOME DATE'
     assert formatted_results == [
         [
-            'ID',
+            'Vendor Account ID',
             'Phone',
             'ContactName', 
             'Current Balance', 
@@ -48,7 +48,7 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
             'Vendor', 
             'InvoiceDate', 
             'DueDate', 
-            'Transaction ID', 
+            'Transfer ID',
             'UnitAmount', 
             'Payment Has Been Made', 
             'Bank Payment Date'
@@ -97,7 +97,7 @@ def test_process_vendor_payout_approve(test_client, authed_sempo_admin_user, cre
             Accept='application/json',
         ),
         json={
-            'csv_data': f"""ID,Phone,First Name,Last Name,Created,Current Balance,Total Sent,Total Received,Approved,Beneficiary,Vendor,Transaction ID,UnitAmount,Payment Has Been Made,Bank Payment Date\n4,{user.phone},Transfer,User,SOME DATE,10.0,10.000000000000,0,True,False,True,1,10.0,TRUE,09/30/2020"""
+            'csv_data': f"""ID,Phone,First Name,Last Name,Created,Current Balance,Total Sent,Total Received,Approved,Beneficiary,Vendor,Transfer ID,UnitAmount,Payment Has Been Made,Bank Payment Date\n4,{user.phone},Transfer,User,SOME DATE,10.0,10.000000000000,0,True,False,True,1,10.0,TRUE,09/30/2020"""
         }
     )
     transfer = user.transfer_account.credit_sends[0]
@@ -125,7 +125,7 @@ def test_process_vendor_payout_reject(test_client, authed_sempo_admin_user, crea
             Accept='application/json',
         ),
         json={
-            'csv_data': f"""ID,Phone,First Name,Last Name,Created,Current Balance,Total Sent,Total Received,Approved,Beneficiary,Vendor,Transaction ID,UnitAmount,Payment Has Been Made,Bank Payment Date\n4,{user.phone},Transfer,User,SOME DATE,10.0,10.000000000000,0,True,False,True,1,10.0,FALSE,09/30/2020"""
+            'csv_data': f"""ID,Phone,First Name,Last Name,Created,Current Balance,Total Sent,Total Received,Approved,Beneficiary,Vendor,Transfer ID,UnitAmount,Payment Has Been Made,Bank Payment Date\n4,{user.phone},Transfer,User,SOME DATE,10.0,10.000000000000,0,True,False,True,1,10.0,FALSE,09/30/2020"""
         }
     )
     transfer = user.transfer_account.credit_sends[0]
