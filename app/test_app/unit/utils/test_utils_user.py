@@ -126,7 +126,7 @@ def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
     from flask import g
     from server import db
 
-    token = TokenFactory(name='Sarafu', symbol='SARAFU')
+    token = TokenFactory(name='Sarafu', symbol='Sarafu')
     organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token, country_code='AU')
     g.active_organisation = organisation
     transfer_account = TransferAccountFactory(token=token, organisation=organisation)

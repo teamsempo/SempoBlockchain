@@ -142,7 +142,7 @@ const LoginForm = function(props) {
         onClick={props.onClick}
         isLoading={props.isLoggingIn}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="LOGIN"
+        buttonText={<span>LOGIN</span>}
       />
 
       <Footer>

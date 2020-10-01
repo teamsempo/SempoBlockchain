@@ -139,7 +139,8 @@ def make_blockchain_transfer(transfer_amount,
                              require_sufficient_balance=False,
                              automatically_resolve_complete=True,
                              uuid=None,
-                             existing_blockchain_txn=False
+                             existing_blockchain_txn=False,
+                             transfer_type=TransferTypeEnum.PAYMENT
                              ):
     send_address_obj = create_address_object_if_required(send_address)
     receive_address_obj = create_address_object_if_required(receive_address)
@@ -169,7 +170,7 @@ def make_blockchain_transfer(transfer_amount,
     transfer.sender_blockchain_address = send_address_obj
     transfer.recipient_blockchain_address = receive_address_obj
 
-    transfer.transfer_type = TransferTypeEnum.PAYMENT
+    transfer.transfer_type = transfer_type
 
     if uuid:
         transfer.uuid = uuid
@@ -180,22 +181,26 @@ def make_blockchain_transfer(transfer_amount,
     return transfer
 
 
-def make_payment_transfer(transfer_amount,
-                          token=None,
-                          send_user=None,
-                          send_transfer_account=None,
-                          receive_user=None,
-                          receive_transfer_account=None,
-                          transfer_use=None,
-                          transfer_mode=None,
-                          require_sender_approved=True,
-                          require_recipient_approved=True,
-                          require_sufficient_balance=True,
-                          automatically_resolve_complete=True,
-                          uuid=None,
-                          transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
-                          is_ghost_transfer=False,
-                          queue='high-priority'):
+def make_payment_transfer(
+        transfer_amount,
+        token=None,
+        send_user=None,
+        send_transfer_account=None,
+        receive_user=None,
+        receive_transfer_account=None,
+        transfer_use=None,
+        transfer_mode=None,
+        require_sender_approved=True,
+        require_recipient_approved=True,
+        require_sufficient_balance=True,
+        automatically_resolve_complete=True,
+        uuid=None,
+        transfer_subtype: TransferSubTypeEnum=TransferSubTypeEnum.STANDARD,
+        is_ghost_transfer=False,
+        queue='high-priority',
+        batch_uuid=None,
+        transfer_type=TransferTypeEnum.PAYMENT
+):
     """
     This is used for internal transfers between Sempo wallets.
     :param transfer_amount:
@@ -215,6 +220,7 @@ def make_payment_transfer(transfer_amount,
     :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
     :param enable_pusher:
     :param queue:
+    :param batch_uuid:
     :return:
     """
 
@@ -231,7 +237,7 @@ def make_payment_transfer(transfer_amount,
         receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
 
     if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
-        send_transfer_account = receive_transfer_account.get_float_transfer_account()
+        send_transfer_account = receive_transfer_account.token.float_account
 
     transfer = CreditTransfer(transfer_amount,
                               token=token,
@@ -240,7 +246,7 @@ def make_payment_transfer(transfer_amount,
                               recipient_user=receive_user,
                               recipient_transfer_account=receive_transfer_account,
                               uuid=uuid,
-                              transfer_type=TransferTypeEnum.PAYMENT,
+                              transfer_type=transfer_type,
                               transfer_subtype=transfer_subtype,
                               transfer_mode=transfer_mode,
                               is_ghost_transfer=is_ghost_transfer)
@@ -276,7 +282,8 @@ def make_payment_transfer(transfer_amount,
         raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
-        transfer.resolve_as_complete_and_trigger_blockchain(queue=queue)
+        transfer.resolve_as_complete_and_trigger_blockchain(queue=queue, batch_uuid=batch_uuid)
+
 
     if make_cashout_incentive_transaction:
         try:
@@ -299,7 +306,8 @@ def make_payment_transfer(transfer_amount,
 
 def make_withdrawal_transfer(transfer_amount,
                              token,
-                             send_account,
+                             send_user=None,
+                             sender_transfer_account=None,
                              transfer_mode=None,
                              require_sender_approved=True,
                              require_sufficient_balance=True,
@@ -319,7 +327,7 @@ def make_withdrawal_transfer(transfer_amount,
     """
 
     transfer = CreditTransfer(transfer_amount, token,
-                              sender_user=send_account,
+                              sender_user=send_user, sender_transfer_account=sender_transfer_account,
                               uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL, transfer_mode=transfer_mode)
 
     if require_sender_approved and not transfer.check_sender_is_approved():

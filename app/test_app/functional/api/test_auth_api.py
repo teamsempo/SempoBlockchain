@@ -130,6 +130,8 @@ def test_request_tfa_token(test_client, authed_sempo_admin_user, otp_generator, 
 
 @pytest.mark.parametrize("email,password,status_code", [
     ("tristan@withsempo.com", "TestPassword", 200),
+    ("TRISTAN@withsempo.com", "TestPassword", 200),
+    ("TRISTAN@WITHSEMPO.COM", "TestPassword", 200),
     ("tristan@withsempo.com", "IncorrectTestPassword", 401),
     ("tristan+123@withsempo.com", "IncorrectTestPassword", 401),
 ])
