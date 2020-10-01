@@ -368,7 +368,9 @@ def make_deposit_transfer(transfer_amount,
                               token=token,
                               recipient_user=receive_account,
                               transfer_type=TransferTypeEnum.DEPOSIT, transfer_mode=transfer_mode,
-                              uuid=uuid, fiat_ramp=fiat_ramp)
+                              uuid=uuid,
+                              fiat_ramp=fiat_ramp,
+                              require_sufficient_balance=False)
 
     if automatically_resolve_complete:
         transfer.resolve_as_complete_and_trigger_blockchain()

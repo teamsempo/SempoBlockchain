@@ -497,6 +497,7 @@ class InternalCreditTransferAPI(MethodView):
                     transfer_type=TransferTypeEnum.PAYMENT,
                     sender_user=maybe_sender_user,
                     recipient_user=maybe_recipient_user,
+                    require_sufficient_balance=False
                 )
 
                 transfer.resolve_as_complete_with_existing_blockchain_transaction(

@@ -316,7 +316,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         return relevant_transfer_limits
 
     def check_sender_has_sufficient_balance(self):
-        return self.sender_user and self.sender_transfer_account.unrounded_balance - Decimal(self.transfer_amount) >= 0
+        return self.sender_transfer_account.unrounded_balance - Decimal(self.transfer_amount) >= 0
 
     def check_sender_is_approved(self):
         return self.sender_user and self.sender_transfer_account.is_approved
@@ -403,7 +403,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
 
         if require_sufficient_balance and not self.check_sender_has_sufficient_balance():
-            message = "Sender {} has insufficient balance".format(sender_transfer_account)
+            message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
+                self.sender_transfer_account,
+                self.sender_transfer_account.balance,
+                self.transfer_amount
+            )
             self.resolve_as_rejected(message)
             raise InsufficientBalanceError(message)
 

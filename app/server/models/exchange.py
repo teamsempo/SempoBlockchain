@@ -174,8 +174,7 @@ class Exchange(BlockchainTaskableBase):
             sender_user=user,
             recipient_transfer_account=find_transfer_accounts_with_matching_token(self.exchange_contract, from_token),
             transfer_type=TransferTypeEnum.EXCHANGE,
-            transfer_mode=transfer_mode,
-            require_sufficient_balance=True
+            transfer_mode=transfer_mode
         )
 
         db.session.add(self.from_transfer)
@@ -229,7 +228,9 @@ class Exchange(BlockchainTaskableBase):
             to_token,
             sender_transfer_account=find_transfer_accounts_with_matching_token(self.exchange_contract, to_token),
             recipient_user=user,
-            transfer_type=TransferTypeEnum.EXCHANGE, transfer_mode=transfer_mode
+            transfer_type=TransferTypeEnum.EXCHANGE,
+            transfer_mode=transfer_mode,
+            require_sufficient_balance=False
         )
 
         db.session.add(self.to_transfer)
