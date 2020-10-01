@@ -244,7 +244,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def resolve_as_complete(self, batch_uuid=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
-            raise Exception(f'Transfer resolve function called multiple times for transaction {self.id}')
+            raise Exception(f'Resolve called multiple times for transfer {self.id}')
         try:
             self.check_sender_transfer_limits()
         except TransferLimitError as e:
@@ -270,7 +270,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def resolve_as_rejected(self, message=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
-            raise Exception(f'Transfer resolve function called multiple times for transaciton {self.id}')
+            raise Exception(f'Resolve called multiple times for transfer {self.id}')
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_rejected()

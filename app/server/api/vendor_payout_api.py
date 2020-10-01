@@ -6,7 +6,7 @@ from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.utils.credit_transfer import make_withdrawal_transfer
-from server.utils.transfer_enums import TransferModeEnum, TransferStatusEnum
+from server.utils.transfer_enums import TransferModeEnum, TransferStatusEnum, TransferTypeEnum
 from server.utils.credit_transfer import cents_to_dollars, dollars_to_cents
 from server.utils.auth import requires_auth
 from server import db
@@ -134,6 +134,7 @@ class VendorPayoutAPI(MethodView):
         bytes_output.seek(0)
         return send_file(bytes_output, as_attachment=True, attachment_filename='vendor_payout.csv', mimetype='text/csv')
 
+
 class ProcessVendorPayout(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
@@ -153,37 +154,47 @@ class ProcessVendorPayout(MethodView):
             csv_data = post_data.get('csv_data', [])
             f = io.StringIO(csv_data)
             reader = csv.DictReader(f)
+
         transfers = []
         for line in reader:
-            transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == line['Transaction ID']).first()
+            tid = line['Transfer ID']
+            transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == tid).first()
             message = ''
+
             if not transfer:
-                response_object = {
-                    'message': f'Tranfer with ID {line["Transfer ID"]} not found!'
-                }
-                return make_response(jsonify(response_object)), 400
+                message = f'Transfer with ID {tid} not found!'
+                transfers.append((tid, None, message))
+                continue
 
-            if round(transfer.transfer_amount) != round(dollars_to_cents(line["UnitAmount"])):
-                response_object = {
-                    'message': f'Invalid transfer amount!'
-                }
-                return make_response(jsonify(response_object)), 400
+            if transfer.transfer_type != TransferTypeEnum.WITHDRAWAL:
+                message = f'Not a withdrawal!'
+                transfers.append((tid, None, message))
+                continue
 
-            if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
-                try:
+            got_amount = round(dollars_to_cents(line["UnitAmount"]))
+            expected_amount = round(transfer.transfer_amount)
+            if got_amount != expected_amount:
+                message = f'Transfer Amounts do not match (got {cents_to_dollars(got_amount)}, expected {cents_to_dollars(expected_amount)})!'
+                transfers.append((tid, None, message))
+                continue
+
+            try:
+                if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
                     transfer.resolve_as_complete_and_trigger_blockchain()
                     message = 'Transfer Success'
-                except Exception as e:
-                    message = str(e)
-            elif line['Payment Has Been Made'] == 'FALSE':
-                transfer.resolve_as_rejected()
-                message = 'Transfer Rejected'
-            transfers.append((transfer, message))
+                elif line['Payment Has Been Made'] == 'FALSE':
+                    transfer.resolve_as_rejected()
+                    message = 'Transfer Rejected'
+            except Exception as e:
+                message = str(e)
+
+            transfers.append((tid, transfer, message))
 
         output = io.StringIO()
         writer = csv.writer(output)
 
         writer.writerow([
+            'Transfer ID',
             'Vendor Account ID',
             'Phone',
             'First Name', 
@@ -194,16 +205,17 @@ class ProcessVendorPayout(MethodView):
             'Transfer Status',
             'Message'
         ])
-        for t, m in transfers:
+        for tid, t, m in transfers:
             writer.writerow([
-                t.sender_transfer_account.id,
-                t.sender_transfer_account.primary_user.phone,
-                t.sender_transfer_account.primary_user.first_name,
-                t.sender_transfer_account.primary_user.last_name,
-                t.created,
-                t.transfer_type.value,
-                cents_to_dollars(t.transfer_amount),
-                t.transfer_status.value,
+                tid,
+                t and t.sender_transfer_account.id,
+                t and t.sender_transfer_account.primary_user.phone,
+                t and t.sender_transfer_account.primary_user.first_name,
+                t and t.sender_transfer_account.primary_user.last_name,
+                t and t.created,
+                t and t.transfer_type.value,
+                t and cents_to_dollars(t.transfer_amount),
+                t and t.transfer_status.value,
                 m
             ])
         bytes_output = io.BytesIO()
