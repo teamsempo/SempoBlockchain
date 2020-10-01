@@ -112,7 +112,7 @@ class VendorPayoutAPI(MethodView):
                 writer.writerow([
                     v.id,
                     v.primary_user.phone,
-                    v.primary_user.first_name + ' ' + v.primary_user.last_name,
+                    f'{v.primary_user.first_name or ""} {v.primary_user.last_name or ""}',
                     cents_to_dollars(v.balance),
                     cents_to_dollars(v.total_sent),
                     cents_to_dollars(v.total_received),

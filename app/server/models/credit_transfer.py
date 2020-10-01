@@ -13,7 +13,7 @@ from uuid import uuid4
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table
 from server.models.token import Token
-from server.models.transfer_account import TransferAccount
+from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.utils.access_control import AccessControl
 
 from server.exceptions import (
@@ -369,7 +369,14 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.sender_transfer_account = self.recipient_transfer_account.token.float_account
 
         if transfer_type is TransferTypeEnum.WITHDRAWAL:
-            self.recipient_transfer_account = self.sender_transfer_account.token.float_account
+            #TODO: This lookup can be belligerent, so need to resort to a query on occasion
+            self.recipient_transfer_account = self.sender_transfer_account.token.float_account or (
+                TransferAccount.query
+                    .filter(TransferAccount.account_type == TransferAccountType.FLOAT)
+                    .filter(TransferAccount.token_id == self.sender_transfer_account.token.id)
+                    .execution_options(show_all=True)
+                    .first()
+            )
 
         try:
             self.recipient_transfer_account = recipient_transfer_account or self.recipient_transfer_account or self._select_transfer_account(
