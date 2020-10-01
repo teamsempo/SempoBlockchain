@@ -59,7 +59,7 @@ def create_transfer_account_user(init_database, create_organisation):
     init_database.session.commit()
     return user
 
-create_transfer_account_user2 = create_transfer_account_user
+create_transfer_account_user_2 = create_transfer_account_user
 
 @pytest.fixture(scope='function')
 def create_user_with_existing_transfer_account(test_client, init_database, create_transfer_account):
