@@ -336,6 +336,7 @@ def receive_after_update(mapper, connection, target):
     if target.blockchain_task and not target.is_third_party_transaction:
         print('TARGET N TASK!')
         print(target.blockchain_task)
+        print(target.blockchain_task.uuid)
         print(target)
         post_data = {
                 'blockchain_task_uuid': target.blockchain_task.uuid,
@@ -346,7 +347,7 @@ def receive_after_update(mapper, connection, target):
                 'hash': target.hash
             }
         callback_url = config.APP_HOST + '/api/v1/blockchain_taskable'
-
+        print(post_data)
         try:
             r = requests.post(
                 callback_url,
@@ -355,16 +356,19 @@ def receive_after_update(mapper, connection, target):
                 auth=HTTPBasicAuth(config.INTERNAL_AUTH_USERNAME,
                                    config.INTERNAL_AUTH_PASSWORD)
             )
+            print(r)
         except Exception:
             r = None
 
         if r and r.ok:
+            print(r)
             obj_table = BlockchainTransaction.__table__
             connection.execute(
                 obj_table.update().
                 where(obj_table.c.id == target.id).
                 values(is_synchronized_with_app=True)
             )
+            print(r.json())
         else:
             # NOTE: Soft error handling here for now, as incomplete transactions can always be synched later
             # where is_synchronized_with_app=False
@@ -379,3 +383,4 @@ def receive_after_update(mapper, connection, target):
                 where(obj_table.c.id == target.id).
                 values(is_synchronized_with_app=False)
             )
+            print(r.json())
