@@ -286,31 +286,64 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
                 return approval
         return None
 
+    def approve_initial_disbursement(self):
+        from server.utils.access_control import AccessControl
+
+        admin = getattr(g, 'user', None)
+        active_org = getattr(g, 'active_organisation', Organisation.master_organisation())
+
+        initial_disbursement = db.session.query(server.models.credit_transfer.CreditTransfer)\
+            .filter(server.models.credit_transfer.CreditTransfer.recipient_user == self.primary_user)\
+            .filter(server.models.credit_transfer.CreditTransfer.is_initial_disbursement == True)\
+            .first()
+        
+        if initial_disbursement and initial_disbursement.transfer_status == TransferStatusEnum.PENDING:
+            # Must be superadmin to auto-resolve something over default disbursement
+            if initial_disbursement.transfer_amount > active_org.default_disbursement:
+                if admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'superadmin'):
+                    return initial_disbursement.resolve_as_complete_and_trigger_blockchain(queue='high-priority')
+                else:
+                    return False
+            else:
+                return initial_disbursement.resolve_as_complete_and_trigger_blockchain(queue='high-priority')
+
     def approve_and_disburse(self, initial_disbursement=None):
         from server.utils.access_control import AccessControl
         admin = getattr(g, 'user', None)
-
-        if not self.is_approved and admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
-            self.is_approved = True
-
-        if self.is_beneficiary:
-            disbursement = self._make_initial_disbursement(initial_disbursement)
-            return disbursement
-
-    def _make_initial_disbursement(self, initial_disbursement=None, auto_resolve=False):
-        from server.utils.credit_transfer import make_payment_transfer
-
         active_org = getattr(g, 'active_organisation', Organisation.master_organisation())
+        
         if initial_disbursement is None:
             # initial disbursement defaults to None. If initial_disbursement is set then skip this section.
             # If none, then we want to see if the active_org has a default disbursement amount
             initial_disbursement = active_org.default_disbursement
+
+        # Baseline is NOT is_approved, and do NOT auto_resolve
+        self.is_approved = False
+        auto_resolve = False
+        # If admin role is admin or higher, then auto-approval is contingent on being less than or 
+        # equal to the default disbursement
+        if admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
+            self.is_approved = True
+            if initial_disbursement <= active_org.default_disbursement:
+                auto_resolve = True
+                
+        # Accounts created by superadmins are all approved, and their disbursements are 
+        # auto-resolved no matter how big they are!
+        if admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'superadmin'):
+            self.is_approved = True
+            auto_resolve = True
+
+        if self.is_beneficiary:
+            # Initial disbursement should be pending if the account is not approved
+            disbursement = self._make_initial_disbursement(initial_disbursement, auto_resolve=auto_resolve)
+            return disbursement
+
+    def _make_initial_disbursement(self, initial_disbursement=None, auto_resolve=None):
+        from server.utils.credit_transfer import make_payment_transfer
+       
         if not initial_disbursement:
             # if initial_disbursement is still none, then we don't want to create a transfer.
             return None
-
-        if initial_disbursement <= active_org.default_disbursement:
-            auto_resolve = True
 
         user_id = get_authorising_user_id()
         if user_id is not None:
@@ -323,7 +356,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
             transfer_subtype=TransferSubTypeEnum.DISBURSEMENT, transfer_mode=TransferModeEnum.WEB,
             is_ghost_transfer=False, require_sender_approved=False,
             require_recipient_approved=False, automatically_resolve_complete=auto_resolve)
-
+        disbursement.is_initial_disbursement = True
         return disbursement
 
     def initialise_withdrawal(self, withdrawal_amount, transfer_mode):

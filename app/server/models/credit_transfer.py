@@ -14,6 +14,7 @@ from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
+from server.utils.access_control import AccessControl
 
 from server.exceptions import (
     NoTransferAccountError,
@@ -74,6 +75,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+
+    is_initial_disbursement = db.Column(db.Boolean, default=False)
 
     attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy='joined')
 
