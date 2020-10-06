@@ -108,7 +108,7 @@ class TransferAccountManager extends React.Component {
   editTransferAccount() {
     const balance = this.state.balance * 100;
     const approve =
-      this.state.is_approved == "n/a" ? null : this.state.is_approved;
+      this.state.is_approved == "n/a" ? null : this.state.is_approved == "true";
     const nfc_card_id = this.state.nfc_card_id;
     const qr_code = this.state.qr_code;
     const phone = this.state.phone;
@@ -307,10 +307,10 @@ class TransferAccountManager extends React.Component {
                     <option name="is_approved" disabled value="n/a">
                       n/a
                     </option>
-                    <option name="is_approved" value="true">
+                    <option name="is_approved" value={true}>
                       Approved
                     </option>
-                    <option name="is_approved" value="false">
+                    <option name="is_approved" value={false}>
                       Unapproved
                     </option>
                   </StatusSelect>
