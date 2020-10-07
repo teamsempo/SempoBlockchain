@@ -117,9 +117,6 @@ class TransferAccountAPI(MethodView):
                 transfer_account.is_approved = True
                 transfer_account.approve_initial_disbursement()
 
-            if approve: 
-                transfer_account.is_approved = True
-
             db.session.flush()
 
             result = transfer_account_schema.dump(transfer_account)
@@ -151,9 +148,6 @@ class TransferAccountAPI(MethodView):
                 if not transfer_account.is_approved and approve:
                     transfer_account.is_approved = True
                     transfer_account.approve_initial_disbursement()
-
-                if approve: 
-                    transfer_account.is_approved = True
 
                 transfer_accounts.append(transfer_account)
 
