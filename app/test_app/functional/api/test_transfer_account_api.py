@@ -5,17 +5,19 @@ from server.utils.transfer_enums import TransferStatusEnum
 from server import db
 import random
 
-@pytest.mark.parametrize("tier, initial_disbursement, is_approved, transfer_status, account_approval_http_status, final_transfer_status", [
+@pytest.mark.parametrize("tier, initial_disbursement, is_approved, transfer_status, transfer_account_approver_tier, account_approval_http_status, final_transfer_status, final_is_approved", [   
     # Every relevant admin tier, at default disbursement amount 
-    ('subadmin', 200, False, TransferStatusEnum.PENDING, 403, None),
-    ('admin', 200, True, TransferStatusEnum.COMPLETE, 201, TransferStatusEnum.COMPLETE),
-    ('superadmin', 200, True, TransferStatusEnum.COMPLETE, 201, TransferStatusEnum.COMPLETE),
+    ('subadmin', 200, False, TransferStatusEnum.PENDING, 'subadmin', 403, TransferStatusEnum.PENDING, False),
+    ('subadmin', 200, False, TransferStatusEnum.PENDING, 'admin', 201, TransferStatusEnum.COMPLETE, True),
+    ('admin', 200, True, TransferStatusEnum.COMPLETE, 'admin', 201, TransferStatusEnum.COMPLETE, True),
+    ('superadmin', 200, True, TransferStatusEnum.COMPLETE, 'admin', 201, TransferStatusEnum.COMPLETE, True),
     # Every relevant admin tier, exceeding default disbursement amount 
-    ('subadmin', 100000, False, TransferStatusEnum.PENDING, 403, None),
-    ('admin', 100000, True, TransferStatusEnum.PENDING, 201, TransferStatusEnum.PENDING),
-    ('superadmin', 100000, True, TransferStatusEnum.COMPLETE, 201, TransferStatusEnum.COMPLETE),
+    ('subadmin', 800, False, TransferStatusEnum.PENDING, 'admin', 201, TransferStatusEnum.PENDING, True),
+    ('admin', 800, True, TransferStatusEnum.PENDING, 'admin', 201, TransferStatusEnum.PENDING, True),
+    ('superadmin', 800, True, TransferStatusEnum.COMPLETE, 'admin', 201, TransferStatusEnum.COMPLETE, True),
+    ('subadmin', 800, False, TransferStatusEnum.PENDING, 'superadmin', 201, TransferStatusEnum.COMPLETE, True),
 ])
-def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, initial_disbursement, is_approved, transfer_status, account_approval_http_status, final_transfer_status):
+def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, initial_disbursement, is_approved, transfer_status, transfer_account_approver_tier, account_approval_http_status, final_transfer_status, final_is_approved):
     authed_sempo_admin_user.set_held_role('ADMIN', tier)
     auth = get_complete_auth_token(authed_sempo_admin_user)
     # Create user!
@@ -47,6 +49,9 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
     assert disbursement.is_initial_disbursement == True
     assert disbursement.transfer_status == transfer_status
 
+    authed_sempo_admin_user.set_held_role('ADMIN', transfer_account_approver_tier)
+    auth = get_complete_auth_token(authed_sempo_admin_user)
+
     response = test_client.put(
         f"/api/v1/transfer_account/{transfer_account_id}/",
         headers=dict(
@@ -66,7 +71,7 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
         assert len(transfer_account.credit_receives) == 1 # Make sure we don't get a double-disbursement on account approval
         disbursement = transfer_account.credit_receives[0]
         assert disbursement.transfer_status == final_transfer_status
-        assert transfer_account.is_approved == True
+    assert transfer_account.is_approved == final_is_approved
         
 @pytest.mark.parametrize("transfer_account_id_accessor, tier, status_code", [
     (lambda u: u.transfer_account.id, None, 401),
