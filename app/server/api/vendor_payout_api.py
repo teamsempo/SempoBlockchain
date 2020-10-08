@@ -39,7 +39,7 @@ class VendorPayoutAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         if account_ids:
-            vendors = db.session.query(TransferAccount).filter(TransferAccount.account_type != TransferAccountType.USER).filter(TransferAccount.id.in_(account_ids)).all()
+            vendors = db.session.query(TransferAccount).filter(TransferAccount.account_type == TransferAccountType.USER).filter(TransferAccount.id.in_(account_ids)).all()
             for vendor in vendors:
                 if not vendor.primary_user.has_vendor_role:
 
