@@ -128,18 +128,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         )
 
     def send_blockchain_payload_to_worker(self, is_retry=False, queue='high-priority'):
-        # TODO: Work out why the transfer account is being filtered out
-        sta = (
-                self.sender_transfer_account
-                or TransferAccount.query.execution_options(show_all=True).get(self.sender_transfer_account_id)
-               )
-        sender_approval = sta.get_or_create_system_transfer_approval()
-
-        rta = (
-                self.recipient_transfer_account
-                or TransferAccount.query.execution_options(show_all=True).get(self.recipient_transfer_account_id)
-        )
-        recipient_approval = rta.get_or_create_system_transfer_approval()
+        sender_approval = self.sender_transfer_account.get_or_create_system_transfer_approval()
+        recipient_approval = self.recipient_transfer_account.get_or_create_system_transfer_approval()
 
         # Approval is called so that the master account can make transactions on behalf of the transfer account.
         # Make sure this approval is done first before making a transaction
@@ -379,14 +369,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.sender_transfer_account = self.recipient_transfer_account.token.float_account
 
         if transfer_type is TransferTypeEnum.WITHDRAWAL:
-            #TODO: This lookup can be belligerent, so need to resort to a query on occasion
-            self.recipient_transfer_account = self.sender_transfer_account.token.float_account or (
-                TransferAccount.query
-                    .filter(TransferAccount.account_type == TransferAccountType.FLOAT)
-                    .filter(TransferAccount.token_id == self.sender_transfer_account.token.id)
-                    .execution_options(show_all=True)
-                    .first()
-            )
+            self.recipient_transfer_account = self.sender_transfer_account.token.float_account
 
         try:
             self.recipient_transfer_account = recipient_transfer_account or self.recipient_transfer_account or self._select_transfer_account(
