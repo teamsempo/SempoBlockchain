@@ -18,8 +18,7 @@ const mapStateToProps = state => {
 class GroupByChart extends React.Component {
   render() {
     const selected = this.props.selected;
-
-    const aggregate = this.props.data.aggregate;
+    const { percent_change, ...aggregate } = this.props.data.aggregate;
     const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
     var aggregateData = aggregate ? Object.values(aggregate) : [];
     if (this.props.data.type.value_type == VALUE_TYPES.CURRENCY) {

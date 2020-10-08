@@ -190,7 +190,8 @@ def new_credit_transfer(create_transfer_account_user, create_transfer_account_us
         recipient_user=create_transfer_account_user_2,
         transfer_type=TransferTypeEnum.PAYMENT,
         transfer_subtype=TransferSubTypeEnum.STANDARD,
-        uuid=str(uuid4())
+        uuid=str(uuid4()),
+        require_sufficient_balance=False
     )
     return credit_transfer
 
@@ -207,7 +208,8 @@ def other_new_credit_transfer(create_transfer_account_user, external_reserve_tok
         recipient_user=create_transfer_account_user,
         transfer_type=TransferTypeEnum.PAYMENT,
         transfer_subtype=TransferSubTypeEnum.STANDARD,
-        uuid=str(uuid4())
+        uuid=str(uuid4()),
+        require_sufficient_balance=False
     )
     return credit_transfer
 
