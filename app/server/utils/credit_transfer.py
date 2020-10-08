@@ -249,7 +249,8 @@ def make_payment_transfer(
                               transfer_type=transfer_type,
                               transfer_subtype=transfer_subtype,
                               transfer_mode=transfer_mode,
-                              is_ghost_transfer=is_ghost_transfer)
+                              is_ghost_transfer=is_ghost_transfer,
+                              require_sufficient_balance=require_sufficient_balance)
 
     make_cashout_incentive_transaction = False
 
@@ -276,10 +277,6 @@ def make_payment_transfer(
         transfer.resolve_as_rejected(message)
         raise AccountNotApprovedError(message, is_sender=False)
 
-    if require_sufficient_balance and not transfer.check_sender_has_sufficient_balance():
-        message = "Sender {} has insufficient balance".format(send_transfer_account)
-        transfer.resolve_as_rejected(message)
-        raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
         transfer.resolve_as_complete_and_trigger_blockchain(queue=queue, batch_uuid=batch_uuid)
@@ -326,19 +323,21 @@ def make_withdrawal_transfer(transfer_amount,
     :return:
     """
 
-    transfer = CreditTransfer(transfer_amount, token,
-                              sender_user=send_user, sender_transfer_account=sender_transfer_account,
-                              uuid=uuid, transfer_type=TransferTypeEnum.WITHDRAWAL, transfer_mode=transfer_mode)
+    transfer = CreditTransfer(
+        transfer_amount,
+        token,
+        sender_user=send_user,
+        sender_transfer_account=sender_transfer_account,
+        uuid=uuid,
+        transfer_type=TransferTypeEnum.WITHDRAWAL,
+        transfer_mode=transfer_mode,
+        require_sufficient_balance=require_sufficient_balance
+    )
 
     if require_sender_approved and not transfer.check_sender_is_approved():
-        message = "Sender {} is not approved".format(send_account)
+        message = "Sender {} is not approved".format(sender_transfer_account)
         transfer.resolve_as_rejected(message)
         raise AccountNotApprovedError(message, is_sender=True)
-
-    if require_sufficient_balance and not transfer.check_sender_has_sufficient_balance():
-        message = "Sender {} has insufficient balance".format(send_account)
-        transfer.resolve_as_rejected(message)
-        raise InsufficientBalanceError(message)
 
     if automatically_resolve_complete:
         transfer.resolve_as_complete_and_trigger_blockchain()
@@ -369,7 +368,9 @@ def make_deposit_transfer(transfer_amount,
                               token=token,
                               recipient_user=receive_account,
                               transfer_type=TransferTypeEnum.DEPOSIT, transfer_mode=transfer_mode,
-                              uuid=uuid, fiat_ramp=fiat_ramp)
+                              uuid=uuid,
+                              fiat_ramp=fiat_ramp,
+                              require_sufficient_balance=False)
 
     if automatically_resolve_complete:
         transfer.resolve_as_complete_and_trigger_blockchain()
