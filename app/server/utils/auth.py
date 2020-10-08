@@ -370,7 +370,7 @@ def create_user_response_object(user, auth_token, message):
             conversion_rate = conversion.rate
 
     transfer_usages = []
-    usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).limit(11).all()
+    usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).all()
     for usage in usage_objects:
         if ((usage.is_cashout and user.cashout_authorised) or not usage.is_cashout):
             transfer_usages.append({

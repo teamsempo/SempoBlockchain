@@ -245,10 +245,10 @@ function* refreshToken() {
     if (token_request.auth_token) {
       storeSessionToken(token_request.auth_token);
 
+      yield call(updateOrganisationStateFromLoginData, token_request);
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(token_request))
       );
-      yield call(updateOrganisationStateFromLoginData, token_request);
       yield call(authenticatePusher);
     }
     return token_request;
@@ -349,11 +349,10 @@ function* activate(
     if (activated_account.auth_token && !activated_account.tfa_url) {
       storeSessionToken(activated_account.auth_token);
       yield put(ActivateAccountAction.activateAccountSuccess());
+      yield call(updateOrganisationStateFromLoginData, activated_account);
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(activated_account))
       );
-      yield call(updateOrganisationStateFromLoginData, activated_account);
-
       yield call(authenticatePusher);
     } else if (activated_account.tfa_url) {
       storeSessionToken(activated_account.auth_token);

@@ -14,6 +14,7 @@ from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
 from server.utils.misc import decrypt_string, attach_host
+from sqlalchemy.sql import func
 
 import random
 
@@ -57,7 +58,8 @@ class RegisterAPI(MethodView):
         # get the post data
         post_data = request.get_json()
 
-        email = post_data.get('email') or post_data.get('username')
+        email = post_data.get('email', '') or post_data.get('username', '')
+        email = email.lower() if email else ''
         password = post_data.get('password')
         phone = post_data.get('phone')
         referral_code = post_data.get('referral_code')
@@ -121,7 +123,7 @@ class RegisterAPI(MethodView):
             return make_response(jsonify(response_object)), 403
 
         # check if user already exists
-        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
+        user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
         if user:
             response_object = {
                 'status': 'fail',
@@ -315,7 +317,8 @@ class LoginAPI(MethodView):
         user = None
         phone = None
 
-        email = post_data.get('username') or post_data.get('email')
+        email = post_data.get('username', '') or post_data.get('email', '')
+        email = email.lower() if email else ''
         password = post_data.get('password')
         tfa_token = post_data.get('tfa_token')
 
@@ -323,7 +326,7 @@ class LoginAPI(MethodView):
 
         # First try to match email
         if email:
-            user = User.query.filter_by(email=email).execution_options(show_all=True).first()
+            user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
 
         # Now try to match the public serial number (comes in under the phone)
         if not user:
@@ -516,8 +519,8 @@ class RequestPasswordResetEmailAPI(MethodView):
         # get the post data
         post_data = request.get_json()
 
-        email = post_data.get('email')
-
+        email = post_data.get('email', '')
+        email = email.lower() if email else ''
         if not email:
             response_object = {
                 'status': 'fail',
@@ -525,8 +528,7 @@ class RequestPasswordResetEmailAPI(MethodView):
             }
 
             return make_response(jsonify(response_object)), 401
-
-        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
+        user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
 
         if user:
             password_reset_token = user.encode_single_use_JWS('R')
@@ -739,9 +741,17 @@ class PermissionsAPI(MethodView):
 
         post_data = request.get_json()
 
-        email = post_data.get('email')
+        email = post_data.get('email', '')
+        email = email.lower() if email else ''
         tier = post_data.get('tier')
         organisation_id = post_data.get('organisation_id', None)
+
+        if not (email and tier):
+            response_object = {'message': 'No email or tier provided'}
+            return make_response(jsonify(response_object)), 400
+
+        if not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', tier):
+            return make_response(jsonify({'message': f'User does not have permission to invite {tier}'})), 400
 
         if organisation_id and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
             response_object = {'message': 'Not Authorised to set organisation ID'}
@@ -756,15 +766,10 @@ class PermissionsAPI(MethodView):
         if not organisation:
             response_object = {'message': 'Organisation Not Found'}
             return make_response(jsonify(response_object)), 404
-
-        email_exists = EmailWhitelist.query.filter_by(email=email).first()
+        email_exists = EmailWhitelist.query.filter(func.lower(EmailWhitelist.email)==email).first()
 
         if email_exists:
             response_object = {'message': 'Email already on whitelist.'}
-            return make_response(jsonify(response_object)), 400
-
-        if not (email and tier):
-            response_object = {'message': 'No email or tier provided'}
             return make_response(jsonify(response_object)), 400
 
         invite = EmailWhitelist(email=email,

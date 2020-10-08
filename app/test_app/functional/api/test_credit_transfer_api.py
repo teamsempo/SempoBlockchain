@@ -50,7 +50,7 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
     recipient_user_id = recipient_user_id_accessor(create_transfer_account_user)
 
     if transfer_type == 'PAYMENT' and sender_user_id:
-        create_transfer_account_user.transfer_account.set_balance_offset(10000)
+        create_transfer_account_user.transfer_account.set_balance_offset(1000000)
         create_transfer_account_user.transfer_account.is_approved = True
 
     if tier:
@@ -167,12 +167,17 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
                                     organisation=org,
                                     initial_disbursement = 100)
 
+    existing_user_a.default_transfer_account.set_balance_offset(1000)
+
     existing_user_b = create_transfer_account_user(
                                     first_name='Buster',
                                     last_name='Baxter',
                                     phone="+19025554321",
                                     organisation=org,
                                     initial_disbursement = 100)
+
+    existing_user_b.default_transfer_account.set_balance_offset(1000)
+
     made_up_hash = '0xdeadbeef2322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
 
     resp = post_to_credit_transfer_internal(existing_user_a.default_transfer_account.blockchain_address, existing_user_b.default_transfer_account.blockchain_address, made_up_hash, 100, token.address)
@@ -184,6 +189,9 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     transfer = CreditTransfer.query.filter_by(id=transfer_id).execution_options(show_all=True).first()
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account == existing_user_b.default_transfer_account
+    # Check that the user is being attached too
+    assert transfer.sender_user_id == existing_user_a.id
+    assert transfer.recipient_user_id == existing_user_b.id
 
     # 2. Existing User A -> Stranger A
     fake_user_a_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539739'
@@ -202,6 +210,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
     assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
+    assert transfer.sender_user_id == existing_user_a.id
 
     # 3. Existing User A -> Stranger A (to ensure we don't give Stranger A two ghost accounts)
     made_up_hash = '0x000011112322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
@@ -216,6 +225,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     assert transfer.sender_transfer_account == existing_user_a.default_transfer_account
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
     assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
+    assert transfer.sender_user_id == existing_user_a.id
 
     # 4. Stranger B -> Existing User A
     fake_user_b_address = '0xA9450d3dB5A909b08197BC4a0665A4d632539739'
