@@ -111,7 +111,8 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
             sender_user=new_credit_transfer.sender_user,
             recipient_user=new_credit_transfer.sender_user,
             transfer_type=TransferTypeEnum.PAYMENT,
-            transfer_subtype=TransferSubTypeEnum.STANDARD
+            transfer_subtype=TransferSubTypeEnum.STANDARD,
+            require_sufficient_balance=False
         )
         db.session.add(c)
         c.resolve_as_complete_and_trigger_blockchain()
