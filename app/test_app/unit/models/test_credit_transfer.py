@@ -67,7 +67,8 @@ def test_prior_task_requirements(test_client, init_database):
     send1 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta1,
-        recipient_transfer_account=ta2
+        recipient_transfer_account=ta2,
+        require_sufficient_balance=False
     )
 
     send1.transfer_status = TransferStatusEnum.COMPLETE
@@ -83,7 +84,8 @@ def test_prior_task_requirements(test_client, init_database):
     send2 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta1,
-        recipient_transfer_account=ta2
+        recipient_transfer_account=ta2,
+        require_sufficient_balance=False
     )
 
     # Should pick up prior send.
@@ -105,19 +107,22 @@ def test_prior_task_requirements(test_client, init_database):
     receive1 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta3,
-        recipient_transfer_account=ta1
+        recipient_transfer_account=ta1,
+        require_sufficient_balance=False
     )
 
     receive2 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta3,
-        recipient_transfer_account=ta1
+        recipient_transfer_account=ta1,
+        require_sufficient_balance=False
     )
 
     send3 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta1,
-        recipient_transfer_account=ta2
+        recipient_transfer_account=ta2,
+        require_sufficient_balance=False
     )
 
     # Should just be send1, as send2, receive1 and receive2 aren't resolved as complete yet
@@ -138,13 +143,15 @@ def test_prior_task_requirements(test_client, init_database):
     send4 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta1,
-        recipient_transfer_account=ta2
+        recipient_transfer_account=ta2,
+        require_sufficient_balance=False
     )
 
     send5 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta1,
-        recipient_transfer_account=ta2
+        recipient_transfer_account=ta2,
+        require_sufficient_balance=False
     )
 
     send3.batch_uuid = u3
@@ -163,7 +170,8 @@ def test_prior_task_requirements(test_client, init_database):
     send6 = CreditTransferFactory(
         amount=1000,
         sender_transfer_account=ta1,
-        recipient_transfer_account=ta2
+        recipient_transfer_account=ta2,
+        require_sufficient_balance=False
     )
 
     assert send6._get_required_prior_tasks() == {send3, send4, send5}

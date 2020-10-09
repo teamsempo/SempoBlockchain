@@ -120,6 +120,7 @@ class TransferAccountAPI(MethodView):
                 transfer_account.payable_epoch = payable_epoch
 
             if not approve == transfer_account.is_approved and transfer_account.is_approved is not True:
+                transfer_account.is_approved = True
                 transfer_account.approve_initial_disbursement()
 
             db.session.flush()
@@ -155,6 +156,7 @@ class TransferAccountAPI(MethodView):
                     transfer_account.is_approved = False
 
                 if not transfer_account.is_approved and approve:
+                    transfer_account.is_approved = True
                     transfer_account.approve_initial_disbursement()
 
                 transfer_accounts.append(transfer_account)

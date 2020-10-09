@@ -39,35 +39,31 @@ export default class CustomTabs extends React.Component {
           let tsPrompt = ts[2];
 
           const timeseries = metrics[tsName].timeseries;
-          let startValue = 0;
-          let endValue = 0;
-          Object.keys(timeseries).map(key => {
-            startValue += timeseries[key][0].value;
-            endValue += timeseries[key][timeseries[key].length - 1].value;
-          });
+
+          const percentage_change = metrics[tsName].aggregate.percent_change;
           let suffix = metrics[tsName].type.currency_symbol
             ? " " + metrics[tsName].type.currency_symbol
             : "";
           let color;
           let arrow;
-          if (endValue > startValue) {
-            color = "#3f8600";
+          if (percentage_change > 0) {
+            color = "#3f8600"; // green
             arrow = (
               <CaretUpOutlined style={{ color: color, marginRight: 0 }} />
             );
-          } else if (startValue > endValue) {
-            color = "#cf1322";
+          } else if (percentage_change < 0) {
+            color = "#cf1322"; // red
             arrow = (
               <CaretDownOutlined style={{ color: color, marginRight: 0 }} />
             );
           } else {
-            color = "#485465";
+            color = "#485465"; // grey
             arrow = <MinusOutlined style={{ color: color, marginRight: 0 }} />;
           }
 
           let percentChange = "--";
-          if (endValue && startValue) {
-            percentChange = Math.round((endValue / startValue - 1) * 100);
+          if (percentage_change) {
+            percentChange = Math.round(percentage_change);
           }
 
           const total =

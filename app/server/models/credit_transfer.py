@@ -17,6 +17,8 @@ from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
 
 from server.exceptions import (
+    TransferLimitError,
+    InsufficientBalanceError,
     NoTransferAccountError,
     MinimumSentLimitError,
     NoTransferAllowedLimitError,
@@ -89,6 +91,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
+
+    def add_message(self, message):
+        dated_message = f"[{datetime.datetime.utcnow()}:: {message}]"
+        self.resolution_message = dated_message
 
     # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
@@ -240,12 +246,19 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def resolve_as_complete(self, batch_uuid=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
-            raise Exception(f'Transfer resolve function called multiple times for transaction {self.id}')
-        self.check_sender_transfer_limits()
+            raise Exception(f'Resolve called multiple times for transfer {self.id}')
+        try:
+            self.check_sender_transfer_limits()
+        except TransferLimitError as e:
+            # Sempo admins can always bypass limits, allowing for things like emergency moving of funds etc
+            if hasattr(g, 'user') and AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'sempoadmin'}):
+                self.add_message(f'Warning: {e}')
+            else:
+                raise e
+
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
-        self.sender_transfer_account.update_balance()
-        self.recipient_transfer_account.update_balance()
+        self.update_balances()
 
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
@@ -259,16 +272,22 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def resolve_as_rejected(self, message=None):
         if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
-            raise Exception(f'Transfer resolve function called multiple times for transaciton {self.id}')
+            raise Exception(f'Resolve called multiple times for transfer {self.id}')
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
             self.fiat_ramp.resolve_as_rejected()
 
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.REJECTED
+        self.update_balances()
 
         if message:
-            self.resolution_message = message
+            self.add_message(message)
+
+    def update_balances(self):
+        self.sender_transfer_account.update_balance()
+        self.recipient_transfer_account.update_balance()
+
 
     def get_transfer_limits(self):
         from server.utils.transfer_limits import (LIMIT_IMPLEMENTATIONS, get_applicable_transfer_limits)
@@ -299,7 +318,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         return relevant_transfer_limits
 
     def check_sender_has_sufficient_balance(self):
-        return self.sender_user and self.sender_transfer_account.unrounded_balance - Decimal(self.transfer_amount) >= 0
+        return self.sender_transfer_account.unrounded_balance - Decimal(self.transfer_amount) >= 0
 
     def check_sender_is_approved(self):
         return self.sender_user and self.sender_transfer_account.is_approved
@@ -329,7 +348,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  fiat_ramp=None,
                  transfer_subtype: TransferSubTypeEnum=None,
                  transfer_mode: TransferModeEnum = None,
-                 is_ghost_transfer=False):
+                 is_ghost_transfer=False,
+                 require_sufficient_balance=True):
 
         if amount < 0:
             raise Exception("Negative amount provided")
@@ -383,3 +403,14 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.append_organisation_if_required(self.recipient_transfer_account.organisation)
         self.append_organisation_if_required(self.sender_transfer_account.organisation)
+
+        if require_sufficient_balance and not self.check_sender_has_sufficient_balance():
+            message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
+                self.sender_transfer_account,
+                self.sender_transfer_account.balance,
+                self.transfer_amount
+            )
+            self.resolve_as_rejected(message)
+            raise InsufficientBalanceError(message)
+
+        self.update_balances()
