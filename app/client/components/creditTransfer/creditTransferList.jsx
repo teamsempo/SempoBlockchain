@@ -365,6 +365,15 @@ class CreditTransferList extends React.Component {
           <option name="transfer_type" value="RECLAMATION">
             RECLAMATION
           </option>
+          <option name="transfer_type" value="WITHDRAWAL">
+            WITHDRAWAL
+          </option>
+          <option name="transfer_type" value="DEPOSIT">
+            DEPOSIT
+          </option>
+          <option name="transfer_type" value="FEE">
+            FEE
+          </option>
         </StyledSelect>
       );
     }
