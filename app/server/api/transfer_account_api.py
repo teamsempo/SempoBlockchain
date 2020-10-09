@@ -101,12 +101,6 @@ class TransferAccountAPI(MethodView):
                 }
                 return make_response(jsonify(response_object)), 400
 
-            # Explicitly checking True and False since null is also possible
-            if approve == True: 
-                transfer_account.is_approved = True
-            elif approve == False:
-                transfer_account.is_approved = False
-
             if transfer_account_name and not transfer_account_name == transfer_account.name:
                 transfer_account.name = transfer_account_name
 
@@ -122,6 +116,12 @@ class TransferAccountAPI(MethodView):
             if not approve == transfer_account.is_approved and transfer_account.is_approved is not True:
                 transfer_account.is_approved = True
                 transfer_account.approve_initial_disbursement()
+
+            # Explicitly checking True and False since null is also possible
+            if approve == True: 
+                transfer_account.is_approved = True
+            elif approve == False:
+                transfer_account.is_approved = False
 
             db.session.flush()
 
