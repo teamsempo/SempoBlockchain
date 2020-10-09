@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - fix-mobile-export
+                - balance_resolution_ordering
           requires:
             - build
             #- test:backend
