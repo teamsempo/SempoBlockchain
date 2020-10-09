@@ -203,7 +203,7 @@ class BusinessVerificationPage extends React.Component {
                   )}
 
                   <AsyncButton
-                    buttonText={"Get Started"}
+                    buttonText={<span>Get Started</span>}
                     onClick={this.props.nextStep}
                   />
                 </div>

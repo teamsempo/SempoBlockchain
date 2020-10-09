@@ -98,7 +98,7 @@ class OrganisationSettingForm extends React.Component<
           type="submit"
           isLoading={this.props.organisations.editStatus.isRequesting}
           buttonStyle={{ display: "flex" }}
-          buttonText="Submit"
+          buttonText={<span>Submit</span>}
         />
       </form>
     );

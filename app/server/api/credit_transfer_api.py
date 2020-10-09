@@ -145,11 +145,21 @@ class CreditTransferAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        if action == 'COMPLETE':
-            credit_transfer.resolve_as_complete_and_trigger_blockchain()
+        try:
+            if action == 'COMPLETE':
+                credit_transfer.resolve_as_complete_and_trigger_blockchain()
 
-        elif action == 'REJECT':
-            credit_transfer.resolve_as_rejected()
+            elif action == 'REJECT':
+                credit_transfer.resolve_as_rejected()
+
+        except Exception as e:
+
+            db.session.commit()
+
+            response_object = {
+                'message': str(e),
+            }
+            return make_response(jsonify(response_object)), 400
 
         db.session.flush()
 
@@ -345,7 +355,6 @@ class CreditTransferAPI(MethodView):
                         automatically_resolve_complete=auto_resolve,
                         transfer_mode=TransferModeEnum.WEB,
                         queue=queue,
-                        enable_pusher=not is_bulk
                     )
 
             except (InsufficientBalanceError,
@@ -487,6 +496,7 @@ class InternalCreditTransferAPI(MethodView):
                     transfer_type=TransferTypeEnum.PAYMENT,
                     sender_user=maybe_sender_user,
                     recipient_user=maybe_recipient_user,
+                    require_sufficient_balance=False
                 )
 
                 transfer.resolve_as_complete_with_existing_blockchain_transaction(
