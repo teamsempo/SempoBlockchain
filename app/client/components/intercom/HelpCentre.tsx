@@ -3,7 +3,7 @@ import { LinkOutlined } from "@ant-design/icons";
 
 export const HelpCentre = () => {
   return (
-    <a href="http://docs.withsempo.com/" target="_blank">
+    <a href="https://docs.withsempo.com/" target="_blank">
       <LinkOutlined translate={""} /> Help Center
     </a>
   );
