@@ -179,7 +179,7 @@ class ExportManager extends React.Component {
             onClick={() => this.attemptNewExport()}
             isLoading={this.props.export.isRequesting}
             buttonStyle={{ display: "flex" }}
-            buttonText="Export"
+            buttonText={<span>Export</span>}
           />
           <ErrorMessage>{this.props.export.error}</ErrorMessage>
           <a

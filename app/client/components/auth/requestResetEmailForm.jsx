@@ -89,7 +89,7 @@ const RequestResetEmailForm = function(props) {
           onClick={props.onClick}
           isLoading={props.isLoading}
           buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-          buttonText="Reset Password"
+          buttonText={<span>Reset Password</span>}
         />
         <ErrorMessage>{error_message}</ErrorMessage>
       </div>

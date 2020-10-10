@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import or_, not_
 import json
+from uuid import uuid4
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
@@ -144,11 +145,21 @@ class CreditTransferAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
-        if action == 'COMPLETE':
-            credit_transfer.resolve_as_complete_and_trigger_blockchain()
+        try:
+            if action == 'COMPLETE':
+                credit_transfer.resolve_as_complete_and_trigger_blockchain()
 
-        elif action == 'REJECT':
-            credit_transfer.resolve_as_rejected()
+            elif action == 'REJECT':
+                credit_transfer.resolve_as_rejected()
+
+        except Exception as e:
+
+            db.session.commit()
+
+            response_object = {
+                'message': str(e),
+            }
+            return make_response(jsonify(response_object)), 400
 
         db.session.flush()
 
@@ -224,6 +235,8 @@ class CreditTransferAPI(MethodView):
 
         if recipient_transfer_accounts_ids:
             is_bulk = True
+            batch_uuid = str(uuid4())
+
 
             if transfer_type not in ["DISBURSEMENT", "BALANCE"]:
                 response_object = {
@@ -252,6 +265,7 @@ class CreditTransferAPI(MethodView):
                         response_list.append({'status': 400, 'message': str(e)})
 
         else:
+            batch_uuid = None
             try:
                 individual_sender_user = find_user_with_transfer_account_from_identifiers(
                     sender_user_id,
@@ -301,7 +315,8 @@ class CreditTransferAPI(MethodView):
                         transfer_mode=TransferModeEnum.WEB,
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        queue=queue,
+                        batch_uuid=batch_uuid
                     )
 
                 elif transfer_type == 'RECLAMATION':
@@ -315,6 +330,7 @@ class CreditTransferAPI(MethodView):
                         require_recipient_approved=False,
                         automatically_resolve_complete=auto_resolve,
                         queue=queue,
+                        batch_uuid=batch_uuid
                     )
 
                 elif transfer_type == 'DISBURSEMENT':
@@ -327,7 +343,8 @@ class CreditTransferAPI(MethodView):
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                         transfer_mode=TransferModeEnum.WEB,
                         automatically_resolve_complete=auto_resolve,
-                        queue=queue
+                        queue=queue,
+                        batch_uuid=batch_uuid
                     )
 
                 elif transfer_type == 'BALANCE':
@@ -338,7 +355,6 @@ class CreditTransferAPI(MethodView):
                         automatically_resolve_complete=auto_resolve,
                         transfer_mode=TransferModeEnum.WEB,
                         queue=queue,
-                        enable_pusher=not is_bulk
                     )
 
             except (InsufficientBalanceError,
@@ -446,7 +462,10 @@ class InternalCreditTransferAPI(MethodView):
         else:
             token = Token.query.filter_by(address=contract_address).first()
             maybe_sender_transfer_account = TransferAccount.query.execution_options(show_all=True).filter_by(blockchain_address=sender_blockchain_address).first()
+            maybe_sender_user = maybe_sender_transfer_account.users[0] if maybe_sender_transfer_account and len(maybe_sender_transfer_account.users) == 1 else None
+
             maybe_recipient_transfer_account = TransferAccount.query.execution_options(show_all=True).filter_by(blockchain_address=recipient_blockchain_address).first()
+            maybe_recipient_user = maybe_recipient_transfer_account.users[0] if maybe_recipient_transfer_account and len(maybe_recipient_transfer_account.users) == 1 else None
 
             # Case 2: Two non-sempo users making a trade on our token. We don't have to track this!
             if not maybe_recipient_transfer_account and not maybe_sender_transfer_account:
@@ -475,6 +494,9 @@ class InternalCreditTransferAPI(MethodView):
                     sender_transfer_account=send_transfer_account,
                     recipient_transfer_account=receive_transfer_account,
                     transfer_type=TransferTypeEnum.PAYMENT,
+                    sender_user=maybe_sender_user,
+                    recipient_user=maybe_recipient_user,
+                    require_sufficient_balance=False
                 )
 
                 transfer.resolve_as_complete_with_existing_blockchain_transaction(

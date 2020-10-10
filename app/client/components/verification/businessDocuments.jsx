@@ -238,9 +238,14 @@ class BusinessDocuments extends React.Component {
 
         <ThemeProvider theme={DefaultTheme}>
           <div>
-            <AsyncButton buttonText={"Back"} onClick={this.props.backStep} />
             <AsyncButton
-              buttonText={this.props.isFinal ? "COMPLETE" : "Next"}
+              buttonText={<span>Back</span>}
+              onClick={this.props.backStep}
+            />
+            <AsyncButton
+              buttonText={
+                this.props.isFinal ? <span>COMPLETE</span> : <span>Next</span>
+              }
               onClick={this.isValidated}
               isLoading={this.props.editStatus.isRequesting}
             />

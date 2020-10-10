@@ -45,7 +45,7 @@ class UploadButton extends React.Component {
     if (this.props.button) {
       return (
         <TheRealInputButton>
-          {this.props.uploadButtonText}
+          <span>{this.props.uploadButtonText}</span>
           <InputTrigger type="file" onChange={e => this.handleFileChange(e)} />
         </TheRealInputButton>
       );
@@ -55,7 +55,7 @@ class UploadButton extends React.Component {
       <div style={{ display: "flex" }}>
         <InputButtonWrapper>
           <InputButton>
-            {this.props.uploadButtonText}
+            <span>{this.props.uploadButtonText}</span>
             <InputTrigger
               type="file"
               onChange={e => this.handleFileChange(e)}

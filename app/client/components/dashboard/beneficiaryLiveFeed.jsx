@@ -2,6 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import { Card } from "antd";
+import { ArrowsAltOutlined, ShrinkOutlined } from "@ant-design/icons";
 
 import { formatMoney } from "../../utils.js";
 
@@ -27,11 +28,43 @@ class BeneficiaryLiveFeed extends React.Component {
 
   render() {
     const {
+      expanded,
       users,
       transferAccounts,
       creditTransfers,
       creditTransferList
     } = this.props;
+
+    const collapsedCardStyle = {
+      width: "100%"
+    };
+
+    const collapsedBodyStyle = {
+      height: "140px",
+      overflowY: "scroll"
+    };
+
+    const collapsedLiveFeedStyle = {};
+
+    const expandedCardStyle = {
+      height: "100vh",
+      position: "fixed",
+      background: "#f0f2f5"
+    };
+
+    const expandedBodyStyle = {
+      height: "100%"
+    };
+
+    const expandedLiveFeedStyle = {
+      height: "100%",
+      overflowY: "scroll",
+      borderColor: "#4a4a4a",
+      borderTop: "1px solid",
+      borderTopWidth: "1px",
+      borderTopStyle: "solid",
+      paddingBottom: "60px"
+    };
 
     if (Object.keys(creditTransferList).length == 0) {
       return <LoadingSpinner />;
@@ -40,10 +73,19 @@ class BeneficiaryLiveFeed extends React.Component {
         <Card
           title="Live Feed"
           bordered={false}
-          bodyStyle={{ height: "140px", overflowY: "scroll" }}
-          style={{ width: "100%" }}
+          style={expanded ? expandedCardStyle : collapsedCardStyle}
+          bodyStyle={expanded ? expandedBodyStyle : collapsedBodyStyle}
+          extra={
+            expanded ? (
+              <ShrinkOutlined onClick={this.props.handleExpandToggle} />
+            ) : (
+              <ArrowsAltOutlined onClick={this.props.handleExpandToggle} />
+            )
+          }
         >
-          <LiveFeed>
+          <LiveFeed
+            style={expanded ? expandedLiveFeedStyle : collapsedLiveFeedStyle}
+          >
             {creditTransferList
               .sort((a, b) => b.id - a.id)
               .map(transfer => {
@@ -166,7 +208,12 @@ class BeneficiaryLiveFeed extends React.Component {
 
                 if (transfer.transfer_type === "EXCHANGE" && showExchange) {
                   return (
-                    <UserWrapper key={transfer.id}>
+                    <UserWrapper
+                      key={transfer.id}
+                      style={{
+                        margin: expanded ? "margin: 2.4em 0" : "margin: 0.8em 0"
+                      }}
+                    >
                       <UserSVG src="/static/media/exchange.svg" />
                       <UserGroup>
                         <ClickableTopText
@@ -197,11 +244,13 @@ class BeneficiaryLiveFeed extends React.Component {
                           >
                             {sender_user_name}
                           </ClickableTopText>
-                          sent
+                          paid
                         </TopText>
                         <BottomText>
-                          <DarkHighlight>{transferFromMoney}</DarkHighlight> to
+                          <DarkHighlight>{transferFromMoney}</DarkHighlight> to{" "}
+                          {expanded ? <br /> : <span />}
                           <ClickableHighlight
+                            style={{ color: expanded ? "#d0a45d" : "#edcba2" }}
                             onClick={() =>
                               this.navigateToAccount(
                                 transfer.recipient_transfer_account
@@ -221,7 +270,12 @@ class BeneficiaryLiveFeed extends React.Component {
                     <UserWrapper key={transfer.id}>
                       <UserSVG src="/static/media/disbursement.svg" />
                       <UserGroup>
-                        <TopText>Disbursement of</TopText>
+                        <TopText>
+                          <NonClickableTopText>
+                            {transfer.authorising_user_email}
+                          </NonClickableTopText>{" "}
+                          disbursed
+                        </TopText>
                         <BottomText>
                           <DarkHighlight>{transferFromMoney}</DarkHighlight> to
                           <ClickableHighlight
@@ -247,9 +301,15 @@ class BeneficiaryLiveFeed extends React.Component {
                         src="/static/media/disbursement.svg"
                       />
                       <UserGroup>
-                        <TopText>Withdrawal of</TopText>
+                        <TopText>
+                          <NonClickableTopText>
+                            {transfer.authorising_user_email}
+                          </NonClickableTopText>{" "}
+                          reclaimed
+                        </TopText>
                         <BottomText>
-                          <DarkHighlight>{transferFromMoney}</DarkHighlight> by
+                          <DarkHighlight>{transferFromMoney}</DarkHighlight>{" "}
+                          from
                           <ClickableHighlight
                             onClick={() =>
                               this.navigateToAccount(transferAccountId)
@@ -280,6 +340,7 @@ export default connect(
 )(BeneficiaryLiveFeed);
 
 const LiveFeed = styled.div`
+  flex: 1;
   margin: -24px 0;
 `;
 
@@ -310,10 +371,15 @@ const TopText = styled.h5`
 `;
 
 const ClickableTopText = styled.span`
-  margin: 3px;
+  margin-right: 3px;
   color: #2d9ea0;
   font-weight: 600;
   cursor: pointer;
+`;
+
+const NonClickableTopText = styled(ClickableTopText)`
+  font-weight: 300;
+  cursor: auto;
 `;
 
 const BottomText = styled.div`
