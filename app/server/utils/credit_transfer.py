@@ -218,7 +218,6 @@ def make_payment_transfer(
     :param uuid:
     :param transfer_subtype: accepts TransferSubType str.
     :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
-    :param enable_pusher:
     :param queue:
     :param batch_uuid:
     :return:
@@ -385,8 +384,7 @@ def make_target_balance_transfer(target_balance,
                                  require_sufficient_balance=True,
                                  automatically_resolve_complete=True,
                                  uuid=None,
-                                 queue='high-priority',
-                                 enable_pusher=True):
+                                 queue='high-priority'):
     if target_balance is None:
         raise InvalidTargetBalanceError("Target balance not provided")
 
@@ -406,8 +404,7 @@ def make_target_balance_transfer(target_balance,
                                          automatically_resolve_complete=automatically_resolve_complete,
                                          uuid=uuid,
                                          transfer_subtype=TransferSubTypeEnum.RECLAMATION,
-                                         queue=queue,
-                                         enable_pusher=enable_pusher)
+                                         queue=queue)
 
     else:
         transfer = make_payment_transfer(transfer_amount,
@@ -417,8 +414,7 @@ def make_target_balance_transfer(target_balance,
                                          automatically_resolve_complete=automatically_resolve_complete,
                                          uuid=uuid,
                                          transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
-                                         queue=queue,
-                                         enable_pusher=enable_pusher)
+                                         queue=queue)
 
     return transfer
 

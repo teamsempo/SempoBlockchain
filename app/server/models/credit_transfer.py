@@ -78,6 +78,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
+    is_initial_disbursement = db.Column(db.Boolean, default=False)
+
     attached_images = db.relationship('UploadedResource', backref='credit_transfer', lazy='joined')
 
     fiat_ramp = db.relationship('FiatRamp', backref='credit_transfer', lazy=True, uselist=False)

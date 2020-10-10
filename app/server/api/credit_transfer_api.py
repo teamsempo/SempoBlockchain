@@ -355,7 +355,6 @@ class CreditTransferAPI(MethodView):
                         automatically_resolve_complete=auto_resolve,
                         transfer_mode=TransferModeEnum.WEB,
                         queue=queue,
-                        enable_pusher=not is_bulk
                     )
 
             except (InsufficientBalanceError,
