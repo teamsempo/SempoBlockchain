@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head lang="en">
+    <meta charset="UTF-8" />
+    <title>{{ title }}</title>
+    <style>
+      body {
+        font-size: 18px;
+        text-align: left;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      .TextHeader {
+        min-width: 120px;
+      }
+
+      .IDHeader {
+        min-width: 30px;
+      }
+
+      .QR {
+        width: 128px;
+        height: 128px;
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+
+      .Subtext {
+        font-size: 8px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Participant Export</h2>
+    <table>
+      <tr>
+        <th></th>
+        <th class="IDHeader">ID</th>
+        <th class="TextHeader">First Name</th>
+        <th class="TextHeader">Last Name</th>
+        <th></th>
+      </tr>
+      {% for user in users %} {% if loop.index is divisibleby 2 %}
+      <tr>
+        <td>
+          <div>
+            <img class="QR" src="{{ user.qr }}" />
+            <div class="Subtext">
+              {{ user.id }}: {{ user.first_name }} {{ user.last_name }}
+            </div>
+          </div>
+        </td>
+        <td>{{ user.id }}</td>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+        <td></td>
+      </tr>
+      {% else %}
+      <tr>
+        <td></td>
+        <td>{{ user.id }}</td>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+        <td>
+          <div>
+            <img class="QR" src="{{ user.qr }}" />
+            <div class="Subtext">
+              {{ user.id }}: {{ user.first_name }} {{ user.last_name }}
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endif %} {% endfor %}
+    </table>
+  </body>
+</html>

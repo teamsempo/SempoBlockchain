@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - balance_resolution_ordering
+                - qr_pdf
           requires:
             - build
             #- test:backend

@@ -6,6 +6,8 @@ import random, string, os
 from sqlalchemy import and_, or_
 from dateutil import parser
 
+from server.schemas import transfer_account_schema
+
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
@@ -14,7 +16,7 @@ from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import upload_local_file_to_s3
 from server.utils.date_magic import find_last_period_dates
 from server.utils.amazon_ses import send_export_email
-from server.utils.workbook import save_local_file_and_upload_to_s3
+from server.utils.export import generate_pdf_export, export_workbook_via_s3
 
 export_blueprint = Blueprint('export', __name__)
 
@@ -66,8 +68,11 @@ class ExportAPI(MethodView):
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
         # TODO MAKE THIS API AUTHED
         time = str(datetime.utcnow())
-        workbook_filename = current_app.config['DEPLOYMENT_NAME'] + '-id' + str(g.user.id) + '-' + str(time[0:10]) + '-' + random_string + '.xlsx'
+
+        base_filename = current_app.config['DEPLOYMENT_NAME'] + '-id' + str(g.user.id) + '-' + str(time[0:10]) + '-' + random_string
+        workbook_filename = base_filename + '.xlsx'
         # e.g. dev-id1-2018-09-19-asfi.xlsx
+        pdf_filename = base_filename + '.pdf'
 
         wb = Workbook()
         ws = wb.active
@@ -108,10 +113,23 @@ class ExportAPI(MethodView):
 
         if user_filter is not None:
             user_accounts = User.query.filter(user_filter==True).all()
-
         elif user_type == 'selected':
             transfer_accounts = TransferAccount.query.filter(TransferAccount.id.in_(selected)).all()
             user_accounts = [ta.primary_user for ta in transfer_accounts]
+        else:
+            user_accounts = User.query.all()
+
+
+        if export_type == 'pdf':
+            file_url = generate_pdf_export(user_accounts, pdf_filename)
+            response_object = {
+                'message': 'Export file created.',
+                'data': {
+                    'file_url': file_url,
+                }
+            }
+
+            return make_response(jsonify(response_object)), 201
 
         if user_accounts is not None:
             # TODO: fix export
@@ -260,7 +278,7 @@ class ExportAPI(MethodView):
                 print('No Credit Transfers')
 
         if len(user_accounts) is not 0:
-            file_url = save_local_file_and_upload_to_s3(wb, workbook_filename)
+            file_url = export_workbook_via_s3(wb, workbook_filename)
 
             response_object = {
                 'message': 'Export file created.',
@@ -360,7 +378,7 @@ class MeExportAPI(MethodView):
                     _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
 
         if credit_transfer_list is not None:
-            file_url = save_local_file_and_upload_to_s3(wb, workbook_filename, email)
+            file_url = export_workbook_via_s3(wb, workbook_filename, email)
 
             response_object = {
                 'status': 'success',

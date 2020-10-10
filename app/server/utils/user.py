@@ -132,6 +132,8 @@ def update_transfer_account_user(user,
         user.public_serial_number = public_serial_number
         transfer_card = TransferCard.get_transfer_card(public_serial_number)
         user.default_transfer_account.transfer_card = transfer_card
+        if transfer_card:
+            transfer_card.update_transfer_card()
     else:
         transfer_card = None
 
@@ -442,6 +444,21 @@ def proccess_create_or_modify_user_request(
 
     provided_public_serial_number = attribute_dict.get('public_serial_number')
 
+    require_identifier = attribute_dict.get('require_identifier', True)
+
+    if not user_id:
+        # Extract ID from Combined User ID and Name String if it exists
+        try:
+            user_id_name_string = attribute_dict.get('user_id_name_string')
+
+            user_id_str = user_id_name_string and user_id_name_string.split(':')[0]
+
+            if user_id_str:
+                user_id = int(user_id_str)
+
+        except SyntaxError:
+            pass
+
     if not blockchain_address and provided_public_serial_number:
 
         try:
@@ -554,7 +571,7 @@ def proccess_create_or_modify_user_request(
                 'message': 'Primary User has no transfer account'}
             return response_object, 400
 
-    if not (phone or email or public_serial_number or blockchain_address):
+    if not (phone or email or public_serial_number or blockchain_address or user_id or not require_identifier):
         response_object = {'message': 'Must provide a unique identifier'}
         return response_object, 400
 
@@ -595,7 +612,7 @@ def proccess_create_or_modify_user_request(
     existing_user = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address)
 
-    if modify_only:
+    if not existing_user and user_id:
         existing_user = User.query.get(user_id)
 
     if modify_only and existing_user is None:
