@@ -152,12 +152,10 @@ class UserAPI(MethodView):
         else:
             data = raw_data
 
-        force_approve_transfer_account = True if (g.get('auth_type') == 'external' and organisation.auto_approve_externally_created_users) else False
         response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
             data,
             organisation=organisation,
-            allow_existing_user_modify=allow_as_update,
-            force_approve_transfer_account=force_approve_transfer_account
+            allow_existing_user_modify=allow_as_update
         )
 
         if response_code == 200:

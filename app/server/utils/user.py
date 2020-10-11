@@ -410,8 +410,7 @@ def proccess_create_or_modify_user_request(
         organisation=None,
         allow_existing_user_modify=False,
         is_self_sign_up=False,
-        modify_only=False,
-        force_approve_transfer_account=True,
+        modify_only=False
 ):
     """
     Takes a create or modify user request and determines the response. Normally what's in the top level API function,
@@ -667,9 +666,6 @@ def proccess_create_or_modify_user_request(
         is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
         business_usage=business_usage, initial_disbursement=initial_disbursement)
-
-    if force_approve_transfer_account:
-        user.default_transfer_account.is_approved = True
 
     set_location_conditionally(user, location, gps_location)
 
