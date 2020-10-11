@@ -133,6 +133,7 @@ def requires_auth(f=None,
                     required_password = None
                     auth_type = None
 
+            g.auth_type = auth_type
             if required_password is None or required_password != password:
                 response_object = {
                     'message': 'invalid basic auth username or password'
