@@ -48,7 +48,6 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
     disbursement = transfer_account.credit_receives[0]
     assert disbursement.is_initial_disbursement == True
     assert disbursement.transfer_status == transfer_status
-
     authed_sempo_admin_user.set_held_role('ADMIN', transfer_account_approver_tier)
     auth = get_complete_auth_token(authed_sempo_admin_user)
 
@@ -71,6 +70,7 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
         assert len(transfer_account.credit_receives) == 1 # Make sure we don't get a double-disbursement on account approval
         disbursement = transfer_account.credit_receives[0]
         assert disbursement.transfer_status == final_transfer_status
+        assert transfer_account.is_approved == True
     assert transfer_account.is_approved == final_is_approved
         
 @pytest.mark.parametrize("transfer_account_id_accessor, tier, status_code", [
