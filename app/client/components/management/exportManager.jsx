@@ -1,15 +1,14 @@
 import React from "react";
 import { connect } from "react-redux";
 import { DateRangePicker } from "react-dates";
-import { Select, InputNumber, DatePicker, Button } from "antd";
-const { Option, OptGroup } = Select;
+import { Select } from "antd";
+const { Option } = Select;
 
 import AsyncButton from "../AsyncButton.jsx";
 
 import { ExportAction } from "../../reducers/export/actions";
 
-import { ErrorMessage, ModuleHeader, StyledSelect } from "../styledElements";
-import { replaceUnderscores } from "../../utils";
+import { ErrorMessage, ModuleHeader } from "../styledElements";
 
 const mapStateToProps = state => {
   return {
