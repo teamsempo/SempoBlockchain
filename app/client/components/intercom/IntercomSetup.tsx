@@ -33,7 +33,8 @@ const IntercomSetup: React.FunctionComponent = () => {
       email: userEmail,
       company: {
         companyId: companyId,
-        name: activeOrganisation && activeOrganisation.name
+        name: activeOrganisation && activeOrganisation.name,
+        subdomain: window.DEPLOYMENT_NAME
       },
       // Intercom Messenger Props
       hideDefaultLauncher: true
