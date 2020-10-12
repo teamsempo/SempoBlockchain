@@ -34,7 +34,7 @@ class ExportManager extends React.Component {
       customExportCycle: false,
       startDate: null,
       endDate: null,
-      userType: "all",
+      userType: "selected",
       exportType: "spreadsheet"
     };
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -163,17 +163,17 @@ class ExportManager extends React.Component {
           >
             <p style={{ margin: "0px 1em 0px 0px" }}>Participant Types:</p>
             <Select
-              defaultValue="All"
+              defaultValue="Selected"
               onChange={val => this.handleSetUserType(val)}
               style={{ width: "150px" }}
             >
+              <Option key={"selected"}> Selected </Option>
               <Option key={"all"}> All </Option>
               <Option key={"beneficiary"}>
                 {" "}
                 {window.BENEFICIARY_TERM_PLURAL}{" "}
               </Option>
               <Option key={"vendor"}> Vendors </Option>
-              <Option key={"selected"}> Selected </Option>
             </Select>
           </div>
           {/*<div>*/}

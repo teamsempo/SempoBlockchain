@@ -5,7 +5,6 @@ from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
 import qrcode
 
-
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
