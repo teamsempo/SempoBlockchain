@@ -70,7 +70,7 @@ jobs:
           name: Save application Docker Images
           command: |
             mkdir docker-cache
-            docker save $(docker images -q) -o docker-cache/images.tar
+            docker save $(docker images | grep $CIRCLE_SHA1 | awk '{print $3}') -o docker-cache/images.tar
       - persist_to_workspace:
           root: ~/project
           paths:
