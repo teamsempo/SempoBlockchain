@@ -227,7 +227,7 @@ workflows:
             branches:
               only:
                 - master
-                - balance_resolution_ordering
+                - fix_spurious_spend_approvals
           requires:
             - build
             #- test:backend
