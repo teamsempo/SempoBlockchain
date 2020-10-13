@@ -91,7 +91,7 @@ jobs:
       - attach_workspace:
           at: ~/project
       - run:
-          name: Load, Docker Images
+          name: Load Docker Images
           command: |
             docker load -i docker-cache/images.tar
       - run:
@@ -112,7 +112,7 @@ jobs:
       - attach_workspace:
           at: ~/project
       - run:
-          name: Load, Docker Images
+          name: Load Docker Images
           command: |
             docker load -i docker-cache/images.tar
       - run:
@@ -156,11 +156,9 @@ jobs:
               exit 1;
             fi
       - run:
-          name: Safety Build of Docker images
+          name: Load Docker Images
           command: |
-            export GIT_HASH=$CIRCLE_SHA1
-            export IMAGE_TAG=$CIRCLE_SHA1
-            docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --build-arg GIT_HASH=$CIRCLE_SHA1
+            docker load -i docker-cache/images.tar
 
       - run:
           name: Prepare for pyth venv install
