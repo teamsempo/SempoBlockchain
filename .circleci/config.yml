@@ -66,12 +66,18 @@ jobs:
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --build-arg GIT_HASH=${CIRCLE_SHA1}
+          name: Save application Docker Images
+          command: |
+            mkdir docker-cache
+            docker save $(docker images -q) -o docker-cache/images.tar
       - persist_to_workspace:
           root: ~/project
           paths:
             - config_files/secret
             - app/node_modules
             - app/server/static/javascript/dist
+            - docker-cache
+
   test:backend:
     working_directory: ~/project
     docker:
@@ -80,10 +86,13 @@ jobs:
           CONTAINER_MODE: TEST
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
       - attach_workspace:
           at: ~/project
+      - run:
+          name: Load, Docker Images
+          command: |
+            docker load -i docker-cache/images.tar
       - run:
           name: Run Docker Tests
           command: |
@@ -98,10 +107,13 @@ jobs:
           CONTAINER_MODE: ETH_WORKER_TEST
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
       - attach_workspace:
           at: ~/project
+      - run:
+          name: Load, Docker Images
+          command: |
+            docker load -i docker-cache/images.tar
       - run:
           name: Run Docker Tests
           command: |
@@ -132,8 +144,7 @@ jobs:
       - image: circleci/python:3.6-node
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
       - attach_workspace:
           at: ~/project
       - run:
