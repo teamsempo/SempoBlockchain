@@ -5,6 +5,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.transfer_enums import TransferSubTypeEnum
 from server.exceptions import IncetiveLimitExceeded
+from server.utils.transfer_enums import TransferModeEnum
 
 from server import db
 from server import constants 
@@ -59,7 +60,7 @@ class Incentive(ModelBase):
         Handles incentives-- checks if they are applicable, then makes the insentive payment
         """
         # See if the insentive is relevant
-        if self.incentive_rules['transfer_method'] != method or self.incentive_rules['transfer_method'] != 'ANY':
+        if TransferModeEnum[self.incentive_rules['transfer_method']] != method:
             return False
 
         # Get incentive amounts, calculate percentage if relevant
@@ -121,15 +122,14 @@ class Incentive(ModelBase):
         if 'incentive_amount' not in self.incentive_rules:
             raise Exception ('No incentive_amount provided')
 
-        transfer_method = self.incentive_rules['transfer_method']
+        transfer_method = TransferModeEnum[self.incentive_rules['transfer_method']]
         incentive_type = self.incentive_rules['incentive_type']
         incentive_recipient = self.incentive_rules['incentive_recipient']
         incentive_amount = self.incentive_rules['incentive_amount']
         restrictions = self.incentive_rules['restrictions'] or []
-
         # Whole lotta validation!
-        if transfer_method not in constants.INCENTIVE_TRANSFER_METHODS:
-            raise Exception (f'{transfer_method} not a valid transfer method. Select one of {constants.INCENTIVE_TRANSFER_METHODS}')
+        if transfer_method not in TransferModeEnum:
+            raise Exception (f'{transfer_method} not a valid transfer method. Select one of {TransferModeEnum}')
         if incentive_type not in constants.INCENTIVE_TYPES:
             raise Exception (f'{incentive_type} not a valid transfer method. Select one of {constants.INCENTIVE_TYPES}')
         if incentive_recipient not in constants.INCENTIVE_RECIPIENTS:

@@ -103,7 +103,8 @@ class MeCreditTransferAPI(MethodView):
 
         is_sending = post_data.get('is_sending', False)
 
-        method = 'ANY'
+        
+        transfer_mode = TransferModeEnum[transfer_mode] if transfer_mode else TransferModeEnum.INTERNAL
 
         my_transfer_account = None
         authorised = False
@@ -126,7 +127,7 @@ class MeCreditTransferAPI(MethodView):
                 return make_response(jsonify(response_object)), 201
 
         if qr_data:
-            method = 'QR'
+            transfer_mode = TransferModeEnum.QR
             split_qr_data = qr_data.split('-')
 
             transfer_amount = int(split_qr_data[0])
@@ -177,7 +178,7 @@ class MeCreditTransferAPI(MethodView):
             authorised = True
 
         elif nfc_serial_number:
-            method = 'NFC'
+            transfer_mode = TransferModeEnum.NFC
             # We treat NFC serials differently because they're automatically authorised under the current version
             transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
 
@@ -299,11 +300,11 @@ class MeCreditTransferAPI(MethodView):
                                              uuid=uuid)
             # Check the incentives to make sure that all of them pass, but don't actually make the payments yet (do_not_transact). 
             # We want to make sure that all the transfers are valid before we allow them!
-            for incentive in g.active_organisation.incentives: # Do we want to use the active org, or the recipients org?
-                incentive.handle_incentive(transfer, method=method, do_not_transact = True)
+            for incentive in g.active_organisation.incentives:
+                incentive.handle_incentive(transfer, method=transfer_mode, do_not_transact = True)
 
             for incentive in g.active_organisation.incentives:
-                incentive_transfers.append(incentive.handle_incentive(transfer, method=method))
+                incentive_transfers.append(incentive.handle_incentive(transfer, method=transfer_mode))
             
         except IncetiveLimitExceeded as e:
             db.session.commit()

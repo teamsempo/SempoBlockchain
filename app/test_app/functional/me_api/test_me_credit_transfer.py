@@ -97,7 +97,7 @@ def test_invalid_create_me_credit_transfer_api(
 @pytest.mark.parametrize('incentive, status, amount', [
     # Gives 50% incentive
     (Incentive(incentive_rules = {
-        'transfer_method': 'ANY',
+        'transfer_method': 'INTERNAL',
         'incentive_type': 'PERCENTAGE',
         'incentive_amount': 50,
         'incentive_recipient': 'RECIPIENT',
@@ -118,7 +118,7 @@ def test_invalid_create_me_credit_transfer_api(
     5.0),
     # Gives 200 units fixed incentive
     (Incentive(incentive_rules = {
-        'transfer_method': 'ANY',
+        'transfer_method': 'INTERNAL',
         'incentive_type': 'FIXED',
         'incentive_amount': 200,
         'incentive_recipient': 'RECIPIENT',
@@ -139,7 +139,7 @@ def test_invalid_create_me_credit_transfer_api(
     200),
     # Fail by transaction count
     (Incentive(incentive_rules = {
-        'transfer_method': 'ANY',
+        'transfer_method': 'INTERNAL',
         'incentive_type': 'FIXED',
         'incentive_amount': 100,
         'incentive_recipient': 'RECIPIENT',
@@ -160,7 +160,7 @@ def test_invalid_create_me_credit_transfer_api(
     None),
     # Fail by currency
     (Incentive(incentive_rules = {
-        'transfer_method': 'ANY',
+        'transfer_method': 'INTERNAL',
         'incentive_type': 'PERCENTAGE',
         'incentive_amount': 100,
         'incentive_recipient': 'RECIPIENT',
@@ -219,7 +219,7 @@ def test_create_me_credit_transfer_api_with_incentive(
             is_sending=True,
             transfer_amount=10,
             my_transfer_account_id=ta1.id,
-            transfer_account_id=ta2.id
+            transfer_account_id=ta2.id,
         )),
         content_type='application/json', follow_redirects=True)
 
