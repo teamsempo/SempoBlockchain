@@ -297,7 +297,7 @@ class MeCreditTransferAPI(MethodView):
                                              transfer_use=transfer_use,
                                              transfer_mode=transfer_mode,
                                              uuid=uuid)
-            # Check the insentives to make sure that all of them pass, but don't actually make the payments yet (do_not_transact). 
+            # Check the incentives to make sure that all of them pass, but don't actually make the payments yet (do_not_transact). 
             # We want to make sure that all the transfers are valid before we allow them!
             for incentive in g.active_organisation.incentives: # Do we want to use the active org, or the recipients org?
                 incentive.handle_incentive(transfer, method=method, do_not_transact = True)

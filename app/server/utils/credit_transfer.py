@@ -251,16 +251,12 @@ def make_payment_transfer(
                               transfer_mode=transfer_mode,
                               is_ghost_transfer=is_ghost_transfer)
 
-    make_cashout_incentive_transaction = False # is this obsolete now?
-
     if transfer_use is not None:
         for use_id in transfer_use:
             if use_id != 'null':
                 use = TransferUsage.query.get(int(use_id))
                 if use:
                     transfer.transfer_usages.append(use)
-                    if use.is_cashout:
-                        make_cashout_incentive_transaction = True
                 else:
                     raise Exception(f'{use_id} not a valid transfer usage')
 
@@ -283,23 +279,6 @@ def make_payment_transfer(
 
     if automatically_resolve_complete:
         transfer.resolve_as_complete_and_trigger_blockchain(queue=queue, batch_uuid=batch_uuid)
-
-
-    if make_cashout_incentive_transaction:
-        try:
-            # todo: check limits apply
-            incentive_amount = round(transfer_amount * current_app.config['CASHOUT_INCENTIVE_PERCENT'] / 100)
-
-            make_payment_transfer(
-                incentive_amount,
-                receive_user=receive_user,
-                transfer_subtype=TransferSubTypeEnum.INCENTIVE,
-                transfer_mode=TransferModeEnum.INTERNAL
-            )
-
-        except Exception as e:
-            print(e)
-            sentry_sdk.capture_exception(e)
 
     return transfer
 

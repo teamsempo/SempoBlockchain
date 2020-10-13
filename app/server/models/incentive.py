@@ -56,7 +56,7 @@ class Incentive(ModelBase):
 
     def handle_incentive(self, transfer, method, do_not_transact = False):
         """
-        Handles insentives-- checks if they are applicable, then makes the insentive payment
+        Handles incentives-- checks if they are applicable, then makes the insentive payment
         """
         # See if the insentive is relevant
         if self.incentive_rules['transfer_method'] != method or self.incentive_rules['transfer_method'] != 'ANY':
