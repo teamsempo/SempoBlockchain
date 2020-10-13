@@ -66,6 +66,7 @@ jobs:
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --build-arg GIT_HASH=${CIRCLE_SHA1}
+      - run:
           name: Save application Docker Images
           command: |
             mkdir docker-cache
