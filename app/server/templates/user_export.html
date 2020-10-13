@@ -14,6 +14,16 @@
         width: 100%;
       }
 
+      tr {
+        border-width: 0 0 1px 0;
+        border-style: solid;
+      }
+
+      td {
+        padding-top: 10px;
+        padding-bottom: 40px;
+      }
+
       .TextHeader {
         min-width: 120px;
       }
@@ -25,13 +35,22 @@
       .QR {
         width: 128px;
         height: 128px;
-        margin-left: 10px;
-        margin-right: 10px;
+        margin-left: 5px;
+        margin-right: 5px;
       }
 
       .Subtext {
         font-size: 8px;
         text-align: center;
+      }
+
+      @page {
+        size: A4;
+        counter-increment: page;
+        @bottom-right {
+          content: "Page " counter(page) " of " counter(pages);
+          width: 50%;
+        }
       }
     </style>
   </head>
