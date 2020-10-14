@@ -4,10 +4,10 @@ import datetime
 from celery import signature
 
 import config
-from celery_app import persistence_module, w3, red, task_manager, processor
+from celery_app import persistence_module, w3, red, task_manager, processor, chain_config
 from eth_src import celery_utils
 
-timeout = config.SYNCRONOUS_TASK_TIMEOUT
+timeout = chain_config['SYNCRONOUS_TASK_TIMEOUT']
 
 def call_contract_function(contract_address, contract_type, func, args=None):
     sig = processor.sigs.call_contract_function(contract_address, contract_type, func, args)

@@ -1,7 +1,7 @@
 import celery
 
 import config
-from celery_app import app, processor, supervisor, task_manager, persistence_module, blockchain_sync
+from celery_app import app, processor, supervisor, task_manager, persistence_module, blockchain_sync, chain_config
 from exceptions import (
     LockedNotAcquired
 )
@@ -193,7 +193,7 @@ def _handle_error(request, exc, traceback, transaction_id):
     return supervisor.handle_error(request, exc, traceback, transaction_id)
 
 
-@app.task(base=SqlAlchemyTask, bind=True, max_retries=config.ETH_CHECK_TRANSACTION_RETRIES, soft_time_limit=300)
+@app.task(base=SqlAlchemyTask, bind=True, max_retries=chain_config['CHECK_TRANSACTION_RETRIES'], soft_time_limit=300)
 def _check_transaction_response(self, transaction_id):
     return supervisor.check_transaction_response(self, transaction_id)
 

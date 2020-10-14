@@ -1,3 +1,5 @@
+from flask import g
+import config
 from typing import Optional, List, Dict
 from functools import partial
 from flask import current_app
@@ -19,7 +21,8 @@ from server.utils.exchange import (
 class BlockchainTasker(object):
     def _eth_endpoint(self, endpoint):
         celery_tasks_name = 'celery_tasks'
-        return f'{celery_tasks_name}.{endpoint}'
+        chain = g.active_organisation.token.chain if g.active_organisation.token else config.DEFAULT_CHAIN
+        return f'{chain}.{celery_tasks_name}.{endpoint}'
 
     def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
