@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - qr_pdf
+                - docker_save_on_circle
           requires:
             - build
             #- test:backend
