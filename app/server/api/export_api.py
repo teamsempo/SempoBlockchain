@@ -117,7 +117,9 @@ class ExportAPI(MethodView):
             transfer_accounts = TransferAccount.query.filter(TransferAccount.id.in_(selected)).all()
             user_accounts = [ta.primary_user for ta in transfer_accounts]
         else:
-            user_accounts = User.query.all()
+            user_accounts = User.query.filter(
+                or_(User.has_beneficiary_role == True, User.has_vendor_role == True)
+            ).all()
 
 
         if export_type == 'pdf':
