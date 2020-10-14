@@ -21,7 +21,7 @@ from server.utils.exchange import (
 class BlockchainTasker(object):
     def _eth_endpoint(self, endpoint):
         celery_tasks_name = 'celery_tasks'
-        chain = g.active_organisation.token.chain if g.active_organisation.token else config.DEFAULT_CHAIN
+        chain = g.active_organisation.token.chain if g.active_organisation and g.active_organisation.token else config.DEFAULT_CHAIN
         return f'{chain}.{celery_tasks_name}.{endpoint}'
 
     def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
