@@ -45,9 +45,7 @@ sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
 with configure_scope() as scope:
     scope.set_tag("domain", config.APP_HOST)
 
-chain = os.environ.get('CHAIN', config.DEFAULT_CHAIN)
-
-chain_config = config.CHAINS[chain]
+chain_config = config.CHAINS[celery_utils.chain]
 
 app = Celery('tasks',
              broker=config.REDIS_URL,
