@@ -49,9 +49,10 @@ class TransferCard(ModelBase):
         return transfer_card
 
     def update_transfer_card(self):
+        # db.session.flush()
         disbursements = (server.models.credit_transfer.CreditTransfer.query
                          .execution_options(show_all=True)
-                         .filter_by(recipient_user_id=self.user_id)
+                         .filter_by(recipient_transfer_account=self.transfer_account)
                          .filter_by(transfer_type=TransferTypeEnum.PAYMENT)
                          .filter_by(transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
                          .filter_by(transfer_status=TransferStatusEnum.COMPLETE)

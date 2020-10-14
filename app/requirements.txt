@@ -5,6 +5,7 @@ blinker==1.4
 boto3==1.14.29
 celery==4.4.6
 certifi==2020.6.20
+CairoSVG==2.4.2
 ecdsa==0.15
 Flask==1.1.2
 Flask-BasicAuth==0.2.0
@@ -27,6 +28,7 @@ pusher==3.0.0
 pyotp==2.3.0
 python-i18n[YAML]==0.3.7
 py-evm==0.3.0a18
+qrcode[pil]==6.1
 raven==6.10.0
 sentry-sdk==0.16.2
 sentry-sdk[flask]==0.16.2
@@ -37,4 +39,6 @@ toolz==0.10.0
 transitions==0.8.2
 twilio==6.44.1
 uWSGI==2.0.19.1
+weasyprint==51
 web3==5.12.0
+
