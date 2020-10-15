@@ -877,7 +877,7 @@ class BlockchainKeyAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
-        chain = g.active_organisation.token.chain if g.active_organisation and g.active_organisation.token else config.DEFAULT_CHAIN
+        chain = g.active_organisation.token.chain if g.get('active_organisation', False) and g.active_organisation.token else config.DEFAULT_CHAIN
         response_object = {
             'status': 'success',
             'message': 'Key loaded',
