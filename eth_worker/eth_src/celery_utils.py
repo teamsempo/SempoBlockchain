@@ -2,7 +2,6 @@ from time import sleep
 
 from celery import signature
 import os
-#import config
 
 chain = os.environ.get('CHAIN', 'ETHEREUM')
 
