@@ -118,14 +118,13 @@
       window.ETH_CONTRACT_ADDRESS =
         "{{ config.CHAINS[chain]['CONTRACT_ADDRESS'] }}";
       window.master_wallet_address =
-        "{{ config.CHAINS['ETHEREUM']['MASTER_WALLET_ADDRESS'] }}";
-      window.ETH_EXPLORER_URL =
-        "{{ config.CHAINS['ETHEREUM']['EXPLORER_URL'] }}";
+        "{{ config.CHAINS[chain]['MASTER_WALLET_ADDRESS'] }}";
+      window.ETH_EXPLORER_URL = "{{ config.CHAINS[chain]['EXPLORER_URL'] }}";
       window.USING_EXTERNAL_ERC20 =
         "{{ config.USING_EXTERNAL_ERC20 }}" === "True";
       window.SENTRY_REACT_DSN = "{{ config.SENTRY_REACT_DSN }}";
       window.IS_USING_BITCOIN =
-        "{{ config.CHAINS['ETHEREUM']['IS_USING_BITCOIN'] }}" === "True";
+        "{{ config.CHAINS[chain]['IS_USING_BITCOIN'] }}" === "True";
     </script>
 
     <div id="app" class="site-wrapper"></div>
