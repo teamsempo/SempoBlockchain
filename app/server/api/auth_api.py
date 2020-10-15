@@ -15,6 +15,7 @@ from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
 from server.utils.misc import decrypt_string, attach_host
+from server.utils.multi_chain import get_chain
 from sqlalchemy.sql import func
 
 import random
@@ -877,7 +878,7 @@ class BlockchainKeyAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
-        chain = g.active_organisation.token.chain if g.get('active_organisation', False) and g.active_organisation.token else config.DEFAULT_CHAIN
+        chain = get_chain()
         response_object = {
             'status': 'success',
             'message': 'Key loaded',

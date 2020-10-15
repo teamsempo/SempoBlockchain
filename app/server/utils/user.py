@@ -29,7 +29,7 @@ from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.internationalization import i18n_for
 from server.utils.misc import rounded_dollars
-
+from server.utils.multi_chain import get_chain
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     save_to_s3_from_url(url, new_filename)
@@ -514,7 +514,7 @@ def proccess_create_or_modify_user_request(
 
     # is_beneficiary defaults to the opposite of is_vendor
     is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
-    chain = g.active_organisation.token.chain if g.get('active_organisation', False) and g.active_organisation.token else config.DEFAULT_CHAIN
+    chain = get_chain()
     if config.CHAINS[chain]['IS_USING_BITCOIN']:
         try:
             base58.b58decode_check(blockchain_address)

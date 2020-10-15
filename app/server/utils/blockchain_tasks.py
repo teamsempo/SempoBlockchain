@@ -16,9 +16,7 @@ from server.utils.exchange import (
     bonding_curve_reserve_to_tokens,
     bonding_curve_token1_to_token2
 )
-
-def get_chain():
-    return g.active_organisation.token.chain if g.get('active_organisation', False) and g.active_organisation.token else config.DEFAULT_CHAIN
+from server.utils.multi_chain import get_chain
 
 class BlockchainTasker(object):
     
