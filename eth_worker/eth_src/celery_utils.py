@@ -7,17 +7,8 @@ import os
 chain = os.environ.get('CHAIN', 'ETHEREUM')
 
 celery_tasks_name = 'celery_tasks'
-eth_endpoint = lambda endpoint: f'{celery_tasks_name}.{endpoint}'
-#def eth_endpoint(endpoint):
-#    e = f'{chain}.{celery_tasks_name}.{endpoint}'
-#    print(e)
-#    print(e)
-#    print(e)
-#    print(e)
-#    print(e)
-#    print(e)
-#    print(e)
-#    return e
+eth_endpoint = lambda endpoint: f'{chain}.{celery_tasks_name}.{endpoint}'
+
 import config
 
 def execute_synchronous_celery(signature):
