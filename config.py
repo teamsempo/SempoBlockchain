@@ -336,10 +336,6 @@ try:
 except ImportError:
     logg.warn("Cannot import Ethereum Packages, make sure they're not required!")
 
-print(CHAINS)
-print(CHAINS)
-print(CHAINS)
-
 FACEBOOK_TOKEN = common_secrets_parser['FACEBOOK']['token']
 FACEBOOK_VERIFY_TOKEN = common_secrets_parser['FACEBOOK']['verify_token']
 
