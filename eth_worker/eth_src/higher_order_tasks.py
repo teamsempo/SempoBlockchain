@@ -88,7 +88,7 @@ def topup_if_required(address):
     if balance <= wei_topup_threshold and wei_target_balance > balance:
         sig = signature(celery_utils.eth_endpoint('send_eth'),
                         kwargs={
-                            'signing_address': config.MASTER_WALLET_ADDRESS,
+                            'signing_address': chain_config['MASTER_WALLET_ADDRESS'],
                             'amount_wei': wei_target_balance - balance,
                             'recipient_address': address,
                             'prior_tasks': []
