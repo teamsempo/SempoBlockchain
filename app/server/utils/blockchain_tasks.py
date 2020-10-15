@@ -144,8 +144,6 @@ class BlockchainTasker(object):
             'wei_topup_threshold': wei_topup_threshold,
             'private_key': private_key
         }
-        print(self._eth_endpoint('create_new_blockchain_wallet'))
-        print(self._eth_endpoint('create_new_blockchain_wallet'))
         wallet_address = self._execute_synchronous_celery(
             self._eth_endpoint('create_new_blockchain_wallet'), args, queue=queue
         )
