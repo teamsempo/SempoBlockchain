@@ -28,7 +28,6 @@ class TransferUsage(ModelBase):
         "CreditTransfer",
         secondary=credit_transfer_transfer_usage_association_table,
         back_populates="transfer_usages",
-        lazy='joined'
     )
 
     @hybrid_property
