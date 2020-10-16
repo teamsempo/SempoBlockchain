@@ -15,6 +15,7 @@ import jwt
 import random
 import string
 import sentry_sdk
+from sqlalchemy import or_, and_
 
 from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -369,6 +370,32 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         # TODO: Review if this could have a better concept of a default?
         return self.get_transfer_account_for_organisation(active_organisation)
 
+    def get_users_within_radius(self, radius):
+        if not (self.lat or self.lng):
+            raise Exception('Cannot get users within radius-- User location undefined')
+        query = f"""
+        select id, distance
+            from (
+                select id, ( 6371 
+                * acos( cos( radians({self.lat}) ) 
+                * cos( radians( lat ) ) 
+                * cos( radians( lng ) 
+                - radians({self.lng}) ) 
+                + sin( radians({self.lat}) ) 
+                * sin( radians( lat ) ) ) ) as distance
+                from "user"
+            ) as dt
+            where distance <= {radius}
+            order by dt asc;
+        """
+
+        results = db.session.execute(query)
+        ids = []
+        for result in results:
+            ids.append(result[0])
+        users = db.session.query(User).filter(or_(User.id.in_(tuple(ids)), and_(User.lat==None, User.lng==None))).all()
+        return users
+        
     def get_transfer_account_for_organisation(self, organisation):
         for ta in self.transfer_accounts:
             if ta in organisation.transfer_accounts:

@@ -34,6 +34,8 @@ class Organisation(ModelBase):
     default_lat = db.Column(db.Float())
     default_lng = db.Column(db.Float())
 
+    card_shard_distance = db.Column(db.Integer, default=0) # 0 means don't shard
+
     _timezone = db.Column(db.String)
     _country_code = db.Column(db.String, nullable=False)
     _default_disbursement_wei = db.Column(db.Numeric(27), default=0)
