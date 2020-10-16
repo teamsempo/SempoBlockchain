@@ -412,6 +412,8 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
+    card_shard_distance = fields.Int()
+
     valid_roles = fields.Raw()
 
     require_transfer_card = fields.Boolean(default=False)
