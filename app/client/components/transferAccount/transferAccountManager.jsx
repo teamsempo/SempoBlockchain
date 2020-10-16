@@ -60,20 +60,6 @@ class TransferAccountManager extends React.Component {
   }
 
   componentDidMount() {
-    this.updateTransferAccountState();
-  }
-
-  componentDidUpdate(newProps) {
-    if (
-      this.props.creditTransfers !== newProps.creditTransfers &&
-      !this.props.creditTransfers.createStatus.isRequesting
-    ) {
-      this.setState({ newTransfer: false });
-      this.updateTransferAccountState();
-    }
-  }
-
-  updateTransferAccountState() {
     const transferAccountId = parseInt(this.props.transfer_account_id);
     const transferAccount = this.props.transferAccounts.byId[transferAccountId];
     const primaryUser =
@@ -83,8 +69,8 @@ class TransferAccountManager extends React.Component {
     if (transferAccount !== null) {
       this.setState({
         balance: transferAccount.balance,
-        created: transferAccount.created,
         is_approved: transferAccount.is_approved,
+        created: transferAccount.created,
         payable_epoch: transferAccount.payable_epoch,
         payable_period_type: transferAccount.payable_period_type,
         payable_period_length: transferAccount.payable_period_length,
@@ -102,6 +88,15 @@ class TransferAccountManager extends React.Component {
         is_tokenagent: primaryUser.is_tokenagent,
         is_groupaccount: primaryUser.is_groupaccount
       });
+    }
+  }
+
+  componentDidUpdate(newProps) {
+    if (
+      this.props.creditTransfers !== newProps.creditTransfers &&
+      !this.props.creditTransfers.createStatus.isRequesting
+    ) {
+      this.setState({ newTransfer: false });
     }
   }
 
