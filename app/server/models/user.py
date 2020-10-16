@@ -79,6 +79,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     email = db.Column(db.String())
     _phone = db.Column(db.String(), unique=True, index=True)
     _public_serial_number = db.Column(db.String())
+    uuid = db.Column(db.String(), index=True)
+
     nfc_serial_number = db.Column(db.String())
 
     password_hash = db.Column(db.String(200))
