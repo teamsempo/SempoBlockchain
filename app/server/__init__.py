@@ -138,6 +138,8 @@ def register_blueprints(app):
 
         for transaction, queue in g.pending_transactions:
             transaction.send_blockchain_payload_to_worker(queue=queue)
+            # DB is modified, so commit changes
+            db.session.commit()
 
         # Push only credit transfers, not exchanges
         from server.models.credit_transfer import CreditTransfer

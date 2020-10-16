@@ -240,6 +240,6 @@ workflows:
                 - user_uuid
           requires:
             - build
-            #- test:backend
-            #- test:worker
-            #- test:frontend
+            - test:backend
+            - test:worker
+            - test:frontend
