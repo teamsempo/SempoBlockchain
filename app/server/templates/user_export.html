@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head lang="en">
+    <meta charset="UTF-8" />
+    <title>{{ title }}</title>
+    <style>
+      body {
+        font-size: 18px;
+        text-align: left;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      tr {
+        border-width: 0 0 1px 0;
+        border-style: solid;
+      }
+
+      td {
+        padding-top: 10px;
+        padding-bottom: 40px;
+      }
+
+      .TextHeader {
+        min-width: 120px;
+      }
+
+      .IDHeader {
+        min-width: 30px;
+      }
+
+      .QR {
+        width: 128px;
+        height: 128px;
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      .Subtext {
+        font-size: 8px;
+        text-align: center;
+      }
+
+      @page {
+        size: A4;
+        counter-increment: page;
+        @bottom-right {
+          content: "Page " counter(page) " of " counter(pages);
+          width: 50%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Participant Export</h2>
+    <table>
+      <tr>
+        <th></th>
+        <th class="IDHeader">ID</th>
+        <th class="TextHeader">First Name</th>
+        <th class="TextHeader">Last Name</th>
+        <th></th>
+      </tr>
+      {% for user in users %} {% if loop.index is divisibleby 2 %}
+      <tr>
+        <td>
+          <div>
+            <img class="QR" src="{{ user.qr }}" />
+            <div class="Subtext">
+              {{ user.id }}: {{ user.first_name }} {{ user.last_name }}
+            </div>
+          </div>
+        </td>
+        <td>{{ user.id }}</td>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+        <td></td>
+      </tr>
+      {% else %}
+      <tr>
+        <td></td>
+        <td>{{ user.id }}</td>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+        <td>
+          <div>
+            <img class="QR" src="{{ user.qr }}" />
+            <div class="Subtext">
+              {{ user.id }}: {{ user.first_name }} {{ user.last_name }}
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endif %} {% endfor %}
+    </table>
+  </body>
+</html>

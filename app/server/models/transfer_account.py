@@ -322,7 +322,9 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         auto_resolve = False
         # If admin role is admin or higher, then auto-approval is contingent on being less than or 
         # equal to the default disbursement
-        if admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'):
+        if (admin and AccessControl.has_sufficient_tier(admin.roles, 'ADMIN', 'admin'))or (
+            g.get('auth_type') == 'external' and active_org.auto_approve_externally_created_users
+        ):
             self.is_approved = True
             if initial_disbursement <= active_org.default_disbursement:
                 auto_resolve = True

@@ -46,6 +46,8 @@ class Organisation(ModelBase):
     # This is the 'behind the scenes' blockchain address used for paying gas fees
     system_blockchain_address = db.Column(db.String)
 
+    auto_approve_externally_created_users = db.Column(db.Boolean, default=False)
+
     users               = db.relationship(
         "User",
         secondary=organisation_association_table,
