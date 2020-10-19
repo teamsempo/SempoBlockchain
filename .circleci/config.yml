@@ -237,6 +237,7 @@ workflows:
             branches:
               only:
                 - master
+                - user_uuid
           requires:
             - build
             - test:backend
