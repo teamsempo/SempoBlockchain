@@ -90,6 +90,11 @@ def find_user_from_public_identifier(*public_identifiers):
         if user:
             break
 
+        user = User.query.execution_options(show_all=True).filter_by(
+            uuid=public_identifier).first()
+        if user:
+            break
+
         try:
             checksummed = to_checksum_address(public_identifier)
             blockchain_address = BlockchainAddress.query.filter_by(
@@ -132,6 +137,8 @@ def update_transfer_account_user(user,
         user.public_serial_number = public_serial_number
         transfer_card = TransferCard.get_transfer_card(public_serial_number)
         user.default_transfer_account.transfer_card = transfer_card
+        if transfer_card:
+            transfer_card.update_transfer_card()
     else:
         transfer_card = None
 
@@ -177,7 +184,7 @@ def update_transfer_account_user(user,
 
 
 def create_transfer_account_user(first_name=None, last_name=None, preferred_language=None,
-                                 phone=None, email=None, public_serial_number=None,
+                                 phone=None, email=None, public_serial_number=None, uuid=None,
                                  organisation: Organisation=None,
                                  token=None,
                                  blockchain_address=None,
@@ -200,6 +207,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 blockchain_address=blockchain_address,
                 phone=phone,
                 email=email,
+                uuid=uuid,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
                 business_usage=business_usage)
@@ -442,6 +450,23 @@ def proccess_create_or_modify_user_request(
 
     provided_public_serial_number = attribute_dict.get('public_serial_number')
 
+    uuid = attribute_dict.get('uuid')
+
+    require_identifier = attribute_dict.get('require_identifier', True)
+
+    if not user_id:
+        # Extract ID from Combined User ID and Name String if it exists
+        try:
+            user_id_name_string = attribute_dict.get('user_id_name_string')
+
+            user_id_str = user_id_name_string and user_id_name_string.split(':')[0]
+
+            if user_id_str:
+                user_id = int(user_id_str)
+
+        except SyntaxError:
+            pass
+
     if not blockchain_address and provided_public_serial_number:
 
         try:
@@ -554,7 +579,7 @@ def proccess_create_or_modify_user_request(
                 'message': 'Primary User has no transfer account'}
             return response_object, 400
 
-    if not (phone or email or public_serial_number or blockchain_address):
+    if not (phone or email or public_serial_number or blockchain_address or user_id or uuid or not require_identifier):
         response_object = {'message': 'Must provide a unique identifier'}
         return response_object, 400
 
@@ -593,9 +618,9 @@ def proccess_create_or_modify_user_request(
         return response_object, 400
 
     existing_user = find_user_from_public_identifier(
-        email, phone, public_serial_number, blockchain_address)
+        email, phone, public_serial_number, blockchain_address, uuid)
 
-    if modify_only:
+    if not existing_user and user_id:
         existing_user = User.query.get(user_id)
 
     if modify_only and existing_user is None:
@@ -654,7 +679,7 @@ def proccess_create_or_modify_user_request(
 
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name, preferred_language=preferred_language,
-        phone=phone, email=email, public_serial_number=public_serial_number,
+        phone=phone, email=email, public_serial_number=public_serial_number, uuid=uuid,
         organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
