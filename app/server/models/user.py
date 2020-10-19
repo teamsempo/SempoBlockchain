@@ -500,7 +500,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     def encode_single_use_JWS(self, token_type):
 
         s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'],
-                                            expires_in=current_app.config['TOKEN_EXPIRATION'])
+                                            expires_in=current_app.config['SINGLE_USE_TOKEN_EXPIRATION'])
 
         return s.dumps({'id': self.id, 'type': token_type}).decode("utf-8")
 
