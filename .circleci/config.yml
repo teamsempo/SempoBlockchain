@@ -65,7 +65,7 @@ jobs:
           command: |
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
-            docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --build-arg GIT_HASH=${CIRCLE_SHA1}
+            COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml -f docker-compose.ci.yml build --build-arg GIT_HASH=${CIRCLE_SHA1}
       - run:
           name: Save application Docker Images
           command: |
@@ -99,7 +99,7 @@ jobs:
           command: |
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
-            docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from app
+            COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from app
   test:worker:
     working_directory: ~/project
     docker:
@@ -120,7 +120,7 @@ jobs:
           command: |
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
-            docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from eth_worker
+            COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from eth_worker
   test:frontend:
     working_directory: ~/project
     docker:
