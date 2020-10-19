@@ -474,7 +474,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         """
         try:
             payload = jwt.decode(auth_token, current_app.config.get(
-                'SECRET_KEY'), algorithms='HS256')
+                'SECRET_KEY'), algorithms='HS256', options={'verify_exp': True})
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
