@@ -37,7 +37,8 @@ CREATE_USER_SETTINGS = [
     'use_last_4_digits_of_id_as_initial_pin'
 ]
 
-DEFAULT_ATTRIBUTES = ['user_id', 'email', 'phone', 'blockchain_address', 'public_serial_number', 'user_id_name_string',
+DEFAULT_ATTRIBUTES = ['user_id', 'email', 'phone', 'blockchain_address', 'public_serial_number', 'uuid',
+                      'user_id_name_string',
                       'custom_attributes',
                       'location', 'geo_location',
                       'use_precreated_pin',

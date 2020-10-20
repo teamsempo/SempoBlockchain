@@ -117,6 +117,12 @@ class TransferAccountAPI(MethodView):
                 transfer_account.is_approved = True
                 transfer_account.approve_initial_disbursement()
 
+            # Explicitly checking True and False since null is also possible
+            if approve == True: 
+                transfer_account.is_approved = True
+            elif approve == False:
+                transfer_account.is_approved = False
+
             db.session.flush()
 
             result = transfer_account_schema.dump(transfer_account)
@@ -144,6 +150,10 @@ class TransferAccountAPI(MethodView):
                     })
 
                     continue
+                if approve == True: 
+                    transfer_account.is_approved = True
+                elif approve == False:
+                    transfer_account.is_approved = False
 
                 if not transfer_account.is_approved and approve:
                     transfer_account.is_approved = True
