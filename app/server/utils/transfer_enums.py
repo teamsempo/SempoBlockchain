@@ -45,3 +45,4 @@ class BlockchainStatus(enum.Enum):
     PENDING = 'PENDING'
     SUCCESS = 'SUCCESS'
     FAILED = 'FAILED'
+    UNSTARTED = 'UNSTARTED'
