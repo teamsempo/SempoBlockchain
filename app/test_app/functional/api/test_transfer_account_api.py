@@ -26,7 +26,7 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
             'last_name': 'Frensky',
             'gender': 'female',
             'phone': f'+1{random.randint(1000000000, 9999999999)}',
-            'is_beneficiary': True,
+            'account_types': ['beneficiary'],
             'location': 'Elwood',
             'initial_disbursement': initial_disbursement,
         }
