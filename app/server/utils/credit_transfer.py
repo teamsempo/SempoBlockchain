@@ -491,3 +491,18 @@ def check_hash(hash_to_check, transfer_amount, transfer_account_id, user_secret,
 
     truncated_hmac_string = full_hmac_string[0: hash_size]
     return truncated_hmac_string == hash_to_check
+
+def give_200_response_if_uuid_can_be_matched(uuid):
+
+    if uuid:
+        existing_transfer = CreditTransfer.query.filter_by(uuid=uuid).first()
+
+        if existing_transfer:
+            # We return a 200 here so that the client removes the uuid from the cache
+            response_object = {
+                'message': 'Transfer already completed',
+                'data': {
+                    'credit_transfer': me_credit_transfer_schema.dump(existing_transfer).data,
+                }
+            }
+            return make_response(jsonify(response_object)), 200

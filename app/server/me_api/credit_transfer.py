@@ -3,6 +3,7 @@ import datetime
 from flask import g, make_response, jsonify, request
 from flask.views import MethodView
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from web3 import Web3
 
 from server import db
@@ -25,11 +26,11 @@ from server.utils.credit_transfer import (
     check_for_any_valid_hash,
     find_user_with_transfer_account_from_identifiers,
     handle_transfer_to_blockchain_address,
-    make_payment_transfer
+    make_payment_transfer,
+    give_200_response_if_uuid_can_be_matched
 )
 from server.utils.pusher_utils import push_user_transfer_confirmation
 from server.utils.transfer_account import find_transfer_accounts_with_matching_token
-
 
 class MeCreditTransferAPI(MethodView):
     @requires_auth
@@ -109,18 +110,9 @@ class MeCreditTransferAPI(MethodView):
         else:
             counterparty_transfer_account = None
 
-        if uuid:
-            existing_transfer = CreditTransfer.query.filter_by(uuid=uuid).first()
-
-            if existing_transfer:
-                # We return a 201 here so that the client removes the uuid from the cache
-                response_object = {
-                    'message': 'Transfer already in cache',
-                    'data': {
-                        'credit_transfer': me_credit_transfer_schema.dump(existing_transfer).data,
-                    }
-                }
-                return make_response(jsonify(response_object)), 201
+        resp = give_200_response_if_uuid_can_be_matched(uuid)
+        if resp:
+            return resp
 
         if qr_data:
 
@@ -292,6 +284,13 @@ class MeCreditTransferAPI(MethodView):
                                              transfer_use=transfer_use,
                                              transfer_mode=transfer_mode,
                                              uuid=uuid)
+
+        except (IntegrityError, InvalidRequestError) as e:
+            resp = give_200_response_if_uuid_can_be_matched(uuid)
+            if resp:
+                return resp
+            else:
+                raise e
 
         except AccountNotApprovedError as e:
             db.session.commit()
