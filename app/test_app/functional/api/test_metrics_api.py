@@ -359,10 +359,6 @@ def test_get_summed_metrics(
             else:
                 assert returned_stats[do]['type'] == desired_output[do]['type']
                 assert returned_stats[do]['aggregate'] == desired_output[do]['aggregate']
-                print('a')
-                print(returned_stats[do]['aggregate'])
-                print('zz')
-                print(desired_output[do]['aggregate'])
                 for timeseries_category in returned_stats[do]['timeseries']:
                     sorted_returned_stats = ts_sort(returned_stats[do]['timeseries'][timeseries_category])
                     sorted_desired_stats = ts_sort(desired_output[do]['timeseries'][timeseries_category])
