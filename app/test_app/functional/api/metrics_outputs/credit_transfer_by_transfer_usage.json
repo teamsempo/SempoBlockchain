@@ -3,37 +3,37 @@
   "active_group_by": "transfer_usage",
   "all_payments_volume": {
     "aggregate": {
-      "Jalepeno Chips": 25,
-      "Pepperoni": 125,
-      "Shopping Carts": 20,
+      "Jalepeno Chips": 0.25,
+      "Pepperoni": 1.25,
+      "Shopping Carts": 0.2,
       "percent_change": 97.04433497536947,
-      "total": 1687
+      "total": 16.87
     },
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
-          "value": 20
+          "date": "2020-10-15T00:00:00",
+          "value": 0.2
         },
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 5
+          "date": "2020-10-20T00:00:00",
+          "value": 0.05
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 25
+          "date": "2020-10-20T00:00:00",
+          "value": 0.25
         },
         {
-          "date": "2020-09-15T00:00:00",
-          "value": 100
+          "date": "2020-10-21T00:00:00",
+          "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
-          "value": 20
+          "date": "2020-10-17T00:00:00",
+          "value": 0.2
         }
       ]
     },
@@ -46,8 +46,8 @@
   },
   "daily_disbursement_volume": {
     "aggregate": {
-      "percent_change": 72.41379310344827,
-      "total": 1517
+      "percent_change": 72.41379310344828,
+      "total": 15.17
     },
     "timeseries": {},
     "type": {
@@ -68,27 +68,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-15T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-10-20T00:00:00",
           "value": 1
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-10-20T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-10-21T00:00:00",
           "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-17T00:00:00",
           "value": 1
         }
       ]
@@ -100,37 +100,37 @@
   },
   "daily_transaction_volume": {
     "aggregate": {
-      "Jalepeno Chips": 25,
-      "Pepperoni": 125,
-      "Shopping Carts": 20,
+      "Jalepeno Chips": 0.25,
+      "Pepperoni": 1.25,
+      "Shopping Carts": 0.2,
       "percent_change": 97.04433497536947,
-      "total": 1687
+      "total": 16.87
     },
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
-          "value": 20
+          "date": "2020-10-15T00:00:00",
+          "value": 0.2
         },
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 5
+          "date": "2020-10-20T00:00:00",
+          "value": 0.05
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 25
+          "date": "2020-10-20T00:00:00",
+          "value": 0.25
         },
         {
-          "date": "2020-09-15T00:00:00",
-          "value": 100
+          "date": "2020-10-21T00:00:00",
+          "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
-          "value": 20
+          "date": "2020-10-17T00:00:00",
+          "value": 0.2
         }
       ]
     },
@@ -159,27 +159,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-15T00:00:00",
           "value": 0.5
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-10-20T00:00:00",
           "value": 0.25
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-10-20T00:00:00",
           "value": 0.25
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-10-21T00:00:00",
           "value": 0.14285714285714285
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-17T00:00:00",
           "value": 0.3333333333333333
         }
       ]
@@ -191,37 +191,37 @@
   },
   "transfer_amount_per_user": {
     "aggregate": {
-      "Jalepeno Chips": 3.5714285714285716,
-      "Pepperoni": 17.857142857142858,
-      "Shopping Carts": 2.857142857142857,
+      "Jalepeno Chips": 0.03571428571428571,
+      "Pepperoni": 0.17857142857142858,
+      "Shopping Carts": 0.02857142857142857,
       "percent_change": null,
-      "total": 24.285714285714285
+      "total": 0.24285714285714285
     },
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
-          "value": 10
+          "date": "2020-10-15T00:00:00",
+          "value": 0.1
         },
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 1.25
+          "date": "2020-10-20T00:00:00",
+          "value": 0.0125
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 6.25
+          "date": "2020-10-20T00:00:00",
+          "value": 0.0625
         },
         {
-          "date": "2020-09-15T00:00:00",
-          "value": 14.285714285714286
+          "date": "2020-10-21T00:00:00",
+          "value": 0.14285714285714285
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
-          "value": 6.666666666666667
+          "date": "2020-10-17T00:00:00",
+          "value": 0.06666666666666667
         }
       ]
     },
@@ -243,27 +243,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-15T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-10-20T00:00:00",
           "value": 1
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-10-20T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-10-21T00:00:00",
           "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-17T00:00:00",
           "value": 1
         }
       ]

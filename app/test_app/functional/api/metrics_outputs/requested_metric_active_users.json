@@ -11,37 +11,37 @@
     "timeseries": {
       "ORGANISATION": [
         {
-          "date": "2020-08-26T00:00:00",
+          "date": "2020-10-01T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-07T00:00:00",
+          "date": "2020-10-13T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-13T00:00:00",
+          "date": "2020-10-19T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-10-21T00:00:00",
           "value": 1
         }
       ],
       "USER": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-15T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-17T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-10-20T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-10-21T00:00:00",
           "value": 1
         }
       ]
@@ -53,10 +53,10 @@
   },
   "all_payments_volume": {
     "aggregate": {
-      "ORGANISATION": 1517,
-      "USER": 170,
+      "ORGANISATION": 15.17,
+      "USER": 1.7,
       "percent_change": 97.04433497536947,
-      "total": 1687
+      "total": 16.87
     },
     "type": {
       "currency_name": "AUD Reserve Token",
@@ -67,9 +67,9 @@
   },
   "daily_disbursement_volume": {
     "aggregate": {
-      "ORGANISATION": 1517,
-      "percent_change": 72.41379310344827,
-      "total": 1517
+      "ORGANISATION": 15.17,
+      "percent_change": 72.41379310344828,
+      "total": 15.17
     },
     "type": {
       "currency_name": "AUD Reserve Token",
@@ -91,10 +91,10 @@
   },
   "daily_transaction_volume": {
     "aggregate": {
-      "ORGANISATION": 1517,
-      "USER": 170,
+      "ORGANISATION": 15.17,
+      "USER": 1.7,
       "percent_change": 97.04433497536947,
-      "total": 1687
+      "total": 16.87
     },
     "type": {
       "currency_name": "AUD Reserve Token",
@@ -126,9 +126,9 @@
   },
   "transfer_amount_per_user": {
     "aggregate": {
-      "USER": 28.333333333333332,
+      "USER": 0.2833333333333333,
       "percent_change": null,
-      "total": 24.285714285714285
+      "total": 0.24285714285714285
     },
     "type": {
       "currency_name": "AUD Reserve Token",
