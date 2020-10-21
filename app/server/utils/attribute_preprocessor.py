@@ -29,12 +29,18 @@ def unwrap_data(attribute_dict):
     """
     Allows the use of wrapped data payloads by taking the contents of _data and moving it up a level.
     This is useful for setting default values in the wrapper in tools such as Kobo toolbox.
-    In the event of a conflict between two levels, the wrapped data takes priority.
+    In the event of a conflict between two levels, the _wrapped_takes_priority field
+    (defined in the wrapper) sets data takes priority and overwrites the other.
     {'is_vendor': True, '_data': {'first_name': 'Alice'}} -> {'is_vendor': True, 'first_name': 'Alice'}
     """
     _data = attribute_dict.get('_data')
+    _wrapped_takes_priority = attribute_dict.get('_wrapped_takes_priority', True)
     if isinstance(_data, dict):
-        attribute_dict = {**attribute_dict, **_data}
+        if _wrapped_takes_priority:
+            attribute_dict = {**attribute_dict, **_data}
+        else:
+            attribute_dict = {**_data, **attribute_dict}
+
         attribute_dict.pop('_data')
 
     return attribute_dict
