@@ -123,9 +123,6 @@ class FilterModule extends React.Component {
           defaultValue={defaultGroupBy}
           style={{ width: 200 }}
           onChange={this.updateGroupBy}
-          filterOption={(input, option) =>
-            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
         >
           {allowedGroups
             ? Object.keys(allowedGroups).map(key => {

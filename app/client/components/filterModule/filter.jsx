@@ -103,9 +103,6 @@ class Filter extends React.Component {
           defaultValue="Select Attribute"
           onChange={this.handleAttributeSelectorChange}
           style={{ width: "150px" }}
-          filterOption={(input, option) =>
-            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
         >
           {typeof keys !== "undefined"
             ? keys.map((key, index) => (
