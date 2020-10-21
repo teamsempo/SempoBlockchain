@@ -93,9 +93,9 @@ class TransferStats(metric_group.MetricGroup):
             stock_filters=[filters.disbursement_filters],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
-            query_actions=[FORMAT_TIMESERIES],
-            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
-            total_query_actions=[GET_FIRST],
+            query_actions=[TIMESERIES_CENTS_TO_DOLLARS, FORMAT_TIMESERIES],
+            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS_WITH_CENTS_TO_DOLLARS],
+            total_query_actions=[GET_FIRST, CENTS_TO_DOLLARS],
             value_type=CURRENCY,
             token=token
         ))
@@ -110,9 +110,9 @@ class TransferStats(metric_group.MetricGroup):
             stock_filters=[filters.transaction_volume_filters],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
-            query_actions=[FORMAT_TIMESERIES],
-            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
-            total_query_actions=[GET_FIRST],
+            query_actions=[TIMESERIES_CENTS_TO_DOLLARS, FORMAT_TIMESERIES],
+            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS_WITH_CENTS_TO_DOLLARS],
+            total_query_actions=[GET_FIRST, CENTS_TO_DOLLARS],
             value_type=CURRENCY,
             token=token
         ))
@@ -126,9 +126,9 @@ class TransferStats(metric_group.MetricGroup):
             object_model=CreditTransfer,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
-            query_actions=[FORMAT_TIMESERIES],
-            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
-            total_query_actions=[GET_FIRST],
+            query_actions=[TIMESERIES_CENTS_TO_DOLLARS, FORMAT_TIMESERIES],
+            aggregated_query_actions=[FORMAT_AGGREGATE_METRICS_WITH_CENTS_TO_DOLLARS],
+            total_query_actions=[GET_FIRST, CENTS_TO_DOLLARS],
             value_type=CURRENCY,
             token=token
         ))
@@ -143,9 +143,9 @@ class TransferStats(metric_group.MetricGroup):
             stock_filters=[filters.standard_payment_filters],
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
-            query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
-            aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS],
-            total_query_actions=[GET_FIRST, CALCULATE_TOTAL_PER_USER],
+            query_actions=[TIMESERIES_CENTS_TO_DOLLARS, CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
+            aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS_WITH_CENTS_TO_DOLLARS],
+            total_query_actions=[GET_FIRST, CALCULATE_TOTAL_PER_USER, CENTS_TO_DOLLARS],
             value_type=CURRENCY,
             token=token
         ))

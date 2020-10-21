@@ -233,6 +233,13 @@ def format_aggregate_metrics(query_result, population_query_result):
         result[_format_group_name(r[1])] = r[0]
     return result
 
+# Changes sqlalchemy raw output into the shape expected for the API!
+def format_aggregate_metrics_with_cents_to_dollars(query_result, population_query_result):
+    result = {}
+    for r in query_result:
+        result[_format_group_name(r[1])] = r[0]/100
+    return result
+
 # Some singleton metrics are returned in a tuple in a list. This unpacks and handles nulls
 def get_first(query_result, population_query_result):
     if query_result:
@@ -241,6 +248,17 @@ def get_first(query_result, population_query_result):
         return query_result[0][0]
     else:
         return 0
+
+def cents_to_dollars(query_result, population_query_result):
+    return query_result/100
+
+def timeseries_cents_to_dollars(query_result, population_query_result):
+    results = []
+    for r in query_result:
+        point = list(r)
+        point[0] /= 100
+        results.append(tuple(point))
+    return results
 
 query_actions = {
     ADD_MISSING_DAYS: add_missing_days,
@@ -251,6 +269,9 @@ query_actions = {
     CALCULATE_TOTAL_PER_USER: calculate_total_per_user,
     FORMAT_TIMESERIES: format_timeseries,
     FORMAT_AGGREGATE_METRICS: format_aggregate_metrics,
+    TIMESERIES_CENTS_TO_DOLLARS: timeseries_cents_to_dollars,
+    FORMAT_AGGREGATE_METRICS_WITH_CENTS_TO_DOLLARS: format_aggregate_metrics_with_cents_to_dollars,
+    CENTS_TO_DOLLARS: cents_to_dollars,
     GET_FIRST: get_first,
 }
 

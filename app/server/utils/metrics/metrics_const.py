@@ -32,6 +32,9 @@ CALCULATE_AGGREGATE_PER_USER = 'calculate_aggregate_per_user'
 CALCULATE_TOTAL_PER_USER = 'calculate_total_per_user'
 FORMAT_TIMESERIES = 'format_timeseries'
 FORMAT_AGGREGATE_METRICS = 'format_aggregate_metrics'
+TIMESERIES_CENTS_TO_DOLLARS = 'timeseries_cents_to_dollars'
+CENTS_TO_DOLLARS = 'cents_to_dollars'
+FORMAT_AGGREGATE_METRICS_WITH_CENTS_TO_DOLLARS = 'format_aggregate_metrics_with_cents_to_dollars'
 GET_FIRST = 'get_first'
 
 TIMESERIES_ACTIONS = [
@@ -43,6 +46,9 @@ TIMESERIES_ACTIONS = [
     CALCULATE_TOTAL_PER_USER,
     FORMAT_TIMESERIES, 
     FORMAT_AGGREGATE_METRICS,
+    TIMESERIES_CENTS_TO_DOLLARS,
+    CENTS_TO_DOLLARS,
+    FORMAT_AGGREGATE_METRICS_WITH_CENTS_TO_DOLLARS,
     GET_FIRST
 ]
 

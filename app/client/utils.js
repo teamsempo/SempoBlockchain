@@ -41,7 +41,7 @@ export function formatMoney(
 }
 
 export const toCurrency = amount => {
-  return Math.round((amount / 100) * 100) / 100;
+  return Math.round(amount * 100) / 100;
 };
 
 const overwriteMerge = (destinationArray, sourceArray) => sourceArray;
