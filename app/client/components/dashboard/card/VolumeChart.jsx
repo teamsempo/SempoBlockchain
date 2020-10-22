@@ -86,8 +86,10 @@ class VolumeChart extends React.Component {
           .filter(date => date != null)
           .map(date => date.startOf("day"))
       );
+    } else {
+      // If there are no outside filters, pad dates til today
+      all_dates = all_dates.concat(Date.now());
     }
-
     let minDate = new Date(Math.min.apply(null, all_dates));
     let maxDate = new Date(Math.max.apply(null, all_dates));
 
