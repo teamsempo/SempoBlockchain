@@ -81,6 +81,10 @@ class Organisation(ModelBase):
     def country_code(self):
         return self._country_code
 
+    @hybrid_property
+    def country(self):
+        return ISO_COUNTRIES[self._country_code]
+
     @country_code.setter
     def country_code(self, val):
         if val is not None:
