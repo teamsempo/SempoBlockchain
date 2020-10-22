@@ -5,7 +5,11 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
+<<<<<<< HEAD
 VERSION = '1.6.32'  # Remember to bump this in every PR
+=======
+VERSION = '1.7.0'  # Remember to bump this in every PR
+>>>>>>> master
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
