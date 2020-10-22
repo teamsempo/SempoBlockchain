@@ -189,7 +189,7 @@ class VolumeChart extends React.Component {
     const datasets = possibleTimeseriesKeys.map((key, index) => {
       const timeseries = data.timeseries[key].map(a => {
         if (data.type.value_type == VALUE_TYPES.CURRENCY) {
-          a.value = toCurrency(a.value);
+          return { ...a, value: toCurrency(a.value) };
         }
         return a;
       });
