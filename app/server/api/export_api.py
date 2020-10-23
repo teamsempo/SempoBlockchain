@@ -67,6 +67,7 @@ class ExportAPI(MethodView):
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
             {'header': 'Transfer Type',     'query_type': 'enum',   'query': 'transfer_type'},
+            {'header': 'Transfer Type',     'query_type': 'enum', 'query': 'transfer_subtype'},
             {'header': 'Transfer Status',   'query_type': 'enum',   'query': 'transfer_status'},
             {'header': 'Sender ID',         'query_type': 'db',     'query': 'sender_transfer_account_id'},
             {'header': 'Recipient ID',      'query_type': 'db',     'query': 'recipient_transfer_account_id'},
@@ -380,9 +381,9 @@ class MeExportAPI(MethodView):
             {'header': 'Transfer Amount',   'query_type': 'custom', 'query': 'transfer_amount'},
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
-            {'header': 'Transfer Type', 'query_type': 'enum', 'query': 'transfer_type'},
-            {'header': 'Transfer Status', 'query_type': 'enum', 'query': 'transfer_status'},
-            {'header': 'Transfer Uses',      'query_type': 'custom',  'query': 'transfer_usages'},
+            {'header': 'Transfer Type',     'query_type': 'enum', 'query': 'transfer_type'},
+            {'header': 'Transfer Status',   'query_type': 'enum', 'query': 'transfer_status'},
+            {'header': 'Transfer Uses',     'query_type': 'custom',  'query': 'transfer_usages'},
         ]
 
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
