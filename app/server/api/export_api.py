@@ -29,6 +29,8 @@ class ExportAPI(MethodView):
 
         export_type = post_data.get('export_type')
         include_transfers = post_data.get('include_transfers')  # True or False
+        include_custom_attributes = post_data.get('include_custom_attributes')  # True or False
+
         user_type = post_data.get('user_type')  # Beneficiaries, Vendors, All
         selected = post_data.get('selected')
         #  TODO: implement date_range
@@ -42,16 +44,18 @@ class ExportAPI(MethodView):
         payable_period_end_date = post_data.get('payable_period_end_date')
 
         transfer_account_columns = [
-            {'header': 'ID',                    'query_type': 'db',     'query': 'id'},
+            {'header': 'Account ID',            'query_type': 'db',     'query': 'id'},
+            {'header': 'User ID',               'query_type': 'custom', 'query': 'user_id'},
             {'header': 'First Name',            'query_type': 'custom', 'query': 'first_name'},
             {'header': 'Last Name',             'query_type': 'custom', 'query': 'last_name'},
+            {'header': 'Public Serial Number',  'query_type': 'custom', 'query': 'public_serial_number'},
             {'header': 'Created (UTC)',         'query_type': 'db',     'query': 'created'},
-            {'header': 'Approved', 'query_type': 'db', 'query': 'is_approved'},
-            {'header': 'Beneficiary', 'query_type': 'custom', 'query': 'has_beneficiary_role'},
-            {'header': 'Vendor', 'query_type': 'custom', 'query': 'has_vendor_role'},
+            {'header': 'Approved',              'query_type': 'db',     'query': 'is_approved'},
+            {'header': 'Beneficiary',           'query_type': 'custom', 'query': 'has_beneficiary_role'},
+            {'header': 'Vendor',                'query_type': 'custom', 'query': 'has_vendor_role'},
             {'header': 'Current Balance',       'query_type': 'custom', 'query': 'balance'},
-            {'header': 'Amount Received', 'query_type': 'custom', 'query': 'received'},
-            {'header': 'Amount Sent', 'query_type': 'custom', 'query': 'sent'}
+            {'header': 'Amount Received',       'query_type': 'custom', 'query': 'received'},
+            {'header': 'Amount Sent',           'query_type': 'custom', 'query': 'sent'}
             # {'header': 'Prev. Period Payable',  'query_type': 'custom', 'query': 'prev_period_payable'},
             # {'header': 'Total Payable',         'query_type': 'custom', 'query': 'total_payable'},
         ]
@@ -139,6 +143,9 @@ class ExportAPI(MethodView):
             return make_response(jsonify(response_object)), 201
 
         if user_accounts is not None:
+
+            custom_attribute_columns = []
+
             for index, user_account in enumerate(user_accounts):
                 transfer_account = user_account.transfer_account
 
@@ -147,11 +154,19 @@ class ExportAPI(MethodView):
                         if column['query_type'] == 'db':
                             cell_contents = "{0}".format(getattr(transfer_account, column['query']))
 
+                        elif column['query'] == 'user_id':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user.id)
+
                         elif column['query'] == 'first_name':
 
                             cell_contents = "{0}".format(transfer_account.primary_user.first_name)
 
                         elif column['query'] == 'last_name':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user.last_name)
+
+                        elif column['query'] == 'public_serial_number':
 
                             cell_contents = "{0}".format(transfer_account.primary_user.last_name)
 
@@ -266,8 +281,29 @@ class ExportAPI(MethodView):
                             cell_contents = ""
 
                         _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
+
+                    if include_custom_attributes:
+                        # Add custom attributes as columns at the end
+                        for attribute in transfer_account.primary_user.custom_attributes:
+                            try:
+                                col_num = custom_attribute_columns.index(attribute.name) + 1 + len(transfer_account_columns)
+                            except ValueError:
+                                custom_attribute_columns.append(attribute.name)
+                                col_num = len(custom_attribute_columns) + len(transfer_account_columns)
+
+                            _ = ws.cell(column=col_num, row=index + 2, value=attribute.value)
+
                 else:
                     print('No Transfer Account for user account id: ', user_account.id)
+
+            # Add custom attribute headers:
+            if include_custom_attributes:
+                for index, column_name in enumerate(custom_attribute_columns):
+                    _ = ws.cell(
+                        column=index + 1 + len(transfer_account_columns),
+                        row=1,
+                        value="{0}".format(column_name)
+                    )
 
         if include_transfers and user_accounts is not None:
             if start_date and end_date is not None:
