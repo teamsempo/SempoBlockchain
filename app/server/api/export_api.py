@@ -53,6 +53,7 @@ class ExportAPI(MethodView):
             {'header': 'Approved',              'query_type': 'db',     'query': 'is_approved'},
             {'header': 'Beneficiary',           'query_type': 'custom', 'query': 'has_beneficiary_role'},
             {'header': 'Vendor',                'query_type': 'custom', 'query': 'has_vendor_role'},
+            {'header': 'Location',              'query_type': 'custom', 'query': 'location'},
             {'header': 'Current Balance',       'query_type': 'custom', 'query': 'balance'},
             {'header': 'Amount Received',       'query_type': 'custom', 'query': 'received'},
             {'header': 'Amount Sent',           'query_type': 'custom', 'query': 'sent'}
@@ -169,6 +170,10 @@ class ExportAPI(MethodView):
                         elif column['query'] == 'public_serial_number':
 
                             cell_contents = "{0}".format(transfer_account.primary_user.public_serial_number)
+
+                        elif column['query'] == 'location':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user._location)
 
                         elif column['query'] == 'balance':
                             cell_contents = getattr(transfer_account, column['query'])/100
