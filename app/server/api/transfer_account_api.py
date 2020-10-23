@@ -1,7 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 import datetime
-import orjson
+import json
 
 from server import db
 from server.models.utils import paginate_query
@@ -73,12 +73,10 @@ class TransferAccountAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
-                'query_time': datetime.datetime.utcnow(),
+                'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
                 'data': {'transfer_accounts': result.data}
             }
-
-            bytes_data = orjson.dumps(response_object)
-            return make_response(bytes_data, 200)
+            return make_response(json.dumps(response_object), 200)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, transfer_account_id):
@@ -116,7 +114,14 @@ class TransferAccountAPI(MethodView):
                 transfer_account.payable_epoch = payable_epoch
 
             if not approve == transfer_account.is_approved and transfer_account.is_approved is not True:
-                transfer_account.approve_and_disburse()
+                transfer_account.is_approved = True
+                transfer_account.approve_initial_disbursement()
+
+            # Explicitly checking True and False since null is also possible
+            if approve == True: 
+                transfer_account.is_approved = True
+            elif approve == False:
+                transfer_account.is_approved = False
 
             db.session.flush()
 
@@ -145,9 +150,14 @@ class TransferAccountAPI(MethodView):
                     })
 
                     continue
+                if approve == True: 
+                    transfer_account.is_approved = True
+                elif approve == False:
+                    transfer_account.is_approved = False
 
                 if not transfer_account.is_approved and approve:
-                    transfer_account.approve_and_disburse()
+                    transfer_account.is_approved = True
+                    transfer_account.approve_initial_disbursement()
 
                 transfer_accounts.append(transfer_account)
 

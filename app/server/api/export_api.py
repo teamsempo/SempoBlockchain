@@ -6,13 +6,17 @@ import random, string, os
 from sqlalchemy import and_, or_
 from dateutil import parser
 
+from server.schemas import transfer_account_schema
+
 from server.models.credit_transfer import CreditTransfer
+from server.models.transfer_account import TransferAccount
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
 from server.models.user import User
 from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import upload_local_file_to_s3
 from server.utils.date_magic import find_last_period_dates
 from server.utils.amazon_ses import send_export_email
+from server.utils.export import generate_pdf_export, export_workbook_via_s3
 
 export_blueprint = Blueprint('export', __name__)
 
@@ -57,11 +61,11 @@ class ExportAPI(MethodView):
             {'header': 'Transfer Amount',   'query_type': 'custom', 'query': 'transfer_amount'},
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
-            {'header': 'Transfer Type',     'query_type': 'db',     'query': 'transfer_type'},
-            {'header': 'Transfer Status',   'query_type': 'db',     'query': 'transfer_status'},
-            {'header': 'Transfer Use',      'query_type': 'db',     'query': 'transfer_use'},
+            {'header': 'Transfer Type',     'query_type': 'enum',   'query': 'transfer_type'},
+            {'header': 'Transfer Status',   'query_type': 'enum',   'query': 'transfer_status'},
             {'header': 'Sender ID',         'query_type': 'db',     'query': 'sender_transfer_account_id'},
             {'header': 'Recipient ID',      'query_type': 'db',     'query': 'recipient_transfer_account_id'},
+            {'header': 'Transfer Uses',     'query_type': 'custom', 'query': 'transfer_usages'},
         ]
 
         # need to add Balance (Payable)
@@ -69,8 +73,11 @@ class ExportAPI(MethodView):
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
         # TODO MAKE THIS API AUTHED
         time = str(datetime.utcnow())
-        workbook_filename = current_app.config['DEPLOYMENT_NAME'] + '-id' + str(g.user.id) + '-' + str(time[0:10]) + '-' + random_string + '.xlsx'
+
+        base_filename = current_app.config['DEPLOYMENT_NAME'] + '-id' + str(g.user.id) + '-' + str(time[0:10]) + '-' + random_string
+        workbook_filename = base_filename + '.xlsx'
         # e.g. dev-id1-2018-09-19-asfi.xlsx
+        pdf_filename = base_filename + '.pdf'
 
         wb = Workbook()
         ws = wb.active
@@ -112,10 +119,24 @@ class ExportAPI(MethodView):
         if user_filter is not None:
             user_accounts = User.query.filter(user_filter==True).all()
         elif user_type == 'selected':
-            user_accounts = User.query.filter(User.transfer_account_id.in_(selected)).all()
-        elif user_type == 'all':
+            transfer_accounts = TransferAccount.query.filter(TransferAccount.id.in_(selected)).all()
+            user_accounts = [ta.primary_user for ta in transfer_accounts]
+        else:
             user_accounts = User.query.filter(
-                or_(User.has_beneficiary_role == True, User.has_vendor_role == True)).all()
+                or_(User.has_beneficiary_role == True, User.has_vendor_role == True)
+            ).all()
+
+
+        if export_type == 'pdf':
+            file_url = generate_pdf_export(user_accounts, pdf_filename)
+            response_object = {
+                'message': 'Export file created.',
+                'data': {
+                    'file_url': file_url,
+                }
+            }
+
+            return make_response(jsonify(response_object)), 201
 
         if user_accounts is not None:
             for index, user_account in enumerate(user_accounts):
@@ -266,8 +287,13 @@ class ExportAPI(MethodView):
                     for jindix, column in enumerate(credit_transfer_columns):
                         if column['query_type'] == 'db':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
+                        elif column['query_type'] == 'enum':
+                            enum = getattr(credit_transfer, column['query'])
+                            cell_contents = "{0}".format(enum.value)
                         elif column['query'] == 'transfer_amount':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
+                        elif column['query'] == 'transfer_usages':
+                            cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
                         else:
                             cell_contents = ""
 
@@ -278,16 +304,7 @@ class ExportAPI(MethodView):
                 print('No Credit Transfers')
 
         if len(user_accounts) is not 0:
-            # Create local URL + save local + Upload to s3 bucket
-            local_save_directory = os.path.join(current_app.config['BASEDIR'], "tmp/")
-
-            local_save_path = os.path.join(local_save_directory, workbook_filename)
-            wb.save(filename=local_save_path)
-            file_url = upload_local_file_to_s3(local_save_path, workbook_filename)
-
-            send_export_email(file_url, g.user.email)
-
-            os.remove(local_save_path)
+            file_url = export_workbook_via_s3(wb, workbook_filename)
 
             response_object = {
                 'message': 'Export file created.',
@@ -322,9 +339,9 @@ class MeExportAPI(MethodView):
             {'header': 'Transfer Amount',   'query_type': 'custom', 'query': 'transfer_amount'},
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
-            {'header': 'Transfer Type',     'query_type': 'db',     'query': 'transfer_type'},
-            {'header': 'Transfer Status',   'query_type': 'db',     'query': 'transfer_status'},
-            {'header': 'Transfer Use',      'query_type': 'db',     'query': 'transfer_use'},
+            {'header': 'Transfer Type', 'query_type': 'enum', 'query': 'transfer_type'},
+            {'header': 'Transfer Status', 'query_type': 'enum', 'query': 'transfer_status'},
+            {'header': 'Transfer Uses',      'query_type': 'custom',  'query': 'transfer_usages'},
         ]
 
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
@@ -364,7 +381,9 @@ class MeExportAPI(MethodView):
 
         else:
             # default to all credit transfers of transfer_account.id
-            credit_transfer_list = CreditTransfer.query.filter(or_(CreditTransfer.recipient_id == transfer_account.id, CreditTransfer.sender_transfer_account_id == transfer_account.id))
+            credit_transfer_list = CreditTransfer.query.filter(
+                or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))
 
         # loop over all credit transfers, create cells
         if credit_transfer_list is not None:
@@ -372,29 +391,20 @@ class MeExportAPI(MethodView):
                 for jindix, column in enumerate(credit_transfer_columns):
                     if column['query_type'] == 'db':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
+                    elif column['query_type'] == 'enum':
+                        enum = getattr(credit_transfer, column['query'])
+                        cell_contents = "{0}".format(enum.value)
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']) / 100)
+                    elif  column['query'] == 'transfer_usages':
+                        cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
 
                     _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
 
         if credit_transfer_list is not None:
-            # Create local URL + save local + Upload to s3 bucket
-            local_save_directory = os.path.join(current_app.config['BASEDIR'], "tmp/")
-
-            local_save_path = os.path.join(local_save_directory, workbook_filename)
-            wb.save(filename=local_save_path)
-            file_url = upload_local_file_to_s3(local_save_path, workbook_filename)
-
-            if email:
-                send_export_email(file_url, email)
-
-            else:
-                if g.user.email is not None:
-                    send_export_email(file_url, g.user.email)
-
-            os.remove(local_save_path)
+            file_url = export_workbook_via_s3(wb, workbook_filename, email)
 
             response_object = {
                 'status': 'success',
@@ -412,7 +422,7 @@ class MeExportAPI(MethodView):
                 'file_url': None,
             }
 
-            return make_response(jsonify(response_object)), 201
+            return make_response(jsonify(response_object)), 404
 
 
 # add Rules for API Endpoints

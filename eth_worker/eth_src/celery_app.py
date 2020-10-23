@@ -67,7 +67,9 @@ app.conf.beat_schedule = {
         'schedule': 30, # Every 30 seconds
     }
 }
+
 w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+
 w3_websocket = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
 red = redis.Redis.from_url(config.REDIS_URL)

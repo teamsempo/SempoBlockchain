@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { NavLink } from "react-router-dom";
 import { Layout, Menu } from "antd";
 import { IntercomChat } from "../intercom/IntercomChat";
-import { IntercomHelpCentre } from "../intercom/IntercomHelpCentre";
+import { HelpCentre } from "../intercom/HelpCentre";
 
 import {
   DesktopOutlined,
@@ -161,7 +161,7 @@ class NavBar extends React.Component<Props, State> {
               title="Help"
             >
               <Menu.Item key="help-centre">
-                <IntercomHelpCentre />
+                <HelpCentre />
               </Menu.Item>
               <Menu.Item key="contact-support">
                 <IntercomChat />

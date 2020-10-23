@@ -133,6 +133,7 @@ def requires_auth(f=None,
                     required_password = None
                     auth_type = None
 
+            g.auth_type = auth_type
             if required_password is None or required_password != password:
                 response_object = {
                     'message': 'invalid basic auth username or password'
@@ -370,7 +371,7 @@ def create_user_response_object(user, auth_token, message):
             conversion_rate = conversion.rate
 
     transfer_usages = []
-    usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).limit(11).all()
+    usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).all()
     for usage in usage_objects:
         if ((usage.is_cashout and user.cashout_authorised) or not usage.is_cashout):
             transfer_usages.append({

@@ -79,6 +79,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     email = db.Column(db.String())
     _phone = db.Column(db.String(), unique=True, index=True)
     _public_serial_number = db.Column(db.String())
+    uuid = db.Column(db.String(), index=True)
+
     nfc_serial_number = db.Column(db.String())
 
     password_hash = db.Column(db.String(200))
@@ -260,17 +262,19 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     @location.setter
     def location(self, location):
-        from server.utils.location import async_set_user_gps_from_location
 
         self._location = location
 
-        if location is not None and location is not '':
+    def attempt_update_gps_location(self):
+        from server.utils.location import async_set_user_gps_from_location
+
+        if self._location is not None and self._location is not '':
             # Delay execution until after request to avoid race condition with db
             # We still need to flush to get user id though
             db.session.flush()
             add_after_request_executor_job(
                 async_set_user_gps_from_location,
-                kwargs={'user_id': self.id, 'location': location}
+                kwargs={'user_id': self.id, 'location': self._location}
             )
 
     @hybrid_property
@@ -449,7 +453,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         try:
 
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7, seconds=0),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(
+                    seconds=current_app.config['AUTH_TOKEN_EXPIRATION']
+                ),
                 'iat': datetime.datetime.utcnow(),
                 'id': self.id,
                 'roles': self.roles
@@ -471,8 +477,15 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         :return: integer|string
         """
         try:
-            payload = jwt.decode(auth_token, current_app.config.get(
-                'SECRET_KEY'), algorithms='HS256')
+            payload = jwt.decode(
+                auth_token,
+                current_app.config['SECRET_KEY'],
+                algorithms='HS256',
+                options={
+                    'verify_exp': current_app.config['VERIFY_JWT_EXPIRY']
+                }
+            )
+
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
@@ -487,7 +500,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     def encode_single_use_JWS(self, token_type):
 
         s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'],
-                                            expires_in=current_app.config['TOKEN_EXPIRATION'])
+                                            expires_in=current_app.config['SINGLE_USE_TOKEN_EXPIRATION'])
 
         return s.dumps({'id': self.id, 'type': token_type}).decode("utf-8")
 
