@@ -28,14 +28,14 @@ def upgrade():
     op.add_column('user', sa.Column('tsv_primary_blockchain_address', postgresql.TSVECTOR(), nullable=True))
     op.add_column('user', sa.Column('tsv_public_serial_number', postgresql.TSVECTOR(), nullable=True))
     
-    op.create_index(op.f('ix_tsv_email'), 'user', ['tsv_email'], postgresql_using='gin')
-    op.create_index(op.f('ix_tsv_phone'), 'user', ['tsv_phone'], postgresql_using='gin')
-    op.create_index(op.f('ix_tsv_firstname'), 'user', ['tsv_first_name'], postgresql_using='gin')
-    op.create_index(op.f('ix_tsv_lastname'), 'user', ['tsv_last_name'], postgresql_using='gin')
-    op.create_index(op.f('_public_serial_number'), 'user', ['tsv_public_serial_number'], postgresql_using='gin')
-    op.create_index(op.f('_location'), 'user', ['tsv_location'], postgresql_using='gin')
-    op.create_index(op.f('primary_blockchain_address'), 'user', ['tsv_primary_blockchain_address'], postgresql_using='gin')
-    op.create_index(op.f('default_transfer_account_id'), 'user', ['tsv_default_transfer_account_id'], postgresql_using='gin')
+    conn.execute(sa.sql.text('''CREATE INDEX ix_tsv_email ON "user" USING gin(tsv_email);'''))
+    conn.execute(sa.sql.text('''CREATE INDEX ix_tsv_phone ON "user" USING gin(tsv_phone);'''))
+    conn.execute(sa.sql.text('''CREATE INDEX ix_tsv_firstname ON "user" USING gin(tsv_first_name);'''))
+    conn.execute(sa.sql.text('''CREATE INDEX ix_tsv_lastname ON "user" USING gin(tsv_last_name);'''))
+    conn.execute(sa.sql.text('''CREATE INDEX ix_public_serial_number ON "user" USING gin(tsv_public_serial_number);'''))
+    conn.execute(sa.sql.text('''CREATE INDEX ix_location ON "user" USING gin(tsv_location);'''))
+    conn.execute(sa.sql.text('''CREATE INDEX ix_primary_blockchain_address ON "user" USING gin(tsv_primary_blockchain_address);'''))
+    conn.execute(sa.sql.text('''CREATE INDEX ix_default_transfer_account_id ON "user" USING gin(tsv_default_transfer_account_id);'''))
 
     # Will take a bit on large data sets
     print('Back-populating tsv_default_transfer_account_id')
