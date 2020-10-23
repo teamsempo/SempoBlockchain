@@ -168,7 +168,7 @@ class ExportAPI(MethodView):
 
                         elif column['query'] == 'public_serial_number':
 
-                            cell_contents = "{0}".format(transfer_account.primary_user.last_name)
+                            cell_contents = "{0}".format(transfer_account.primary_user.public_serial_number)
 
                         elif column['query'] == 'balance':
                             cell_contents = getattr(transfer_account, column['query'])/100
