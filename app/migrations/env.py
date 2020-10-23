@@ -26,7 +26,7 @@ target_metadata = db.Model.metadata
 
 # Tables to ignore when running 'manage.py db migrate' are defined here
 def include_object(object, name, type_, reflected, compare_to):
-    if type_ == 'table' and name in ('search_view'):
+    if type_ == 'table' and name in ():
         return False
     return True
 

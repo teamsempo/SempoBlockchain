@@ -1,9 +1,10 @@
 import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy.dialects.postgresql import JSON, JSONB, TSVECTOR
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text, Table
+from sqlalchemy.sql.functions import GenericFunction
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
 import pyotp
@@ -112,7 +113,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     terms_accepted = db.Column(db.Boolean, default=True)
 
-    matched_profile_pictures = db.Column(JSON)
+    matched_profile_pictures = db.Column(JSONB)
 
     business_usage_id = db.Column(db.Integer, db.ForeignKey(TransferUsage.id))
 
@@ -173,6 +174,16 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                                         lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
+
+    # TSVECTOR versions of searchable columns
+    tsv_email = db.Column(TSVECTOR)
+    tsv_phone = db.Column(TSVECTOR)
+    tsv_first_name = db.Column(TSVECTOR)
+    tsv_last_name = db.Column(TSVECTOR)
+    tsv_public_serial_number = db.Column(TSVECTOR)
+    tsv_primary_blockchain_address = db.Column(TSVECTOR)
+    tsv_default_transfer_account_id = db.Column(TSVECTOR)
+    tsv_location = db.Column(TSVECTOR)
 
     def delete_user_and_transfer_account(self):
         """
@@ -710,3 +721,6 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
+class TSRank(GenericFunction):
+    package = 'full_text'
+    name = 'ts_rank'

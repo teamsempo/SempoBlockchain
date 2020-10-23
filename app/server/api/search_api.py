@@ -16,7 +16,6 @@ from server.utils.transfer_filter import process_transfer_filters
 from server.schemas import transfer_accounts_schema, credit_transfers_schema
 from server.models.utils import paginate_query
 from server.utils.metrics.filters import apply_filters
-from server.models.search import SearchView
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
@@ -157,22 +156,22 @@ class SearchAPI(MethodView):
         else:
             # First get users who match search string
             user_search_result = db.session.query(
-                db.distinct(SearchView.id),
-                SearchView,
+                db.distinct(User.id),
+                User,
                 # This ugly (but functional) multi-tscolumn ranking is a modified from Ben Smithgall's blog post
                 # https://www.codeforamerica.org/blog/2015/07/02/multi-table-full-text-search-with-postgres-flask-and-sqlalchemy/
                 db.func.max(db.func.full_text.ts_rank(
-                    db.func.setweight(db.func.coalesce(SearchView.tsv_email, ''), 'D')\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_phone, ''), 'A'))\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_first_name, ''), 'B'))\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_last_name, ''), 'B'))\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_public_serial_number, ''), 'A'))\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_primary_blockchain_address, ''), 'A'))\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_location, ''), 'C'))\
-                        .concat(db.func.setweight(db.func.coalesce(SearchView.tsv_default_transfer_account_id, ''), 'A')),
+                    db.func.setweight(db.func.coalesce(User.tsv_email, ''), 'D')\
+                        .concat(db.func.setweight(db.func.coalesce(User.tsv_phone, ''), 'A'))\
+                        .concat(db.func.setweight(db.func.coalesce(User.tsv_first_name, ''), 'B'))\
+                        .concat(db.func.setweight(db.func.coalesce(User.tsv_last_name, ''), 'B'))\
+                        .concat(db.func.setweight(db.func.coalesce(User.tsv_public_serial_number, ''), 'A'))\
+                        .concat(db.func.setweight(db.func.coalesce(User.tsv_primary_blockchain_address, ''), 'A'))\
+                        .concat(db.func.setweight(db.func.coalesce(User.tsv_location, ''), 'C'))\
+                        .concat(db.func.setweight(db.func.coalesce(User.tsv_default_transfer_account_id, ''), 'A')),
                         db.func.to_tsquery(tsquery, postgresql_regconfig='english')))\
                 .label('rank'))\
-                .group_by(SearchView)\
+                .group_by(User)\
                 .subquery()
 
             # Then use those results to join aginst TransferAccount or CreditTransfer

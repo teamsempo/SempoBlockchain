@@ -8,32 +8,16 @@ from server.utils.user import create_transfer_account_user, set_custom_attribute
 from server import db
 
 def test_prep_search_api(test_client, complete_admin_auth_token, create_organisation):
-    # This is a hack because the test DB isn't being built with migrations (and thus doesn't have tsvectors)
-    db.session.execute("drop table search_view;")
+    # This is a hack because the test DB isn't being built with migrations (and thus doesn't have triggers)
+    db.session.execute('''CREATE TRIGGER tsv_email_trigger BEFORE INSERT OR UPDATE ON "user" FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(tsv_email, 'pg_catalog.simple', email);''')
+    db.session.execute('''CREATE TRIGGER tsv_phone_trigger BEFORE INSERT OR UPDATE ON "user" FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(tsv_phone, 'pg_catalog.simple', _phone);''')
+    db.session.execute('''CREATE TRIGGER tsv_first_name_trigger BEFORE INSERT OR UPDATE ON "user" FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(tsv_first_name, 'pg_catalog.simple', first_name);''')
+    db.session.execute('''CREATE TRIGGER tsv_last_name_trigger BEFORE INSERT OR UPDATE ON "user" FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(tsv_last_name, 'pg_catalog.simple', last_name);''')
+    db.session.execute('''CREATE TRIGGER tsv_public_serial_number_trigger BEFORE INSERT OR UPDATE ON "user" FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(tsv_public_serial_number, 'pg_catalog.simple', _public_serial_number);''')
+    db.session.execute('''CREATE TRIGGER tsv_location_trigger BEFORE INSERT OR UPDATE ON "user" FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(tsv_location, 'pg_catalog.simple', _location);''')
+    db.session.execute('''CREATE TRIGGER tsv_primary_blockchain_address_trigger BEFORE INSERT OR UPDATE ON "user" FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(tsv_primary_blockchain_address, 'pg_catalog.simple', primary_blockchain_address);''')
+
     db.session.commit()
-    db.session.execute('''
-        CREATE MATERIALIZED VIEW search_view AS (
-            SELECT
-                u.id,
-                u.email,
-                u._phone,
-                u.first_name,
-                u.last_name,
-                u._public_serial_number,
-                u._location,
-                u.primary_blockchain_address,
-                u.default_transfer_account_id,
-                to_tsvector(u.email) AS tsv_email,
-                to_tsvector(u._phone) AS tsv_phone,
-                to_tsvector(u.first_name) AS tsv_first_name,
-                to_tsvector(u.last_name) AS tsv_last_name,
-                to_tsvector(u._public_serial_number) AS tsv_public_serial_number,
-                to_tsvector(u._location) AS tsv_location,
-                to_tsvector(u.primary_blockchain_address) AS tsv_primary_blockchain_address,
-                to_tsvector(CAST (u.default_transfer_account_id AS VARCHAR(10))) AS tsv_default_transfer_account_id
-            FROM "user" u
-        );
-    ''')
 
     # Adds users we're searching for
     create_transfer_account_user(first_name='Michiel',
@@ -56,8 +40,6 @@ def test_prep_search_api(test_client, complete_admin_auth_token, create_organisa
                                     initial_disbursement = 200)
 
     db.session.commit()
-    # Manually refresh tsvectors because the test DB has no triggers either
-    db.session.execute("REFRESH MATERIALIZED VIEW search_view;")
 
 @pytest.mark.parametrize("search_term, results", [
     ('', ['Roy', 'Francine', 'Michiel']), # Empty string should return everyone
@@ -105,9 +87,3 @@ def test_filtered_search(search_term, filters, results, test_client, complete_ad
         if transfer_account['users']:
             user_names.append(transfer_account['users'][0]['first_name'])
     assert results == user_names
-
-def test_tear_down():
-    db.session.execute('DROP MATERIALIZED VIEW search_view CASCADE;')
-    db.session.flush()
-    db.session.commit()
-
