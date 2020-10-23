@@ -13,12 +13,11 @@ from dateutil.parser import isoparse
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
     # Generates metrics over timeline
-    
     # User1 and User2 made today
     user1 = create_transfer_account_user(first_name='Ricky',
                                     phone="+19025551234",
                                     organisation=create_organisation,
-                                    is_beneficiary=True)
+                                    roles=[('BENEFICIARY', 'beneficiary')])
     user1.default_transfer_account.is_approved = True
     user1.default_transfer_account._make_initial_disbursement(100, True)
     user1._location = 'Sunnyvale'

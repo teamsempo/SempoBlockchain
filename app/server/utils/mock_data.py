@@ -100,7 +100,10 @@ def create_transfer_user(email, transfer_usages, organisation, created_offset):
     last_name = f'{middle_name} {random.choice(ANIMALS)}'
 
     is_beneficiary = rand_bool(0.9)
-    is_vendor = not is_beneficiary
+    if is_beneficiary:
+        roles = roles=[('BENEFICIARY', 'beneficiary')]
+    else:
+        roles=[('VENDOR', 'vendor')]
 
     phone = '+1' + ''.join([str(random.randint(0,10)) for i in range(0, 10)])
 
@@ -110,8 +113,7 @@ def create_transfer_user(email, transfer_usages, organisation, created_offset):
         email=email,
         phone=phone,
         organisation=organisation,
-        is_beneficiary=is_beneficiary,
-        is_vendor=is_vendor,
+        roles=roles,
     )
 
     # Set the created date to the first day
@@ -130,7 +132,7 @@ def create_transfer_user(email, transfer_usages, organisation, created_offset):
 
     set_custom_attributes(attribute_dict, user)
 
-    if is_vendor:
+    if not is_beneficiary:
         bu = random.choice(transfer_usages)
         user.business_usage = bu
 
