@@ -338,7 +338,7 @@ class ExportAPI(MethodView):
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
                         elif column['query_type'] == 'enum':
                             enum = getattr(credit_transfer, column['query'])
-                            cell_contents = "{0}".format(enum.value)
+                            cell_contents = "{0}".format(enum and enum.value)
                         elif column['query'] == 'transfer_amount':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
                         elif column['query'] == 'transfer_usages':
@@ -442,7 +442,7 @@ class MeExportAPI(MethodView):
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
                     elif column['query_type'] == 'enum':
                         enum = getattr(credit_transfer, column['query'])
-                        cell_contents = "{0}".format(enum.value)
+                        cell_contents = "{0}".format(enum and enum.value)
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']) / 100)
                     elif  column['query'] == 'transfer_usages':
