@@ -57,6 +57,7 @@ class ExportAPI(MethodView):
             {'header': 'Approved',              'query_type': 'db',     'query': 'is_approved'},
             {'header': 'Beneficiary',           'query_type': 'custom', 'query': 'has_beneficiary_role'},
             {'header': 'Vendor',                'query_type': 'custom', 'query': 'has_vendor_role'},
+            {'header': 'Location',              'query_type': 'custom', 'query': 'location'},
             {'header': 'Current Balance',       'query_type': 'custom', 'query': 'balance'},
             {'header': 'Amount Received',       'query_type': 'custom', 'query': 'received'},
             {'header': 'Amount Sent',           'query_type': 'custom', 'query': 'sent'}
@@ -70,6 +71,7 @@ class ExportAPI(MethodView):
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
             {'header': 'Transfer Type',     'query_type': 'enum',   'query': 'transfer_type'},
+            {'header': 'Transfer Type',     'query_type': 'enum', 'query': 'transfer_subtype'},
             {'header': 'Transfer Status',   'query_type': 'enum',   'query': 'transfer_status'},
             {'header': 'Sender ID',         'query_type': 'db',     'query': 'sender_transfer_account_id'},
             {'header': 'Recipient ID',      'query_type': 'db',     'query': 'recipient_transfer_account_id'},
@@ -158,6 +160,7 @@ class ExportAPI(MethodView):
             custom_attribute_columns = []
 
             for index, user_account in enumerate(user_accounts):
+                print('row')
                 transfer_account = user_account.transfer_account
 
                 if transfer_account:
@@ -179,7 +182,11 @@ class ExportAPI(MethodView):
 
                         elif column['query'] == 'public_serial_number':
 
-                            cell_contents = "{0}".format(transfer_account.primary_user.last_name)
+                            cell_contents = "{0}".format(transfer_account.primary_user.public_serial_number)
+
+                        elif column['query'] == 'location':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user._location)
 
                         elif column['query'] == 'balance':
                             cell_contents = getattr(transfer_account, column['query'])/100
@@ -385,9 +392,9 @@ class MeExportAPI(MethodView):
             {'header': 'Transfer Amount',   'query_type': 'custom', 'query': 'transfer_amount'},
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
-            {'header': 'Transfer Type', 'query_type': 'enum', 'query': 'transfer_type'},
-            {'header': 'Transfer Status', 'query_type': 'enum', 'query': 'transfer_status'},
-            {'header': 'Transfer Uses',      'query_type': 'custom',  'query': 'transfer_usages'},
+            {'header': 'Transfer Type',     'query_type': 'enum', 'query': 'transfer_type'},
+            {'header': 'Transfer Status',   'query_type': 'enum', 'query': 'transfer_status'},
+            {'header': 'Transfer Uses',     'query_type': 'custom',  'query': 'transfer_usages'},
         ]
 
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
