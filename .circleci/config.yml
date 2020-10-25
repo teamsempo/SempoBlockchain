@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - export_bugfix
+                - improving_analytics_load
           requires:
             - build
 #            - test:backend
