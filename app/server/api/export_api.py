@@ -27,8 +27,6 @@ class ExportAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
 
-        start_time = datetime.utcnow()
-
         post_data = request.get_json()
 
         export_type = post_data.get('export_type')
@@ -198,14 +196,12 @@ class ExportAPI(MethodView):
                             cell_contents = "{0}".format(transfer_account.primary_user.has_vendor_role)
 
                         elif column['query'] == 'received':
-                            cell_contents = 0
-                            # received_amount = transfer_account.total_received
-                            # cell_contents = received_amount / 100
+                            received_amount = transfer_account.total_received
+                            cell_contents = received_amount / 100
 
                         elif column['query'] == 'sent':
-                            cell_contents = 0
-                            # sent_amount = transfer_account.total_sent
-                            # cell_contents = sent_amount / 100
+                            sent_amount = transfer_account.total_sent
+                            cell_contents = sent_amount / 100
 
                         elif column['query'] == 'prev_period_payable':
 
