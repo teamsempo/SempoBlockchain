@@ -4,6 +4,8 @@ from openpyxl import Workbook
 from datetime import datetime, timedelta
 import random, string, os
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import joinedload
+
 from dateutil import parser
 
 from server.schemas import transfer_account_schema
@@ -24,6 +26,8 @@ export_blueprint = Blueprint('export', __name__)
 class ExportAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
+
+        start_time = datetime.utcnow()
 
         post_data = request.get_json()
 
@@ -121,15 +125,22 @@ class ExportAPI(MethodView):
             start_date = end_date - timedelta(weeks=1)
 
         if user_filter is not None:
-            user_accounts = User.query.filter(user_filter==True).all()
+            user_accounts = User.query.filter(
+                user_filter==True
+            ).options(
+                joinedload(User.transfer_accounts)
+            ).all()
+
         elif user_type == 'selected':
             transfer_accounts = TransferAccount.query.filter(TransferAccount.id.in_(selected)).all()
             user_accounts = [ta.primary_user for ta in transfer_accounts]
+
         else:
             user_accounts = User.query.filter(
                 or_(User.has_beneficiary_role == True, User.has_vendor_role == True)
+            ).options(
+                joinedload(User.transfer_accounts)
             ).all()
-
 
         if export_type == 'pdf':
             file_url = generate_pdf_export(user_accounts, pdf_filename)
@@ -147,6 +158,7 @@ class ExportAPI(MethodView):
             custom_attribute_columns = []
 
             for index, user_account in enumerate(user_accounts):
+                print('row')
                 transfer_account = user_account.transfer_account
 
                 if transfer_account:
@@ -180,18 +192,14 @@ class ExportAPI(MethodView):
                             cell_contents = "{0}".format(transfer_account.primary_user.has_vendor_role)
 
                         elif column['query'] == 'received':
-                            received_amount = 0
-                            for transaction in transfer_account.credit_receives:
-                                received_amount += transaction.transfer_amount
-
-                            cell_contents = received_amount / 100
+                            cell_contents = 0
+                            # received_amount = transfer_account.total_received
+                            # cell_contents = received_amount / 100
 
                         elif column['query'] == 'sent':
-                            sent_amount = 0
-                            for transaction in transfer_account.credit_sends:
-                                sent_amount += transaction.transfer_amount
-
-                            cell_contents = sent_amount / 100
+                            cell_contents = 0
+                            # sent_amount = transfer_account.total_sent
+                            # cell_contents = sent_amount / 100
 
                         elif column['query'] == 'prev_period_payable':
 
@@ -306,11 +314,14 @@ class ExportAPI(MethodView):
                     )
 
         if include_transfers and user_accounts is not None:
+            base_credit_transfer_query= CreditTransfer.query.enable_eagerloads(False)
             if start_date and end_date is not None:
-                credit_transfer_list = CreditTransfer.query.filter(CreditTransfer.created.between(start_date, end_date)).all()
+                credit_transfer_list = base_credit_transfer_query.filter(
+                    CreditTransfer.created.between(start_date, end_date)
+                ).all()
 
             if date_range == 'all':
-                credit_transfer_list = CreditTransfer.query.all()
+                credit_transfer_list = base_credit_transfer_query.all()
 
             transfer_sheet = wb.create_sheet(title='credit_transfers')
 
