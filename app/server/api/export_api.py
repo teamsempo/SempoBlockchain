@@ -158,7 +158,6 @@ class ExportAPI(MethodView):
             custom_attribute_columns = []
 
             for index, user_account in enumerate(user_accounts):
-                print('row')
                 transfer_account = user_account.transfer_account
 
                 if transfer_account:
