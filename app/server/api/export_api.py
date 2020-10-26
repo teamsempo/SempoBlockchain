@@ -51,6 +51,7 @@ class ExportAPI(MethodView):
             {'header': 'First Name',            'query_type': 'custom', 'query': 'first_name'},
             {'header': 'Last Name',             'query_type': 'custom', 'query': 'last_name'},
             {'header': 'Public Serial Number',  'query_type': 'custom', 'query': 'public_serial_number'},
+            {'header': 'Phone',                 'query_type': 'custom', 'query': 'phone'},
             {'header': 'Created (UTC)',         'query_type': 'db',     'query': 'created'},
             {'header': 'Approved',              'query_type': 'db',     'query': 'is_approved'},
             {'header': 'Beneficiary',           'query_type': 'custom', 'query': 'has_beneficiary_role'},
@@ -178,9 +179,13 @@ class ExportAPI(MethodView):
 
                             cell_contents = "{0}".format(transfer_account.primary_user.last_name)
 
+                        elif column['query'] == 'phone':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user.phone or '')
+
                         elif column['query'] == 'public_serial_number':
 
-                            cell_contents = "{0}".format(transfer_account.primary_user.public_serial_number)
+                            cell_contents = "{0}".format(transfer_account.primary_user.public_serial_number or '')
 
                         elif column['query'] == 'location':
 
