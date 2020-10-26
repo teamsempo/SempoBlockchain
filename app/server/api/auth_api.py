@@ -553,9 +553,9 @@ class ResetPasswordAPI(MethodView):
 
         # get the post data
         post_data = request.get_json()
-
         old_password = post_data.get('old_password')
         new_password = post_data.get('new_password')
+        new_pin = post_data.get('new_pin')
         phone = proccess_phone_number(phone_number=post_data.get('phone'), region=post_data.get('region'))
         one_time_code = post_data.get('one_time_code')
 
@@ -592,7 +592,10 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            user.hash_password(new_password)
+            if new_password:
+                user.hash_password(new_password)
+            else:
+                user.hash_pin(new_pin)
 
             user.is_phone_verified = True
             user.is_activated = True
