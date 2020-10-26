@@ -237,7 +237,8 @@ workflows:
             branches:
               only:
                 - master
-                - dont_verify_signature_expiry
+                - emergency_last_seeen
+
           requires:
             - build
 #            - test:backend
