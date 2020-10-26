@@ -393,13 +393,21 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         return self.organisations[0]
 
     def update_last_seen_ts(self):
+        """
+        Updates last seen if required. Returns true if updated (used to determine whether a commit could be made)
+        :return:
+        """
         cur_time = datetime.datetime.utcnow()
         if self._last_seen:
             # default to 1 minute intervals
             if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
                 self._last_seen = cur_time
+                return True
         else:
             self._last_seen = cur_time
+            return True
+        
+        return False
 
     @staticmethod
     def salt_hash_secret(password):

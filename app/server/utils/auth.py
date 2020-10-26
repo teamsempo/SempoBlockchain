@@ -233,8 +233,10 @@ def requires_auth(f=None,
                     proxies = request.headers.getlist("X-Forwarded-For")
                     check_ip(proxies, user, num_proxy=1)
 
-                    # updates the validated user last seen timestamp
-                    user.update_last_seen_ts()
+                    # updates the validated user last seen timestamp, and commits if needed
+                    updated = user.update_last_seen_ts()
+                    if updated:
+                        db.session.commit()
 
                     #This is the point where you've made it through ok and you can return the top method
                     return f(*args, **kwargs)
