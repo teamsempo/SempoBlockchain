@@ -8,12 +8,10 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from server import db, create_app
 from server.models.ussd import UssdMenu
 from server.models.transfer_usage import TransferUsage
-from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.organisation import Organisation
 from server.models.token import Token, TokenType
 from server.exceptions import TransferUsageNameDuplicateException
-from server.utils.transfer_enums import TransferStatusEnum, BlockchainStatus
 
 
 def print_section_title(text):
@@ -390,15 +388,6 @@ def create_float_transfer_account(app):
             db.session.commit()
     print_section_conclusion('Done Creating/Updating Float Wallet')
 
-def make_rejected_transactions_unstarted(app):
-    print_section_title('Marking rejected transactions as unstarted')
-    rejected_transactions = db.session.query(CreditTransfer)\
-        .filter(CreditTransfer.transfer_status == TransferStatusEnum.REJECTED)\
-        .execution_options(show_all=True)
-    for rt in rejected_transactions:
-        rt.blockchain_status = BlockchainStatus.UNSTARTED
-    db.session.commit()
-
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
     current_app = create_app()
@@ -413,6 +402,4 @@ if __name__ == '__main__':
 
     create_float_transfer_account(current_app)
 
-    make_rejected_transactions_unstarted(current_app)
-    
     ctx.pop()
