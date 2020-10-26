@@ -393,13 +393,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         return self.organisations[0]
 
     def update_last_seen_ts(self):
-        cur_time = datetime.datetime.utcnow()
-        if self._last_seen:
-            # default to 1 minute intervals
-            if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
-                self._last_seen = cur_time
-        else:
-            self._last_seen = cur_time
+        pass
+        # cur_time = datetime.datetime.utcnow()
+        # if self._last_seen:
+        #     # default to 1 minute intervals
+        #     if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
+        #         self._last_seen = cur_time
+        # else:
+        #     self._last_seen = cur_time
 
     @staticmethod
     def salt_hash_secret(password):

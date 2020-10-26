@@ -86,8 +86,10 @@ class VolumeChart extends React.Component {
           .filter(date => date != null)
           .map(date => date.startOf("day"))
       );
+    } else {
+      // If there are no outside filters, pad dates til today
+      all_dates = all_dates.concat(Date.now());
     }
-
     let minDate = new Date(Math.min.apply(null, all_dates));
     let maxDate = new Date(Math.max.apply(null, all_dates));
 
@@ -186,12 +188,11 @@ class VolumeChart extends React.Component {
     let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
     const datasets = possibleTimeseriesKeys.map((key, index) => {
       const timeseries = data.timeseries[key].map(a => {
-        if (data.type.value_type == VALUE_TYPES.CURRENCY && !data.converted) {
-          a.value = toCurrency(a.value);
+        if (data.type.value_type == VALUE_TYPES.CURRENCY) {
+          return { ...a, value: toCurrency(a.value) };
         }
         return a;
       });
-      data.converted = true;
 
       const zero_filled_data = get_zero_filled_values(
         "value",
