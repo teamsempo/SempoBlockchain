@@ -238,6 +238,7 @@ workflows:
               only:
                 - master
                 - emergency_last_seeen
+
           requires:
             - build
 #            - test:backend

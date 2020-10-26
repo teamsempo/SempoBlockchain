@@ -62,9 +62,6 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             'bio': 'EasyMart',
             'gender': 'female',
             'phone': phone,
-            'is_vendor': False,
-            'is_tokenagent': False,
-            'is_groupaccount': False,
             'initial_disbursement': initial_disbursement,
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
@@ -128,13 +125,13 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             assert kwargs == {'user_id': data['user']['id'], 'location': 'Elwood'}
 
 
-@pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, tier, status_code", [
-    (lambda o: o.id, False, False, 'subadmin', 403),
-    (lambda o: o.id, True, False, 'admin', 200),
-    (lambda o: o.id, False, True, 'admin', 200),
-    (lambda o: 1222103, False, False, 'admin', 404),
+@pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, roles, tier, status_code", [
+    (lambda o: o.id, False, False, [], 'subadmin', 403),
+    (lambda o: o.id, True, False, ['vendor'], 'admin', 200),
+    (lambda o: o.id, False, True, ['group_account'], 'admin', 200),
+    (lambda o: 1222103, False, False, [], 'admin', 404),
 ])
-def test_edit_user(test_client, authed_sempo_admin_user, create_transfer_account_user, user_id_accessor, is_vendor, is_groupaccount, tier, status_code):
+def test_edit_user(test_client, authed_sempo_admin_user, create_transfer_account_user, user_id_accessor, is_vendor, is_groupaccount, roles, tier, status_code):
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)
         auth = get_complete_auth_token(authed_sempo_admin_user)
@@ -151,8 +148,7 @@ def test_edit_user(test_client, authed_sempo_admin_user, create_transfer_account
         ),
         json={
             'phone': new_phone,
-            'is_vendor': is_vendor,
-            'is_groupaccount': is_groupaccount,
+            'account_types': roles
         })
 
     assert response.status_code == status_code
