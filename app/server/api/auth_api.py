@@ -320,9 +320,11 @@ class LoginAPI(MethodView):
         email = post_data.get('username', '') or post_data.get('email', '')
         email = email.lower() if email else ''
         password = post_data.get('password')
+        pin = post_data.get('pin', None)
         tfa_token = post_data.get('tfa_token')
 
         password_empty = password == '' or password is None
+        pin_empty = pin == '' or pin is None
 
         # First try to match email
         if email:
@@ -359,8 +361,8 @@ class LoginAPI(MethodView):
 
             return make_response(jsonify(response_object)), response_code
 
-        if user and user.is_activated and post_data.get('phone') and password_empty:
-            # user already exists, is activated. no password provided, thus request PIN screen.
+        if user and user.is_activated and post_data.get('phone') and (password_empty and pin_empty):
+            # user already exists, is activated. no password or pin provided, thus request PIN screen.
             # todo: this should check if device exists, if no, resend OTP to verify login is real.
             response_object = {
                 'status': 'success',
@@ -408,8 +410,7 @@ class LoginAPI(MethodView):
                 return make_response(jsonify(attach_host(response_object))), 200
 
         try:
-
-            if not (user and password and user.verify_password(password)):
+            if not (user and (pin and user.verify_pin(pin) or password and user.verify_password(password))):
                 response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
