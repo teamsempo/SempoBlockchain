@@ -237,7 +237,8 @@ workflows:
             branches:
               only:
                 - master
-                - improving_analytics_load
+                - emergency_last_seeen
+
           requires:
             - build
 #            - test:backend
