@@ -503,8 +503,6 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (status === "PENDING") {
                       colour = "#F5A623";
-                    } else if (status === "UNSTARTED") {
-                      colour = "#F16853";
                     } else if (status === "ERROR") {
                       colour = "#F16853";
                     } else {

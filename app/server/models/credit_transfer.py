@@ -279,7 +279,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.REJECTED
-        self.blockchain_status = BlockchainStatus.UNSTARTED
         self.update_balances()
 
         if message:
