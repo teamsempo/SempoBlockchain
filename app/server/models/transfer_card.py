@@ -67,4 +67,4 @@ class TransferCard(ModelBase):
 
         self.amount_loaded = total_disbursed
 
-        self.token = self.transfer_accont.token
+        self.token = self.transfer_account.token
