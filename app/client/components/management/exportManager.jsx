@@ -31,6 +31,7 @@ class ExportManager extends React.Component {
       error_message: "",
       date_range: "all",
       includeTransfers: false,
+      includeCustomAttributes: false,
       customExportCycle: false,
       startDate: null,
       endDate: null,
@@ -88,6 +89,7 @@ class ExportManager extends React.Component {
     this.props.newExport({
       export_type: this.state.exportType,
       include_transfers: this.state.includeTransfers,
+      include_custom_attributes: this.state.includeCustomAttributes,
       user_type: this.state.userType,
       date_range: this.state.date_range,
       payable_period_start_date: payable_period_start_date,
@@ -98,14 +100,33 @@ class ExportManager extends React.Component {
 
   render() {
     let transferToggle = (
-      <div style={{ display: "flex", flexDirection: "row", padding: "1em 0" }}>
-        <p style={{ margin: "0 1em 0 0" }}>Include transfers?</p>
-        <input
-          name="includeTransfers"
-          type="checkbox"
-          checked={this.state.includeTransfers}
-          onChange={evt => this.handleToggle(evt, this.state.includeTransfers)}
-        />
+      <div>
+        <div
+          style={{ display: "flex", flexDirection: "row", padding: "1em 0" }}
+        >
+          <p style={{ margin: "0 1em 0 0" }}>Include transfers?</p>
+          <input
+            name="includeTransfers"
+            type="checkbox"
+            checked={this.state.includeTransfers}
+            onChange={evt =>
+              this.handleToggle(evt, this.state.includeTransfers)
+            }
+          />
+        </div>
+        <div
+          style={{ display: "flex", flexDirection: "row", padding: "1em 0" }}
+        >
+          <p style={{ margin: "0 1em 0 0" }}>Include Custom Attributes?</p>
+          <input
+            name="includeCustomAttributes"
+            type="checkbox"
+            checked={this.state.includeCustomAttributes}
+            onChange={evt =>
+              this.handleToggle(evt, this.state.includeCustomAttributes)
+            }
+          />
+        </div>
       </div>
     );
 
