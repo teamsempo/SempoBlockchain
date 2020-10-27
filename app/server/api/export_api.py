@@ -159,7 +159,6 @@ class ExportAPI(MethodView):
             custom_attribute_columns = []
 
             for index, user_account in enumerate(user_accounts):
-                print('row')
                 transfer_account = user_account.transfer_account
 
                 if transfer_account:
@@ -383,7 +382,7 @@ class MeExportAPI(MethodView):
     def post(self):
         post_data = request.get_json()
 
-        transfer_account = g.user.transfer_account
+        transfer_account = g.user.default_transfer_account or g.user.transfer_accounts[0]
 
         date_range = post_data.get('date_range')  # last day, previous week, or all
         email = post_data.get('email')
