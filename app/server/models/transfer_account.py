@@ -96,6 +96,8 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         try:
             if self.balance != 0:
                 raise TransferAccountDeletionError('Balance must be zero to delete')
+            if self.total_sent_incl_pending_wei != self.total_sent_complete_only_wei:
+                raise TransferAccountDeletionError('Must resolve pending transactions before account deletion')
             if len(self.users) > 1:
                 # todo(user): deletion of user from account with multiple users - NOT CURRENTLY SUPPORTED
                 raise TransferAccountDeletionError('More than one user attached to transfer account')
