@@ -6,6 +6,7 @@ from celery_utils import eth_endpoint
 from sempo_types import UUID, UUIDList
 
 from eth_manager.transaction_supervisor import TransactionSupervisor
+from eth_manager.eth_transaction_processor import EthTransactionProcessor
 
 class TaskManager(object):
     """
@@ -164,12 +165,19 @@ class TaskManager(object):
     def retry_failed(self, min_task_id, max_task_id, retry_unstarted=False):
 
         print(f'Testings Task from {min_task_id} to {max_task_id}, retrying unstarted={retry_unstarted}')
-
         needing_retry = self.persistence.get_failed_tasks(min_task_id, max_task_id)
         pending_tasks = self.persistence.get_pending_tasks(min_task_id, max_task_id)
 
-        print(f"{len(needing_retry)} tasks currently with failed state")
-        print(f"{len(pending_tasks)} tasks currently pending")
+        # Check if any of the tasks needing retry have already succeeded
+        # If they have, mark them as succeeded and remove from the needing_retry list!
+        for task in needing_retry:
+            for transaction in task.transactions:
+                status = self.processor.get_transaction_status(transaction.id).get('status')
+                if status == 'SUCCESS':
+                    print(f'Task with id {task.id} has already completed! Marking as complete and removing from retry queue')
+                    self.persistence.set_task_status_text(task, 'SUCCESS')
+                    needing_retry.remove(transaction)
+                    break
 
         unstarted_tasks = None
         if retry_unstarted:
@@ -194,13 +202,15 @@ class TaskManager(object):
             self.transaction_supervisor.sigs.attempt_transaction(task_uuid)
         )
 
-    def __init__(self, persistence, transaction_supervisor: TransactionSupervisor):
+    def __init__(self, persistence, transaction_supervisor: TransactionSupervisor, processor: EthTransactionProcessor):
 
         self.persistence = persistence
 
         self.transaction_supervisor = transaction_supervisor
 
         self.sigs = SigGenerators()
+
+        self.processor = processor
 
 
 class SigGenerators(object):
