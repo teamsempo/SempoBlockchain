@@ -178,7 +178,9 @@ class TaskManager(object):
                     self.persistence.set_task_status_text(task, 'SUCCESS')
                     needing_retry.remove(transaction)
                     break
-
+                
+        print(f"{len(needing_retry)} tasks currently with failed state")	
+        print(f"{len(pending_tasks)} tasks currently pending")	
         unstarted_tasks = None
         if retry_unstarted:
             unstarted_tasks = self.persistence.get_unstarted_tasks(min_task_id, max_task_id)
