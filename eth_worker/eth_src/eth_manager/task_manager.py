@@ -170,17 +170,22 @@ class TaskManager(object):
 
         # Check if any of the tasks needing retry have already succeeded
         # If they have, mark them as succeeded and remove from the needing_retry list!
+        to_remove = []
         for task in needing_retry:
+            status = 'FAILED'
             for transaction in task.transactions:
                 status = self.processor.get_transaction_status(transaction.id).get('status')
                 if status == 'SUCCESS':
                     print(f'Task with id {task.id} has already completed! Marking as complete and removing from retry queue')
                     self.persistence.set_task_status_text(task, 'SUCCESS')
-                    needing_retry.remove(transaction)
+                    to_remove.append(task)
                     break
-                
+        for task in to_remove:
+            needing_retry.remove(task)
+    
         print(f"{len(needing_retry)} tasks currently with failed state")	
         print(f"{len(pending_tasks)} tasks currently pending")	
+
         unstarted_tasks = None
         if retry_unstarted:
             unstarted_tasks = self.persistence.get_unstarted_tasks(min_task_id, max_task_id)
