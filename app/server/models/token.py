@@ -60,6 +60,13 @@ class Token(ModelBase):
     fiat_ramps = db.relationship('FiatRamp', backref='token', lazy=True,
                                  foreign_keys='FiatRamp.token_id')
 
+    transfer_cards = db.relationship(
+        'TransferCard',
+        backref='token',
+        lazy=True,
+        foreign_keys='TransferCard.token_id'
+    )
+
     def get_decimals(self, queue='high-priority'):
         if self._decimals:
             return self._decimals

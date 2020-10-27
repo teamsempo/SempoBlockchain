@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - emergency_last_seeen
+                - transfer_card_names
 
           requires:
             - build

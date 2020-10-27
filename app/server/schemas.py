@@ -4,6 +4,7 @@ from flask import g
 from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
 import qrcode
+import json
 
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
@@ -324,6 +325,7 @@ class TransferAccountSchema(SchemaBase):
 
 
 class TransferCardSchema(SchemaBase):
+
     public_serial_number    = fields.Str()
     nfc_serial_number       = fields.Function(lambda obj: obj.nfc_serial_number.upper())
 
@@ -332,11 +334,34 @@ class TransferCardSchema(SchemaBase):
     amount_loaded           = fields.Function(lambda obj: obj._amount_loaded)
     amount_loaded_signature = fields.Str()
 
-    user                    = fields.Nested(UserSchema, only=('first_name', 'last_name'))
+    user                    = fields.Method('get_user')
+
+    def get_user(self, obj):
+        caregiver = self.get_caregiver(obj)
+
+        if caregiver:
+            return {
+                'first_name': obj.user.first_name,
+                'last_name': f'{obj.user.last_name} or {caregiver}'
+            }
+
+        else:
+            return {
+                'first_name': obj.user.first_name,
+                'last_name': obj.user.last_name
+            }
+
+    def get_caregiver(self, obj):
+        for ca in obj.user.custom_attributes:
+            if ca.name == 'caregiver':
+                val = json.loads(ca.value)
+                if val is not True:
+                    return val
+        return None
 
     def get_symbol(self, obj):
         try:
-            return obj.transfer_account.token.symbol
+            return obj.token.symbol
         except Exception as e:
             return None
 
@@ -497,7 +522,7 @@ synchronization_filter_schema = SynchronizationFilterSchema()
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
-transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
+transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created", "updated"))
 
 uploaded_resource_schema = UploadedResourceSchema()
 

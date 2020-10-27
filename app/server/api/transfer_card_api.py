@@ -1,10 +1,14 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 from server.models.transfer_card import TransferCard
+from server.models.user import User
+
 from server.utils.auth import requires_auth
 from server.schemas import transfer_cards_schema
 from server import db
 import re
+
+from sqlalchemy.orm import joinedload
 
 transfer_cards_blueprint = Blueprint('transfer_cards', __name__)
 
@@ -22,9 +26,13 @@ class TransferCardAPI(MethodView):
         only_bound = request.args.get('only_bound', 'true').lower() == 'true' #defaults true
 
         if only_bound:
-            transfer_cards = TransferCard.query.filter(TransferCard.transfer_account_id != None).all()
+            transfer_cards = TransferCard.query.filter(TransferCard.transfer_account_id != None).options(
+                joinedload(TransferCard.user).joinedload(User.custom_attributes)
+            ).all()
         else:
-            transfer_cards = TransferCard.query.all()
+            transfer_cards = TransferCard.query.options(
+                joinedload(TransferCard.user).joinedload(User.custom_attributes)
+            ).all()
 
         response_object = {
             'message': 'Successfully loaded transfer_cards',

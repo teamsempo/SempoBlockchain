@@ -22,6 +22,8 @@ class TransferCard(ModelBase):
 
     transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
 
+    token_id    = db.Column(db.Integer, db.ForeignKey("token.id"))
+
     @hybrid_property
     def amount_loaded(self):
         return self._phone
@@ -64,3 +66,5 @@ class TransferCard(ModelBase):
             total_disbursed += float(disbursement.transfer_amount)
 
         self.amount_loaded = total_disbursed
+
+        self.token = self.transfer_accont.token
