@@ -517,9 +517,9 @@ def mock_osm_search(mocker):
                 return self.json_response
 
             def __init__(self, query_string):
-                if query_string == 'not a real place' or query_string == 'not a real place, Canada':
+                if query_string == 'not a real place':
                     self.json_response = []
-                elif query_string == 'multiple matched place' or query_string == 'multiple matched place, Canada':
+                elif query_string == 'multiple matched place':
                     self.json_response = [
                         {'lat': '12.0', 'lon': '14.4'},
                         {'lat': '-37.81', 'lon': '144.97'},

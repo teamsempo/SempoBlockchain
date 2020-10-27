@@ -27,15 +27,6 @@ def _set_user_gps_from_location(user_id: int, location: str):
     """
     Wrapped version for testing
     """
-    user = User.query.get(user_id)
-    if not user:
-        capture_message(f'User not found for id {user_id}')
-        return
-
-    # Add country to location lookup if it's not already there
-    country = user.default_organisation.country if user.default_organisation else None
-    if country and country not in location:
-        location = f'{location}, {country}'
 
     # Try load location from redis cache to avoid hitting OSM too much
     cached_tuple_string = red.get(redis_location_key(location))
@@ -52,6 +43,10 @@ def _set_user_gps_from_location(user_id: int, location: str):
 
     lat, lng = gps_tuple
 
+    user = User.query.get(user_id)
+    if not user:
+        capture_message(f'User not found for id {user_id}')
+        return
 
     user.lat = lat
     user.lng = lng
