@@ -346,7 +346,7 @@ class ExportAPI(MethodView):
                         elif column['query'] == 'transfer_amount':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
                         elif column['query'] == 'transfer_usages':
-                            cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
+                            cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                         else:
                             cell_contents = ""
 
@@ -450,7 +450,7 @@ class MeExportAPI(MethodView):
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']) / 100)
                     elif  column['query'] == 'transfer_usages':
-                        cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
+                        cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
 
