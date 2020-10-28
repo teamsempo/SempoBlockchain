@@ -179,8 +179,14 @@ class VolumeChart extends React.Component {
             ticks: {
               beginAtZero: true,
               callback(value) {
-                // We don't want the yAxis to display decimals
-                return formatMoney(value, 0, undefined, undefined);
+                if (
+                  data.type &&
+                  data.type.value_type === VALUE_TYPES.CURRENCY
+                ) {
+                  // We don't want the yAxis to display decimals
+                  return formatMoney(value, 0, undefined, undefined);
+                }
+                return value;
               }
             },
             stacked: true
