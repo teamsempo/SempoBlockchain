@@ -160,15 +160,28 @@ class TaskManager(object):
 
     def retry_task(self, task_uuid: UUID):
         task = self.persistence.get_task_from_uuid(task_uuid)
-        needs_retry = False
+        needs_retry = True
 
         if task:
             for transaction in task.transactions:
-                status = self.processor.get_transaction_status(transaction.id).get('status')
+                result = self.processor.get_transaction_status(transaction.id)
+
+                status = result.get('status')
+
                 if status == 'SUCCESS':
+
                     print(f'Task with id {task.id} has already completed! Skipping')
+                    self.persistence.update_transaction_data(transaction.id, result)
                     self.persistence.set_task_status_text(task, 'SUCCESS')
-                    needs_retry = True
+
+                    unstarted_posteriors = self.persistence.get_unstarted_posteriors(task.uuid)
+
+                    for dep_task in unstarted_posteriors:
+                        print('Starting posterior task: {}'.format(dep_task.uuid))
+                        self._queue_attempt_transaction(dep_task.uuid)
+
+                    needs_retry = False
+
                     break
 
         if needs_retry:
@@ -207,7 +220,7 @@ class TaskManager(object):
             self.transaction_supervisor.sigs.attempt_transaction(task_uuid)
         )
 
-    def __init__(self, persistence, transaction_supervisor: TransactionSupervisor, processor: EthTransactionProcessor):
+    def __init__(self, persistence, transaction_supervisor: TransactionSupervisor):
 
         self.persistence = persistence
 
@@ -215,7 +228,7 @@ class TaskManager(object):
 
         self.sigs = SigGenerators()
 
-        self.processor = processor
+        self.processor = transaction_supervisor.processor
 
 
 class SigGenerators(object):

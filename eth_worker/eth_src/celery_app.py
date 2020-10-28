@@ -94,7 +94,7 @@ supervisor = TransactionSupervisor(
     processor=processor
 )
 
-task_manager = TaskManager(persistence=persistence_module, transaction_supervisor=supervisor, processor=processor)
+task_manager = TaskManager(persistence=persistence_module, transaction_supervisor=supervisor)
 
 blockchain_sync = BlockchainSyncer(persistence=persistence_module, red=red, w3_websocket=w3_websocket)
 
