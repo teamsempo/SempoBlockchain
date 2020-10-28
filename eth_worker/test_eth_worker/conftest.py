@@ -140,8 +140,7 @@ def manager(persistence_module, supervisor):
 
     return TaskManager(
         persistence_module,
-        supervisor,
-        processor
+        supervisor
     )
 
 @pytest.fixture(scope='function')
