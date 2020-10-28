@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - emergency_last_seeen
+                - negative_balance_disbursements
 
           requires:
             - build
