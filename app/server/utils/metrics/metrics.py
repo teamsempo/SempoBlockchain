@@ -132,7 +132,7 @@ def calculate_transfer_stats(
         data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
 
     try:
-        data['master_wallet_balance'] = max(g.active_organisation.org_level_transfer_account.balance, 0)
+        data['master_wallet_balance'] = g.active_organisation.org_level_transfer_account.balance
     except:
         data['master_wallet_balance'] = 0
 
