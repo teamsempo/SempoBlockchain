@@ -1,9 +1,10 @@
 import datetime
 from typing import Tuple
 from sqlalchemy import and_, or_
-import config 
 
 from sempo_types import UUID, UUIDList
+
+import config
 
 from sql_persistence.models import (
     BlockchainTransaction,
@@ -18,9 +19,10 @@ from exceptions import (
 )
 
 class SQLPersistenceInterface(object):
+
     def _fail_expired_transactions(self):
         expire_time = datetime.datetime.utcnow() - datetime.timedelta(
-            seconds=config.ETH_PENDING_TRANSACTION_EXPIRY_SECONDS
+            seconds=self.PENDING_TRANSACTION_EXPIRY_SECONDS
         )
 
         (self.session.query(BlockchainTransaction)
@@ -32,7 +34,7 @@ class SQLPersistenceInterface(object):
 
     def _unconsume_high_failed_nonces(self, signing_wallet_id, stating_nonce):
         expire_time = datetime.datetime.utcnow() - datetime.timedelta(
-            seconds=config.ETH_PENDING_TRANSACTION_EXPIRY_SECONDS
+            seconds=self.PENDING_TRANSACTION_EXPIRY_SECONDS
         )
 
         highest_known_success = (self.session.query(BlockchainTransaction)
@@ -540,10 +542,12 @@ class SQLPersistenceInterface(object):
         self.session.commit()
 
 
-    def __init__(self, red, session, first_block_hash):
+    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=config.ETH_PENDING_TRANSACTION_EXPIRY_SECONDS):
 
         self.red = red
 
         self.session = session
         
         self.first_block_hash = first_block_hash
+
+        self.PENDING_TRANSACTION_EXPIRY_SECONDS = PENDING_TRANSACTION_EXPIRY_SECONDS

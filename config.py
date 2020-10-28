@@ -270,7 +270,7 @@ try:
             private_key = bytes.fromhex(private_key.replace('0x', ''))
         return keys.PrivateKey(private_key).public_key.to_checksum_address()
 
-    ETH_PENDING_TRANSACTION_EXPIRY_SECONDS = config_parser['ETHEREUM'].get('transaction_expiry_seconds') or 30
+    ETH_PENDING_TRANSACTION_EXPIRY_SECONDS = config_parser['ETHEREUM'].getint('transaction_expiry_seconds', 30)
     ETH_HTTP_PROVIDER       = config_parser['ETHEREUM']['http_provider']
     ETH_WEBSOCKET_PROVIDER  = config_parser['ETHEREUM'].get('websocket_provider')
     ETH_CHAIN_ID            = config_parser['ETHEREUM'].get('chain_id')
