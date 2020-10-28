@@ -159,8 +159,21 @@ class TaskManager(object):
 
 
     def retry_task(self, task_uuid: UUID):
-        self.persistence.increment_task_invocations(task_uuid)
-        self._queue_attempt_transaction(task_uuid)
+        task = self.persistence.get_task_from_uuid(task_uuid)
+        needs_retry = False
+
+        if task:
+            for transaction in task.transactions:
+                status = self.processor.get_transaction_status(transaction.id).get('status')
+                if status == 'SUCCESS':
+                    print(f'Task with id {task.id} has already completed! Skipping')
+                    self.persistence.set_task_status_text(task, 'SUCCESS')
+                    needs_retry = True
+                    break
+
+        if needs_retry:
+            self.persistence.increment_task_invocations(task_uuid)
+            self._queue_attempt_transaction(task_uuid)
 
     def retry_failed(self, min_task_id, max_task_id, retry_unstarted=False):
 
@@ -168,23 +181,8 @@ class TaskManager(object):
         needing_retry = self.persistence.get_failed_tasks(min_task_id, max_task_id)
         pending_tasks = self.persistence.get_pending_tasks(min_task_id, max_task_id)
 
-        # Check if any of the tasks needing retry have already succeeded
-        # If they have, mark them as succeeded and remove from the needing_retry list!
-        to_remove = []
-        for task in needing_retry:
-            status = 'FAILED'
-            for transaction in task.transactions:
-                status = self.processor.get_transaction_status(transaction.id).get('status')
-                if status == 'SUCCESS':
-                    print(f'Task with id {task.id} has already completed! Marking as complete and removing from retry queue')
-                    self.persistence.set_task_status_text(task, 'SUCCESS')
-                    to_remove.append(task)
-                    break
-        for task in to_remove:
-            needing_retry.remove(task)
-    
-        print(f"{len(needing_retry)} tasks currently with failed state")	
-        print(f"{len(pending_tasks)} tasks currently pending")	
+        print(f"{len(needing_retry)} tasks currently with failed state")
+        print(f"{len(pending_tasks)} tasks currently pending")
 
         unstarted_tasks = None
         if retry_unstarted:
