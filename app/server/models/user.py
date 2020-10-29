@@ -98,7 +98,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     default_currency = db.Column(db.String())
 
-    _location = db.Column(db.String(), index=True)
+    _location = db.Column(db.String())
     lat = db.Column(db.Float())
     lng = db.Column(db.Float())
 
@@ -124,14 +124,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         secondary=user_transfer_account_association_table,
         back_populates="users")
 
-    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'), index=True)
+    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
 
     default_transfer_account = db.relationship('TransferAccount',
                                            primaryjoin='TransferAccount.id == User.default_transfer_account_id',
                                            lazy=True,
                                            uselist=False)
 
-    default_organisation_id = db.Column( db.Integer, db.ForeignKey('organisation.id'), index=True)
+    default_organisation_id = db.Column( db.Integer, db.ForeignKey('organisation.id'))
 
     default_organisation = db.relationship('Organisation',
                                            primaryjoin=Organisation.id == default_organisation_id,

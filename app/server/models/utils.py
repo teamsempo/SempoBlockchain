@@ -212,7 +212,7 @@ exchange_contract_token_association_table = db.Table(
 class ModelBase(db.Model):
     __abstract__ = True
 
-    id = db.Column(db.Integer, primary_key=True, index=True)
+    id = db.Column(db.Integer, primary_key=True)
     authorising_user_id = db.Column(db.Integer, default=get_authorising_user_id)
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
@@ -223,7 +223,7 @@ class BlockchainTaskableBase(ModelBase):
 
     __abstract__ = True
 
-    blockchain_task_uuid = db.Column(db.String, index=True)
+    blockchain_task_uuid = db.Column(db.String)
 
     # Present status, and time of last update (according to worker) to ensure the present blockchain_status 
     # is the newest (since order of ack's is not guaranteed)
