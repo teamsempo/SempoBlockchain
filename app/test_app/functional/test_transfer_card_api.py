@@ -193,6 +193,10 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
     # Make sure the distance filters are working!
     distances = [(0, 6), (1, 5), (10, 6), (100, 7), (100000, 8)]
     for distance, length in distances:
+        print('DIST')
+        print(distance)
+        print(length)
+        print('DIST')
         # Set card shard distance
         create_organisation.card_shard_distance=distance
         db.session.commit()
