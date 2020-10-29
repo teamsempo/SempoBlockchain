@@ -4,94 +4,6 @@ from server import db
 import json
 import pytest
 
-def test_transfer_card_api(test_client, init_database, complete_admin_auth_token, create_transfer_account_user):
-
-    # Test regular load of card
-    response = test_client.post('/api/v1/transfer_cards/',
-                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
-                                data=json.dumps({
-                                    'public_serial_number': 123456,
-                                    'nfc_serial_number': 'ABCD1234F'
-                                }),
-                                content_type='application/json', follow_redirects=True)
-
-    assert response.status_code == 201
-
-    # Ensure duplicated public_serial_number fails, even if provided as string
-    response = test_client.post('/api/v1/transfer_cards/',
-                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
-                                data=json.dumps({
-                                    'public_serial_number': '123456',
-                                    'nfc_serial_number': '123DEEF'
-                                }),
-                                content_type='application/json', follow_redirects=True)
-
-    assert response.status_code == 400
-
-    # Ensure duplicated nfc_id fails, even if nfc is lowercase
-    response = test_client.post('/api/v1/transfer_cards/',
-                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
-                                data=json.dumps({
-                                    'public_serial_number': '22222',
-                                    'nfc_serial_number': 'abcd1234F'
-                                }),
-                                content_type='application/json', follow_redirects=True)
-
-    assert response.status_code == 400
-
-    # Make sure db reflects what we'd expect
-    cards = TransferCard.query.all()
-
-    assert len(cards) == 1
-    card = cards[0]
-    assert card.public_serial_number == '123456'
-    assert card.nfc_serial_number == 'ABCD1234F'
-
-    # Now try a get of the data
-    response = test_client.get('/api/v1/transfer_cards/',
-                               headers=dict(
-                                   Authorization=complete_admin_auth_token, Accept='application/json'),
-                               follow_redirects=True)
-
-    assert response.status_code == 200
-    # Should not return any cards, since defaults to not returning cards bound to a transfer_account
-    assert len(response.json['data']['transfer_cards']) == 0
-
-    # Now try a get of the data, getting ALL cards, not just ones that are bound
-    response = test_client.get('/api/v1/transfer_cards/?only_bound=false',
-                               headers=dict(
-                                   Authorization=complete_admin_auth_token, Accept='application/json'),
-                               follow_redirects=True)
-
-    assert response.status_code == 200
-
-    card_json = response.json['data']['transfer_cards'][0]
-    assert card_json['nfc_serial_number'] == 'ABCD1234F'
-    assert card_json['public_serial_number'] == '123456'
-
-    # Now bind to a user
-    test_client.put(
-        f"/api/v1/user/{create_transfer_account_user.id}/",
-        headers=dict(
-            Authorization=complete_admin_auth_token,
-            Accept='application/json'
-        ),
-        json={
-            'public_serial_number': '123456'
-    })
-
-    response = test_client.get('/api/v1/transfer_cards/',
-                               headers=dict(
-                                   Authorization=complete_admin_auth_token, Accept='application/json'),
-                               follow_redirects=True)
-
-    assert response.status_code == 200
-
-    # Should now return our card
-    card_json = response.json['data']['transfer_cards'][0]
-    assert card_json['nfc_serial_number'] == 'ABCD1234F'
-    assert card_json['public_serial_number'] == '123456'
-
 def test_transfer_card_radius(test_client, init_database, complete_admin_auth_token, authed_sempo_admin_user, create_organisation):
     from server.utils.user import create_transfer_account_user
     # Create cards
@@ -141,8 +53,8 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                                         organisation=create_organisation)
 
     # Set locations
-    authed_sempo_admin_user.lat = 44.650069
-    authed_sempo_admin_user.lng = -63.598865
+    authed_sempo_admin_user.lat = 44.650070
+    authed_sempo_admin_user.lng = -63.598863
     authed_sempo_admin_user.location = 'Halifax'
 
     # Base user (Halifax)
@@ -191,7 +103,7 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
     bind_user(user6.id, 555555)
 
     # Make sure the distance filters are working!
-    distances = [(0, 6), (1, 5), (10, 6), (100, 7), (100000, 8)]
+    distances = [(0, 6), (2, 4), (10, 5), (100, 6), (100000, 7)]
     for distance, length in distances:
         # Set card shard distance
         create_organisation.card_shard_distance=distance
@@ -214,7 +126,7 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                            headers=dict(
                                Authorization=complete_admin_auth_token, Accept='application/json'),
                            follow_redirects=True)
-    assert len(response.json['data']['transfer_cards']) == 5
+    assert len(response.json['data']['transfer_cards']) == 4
     # Check that it doesn't try to shard when the user doesn't have coords
     authed_sempo_admin_user.lat = None
     authed_sempo_admin_user.lng = None
@@ -223,3 +135,92 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                                Authorization=complete_admin_auth_token, Accept='application/json'),
                            follow_redirects=True)
     assert len(response.json['data']['transfer_cards']) == 6
+
+def test_transfer_card_api(test_client, init_database, complete_admin_auth_token, create_transfer_account_user):
+
+
+    # Test regular load of card
+    response = test_client.post('/api/v1/transfer_cards/',
+                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
+                                data=json.dumps({
+                                    'public_serial_number': 111119,
+                                    'nfc_serial_number': '9AAA1111A'
+                                }),
+                                content_type='application/json', follow_redirects=True)
+
+    assert response.status_code == 201
+
+    # Ensure duplicated public_serial_number fails, even if provided as string
+    response = test_client.post('/api/v1/transfer_cards/',
+                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
+                                data=json.dumps({
+                                    'public_serial_number': '111119',
+                                    'nfc_serial_number': '9AAA1111A'
+                                }),
+                                content_type='application/json', follow_redirects=True)
+
+    assert response.status_code == 400
+
+    # Ensure duplicated nfc_id fails, even if nfc is lowercase
+    response = test_client.post('/api/v1/transfer_cards/',
+                                headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
+                                data=json.dumps({
+                                    'public_serial_number': '22222',
+                                    'nfc_serial_number': 'abcd1234F'
+                                }),
+                                content_type='application/json', follow_redirects=True)
+
+    assert response.status_code == 400
+
+    # Make sure db reflects what we'd expect
+    cards = TransferCard.query.all()
+
+    assert len(cards) == 7
+    card = cards[0]
+    assert card.public_serial_number == '123456'
+    assert card.nfc_serial_number == 'ABCD1234F'
+
+    # Now try a get of the data
+    response = test_client.get('/api/v1/transfer_cards/',
+                               headers=dict(
+                                   Authorization=complete_admin_auth_token, Accept='application/json'),
+                               follow_redirects=True)
+
+    assert response.status_code == 200
+    # Should not return all 7 cards (only 6), since defaults to not returning cards bound to a transfer_account
+    assert len(response.json['data']['transfer_cards']) == 6
+
+    # Now try a get of the data, getting ALL cards, not just ones that are bound
+    response = test_client.get('/api/v1/transfer_cards/?only_bound=false',
+                               headers=dict(
+                                   Authorization=complete_admin_auth_token, Accept='application/json'),
+                               follow_redirects=True)
+
+    assert response.status_code == 200
+
+    card_json = response.json['data']['transfer_cards'][0]
+    assert card_json['nfc_serial_number'] == 'ABCD1234F'
+    assert card_json['public_serial_number'] == '123456'
+
+    # Now bind to a user
+    test_client.put(
+        f"/api/v1/user/{create_transfer_account_user.id}/",
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        json={
+            'public_serial_number': '123456'
+    })
+
+    response = test_client.get('/api/v1/transfer_cards/',
+                               headers=dict(
+                                   Authorization=complete_admin_auth_token, Accept='application/json'),
+                               follow_redirects=True)
+
+    assert response.status_code == 200
+
+    # Should now return our card
+    card_json = response.json['data']['transfer_cards'][0]
+    assert card_json['nfc_serial_number'] == 'AAAA1111A'
+    assert card_json['public_serial_number'] == '111111'
