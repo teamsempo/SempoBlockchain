@@ -108,6 +108,7 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
     create_card(222222, 'BBBBB111B')
     create_card(333333, 'CCCCC222C')
     create_card(444444, 'DDDDD333D')
+    create_card(555555, 'AAAAVVVVV')
 
     # Create users
     user1 = create_transfer_account_user(first_name='Arthur',
@@ -134,24 +135,40 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                                         phone='+19027195555',
                                         organisation=create_organisation)
 
+    user6 = create_transfer_account_user(first_name='Binky',
+                                        last_name='Barnes',
+                                        phone='+19027195455',
+                                        organisation=create_organisation)
+
     # Set locations
     authed_sempo_admin_user.lat = 44.650069
     authed_sempo_admin_user.lng = -63.598865
+    authed_sempo_admin_user.location = 'Halifax'
+
     # Base user (Halifax)
     user1.lat = 44.650069
     user1.lng = -63.598865
+    user1.location = 'Halifax'
     # Nearby user (Dartmouth)
     user2.lat = 44.679730
     user2.lng = -63.583979
+    user2.location = 'Dartmouth'
     # Kinda far user (Wolfville)
     user3.lat = 45.099418
     user3.lng = -64.323369
+    user3.location = 'Wolfville'
     # Very far user (Melbourne)
     user4.lat = -37.874072
     user4.lng = 145.053438
+    user4.location = 'Melbourne'
     # Null lat/lng. We want to catch these!
     user5.lat = None
     user5.lng = None
+    user5.location = None
+    # Incorrect coords, but same location name (Halifax)
+    user6.lat = 10.1
+    user6.lng = -10.5
+    user6.location = 'Halifax'
 
     db.session.commit()
 
@@ -171,9 +188,10 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
     bind_user(user3.id, 222222)
     bind_user(user4.id, 333333)
     bind_user(user5.id, 444444)
+    bind_user(user6.id, 555555)
 
     # Make sure the distance filters are working!
-    distances = [(0, 5), (1, 4), (10, 5), (100, 6), (100000, 7)]
+    distances = [(0, 6), (1, 5), (10, 6), (100, 7), (100000, 8)]
     for distance, length in distances:
         # Set card shard distance
         create_organisation.card_shard_distance=distance
@@ -190,13 +208,13 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                            headers=dict(
                                Authorization=complete_admin_auth_token, Accept='application/json'),
                            follow_redirects=True)
-    assert len(response.json['data']['transfer_cards']) == 5
+    assert len(response.json['data']['transfer_cards']) == 6
     # Check that the sharding flag works (true)
     response = test_client.get('/api/v1/transfer_cards/?shard=true',
                            headers=dict(
                                Authorization=complete_admin_auth_token, Accept='application/json'),
                            follow_redirects=True)
-    assert len(response.json['data']['transfer_cards']) == 4
+    assert len(response.json['data']['transfer_cards']) == 5
     # Check that it doesn't try to shard when the user doesn't have coords
     authed_sempo_admin_user.lat = None
     authed_sempo_admin_user.lng = None
@@ -204,4 +222,4 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                            headers=dict(
                                Authorization=complete_admin_auth_token, Accept='application/json'),
                            follow_redirects=True)
-    assert len(response.json['data']['transfer_cards']) == 5
+    assert len(response.json['data']['transfer_cards']) == 6
