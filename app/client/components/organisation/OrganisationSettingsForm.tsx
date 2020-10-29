@@ -95,7 +95,7 @@ class OrganisationSettingForm extends React.Component<
 
         <InputField
           name="cardShardDistance"
-          label="Card Shard Distance"
+          label="Automatically Load Cards Within"
           isRequired
           isNumber
         >
