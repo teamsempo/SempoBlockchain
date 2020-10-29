@@ -25,15 +25,7 @@ class TransferCardAPI(MethodView):
         shard = True
         if ((shard_param == 'false') or (shard_distance == 0)) or (g.user.lat == None and g.user.lng == None):
             shard = False
-        print('---')
-        print('---')
-        print('---')
-        
-        print(shard_distance)
-        print(shard)
-        print('---')
-        print('---')
-        print('---')
+
         if shard:
             nearby_users = g.user.get_users_within_radius(shard_distance)
             transfer_cards = []
