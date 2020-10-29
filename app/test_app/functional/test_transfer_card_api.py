@@ -173,7 +173,7 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
     bind_user(user5.id, 444444)
 
     # Make sure the distance filters are working!
-    distances = [(0, 5), (10, 4), (100, 5), (100000, 6)]
+    distances = [(0, 5), (1, 4), (10, 5), (100, 6), (100000, 7)]
     for distance, length in distances:
         # Set card shard distance
         create_organisation.card_shard_distance=distance
@@ -184,7 +184,6 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                                    Authorization=complete_admin_auth_token, Accept='application/json'),
                                follow_redirects=True)
         assert len(response.json['data']['transfer_cards']) == length
-
     # Check that the sharding flag works (false)
     create_organisation.card_shard_distance=1
     response = test_client.get('/api/v1/transfer_cards/?shard=false',
@@ -197,7 +196,7 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                            headers=dict(
                                Authorization=complete_admin_auth_token, Accept='application/json'),
                            follow_redirects=True)
-    assert len(response.json['data']['transfer_cards']) == 3
+    assert len(response.json['data']['transfer_cards']) == 4
     # Check that it doesn't try to shard when the user doesn't have coords
     authed_sempo_admin_user.lat = None
     authed_sempo_admin_user.lng = None

@@ -1,9 +1,10 @@
 import json
 from typing import Union
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text, Table
+from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
 import pyotp
@@ -11,6 +12,7 @@ import config
 from flask import current_app, g
 import datetime
 import bcrypt
+import math
 import jwt
 import random
 import string
@@ -95,8 +97,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     default_currency = db.Column(db.String())
 
     _location = db.Column(db.String())
-    lat = db.Column(db.Float())
-    lng = db.Column(db.Float())
+    lat = db.Column(db.Float(), index=True)
+    lng = db.Column(db.Float(), index=True)
 
     _held_roles = db.Column(JSONB)
 
@@ -370,31 +372,40 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         # TODO: Review if this could have a better concept of a default?
         return self.get_transfer_account_for_organisation(active_organisation)
 
+    @hybrid_method
+    def great_circle_distance(self, lat, lng):
+        """
+        Tries to calculate the great circle distance between
+        the two locations in km by using the Haversine formula.
+        """
+        return self._haversine(math, self, lat, lng)
+
+    @great_circle_distance.expression
+    def great_circle_distance(cls, lat, lng):
+        return cls._haversine(func, cls, lat, lng)
+
+    @staticmethod
+    def _haversine(lib, selfref, lat, lng):
+        return 6371 * lib.acos(
+            lib.cos(lib.radians(selfref.lat))
+            * lib.cos(lib.radians(lat))
+            * lib.cos(lib.radians(selfref.lng) - lib.radians(lng))
+            + lib.sin(lib.radians(selfref.lat))
+            * lib.sin(lib.radians(lat))
+        )
+
     def get_users_within_radius(self, radius):
+
         if not (self.lat or self.lng):
             raise Exception('Cannot get users within radius-- User location undefined')
-        query = f"""
-        select id, distance
-            from (
-                select id, ( 6371 
-                * acos( cos( radians({self.lat}) ) 
-                * cos( radians( lat ) ) 
-                * cos( radians( lng ) 
-                - radians({self.lng}) ) 
-                + sin( radians({self.lat}) ) 
-                * sin( radians( lat ) ) ) ) as distance
-                from "user"
-            ) as dt
-            where distance <= {radius}
-            order by dt asc;
-        """
 
-        results = db.session.execute(query)
-        ids = []
-        for result in results:
-            ids.append(result[0])
-        users = db.session.query(User).filter(or_(User.id.in_(tuple(ids)), and_(User.lat==None, User.lng==None))).all()
-        return users
+        return db.session.query(User).filter(
+            or_(
+                User.great_circle_distance(self.lat, self.lng) < radius,
+                and_(User.lat==None, User.lng==None),
+                and_(self._location is not None, User._location == self._location)
+            )
+        ).all()
         
     def get_transfer_account_for_organisation(self, organisation):
         for ta in self.transfer_accounts:
