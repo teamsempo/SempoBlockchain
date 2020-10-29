@@ -430,13 +430,15 @@ class MeExportAPI(MethodView):
             credit_transfer_list = CreditTransfer.query.filter(
                 and_(CreditTransfer.created.between(start_date, end_date), (
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                    CreditTransfer.sender_transfer_account_id == transfer_account.id))))
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))))\
+                    .enable_eagerloads(True)
 
         else:
             # default to all credit transfers of transfer_account.id
             credit_transfer_list = CreditTransfer.query.filter(
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                    CreditTransfer.sender_transfer_account_id == transfer_account.id))
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))\
+                    .enable_eagerloads(True)
 
         # loop over all credit transfers, create cells
         if credit_transfer_list is not None:
@@ -457,12 +459,12 @@ class MeExportAPI(MethodView):
                     _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
 
         if credit_transfer_list is not None:
-            file_url = export_workbook_via_s3(wb, workbook_filename, email)
+            #file_url = export_workbook_via_s3(wb, workbook_filename, email)
 
             response_object = {
                 'status': 'success',
                 'message': 'Export file created.',
-                'file_url': file_url,
+                'file_url': 'a',
             }
 
             return make_response(jsonify(response_object)), 201
@@ -472,7 +474,7 @@ class MeExportAPI(MethodView):
             response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
-                'file_url': None,
+                'file_url': 'a',
             }
 
             return make_response(jsonify(response_object)), 404
