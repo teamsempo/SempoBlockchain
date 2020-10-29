@@ -128,11 +128,11 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # hardware that can only handle small ints (like the transfer cards and old android devices)
 
         # rounded to whole value of balance
-        return float((self._balance_wei or 0) / int(1e16))
+        return Decimal((self._balance_wei or 0) / int(1e16))
 
     @property
     def balance_offset(self):
-        return float((self._balance_offset_wei or 0) / int(1e16))
+        return Decimal((self._balance_offset_wei or 0) / int(1e16))
 
     def set_balance_offset(self, val):
         self._balance_offset_wei = val * int(1e16)

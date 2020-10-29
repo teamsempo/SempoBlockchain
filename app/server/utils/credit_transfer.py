@@ -3,6 +3,7 @@ import hmac
 import time
 from flask import make_response, jsonify, current_app
 import sentry_sdk
+from decimal import Decimal
 
 from server.exceptions import (
     NoTransferAccountError,
