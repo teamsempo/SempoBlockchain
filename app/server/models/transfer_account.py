@@ -32,7 +32,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    _balance_wei    = db.Column(db.Numeric(27), default=0, index=True)
+    _balance_wei    = db.Column(db.Numeric(27), default=0)
 
     # The purpose of the balance offset is to allow the master wallet to be seeded at
     # initial deploy time. Since balance is calculated by subtracting total credits from
@@ -53,13 +53,13 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     is_ghost = db.Column(db.Boolean, default=False)
 
-    account_type    = db.Column(db.Enum(TransferAccountType), index=True)
+    account_type    = db.Column(db.Enum(TransferAccountType))
 
     payable_period_type   = db.Column(db.String(), default='week')
     payable_period_length = db.Column(db.Integer, default=2)
     payable_epoch         = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    token_id        = db.Column(db.Integer, db.ForeignKey("token.id"), index=True)
+    token_id        = db.Column(db.Integer, db.ForeignKey("token.id"))
 
     exchange_contract_id = db.Column(db.Integer, db.ForeignKey(ExchangeContract.id))
 
