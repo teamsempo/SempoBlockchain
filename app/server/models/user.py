@@ -402,6 +402,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         return db.session.query(User).filter(
             or_(
                 and_(User.lat==None, User.lng==None),
+                and_(User.lat==self.lat, User.lng==self.lng),
                 User.great_circle_distance(self.lat, self.lng) < radius,
                 and_(self._location is not None, User._location == self._location)
             )
