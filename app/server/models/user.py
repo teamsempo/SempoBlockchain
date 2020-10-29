@@ -67,9 +67,6 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         created using the POST user API or the bulk upload function
     """
     __tablename__ = 'user'
-    
-    # override ModelBase deleted to add an index
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
 
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())

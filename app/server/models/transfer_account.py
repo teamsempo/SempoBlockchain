@@ -34,9 +34,6 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     name            = db.Column(db.String())
     _balance_wei    = db.Column(db.Numeric(27), default=0, index=True)
 
-    # override ModelBase deleted to add an index
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
-
     # The purpose of the balance offset is to allow the master wallet to be seeded at
     # initial deploy time. Since balance is calculated by subtracting total credits from
     # total debits, without a balance offset we'd be stuck in a zero-sum system with no
