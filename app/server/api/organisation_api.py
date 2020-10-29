@@ -62,7 +62,7 @@ class OrganisationAPI(MethodView):
         default_lat = put_data.get('default_lat')
         default_lng = put_data.get('default_lng')
         account_types = put_data.get('account_types', [])
-        card_shard_distance = put_data.get('card_shard_distance')
+        card_shard_distance = put_data.get('card_shard_distance') # Kilometers
 
         for at in account_types:
             if at not in ASSIGNABLE_TIERS.keys():
@@ -87,7 +87,7 @@ class OrganisationAPI(MethodView):
             organisation.default_lat = default_lat
         if default_lng is not None:
             organisation.default_lng = default_lng
-        if card_shard_distance is not None:
+        if card_shard_distance is not None: # Distance in KM
             organisation.card_shard_distance = card_shard_distance
             
         response_object = {

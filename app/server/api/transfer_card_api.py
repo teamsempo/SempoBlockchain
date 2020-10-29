@@ -15,7 +15,7 @@ class TransferCardAPI(MethodView):
         """
         Get a list of the transfer cards on the system.
         :arg only_bound: only return cards that have transfer accounts bound to them.
-        :arg shard: Get only transfer cards within the radius defined by org parameter.
+        :arg shard: Get only transfer cards within the radius defined by org parameter. Distance is in kilometers
         Prevents returning a list of 100000 cards and overwhelming low power android phones. Defaults true.
         :return:
         """

@@ -412,7 +412,7 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
-    card_shard_distance = fields.Int()
+    card_shard_distance = fields.Int() # Kilometers
 
     valid_roles = fields.Raw()
 
