@@ -96,7 +96,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     default_currency = db.Column(db.String())
 
-    _location = db.Column(db.String())
+    _location = db.Column(db.String(), index=True)
     lat = db.Column(db.Float(), index=True)
     lng = db.Column(db.Float(), index=True)
 
