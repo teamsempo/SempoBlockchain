@@ -6,6 +6,31 @@ from server.models.kyc_application import KycApplication
 import csv
 from io import StringIO
 
+def test_get_vendor_payout_with_withdrawal_limit(test_client, authed_sempo_admin_user, create_transfer_account_user):
+    authed_sempo_admin_user.organisations[0].minimum_vendor_payout_withdrawal = 200
+    auth = get_complete_auth_token(authed_sempo_admin_user)
+    user = create_transfer_account_user
+    user.transfer_account.is_vendor = True
+    user.set_held_role('VENDOR', 'supervendor')
+    user.transfer_account.approve_and_disburse()
+    user.transfer_account.organisation = authed_sempo_admin_user.organisations[0]
+    user.transfer_account.set_balance_offset(100)
+    user.is_phone_verified = True
+    kyc = KycApplication(type='INDIVIDUAL')
+    user.kyc_applications = [kyc]
+    user.kyc_applications[0].kyc_status = 'VERIFIED'
+    db.session.commit()
+
+    response = test_client.post(
+        f"/api/v1/get_vendor_payout/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json',
+        ),
+        data=json.dumps(dict({}))
+    )
+    assert len(user.transfer_account.credit_sends) == 0
+
 def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer_account_user):
     auth = get_complete_auth_token(authed_sempo_admin_user)
     user = create_transfer_account_user
@@ -59,7 +84,7 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
             '0',
             '10', 
             '0', 
-            'False', 
+            'True', 
             'False', 
             'True', 
             'SOME DATE', 
