@@ -12,7 +12,7 @@ class CustomAttributeUserStorage(ModelBase):
     name = db.Column(db.String)
     value = db.Column(db.JSON)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     uploaded_image_id = db.Column(db.Integer)
 
     @staticmethod
