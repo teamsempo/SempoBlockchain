@@ -1,4 +1,4 @@
-"""empty message
+"""Add indexes
 
 Revision ID: 7238af4164b4
 Revises: bb92df9cb6e3

@@ -162,20 +162,14 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         """
         Canonical total sent in cents, helping us to remember that sent amounts should include pending txns
         """
-
-        total_sent_cents = self.total_sent_incl_pending_wei/int(1e16)
-
-        return total_sent_cents
+        return Decimal(self.total_sent_incl_pending_wei) / int(1e16)
 
     @hybrid_property
     def total_received(self):
         """
         Canonical total sent in cents, helping us to remember that received amounts should only include complete txns
         """
-
-        total_received_cents = self.total_received_complete_only_wei / int(1e16)
-
-        return total_received_cents
+        return Decimal(self.total_received_complete_only_wei) / int(1e16)
 
     @hybrid_property
     def total_sent_complete_only_wei(self):
