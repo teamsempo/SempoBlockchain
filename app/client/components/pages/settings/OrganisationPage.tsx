@@ -80,6 +80,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
       {
         country_code: form.countryCode,
         default_disbursement: form.defaultDisbursement * 100,
+        minimum_vendor_payout_withdrawal:
+          form.mimimumVendorPayoutWithdrawal * 100,
         require_transfer_card: form.requireTransferCard,
         account_types: form.accountTypes
         // default_lat: null,
