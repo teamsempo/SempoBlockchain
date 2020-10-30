@@ -128,8 +128,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                                            lazy=True,
                                            uselist=False)
 
-    default_organisation_id = db.Column(
-        db.Integer, db.ForeignKey('organisation.id'))
+    default_organisation_id = db.Column( db.Integer, db.ForeignKey('organisation.id'))
 
     default_organisation = db.relationship('Organisation',
                                            primaryjoin=Organisation.id == default_organisation_id,

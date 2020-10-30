@@ -33,6 +33,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     name            = db.Column(db.String())
     _balance_wei    = db.Column(db.Numeric(27), default=0)
+
     # The purpose of the balance offset is to allow the master wallet to be seeded at
     # initial deploy time. Since balance is calculated by subtracting total credits from
     # total debits, without a balance offset we'd be stuck in a zero-sum system with no
@@ -124,11 +125,11 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # hardware that can only handle small ints (like the transfer cards and old android devices)
 
         # rounded to whole value of balance
-        return float((self._balance_wei or 0) / int(1e16))
+        return Decimal((self._balance_wei or 0) / int(1e16))
 
     @property
     def balance_offset(self):
-        return float((self._balance_offset_wei or 0) / int(1e16))
+        return Decimal((self._balance_offset_wei or 0) / int(1e16))
 
     def set_balance_offset(self, val):
         self._balance_offset_wei = val * int(1e16)
@@ -158,20 +159,14 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         """
         Canonical total sent in cents, helping us to remember that sent amounts should include pending txns
         """
-
-        total_sent_cents = self.total_sent_incl_pending_wei/int(1e16)
-
-        return total_sent_cents
+        return Decimal(self.total_sent_incl_pending_wei) / int(1e16)
 
     @hybrid_property
     def total_received(self):
         """
         Canonical total sent in cents, helping us to remember that received amounts should only include complete txns
         """
-
-        total_received_cents = self.total_received_complete_only_wei / int(1e16)
-
-        return total_received_cents
+        return Decimal(self.total_received_complete_only_wei) / int(1e16)
 
     @hybrid_property
     def total_sent_complete_only_wei(self):
