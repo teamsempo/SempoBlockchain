@@ -459,12 +459,12 @@ class MeExportAPI(MethodView):
                     _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
 
         if credit_transfer_list is not None:
-            #file_url = export_workbook_via_s3(wb, workbook_filename, email)
+            file_url = export_workbook_via_s3(wb, workbook_filename, email)
 
             response_object = {
                 'status': 'success',
                 'message': 'Export file created.',
-                'file_url': 'a',
+                'file_url': file_url,
             }
 
             return make_response(jsonify(response_object)), 201
@@ -474,7 +474,7 @@ class MeExportAPI(MethodView):
             response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
-                'file_url': 'a',
+                'file_url': '',
             }
 
             return make_response(jsonify(response_object)), 404
