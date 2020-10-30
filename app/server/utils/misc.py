@@ -6,6 +6,7 @@ from flask import current_app, request
 from eth_utils import keccak
 from cryptography.fernet import Fernet
 import itertools
+from decimal import Decimal
 
 last_marker = datetime.datetime.utcnow()
 
@@ -42,7 +43,7 @@ def round_to_decimals(amount, decimals=2):
         return None
 
     # Add a small amount before round to override rounding half to even
-    return round(amount + 0.000001, decimals)
+    return round(amount + Decimal(0.000001), decimals)
 
 
 def rounded_dollars(amount):
@@ -53,8 +54,8 @@ def rounded_dollars(amount):
     if amount is None:
         return None
 
-    rounded = round_to_decimals(float(amount) / 100)
-    if int(rounded) == float(rounded) and int(rounded) > 1000:
+    rounded = round_to_decimals(Decimal(amount) / 100)
+    if int(rounded) == Decimal(rounded) and int(rounded) > 1000:
         # It's a large whole amount like 1200.00, so return as 1200
         return str(int(rounded))
 

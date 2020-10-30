@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from sqlalchemy import func
 from sqlalchemy.orm import Query
+from decimal import Decimal
 
 import config
 from server import db
@@ -446,7 +447,7 @@ class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
             applied_to_transfer_types: AppliedToTypes,
             application_filter: ApplicationFilter,
             time_period_days: int,
-            balance_fraction: float,
+            balance_fraction: Decimal,
             aggregation_filter: AggregationFilter = matching_transfer_type_filter
 
     ):

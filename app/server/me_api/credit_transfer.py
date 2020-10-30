@@ -4,6 +4,7 @@ from flask import g, make_response, jsonify, request
 from flask.views import MethodView
 from sqlalchemy import or_
 from web3 import Web3
+from decimal import Decimal
 
 from server import db
 from server.exceptions import (
@@ -82,7 +83,7 @@ class MeCreditTransferAPI(MethodView):
             use_ids = transfer_use
         transfer_mode = post_data.get('transfer_mode')
 
-        transfer_amount = round(float(post_data.get('transfer_amount', 0)), 6)
+        transfer_amount = round(Decimal(post_data.get('transfer_amount', 0)), 6)
 
         transfer_random_key = post_data.get('transfer_random_key')
 
@@ -356,7 +357,7 @@ class RequestWithdrawalAPI(MethodView):
 
         transfer_account = g.user.transfer_account
 
-        withdrawal_amount = abs(round(float(post_data.get('withdrawal_amount', transfer_account.balance)),6))
+        withdrawal_amount = abs(round(Decimal(post_data.get('withdrawal_amount', transfer_account.balance)),6))
 
         transfer_account.initialise_withdrawal(withdrawal_amount, transfer_mode=TransferModeEnum.MOBILE)
 
