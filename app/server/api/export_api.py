@@ -431,14 +431,14 @@ class MeExportAPI(MethodView):
                 and_(CreditTransfer.created.between(start_date, end_date), (
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
                     CreditTransfer.sender_transfer_account_id == transfer_account.id))))\
-                    .enable_eagerloads(True)
+                    .enable_eagerloads(False)
 
         else:
             # default to all credit transfers of transfer_account.id
             credit_transfer_list = CreditTransfer.query.filter(
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
                     CreditTransfer.sender_transfer_account_id == transfer_account.id))\
-                    .enable_eagerloads(True)
+                    .enable_eagerloads(False)
 
         # loop over all credit transfers, create cells
         if credit_transfer_list is not None:
