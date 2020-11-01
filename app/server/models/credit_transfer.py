@@ -42,7 +42,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     __tablename__ = 'credit_transfer'
 
     uuid            = db.Column(db.String, unique=True)
-    batch_uuid            = db.Column(db.String)
+    batch_uuid      = db.Column(db.String)
+
+    # override ModelBase deleted to add an index
+    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
 
     resolved_date   = db.Column(db.DateTime)
     _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
@@ -50,7 +53,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     transfer_type       = db.Column(db.Enum(TransferTypeEnum), index=True)
     transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
-    transfer_mode       = db.Column(db.Enum(TransferModeEnum))
+    transfer_mode       = db.Column(db.Enum(TransferModeEnum), index=True)
     transfer_use        = db.Column(JSON) # Deprecated
     transfer_usages = db.relationship(
         "TransferUsage",
@@ -66,17 +69,17 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     token_id        = db.Column(db.Integer, db.ForeignKey(Token.id))
 
-    sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
+    sender_transfer_account_id       = db.Column(db.Integer, db.ForeignKey("transfer_account.id"), index=True)
     sender_transfer_account          = db.relationship('TransferAccount', foreign_keys=[sender_transfer_account_id], back_populates='credit_sends', lazy='joined')
 
-    recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
+    recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"), index=True)
     recipient_transfer_account          = db.relationship('TransferAccount', foreign_keys=[recipient_transfer_account_id], back_populates='credit_receives', lazy='joined')
 
-    sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
-    recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"))
+    sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
+    recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
 
     sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
-    recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
 
     is_initial_disbursement = db.Column(db.Boolean, default=False)
 
