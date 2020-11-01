@@ -19,10 +19,10 @@ class TransferStats(metric_group.MetricGroup):
         self.timeseries_unit = timeseries_unit
         self.metrics = []
 
-        total_distributed_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        total_amount_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
         self.metrics.append(metric.Metric(
             metric_name='total_distributed',
-            query=total_distributed_query,
+            query=total_amount_query,
             object_model=CreditTransfer,
             stock_filters=[filters.disbursement_filters],
             caching_combinatory_strategy=metrics_cache.SUM,
@@ -30,19 +30,37 @@ class TransferStats(metric_group.MetricGroup):
             bypass_user_filters=True,
         ))
 
-        total_spent_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
+        self.metrics.append(metric.Metric(
+            metric_name='total_reclaimed',
+            query=total_amount_query,
+            object_model=CreditTransfer,
+            stock_filters=[filters.reclamiation_filters],
+            caching_combinatory_strategy=metrics_cache.SUM,
+            filterable_by=self.filterable_attributes,
+            bypass_user_filters=True,
+        ))
+
+        self.metrics.append(metric.Metric(
+            metric_name='total_withdrawn',
+            query=total_amount_query,
+            object_model=CreditTransfer,
+            stock_filters=[filters.withdrawal_filters],
+            caching_combinatory_strategy=metrics_cache.SUM,
+            filterable_by=self.filterable_attributes,
+            bypass_user_filters=True,
+        ))
+
         self.metrics.append(metric.Metric(
             metric_name='total_spent',
-            query=total_spent_query,
+            query=total_amount_query,
             object_model=CreditTransfer,
             stock_filters=[filters.standard_payment_filters],
             caching_combinatory_strategy=metrics_cache.SUM,
             filterable_by=self.filterable_attributes))
 
-        total_exchanged_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
         self.metrics.append(metric.Metric(
             metric_name='total_exchanged',
-            query=total_exchanged_query,
+            query=total_amount_query,
             object_model=CreditTransfer,
             stock_filters=[filters.exchanged_filters],
             caching_combinatory_strategy=metrics_cache.SUM,
