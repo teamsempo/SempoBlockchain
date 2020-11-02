@@ -197,6 +197,7 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
                                follow_redirects=True)
 
     assert response.status_code == 200
+    assert len(response.json['data']['transfer_cards']) == 7
 
     card_json = response.json['data']['transfer_cards'][0]
     assert card_json['nfc_serial_number'] == 'ABCD1234F'
