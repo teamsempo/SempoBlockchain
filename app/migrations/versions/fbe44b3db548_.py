@@ -19,9 +19,7 @@ depends_on = None
 def upgrade():
     op.create_index(op.f('ix_user_lat'), 'user', ['lat'], unique=False)
     op.create_index(op.f('ix_user_lng'), 'user', ['lng'], unique=False)
-    op.create_index(op.f('ix_user__location'), 'user', ['_location'], unique=False)
 
 def downgrade():
     op.drop_index(op.f('ix_user_lng'), table_name='user')
     op.drop_index(op.f('ix_user_lat'), table_name='user')
-    op.drop_index(op.f('ix_user__location'), table_name='user')
