@@ -19,15 +19,6 @@ class ParticipantStats(metric_group.MetricGroup):
         self.timeseries_unit = timeseries_unit
         self.metrics = []
 
-        total_beneficiaries_query = db.session.query(User)
-        self.metrics.append(metric.Metric(
-            metric_name='total_beneficiaries',
-            query=total_beneficiaries_query,
-            object_model=User,
-            stock_filters=[filters.beneficiary_filters],
-            caching_combinatory_strategy=metrics_cache.COUNT,
-            filterable_by=self.filterable_attributes))
-
         total_vendors_query = db.session.query(User)
         self.metrics.append(metric.Metric(
             metric_name='total_vendors',
