@@ -26,7 +26,7 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
             'last_name': 'Frensky',
             'gender': 'female',
             'phone': f'+1{random.randint(1000000000, 9999999999)}',
-            'is_beneficiary': True,
+            'account_types': ['beneficiary'],
             'location': 'Elwood',
             'initial_disbursement': initial_disbursement,
         }
@@ -70,7 +70,6 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
         assert len(transfer_account.credit_receives) == 1 # Make sure we don't get a double-disbursement on account approval
         disbursement = transfer_account.credit_receives[0]
         assert disbursement.transfer_status == final_transfer_status
-        assert transfer_account.is_approved == True
     assert transfer_account.is_approved == final_is_approved
         
 @pytest.mark.parametrize("transfer_account_id_accessor, tier, status_code", [

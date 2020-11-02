@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import or_, not_
 import json
+from decimal import Decimal
 from uuid import uuid4
 from server import db
 from server.models.token import Token
@@ -184,7 +185,7 @@ class CreditTransferAPI(MethodView):
         queue = 'low-priority'
 
         transfer_type = post_data.get('transfer_type')
-        transfer_amount = abs(round(float(post_data.get('transfer_amount') or 0),6))
+        transfer_amount = abs(round(Decimal(post_data.get('transfer_amount') or 0),6))
         token_id = post_data.get('token_id')
         target_balance = post_data.get('target_balance')
 

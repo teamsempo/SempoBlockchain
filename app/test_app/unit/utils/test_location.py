@@ -23,4 +23,3 @@ def test_set_location(create_transfer_account_user, location, expected_coordinat
     _set_user_gps_from_location(create_transfer_account_user.id, location)
     assert create_transfer_account_user.lat == expected_coordinates[0]
     assert create_transfer_account_user.lng == expected_coordinates[1]
-
