@@ -34,7 +34,7 @@ class TransferStats(metric_group.MetricGroup):
             metric_name='total_reclaimed',
             query=total_amount_query,
             object_model=CreditTransfer,
-            stock_filters=[filters.reclamiation_filters],
+            stock_filters=[filters.reclamation_filters],
             caching_combinatory_strategy=metrics_cache.SUM,
             filterable_by=self.filterable_attributes,
             bypass_user_filters=True,

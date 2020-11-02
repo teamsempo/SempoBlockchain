@@ -143,7 +143,7 @@ disbursement_filters = [
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT
 ]
 
-reclamiation_filters = [
+reclamation_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.RECLAMATION
