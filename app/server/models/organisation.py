@@ -83,6 +83,8 @@ class Organisation(ModelBase):
 
     @hybrid_property
     def country(self):
+        if self._country_code not in ISO_COUNTRIES:
+            raise Exception(f"{self._country_code} is not a valid timezone")
         return ISO_COUNTRIES[self._country_code]
 
     @country_code.setter
