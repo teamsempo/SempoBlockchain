@@ -8,7 +8,7 @@ import datetime
 from server import db
 
 class Metric(object):
-    def execute_query(self, user_filters: dict = None, date_filter_attributes=None, enable_caching=True, population_query_result=False, dont_include_timeseries=False, start_date=None, end_date=None):
+    def execute_query(self, user_filters: dict = None, date_filter_attributes=None, enable_caching=True, population_query_result=False, dont_include_timeseries=False, start_date=None, end_date=None, group_by=None):
         """
         :param user_filters: dict of filters to apply to all metrics
         :param date_filter_attributes: lookup table indicating which row to use when filtering by date  
@@ -20,7 +20,8 @@ class Metric(object):
         :param start_date: Start date for metrics queries (for calculating percent change within date range)
         :param End_date: End date for metrics queries (for calculating percent change within date range)
         """
-        actions = {'query': self.query_actions, 
+        actions = {
+                    'primary': self.query_actions, 
                     'aggregated_query': self.aggregated_query_actions, 
                     'total_query': self.total_query_actions,
                     'start_day_query': self.total_query_actions,
@@ -33,13 +34,13 @@ class Metric(object):
             if dont_include_timeseries:
                 queries = { 'total_query': self.total_query, 'start_day_query': self.total_query, 'end_day_query': self.total_query }
             else:   
-                queries = { 'query': self.query, 'total_query': self.total_query, 'start_day_query': self.total_query, 'end_day_query': self.total_query }
+                queries = { 'primary': self.query, 'total_query': self.total_query, 'start_day_query': self.total_query, 'end_day_query': self.total_query }
             if self.aggregated_query:
                 queries['aggregated_query'] = self.aggregated_query
             if None in queries.values():
                 raise Exception('Timeseries query requires a query, and a total_query')
         else:
-            queries = { 'query': self.query }
+            queries = { 'primary': self.query }
 
         results = {}
         for query in queries:
@@ -97,12 +98,12 @@ class Metric(object):
                 filtered_query, 
                 self.object_model, 
                 self.caching_combinatory_strategy, 
-                enable_caching) 
+                enable_caching and query=='primary', # Only cache primary query
+                group_by=group_by)
             if not actions[query]:
                 results[query] = result
             else:
                 results[query] = postprocessing_actions.execute_postprocessing(result, population_query_result, actions[query])
-
         if self.is_timeseries:
             result = {}
             # Get percentage change between first and last date
@@ -125,7 +126,7 @@ class Metric(object):
                 result['type']['currency_symbol'] = self.token.symbol
                 result['type']['display_decimals'] = self.token.display_decimals if self.token.display_decimals else 0
             if not dont_include_timeseries:
-                result['timeseries'] = results['query']
+                result['timeseries'] = results['primary']
             if self.aggregated_query:
                 result['aggregate'] = results['aggregated_query']
                 result['aggregate']['total'] = results['total_query']
@@ -134,7 +135,7 @@ class Metric(object):
                 result['aggregate'] = {'total': results['total_query'], 'percent_change': percent_change}
             return result
         else:
-            return results['query']
+            return results['primary']
 
     def __repr__(self):
         return f"<Metric {self.metric_name}>"

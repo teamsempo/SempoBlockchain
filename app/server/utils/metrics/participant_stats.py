@@ -56,7 +56,7 @@ class ParticipantStats(metric_group.MetricGroup):
             object_model=User,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
@@ -81,7 +81,7 @@ class ParticipantStats(metric_group.MetricGroup):
             object_model=CreditTransfer,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
