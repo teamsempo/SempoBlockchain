@@ -1,9 +1,10 @@
 import json
 from typing import Union
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text, Table
+from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
 import pyotp
@@ -11,10 +12,12 @@ import config
 from flask import current_app, g
 import datetime
 import bcrypt
+import math
 import jwt
 import random
 import string
 import sentry_sdk
+from sqlalchemy import or_, and_
 
 from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -68,6 +71,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     """
     __tablename__ = 'user'
 
+    # override ModelBase deleted to add an index
+    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
+
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     preferred_language = db.Column(db.String())
@@ -95,9 +101,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     default_currency = db.Column(db.String())
 
-    _location = db.Column(db.String())
-    lat = db.Column(db.Float())
-    lng = db.Column(db.Float())
+    _location = db.Column(db.String(), index=True)
+    lat = db.Column(db.Float(), index=True)
+    lng = db.Column(db.Float(), index=True)
 
     _held_roles = db.Column(JSONB)
 
@@ -121,15 +127,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         secondary=user_transfer_account_association_table,
         back_populates="users")
 
-    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
+    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'), index=True)
 
     default_transfer_account = db.relationship('TransferAccount',
                                            primaryjoin='TransferAccount.id == User.default_transfer_account_id',
                                            lazy=True,
                                            uselist=False)
 
-    default_organisation_id = db.Column(
-        db.Integer, db.ForeignKey('organisation.id'))
+    default_organisation_id = db.Column( db.Integer, db.ForeignKey('organisation.id'), index=True)
 
     default_organisation = db.relationship('Organisation',
                                            primaryjoin=Organisation.id == default_organisation_id,
@@ -371,6 +376,42 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         # TODO: Review if this could have a better concept of a default?
         return self.get_transfer_account_for_organisation(active_organisation)
 
+    @hybrid_method
+    def great_circle_distance(self, lat, lng):
+        """
+        Tries to calculate the great circle distance between
+        the two locations in km by using the Haversine formula.
+        """
+        return self._haversine(math, self, lat, lng)
+
+    @great_circle_distance.expression
+    def great_circle_distance(cls, lat, lng):
+        return cls._haversine(func, cls, lat, lng)
+
+    @staticmethod
+    def _haversine(lib, selfref, lat, lng):
+        return 6371 * lib.acos(
+            lib.cos(lib.radians(selfref.lat))
+            * lib.cos(lib.radians(lat))
+            * lib.cos(lib.radians(selfref.lng) - lib.radians(lng))
+            + lib.sin(lib.radians(selfref.lat))
+            * lib.sin(lib.radians(lat))
+        )
+
+    def get_users_within_radius(self, radius):
+
+        if not (self.lat or self.lng):
+            raise Exception('Cannot get users within radius-- User location undefined')
+
+        return db.session.query(User).filter(
+            or_(
+                and_(User.lat==None, User.lng==None),
+                and_(User.lat==self.lat, User.lng==self.lng),
+                User.great_circle_distance(self.lat, self.lng) < radius,
+                and_(self._location is not None, User._location == self._location)
+            )
+        ).all()
+
     def get_transfer_account_for_organisation(self, organisation):
         for ta in self.transfer_accounts:
             if ta in organisation.transfer_accounts:
@@ -393,13 +434,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         return self.organisations[0]
 
     def update_last_seen_ts(self):
-        cur_time = datetime.datetime.utcnow()
-        if self._last_seen:
-            # default to 1 minute intervals
-            if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
-                self._last_seen = cur_time
-        else:
-            self._last_seen = cur_time
+        pass
+        # cur_time = datetime.datetime.utcnow()
+        # if self._last_seen:
+        #     # default to 1 minute intervals
+        #     if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
+        #         self._last_seen = cur_time
+        # else:
+        #     self._last_seen = cur_time
 
     @staticmethod
     def salt_hash_secret(password):

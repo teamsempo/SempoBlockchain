@@ -5,6 +5,7 @@ export interface ExportPayload {
   body: {
     export_type: ExportTypes;
     include_transfers: boolean;
+    include_custom_attributes: boolean;
     user_type: UserTypes;
     date_range: string;
     payable_period_start_date?: string;

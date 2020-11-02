@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import type_coerce
 import pendulum
 import secrets
+from decimal import Decimal
 
 from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
@@ -33,6 +34,9 @@ class Organisation(ModelBase):
 
     default_lat = db.Column(db.Float())
     default_lng = db.Column(db.Float())
+    
+    # 0 means don't shard, units are kilometers
+    card_shard_distance = db.Column(db.Integer, default=0) 
 
     _timezone = db.Column(db.String)
     _country_code = db.Column(db.String, nullable=False)
@@ -100,7 +104,7 @@ class Organisation(ModelBase):
 
     @property
     def default_disbursement(self):
-        return float((self._default_disbursement_wei or 0) / int(1e16))
+        return Decimal((self._default_disbursement_wei or 0) / int(1e16))
 
     @default_disbursement.setter
     def default_disbursement(self, val):

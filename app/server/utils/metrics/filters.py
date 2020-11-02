@@ -143,6 +143,18 @@ disbursement_filters = [
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT
 ]
 
+reclamation_filters = [
+    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+    CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+    CreditTransfer.transfer_subtype == TransferSubTypeEnum.RECLAMATION
+]
+
+withdrawal_filters = [
+    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+    CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL
+]
+
+
 transaction_volume_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
 ]
