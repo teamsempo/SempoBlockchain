@@ -23,7 +23,7 @@ class TransferCardAPI(MethodView):
         shard_distance = g.active_organisation.card_shard_distance
 
         shard = True
-        if ((shard_param == 'false') or (not shard_distance)) or (g.user.lat == None and g.user.lng == None):
+        if ((shard_param == 'false') or (shard_distance == 0)) or (g.user.lat == None and g.user.lng == None):
             shard = False
 
         if shard:
