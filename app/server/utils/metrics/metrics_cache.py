@@ -38,10 +38,7 @@ def _load_cache(key):
 
 def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None):
     # enable_cache pass-thru. This is so we don't cache data when filters are active.
-    if not enable_cache:
-        return _handle_combinatory_strategy(query, None, QUERY_ALL)
-
-    if strategy in dumb_strategies:
+    if strategy in dumb_strategies or not enable_cache:
         return _handle_combinatory_strategy(query, None, strategy)
 
     # Redis object names
@@ -112,12 +109,12 @@ def _sum_list_of_objects(query, cache_result):
             if (r[1], r[2]) not in combined_results:
                 combined_results[(r[1], r[2])] = r[0]
             else:
-                combined_results[(r[1], r[2])] = combined_results[(r[1], r[2])] + r[0]
+                combined_results[(r[1], r[2])] += r[0]
         else:
             if r[1] not in combined_results:
                 combined_results[(r[1])] = r[0]
             else:
-                combined_results[(r[1])] = combined_results[(r[1])] + r[0]
+                combined_results[(r[1])] += r[0]
 
     formatted_results = []
     for result in combined_results:

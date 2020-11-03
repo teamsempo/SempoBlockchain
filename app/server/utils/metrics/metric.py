@@ -19,6 +19,7 @@ class Metric(object):
              aggregated_query and total_query
         :param start_date: Start date for metrics queries (for calculating percent change within date range)
         :param End_date: End date for metrics queries (for calculating percent change within date range)
+        :param group_by: Name of the group-by used, used for metrics cache key names
         """
         actions = {
                     'primary': self.query_actions, 
@@ -93,13 +94,18 @@ class Metric(object):
             if not self.bypass_user_filters:
                 filtered_query = filters.apply_filters(filtered_query, user_filters, self.object_model)
 
+            strategy = self.caching_combinatory_strategy
+            if self.is_timeseries and query=='primary':
+                strategy = self.timeseries_caching_combinatory_strategy
+
             result = metrics_cache.execute_with_partial_history_cache(
                 self.metric_name, 
                 filtered_query, 
                 self.object_model, 
-                self.caching_combinatory_strategy, 
-                enable_caching and query=='primary', # Only cache primary query
+                strategy, 
+                enable_caching,
                 group_by=group_by)
+
             if not actions[query]:
                 results[query] = result
             else:
@@ -147,6 +153,7 @@ class Metric(object):
             object_model=None,
             filterable_by=None,
             stock_filters=None,
+            timeseries_caching_combinatory_strategy=None,
             caching_combinatory_strategy=None,
             bypass_user_filters=False,
             query=None,
@@ -167,7 +174,8 @@ class Metric(object):
         :param filterable_by: used to validate whether the custom filters are valid for this case
         :param stock_filters: the base filters required to get this metric to return what we expect, regardless of what
         futher custom filtering we need to do
-        :param caching_combinatory_strategy: how da cache gonna cache
+        :param timeseries_caching_combinatory_strategy: how new and old timeseries results will be combined
+        :param caching_combinatory_strategy: how new and old non-timeseries results will be combined
         :param bypass_user_filters: ignore any user supplied filter
         :param query: the base query of the metric. This could be a timeseries query, or one which only returns a single number
         :param aggregated_query: used only with timeseries metrics, this is the query which defines an aggregated version 
@@ -189,6 +197,7 @@ class Metric(object):
         self.filterable_by = filterable_by or []
         self.object_model = object_model
         self.stock_filters = stock_filters or []
+        self.timeseries_caching_combinatory_strategy = timeseries_caching_combinatory_strategy
         self.caching_combinatory_strategy = caching_combinatory_strategy
         self.bypass_user_filters = bypass_user_filters
         # Queries
