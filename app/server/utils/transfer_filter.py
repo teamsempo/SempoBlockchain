@@ -34,29 +34,54 @@ class TransferFilterEnum:
     DISCRETE        = "discrete"
     BOOLEAN_MAPPING = "boolean_mapping"
 
-def get_custom_attribute_filters():
+def get_custom_attribute_filters(distinct_sender_and_recipient = False):
     # Get all custom attributes and options
     attribute_options = CustomAttributeUserStorage.get_attributes_and_options()
     # Build those into filters objects
     filters = {}
     for ao in attribute_options:
-        filters[ao] = {
-            'name': ao.capitalize(),
-            'table': CustomAttributeUserStorage.__tablename__,
-            'type': TransferFilterEnum.DISCRETE,
-            'values': attribute_options[ao]
-        }
+        if distinct_sender_and_recipient:
+            filters[ao + ',sender'] = {
+                'name': 'Sender ' + ao.capitalize(),
+                'table': CustomAttributeUserStorage.__tablename__+',sender',
+                'type': TransferFilterEnum.DISCRETE,
+                'values': attribute_options[ao]
+            }
+            filters[ao + ',recipient'] = {
+                'name': 'Recipient ' + ao.capitalize(),
+                'table': CustomAttributeUserStorage.__tablename__+',recipient',
+                'type': TransferFilterEnum.DISCRETE,
+                'values': attribute_options[ao]
+            }
+        else:
+            filters[ao] = {
+                'name': ao.capitalize(),
+                'table': CustomAttributeUserStorage.__tablename__,
+                'type': TransferFilterEnum.DISCRETE,
+                'values': attribute_options[ao]
+            }
     return filters
 
 class Filters(object):
     @property
-    def ALL_FILTERS(self):
-        fixed_filters = {
+    def transfer_filters(self):
+        return {
             'rounded_transfer_amount': {
                 'name': 'Transfer Amount',
                 'table': CreditTransfer.__tablename__,
                 'type': TransferFilterEnum.INT_RANGE
             },
+            'public_transfer_type': {
+                'name': "Transfer Type",
+                'table': CreditTransfer.__tablename__,
+                'type': TransferFilterEnum.DISCRETE,
+                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
+            },
+        }
+
+    @property
+    def user_filters(self):
+        return {
             'created': {
                 'name': "Created",
                 'table': User.__tablename__,
@@ -74,35 +99,78 @@ class Filters(object):
                 'type': TransferFilterEnum.DISCRETE,
                 'values' : [u._location for u in db.session.query(User._location).distinct()]
             },
-            'public_transfer_type': {
-                'name': "Transfer Type",
-                'table': CreditTransfer.__tablename__,
-                'type': TransferFilterEnum.DISCRETE,
-                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
-            },
             'rounded_account_balance': {
                 'name': "Balance",
                 'table': TransferAccount.__tablename__,
                 'type' : TransferFilterEnum.INT_RANGE
-            }
+            },
         }
-        custom_attribute_filters = get_custom_attribute_filters()
-        return {**custom_attribute_filters, **fixed_filters}
 
     @property
-    def TRANSFER_FILTERS(self): return self.ALL_FILTERS
+    def tx_rx_user_filters(self):
+        return {
+            'created,sender': {
+                'name': "Sender Created",
+                'table': User.__tablename__+',sender',
+                'type' : TransferFilterEnum.DATE_RANGE,
+            },
+            'user_type,sender': {
+                'name': "Sender Participant Type",
+                'table': User.__tablename__+',sender',
+                'type': TransferFilterEnum.BOOLEAN_MAPPING,
+                'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
+            },
+            '_location,sender': {
+                'name': "Sender Location",
+                'table': User.__tablename__+',sender',
+                'type': TransferFilterEnum.DISCRETE,
+                'values' : [u._location for u in db.session.query(User._location).distinct()]
+            },
+            'rounded_account_balance,sender': {
+                'name': "Sender Balance",
+                'table': TransferAccount.__tablename__+',sender',
+                'type' : TransferFilterEnum.INT_RANGE
+            },
+            'created,recipient': {
+                'name': "Recipient Created",
+                'table': User.__tablename__+',recipient',
+                'type' : TransferFilterEnum.DATE_RANGE,
+            },
+            'user_type,recipient': {
+                'name': "Recipient Participant Type",
+                'table': User.__tablename__+',recipient',
+                'type': TransferFilterEnum.BOOLEAN_MAPPING,
+                'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
+            },
+            '_location,recipient': {
+                'name': "Recipient Location",
+                'table': User.__tablename__+',recipient',
+                'type': TransferFilterEnum.DISCRETE,
+                'values' : [u._location for u in db.session.query(User._location).distinct()]
+            },
+            'rounded_account_balance,recipient': {
+                'name': "Recipient Balance",
+                'table': TransferAccount.__tablename__+',recipient',
+                'type' : TransferFilterEnum.INT_RANGE
+            },
+        }
+
+    @property
+    def ALL_FILTERS(self):
+        return {
+            **get_custom_attribute_filters(distinct_sender_and_recipient=True),
+            **get_custom_attribute_filters(distinct_sender_and_recipient=False),
+            **self.transfer_filters,
+            **self.user_filters,
+            **self.tx_rx_user_filters,
+        }
+
+    @property
+    def TRANSFER_FILTERS(self): return { **self.tx_rx_user_filters, **self.transfer_filters, **get_custom_attribute_filters(distinct_sender_and_recipient=True) }
     
     @property
     def USER_FILTERS(self): 
-        all_filters = self.ALL_FILTERS
-        fixed_filters = {
-            'created': all_filters['created'],
-            'user_type': all_filters['user_type'],
-            '_location': all_filters['_location'],
-            'rounded_account_balance': all_filters['rounded_account_balance']
-        }
-        custom_attribute_filters = get_custom_attribute_filters()
-        return {**custom_attribute_filters, **fixed_filters}
+        return { **self.user_filters, **get_custom_attribute_filters(distinct_sender_and_recipient=False) }
 
 # will return a dictionary with table names as keys
 # values will be a dictionary of array of tuples

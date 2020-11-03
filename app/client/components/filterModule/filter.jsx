@@ -102,7 +102,7 @@ class Filter extends React.Component {
           showSearch
           defaultValue="Select Attribute"
           onChange={this.handleAttributeSelectorChange}
-          style={{ width: "150px" }}
+          style={{ width: "225px" }}
         >
           {typeof keys !== "undefined"
             ? keys.map((key, index) => (

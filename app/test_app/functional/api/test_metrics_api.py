@@ -148,8 +148,8 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
     if status_code == 200:
         if metric_type == 'user':
             assert response.json['data']['filters'] == filters.USER_FILTERS
-        else:
-            assert response.json['data']['filters'] == filters.ALL_FILTERS
+        elif metric_type == 'transfer':
+            assert response.json['data']['filters'] == filters.TRANSFER_FILTERS
 
 base_participant = {
     'data': 
