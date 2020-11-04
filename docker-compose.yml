@@ -79,6 +79,8 @@ services:
       context: .
       dockerfile: celo/Dockerfile
     command: "-l 80000000 -i 42"
+    ports:
+      - "8545:8545"
 #  beat:
 #    build:
 #      context: app/server
