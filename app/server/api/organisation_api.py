@@ -10,7 +10,7 @@ from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
 from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
-
+import pendulum
 
 organisation_blueprint = Blueprint('organisation', __name__)
 
@@ -63,6 +63,7 @@ class OrganisationAPI(MethodView):
         default_lng = put_data.get('default_lng')
         account_types = put_data.get('account_types', [])
         card_shard_distance = put_data.get('card_shard_distance') # Kilometers
+        timezone = put_data.get('timezone')
 
         for at in account_types:
             if at not in ASSIGNABLE_TIERS.keys():
@@ -89,7 +90,9 @@ class OrganisationAPI(MethodView):
             organisation.default_lng = default_lng
         if card_shard_distance is not None: # Distance in KM
             organisation.card_shard_distance = card_shard_distance
-            
+        if timezone is not None:
+            organisation.timezone = timezone
+
         response_object = {
             'message': f'Organisation {organisation_id} successfully updated',
             'data': {'organisation': organisation_schema.dump(organisation).data}
@@ -214,6 +217,7 @@ class OrganisationConstantsAPI(MethodView):
             'message': 'Organisation constants',
             'data': {
                 'iso_countries': ISO_COUNTRIES,
+                'timezones': list(pendulum.timezones),
                 'roles': list(ASSIGNABLE_TIERS.keys())
                 }
         }

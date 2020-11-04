@@ -77,9 +77,11 @@ class Organisation(ModelBase):
 
     @timezone.setter
     def timezone(self, val):
-        if val is not None and val not in pendulum.timezones:
+        # Make the timezone case insensitive
+        lower_zones = dict(zip([tz.lower() for tz in pendulum.timezones], pendulum.timezones))
+        if val is not None and val.lower() not in lower_zones:
             raise Exception(f"{val} is not a valid timezone")
-        self._timezone = val
+        self._timezone = lower_zones[val]
 
     @hybrid_property
     def country_code(self):

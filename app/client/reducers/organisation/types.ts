@@ -10,6 +10,7 @@ export interface Organisation {
   default_disbursement: number;
   card_shard_distance: number;
   country_code: string;
+  timezone: string;
   valid_roles: TransferAccountTypes[];
 }
 
@@ -29,6 +30,7 @@ export enum OrganisationActionTypes {
 export interface EditOrganisationPayload {
   body: {
     country_code: string;
+    timezone: string;
     default_disbursement: number;
     card_shard_distance: number;
     require_transfer_card: boolean;

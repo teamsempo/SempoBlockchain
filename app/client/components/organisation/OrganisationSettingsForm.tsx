@@ -14,6 +14,7 @@ export interface IOrganisationSettings {
   cardShardDistance: number;
   requireTransferCard: boolean;
   countryCode: string;
+  timezone: string;
   accountTypes: string[];
 }
 
@@ -23,6 +24,7 @@ interface StateProps {
 
 interface OuterProps {
   isoCountries: [];
+  timezones: any;
   organisations: any;
   activeOrganisation: Organisation | any;
   roles: [];
@@ -49,12 +51,13 @@ class OrganisationSettingForm extends React.Component<
       defaultDisbursement: activeOrganisation.default_disbursement / 100,
       requireTransferCard: activeOrganisation.require_transfer_card,
       cardShardDistance: activeOrganisation.card_shard_distance,
-      countryCode: countryCode.toLowerCase()
+      countryCode: countryCode.toLowerCase(),
+      timezone: activeOrganisation.timezone.toLowerCase()
     });
   }
 
   render() {
-    const { isoCountries, activeOrganisation, roles } = this.props;
+    const { isoCountries, activeOrganisation, roles, timezones } = this.props;
     return (
       <form onSubmit={this.props.handleSubmit}>
         <InputField
@@ -89,6 +92,14 @@ class OrganisationSettingForm extends React.Component<
           name="countryCode"
           label="Default Country Code"
           options={isoCountries}
+          isRequired
+          hideNoneOption={true}
+        />
+
+        <SelectField
+          name="timezone"
+          label="Default Time Zone"
+          options={timezones}
           isRequired
           hideNoneOption={true}
         />

@@ -21,6 +21,7 @@ interface StateProps {
 
 interface IState {
   isoCountries: null;
+  timezones: null;
   roles: null;
 }
 
@@ -31,6 +32,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     super(props);
     this.state = {
       isoCountries: null,
+      timezones: null,
       roles: null
     };
   }
@@ -66,6 +68,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
         //@ts-ignore
         this.setState({
           isoCountries: isoCountriesOptions,
+          timezones: handled.data.timezones || [],
           roles: handled.data.roles
         });
       })
@@ -79,6 +82,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     this.props.editOrganisation(
       {
         country_code: form.countryCode,
+        timezone: form.timezone,
         default_disbursement: form.defaultDisbursement * 100,
         card_shard_distance: form.cardShardDistance,
         require_transfer_card: form.requireTransferCard,
@@ -103,6 +107,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
                 activeOrganisation={this.props.activeOrganisation}
                 organisations={this.props.organisations}
                 isoCountries={this.state.isoCountries}
+                timezones={this.state.timezones}
                 roles={this.state.roles}
                 onSubmit={(form: IOrganisationSettings) => this.onSubmit(form)}
               />
