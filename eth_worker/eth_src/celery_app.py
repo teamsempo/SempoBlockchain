@@ -39,6 +39,8 @@ from eth_manager.transaction_supervisor import TransactionSupervisor
 from eth_manager.task_manager import TaskManager
 from eth_manager.blockchain_sync.blockchain_sync import BlockchainSyncer
 
+from celo_eth_account.account import Account
+
 import celery_utils
 
 sentry_sdk.init(config.SENTRY_SERVER_DSN, integrations=[CeleryIntegration()])
@@ -68,9 +70,12 @@ app.conf.beat_schedule = {
     }
 }
 
+
 w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 
 w3_websocket = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
+
+w3.eth.account = Account
 
 red = redis.Redis.from_url(config.REDIS_URL)
 

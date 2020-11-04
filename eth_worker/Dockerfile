@@ -13,6 +13,9 @@ COPY ./config.py /
 RUN mkdir /config_files
 COPY ./config_files/* /config_files/
 
+COPY ./third_party/celo_eth_account /celo_eth_account
+
+
 WORKDIR /
 
 EXPOSE 80
