@@ -40,6 +40,7 @@ from eth_manager.task_manager import TaskManager
 from eth_manager.blockchain_sync.blockchain_sync import BlockchainSyncer
 
 from celo_eth_account.account import Account
+from celo_integration import CeloTransactionProcessor
 
 import celery_utils
 
@@ -85,7 +86,7 @@ persistence_module = SQLPersistenceInterface(
     red=red, session=session, first_block_hash=first_block_hash
 )
 
-processor = EthTransactionProcessor(
+processor = CeloTransactionProcessor(
     ethereum_chain_id=config.ETH_CHAIN_ID,
     gas_price_wei=w3.toWei(config.ETH_GAS_PRICE, 'gwei'),
     gas_limit=config.ETH_GAS_LIMIT,
