@@ -5,5 +5,5 @@ FROM node:12-alpine
 RUN npm i -g @celo/ganache-cli
 EXPOSE 8545
 
-ENTRYPOINT ["ganache-cli"]
+ENTRYPOINT ["ganache-cli","-h","0.0.0.0"]
 
