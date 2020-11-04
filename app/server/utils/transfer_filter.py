@@ -13,13 +13,13 @@ from server.models.user import User
 from sqlalchemy.sql.expression import cast
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
-MALE = 'male'
-FEMALE = 'female'
-
 BENEFICIARY = "Beneficiary"
 VENDOR = "Vendor"
 TOKEN_AGENT = "Token Agent"
 GROUP_ACCOUNT = "Group Account"
+
+SENDER = 'sender'
+RECIPIENT = 'recipient'
 
 BOOLEAN_MAPPINGS = {
     BENEFICIARY: "has_beneficiary_role",
@@ -43,13 +43,15 @@ def get_custom_attribute_filters(distinct_sender_and_recipient = False):
         if distinct_sender_and_recipient:
             filters[ao + ',sender'] = {
                 'name': 'Sender ' + ao.capitalize(),
-                'table': CustomAttributeUserStorage.__tablename__+',sender',
+                'table': CustomAttributeUserStorage.__tablename__,
+                'sender_or_recipient': SENDER,
                 'type': TransferFilterEnum.DISCRETE,
                 'values': attribute_options[ao]
             }
             filters[ao + ',recipient'] = {
                 'name': 'Recipient ' + ao.capitalize(),
-                'table': CustomAttributeUserStorage.__tablename__+',recipient',
+                'table': CustomAttributeUserStorage.__tablename__,
+                'sender_or_recipient': RECIPIENT,
                 'type': TransferFilterEnum.DISCRETE,
                 'values': attribute_options[ao]
             }
@@ -111,46 +113,54 @@ class Filters(object):
         return {
             'created,sender': {
                 'name': "Sender Created",
-                'table': User.__tablename__+',sender',
+                'table': User.__tablename__,
+                'sender_or_recipient': SENDER,
                 'type' : TransferFilterEnum.DATE_RANGE,
             },
             'user_type,sender': {
                 'name': "Sender Participant Type",
-                'table': User.__tablename__+',sender',
+                'table': User.__tablename__,
+                'sender_or_recipient': SENDER,
                 'type': TransferFilterEnum.BOOLEAN_MAPPING,
                 'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
             },
             '_location,sender': {
                 'name': "Sender Location",
-                'table': User.__tablename__+',sender',
+                'table': User.__tablename__,
+                'sender_or_recipient': SENDER,
                 'type': TransferFilterEnum.DISCRETE,
                 'values' : [u._location for u in db.session.query(User._location).distinct()]
             },
             'rounded_account_balance,sender': {
                 'name': "Sender Balance",
-                'table': TransferAccount.__tablename__+',sender',
+                'table': TransferAccount.__tablename__,
+                'sender_or_recipient': SENDER,
                 'type' : TransferFilterEnum.INT_RANGE
             },
             'created,recipient': {
                 'name': "Recipient Created",
-                'table': User.__tablename__+',recipient',
+                'table': User.__tablename__,
+                'sender_or_recipient': RECIPIENT,
                 'type' : TransferFilterEnum.DATE_RANGE,
             },
             'user_type,recipient': {
                 'name': "Recipient Participant Type",
-                'table': User.__tablename__+',recipient',
+                'table': User.__tablename__,
+                'sender_or_recipient': RECIPIENT,
                 'type': TransferFilterEnum.BOOLEAN_MAPPING,
                 'values': [BENEFICIARY, VENDOR, TOKEN_AGENT, GROUP_ACCOUNT]
             },
             '_location,recipient': {
                 'name': "Recipient Location",
-                'table': User.__tablename__+',recipient',
+                'table': User.__tablename__,
+                'sender_or_recipient': RECIPIENT,
                 'type': TransferFilterEnum.DISCRETE,
                 'values' : [u._location for u in db.session.query(User._location).distinct()]
             },
             'rounded_account_balance,recipient': {
                 'name': "Recipient Balance",
-                'table': TransferAccount.__tablename__+',recipient',
+                'table': TransferAccount.__tablename__,
+                'sender_or_recipient': RECIPIENT,
                 'type' : TransferFilterEnum.INT_RANGE
             },
         }
@@ -189,12 +199,13 @@ def process_transfer_filters(encoded_filters):
 
         unprocessed_attribute = f['attribute']
         table = filters.ALL_FILTERS[unprocessed_attribute]['table']
+        sender_or_recipient = filters.ALL_FILTERS[unprocessed_attribute]['sender_or_recipient'] if 'sender_or_recipient' in filters.ALL_FILTERS[unprocessed_attribute] else False
 
         processed = handle_filter(**f)
 
         if table not in filter_dict:
-            filter_dict[table] = []
-        filter_dict[table].append(processed)
+            filter_dict[(table, sender_or_recipient)] = []
+        filter_dict[(table, sender_or_recipient)].append(processed)
 
     return filter_dict
 

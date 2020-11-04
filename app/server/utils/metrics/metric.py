@@ -50,8 +50,9 @@ class Metric(object):
                 filtered_query = filtered_query.filter(*f)
 
             # Validate that the filters we're applying are in the metrics' filterable_by
-            for f in user_filters or []:
-                if f.split(',')[0] not in self.filterable_by:
+            print(user_filters)
+            for f, _ in user_filters or []:
+                if f not in self.filterable_by:
                     raise Exception(f'{self.metric_name} not filterable by {f}')
 
             # Apply the applicable date filters

@@ -36,8 +36,8 @@ def apply_filters(query, filters, query_table):
     if filters is None:
         return query
 
-    for filter_table_name, _filts in filters.items():
-        filter_table, _, sender_or_recipient = filter_table_name.partition(',')
+    for filter_tuple, _filts in filters.items():
+        filter_table, sender_or_recipient = filter_tuple
         user_join_attribute, account_join_attribute = _determine_join_conditions(query_table, sender_or_recipient)
         if filter_table == TransferAccount.__tablename__:
                 # only join transfer account if table is not transfer account
