@@ -6,6 +6,7 @@ from celery_utils import eth_endpoint
 from sempo_types import UUID, UUIDList
 
 from eth_manager.transaction_supervisor import TransactionSupervisor
+from eth_manager.eth_transaction_processor import EthTransactionProcessor
 
 class TaskManager(object):
     """
@@ -158,13 +159,38 @@ class TaskManager(object):
 
 
     def retry_task(self, task_uuid: UUID):
-        self.persistence.increment_task_invocations(task_uuid)
-        self._queue_attempt_transaction(task_uuid)
+        task = self.persistence.get_task_from_uuid(task_uuid)
+        needs_retry = True
+
+        if task:
+            for transaction in task.transactions:
+                result = self.processor.get_transaction_status(transaction.id)
+
+                status = result.get('status')
+
+                if status == 'SUCCESS':
+
+                    print(f'Task with id {task.id} has already completed! Skipping')
+                    self.persistence.update_transaction_data(transaction.id, result)
+                    self.persistence.set_task_status_text(task, 'SUCCESS')
+
+                    unstarted_posteriors = self.persistence.get_unstarted_posteriors(task.uuid)
+
+                    for dep_task in unstarted_posteriors:
+                        print('Starting posterior task: {}'.format(dep_task.uuid))
+                        self._queue_attempt_transaction(dep_task.uuid)
+
+                    needs_retry = False
+
+                    break
+
+        if needs_retry:
+            self.persistence.increment_task_invocations(task_uuid)
+            self._queue_attempt_transaction(task_uuid)
 
     def retry_failed(self, min_task_id, max_task_id, retry_unstarted=False):
 
         print(f'Testings Task from {min_task_id} to {max_task_id}, retrying unstarted={retry_unstarted}')
-
         needing_retry = self.persistence.get_failed_tasks(min_task_id, max_task_id)
         pending_tasks = self.persistence.get_pending_tasks(min_task_id, max_task_id)
 
@@ -201,6 +227,8 @@ class TaskManager(object):
         self.transaction_supervisor = transaction_supervisor
 
         self.sigs = SigGenerators()
+
+        self.processor = transaction_supervisor.processor
 
 
 class SigGenerators(object):
