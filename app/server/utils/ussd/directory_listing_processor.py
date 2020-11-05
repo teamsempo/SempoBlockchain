@@ -15,7 +15,7 @@ from server.constants import NUMBER_OF_DIRECTORY_LISTING_RESULTS
 
 
 def user_directory_listing(user: User) -> str:
-    bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
+    bio = next(filter(lambda x: x.key == 'bio', user.custom_attributes), None)
     if bio is None:
         return user.phone
     else:

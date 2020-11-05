@@ -3,7 +3,6 @@ from server.models.transfer_usage import TransferUsage
 from server.utils.transfer_filter import Filters
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user, set_custom_attributes
-from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server import db
 import json
 import os
