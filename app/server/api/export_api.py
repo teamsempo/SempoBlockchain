@@ -159,7 +159,6 @@ class ExportAPI(MethodView):
             custom_attribute_columns = []
 
             for index, user_account in enumerate(user_accounts):
-                print('row')
                 transfer_account = user_account.transfer_account
 
                 if transfer_account:
@@ -347,7 +346,7 @@ class ExportAPI(MethodView):
                         elif column['query'] == 'transfer_amount':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
                         elif column['query'] == 'transfer_usages':
-                            cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
+                            cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                         else:
                             cell_contents = ""
 
@@ -383,7 +382,7 @@ class MeExportAPI(MethodView):
     def post(self):
         post_data = request.get_json()
 
-        transfer_account = g.user.transfer_account
+        transfer_account = g.user.default_transfer_account or g.user.transfer_accounts[0]
 
         date_range = post_data.get('date_range')  # last day, previous week, or all
         email = post_data.get('email')
@@ -431,13 +430,15 @@ class MeExportAPI(MethodView):
             credit_transfer_list = CreditTransfer.query.filter(
                 and_(CreditTransfer.created.between(start_date, end_date), (
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                    CreditTransfer.sender_transfer_account_id == transfer_account.id))))
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))))\
+                    .enable_eagerloads(False)
 
         else:
             # default to all credit transfers of transfer_account.id
             credit_transfer_list = CreditTransfer.query.filter(
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                    CreditTransfer.sender_transfer_account_id == transfer_account.id))
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))\
+                    .enable_eagerloads(False)
 
         # loop over all credit transfers, create cells
         if credit_transfer_list is not None:
@@ -451,7 +452,7 @@ class MeExportAPI(MethodView):
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']) / 100)
                     elif  column['query'] == 'transfer_usages':
-                        cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
+                        cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
 
@@ -473,7 +474,7 @@ class MeExportAPI(MethodView):
             response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
-                'file_url': None,
+                'file_url': '',
             }
 
             return make_response(jsonify(response_object)), 404
