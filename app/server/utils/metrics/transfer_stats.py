@@ -14,9 +14,10 @@ from server import db, red, bt
 from sqlalchemy.dialects.postgresql import JSONB
 
 class TransferStats(metric_group.MetricGroup):
-    def __init__(self, group_strategy, timeseries_unit = 'day', token=None):
+    def __init__(self, group_strategy, timeseries_unit = 'day', token=None, timezone=None):
         self.filterable_attributes = [DATE, CUSTOM_ATTRIBUTE, TRANSFER_ACCOUNT, CREDIT_TRANSFER, USER]
         self.timeseries_unit = timeseries_unit
+        self.timezone = timezone
         self.metrics = []
 
         total_amount_query = db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))

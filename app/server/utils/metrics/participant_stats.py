@@ -14,9 +14,10 @@ from server.utils.metrics.metrics_const import *
 
 
 class ParticipantStats(metric_group.MetricGroup):
-    def __init__(self, group_strategy, timeseries_unit = 'day'):
+    def __init__(self, group_strategy, timeseries_unit = 'day', timezone = None):
         self.filterable_attributes = [DATE, CUSTOM_ATTRIBUTE, TRANSFER_ACCOUNT, USER]
         self.timeseries_unit = timeseries_unit
+        self.timezone = timezone
         self.metrics = []
 
         total_beneficiaries_query = db.session.query(User)

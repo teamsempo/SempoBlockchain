@@ -38,7 +38,7 @@ class Organisation(ModelBase):
     # 0 means don't shard, units are kilometers
     card_shard_distance = db.Column(db.Integer, default=0) 
 
-    _timezone = db.Column(db.String)
+    _timezone = db.Column(db.String, default='UTC')
     _country_code = db.Column(db.String, nullable=False)
     _default_disbursement_wei = db.Column(db.Numeric(27), default=0)
     require_transfer_card = db.Column(db.Boolean, default=False)
@@ -81,7 +81,7 @@ class Organisation(ModelBase):
         lower_zones = dict(zip([tz.lower() for tz in pendulum.timezones], pendulum.timezones))
         if val is not None and val.lower() not in lower_zones:
             raise Exception(f"{val} is not a valid timezone")
-        self._timezone = lower_zones[val]
+        self._timezone = lower_zones[val.lower()]
 
     @hybrid_property
     def country_code(self):
@@ -166,9 +166,9 @@ class Organisation(ModelBase):
         self.token = token
         self._setup_org_transfer_account()
 
-    def __init__(self, token=None, is_master=False, valid_roles=None, **kwargs):
+    def __init__(self, token=None, is_master=False, valid_roles=None, timezone=None, **kwargs):
         super(Organisation, self).__init__(**kwargs)
-    
+        self.timezone = timezone if timezone else 'UTC'
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
         self.external_auth_password = secrets.token_hex(16)
         self.valid_roles = valid_roles or list(ASSIGNABLE_TIERS.keys())

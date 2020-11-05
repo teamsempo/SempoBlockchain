@@ -67,6 +67,7 @@ def calculate_transfer_stats(
     if not organisations:
         org = g.active_organisation
         token = org.token
+        timezone = org.timezone or 'UTC'
 
     date_filter_attributes = {
         CreditTransfer: CreditTransfer.created,
@@ -91,20 +92,20 @@ def calculate_transfer_stats(
 
     total_users = {}
     if group_strategy and set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
-        total_users_stats = TotalUsers(group_strategy, timeseries_unit)
+        total_users_stats = TotalUsers(group_strategy, timeseries_unit, timezone=timezone)
         total_users[metrics_const.GROUPED] = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date)
         total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date)
     else:
-        total_users_stats = TotalUsers(None, timeseries_unit)
+        total_users_stats = TotalUsers(None, timeseries_unit, timezone=timezone)
         total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date)
 
     # Determines which metrics the user is asking for, and calculate them
     if metric_type == metrics_const.TRANSFER:
-        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token, timezone=timezone).metrics
     elif metric_type == metrics_const.USER:
-        metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
+        metrics_list = ParticipantStats(group_strategy, timeseries_unit, timezone=timezone).metrics
     else:
-        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token, timezone=timezone).metrics + ParticipantStats(group_strategy, timeseries_unit, timezone=timezone).metrics
     
     # Ensure that the metric requested by the user is available
     availible_metrics = [m.metric_name for m in metrics_list]
