@@ -310,7 +310,7 @@ class CreditTransferList extends React.Component {
                   height: "25px"
                 }}
                 isLoading={this.props.isApproving}
-                buttonText="NEXT"
+                buttonText={<span>NEXT</span>}
               />
               <StyledSelect
                 style={{
@@ -364,6 +364,15 @@ class CreditTransferList extends React.Component {
           </option>
           <option name="transfer_type" value="RECLAMATION">
             RECLAMATION
+          </option>
+          <option name="transfer_type" value="WITHDRAWAL">
+            WITHDRAWAL
+          </option>
+          <option name="transfer_type" value="DEPOSIT">
+            DEPOSIT
+          </option>
+          <option name="transfer_type" value="FEE">
+            FEE
           </option>
         </StyledSelect>
       );
@@ -494,6 +503,8 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (status === "PENDING") {
                       colour = "#F5A623";
+                    } else if (status === "UNSTARTED") {
+                      colour = "#F16853";
                     } else if (status === "ERROR") {
                       colour = "#F16853";
                     } else {

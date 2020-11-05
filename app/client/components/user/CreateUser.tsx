@@ -32,9 +32,7 @@ interface OuterProps {
   isVendor: boolean;
 }
 
-interface ComponentState {
-  accountType?: string;
-}
+interface ComponentState {}
 
 type Form = ICreateUserUpdate;
 type Props = DispatchProps & StateProps & OuterProps;
@@ -65,10 +63,6 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
       businessUsage = form.usageOtherSpecific;
     }
 
-    if (form.accountType) {
-      this.setState({ accountType: form.accountType });
-    }
-
     this.props.createUser({
       body: {
         first_name: form.firstName,
@@ -76,11 +70,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         bio: form.bio,
         gender: form.gender,
         public_serial_number: form.publicSerialNumber,
-        phone: form.phone,
-        is_vendor:
-          form.accountType === "vendor" || form.accountType === "cashier",
-        is_tokenagent: form.accountType === "tokenagent",
-        is_groupaccount: form.accountType === "groupaccount",
+        phone: form.publicSerialNumber ? undefined : form.phone,
         initial_disbursement: (form.initialDisbursement || 0) * 100,
         require_transfer_card_exists:
           activeOrganisation && activeOrganisation.require_transfer_card,
@@ -89,14 +79,13 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         transfer_account_name: form.transferAccountName,
         location: form.location,
         business_usage_name: businessUsage,
-        referred_by: form.referredBy
+        referred_by: form.referredBy,
+        account_types: form.accountTypes
       }
     });
   }
 
   render() {
-    const accountType = this.state.accountType;
-    const transferAccountType = accountType ? toTitleCase(accountType) : "user";
     const { one_time_code, is_external_wallet } = this.props.users.createStatus;
 
     if (one_time_code !== null) {
@@ -104,15 +93,13 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         return (
           <div>
             <ModuleHeader>
-              Successfully Created External Wallet User
+              Successfully Created External Wallet Participant
             </ModuleHeader>
             <div style={{ padding: "0 1em 1em" }}>
-              <p>
-                You can now send funds to the {transferAccountType}'s wallet.
-              </p>
+              <p>You can now send funds to the participant's wallet.</p>
 
               <StyledButton onClick={() => this.resetCreateUser()}>
-                Add another {transferAccountType}
+                Add another participant
               </StyledButton>
             </div>
           </div>
@@ -127,13 +114,12 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
               </p>
 
               <p>
-                Show the {transferAccountType} their one time code now. They
-                will be able to instantly and securely log in via the android
-                app.
+                Show the participant their one time code now. They will be able
+                to instantly and securely log in via the android app.
               </p>
 
               <StyledButton onClick={() => this.resetCreateUser()}>
-                Add another {transferAccountType}
+                Add another participant
               </StyledButton>
             </div>
           </div>
@@ -143,7 +129,6 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
       return (
         <CreateUserForm
           users={this.props.users}
-          transferAccountType={transferAccountType}
           transferUsages={this.props.transferUsages}
           onSubmit={(form: Form) => this.onCreateUser(form)}
         />

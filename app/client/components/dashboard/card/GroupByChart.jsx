@@ -6,7 +6,12 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
-import { toTitleCase, replaceUnderscores, toCurrency } from "../../../utils";
+import {
+  toTitleCase,
+  replaceUnderscores,
+  toCurrency,
+  formatMoney
+} from "../../../utils";
 import { VALUE_TYPES } from "../../../constants";
 
 const mapStateToProps = state => {
@@ -17,9 +22,8 @@ const mapStateToProps = state => {
 
 class GroupByChart extends React.Component {
   render() {
-    const selected = this.props.selected;
-
-    const aggregate = this.props.data.aggregate;
+    const { selected, data } = this.props;
+    const { percent_change, ...aggregate } = this.props.data.aggregate;
     const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
     var aggregateData = aggregate ? Object.values(aggregate) : [];
     if (this.props.data.type.value_type == VALUE_TYPES.CURRENCY) {
@@ -43,7 +47,21 @@ class GroupByChart extends React.Component {
       tooltips: {
         mode: "y",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
-        cornerRadius: 1
+        cornerRadius: 1,
+        callbacks: {
+          label: function(tooltipItem) {
+            if (data.type && data.type.value_type === VALUE_TYPES.CURRENCY) {
+              return formatMoney(
+                tooltipItem.xLabel,
+                data.type.display_decimals,
+                undefined,
+                undefined,
+                data.type.currency_symbol
+              );
+            }
+            return tooltipItem.xLabel;
+          }
+        }
       },
       scales: {
         xAxes: [
@@ -59,7 +77,17 @@ class GroupByChart extends React.Component {
             },
             ticks: {
               beginAtZero: true,
-              min: 0
+              min: 0,
+              callback(value) {
+                if (
+                  data.type &&
+                  data.type.value_type === VALUE_TYPES.CURRENCY
+                ) {
+                  // We don't want the yAxis to display decimals
+                  return formatMoney(value, 0, undefined, undefined);
+                }
+                return value;
+              }
             }
           }
         ],
@@ -79,7 +107,7 @@ class GroupByChart extends React.Component {
       }
     };
 
-    var data = {
+    var chartData = {
       labels: aggregateKeys,
       datasets: [
         {
@@ -106,7 +134,7 @@ class GroupByChart extends React.Component {
       <div>
         <div style={{ height: `${this.props.chartHeight}px` }}>
           <HorizontalBar
-            data={data}
+            data={chartData}
             height={this.props.chartHeight}
             options={options}
           />

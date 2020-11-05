@@ -5,6 +5,7 @@
     "aggregate": {
       "DISBURSEMENT": 1517,
       "PAYMENT": 170,
+      "percent_change": 97.04433497536947,
       "total": 1687
     },
     "timeseries": {
@@ -55,6 +56,7 @@
   "daily_disbursement_volume": {
     "aggregate": {
       "DISBURSEMENT": 1517,
+      "percent_change": 72.41379310344827,
       "total": 1517
     },
     "timeseries": {
@@ -87,6 +89,7 @@
   "daily_transaction_count": {
     "aggregate": {
       "PAYMENT": 5,
+      "percent_change": null,
       "total": 5
     },
     "timeseries": {
@@ -118,6 +121,7 @@
     "aggregate": {
       "DISBURSEMENT": 1517,
       "PAYMENT": 170,
+      "percent_change": 97.04433497536947,
       "total": 1687
     },
     "timeseries": {
@@ -168,13 +172,14 @@
   "exhausted_balance": 0,
   "has_transferred_count": 5,
   "mandatory_filter": {},
-  "master_wallet_balance": 0,
+  "master_wallet_balance": -1517.0,
   "total_distributed": 1517,
   "total_exchanged": 0,
   "total_spent": 170,
   "trades_per_user": {
     "aggregate": {
       "PAYMENT": 0.7142857142857143,
+      "percent_change": null,
       "total": 0.7142857142857143
     },
     "timeseries": {
@@ -205,6 +210,7 @@
   "transfer_amount_per_user": {
     "aggregate": {
       "PAYMENT": 24.285714285714285,
+      "percent_change": null,
       "total": 24.285714285714285
     },
     "timeseries": {
@@ -238,6 +244,7 @@
     "aggregate": {
       "DISBURSEMENT": 1,
       "PAYMENT": 5,
+      "percent_change": 100,
       "total": 6
     },
     "timeseries": {

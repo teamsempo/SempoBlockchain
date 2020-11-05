@@ -4,6 +4,10 @@ from server.models.custom_attribute import CustomAttribute
 from sqlalchemy import cast
 from sqlalchemy.ext.hybrid import hybrid_property
 
+from sqlalchemy import func
+
+from server.models.custom_attribute import CustomAttribute
+
 class CustomAttributeUserStorage(ModelBase):
     __tablename__ = 'custom_attribute_user_storage'
 
@@ -13,7 +17,7 @@ class CustomAttributeUserStorage(ModelBase):
     name = db.Column(db.String) # Deprecated for key
     value = db.Column(db.String)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     uploaded_image_id = db.Column(db.Integer)
 
     @hybrid_property

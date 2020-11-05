@@ -29,7 +29,7 @@ export default class TFAForm extends React.Component {
           <AsyncButton
             onClick={() => this.handleNextBack()}
             buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-            buttonText="Next"
+            buttonText={<span>Next</span>}
           />
         </div>
       );

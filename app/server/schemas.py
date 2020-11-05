@@ -1,7 +1,9 @@
+import base64
+from io import BytesIO
 from flask import g
-
 from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
+import qrcode
 
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
@@ -10,6 +12,14 @@ from server.models.exchange import Exchange
 from server.exceptions import SubexchangeNotFound
 
 
+def gen_qr(data):
+    out = BytesIO()
+    img = qrcode.make(data)
+    img.save(out, "PNG")
+    out.seek(0)
+
+    return u"data:image/png;base64," + base64.b64encode(out.getvalue()).decode("ascii")
+
 class LowerCase(fields.Field):
     """Field that deserializes to a lower case string.
     """
@@ -17,6 +27,13 @@ class LowerCase(fields.Field):
     def _deserialize(self, value, attr, data, **kwargs):
         return value.lower()
 
+class QR(fields.Field):
+    """
+    Field that serializes to a QR code
+    """
+
+    def _serialize(self, value, attr, obj):
+        return gen_qr(value)
 
 class SchemaBase(Schema):
     class Meta:
@@ -32,6 +49,7 @@ class BlockchainTaskableSchemaBase(SchemaBase):
     blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
 
 class UserSchema(SchemaBase):
+
     first_name              = fields.Str()
     last_name               = fields.Str()
     preferred_language      = fields.Str()
@@ -51,6 +69,7 @@ class UserSchema(SchemaBase):
     is_activated            = fields.Boolean()
     is_disabled             = fields.Boolean()
 
+    roles                   = fields.Dict(keys=fields.Str(), values=fields.Str())
     is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_tokenagent           = fields.Boolean(attribute='has_token_agent_role')
@@ -66,10 +85,14 @@ class UserSchema(SchemaBase):
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
     referred_by              = fields.Method("get_referrer_phone")
+    qr                       = fields.Method("get_qr_code")
 
     transfer_accounts        = fields.Nested('TransferAccountSchema',
                                              many=True,
                                              exclude=('users', 'credit_sends', 'credit_receives'))
+
+    def get_qr_code(self, obj):
+        return gen_qr(f'{obj.id}: {obj.first_name} {obj.last_name}')
 
     def get_json_data(self, obj):
 
@@ -389,15 +412,19 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
+    card_shard_distance = fields.Int() # Kilometers
+
+    valid_roles = fields.Raw()
+
     require_transfer_card = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
     country_code = fields.Function(lambda obj: str(obj.country_code))
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
-    users               = fields.Nested('server.schemas.UserSchema', many=True)
-    transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
-    credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
+    #users               = fields.Nested('server.schemas.UserSchema', many=True)
+    #transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
+    #credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
 
 class TransferUsageSchema(Schema):
@@ -414,10 +441,19 @@ class SynchronizationFilterSchema(Schema):
     created                     = fields.DateTime(dump_only=True)
     updated                     = fields.DateTime(dump_only=True)
 
-user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
+class AttributeMapSchema(Schema):
+    input_name                  = fields.Str()
+    output_name                 = fields.Str()
+
+
+pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
+
+user_schema = UserSchema(exclude=("qr",
+                                  "transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
 
-users_schema = UserSchema(many=True, exclude=("transfer_accounts.credit_sends",
+users_schema = UserSchema(many=True, exclude=("qr",
+                                              "transfer_accounts.credit_sends",
                                               "transfer_accounts.credit_receives"))
 
 transfer_account_schema = TransferAccountSchema(
@@ -482,6 +518,10 @@ kyc_application_state_schema = KycApplicationSchema(
 me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
+
+attribute_map_schema = AttributeMapSchema()
+attribute_maps_schema = AttributeMapSchema(many=True)
+
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)

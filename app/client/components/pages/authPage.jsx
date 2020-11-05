@@ -88,13 +88,21 @@ export class authPage extends React.Component {
             <Route component={LoginForm} />
           </Switch>
         </LoginModuleBox>
-        <DeploymentNameText>sempo | {deploymentName}</DeploymentNameText>
+        <TermsText
+          target="_blank"
+          href={
+            "https://docs.withsempo.com/sempo-dashboard/common-login-errors#what-to-do-if-you-encounter-issues-logging-in"
+          }
+        >
+          Get help logging in
+        </TermsText>
         <TermsWrapper>
+          <TermsText href="#">· Sempo - {deploymentName}</TermsText>
           <TermsText href="https://withsempo.com/legal/privacy-policy/">
-            Privacy Policy
+            · Privacy Policy
           </TermsText>
           <TermsText href="https://withsempo.com/legal/platform-terms/">
-            Terms of Service
+            · Terms of Service
           </TermsText>
         </TermsWrapper>
       </WrapperDiv>

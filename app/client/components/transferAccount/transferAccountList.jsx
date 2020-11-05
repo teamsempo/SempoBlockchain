@@ -69,6 +69,7 @@ class TransferAccountList extends React.Component {
     );
     this.onNewTransfer = this.onNewTransfer.bind(this);
     this.approveSelected = this.approveSelected.bind(this);
+    this.unapproveSelected = this.unapproveSelected.bind(this);
   }
 
   componentWillUnmount() {
@@ -153,6 +154,18 @@ class TransferAccountList extends React.Component {
     });
   }
 
+  unapproveSelected() {
+    let approve = false;
+    let transfer_account_id_list = this.get_selected_ids_array(
+      this.state.idSelectedStatus
+    );
+
+    this.props.editTransferAccountRequest({
+      transfer_account_id_list,
+      approve
+    });
+  }
+
   handleChange(evt) {
     this.setState({ [evt.target.name]: evt.target.value });
   }
@@ -194,16 +207,16 @@ class TransferAccountList extends React.Component {
     var filteredData =
       this.props.item_list !== undefined ? this.props.item_list : null;
 
-    if (account_type === TransferAccountTypes.USER) {
+    if (account_type === TransferAccountTypes.BENEFICIARY) {
       filteredData = filteredData.filter(account => account.is_beneficiary);
     } else if (
       account_type === TransferAccountTypes.VENDOR ||
       account_type === TransferAccountTypes.CASHIER
     ) {
       filteredData = filteredData.filter(account => account.is_vendor);
-    } else if (account_type === TransferAccountTypes.TOKENAGENT) {
+    } else if (account_type === TransferAccountTypes.TOKEN_AGENT) {
       filteredData = filteredData.filter(account => account.is_tokenagent);
-    } else if (account_type === TransferAccountTypes.GROUPACCOUNT) {
+    } else if (account_type === TransferAccountTypes.GROUP_ACCOUNT) {
       filteredData = filteredData.filter(account => account.is_groupaccount);
     }
 
@@ -248,6 +261,19 @@ class TransferAccountList extends React.Component {
               >
                 APPROVE
               </StyledButton>
+              <StyledButton
+                onClick={this.unapproveSelected}
+                style={{
+                  display: this.state.newTransfer ? "none" : "flex",
+                  fontWeight: "400",
+                  margin: "0em 1em 0 0",
+                  lineHeight: "25px",
+                  height: "25px"
+                }}
+              >
+                UNAPPROVE
+              </StyledButton>
+
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
                   onClick={() => browserHistory.push("/export")}

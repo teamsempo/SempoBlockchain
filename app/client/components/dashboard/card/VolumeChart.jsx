@@ -13,7 +13,8 @@ import {
   toTitleCase,
   replaceUnderscores,
   get_zero_filled_values,
-  toCurrency
+  toCurrency,
+  formatMoney
 } from "../../../utils";
 
 import { VALUE_TYPES } from "../../../constants";
@@ -86,8 +87,10 @@ class VolumeChart extends React.Component {
           .filter(date => date != null)
           .map(date => date.startOf("day"))
       );
+    } else {
+      // If there are no outside filters, pad dates til today
+      all_dates = all_dates.concat(Date.now());
     }
-
     let minDate = new Date(Math.min.apply(null, all_dates));
     let maxDate = new Date(Math.max.apply(null, all_dates));
 
@@ -114,7 +117,21 @@ class VolumeChart extends React.Component {
       tooltips: {
         mode: "nearest",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
-        cornerRadius: 1
+        cornerRadius: 1,
+        callbacks: {
+          label: function(tooltipItem) {
+            if (data.type && data.type.value_type === VALUE_TYPES.CURRENCY) {
+              return formatMoney(
+                tooltipItem.yLabel,
+                data.type.display_decimals,
+                undefined,
+                undefined,
+                data.type.currency_symbol
+              );
+            }
+            return tooltipItem.yLabel;
+          }
+        }
       },
       elements: {
         line: {
@@ -160,7 +177,17 @@ class VolumeChart extends React.Component {
               fontSize: "10"
             },
             ticks: {
-              beginAtZero: true
+              beginAtZero: true,
+              callback(value) {
+                if (
+                  data.type &&
+                  data.type.value_type === VALUE_TYPES.CURRENCY
+                ) {
+                  // We don't want the yAxis to display decimals
+                  return formatMoney(value, 0, undefined, undefined);
+                }
+                return value;
+              }
             },
             stacked: true
           }
@@ -187,7 +214,7 @@ class VolumeChart extends React.Component {
     const datasets = possibleTimeseriesKeys.map((key, index) => {
       const timeseries = data.timeseries[key].map(a => {
         if (data.type.value_type == VALUE_TYPES.CURRENCY) {
-          a.value = toCurrency(a.value);
+          return { ...a, value: toCurrency(a.value) };
         }
         return a;
       });

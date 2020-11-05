@@ -165,6 +165,8 @@ def register_blueprints(app):
 
         for transaction, queue in g.pending_transactions:
             transaction.send_blockchain_payload_to_worker(queue=queue)
+            # DB is modified, so commit changes
+            db.session.commit()
 
         # Push only credit transfers, not exchanges
         from server.models.credit_transfer import CreditTransfer
@@ -183,7 +185,6 @@ def register_blueprints(app):
     from server.api.dataset_api import dataset_blueprint
     from server.api.credit_transfer_api import credit_transfer_blueprint
     from server.api.user_api import user_blueprint
-    from server.api.kobo_api import user_kobo_blueprint
     from server.me_api import me_blueprint
     from server.api.export_api import export_blueprint
     from server.api.image_uploader_api import image_uploader_blueprint
@@ -204,6 +205,8 @@ def register_blueprints(app):
     from server.api.blockchain_taskable_api import blockchain_taskable_blueprint
     from server.api.metrics_api import metrics_blueprint
     from server.api.mock_data_api import mock_data_blueprint
+    from server.api.attribute_map_api import attribute_map_blueprint
+    from server.api.vendor_payout_api import vendor_payout
 
     versioned_url = '/api/v1'
 
@@ -212,7 +215,6 @@ def register_blueprints(app):
     app.register_blueprint(auth_blueprint, url_prefix=versioned_url)
     app.register_blueprint(pusher_auth_blueprint, url_prefix=versioned_url)
     app.register_blueprint(user_blueprint, url_prefix=versioned_url)
-    app.register_blueprint(user_kobo_blueprint, url_prefix=versioned_url)
     app.register_blueprint(transfer_account_blueprint, url_prefix=versioned_url)
     app.register_blueprint(blockchain_transaction_blueprint, url_prefix=versioned_url)
     app.register_blueprint(geolocation_blueprint, url_prefix=versioned_url)
@@ -238,6 +240,8 @@ def register_blueprints(app):
     app.register_blueprint(blockchain_taskable_blueprint, url_prefix=versioned_url)
     app.register_blueprint(metrics_blueprint, url_prefix=versioned_url)
     app.register_blueprint(mock_data_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(attribute_map_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(vendor_payout, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)

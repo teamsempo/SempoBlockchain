@@ -210,6 +210,7 @@ const RegisterForm = function(props) {
           type="email"
           onKeyUp={props.onUserFieldKeyPress}
           placeholder="Email"
+          disabled={props.state.invite ? "disabled" : ""}
           style={props.state.invite ? { display: "none" } : null}
         />
 
@@ -234,7 +235,7 @@ const RegisterForm = function(props) {
         onClick={props.onClick}
         isLoading={props.isRegistering}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="REGISTER"
+        buttonText={<span>REGISTER</span>}
       />
     </div>
   );
