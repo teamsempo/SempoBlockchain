@@ -4,6 +4,8 @@ from sqlalchemy import and_, or_
 
 from sempo_types import UUID, UUIDList
 
+import config
+
 from sql_persistence.models import (
     BlockchainTransaction,
     BlockchainTask,
@@ -540,7 +542,7 @@ class SQLPersistenceInterface(object):
         self.session.commit()
 
 
-    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=30):
+    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=config.ETH_PENDING_TRANSACTION_EXPIRY_SECONDS):
 
         self.red = red
 
