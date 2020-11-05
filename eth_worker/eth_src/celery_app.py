@@ -76,6 +76,12 @@ w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
 
 w3_websocket = Web3(WebsocketProvider(config.ETH_WEBSOCKET_PROVIDER))
 
+from web3.middleware import geth_poa_middleware
+
+w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+w3_websocket.middleware_onion.inject(geth_poa_middleware, layer=0)
+
+
 w3.eth.account = Account
 
 red = redis.Redis.from_url(config.REDIS_URL)
