@@ -172,7 +172,7 @@
   "exhausted_balance": 0,
   "has_transferred_count": 5,
   "mandatory_filter": {},
-  "master_wallet_balance": 0,
+  "master_wallet_balance": -1517.0,
   "total_distributed": 1517,
   "total_exchanged": 0,
   "total_spent": 170,

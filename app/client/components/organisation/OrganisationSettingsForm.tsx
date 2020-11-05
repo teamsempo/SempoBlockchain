@@ -11,6 +11,7 @@ import InputField from "../form/InputField";
 
 export interface IOrganisationSettings {
   defaultDisbursement: number;
+  cardShardDistance: number;
   requireTransferCard: boolean;
   countryCode: string;
   accountTypes: string[];
@@ -47,6 +48,7 @@ class OrganisationSettingForm extends React.Component<
       accountTypes: activeOrganisation.valid_roles,
       defaultDisbursement: activeOrganisation.default_disbursement / 100,
       requireTransferCard: activeOrganisation.require_transfer_card,
+      cardShardDistance: activeOrganisation.card_shard_distance,
       countryCode: countryCode.toLowerCase()
     });
   }
@@ -90,6 +92,15 @@ class OrganisationSettingForm extends React.Component<
           isRequired
           hideNoneOption={true}
         />
+
+        <InputField
+          name="cardShardDistance"
+          label="Automatically Load Cards Within"
+          isRequired
+          isNumber
+        >
+          Km
+        </InputField>
 
         <ErrorMessage>{this.props.organisations.editStatus.error}</ErrorMessage>
         {/*

@@ -4,6 +4,8 @@ from openpyxl import Workbook
 from datetime import datetime, timedelta
 import random, string, os
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import joinedload
+
 from dateutil import parser
 
 from server.schemas import transfer_account_schema
@@ -20,6 +22,7 @@ from server.utils.export import generate_pdf_export, export_workbook_via_s3
 
 export_blueprint = Blueprint('export', __name__)
 
+
 class ExportAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
@@ -28,6 +31,8 @@ class ExportAPI(MethodView):
 
         export_type = post_data.get('export_type')
         include_transfers = post_data.get('include_transfers')  # True or False
+        include_custom_attributes = post_data.get('include_custom_attributes')  # True or False
+
         user_type = post_data.get('user_type')  # Beneficiaries, Vendors, All
         selected = post_data.get('selected')
         #  TODO: implement date_range
@@ -41,12 +46,20 @@ class ExportAPI(MethodView):
         payable_period_end_date = post_data.get('payable_period_end_date')
 
         transfer_account_columns = [
-            {'header': 'ID',                    'query_type': 'db',     'query': 'id'},
+            {'header': 'Account ID',            'query_type': 'db',     'query': 'id'},
+            {'header': 'User ID',               'query_type': 'custom', 'query': 'user_id'},
             {'header': 'First Name',            'query_type': 'custom', 'query': 'first_name'},
             {'header': 'Last Name',             'query_type': 'custom', 'query': 'last_name'},
+            {'header': 'Public Serial Number',  'query_type': 'custom', 'query': 'public_serial_number'},
+            {'header': 'Phone',                 'query_type': 'custom', 'query': 'phone'},
             {'header': 'Created (UTC)',         'query_type': 'db',     'query': 'created'},
-            {'header': 'Is Approved?',          'query_type': 'db',     'query': 'is_approved'},
+            {'header': 'Approved',              'query_type': 'db',     'query': 'is_approved'},
+            {'header': 'Beneficiary',           'query_type': 'custom', 'query': 'has_beneficiary_role'},
+            {'header': 'Vendor',                'query_type': 'custom', 'query': 'has_vendor_role'},
+            {'header': 'Location',              'query_type': 'custom', 'query': 'location'},
             {'header': 'Current Balance',       'query_type': 'custom', 'query': 'balance'},
+            {'header': 'Amount Received',       'query_type': 'custom', 'query': 'received'},
+            {'header': 'Amount Sent',           'query_type': 'custom', 'query': 'sent'}
             # {'header': 'Prev. Period Payable',  'query_type': 'custom', 'query': 'prev_period_payable'},
             # {'header': 'Total Payable',         'query_type': 'custom', 'query': 'total_payable'},
         ]
@@ -57,6 +70,7 @@ class ExportAPI(MethodView):
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
             {'header': 'Transfer Type',     'query_type': 'enum',   'query': 'transfer_type'},
+            {'header': 'Transfer Type',     'query_type': 'enum', 'query': 'transfer_subtype'},
             {'header': 'Transfer Status',   'query_type': 'enum',   'query': 'transfer_status'},
             {'header': 'Sender ID',         'query_type': 'db',     'query': 'sender_transfer_account_id'},
             {'header': 'Recipient ID',      'query_type': 'db',     'query': 'recipient_transfer_account_id'},
@@ -112,15 +126,22 @@ class ExportAPI(MethodView):
             start_date = end_date - timedelta(weeks=1)
 
         if user_filter is not None:
-            user_accounts = User.query.filter(user_filter==True).all()
+            user_accounts = User.query.filter(
+                user_filter==True
+            ).options(
+                joinedload(User.transfer_accounts)
+            ).all()
+
         elif user_type == 'selected':
             transfer_accounts = TransferAccount.query.filter(TransferAccount.id.in_(selected)).all()
             user_accounts = [ta.primary_user for ta in transfer_accounts]
+
         else:
             user_accounts = User.query.filter(
                 or_(User.has_beneficiary_role == True, User.has_vendor_role == True)
+            ).options(
+                joinedload(User.transfer_accounts)
             ).all()
-
 
         if export_type == 'pdf':
             file_url = generate_pdf_export(user_accounts, pdf_filename)
@@ -134,7 +155,9 @@ class ExportAPI(MethodView):
             return make_response(jsonify(response_object)), 201
 
         if user_accounts is not None:
-            # TODO: fix export
+
+            custom_attribute_columns = []
+
             for index, user_account in enumerate(user_accounts):
                 transfer_account = user_account.transfer_account
 
@@ -142,6 +165,10 @@ class ExportAPI(MethodView):
                     for jindix, column in enumerate(transfer_account_columns):
                         if column['query_type'] == 'db':
                             cell_contents = "{0}".format(getattr(transfer_account, column['query']))
+
+                        elif column['query'] == 'user_id':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user.id)
 
                         elif column['query'] == 'first_name':
 
@@ -151,8 +178,34 @@ class ExportAPI(MethodView):
 
                             cell_contents = "{0}".format(transfer_account.primary_user.last_name)
 
+                        elif column['query'] == 'phone':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user.phone or '')
+
+                        elif column['query'] == 'public_serial_number':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user.public_serial_number or '')
+
+                        elif column['query'] == 'location':
+
+                            cell_contents = "{0}".format(transfer_account.primary_user._location)
+
                         elif column['query'] == 'balance':
                             cell_contents = getattr(transfer_account, column['query'])/100
+
+                        elif column['query'] == 'has_beneficiary_role':
+                            cell_contents = "{0}".format(transfer_account.primary_user.has_beneficiary_role)
+
+                        elif column['query'] == 'has_vendor_role':
+                            cell_contents = "{0}".format(transfer_account.primary_user.has_vendor_role)
+
+                        elif column['query'] == 'received':
+                            received_amount = transfer_account.total_received
+                            cell_contents = received_amount / 100
+
+                        elif column['query'] == 'sent':
+                            sent_amount = transfer_account.total_sent
+                            cell_contents = sent_amount / 100
 
                         elif column['query'] == 'prev_period_payable':
 
@@ -242,15 +295,39 @@ class ExportAPI(MethodView):
                             cell_contents = ""
 
                         _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
+
+                    if include_custom_attributes:
+                        # Add custom attributes as columns at the end
+                        for attribute in transfer_account.primary_user.custom_attributes:
+                            try:
+                                col_num = custom_attribute_columns.index(attribute.name) + 1 + len(transfer_account_columns)
+                            except ValueError:
+                                custom_attribute_columns.append(attribute.name)
+                                col_num = len(custom_attribute_columns) + len(transfer_account_columns)
+
+                            _ = ws.cell(column=col_num, row=index + 2, value=attribute.value)
+
                 else:
                     print('No Transfer Account for user account id: ', user_account.id)
 
+            # Add custom attribute headers:
+            if include_custom_attributes:
+                for index, column_name in enumerate(custom_attribute_columns):
+                    _ = ws.cell(
+                        column=index + 1 + len(transfer_account_columns),
+                        row=1,
+                        value="{0}".format(column_name)
+                    )
+
         if include_transfers and user_accounts is not None:
+            base_credit_transfer_query= CreditTransfer.query.enable_eagerloads(False)
             if start_date and end_date is not None:
-                credit_transfer_list = CreditTransfer.query.filter(CreditTransfer.created.between(start_date, end_date)).all()
+                credit_transfer_list = base_credit_transfer_query.filter(
+                    CreditTransfer.created.between(start_date, end_date)
+                ).all()
 
             if date_range == 'all':
-                credit_transfer_list = CreditTransfer.query.all()
+                credit_transfer_list = base_credit_transfer_query.all()
 
             transfer_sheet = wb.create_sheet(title='credit_transfers')
 
@@ -265,11 +342,11 @@ class ExportAPI(MethodView):
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
                         elif column['query_type'] == 'enum':
                             enum = getattr(credit_transfer, column['query'])
-                            cell_contents = "{0}".format(enum.value)
+                            cell_contents = "{0}".format(enum and enum.value)
                         elif column['query'] == 'transfer_amount':
                             cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
                         elif column['query'] == 'transfer_usages':
-                            cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
+                            cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                         else:
                             cell_contents = ""
 
@@ -305,7 +382,7 @@ class MeExportAPI(MethodView):
     def post(self):
         post_data = request.get_json()
 
-        transfer_account = g.user.transfer_account
+        transfer_account = g.user.default_transfer_account or g.user.transfer_accounts[0]
 
         date_range = post_data.get('date_range')  # last day, previous week, or all
         email = post_data.get('email')
@@ -315,9 +392,9 @@ class MeExportAPI(MethodView):
             {'header': 'Transfer Amount',   'query_type': 'custom', 'query': 'transfer_amount'},
             {'header': 'Created',           'query_type': 'db',     'query': 'created'},
             {'header': 'Resolved Date',     'query_type': 'db',     'query': 'resolved_date'},
-            {'header': 'Transfer Type', 'query_type': 'enum', 'query': 'transfer_type'},
-            {'header': 'Transfer Status', 'query_type': 'enum', 'query': 'transfer_status'},
-            {'header': 'Transfer Uses',      'query_type': 'custom',  'query': 'transfer_usages'},
+            {'header': 'Transfer Type',     'query_type': 'enum', 'query': 'transfer_type'},
+            {'header': 'Transfer Status',   'query_type': 'enum', 'query': 'transfer_status'},
+            {'header': 'Transfer Uses',     'query_type': 'custom',  'query': 'transfer_usages'},
         ]
 
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
@@ -353,13 +430,15 @@ class MeExportAPI(MethodView):
             credit_transfer_list = CreditTransfer.query.filter(
                 and_(CreditTransfer.created.between(start_date, end_date), (
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                    CreditTransfer.sender_transfer_account_id == transfer_account.id))))
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))))\
+                    .enable_eagerloads(False)
 
         else:
             # default to all credit transfers of transfer_account.id
             credit_transfer_list = CreditTransfer.query.filter(
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                    CreditTransfer.sender_transfer_account_id == transfer_account.id))
+                    CreditTransfer.sender_transfer_account_id == transfer_account.id))\
+                    .enable_eagerloads(False)
 
         # loop over all credit transfers, create cells
         if credit_transfer_list is not None:
@@ -369,11 +448,11 @@ class MeExportAPI(MethodView):
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
                     elif column['query_type'] == 'enum':
                         enum = getattr(credit_transfer, column['query'])
-                        cell_contents = "{0}".format(enum.value)
+                        cell_contents = "{0}".format(enum and enum.value)
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']) / 100)
                     elif  column['query'] == 'transfer_usages':
-                        cell_contents = ', '.join([useage.name for useage in credit_transfer.transfer_usages])
+                        cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
 
@@ -395,7 +474,7 @@ class MeExportAPI(MethodView):
             response_object = {
                 'status': 'Fail',
                 'message': 'No data available for export',
-                'file_url': None,
+                'file_url': '',
             }
 
             return make_response(jsonify(response_object)), 404

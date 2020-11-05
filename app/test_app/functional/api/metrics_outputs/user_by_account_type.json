@@ -52,7 +52,7 @@
     }
   },
   "mandatory_filter": {},
-  "master_wallet_balance": 0,
+  "master_wallet_balance": -1517.0,
   "total_beneficiaries": 1,
   "total_users": 1,
   "total_vendors": 0,
