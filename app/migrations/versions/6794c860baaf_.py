@@ -60,7 +60,10 @@ def upgrade():
                         attribute_cache[user_attr.name] = session.query(CustomAttribute).filter(CustomAttribute.name == user_attr.name).first()
                 custom_attribute = attribute_cache[user_attr.name]
                 user_attr.custom_attribute = custom_attribute
-                user_attr.value = user_attr.value.strip('"')
+                try:
+                    user_attr.value = json.loads(user_attr.value)
+                except:
+                    pass
                 session.flush()
 
     except:
@@ -68,4 +71,5 @@ def upgrade():
 
 
 def downgrade():
-    pass
+    op.drop_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), table_name='custom_attribute_user_storage')
+
