@@ -16,7 +16,7 @@ def test_custom_attribute_cleansing(create_transfer_account_user):
     # Test each of the cleaning steps
     attribute_dict['custom_attributes']['gender'] = 'PIZZA'
     # PIZZA -> pizza -> aaba -> aaa -> AAA
-    ca.custom_attribute.cleaning_steps = [ { "lower": None }, { 'replace': ['pizz', 'aa'] }, { 'upper': None } ]
+    ca.custom_attribute.cleaning_steps = [ ( "lower", ), ( 'replace', ['pizz', 'aa'] ), ( 'upper', ) ]
     ca = set_custom_attributes(attribute_dict, user)[0]
     assert user.custom_attributes[0].value == 'AAA'
     assert user.custom_attributes[0].key == 'gender'
