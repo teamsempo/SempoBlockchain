@@ -40,6 +40,8 @@ class CustomAttributeUserStorage(Base):
 def upgrade():
     conn = op.get_bind()
     session = Session(bind=conn)
+    op.create_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), 'custom_attribute_user_storage', ['custom_attribute_id'], unique=False)
+
     # If it hasn't been done before, migrate from the old custom attribute scheme to the new one
     try:
        if not session.query(CustomAttribute).all():
