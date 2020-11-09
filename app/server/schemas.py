@@ -101,7 +101,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
-            parsed_dict[attribute.name] = attribute.value.strip('"')
+            parsed_dict[attribute.key] = attribute.value
 
         return parsed_dict
 

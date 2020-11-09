@@ -91,7 +91,7 @@ export class authPage extends React.Component {
         <TermsText
           target="_blank"
           href={
-            "https://docs.withsempo.com/sempo-platform/accessing-the-dashboard/common-login-errors"
+            "https://docs.withsempo.com/sempo-dashboard/common-login-errors#what-to-do-if-you-encounter-issues-logging-in"
           }
         >
           Get help logging in
