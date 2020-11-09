@@ -60,10 +60,8 @@ class Metric(object):
                     date_filter_attribute = date_filter_attributes[self.object_model]
                     date_filters = []
                     if start_date:
-                        # Add timezone delta here!
                         date_filters.append(date_filter_attribute >= start_date)
                     if end_date:
-                        # Add timezone delta here!
                         date_filters.append(date_filter_attribute <=  datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)  )
                     filtered_query = filtered_query.filter(*date_filters)
 
