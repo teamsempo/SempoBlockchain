@@ -121,7 +121,6 @@
   "master_wallet_balance": -1517,
   "total_distributed": 1517,
   "total_reclaimed": 0,
-  "total_vendors": 0,
   "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {

@@ -160,7 +160,6 @@ base_participant = {
             'timeseries': {}, 
             'type': {'display_decimals': 0, 'value_type': 'count'}}, 
             'mandatory_filter': {}, 
-            'total_vendors': 0, 
             'master_wallet_balance': 0,
             'users_created': {'aggregate': {'percent_change': 0.0, 'total': 1}, 
             'timeseries': {}, 
@@ -188,7 +187,6 @@ base_all = {
         'total_distributed': 0.0, 
         'total_reclaimed': 0.0,
         'total_withdrawn': 0.0,
-        'total_vendors': 0, 
         'trades_per_user': 
             {'aggregate': {'percent_change': None, 'total': 0.0}, 'timeseries': {}, 'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 
         'transfer_amount_per_user': 
@@ -215,7 +213,6 @@ base_all_zero_decimals = {'data':
     'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
     'mandatory_filter': {}, 'master_wallet_balance': 0, 'total_distributed': 0.0, 
     'total_reclaimed': 0.0, 
-    'total_vendors': 0, 
     'total_withdrawn': 0.0, 
     'trades_per_user': {'aggregate': {'percent_change': None, 'total': 0.0}, 
     'timeseries': {}, 
