@@ -26,7 +26,7 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
             'last_name': 'Frensky',
             'gender': 'female',
             'phone': f'+1{random.randint(1000000000, 9999999999)}',
-            'is_beneficiary': True,
+            'account_types': ['beneficiary'],
             'location': 'Elwood',
             'initial_disbursement': initial_disbursement,
         }
@@ -48,7 +48,6 @@ def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, ini
     disbursement = transfer_account.credit_receives[0]
     assert disbursement.is_initial_disbursement == True
     assert disbursement.transfer_status == transfer_status
-
     authed_sempo_admin_user.set_held_role('ADMIN', transfer_account_approver_tier)
     auth = get_complete_auth_token(authed_sempo_admin_user)
 

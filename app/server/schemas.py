@@ -1,7 +1,9 @@
+import base64
+from io import BytesIO
 from flask import g
-
 from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
+import qrcode
 
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
@@ -10,6 +12,14 @@ from server.models.exchange import Exchange
 from server.exceptions import SubexchangeNotFound
 
 
+def gen_qr(data):
+    out = BytesIO()
+    img = qrcode.make(data)
+    img.save(out, "PNG")
+    out.seek(0)
+
+    return u"data:image/png;base64," + base64.b64encode(out.getvalue()).decode("ascii")
+
 class LowerCase(fields.Field):
     """Field that deserializes to a lower case string.
     """
@@ -17,6 +27,13 @@ class LowerCase(fields.Field):
     def _deserialize(self, value, attr, data, **kwargs):
         return value.lower()
 
+class QR(fields.Field):
+    """
+    Field that serializes to a QR code
+    """
+
+    def _serialize(self, value, attr, obj):
+        return gen_qr(value)
 
 class SchemaBase(Schema):
     class Meta:
@@ -32,6 +49,7 @@ class BlockchainTaskableSchemaBase(SchemaBase):
     blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
 
 class UserSchema(SchemaBase):
+
     first_name              = fields.Str()
     last_name               = fields.Str()
     preferred_language      = fields.Str()
@@ -67,10 +85,14 @@ class UserSchema(SchemaBase):
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
     referred_by              = fields.Method("get_referrer_phone")
+    qr                       = fields.Method("get_qr_code")
 
     transfer_accounts        = fields.Nested('TransferAccountSchema',
                                              many=True,
                                              exclude=('users', 'credit_sends', 'credit_receives'))
+
+    def get_qr_code(self, obj):
+        return gen_qr(f'{obj.id}: {obj.first_name} {obj.last_name}')
 
     def get_json_data(self, obj):
 
@@ -79,7 +101,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
-            parsed_dict[attribute.name] = attribute.value.strip('"')
+            parsed_dict[attribute.key] = attribute.value
 
         return parsed_dict
 
@@ -390,6 +412,8 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
+    card_shard_distance = fields.Int() # Kilometers
+
     valid_roles = fields.Raw()
 
     require_transfer_card = fields.Boolean(default=False)
@@ -422,10 +446,14 @@ class AttributeMapSchema(Schema):
     output_name                 = fields.Str()
 
 
-user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
+pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
+
+user_schema = UserSchema(exclude=("qr",
+                                  "transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
 
-users_schema = UserSchema(many=True, exclude=("transfer_accounts.credit_sends",
+users_schema = UserSchema(many=True, exclude=("qr",
+                                              "transfer_accounts.credit_sends",
                                               "transfer_accounts.credit_receives"))
 
 transfer_account_schema = TransferAccountSchema(

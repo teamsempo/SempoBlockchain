@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.6.23'  # Remember to bump this in every PR
+VERSION = '1.7.19'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -136,10 +136,12 @@ ALLOW_SELF_SIGN_UP = config_parser['APP'].getboolean('ALLOW_SELF_SIGN_UP') or Fa
 
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
 
-TOKEN_EXPIRATION =  60 * 60 * 24 * 1 # Day
-PASSWORD_PEPPER     = secrets_parser['APP'].get('PASSWORD_PEPPER')
-SECRET_KEY          = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
-ECDSA_SECRET        = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
+SINGLE_USE_TOKEN_EXPIRATION      = 60 * 60 * 24 * 1
+AUTH_TOKEN_EXPIRATION = int(config_parser['APP'].getboolean('AUTH_TOKEN_EXPIRATION', 60 * 60 * 24 * 7))  # 1 week
+VERIFY_JWT_EXPIRY     = config_parser['APP'].getboolean('VERIFY_JWT_EXPIRY', True)
+PASSWORD_PEPPER       = secrets_parser['APP'].get('PASSWORD_PEPPER')
+SECRET_KEY            = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
+ECDSA_SECRET          = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].encode()).digest()[0:24]
 
 INTERNAL_AUTH_USERNAME = secrets_parser['APP']['BASIC_AUTH_USERNAME'] + '_' + DEPLOYMENT_NAME
 INTERNAL_AUTH_PASSWORD = secrets_parser['APP']['BASIC_AUTH_PASSWORD']
@@ -294,6 +296,7 @@ try:
 
         configs['INTERNAL_TO_TOKEN_RATIO'] = float(config_parser[chain].get('internal_to_token_ratio', 1))
         configs['FORCE_ETH_DISBURSEMENT_AMOUNT'] = float(config_parser[chain].get('force_eth_disbursement_amount', 0))
+        configs['PENDING_TRANSACTION_EXPIRY_SECONDS'] = config_parser[chain].getint('transaction_expiry_seconds', 30)
 
         unchecksummed_withdraw_to_address     = config_parser[chain].get('withdraw_to_address')
         if unchecksummed_withdraw_to_address:

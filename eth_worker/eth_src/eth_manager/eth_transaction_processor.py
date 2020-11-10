@@ -240,6 +240,12 @@ class EthTransactionProcessor(object):
 
         print('watching txn: {} at {}'.format(transaction_hash, datetime.datetime.utcnow()))
 
+        if not transaction_hash:
+            return {
+               'status': 'FAILED',
+               'error': 'No Transaction Hash Provided',
+            }
+
         tx_receipt = self.w3.eth.getTransactionReceipt(transaction_hash)
 
         if tx_receipt is None:

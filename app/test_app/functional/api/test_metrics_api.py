@@ -3,7 +3,6 @@ from server.models.transfer_usage import TransferUsage
 from server.utils.transfer_filter import Filters
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user, set_custom_attributes
-from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server import db
 import json
 import os
@@ -13,12 +12,11 @@ from dateutil.parser import isoparse
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
     # Generates metrics over timeline
-    
     # User1 and User2 made today
     user1 = create_transfer_account_user(first_name='Ricky',
                                     phone="+19025551234",
                                     organisation=create_organisation,
-                                    is_beneficiary=True)
+                                    roles=[('BENEFICIARY', 'beneficiary')])
     user1.default_transfer_account.is_approved = True
     user1.default_transfer_account._make_initial_disbursement(100, True)
     user1._location = 'Sunnyvale'
@@ -193,7 +191,9 @@ base_all = {
         'master_wallet_balance': 0, 
         'total_beneficiaries': 0, 
         'total_distributed': 0.0, 
-        'total_exchanged': 0.0, 
+        'total_exchanged': 0.0,
+        'total_reclaimed': 0.0,
+        'total_withdrawn': 0.0,
         'total_spent': 0.0, 
         'total_users': 0, 
         'total_vendors': 0, 
@@ -229,7 +229,9 @@ base_all_zero_decimals = {
         'master_wallet_balance': 0.0, 
         'total_beneficiaries': 0, 
         'total_distributed': 0.0, 
-        'total_exchanged': 0.0, 
+        'total_exchanged': 0.0,
+        'total_reclaimed': 0.0,
+        'total_withdrawn': 0.0,
         'total_spent': 0.0, 
         'total_users': 0, 
         'total_vendors': 0, 
@@ -263,7 +265,9 @@ base_transfer = {'data':
     'mandatory_filter': {}, 
     'master_wallet_balance': 0, 
     'total_distributed': 0.0, 
-    'total_exchanged': 0.0, 
+    'total_exchanged': 0.0,
+    'total_reclaimed': 0.0,
+    'total_withdrawn': 0.0,
     'total_spent': 0.0, 
     'trades_per_user': 
         {'aggregate': {'percent_change': None, 'total': 0.0}, 'timeseries': {}, 'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 

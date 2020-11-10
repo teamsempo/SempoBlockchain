@@ -38,6 +38,8 @@ export interface Metrics {
   master_wallet_balance: number;
   total_beneficiaries: number;
   total_distributed: number;
+  total_withdrawn: number;
+  total_reclaimed: number;
   total_exchanged: number;
   total_spent: number;
   total_users: number;

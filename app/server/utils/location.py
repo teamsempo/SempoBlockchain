@@ -1,10 +1,15 @@
 from typing import Tuple, Optional
 import requests
+import json
 from sentry_sdk import capture_message
 
 from config import logg
 from server import db, executor
 from server.models.user import User
+from server import red
+
+def redis_location_key(location):
+    return f'GPS_LOCATION_{location}'
 
 @executor.job
 def async_set_user_gps_from_location(user_id: int, location: str):
@@ -22,17 +27,31 @@ def _set_user_gps_from_location(user_id: int, location: str):
     """
     Wrapped version for testing
     """
-    gps_tuple = osm_location_to_gps_lookup(location)
-    if not gps_tuple:
-        logg.warning(f'GPS for location not found on OSM for user {user_id}')
-        return
-
-    lat, lng = gps_tuple
-
     user = User.query.get(user_id)
     if not user:
         capture_message(f'User not found for id {user_id}')
         return
+
+    # Add country to location lookup if it's not already there
+    country = user.default_organisation.country if user.default_organisation else None
+    if country and country not in location:
+        location = f'{location}, {country}'
+
+    # Try load location from redis cache to avoid hitting OSM too much
+    cached_tuple_string = red.get(redis_location_key(location))
+    if cached_tuple_string:
+        gps_tuple = json.loads(cached_tuple_string)
+    else:
+
+        gps_tuple = osm_location_to_gps_lookup(location)
+        if not gps_tuple:
+            logg.warning(f'GPS for location not found on OSM for user {user_id}')
+            return
+
+        red.set(redis_location_key(location), json.dumps(gps_tuple))
+
+    lat, lng = gps_tuple
+
 
     user.lat = lat
     user.lng = lng

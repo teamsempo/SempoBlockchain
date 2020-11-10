@@ -17,6 +17,7 @@ from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+from server.models.custom_attribute import CustomAttribute
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.blockchain_address import BlockchainAddress
@@ -91,6 +92,11 @@ def find_user_from_public_identifier(*public_identifiers):
         if user:
             break
 
+        user = User.query.execution_options(show_all=True).filter_by(
+            uuid=public_identifier).first()
+        if user:
+            break
+
         try:
             checksummed = to_checksum_address(public_identifier)
             blockchain_address = BlockchainAddress.query.filter_by(
@@ -113,10 +119,6 @@ def update_transfer_account_user(user,
                                  use_precreated_pin=False,
                                  existing_transfer_account=None,
                                  roles=None,
-                                 is_beneficiary=False,
-                                 is_vendor=False,
-                                 is_tokenagent=False,
-                                 is_groupaccount=False,
                                  default_organisation_id=None,
                                  business_usage=None):
     if first_name:
@@ -133,6 +135,8 @@ def update_transfer_account_user(user,
         user.public_serial_number = public_serial_number
         transfer_card = TransferCard.get_transfer_card(public_serial_number)
         user.default_transfer_account.transfer_card = transfer_card
+        if transfer_card:
+            transfer_card.update_transfer_card()
     else:
         transfer_card = None
 
@@ -155,30 +159,12 @@ def update_transfer_account_user(user,
     if roles:
         for role in roles:
             user.set_held_role(role[0], role[1])
-    else:
-        if not is_vendor:
-            vendor_tier = None
-        elif existing_transfer_account:
-            vendor_tier = 'vendor'
-        else:
-            vendor_tier = 'supervendor'
-
-        user.set_held_role('VENDOR', vendor_tier)
-
-        if is_tokenagent:
-            user.set_held_role('TOKEN_AGENT', 'token_agent')
-
-        if is_groupaccount:
-            user.set_held_role('GROUP_ACCOUNT', 'group_account')
-
-        if is_beneficiary:
-            user.set_held_role('BENEFICIARY', 'beneficiary')
 
     return user
 
 
 def create_transfer_account_user(first_name=None, last_name=None, preferred_language=None,
-                                 phone=None, email=None, public_serial_number=None,
+                                 phone=None, email=None, public_serial_number=None, uuid=None,
                                  organisation: Organisation=None,
                                  token=None,
                                  blockchain_address=None,
@@ -187,10 +173,6 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                                  use_last_4_digits_of_id_as_initial_pin=False,
                                  existing_transfer_account=None,
                                  roles=None,
-                                 is_beneficiary=False,
-                                 is_vendor=False,
-                                 is_tokenagent=False,
-                                 is_groupaccount=False,
                                  is_self_sign_up=False,
                                  business_usage=None,
                                  initial_disbursement=None):
@@ -201,6 +183,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
                 blockchain_address=blockchain_address,
                 phone=phone,
                 email=email,
+                uuid=uuid,
                 public_serial_number=public_serial_number,
                 is_self_sign_up=is_self_sign_up,
                 business_usage=business_usage)
@@ -227,23 +210,7 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
         for role in roles:
             user.set_held_role(role[0], role[1])
     else:
-        if not is_vendor:
-            vendor_tier = None
-        elif existing_transfer_account:
-            vendor_tier = 'vendor'
-        else:
-            vendor_tier = 'supervendor'
-
-        user.set_held_role('VENDOR', vendor_tier)
-
-        if is_tokenagent:
-            user.set_held_role('TOKEN_AGENT', 'token_agent')
-
-        if is_groupaccount:
-            user.set_held_role('GROUP_ACCOUNT', 'group_account')
-
-        if is_beneficiary:
-            user.set_held_role('BENEFICIARY', 'beneficiary')
+        user.remove_all_held_roles()
 
     if not organisation:
         organisation = Organisation.master_organisation()
@@ -261,6 +228,10 @@ def create_transfer_account_user(first_name=None, last_name=None, preferred_lang
             blockchain_address=blockchain_address,
             organisation=organisation
         )
+
+        top_level_roles = [r[0] for r in roles or []]
+        is_vendor = 'VENDOR' in top_level_roles
+        is_beneficiary = 'BENEFICIARY' in top_level_roles
 
         transfer_account.name = transfer_account_name
         transfer_account.is_vendor = is_vendor
@@ -309,13 +280,23 @@ def set_custom_attributes(attribute_dict, user):
     # loads in any existing custom attributes
     custom_attributes = user.custom_attributes or []
     for key in attribute_dict['custom_attributes'].keys():
-        to_remove = list(filter(lambda a: a.name == key, custom_attributes))
+        custom_attribute = CustomAttribute.query.filter(CustomAttribute.name == key).first()
+        if not custom_attribute:
+            custom_attribute = CustomAttribute()
+            custom_attribute.name = key
+            db.session.add(custom_attribute)
+
+        # Put validation logic here!
+        value = attribute_dict['custom_attributes'][key]
+        value = custom_attribute.clean_and_validate_custom_attribute(value)
+        
+        to_remove = list(filter(lambda a: a.custom_attribute.name == key, custom_attributes))
         for r in to_remove:
             custom_attributes.remove(r)
             db.session.delete(r)
 
         custom_attribute = CustomAttributeUserStorage(
-            name=key, value=attribute_dict['custom_attributes'][key])
+            custom_attribute=custom_attribute, value=value)
 
         custom_attributes.append(custom_attribute)
     custom_attributes = set_attachments(
@@ -443,6 +424,23 @@ def proccess_create_or_modify_user_request(
 
     provided_public_serial_number = attribute_dict.get('public_serial_number')
 
+    uuid = attribute_dict.get('uuid')
+
+    require_identifier = attribute_dict.get('require_identifier', True)
+
+    if not user_id:
+        # Extract ID from Combined User ID and Name String if it exists
+        try:
+            user_id_name_string = attribute_dict.get('user_id_name_string')
+
+            user_id_str = user_id_name_string and user_id_name_string.split(':')[0]
+
+            if user_id_str:
+                user_id = int(user_id_str)
+
+        except SyntaxError:
+            pass
+
     if not blockchain_address and provided_public_serial_number:
 
         try:
@@ -487,7 +485,8 @@ def proccess_create_or_modify_user_request(
     primary_user_pin = attribute_dict.get('primary_user_pin')
 
     initial_disbursement = attribute_dict.get('initial_disbursement', None)
-
+    if not account_types:
+        account_types = ['beneficiary']
     roles_to_set = []
     for at in account_types:
         if at not in g.active_organisation.valid_roles:
@@ -555,7 +554,7 @@ def proccess_create_or_modify_user_request(
                 'message': 'Primary User has no transfer account'}
             return response_object, 400
 
-    if not (phone or email or public_serial_number or blockchain_address):
+    if not (phone or email or public_serial_number or blockchain_address or user_id or uuid or not require_identifier):
         response_object = {'message': 'Must provide a unique identifier'}
         return response_object, 400
 
@@ -594,9 +593,9 @@ def proccess_create_or_modify_user_request(
         return response_object, 400
 
     existing_user = find_user_from_public_identifier(
-        email, phone, public_serial_number, blockchain_address)
+        email, phone, public_serial_number, blockchain_address, uuid)
 
-    if modify_only:
+    if not existing_user and user_id:
         existing_user = User.query.get(user_id)
 
     if modify_only and existing_user is None:
@@ -621,10 +620,6 @@ def proccess_create_or_modify_user_request(
                 use_precreated_pin=use_precreated_pin,
                 existing_transfer_account=existing_transfer_account,
                 roles=roles_to_set,
-                is_beneficiary=is_beneficiary,
-                is_vendor=is_vendor,
-                is_tokenagent=is_tokenagent,
-                is_groupaccount=is_groupaccount,
                 business_usage=business_usage
             )
 
@@ -655,7 +650,7 @@ def proccess_create_or_modify_user_request(
 
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name, preferred_language=preferred_language,
-        phone=phone, email=email, public_serial_number=public_serial_number,
+        phone=phone, email=email, public_serial_number=public_serial_number, uuid=uuid,
         organisation=organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
@@ -663,8 +658,6 @@ def proccess_create_or_modify_user_request(
         use_last_4_digits_of_id_as_initial_pin=use_last_4_digits_of_id_as_initial_pin,
         existing_transfer_account=existing_transfer_account,
         roles=roles_to_set,
-        is_beneficiary=is_beneficiary, is_vendor=is_vendor,
-        is_tokenagent=is_tokenagent, is_groupaccount=is_groupaccount,
         is_self_sign_up=is_self_sign_up,
         business_usage=business_usage, initial_disbursement=initial_disbursement)
 

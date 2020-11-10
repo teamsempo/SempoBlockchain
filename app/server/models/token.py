@@ -84,7 +84,7 @@ class Token(ModelBase):
         return int(token_amount) / 10**self.get_decimals(queue) * 100
 
     def system_amount_to_token(self, system_amount, queue='high-priority'):
-        return int(float(system_amount)/100 * 10**self.get_decimals(queue))
+        return int(system_amount/100 * 10**self.get_decimals(queue))
 
     def __init__(self, chain='ETHEREUM', **kwargs):
         self.chain = chain

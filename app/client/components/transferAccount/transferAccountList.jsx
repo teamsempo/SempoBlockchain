@@ -69,6 +69,7 @@ class TransferAccountList extends React.Component {
     );
     this.onNewTransfer = this.onNewTransfer.bind(this);
     this.approveSelected = this.approveSelected.bind(this);
+    this.unapproveSelected = this.unapproveSelected.bind(this);
   }
 
   componentWillUnmount() {
@@ -143,6 +144,18 @@ class TransferAccountList extends React.Component {
 
   approveSelected() {
     let approve = true;
+    let transfer_account_id_list = this.get_selected_ids_array(
+      this.state.idSelectedStatus
+    );
+
+    this.props.editTransferAccountRequest({
+      transfer_account_id_list,
+      approve
+    });
+  }
+
+  unapproveSelected() {
+    let approve = false;
     let transfer_account_id_list = this.get_selected_ids_array(
       this.state.idSelectedStatus
     );
@@ -248,6 +261,19 @@ class TransferAccountList extends React.Component {
               >
                 APPROVE
               </StyledButton>
+              <StyledButton
+                onClick={this.unapproveSelected}
+                style={{
+                  display: this.state.newTransfer ? "none" : "flex",
+                  fontWeight: "400",
+                  margin: "0em 1em 0 0",
+                  lineHeight: "25px",
+                  height: "25px"
+                }}
+              >
+                UNAPPROVE
+              </StyledButton>
+
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
                   onClick={() => browserHistory.push("/export")}
