@@ -4,6 +4,8 @@ import styled from "styled-components";
 import ReactTable from "react-table";
 import { browserHistory } from "../../createStore.js";
 
+import { Link } from "react-router-dom";
+
 import {
   ModuleBox,
   TopRow,
@@ -403,10 +405,20 @@ class TransferAccountList extends React.Component {
                   {
                     Header: "Name",
                     id: "transferAccountName",
-                    accessor: transferAccount =>
-                      this._customName(transferAccount),
+                    accessor: "transferAccount",
                     headerClassName: "react-table-header",
-                    className: "react-table-first-cell"
+                    className: "react-table-first-cell",
+                    Cell: cellInfo => (
+                      <Link
+                        to={"/accounts/" + cellInfo.original.id}
+                        style={{
+                          textDecoration: "underline",
+                          color: "#000000a6"
+                        }}
+                      >
+                        {this._customName(cellInfo.original)}
+                      </Link>
+                    )
                   },
                   {
                     Header: "Created",
@@ -481,13 +493,9 @@ class TransferAccountList extends React.Component {
                   return {
                     onClick: (e, handleOriginal) => {
                       // handle click on checkbox
-                      if (column.id === "id") {
+                      if (column.id !== "transferAccountName") {
                         this.toggleSelectedTransferAccount(rowInfo.original.id);
                         return;
-                      }
-
-                      if (rowInfo && rowInfo.row) {
-                        browserHistory.push("/accounts/" + rowInfo.row.id);
                       }
 
                       if (handleOriginal) {
