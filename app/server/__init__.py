@@ -12,6 +12,9 @@ from twilio.rest import Client as TwilioClient
 import sentry_sdk
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+
 import messagebird
 import africastalking
 from datetime import datetime
@@ -82,6 +85,33 @@ def create_app():
                     add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
     except:
         print('Unable to automatically create filters')
+
+    # If it hasn't been done before, migrate from the old custom attribute scheme to the new one
+    try:
+        with app.app_context():
+            from server.models.custom_attribute import CustomAttribute
+            from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+            if not db.session.query(CustomAttribute).first():
+                print('Old style custom attributes still present. Migrating to new custom attributes scheme!')
+                attributes = db.session.query(CustomAttributeUserStorage).all()
+                attribute_cache = {} # Save { name : attribute } mapping so we don't have to query for it userCount times
+                for user_attr in attributes:
+                    if not user_attr.custom_attribute:
+                        if user_attr.name not in attribute_cache:
+                            custom_attribute = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
+                            if not custom_attribute:
+                                user_attr.custom_attribute = CustomAttribute()
+                                user_attr.custom_attribute.name = user_attr.name
+                                db.session.add(user_attr.custom_attribute)
+
+                            attribute_cache[user_attr.name] = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
+                        custom_attribute = attribute_cache[user_attr.name]
+                        user_attr.custom_attribute = custom_attribute
+                        user_attr.value = user_attr.value.strip('"')
+                db.session.commit()
+    except:
+        print('Unable to automatically migrate to new-style custom attributes')
+    
     return app
 
 def register_extensions(app):
@@ -107,7 +137,11 @@ def register_extensions(app):
 
     celery_app.conf.update(app.config)
     if not config.IS_TEST:
-        sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
+        sentry_sdk.init(
+            app.config['SENTRY_SERVER_DSN'], 
+            integrations=[FlaskIntegration(), SqlalchemyIntegration(), RedisIntegration()], 
+            release=config.VERSION
+        )
         with configure_scope() as scope:
             scope.set_tag("domain", config.APP_HOST)
 
