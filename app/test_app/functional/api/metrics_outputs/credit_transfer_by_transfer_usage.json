@@ -12,44 +12,31 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 5
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 25
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 100
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 20
         }
       ]
     },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "daily_disbursement_volume": {
-    "aggregate": {
-      "percent_change": 72.41379310344827,
-      "total": 1517
-    },
-    "timeseries": {},
     "type": {
       "currency_name": "AUD Reserve Token",
       "currency_symbol": "AUD",
@@ -68,27 +55,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]
@@ -98,56 +85,11 @@
       "value_type": "count"
     }
   },
-  "daily_transaction_volume": {
-    "aggregate": {
-      "Jalepeno Chips": 25,
-      "Pepperoni": 125,
-      "Shopping Carts": 20,
-      "percent_change": 97.04433497536947,
-      "total": 1687
-    },
-    "timeseries": {
-      "Jalepeno Chips": [
-        {
-          "date": "2020-09-09T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-09-14T00:00:00",
-          "value": 5
-        }
-      ],
-      "Pepperoni": [
-        {
-          "date": "2020-09-14T00:00:00",
-          "value": 25
-        },
-        {
-          "date": "2020-09-15T00:00:00",
-          "value": 100
-        }
-      ],
-      "Shopping Carts": [
-        {
-          "date": "2020-09-11T00:00:00",
-          "value": 20
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "exhausted_balance": 0,
-  "has_transferred_count": 5,
   "mandatory_filter": {},
-  "master_wallet_balance": -1517.0,
+  "master_wallet_balance": -1517,
   "total_distributed": 1517,
-  "total_exchanged": 0,
-  "total_spent": 170,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
       "Jalepeno Chips": 0.2857142857142857,
@@ -159,27 +101,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 0.5
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 0.25
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 0.25
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 0.14285714285714285
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 0.3333333333333333
         }
       ]
@@ -200,27 +142,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 10
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1.25
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 6.25
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 14.285714285714286
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 6.666666666666667
         }
       ]
@@ -243,27 +185,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "Pepperoni": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]
