@@ -283,6 +283,7 @@ class TransferAccountSchema(SchemaBase):
     payable_period_type     = fields.Str()
     payable_period_length   = fields.Int()
     payable_epoch           = fields.Str()
+    notes                   = fields.Str()
     payable_period_epoch    = fields.DateTime()
 
     blockchain_address      = fields.Str()
