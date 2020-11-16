@@ -103,7 +103,7 @@ class UserAPI(MethodView):
             else:
                 user_query = User.query
 
-            users, total_items, total_pages = paginate_query(user_query, User)
+            users, total_items, total_pages, new_last_fetched = paginate_query(user_query)
 
             if users is None:
                 response_object = {

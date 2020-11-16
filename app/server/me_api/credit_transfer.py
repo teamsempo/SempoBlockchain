@@ -52,7 +52,7 @@ class MeCreditTransferAPI(MethodView):
                 or_(CreditTransfer.recipient_user_id == user.id,
                     CreditTransfer.sender_user_id == user.id))
 
-        transfers, total_items, total_pages = paginate_query(transfers_query, CreditTransfer)
+        transfers, total_items, total_pages, new_last_fetched = paginate_query(transfers_query)
 
         transfer_list = me_credit_transfers_schema.dump(transfers).data
 

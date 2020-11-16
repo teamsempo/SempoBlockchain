@@ -39,7 +39,7 @@ class OrganisationAPI(MethodView):
         else:
             organisations_query = Organisation.query.execution_options(show_all=True)
 
-            organisations, total_items, total_pages = paginate_query(organisations_query, Organisation)
+            organisations, total_items, total_pages, new_last_fetched = paginate_query(organisations_query)
 
             if organisations is None:
                 return make_response(jsonify({'message': 'No organisations found'})), 400

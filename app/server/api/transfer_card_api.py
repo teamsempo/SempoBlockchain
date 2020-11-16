@@ -1,6 +1,7 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from server.models.transfer_card import TransferCard
+from server.models.utils import paginate_query
 from server.utils.auth import requires_auth
 from server.schemas import transfer_cards_schema
 from server import db
@@ -27,7 +28,7 @@ class TransferCardAPI(MethodView):
             shard = False
 
         if shard:
-            nearby_users = g.user.get_users_within_radius(shard_distance)
+            nearby_users_query = g.user.get_users_within_radius(shard_distance)
             transfer_cards = []
             for user in nearby_users:
                 transfer_cards.append(user.transfer_card)
@@ -35,13 +36,16 @@ class TransferCardAPI(MethodView):
             only_bound = request.args.get('only_bound', 'true').lower() == 'true' #defaults true
 
             if only_bound:
-                transfer_cards = TransferCard.query.filter(TransferCard.transfer_account_id != None).all()
+                query = TransferCard.query.filter(TransferCard.transfer_account_id != None)
             else:
-                transfer_cards = TransferCard.query.all()
+                query = TransferCard.query
+
+            transfer_cards,  total_items, total_pages, new_last_fetched = paginate_query(query, TransferCard.updated)
 
         response_object = {
             'message': 'Successfully loaded transfer_cards',
-            'data': {'transfer_cards': transfer_cards_schema.dump(transfer_cards).data}
+            'data': {'transfer_cards': transfer_cards_schema.dump(transfer_cards).data},
+            'last_fetched': new_last_fetched
         }
 
         return make_response(jsonify(response_object)), 200

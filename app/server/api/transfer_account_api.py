@@ -55,7 +55,7 @@ class TransferAccountAPI(MethodView):
                 # Filter Contract, Float and Organisation Transfer Accounts
                 transfer_accounts_query = (base_query.filter(TransferAccount.account_type == TransferAccountType.USER))
 
-            transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
+            transfer_accounts, total_items, total_pages, new_last_fetched = paginate_query(transfer_accounts_query)
 
             if transfer_accounts is None:
                 response_object = {
