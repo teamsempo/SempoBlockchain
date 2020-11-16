@@ -56,7 +56,7 @@ class TransferCard(ModelBase):
                          .filter_by(transfer_type=TransferTypeEnum.PAYMENT)
                          .filter_by(transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
                          .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
-                         .filter(server.models.credit_transfer.CreditTransfer.exclude_from_card_balance != True)
+                         .filter_by(exclude_from_card_balance=False)
                          .all())
 
         total_disbursed = 0
