@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - catch_not_found_hash
+                - custom_attr_list_fix
 
           requires:
             - build
