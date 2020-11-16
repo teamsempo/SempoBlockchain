@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - custom_attr_list_fix
+                - exlude_disbursement_from_card_option
 
           requires:
             - build
