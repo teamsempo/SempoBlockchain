@@ -28,10 +28,10 @@ class TransferCardAPI(MethodView):
             shard = False
 
         if shard:
-            nearby_users_query = g.user.get_users_within_radius(shard_distance)
-            transfer_cards = []
-            for user in nearby_users:
-                transfer_cards.append(user.transfer_card)
+            nearby_users_filter = g.user.users_within_radius_filter(shard_distance)
+
+            query = TransferCard.query.join(TransferCard.user).filter(nearby_users_filter)
+
         else:
             only_bound = request.args.get('only_bound', 'true').lower() == 'true' #defaults true
 
@@ -40,7 +40,7 @@ class TransferCardAPI(MethodView):
             else:
                 query = TransferCard.query
 
-            transfer_cards,  total_items, total_pages, new_last_fetched = paginate_query(query, TransferCard.updated)
+        transfer_cards,  total_items, total_pages, new_last_fetched = paginate_query(query, TransferCard.updated)
 
         response_object = {
             'message': 'Successfully loaded transfer_cards',

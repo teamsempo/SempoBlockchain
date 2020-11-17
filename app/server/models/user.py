@@ -399,20 +399,17 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         )
 
     def get_users_within_radius(self, radius):
-        return self.users_with_radius_query(radius).all()
-
-    def users_with_radius_query(self, radius):
-
         if not (self.lat or self.lng):
             raise Exception('Cannot get users within radius-- User location undefined')
 
-        return db.session.query(User).filter(
-            or_(
-                and_(User.lat==None, User.lng==None),
-                and_(User.lat==self.lat, User.lng==self.lng),
-                User.great_circle_distance(self.lat, self.lng) < radius,
-                and_(self._location is not None, User._location == self._location)
-            )
+        return db.session.query(User).filter(self.users_within_radius_filter(radius)).all()
+
+    def users_within_radius_filter(self, radius):
+        return or_(
+            and_(User.lat==None, User.lng==None),
+            and_(User.lat==self.lat, User.lng==self.lng),
+            User.great_circle_distance(self.lat, self.lng) < radius,
+            and_(self._location is not None, User._location == self._location)
         )
 
     def get_transfer_account_for_organisation(self, organisation):

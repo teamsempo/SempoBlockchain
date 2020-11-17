@@ -273,7 +273,7 @@ def paginate_query(query, sort_attribute=None, sort_desc=True):
     if not sort_attribute:
         sort_attribute = queried_object.id
 
-    if sort_attribute.expression.comparator.type.python_type == datetime.datetime:
+    if sort_attribute.expression.comparator.type.python_type == datetime.datetime and last_fetched:
         last_fetched = parser.isoparse(last_fetched)
 
     if sort_desc:

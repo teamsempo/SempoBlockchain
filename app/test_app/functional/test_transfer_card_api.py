@@ -135,7 +135,7 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
     bind_user(user9.id, 888888)
 
     # Make sure the distance filters are working!
-    distances = [(None, 9), (0, 9), (0.001, 7), (2, 7), (10, 8), (100, 9), (100000, 10)]
+    distances = [(None, 9), (0, 9), (0.001, 6), (2, 6),(10, 7), (100, 8), (100000, 9)]
     for distance, length in distances:
         # Set card shard distance
         create_organisation.card_shard_distance=distance
@@ -158,7 +158,7 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                            headers=dict(
                                Authorization=complete_admin_auth_token, Accept='application/json'),
                            follow_redirects=True)
-    assert len(response.json['data']['transfer_cards']) == 7
+    assert len(response.json['data']['transfer_cards']) == 6
     # Check that it doesn't try to shard when the user doesn't have coords
     authed_sempo_admin_user.lat = None
     authed_sempo_admin_user.lng = None
@@ -233,8 +233,8 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
     assert len(response.json['data']['transfer_cards']) == 10
 
     card_json = response.json['data']['transfer_cards'][0]
-    assert card_json['nfc_serial_number'] == 'ABCD1234F'
-    assert card_json['public_serial_number'] == '123456'
+    assert card_json['nfc_serial_number'] == '9AAA1111A'
+    assert card_json['public_serial_number'] == '111119'
 
     # Now bind to a user
     test_client.put(
@@ -256,5 +256,5 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
 
     # Should now return our card
     card_json = response.json['data']['transfer_cards'][0]
-    assert card_json['nfc_serial_number'] == 'AAAA1111A'
-    assert card_json['public_serial_number'] == '111111'
+    assert card_json['nfc_serial_number'] == 'ABCD1234F'
+    assert card_json['public_serial_number'] == '123456'
