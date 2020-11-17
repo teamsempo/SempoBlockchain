@@ -51,8 +51,8 @@ export class authPage extends React.Component {
     }
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.loggedIn !== prevProps.loggedIn) {
+  componentDidUpdate() {
+    if (this.props.loggedIn) {
       this.setState({ redirectToReferrer: true });
     }
   }
@@ -61,7 +61,7 @@ export class authPage extends React.Component {
     let deploymentName = window.DEPLOYMENT_NAME;
     const { from } = this.props.location.state || { from: { pathname: "/" } };
 
-    if (this.state.redirectToReferrer) {
+    if (this.state.redirectToReferrer || this.props.loggedIn) {
       return <Redirect to={from} />;
     }
 
