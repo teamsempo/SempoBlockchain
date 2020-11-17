@@ -1,5 +1,4 @@
 import "babel-polyfill";
-import "react-dates/initialize";
 
 import React, { lazy } from "react";
 import { connect } from "react-redux";
