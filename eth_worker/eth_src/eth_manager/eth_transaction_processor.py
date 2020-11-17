@@ -9,6 +9,7 @@ from exceptions import PreBlockchainError
 from eth_manager.contract_registry.contract_registry import ContractRegistry
 from celery_utils import eth_endpoint
 import celery_app 
+from web3.exceptions import TransactionNotFound
 
 class EthTransactionProcessor(object):
     """
@@ -246,7 +247,10 @@ class EthTransactionProcessor(object):
                'error': 'No Transaction Hash Provided',
             }
 
-        tx_receipt = self.w3.eth.getTransactionReceipt(transaction_hash)
+        try:
+            tx_receipt = self.w3.eth.getTransactionReceipt(transaction_hash)
+        except TransactionNotFound:
+            tx_receipt = None
 
         if tx_receipt is None:
             return {'status': 'PENDING'}
