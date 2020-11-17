@@ -4,6 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 import config
 from server import db, bt
 
+from flask import current_app
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.utils import (
     ModelBase,
@@ -90,7 +91,7 @@ class Token(ModelBase):
         self.chain = chain
         super(Token, self).__init__(**kwargs)
         float_transfer_account = TransferAccount(
-            private_key=config.CHAINS[self.chain]['FLOAT_PRIVATE_KEY'],
+            private_key=current_app.config['CHAINS'][self.chain]['FLOAT_PRIVATE_KEY'],
             account_type=TransferAccountType.FLOAT,
             token=self,
             is_approved=True

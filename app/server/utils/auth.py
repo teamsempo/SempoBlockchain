@@ -354,7 +354,7 @@ def get_denominations(currency_symbol=None):
 
 
 def create_user_response_object(user, auth_token, message):
-    if config.CHAINS[user.default_organisation.token.chain]['IS_USING_BITCOIN']:
+    if current_app.config['CHAINS'][user.default_organisation.token.chain]['IS_USING_BITCOIN']:
         try:
             usd_to_satoshi_rate = get_usd_to_satoshi_rate()
         except Exception:

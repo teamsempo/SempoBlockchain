@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify, g, current_app
 import config
 from flask.views import MethodView
 import sentry_sdk
@@ -88,7 +88,7 @@ class RegisterAPI(MethodView):
         exact_match = False
 
         tier = None
-        sempoadmin_emails = config.SEMPOADMIN_EMAILS
+        sempoadmin_emails = current_app.config['SEMPOADMIN_EMAILS']
 
         if sempoadmin_emails != [''] and email in sempoadmin_emails:
             email_ok = True
@@ -349,7 +349,7 @@ class LoginAPI(MethodView):
                 user = User.query.filter_by(phone=phone).execution_options(show_all=True).first()
 
         # mobile user doesn't exist so default to creating a new wallet!
-        if user is None and phone and config.ALLOW_SELF_SIGN_UP:
+        if user is None and phone and current_app.config['ALLOW_SELF_SIGN_UP']:
             # this is a registration from a mobile device THUS a vendor or recipient.
             response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
                 dict(phone=phone, deviceInfo=post_data.get('deviceInfo')),
@@ -882,8 +882,8 @@ class BlockchainKeyAPI(MethodView):
         response_object = {
             'status': 'success',
             'message': 'Key loaded',
-            'private_key': config.CHAINS[chain]['MASTER_WALLET_PRIVATE_KEY'],
-            'address': config.CHAINS[chain]['MASTER_WALLET_ADDRESS']
+            'private_key': current_app.config['CHAINS'][chain]['MASTER_WALLET_PRIVATE_KEY'],
+            'address': current_app.config['CHAINS'][chain]['MASTER_WALLET_ADDRESS']
         }
 
         return make_response(jsonify(attach_host(response_object))), 200

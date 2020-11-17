@@ -514,7 +514,7 @@ def proccess_create_or_modify_user_request(
     # is_beneficiary defaults to the opposite of is_vendor
     is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
     chain = get_chain()
-    if config.CHAINS[chain]['IS_USING_BITCOIN']:
+    if current_app.config['CHAINS'][chain]['IS_USING_BITCOIN']:
         try:
             base58.b58decode_check(blockchain_address)
         except ValueError:

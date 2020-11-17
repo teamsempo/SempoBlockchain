@@ -28,7 +28,7 @@ class BlockchainTasker(object):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
         try:
             response = async_result.get(
-                timeout=timeout or config.CHAINS[get_chain()]['SYNCRONOUS_TASK_TIMEOUT'],
+                timeout=timeout or current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'],
                 propagate=True,
                 interval=0.3)
         except Exception as e:
@@ -97,7 +97,7 @@ class BlockchainTasker(object):
         elapsed = 0
 
         if timeout is None:
-            timeout = config.CHAINS[get_chain()]['SYNCRONOUS_TASK_TIMEOUT']
+            timeout = current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT']
 
         while timeout is None or elapsed <= timeout:
             task = self.get_blockchain_task(task_uuid)
@@ -434,7 +434,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_exchange_network'),
             args=[deploying_address],
-            timeout=config.CHAINS[get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 25
+            timeout=current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 25
         )
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
@@ -442,7 +442,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_and_fund_reserve_token'),
             args=args,
-            timeout=config.CHAINS[get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 20
+            timeout=current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 20
         )
 
     def deploy_smart_token(self,
@@ -465,7 +465,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_smart_token'),
             args=args,
-            timeout=config.CHAINS[get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 15
+            timeout=current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 15
         )
 
     def topup_wallet_if_required(self, wallet_address, queue='high-priority'):
