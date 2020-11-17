@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - emergency_last_seeen
+                - custom_attr_list_fix
 
           requires:
             - build

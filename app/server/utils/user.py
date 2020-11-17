@@ -16,6 +16,7 @@ from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+from server.models.custom_attribute import CustomAttribute
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.blockchain_address import BlockchainAddress
@@ -278,13 +279,23 @@ def set_custom_attributes(attribute_dict, user):
     # loads in any existing custom attributes
     custom_attributes = user.custom_attributes or []
     for key in attribute_dict['custom_attributes'].keys():
-        to_remove = list(filter(lambda a: a.name == key, custom_attributes))
+        custom_attribute = CustomAttribute.query.filter(CustomAttribute.name == key).first()
+        if not custom_attribute:
+            custom_attribute = CustomAttribute()
+            custom_attribute.name = key
+            db.session.add(custom_attribute)
+
+        # Put validation logic here!
+        value = attribute_dict['custom_attributes'][key]
+        value = custom_attribute.clean_and_validate_custom_attribute(value)
+        
+        to_remove = list(filter(lambda a: a.custom_attribute.name == key, custom_attributes))
         for r in to_remove:
             custom_attributes.remove(r)
             db.session.delete(r)
 
         custom_attribute = CustomAttributeUserStorage(
-            name=key, value=attribute_dict['custom_attributes'][key])
+            custom_attribute=custom_attribute, value=value)
 
         custom_attributes.append(custom_attribute)
     custom_attributes = set_attachments(

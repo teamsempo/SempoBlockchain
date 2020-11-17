@@ -32,7 +32,11 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
     __tablename__ = 'transfer_account'
 
     name            = db.Column(db.String())
-    _balance_wei    = db.Column(db.Numeric(27), default=0)
+    _balance_wei    = db.Column(db.Numeric(27), default=0, index=True)
+
+    # override ModelBase deleted to add an index
+    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
+
     # The purpose of the balance offset is to allow the master wallet to be seeded at
     # initial deploy time. Since balance is calculated by subtracting total credits from
     # total debits, without a balance offset we'd be stuck in a zero-sum system with no
@@ -52,17 +56,19 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     is_ghost = db.Column(db.Boolean, default=False)
 
-    account_type    = db.Column(db.Enum(TransferAccountType))
+    account_type    = db.Column(db.Enum(TransferAccountType), index=True)
 
     payable_period_type   = db.Column(db.String(), default='week')
     payable_period_length = db.Column(db.Integer, default=2)
     payable_epoch         = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    token_id        = db.Column(db.Integer, db.ForeignKey("token.id"))
+    token_id        = db.Column(db.Integer, db.ForeignKey("token.id"), index=True)
 
     exchange_contract_id = db.Column(db.Integer, db.ForeignKey(ExchangeContract.id))
 
     transfer_card    = db.relationship('TransferCard', backref='transfer_account', lazy=True, uselist=False)
+
+    notes            = db.Column(db.String(), default='')
 
     # users               = db.relationship('User', backref='transfer_account', lazy=True)
     users = db.relationship(
@@ -96,6 +102,8 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         try:
             if self.balance != 0:
                 raise TransferAccountDeletionError('Balance must be zero to delete')
+            if self.total_sent_incl_pending_wei != self.total_sent_complete_only_wei:
+                raise TransferAccountDeletionError('Must resolve pending transactions before account deletion')
             if len(self.users) > 1:
                 # todo(user): deletion of user from account with multiple users - NOT CURRENTLY SUPPORTED
                 raise TransferAccountDeletionError('More than one user attached to transfer account')
@@ -122,11 +130,11 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # hardware that can only handle small ints (like the transfer cards and old android devices)
 
         # rounded to whole value of balance
-        return float((self._balance_wei or 0) / int(1e16))
+        return Decimal((self._balance_wei or 0) / int(1e16))
 
     @property
     def balance_offset(self):
-        return float((self._balance_offset_wei or 0) / int(1e16))
+        return Decimal((self._balance_offset_wei or 0) / int(1e16))
 
     def set_balance_offset(self, val):
         self._balance_offset_wei = val * int(1e16)
@@ -156,20 +164,14 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         """
         Canonical total sent in cents, helping us to remember that sent amounts should include pending txns
         """
-
-        total_sent_cents = self.total_sent_incl_pending_wei/int(1e16)
-
-        return total_sent_cents
+        return Decimal(self.total_sent_incl_pending_wei) / int(1e16)
 
     @hybrid_property
     def total_received(self):
         """
         Canonical total sent in cents, helping us to remember that received amounts should only include complete txns
         """
-
-        total_received_cents = self.total_received_complete_only_wei / int(1e16)
-
-        return total_received_cents
+        return Decimal(self.total_received_complete_only_wei) / int(1e16)
 
     @hybrid_property
     def total_sent_complete_only_wei(self):

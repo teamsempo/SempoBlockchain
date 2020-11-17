@@ -3,6 +3,7 @@ import hmac
 import time
 from flask import make_response, jsonify, current_app
 import sentry_sdk
+from decimal import Decimal
 
 from server.exceptions import (
     NoTransferAccountError,
@@ -26,11 +27,11 @@ from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, T
 
 
 def cents_to_dollars(amount_cents):
-    return float(amount_cents) / 100
+    return Decimal(amount_cents) / 100
 
 
 def dollars_to_cents(amount_dollars):
-    return float(amount_dollars) * 100
+    return Decimal(amount_dollars) * 100
 
 def find_user_with_transfer_account_from_identifiers(user_id, public_identifier, transfer_account_id):
 

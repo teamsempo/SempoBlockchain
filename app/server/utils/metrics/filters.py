@@ -6,6 +6,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
 from server.utils.metrics import metrics_cache
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+from server.models.custom_attribute import CustomAttribute
 
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
 from flask import g
@@ -104,11 +105,11 @@ def _apply_ca_filters(query, filters, user_join_condition):
 
     # get all custom attributes and create pivot table
     new_cs = [CustomAttributeUserStorage.user_id]
-    for value in db.session.query(CustomAttributeUserStorage.name).distinct():
+    for value in db.session.query(CustomAttribute.name).distinct():
         value = value[0]
         new_cs.append(
              func.max(case(
-                [(CustomAttributeUserStorage.name == value, CustomAttributeUserStorage.value)],
+                [(CustomAttribute.name == value, CustomAttributeUserStorage.value)],
                 else_=None
             )).label(value)
         )
@@ -126,7 +127,6 @@ def _apply_ca_filters(query, filters, user_join_condition):
 
             if comparator == 'EQ':
                 val = val if isinstance(val, list) else [val]
-                val = [f'\"{element}\"' for element in val] # needs ot be in form '"{item}"' for json string match
                 to_batch.append(pivot.c[column].in_(val))
             elif comparator == 'GT':
                to_batch.append(pivot.c[column] > val)
@@ -142,6 +142,18 @@ disbursement_filters = [
     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT
 ]
+
+reclamation_filters = [
+    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+    CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
+    CreditTransfer.transfer_subtype == TransferSubTypeEnum.RECLAMATION
+]
+
+withdrawal_filters = [
+    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+    CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL
+]
+
 
 transaction_volume_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,

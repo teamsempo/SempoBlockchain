@@ -32,8 +32,7 @@ export function formatMoney(
             .toFixed(decimalCount)
             .slice(2)
         : "") +
-      " " +
-      currency
+      (currency ? " " + currency : "")
     );
   } catch (e) {
     console.log(e);
