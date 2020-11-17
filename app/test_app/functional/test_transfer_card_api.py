@@ -2,6 +2,7 @@ from server.models.transfer_card import TransferCard
 from server.models.user import User
 from server import db
 import json
+from dateutil import parser
 import pytest
 
 def test_transfer_card_radius(test_client, init_database, complete_admin_auth_token, authed_sempo_admin_user, create_organisation):
@@ -258,3 +259,34 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
     card_json = response.json['data']['transfer_cards'][0]
     assert card_json['nfc_serial_number'] == 'ABCD1234F'
     assert card_json['public_serial_number'] == '123456'
+
+
+    # Only try to get three most recently updated cards through pagination
+    response = test_client.get('/api/v1/transfer_cards/?per_page=3',
+                               headers=dict(
+                                   Authorization=complete_admin_auth_token, Accept='application/json'
+                               ),
+                               follow_redirects=True)
+
+    cards = response.json['data']['transfer_cards']
+
+    assert len(cards) == 3
+
+
+    assert cards[-1]['nfc_serial_number'] == 'RAAAVVVVZ'
+    assert (parser.isoparse(response.json['last_fetched']).toordinal() == parser.isoparse(cards[-1]['updated']).toordinal())
+
+    # Try to get the rest, making sure we pick up where we left off
+    response = test_client.get(f'/api/v1/transfer_cards/?last_fetched={response.json["last_fetched"]}',
+                               headers=dict(
+                                   Authorization=complete_admin_auth_token, Accept='application/json'
+                               ),
+                               follow_redirects=True)
+
+    cards = response.json['data']['transfer_cards']
+
+    assert len(cards) == 6
+    assert cards[0]['nfc_serial_number'] == 'AAAAVVVVZ'
+
+
+
