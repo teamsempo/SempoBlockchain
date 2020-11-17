@@ -180,6 +180,9 @@ def register_blueprints(app):
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
         pusher_utils.push_admin_credit_transfer(transactions)
 
+        # Adds version to response header
+        response.headers['App-Version'] = config.VERSION
+
         return response
 
     from .views.index import index_view

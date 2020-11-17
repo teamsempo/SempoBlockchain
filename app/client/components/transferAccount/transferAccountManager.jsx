@@ -4,9 +4,6 @@ import { connect } from "react-redux";
 
 import { StyledButton, ModuleBox, ModuleHeader } from "../styledElements";
 import AsyncButton from "../AsyncButton.jsx";
-const SingleDatePickerWrapper = lazy(() =>
-  import("./SingleDatePickerWrapper.jsx")
-);
 import NewTransferManager from "../management/newTransferManager.jsx";
 import DateTime from "../dateTime.tsx";
 
@@ -315,55 +312,6 @@ class TransferAccountManager extends React.Component {
                     {this.state.one_time_code !== "" ? "One Time Code:" : ""}
                   </InputLabel>
                   <ManagerText>{this.state.one_time_code}</ManagerText>
-                </SubRow>
-              </Row>
-              <Row style={{ margin: "0em 1em" }}>
-                <SubRow style={{ width: "50%" }}>
-                  <InputLabel>Payment Cycle Start Date: </InputLabel>
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <SingleDatePickerWrapper
-                      numberOfMonths={1}
-                      date={this.state.date} // momentPropTypes.momentObj or null
-                      onDateChange={date =>
-                        this.setState({ payable_epoch: date })
-                      }
-                      focused={this.state.focused} // PropTypes.bool
-                      onFocusChange={() =>
-                        this.setState({ focused: !this.state.focused })
-                      } // PropTypes.func.isRequired
-                      id="your_unique_id" // PropTypes.string.isRequired,
-                      withPortal
-                      hideKeyboardShortcutsPanel
-                      // showDefaultInputIcon
-                      // inputIconPosition="after"
-                      isOutsideRange
-                    />
-                  </Suspense>
-                </SubRow>
-                <SubRow>
-                  <InputLabel>Payment Cycle: </InputLabel>
-                  <StatusSelect
-                    name="payable_period_type"
-                    value={
-                      this.state.payable_period_type === null
-                        ? "n/a"
-                        : this.state.payable_period_type
-                    }
-                    onChange={this.handleChange}
-                  >
-                    <option name="payable_period_type" disabled value="n/a">
-                      n/a
-                    </option>
-                    <option name="payable_period_type" value="day">
-                      Daily
-                    </option>
-                    <option name="payable_period_type" value="week">
-                      Weekly
-                    </option>
-                    <option name="payable_period_type" value="month">
-                      Monthly
-                    </option>
-                  </StatusSelect>
                 </SubRow>
               </Row>
             </Wrapper>
