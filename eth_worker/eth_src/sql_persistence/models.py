@@ -313,10 +313,10 @@ class BlockchainTransaction(ModelBase):
 
 class SynchronizedBlock(ModelBase):
     __tablename__ = 'synchronized_block'
-    block_number = Column(Integer)
+    block_number = Column(Integer, index=True)
     status = Column(String)
     is_synchronized = Column(Boolean)
-    synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'))
+    synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'), index=True)
     synchronization_filter = relationship("SynchronizationFilter", back_populates="blocks", lazy=True)
     decimals = Column(Integer)
 
