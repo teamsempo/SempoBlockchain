@@ -577,7 +577,7 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            if str(one_time_code) != user.one_time_code:
+            if not one_time_code or str(one_time_code) != user.one_time_code:
                 response_object = {
                     'status': 'fail',
                     'message': 'One time code not valid'
