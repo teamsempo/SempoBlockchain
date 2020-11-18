@@ -103,22 +103,6 @@ def _apply_single_column_filter(query, filters, target_table, account_join_attri
     return query
 
 def _apply_ca_filters(query, filters, user_join_condition):
-
-#    # get all custom attributes and create pivot table
-#    new_cs = [CustomAttributeUserStorage.user_id]
-#    for value in db.session.query(CustomAttribute.name).distinct():
-#        value = value[0]
-#        print(value)
-#        new_cs.append(
-#             func.max(case(
-#                [(CustomAttribute.name == value, CustomAttributeUserStorage.value)],
-#                else_=None
-#            )).label(value)
-#        )
-#
-#    # join pivot table of custom attributes
-#    pivot = db.session.query(*new_cs).group_by(CustomAttributeUserStorage.user_id).subquery()
-#    query = query.outerjoin(pivot, user_join_condition == pivot.c.user_id)
     for batches in filters:
         to_batch = []
         for _filt in batches:
