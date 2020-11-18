@@ -3,7 +3,7 @@ from flask.views import MethodView
 from server.models.transfer_card import TransferCard
 from server.models.utils import paginate_query
 from server.utils.auth import requires_auth
-from server.schemas import transfer_cards_schema
+from server.schemas import transfer_cards_schema, transfer_card_schema
 from server import db
 import re
 
@@ -21,7 +21,32 @@ class TransferCardAPI(MethodView):
         :return:
         """
         shard_param = request.args.get('shard', 'true').lower()
+        nfc_serial_number = request.args.get('nfc_serial_number').upper()
         shard_distance = g.active_organisation.card_shard_distance
+
+        if nfc_serial_number:
+            #     We're looking for a single card
+            card = (
+                TransferCard.query
+                    .filter(TransferCard.transfer_account_id != None)
+                    .filter(TransferCard.nfc_serial_number == nfc_serial_number)
+                    .first()
+            )
+
+            if not card:
+                response_object = {
+                    'message': 'Card not found',
+                }
+
+                return make_response(jsonify(response_object)), 404
+
+            response_object = {
+                'message': 'Successfully loaded transfer_card',
+                'data': {'transfer_card': transfer_card_schema.dump(card).data},
+            }
+
+            return make_response(jsonify(response_object)), 200
+
 
         shard = True
         if ((shard_param == 'false') or (not shard_distance)) or (g.user.lat == None and g.user.lng == None):
