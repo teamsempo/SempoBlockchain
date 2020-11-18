@@ -493,26 +493,6 @@ def proccess_create_or_modify_user_request(
             raise Exception(f'{at} not a valid role for this organisation. Please choose one of the following: {g.active_organisation.valid_roles}')
         roles_to_set.append((ASSIGNABLE_TIERS[at], at))
 
-    is_vendor = attribute_dict.get('is_vendor', None)
-    if is_vendor is None:
-        is_vendor = 'VENDOR' in account_types or attribute_dict.get('vendor', False)
-
-    is_tokenagent = 'TOKEN_AGENT' in account_types or attribute_dict.get('is_tokenagent', False)
-    is_groupaccount = 'GROUP_ACCOUNT' in account_types or attribute_dict.get('is_groupaccount', False)
-
-    # is_beneficiary defaults to the opposite of is_vendor
-    is_beneficiary = 'BENEFICIARY' in account_types or attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
-
-
-    is_vendor = attribute_dict.get('is_vendor', None)
-    if is_vendor is None:
-        is_vendor = attribute_dict.get('vendor', False)
-
-    is_tokenagent = attribute_dict.get('is_tokenagent', False)
-    is_groupaccount = attribute_dict.get('is_groupaccount', False)
-
-    # is_beneficiary defaults to the opposite of is_vendor
-    is_beneficiary = attribute_dict.get('is_beneficiary', not is_vendor and not is_tokenagent and not is_groupaccount)
     chain = get_chain()
     if current_app.config['CHAINS'][chain]['IS_USING_BITCOIN']:
         try:
