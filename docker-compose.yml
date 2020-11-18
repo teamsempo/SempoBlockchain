@@ -75,12 +75,8 @@ services:
     image: "redis:alpine"
 
   ganache:
-    build:
-      context: .
-      dockerfile: celo/Dockerfile
+    image: "trufflesuite/ganache-cli:v6.7.0"
     command: "-l 80000000 -i 42"
-    ports:
-      - "8545:8545"
 #  beat:
 #    build:
 #      context: app/server

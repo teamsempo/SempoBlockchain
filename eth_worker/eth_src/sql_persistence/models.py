@@ -278,7 +278,7 @@ class BlockchainTransaction(ModelBase):
 
     signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
 
-    blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id), index=True)
+    blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id))
 
     blockchain_task = relationship('BlockchainTask', foreign_keys=[blockchain_task_id])
 
