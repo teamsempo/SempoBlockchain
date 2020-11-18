@@ -12,6 +12,7 @@ from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, T
 from flask import g
 from server.models.user import User
 from sqlalchemy.sql import func, text
+from sqlalchemy.orm import aliased
 from sqlalchemy import case, or_
 from server import db, red, bt
 
@@ -103,35 +104,40 @@ def _apply_single_column_filter(query, filters, target_table, account_join_attri
 
 def _apply_ca_filters(query, filters, user_join_condition):
 
-    # get all custom attributes and create pivot table
-    new_cs = [CustomAttributeUserStorage.user_id]
-    for value in db.session.query(CustomAttribute.name).distinct():
-        value = value[0]
-        new_cs.append(
-             func.max(case(
-                [(CustomAttribute.name == value, CustomAttributeUserStorage.value)],
-                else_=None
-            )).label(value)
-        )
-
-    # join pivot table of custom attributes
-    pivot = db.session.query(*new_cs).group_by(CustomAttributeUserStorage.user_id).subquery()
-    query = query.outerjoin(pivot, user_join_condition == pivot.c.user_id)
-    
+#    # get all custom attributes and create pivot table
+#    new_cs = [CustomAttributeUserStorage.user_id]
+#    for value in db.session.query(CustomAttribute.name).distinct():
+#        value = value[0]
+#        print(value)
+#        new_cs.append(
+#             func.max(case(
+#                [(CustomAttribute.name == value, CustomAttributeUserStorage.value)],
+#                else_=None
+#            )).label(value)
+#        )
+#
+#    # join pivot table of custom attributes
+#    pivot = db.session.query(*new_cs).group_by(CustomAttributeUserStorage.user_id).subquery()
+#    query = query.outerjoin(pivot, user_join_condition == pivot.c.user_id)
     for batches in filters:
         to_batch = []
         for _filt in batches:
             column = _filt[0]
             comparator = _filt[1]
             val = _filt[2]
+            CustomAttributeUserStorageAlias = aliased(CustomAttributeUserStorage)
+            CustomAttributeAlias = aliased(CustomAttribute)
+            query = query.outerjoin(CustomAttributeUserStorageAlias, CustomAttributeUserStorageAlias.user_id == user_join_condition)\
+                .join(CustomAttributeAlias, CustomAttributeUserStorageAlias.custom_attribute_id == CustomAttributeAlias.id)\
+                .filter(CustomAttributeAlias.name == column)
 
             if comparator == 'EQ':
                 val = val if isinstance(val, list) else [val]
-                to_batch.append(pivot.c[column].in_(val))
+                to_batch.append(CustomAttributeUserStorageAlias.value.in_(val))
             elif comparator == 'GT':
-               to_batch.append(pivot.c[column] > val)
+               to_batch.append(CustomAttributeUserStorageAlias.value > val)
             elif comparator == "LT":
-                to_batch.append(pivot.c[column] < val)
+                to_batch.append(CustomAttributeUserStorageAlias.value < val)
         query = query.filter(or_(*to_batch))
 
     return query
