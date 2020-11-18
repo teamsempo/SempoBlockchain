@@ -7,6 +7,7 @@ from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
 import sentry_sdk
+import config
 
 from server import db
 from server.models.device_info import DeviceInfo
@@ -16,6 +17,7 @@ from server.models.transfer_usage import TransferUsage
 from server.models.upload import UploadedResource
 from server.models.user import User
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
+from server.models.custom_attribute import CustomAttribute
 from server.models.transfer_card import TransferCard
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.blockchain_address import BlockchainAddress
@@ -28,7 +30,7 @@ from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.internationalization import i18n_for
 from server.utils.misc import rounded_dollars
-
+from server.utils.multi_chain import get_chain
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     save_to_s3_from_url(url, new_filename)
@@ -278,13 +280,23 @@ def set_custom_attributes(attribute_dict, user):
     # loads in any existing custom attributes
     custom_attributes = user.custom_attributes or []
     for key in attribute_dict['custom_attributes'].keys():
-        to_remove = list(filter(lambda a: a.name == key, custom_attributes))
+        custom_attribute = CustomAttribute.query.filter(CustomAttribute.name == key).first()
+        if not custom_attribute:
+            custom_attribute = CustomAttribute()
+            custom_attribute.name = key
+            db.session.add(custom_attribute)
+
+        # Put validation logic here!
+        value = attribute_dict['custom_attributes'][key]
+        value = custom_attribute.clean_and_validate_custom_attribute(value)
+        
+        to_remove = list(filter(lambda a: a.custom_attribute.name == key, custom_attributes))
         for r in to_remove:
             custom_attributes.remove(r)
             db.session.delete(r)
 
         custom_attribute = CustomAttributeUserStorage(
-            name=key, value=attribute_dict['custom_attributes'][key])
+            custom_attribute=custom_attribute, value=value)
 
         custom_attributes.append(custom_attribute)
     custom_attributes = set_attachments(
@@ -481,7 +493,8 @@ def proccess_create_or_modify_user_request(
             raise Exception(f'{at} not a valid role for this organisation. Please choose one of the following: {g.active_organisation.valid_roles}')
         roles_to_set.append((ASSIGNABLE_TIERS[at], at))
 
-    if current_app.config['IS_USING_BITCOIN']:
+    chain = get_chain()
+    if current_app.config['CHAINS'][chain]['IS_USING_BITCOIN']:
         try:
             base58.b58decode_check(blockchain_address)
         except ValueError:

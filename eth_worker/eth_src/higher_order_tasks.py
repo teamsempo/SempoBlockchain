@@ -4,10 +4,10 @@ import datetime
 from celery import signature
 
 import config
-from celery_app import persistence_module, w3, red, task_manager, processor
+from celery_app import persistence_module, w3, red, task_manager, processor, chain_config
 from eth_src import celery_utils
 
-timeout = config.SYNCRONOUS_TASK_TIMEOUT
+timeout = chain_config['SYNCRONOUS_TASK_TIMEOUT']
 
 def call_contract_function(contract_address, contract_type, func, args=None):
     sig = processor.sigs.call_contract_function(contract_address, contract_type, func, args)
@@ -88,7 +88,7 @@ def topup_if_required(address):
     if balance <= wei_topup_threshold and wei_target_balance > balance:
         sig = signature(celery_utils.eth_endpoint('send_eth'),
                         kwargs={
-                            'signing_address': config.MASTER_WALLET_ADDRESS,
+                            'signing_address': chain_config['MASTER_WALLET_ADDRESS'],
                             'amount_wei': wei_target_balance - balance,
                             'recipient_address': address,
                             'prior_tasks': []
