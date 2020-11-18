@@ -2,13 +2,13 @@ from time import sleep
 
 from celery import signature
 import os
+import config
 
-chain = os.environ.get('CHAIN', 'ETHEREUM')
+chain = os.environ.get('CHAIN', config.DEFAULT_CHAIN)
 
 celery_tasks_name = 'celery_tasks'
 eth_endpoint = lambda endpoint: f'{chain}.{celery_tasks_name}.{endpoint}'
 
-import config
 
 def execute_synchronous_celery(signature):
     async_result = signature.delay()
