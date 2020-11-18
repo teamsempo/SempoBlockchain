@@ -310,8 +310,11 @@ def paginate_query(query, sort_attribute=None, sort_desc=True):
 
         paginated = query.paginate(page, per_page, error_out=False)
 
-    new_last_fetched_obj = paginated.items[-1]
-    new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
+    if len(paginated.items) > 0:
+        new_last_fetched_obj = paginated.items[-1]
+        new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
+    else:
+        new_last_fetched = None
 
     return paginated.items, paginated.total, paginated.pages, new_last_fetched
 

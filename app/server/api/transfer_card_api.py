@@ -21,7 +21,7 @@ class TransferCardAPI(MethodView):
         :return:
         """
         shard_param = request.args.get('shard', 'true').lower()
-        nfc_serial_number = request.args.get('nfc_serial_number').upper()
+        nfc_serial_number = request.args.get('nfc_serial_number')
         shard_distance = g.active_organisation.card_shard_distance
 
         if nfc_serial_number:
@@ -29,7 +29,7 @@ class TransferCardAPI(MethodView):
             card = (
                 TransferCard.query
                     .filter(TransferCard.transfer_account_id != None)
-                    .filter(TransferCard.nfc_serial_number == nfc_serial_number)
+                    .filter(TransferCard.nfc_serial_number == nfc_serial_number.upper())
                     .first()
             )
 

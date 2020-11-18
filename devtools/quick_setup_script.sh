@@ -129,10 +129,10 @@ echo ~~~Setting up Contracts
 cd ../
 python -u devtools/contract_setup_script.py
 
-if [[ ${mockData} != 'none' ]]; then
+if [[ "mockData" != 'none' ]]; then
     echo ~~~Creating mock data
     cd ./app/server/utils
-    python -u mock_data.py ${mockData}
+    python -u mock_data.py ${testdata}
 fi
 
 echo ~~~Generating Auth Token
