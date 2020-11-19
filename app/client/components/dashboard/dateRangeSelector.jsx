@@ -8,6 +8,7 @@ import { DatePicker, Space, Typography } from "antd";
 import moment from "moment";
 
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
+import { expandObject, parseQuery } from "../../utils";
 
 const { RangePicker } = DatePicker;
 const { Link } = Typography;
@@ -20,6 +21,31 @@ class DateRangeSelector extends React.Component {
     this.state = {
       dateRange: ""
     };
+  }
+
+  componentDidMount() {
+    let existingQuery = parseQuery(location.search);
+
+    let expandedQuery = null;
+    if (existingQuery && !/^\s*$/.test(existingQuery)) {
+      expandedQuery = expandObject(existingQuery);
+    }
+
+    let metric_type = this.props.filterObject;
+    let activeFilters = expandedQuery && expandedQuery[metric_type];
+
+    if (activeFilters) {
+      let start =
+        activeFilters.start_date && activeFilters.start_date.split("-");
+      let end = activeFilters.end_date && activeFilters.end_date.split("-");
+      if (start || end) {
+        this.setDateRange([
+          start &&
+            moment(start[2] + "/" + start[1] + "/" + start[0], dateFormat),
+          end && moment(end[2] + "/" + end[1] + "/" + end[0], dateFormat)
+        ]);
+      }
+    }
   }
 
   setFromSelection(selection) {

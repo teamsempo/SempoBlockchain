@@ -3,6 +3,7 @@ import merge from "deepmerge";
 import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
+import { allowedFilters } from "./reducers/allowedFilters/reducers";
 
 export function formatMoney(
   amount,
@@ -66,7 +67,10 @@ export const generateQueryString = query => {
   if (query) {
     Object.keys(query).map(query_key => {
       let string_term = query_key + "=" + query[query_key] + "&";
-      query_string = query_string.concat(string_term);
+      if (!/^\s*$/.test(query[query_key])) {
+        // We don't want to include empty string keys ' ', i.e. ?params=
+        query_string = query_string.concat(string_term);
+      }
     });
   }
 
@@ -89,7 +93,15 @@ export const parseQuery = queryString => {
     var pair = pairs[i].split("=");
     query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || "");
   }
-  return query;
+  if (
+    Object.keys(query).filter(key => {
+      if (/^\s*$/.test(key) || /^\s*$/.test(query[key])) {
+        // delete empty string key value pairs, e.g. {"":""}
+        delete query[key];
+      }
+    })
+  )
+    return query;
 };
 
 export const generateFormattedURLPath = (url, query, path) => {
@@ -304,6 +316,125 @@ export const processFiltersForQuery = filters => {
   encoded_filters = encoded_filters.slice(0, -delimiter.length);
 
   return encoded_filters;
+};
+
+export const parseEncodedParams = (allowedFilters, params) => {
+  let filters = [];
+  let param_array;
+  let allowedValues;
+  try {
+    if (allowedFilters && params) {
+      param_array = params.split(":");
+      param_array.map((param, i) => {
+        let filter = {};
+        let filterAttribute = param.split("(")[0];
+        filter["type"] = allowedFilters[filterAttribute].type;
+        if (
+          USER_FILTER_TYPE.DISCRETE === filter.type ||
+          USER_FILTER_TYPE.BOOLEAN_MAPPING === filter.type
+        ) {
+          allowedValues = param.split("(IN)")[1];
+          filter["allowedValues"] = allowedValues
+            .substr(1, allowedValues.length - 2)
+            .split(",");
+          filter["attribute"] = filterAttribute;
+          filter["id"] = i + 1;
+        } else {
+          if (filter.type === ">") {
+            allowedValues = param.split("(GT)")[1];
+            filter["type"] = ">";
+            filter["threshold"] = allowedValues.substr(
+              1,
+              allowedValues.length - 2
+            );
+          } else if (filter.type === "<") {
+            allowedValues = param.split("(LT)")[1];
+            filter["type"] = "<";
+            filter["threshold"] = allowedValues.substr(
+              1,
+              allowedValues.length - 2
+            );
+          } else {
+            allowedValues = param.split("(EQ)")[1];
+            filter["type"] = "=";
+            filter["threshold"] = allowedValues.substr(
+              1,
+              allowedValues.length - 2
+            );
+          }
+          filter["attribute"] = filterAttribute;
+          filter["id"] = i + 1;
+        }
+
+        filters.push(filter);
+      });
+    }
+  } catch (e) {
+    console.log("Something went wrong", e);
+    allowedFilters = null;
+  }
+  return filters;
+};
+
+export const flattenObject = obj => {
+  // Input = {group_key1: {queryKey1: queryValue1}, group_key2: {queryKey2: queryValue2} ...}
+  // Output = {group_key1.queryKey1: queryValue1, group_key2.group_key2: queryValue2 ...}
+  Object.keys(obj).map(group_key => {
+    Object.keys(obj[group_key]).map(key => {
+      obj[group_key + "." + key] = obj[group_key][key];
+      delete obj[group_key][key];
+    });
+    delete obj[group_key];
+  });
+  return obj;
+};
+
+export const expandObject = obj => {
+  // Input = {group_key1.queryKey1: queryValue1, group_key2.group_key2: queryValue2 ...}
+  // Output = {group_key1: {queryKey1: queryValue1}, group_key2: {queryKey2: queryValue2} ...}
+  Object.keys(obj).map(key => {
+    let group_key = key.split(".")[0];
+    let individual_key = key.split(".")[1];
+    if (!obj.hasOwnProperty(group_key)) {
+      obj[group_key] = {};
+    }
+    obj[group_key][individual_key] = obj[key];
+    delete obj[key];
+  });
+  return obj;
+};
+
+export const inverseFilterObject = (obj, filter) => {
+  let new_obj = {};
+  Object.keys(obj)
+    .filter(key => {
+      if (!key.includes(filter)) {
+        return key;
+      }
+    })
+    .map(key => (new_obj[key] = obj[key]));
+  return new_obj;
+};
+
+export const generateGroupQueryString = query_set => {
+  query_set = flattenObject(query_set);
+  return generateQueryString(query_set);
+};
+
+export const parseUniqueQueryString = querystring => {
+  let query = parseQuery(querystring);
+
+  if (query) {
+    Object.keys(query).map(key => {
+      // user.group_by
+      let unique_key = key.split(".")[0]; // user
+      let new_key = key.split(".")[1]; // group_by
+      query[unique_key] = {};
+      query[unique_key][new_key] = query[key];
+      delete query[key];
+    });
+  }
+  return query;
 };
 
 export function hexToRgb(hex) {

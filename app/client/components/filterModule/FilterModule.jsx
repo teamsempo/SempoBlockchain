@@ -8,13 +8,19 @@ import { Space, Select } from "antd";
 const { Option } = Select;
 import { connect } from "react-redux";
 
+import { browserHistory } from "../../createStore.js";
 import { LoadMetricAction } from "../../reducers/metric/actions";
 import styled from "styled-components";
 import Filter from "./filter";
 import {
+  generateGroupQueryString,
+  parseQuery,
+  parseEncodedParams,
+  expandObject,
   processFiltersForQuery,
   replaceUnderscores,
-  toTitleCase
+  toTitleCase,
+  inverseFilterObject
 } from "../../utils";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
@@ -24,7 +30,8 @@ const mapStateToProps = (state, ownProps) => {
   return {
     allowedFilters: state.allowedFilters[ownProps.filterObject].allowed.filters,
     allowedGroups: state.allowedFilters[ownProps.filterObject].allowed.groups,
-    loadStatus: state.allowedFilters[ownProps.filterObject].loadStatus
+    loadStatus: state.allowedFilters[ownProps.filterObject].loadStatus,
+    metricsLoadStatus: state.metrics.loadStatus
   };
 };
 
@@ -45,46 +52,89 @@ class FilterModule extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      search: null,
+      metric_type: null,
       encoded_filters: null,
-      groupBy: props.defaultGroupBy
+      groupBy: this.props.defaultGroupBy,
+      dateRange: [undefined, undefined],
+      filters: null
     };
-
     this.props.loadAllowedFilters(this.props.filterObject);
-
-    console.log("Default groupby is", props.defaultGroupBy);
   }
 
   componentDidMount() {
-    this.loadMetricsWithParams();
+    let existingQuery = parseQuery(location.search);
+
+    let expandedQuery = null;
+    if (existingQuery && !/^\s*$/.test(existingQuery)) {
+      expandedQuery = expandObject(existingQuery);
+    }
+
+    let metric_type = this.props.filterObject;
+    let activeFilters = expandedQuery && expandedQuery[metric_type];
+    let isDatePresent =
+      (activeFilters && activeFilters.start_date) ||
+      (activeFilters && activeFilters.end_date);
+
+    this.setState(
+      {
+        metric_type: metric_type,
+        encoded_filters: activeFilters && activeFilters.params,
+        groupBy:
+          (activeFilters && activeFilters.group_by) || this.props.defaultGroupBy
+      },
+      () => {
+        if (isDatePresent) {
+          // We don't load metrics here
+          // They will be loaded in componentDidUpdate when the date is set from the dateRangeSelector Component
+        } else {
+          this.loadMetricsWithParams();
+        }
+      }
+    );
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (prevProps.dateRange !== this.props.dateRange) {
-      this.loadMetricsWithParams();
+    let { dateRange, loadStatus } = this.props;
+    if (prevProps.dateRange !== dateRange) {
+      this.setState({ dateRange: dateRange }, () =>
+        this.loadMetricsWithParams()
+      );
+    }
+
+    if (prevProps.loadStatus !== loadStatus) {
+      // Once allowedFilters is loaded, we want to then load in the filters from the URL
+      let activeFilters = this.state.encoded_filters;
+      if (activeFilters) {
+        let decoded = parseEncodedParams(
+          this.props.allowedFilters,
+          activeFilters
+        );
+        this.setState({ filters: decoded });
+      }
     }
   }
 
   onFiltersChanged = filters => {
+    let metric_type = this.props.filterObject;
     let encoded_filters = processFiltersForQuery(filters);
-    console.log("encoded filters are", encoded_filters);
+
     this.setState(
       {
-        encoded_filters
+        encoded_filters,
+        metric_type: metric_type,
+        search: location.search
       },
       () => this.loadMetricsWithParams()
     );
-    // browserHistory.push({
-    //   search: "?params=" + encoded_filters
-    // });
   };
 
   loadMetricsWithParams = () => {
-    let { encoded_filters, groupBy } = this.state;
-    let { dateRange } = this.props;
+    let { encoded_filters, groupBy, dateRange, metric_type } = this.state;
     let params = {};
     let apiDateFormat = "YYYY-MM-DD";
 
-    params.metric_type = this.props.filterObject;
+    params.metric_type = metric_type;
 
     if (encoded_filters) {
       params.params = encoded_filters;
@@ -103,14 +153,45 @@ class FilterModule extends React.Component {
     }
 
     this.props.loadMetrics(params);
+    this.buildQueryString(params);
+  };
+
+  buildQueryString = params => {
+    let existingQuery = parseQuery(location.search);
+    let filteredQuery = null;
+    let expandedFilteredQueryObject = null;
+    if (existingQuery && !/^\s*$/.test(existingQuery)) {
+      filteredQuery = inverseFilterObject(existingQuery, params.metric_type);
+    }
+    if (filteredQuery) {
+      expandedFilteredQueryObject = expandObject(filteredQuery);
+    }
+
+    let query = { ...params };
+
+    // don't display these variables in URL
+    delete query.disable_cache;
+    delete query.metric_type;
+
+    let query_set = {
+      [params.metric_type]: query,
+      ...expandedFilteredQueryObject
+    };
+    let searchQuery = generateGroupQueryString(query_set);
+
+    browserHistory.push({
+      search: searchQuery
+    });
   };
 
   updateGroupBy = groupBy => {
-    this.setState({ groupBy }, () => this.loadMetricsWithParams());
+    let metric_type = this.props.filterObject;
+    this.setState({ metric_type, groupBy }, () => this.loadMetricsWithParams());
   };
 
   render() {
-    let { allowedGroups, defaultGroupBy, isMobile } = this.props;
+    let { allowedGroups, isMobile } = this.props;
+    let { groupBy, filters } = this.state;
 
     let groupByModule = (
       <Space size={"middle"}>
@@ -120,7 +201,7 @@ class FilterModule extends React.Component {
         />
         <Select
           showSearch
-          defaultValue={defaultGroupBy}
+          value={groupBy}
           style={{ width: 200 }}
           onChange={this.updateGroupBy}
         >
@@ -146,6 +227,7 @@ class FilterModule extends React.Component {
           />
           <Filter
             label={"Filter by user:"}
+            filters={filters}
             possibleFilters={this.props.allowedFilters}
             onFiltersChanged={this.onFiltersChanged}
           />

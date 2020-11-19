@@ -53,6 +53,12 @@ class Filter extends React.Component {
     date: moment()
   };
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.filters !== this.props.filters) {
+      this.setState({ filters: this.props.filters });
+    }
+  }
+
   handleAttributeSelectorChange = attribute => {
     let attributeProperties = this.props.possibleFilters[attribute];
 

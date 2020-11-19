@@ -60,7 +60,12 @@ class MetricsCard extends React.Component {
 
     const selectedData = metrics[this.state.selectedTimeSeries];
 
-    const filter = <DateRangeSelector onChange={this.setDateRange} />;
+    const filter = (
+      <DateRangeSelector
+        filterObject={filterObject}
+        onChange={this.setDateRange}
+      />
+    );
 
     let dataModule;
 
