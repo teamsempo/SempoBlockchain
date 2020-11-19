@@ -1,5 +1,4 @@
 import pytest
-from server import db
 
 from server.utils.location import (
     osm_location_to_gps_lookup,
@@ -32,10 +31,8 @@ def test_get_location_from_peers(create_transfer_account_user):
     create_transfer_account_user._location = 'Fake Location, Super Fake! Zero Result!'
     create_transfer_account_user.lat = None
     create_transfer_account_user.lon = None
-    db.session.commit()
     assert get_location_from_peers('Fake Location, Super Fake! Zero Result!') == None
     create_transfer_account_user._location = 'Fake Location, Super Fake! Zero Result!'
     create_transfer_account_user.lat = 123
     create_transfer_account_user.lng = 321
-    db.session.commit()
     assert get_location_from_peers('Fake Location, Super Fake! Zero Result!') == (123, 321)
