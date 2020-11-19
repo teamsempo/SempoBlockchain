@@ -12,16 +12,16 @@ transfer_cards_blueprint = Blueprint('transfer_cards', __name__)
 
 class TransferCardAPI(MethodView):
     @requires_auth
-    def get(self):
+    def get(self, nfc_serial_number):
         """
         Get a list of the transfer cards on the system.
         :arg only_bound: only return cards that have transfer accounts bound to them.
         :arg shard: Get only transfer cards within the radius defined by org parameter. Distance is in kilometers
         Prevents returning a list of 100000 cards and overwhelming low power android phones. Defaults true.
+        :arg nfc_serial_number: get a card according to its nfc serial number
         :return:
         """
         shard_param = request.args.get('shard', 'true').lower()
-        nfc_serial_number = request.args.get('nfc_serial_number')
         shard_distance = g.active_organisation.card_shard_distance
 
         if nfc_serial_number:
@@ -121,6 +121,13 @@ class TransferCardAPI(MethodView):
 transfer_cards_blueprint.add_url_rule(
     '/transfer_cards/',
     view_func=TransferCardAPI.as_view('transfer_card_view'),
-    methods=['GET', 'POST']
+    methods=['GET', 'POST'],
+    defaults={'nfc_serial_number': None}
+)
+
+transfer_cards_blueprint.add_url_rule(
+    '/transfer_cards/nfc_serial_number/<nfc_serial_number>',
+    view_func=TransferCardAPI.as_view('nfc_sn_referenced_transfer_card_view'),
+    methods=['GET']
 )
 
