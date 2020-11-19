@@ -86,6 +86,8 @@ class TransferAccountAPI(MethodView):
         approve = put_data.get('approve')
 
         transfer_account_name = put_data.get('transfer_account_name')
+        
+        notes = put_data.get('notes')
 
         payable_period_type = put_data.get('payable_period_type')
         payable_period_length = put_data.get('payable_period_length')
@@ -109,6 +111,9 @@ class TransferAccountAPI(MethodView):
 
             if payable_period_length and not payable_period_length == transfer_account.payable_period_length:
                 transfer_account.payable_period_length = payable_period_length
+
+            if notes and not notes == transfer_account.notes:
+                transfer_account.notes = notes
 
             if payable_epoch and not payable_epoch == transfer_account.payable_epoch:
                 transfer_account.payable_epoch = payable_epoch

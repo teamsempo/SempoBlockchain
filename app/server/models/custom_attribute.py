@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 class CustomAttribute(ModelBase):
     __tablename__ = 'custom_attribute'
 
-    name            = db.Column(db.String)
+    name            = db.Column(db.String, index=True)
     attributes      = db.relationship("CustomAttributeUserStorage", back_populates="custom_attribute")
     cleaning_steps  = db.Column(JSONB, default=None) # E.x. [ { "replace": ["this", "that"] }, { "lower": null } ]
     options         = db.Column(JSONB, default=None) # E.x. ["male", "female", "other"]
