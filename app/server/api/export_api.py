@@ -320,7 +320,13 @@ class ExportAPI(MethodView):
                     )
 
         if include_transfers and user_accounts is not None:
-            base_credit_transfer_query= CreditTransfer.query.enable_eagerloads(False)
+            base_credit_transfer_query = CreditTransfer.query.enable_eagerloads(False).order_by(CreditTransfer.id)
+
+            if selected:
+                base_credit_transfer_query = base_credit_transfer_query.filter(
+                    or_(CreditTransfer.sender_transfer_account_id.in_(selected),
+                        CreditTransfer.recipient_transfer_account_id.in_(selected)))
+
             if start_date and end_date is not None:
                 credit_transfer_list = base_credit_transfer_query.filter(
                     CreditTransfer.created.between(start_date, end_date)
