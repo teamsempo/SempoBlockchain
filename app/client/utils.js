@@ -390,7 +390,7 @@ export const parseEncodedParams = (allowedFilters, params) => {
       store.dispatch(
         MessageAction.addMessage({
           error: true,
-          message: "Something went wrong: " + e.toString()
+          message: "URL Invalid"
         })
       );
       buildQueryString(params);
