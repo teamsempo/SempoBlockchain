@@ -322,6 +322,9 @@ export const parseEncodedParams = (allowedFilters, params) => {
   let filters = [];
   let param_array;
   let allowedValues;
+  let gt;
+  let lt;
+  let eq;
   try {
     if (allowedFilters && params) {
       param_array = params.split(":");
@@ -340,22 +343,25 @@ export const parseEncodedParams = (allowedFilters, params) => {
           filter["attribute"] = filterAttribute;
           filter["id"] = i + 1;
         } else {
-          if (filter.type === ">") {
-            allowedValues = param.split("(GT)")[1];
+          gt = param.split("(GT)");
+          lt = param.split("(LT)");
+          eq = param.split("(EQ)");
+          if (gt.length > 1) {
+            allowedValues = gt[1];
             filter["type"] = ">";
             filter["threshold"] = allowedValues.substr(
               1,
               allowedValues.length - 2
             );
-          } else if (filter.type === "<") {
-            allowedValues = param.split("(LT)")[1];
+          } else if (lt.length > 1) {
+            allowedValues = lt[1];
             filter["type"] = "<";
             filter["threshold"] = allowedValues.substr(
               1,
               allowedValues.length - 2
             );
           } else {
-            allowedValues = param.split("(EQ)")[1];
+            allowedValues = eq[1];
             filter["type"] = "=";
             filter["threshold"] = allowedValues.substr(
               1,
