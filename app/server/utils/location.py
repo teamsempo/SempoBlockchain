@@ -81,7 +81,7 @@ def _set_user_gps_from_location(user_id: int, location: str, skip_cache=False, u
     user.lat = lat
     user.lng = lng
 
-    db.session.flush()
+    db.session.commit()
 
 
 def osm_location_to_gps_lookup(location: str) -> Optional[Tuple[float, float]]:
