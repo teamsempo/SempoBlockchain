@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - custom_attr_list_fix
+                - filter_credit_transfers_on_selected_export
 
           requires:
             - build
