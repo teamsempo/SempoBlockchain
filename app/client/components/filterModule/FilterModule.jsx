@@ -181,8 +181,6 @@ class FilterModule extends React.Component {
     let { allowedGroups, isMobile } = this.props;
     let { groupBy, filters } = this.state;
 
-    console.log("filters", filters);
-
     let groupByModule = (
       <Space size={"middle"}>
         <TooltipWrapper

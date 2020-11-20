@@ -384,30 +384,29 @@ export const parseEncodedParams = (allowedFilters, params) => {
 
 export const flattenObject = obj => {
   // Input = {group_key1: {queryKey1: queryValue1}, group_key2: {queryKey2: queryValue2} ...}
-  // Output = {group_key1.queryKey1: queryValue1, group_key2.group_key2: queryValue2 ...}
+  // Output = {group_key1.queryKey1: queryValue1, group_key2.queryKey2: queryValue2 ...}
+  let new_obj = {};
   Object.keys(obj).map(group_key => {
     Object.keys(obj[group_key]).map(key => {
-      obj[group_key + "." + key] = obj[group_key][key];
-      delete obj[group_key][key];
+      new_obj[group_key + "." + key] = obj[group_key][key];
     });
-    delete obj[group_key];
   });
-  return obj;
+  return new_obj;
 };
 
 export const expandObject = obj => {
   // Input = {group_key1.queryKey1: queryValue1, group_key2.group_key2: queryValue2 ...}
   // Output = {group_key1: {queryKey1: queryValue1}, group_key2: {queryKey2: queryValue2} ...}
+  let new_obj = {};
   Object.keys(obj).map(key => {
     let group_key = key.split(".")[0];
     let individual_key = key.split(".")[1];
-    if (!obj.hasOwnProperty(group_key)) {
-      obj[group_key] = {};
+    if (!new_obj.hasOwnProperty(group_key)) {
+      new_obj[group_key] = {};
     }
-    obj[group_key][individual_key] = obj[key];
-    delete obj[key];
+    new_obj[group_key][individual_key] = obj[key];
   });
-  return obj;
+  return new_obj;
 };
 
 export const inverseFilterObject = (obj, filterKey) => {

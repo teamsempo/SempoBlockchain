@@ -226,3 +226,21 @@ test("parseEncodedParams", () => {
     filters
   );
 });
+
+describe("objectManipulation", () => {
+  const expanded = {
+    group_key1: { queryKey1: "queryValue1" },
+    group_key2: { queryKey2: "queryValue2" }
+  };
+  const flattened = {
+    "group_key1.queryKey1": "queryValue1",
+    "group_key2.queryKey2": "queryValue2"
+  };
+  test("flattenObject", () => {
+    expect(utils.flattenObject(expanded)).toStrictEqual(flattened);
+  });
+
+  test("expandObject", () => {
+    expect(utils.expandObject(flattened)).toStrictEqual(expanded);
+  });
+});
