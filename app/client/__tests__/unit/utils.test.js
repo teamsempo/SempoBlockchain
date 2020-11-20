@@ -142,58 +142,7 @@ test("get_zero_filled_values", () => {
   ).toStrictEqual([11, 0, 1, 0, 0, 1]);
 });
 
-test("processFiltersForQuery", () => {
-  const filters = [
-    {
-      id: 1,
-      attribute: "_location",
-      type: "discrete",
-      allowedValues: ["Kibera", "Halba"]
-    },
-    {
-      id: 2,
-      attribute: "rounded_account_balance",
-      threshold: 1,
-      type: "="
-    },
-    {
-      id: 3,
-      attribute: "rounded_transfer_amount",
-      threshold: 12,
-      type: ">"
-    },
-    {
-      id: 4,
-      attribute: "rounded_account_balance",
-      threshold: 2,
-      type: "<"
-    }
-  ];
-  expect(utils.processFiltersForQuery(filters)).toEqual(
-    "_location(IN)(Kibera,Halba):rounded_account_balance(EQ)(1):rounded_transfer_amount(GT)(12):rounded_account_balance(LT)(2)"
-  );
-});
-
-test("parseEncodedParams", () => {
-  const allowedFilters = {
-    _location: {
-      name: "Location",
-      table: "user",
-      type: "discrete",
-      values: ["Halba", "Kibera", "Malapoa", "Melemaat", "Miyani"]
-    },
-    rounded_account_balance: {
-      name: "Balance",
-      table: "transfer_account",
-      type: "int_range"
-    },
-    rounded_transfer_amount: {
-      name: "Transfer Amount",
-      table: "credit_transfer",
-      type: "int_range"
-    }
-  };
-
+describe("filterEncoding", () => {
   const filters = [
     {
       id: 1,
@@ -220,10 +169,60 @@ test("parseEncodedParams", () => {
       type: "<"
     }
   ];
+  const allowedFilters = {
+    _location: {
+      name: "Location",
+      table: "user",
+      type: "discrete",
+      values: ["Halba", "Kibera", "Malapoa", "Melemaat", "Miyani"]
+    },
+    rounded_account_balance: {
+      name: "Balance",
+      table: "transfer_account",
+      type: "int_range"
+    },
+    rounded_transfer_amount: {
+      name: "Transfer Amount",
+      table: "credit_transfer",
+      type: "int_range"
+    }
+  };
   const encodedFilter =
     "_location(IN)(Kibera,Halba):rounded_account_balance(EQ)(1):rounded_transfer_amount(GT)(12):rounded_account_balance(LT)(2)";
-  expect(utils.parseEncodedParams(allowedFilters, encodedFilter)).toStrictEqual(
-    filters
+
+  test("processFiltersForQuery", () => {
+    expect(utils.processFiltersForQuery(filters)).toEqual(encodedFilter);
+  });
+
+  test("parseEncodedParams", () => {
+    expect(
+      utils.parseEncodedParams(allowedFilters, encodedFilter)
+    ).toStrictEqual(filters);
+  });
+
+  const expandedFilters = {
+    user: { group_by: "ungrouped" },
+    credit_transfer: { params: encodedFilter, group_by: "ungrouped" }
+  };
+  const queryString =
+    "?user.group_by=ungrouped&credit_transfer.params=" +
+    encodedFilter +
+    "&credit_transfer.group_by=ungrouped";
+
+  it.each([[queryString, expandedFilters], ["?basgd", {}], ["", {}]])(
+    ".parseQueryStringToFilterObject(%s) == %s",
+    (search, expected) => {
+      expect(utils.parseQueryStringToFilterObject(search)).toStrictEqual(
+        expected
+      );
+    }
+  );
+
+  it.each([[expandedFilters, queryString], [{}, ""]])(
+    ".generateGroupQueryString(%s) == %s",
+    (query_set, expected) => {
+      expect(utils.generateGroupQueryString(query_set)).toEqual(expected);
+    }
   );
 });
 
