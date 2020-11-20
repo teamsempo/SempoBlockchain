@@ -20,7 +20,7 @@ export enum LoadMetricsActionType {
 }
 
 export interface LoadMetricsPayload {
-  path: number;
+  path?: number;
   query: object;
 }
 

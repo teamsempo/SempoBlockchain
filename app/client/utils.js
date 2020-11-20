@@ -1,9 +1,10 @@
 import { call, put } from "redux-saga/effects";
 import merge from "deepmerge";
 import { LoginAction } from "./reducers/auth/actions";
-import store from "./createStore.js";
+import store, { browserHistory } from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
-import { allowedFilters } from "./reducers/allowedFilters/reducers";
+import { LoadMetricAction } from "./reducers/metric/actions";
+import { MessageAction } from "./reducers/message/actions";
 
 export function formatMoney(
   amount,
@@ -319,6 +320,7 @@ export const processFiltersForQuery = filters => {
 };
 
 export const parseEncodedParams = (allowedFilters, params) => {
+  let metric_types = ["credit_transfer", "user"];
   let filters = [];
   let param_array;
   let allowedValues;
@@ -378,6 +380,21 @@ export const parseEncodedParams = (allowedFilters, params) => {
   } catch (e) {
     console.log("Something went wrong", e);
     allowedFilters = null;
+    metric_types.map(mt => {
+      params = {
+        disable_cache: true,
+        group_by: "ungrouped",
+        metric_type: mt
+      };
+      store.dispatch(LoadMetricAction.loadMetricRequest({ query: params }));
+      store.dispatch(
+        MessageAction.addMessage({
+          error: true,
+          message: "Something went wrong: " + e.toString()
+        })
+      );
+      buildQueryString(params);
+    });
   }
   return filters;
 };
@@ -435,6 +452,28 @@ export const parseQueryStringToFilterObject = search => {
   }
 
   return expandedQuery;
+};
+
+export const buildQueryString = params => {
+  let filters = parseQueryStringToFilterObject(location.search);
+  let filteredQuery =
+    filters && inverseFilterObject(filters, params.metric_type);
+
+  let query = { ...params };
+
+  // don't display these variables in URL
+  delete query.disable_cache;
+  delete query.metric_type;
+
+  let query_set = {
+    [params.metric_type]: query,
+    ...filteredQuery
+  };
+  let searchQuery = generateGroupQueryString(query_set);
+
+  browserHistory.push({
+    search: searchQuery
+  });
 };
 
 export function hexToRgb(hex) {

@@ -8,18 +8,16 @@ import { Space, Select } from "antd";
 const { Option } = Select;
 import { connect } from "react-redux";
 
-import { browserHistory } from "../../createStore.js";
 import { LoadMetricAction } from "../../reducers/metric/actions";
 import styled from "styled-components";
 import Filter from "./filter";
 import {
   parseQueryStringToFilterObject,
-  generateGroupQueryString,
+  buildQueryString,
   parseEncodedParams,
   processFiltersForQuery,
   replaceUnderscores,
-  toTitleCase,
-  inverseFilterObject
+  toTitleCase
 } from "../../utils";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
@@ -147,29 +145,7 @@ class FilterModule extends React.Component {
     }
 
     this.props.loadMetrics(params);
-    this.buildQueryString(params);
-  };
-
-  buildQueryString = params => {
-    let filters = parseQueryStringToFilterObject(location.search);
-    let filteredQuery =
-      filters && inverseFilterObject(filters, params.metric_type);
-
-    let query = { ...params };
-
-    // don't display these variables in URL
-    delete query.disable_cache;
-    delete query.metric_type;
-
-    let query_set = {
-      [params.metric_type]: query,
-      ...filteredQuery
-    };
-    let searchQuery = generateGroupQueryString(query_set);
-
-    browserHistory.push({
-      search: searchQuery
-    });
+    buildQueryString(params);
   };
 
   updateGroupBy = groupBy => {
