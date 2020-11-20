@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import styled from "styled-components";
 import { connect } from "react-redux";
+import { Input } from "antd";
 
 import { StyledButton, ModuleBox, ModuleHeader } from "../styledElements";
 import AsyncButton from "../AsyncButton.jsx";
@@ -10,6 +11,8 @@ import DateTime from "../dateTime.tsx";
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
+
+const { TextArea } = Input;
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -320,10 +323,12 @@ class TransferAccountManager extends React.Component {
               <Row style={{ margin: "0em 1em" }}>
                 <SubRow>
                   <InputLabel>Notes: </InputLabel>
-                  <ManagerInput
+                  <TextArea
                     name="notes"
                     value={this.state.notes}
                     onChange={this.handleChange}
+                    placeholder="Notes"
+                    autoSize
                   />
                 </SubRow>
               </Row>
