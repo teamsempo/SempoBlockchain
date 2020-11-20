@@ -13,10 +13,9 @@ import { LoadMetricAction } from "../../reducers/metric/actions";
 import styled from "styled-components";
 import Filter from "./filter";
 import {
+  parseQueryStringToFilterObject,
   generateGroupQueryString,
-  parseQuery,
   parseEncodedParams,
-  expandObject,
   processFiltersForQuery,
   replaceUnderscores,
   toTitleCase,
@@ -63,22 +62,16 @@ class FilterModule extends React.Component {
   }
 
   componentDidMount() {
-    let existingQuery = parseQuery(location.search);
-
-    let expandedQuery = null;
-    if (existingQuery && !/^\s*$/.test(existingQuery)) {
-      expandedQuery = expandObject(existingQuery);
-    }
-
-    let metric_type = this.props.filterObject;
-    let activeFilters = expandedQuery && expandedQuery[metric_type];
+    const { filterObject } = this.props;
+    let filters = parseQueryStringToFilterObject(location.search);
+    let activeFilters = filters[filterObject];
     let isDatePresent =
       (activeFilters && activeFilters.start_date) ||
       (activeFilters && activeFilters.end_date);
 
     this.setState(
       {
-        metric_type: metric_type,
+        metric_type: filterObject,
         encoded_filters: activeFilters && activeFilters.params,
         groupBy:
           (activeFilters && activeFilters.group_by) || this.props.defaultGroupBy
@@ -121,6 +114,7 @@ class FilterModule extends React.Component {
 
     this.setState(
       {
+        filters: filters,
         encoded_filters,
         metric_type: metric_type,
         search: location.search
@@ -157,15 +151,9 @@ class FilterModule extends React.Component {
   };
 
   buildQueryString = params => {
-    let existingQuery = parseQuery(location.search);
-    let filteredQuery = null;
-    let expandedFilteredQueryObject = null;
-    if (existingQuery && !/^\s*$/.test(existingQuery)) {
-      filteredQuery = inverseFilterObject(existingQuery, params.metric_type);
-    }
-    if (filteredQuery) {
-      expandedFilteredQueryObject = expandObject(filteredQuery);
-    }
+    let filters = parseQueryStringToFilterObject(location.search);
+    let filteredQuery =
+      filters && inverseFilterObject(filters, params.metric_type);
 
     let query = { ...params };
 
@@ -175,7 +163,7 @@ class FilterModule extends React.Component {
 
     let query_set = {
       [params.metric_type]: query,
-      ...expandedFilteredQueryObject
+      ...filteredQuery
     };
     let searchQuery = generateGroupQueryString(query_set);
 
@@ -229,7 +217,7 @@ class FilterModule extends React.Component {
           />
           <Filter
             label={"Filter by user:"}
-            filters={filters}
+            filters={filters} // this is only used for initial load
             possibleFilters={this.props.allowedFilters}
             onFiltersChanged={this.onFiltersChanged}
           />

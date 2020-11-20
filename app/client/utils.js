@@ -410,11 +410,11 @@ export const expandObject = obj => {
   return obj;
 };
 
-export const inverseFilterObject = (obj, filter) => {
+export const inverseFilterObject = (obj, filterKey) => {
   let new_obj = {};
   Object.keys(obj)
     .filter(key => {
-      if (!key.includes(filter)) {
+      if (!key.includes(filterKey)) {
         return key;
       }
     })
@@ -427,20 +427,15 @@ export const generateGroupQueryString = query_set => {
   return generateQueryString(query_set);
 };
 
-export const parseUniqueQueryString = querystring => {
-  let query = parseQuery(querystring);
+export const parseQueryStringToFilterObject = search => {
+  let existingQuery = parseQuery(search);
 
-  if (query) {
-    Object.keys(query).map(key => {
-      // user.group_by
-      let unique_key = key.split(".")[0]; // user
-      let new_key = key.split(".")[1]; // group_by
-      query[unique_key] = {};
-      query[unique_key][new_key] = query[key];
-      delete query[key];
-    });
+  let expandedQuery = null;
+  if (existingQuery && !/^\s*$/.test(existingQuery)) {
+    expandedQuery = expandObject(existingQuery);
   }
-  return query;
+
+  return expandedQuery;
 };
 
 export function hexToRgb(hex) {
