@@ -15,10 +15,18 @@ down_revision = '3386e7f8b71f'
 branch_labels = None
 depends_on = None
 
+def index_exists(name):
+    connection = op.get_bind()
+    result = connection.execute(
+        "SELECT exists(SELECT 1 from pg_indexes where indexname = '{}') as ix_exists;"
+            .format(name)
+    ).first()
+    return bool(result.ix_exists)
+
 
 def upgrade():
-    op.create_index(op.f('ix_user_lat'), 'user', ['lat'], unique=False)
-    op.create_index(op.f('ix_user_lng'), 'user', ['lng'], unique=False)
+    index_exists('ix_user_lat') or op.create_index(op.f('ix_user_lat'), 'user', ['lat'], unique=False)
+    index_exists('ix_user_lng') or op.create_index(op.f('ix_user_lng'), 'user', ['lng'], unique=False)
 
 def downgrade():
     op.drop_index(op.f('ix_user_lng'), table_name='user')
