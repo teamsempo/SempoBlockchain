@@ -8,11 +8,9 @@ const { Option, OptGroup } = Select;
 
 import { DefaultTheme } from "../theme";
 
-import { StyledSelect, Input, StyledButton } from "../styledElements.js";
 import styled from "styled-components";
 import PropTypes from "prop-types";
 import { replaceUnderscores } from "../../utils.js";
-import { SingleDatePicker } from "react-dates";
 
 import moment from "moment";
 
