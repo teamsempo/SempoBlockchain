@@ -6,6 +6,7 @@ import enum
 from sqlalchemy.sql import text
 from sqlalchemy import or_, Column, String, Float
 from server import db
+from server.models.custom_attribute import CustomAttribute, MetricsVisibility
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -36,31 +37,36 @@ class TransferFilterEnum:
 
 def get_custom_attribute_filters(distinct_sender_and_recipient = False):
     # Get all custom attributes and options
-    attribute_options = CustomAttributeUserStorage.get_attributes_and_options()
+    attribute_options = db.session.query(CustomAttribute)\
+        .filter(CustomAttribute.filter_visibility != MetricsVisibility.HIDDEN)\
+        .all()
+
     # Build those into filters objects
     filters = {}
     for ao in attribute_options:
         if distinct_sender_and_recipient:
-            filters[ao + ',sender'] = {
-                'name': 'Sender ' + ao.capitalize(),
-                'table': CustomAttributeUserStorage.__tablename__,
-                'sender_or_recipient': SENDER,
-                'type': TransferFilterEnum.DISCRETE,
-                'values': attribute_options[ao]
-            }
-            filters[ao + ',recipient'] = {
-                'name': 'Recipient ' + ao.capitalize(),
-                'table': CustomAttributeUserStorage.__tablename__,
-                'sender_or_recipient': RECIPIENT,
-                'type': TransferFilterEnum.DISCRETE,
-                'values': attribute_options[ao]
-            }
+            if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.SENDER]:
+                filters[ao.name + ',sender'] = {
+                    'name': 'Sender ' + ao.name.capitalize(),
+                    'table': CustomAttributeUserStorage.__tablename__,
+                    'sender_or_recipient': SENDER,
+                    'type': TransferFilterEnum.DISCRETE,
+                    'values': ao.existing_options
+                }
+            if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.RECIPIENT]:
+                filters[ao.name + ',recipient'] = {
+                    'name': 'Recipient ' + ao.name.capitalize(),
+                    'table': CustomAttributeUserStorage.__tablename__,
+                    'sender_or_recipient': RECIPIENT,
+                    'type': TransferFilterEnum.DISCRETE,
+                    'values': ao.existing_options
+                }
         else:
-            filters[ao] = {
-                'name': ao.capitalize(),
+            filters[ao.name] = {
+                'name': ao.name.capitalize(),
                 'table': CustomAttributeUserStorage.__tablename__,
                 'type': TransferFilterEnum.DISCRETE,
-                'values': attribute_options[ao]
+                'values': ao.existing_options
             }
     return filters
 
@@ -77,7 +83,7 @@ class Filters(object):
                 'name': "Transfer Type",
                 'table': CreditTransfer.__tablename__,
                 'type': TransferFilterEnum.DISCRETE,
-                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
+                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'INCENTIVE']
             },
         }
 
