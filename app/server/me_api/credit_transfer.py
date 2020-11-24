@@ -103,6 +103,7 @@ class MeCreditTransferAPI(MethodView):
 
         is_sending = post_data.get('is_sending', False)
 
+        transfer_card = None
         my_transfer_account = None
         authorised = False
         if transfer_account_id:
@@ -194,7 +195,7 @@ class MeCreditTransferAPI(MethodView):
 
         else:
             try:
-                counterparty_user = find_user_with_transfer_account_from_identifiers(
+                counterparty_user, _ = find_user_with_transfer_account_from_identifiers(
                     user_id,
                     public_identifier,
                     transfer_account_id)
@@ -292,7 +293,8 @@ class MeCreditTransferAPI(MethodView):
                                              receive_transfer_account=receive_transfer_account,
                                              transfer_use=transfer_use,
                                              transfer_mode=transfer_mode,
-                                             uuid=uuid)
+                                             uuid=uuid,
+                                             transfer_card=transfer_card)
 
         except AccountNotApprovedError as e:
             db.session.commit()
