@@ -195,7 +195,7 @@ class MeCreditTransferAPI(MethodView):
 
         else:
             try:
-                counterparty_user = find_user_with_transfer_account_from_identifiers(
+                counterparty_user, _ = find_user_with_transfer_account_from_identifiers(
                     user_id,
                     public_identifier,
                     transfer_account_id)

@@ -254,15 +254,13 @@ class CreditTransferAPI(MethodView):
                 all_user_accounts_query = (all_accounts_query.filter(TransferAccount.account_type == TransferAccountType.USER))
                 all_accounts_except_selected_query = all_user_accounts_query.filter(not_(TransferAccount.id.in_(recipient_transfer_accounts_ids)))
                 for individual_recipient_user in all_accounts_except_selected_query.all():
-                    transfer_user_list.append((individual_sender_user, individual_recipient_user.primary_user))
+                    transfer_user_list.append((individual_sender_user, individual_recipient_user.primary_user, None))
             else:
                 for transfer_account_id in recipient_transfer_accounts_ids:
                     try:
                         individual_recipient_user, transfer_card = find_user_with_transfer_account_from_identifiers(
                             None, None, transfer_account_id)
-
-                        transfer_user_list.append((individual_sender_user, individual_recipient_user))
-
+                        transfer_user_list.append((individual_sender_user, individual_recipient_user, transfer_card))
                     except (NoTransferAccountError, UserNotFoundError) as e:
                         response_list.append({'status': 400, 'message': str(e)})
 
@@ -278,8 +276,7 @@ class CreditTransferAPI(MethodView):
                     recipient_user_id,
                     recipient_public_identifier,
                     recipient_transfer_account_id)
-
-                transfer_user_list = [(individual_sender_user, individual_recipient_user)]
+                transfer_user_list = [(individual_sender_user, individual_recipient_user, transfer_card)]
 
             except Exception as e:
                 response_object = {
@@ -305,7 +302,7 @@ class CreditTransferAPI(MethodView):
                 token = active_organisation.token
 
 
-        for sender_user, recipient_user in transfer_user_list:
+        for sender_user, recipient_user, transfer_card in transfer_user_list:
             try:
                 if transfer_type == 'PAYMENT':
                     transfer = make_payment_transfer(
