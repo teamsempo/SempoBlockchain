@@ -101,7 +101,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
-            parsed_dict[attribute.name] = attribute.value.strip('"')
+            parsed_dict[attribute.key] = attribute.value
 
         return parsed_dict
 
@@ -283,6 +283,7 @@ class TransferAccountSchema(SchemaBase):
     payable_period_type     = fields.Str()
     payable_period_length   = fields.Int()
     payable_epoch           = fields.Str()
+    notes                   = fields.Str()
     payable_period_epoch    = fields.DateTime()
 
     blockchain_address      = fields.Str()

@@ -1,18 +1,18 @@
 import React, { lazy, Suspense } from "react";
 import styled from "styled-components";
 import { connect } from "react-redux";
+import { Input } from "antd";
 
 import { StyledButton, ModuleBox, ModuleHeader } from "../styledElements";
 import AsyncButton from "../AsyncButton.jsx";
-const SingleDatePickerWrapper = lazy(() =>
-  import("./SingleDatePickerWrapper.jsx")
-);
 import NewTransferManager from "../management/newTransferManager.jsx";
 import DateTime from "../dateTime.tsx";
 
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
+
+const { TextArea } = Input;
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -70,6 +70,7 @@ class TransferAccountManager extends React.Component {
       this.setState({
         balance: transferAccount.balance,
         is_approved: transferAccount.is_approved,
+        notes: transferAccount.notes,
         created: transferAccount.created,
         payable_epoch: transferAccount.payable_epoch,
         payable_period_type: transferAccount.payable_period_type,
@@ -104,6 +105,7 @@ class TransferAccountManager extends React.Component {
     const balance = this.state.balance * 100;
     const approve =
       this.state.is_approved == "n/a" ? null : this.state.is_approved == "true";
+    const notes = this.state.notes;
     const nfc_card_id = this.state.nfc_card_id;
     const qr_code = this.state.qr_code;
     const phone = this.state.phone;
@@ -124,6 +126,7 @@ class TransferAccountManager extends React.Component {
       {
         balance,
         approve,
+        notes,
         phone,
         nfc_card_id,
         qr_code,
@@ -318,52 +321,15 @@ class TransferAccountManager extends React.Component {
                 </SubRow>
               </Row>
               <Row style={{ margin: "0em 1em" }}>
-                <SubRow style={{ width: "50%" }}>
-                  <InputLabel>Payment Cycle Start Date: </InputLabel>
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <SingleDatePickerWrapper
-                      numberOfMonths={1}
-                      date={this.state.date} // momentPropTypes.momentObj or null
-                      onDateChange={date =>
-                        this.setState({ payable_epoch: date })
-                      }
-                      focused={this.state.focused} // PropTypes.bool
-                      onFocusChange={() =>
-                        this.setState({ focused: !this.state.focused })
-                      } // PropTypes.func.isRequired
-                      id="your_unique_id" // PropTypes.string.isRequired,
-                      withPortal
-                      hideKeyboardShortcutsPanel
-                      // showDefaultInputIcon
-                      // inputIconPosition="after"
-                      isOutsideRange
-                    />
-                  </Suspense>
-                </SubRow>
                 <SubRow>
-                  <InputLabel>Payment Cycle: </InputLabel>
-                  <StatusSelect
-                    name="payable_period_type"
-                    value={
-                      this.state.payable_period_type === null
-                        ? "n/a"
-                        : this.state.payable_period_type
-                    }
+                  <InputLabel>Notes: </InputLabel>
+                  <TextArea
+                    name="notes"
+                    value={this.state.notes}
                     onChange={this.handleChange}
-                  >
-                    <option name="payable_period_type" disabled value="n/a">
-                      n/a
-                    </option>
-                    <option name="payable_period_type" value="day">
-                      Daily
-                    </option>
-                    <option name="payable_period_type" value="week">
-                      Weekly
-                    </option>
-                    <option name="payable_period_type" value="month">
-                      Monthly
-                    </option>
-                  </StatusSelect>
+                    placeholder="Notes"
+                    autoSize
+                  />
                 </SubRow>
               </Row>
             </Wrapper>
@@ -430,7 +396,7 @@ const ManagerInput = styled.input`
   border-width: 0 0 1px 0;
   outline: none;
   margin-left: 0.5em;
-  width: 50%;
+  width: 100%;
   font-size: 15px;
   &:focus {
     border-color: #2d9ea0;

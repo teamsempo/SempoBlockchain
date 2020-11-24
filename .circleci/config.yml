@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - negative_balance_disbursements
+                - custom_attr_list_fix
 
           requires:
             - build
