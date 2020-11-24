@@ -354,8 +354,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  fiat_ramp=None,
                  transfer_subtype: TransferSubTypeEnum=None,
                  transfer_mode: TransferModeEnum = None,
+                 transfer_card=None,
                  is_ghost_transfer=False,
-                 require_sufficient_balance=True):
+                 require_sufficient_balance=True
+                 ):
 
         if amount < 0:
             raise Exception("Negative amount provided")
@@ -403,6 +405,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.transfer_subtype = transfer_subtype
         self.transfer_mode = transfer_mode
         self.transfer_metadata = transfer_metadata
+        self.transfer_card = transfer_card
 
         if uuid is not None:
             self.uuid = uuid

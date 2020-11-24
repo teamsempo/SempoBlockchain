@@ -63,6 +63,7 @@ def find_user_from_public_identifier(*public_identifiers):
     :return: First user found
     """
     user = None
+    transfer_card = None
 
     for public_identifier in list(filter(lambda x: x is not None, public_identifiers)):
         if public_identifier is None:
@@ -81,13 +82,17 @@ def find_user_from_public_identifier(*public_identifiers):
         except NumberParseException:
             pass
 
-        user = User.query.execution_options(show_all=True).filter_by(
+        transfer_card = TransferCard.query.execution_options(show_all=True).filter_by(
             public_serial_number=str(public_identifier).lower()).first()
+        user = transfer_card.user
+
         if user:
             break
 
-        user = User.query.execution_options(show_all=True).filter_by(
+        transfer_card = TransferCard.query.execution_options(show_all=True).filter_by(
             nfc_serial_number=public_identifier.upper()).first()
+        user = transfer_card.user
+
         if user:
             break
 
@@ -109,7 +114,7 @@ def find_user_from_public_identifier(*public_identifiers):
         except Exception:
             pass
 
-    return user
+    return user, transfer_card
 
 
 def update_transfer_account_user(user,
@@ -514,7 +519,7 @@ def proccess_create_or_modify_user_request(
     # Work out if there's an existing transfer account to bind to
     existing_transfer_account = None
     if primary_user_identifier:
-        primary_user = find_user_from_public_identifier(
+        primary_user, _ = find_user_from_public_identifier(
             primary_user_identifier)
 
         if not primary_user or not primary_user.verify_password(primary_user_pin):
@@ -562,7 +567,7 @@ def proccess_create_or_modify_user_request(
             }
             return response_object, 400
 
-    referred_by_user = find_user_from_public_identifier(referred_by)
+    referred_by_user, _ = find_user_from_public_identifier(referred_by)
 
     if referred_by and not referred_by_user:
         response_object = {
@@ -570,7 +575,7 @@ def proccess_create_or_modify_user_request(
         }
         return response_object, 400
 
-    existing_user = find_user_from_public_identifier(
+    existing_user, _ = find_user_from_public_identifier(
         email, phone, public_serial_number, blockchain_address, uuid)
 
     if not existing_user and user_id:
