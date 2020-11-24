@@ -1,6 +1,5 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import not_
 from sqlalchemy.sql import func
 
 from server import db
@@ -18,7 +17,7 @@ class TransferCard(ModelBase):
     PIN                     = db.Column(db.String)
 
     _amount_loaded          = db.Column(db.Integer)
-    amount_offset           = db.Column(db.Integer)
+    _amount_offset           = db.Column(db.Integer)
     amount_loaded_signature = db.Column(db.String)
 
     user_id                 = db.Column(db.Integer, db.ForeignKey("user.id"))
@@ -28,12 +27,12 @@ class TransferCard(ModelBase):
         'CreditTransfer',
         backref='transfer_card',
         lazy='dynamic',
-        foreign_keys='CreditTransfer.transfer_card_id'
+        foreign_keys='CreditTransfer.sender_transfer_card_id'
     )
 
     @hybrid_property
     def amount_loaded(self):
-        return self._phone
+        return self._amount_loaded
 
     @amount_loaded.setter
     def amount_loaded(self, amount):
@@ -45,6 +44,15 @@ class TransferCard(ModelBase):
         )
 
         self.amount_loaded_signature = current_app.config['ECDSA_SIGNING_KEY'].sign(message.encode()).hex()
+
+    @hybrid_property
+    def amount_offset(self):
+        return self._amount_offset
+
+    @amount_offset.setter
+    def amount_offset(self, amount):
+        self._amount_offset = round(amount)
+        self.update_transfer_card()
 
     @staticmethod
     def get_transfer_card(public_serial_number):
@@ -67,7 +75,7 @@ class TransferCard(ModelBase):
             ).execution_options(show_all=True)
                 .filter_by(recipient_transfer_account=self.transfer_account)
                 .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
-                .all()
+                .scalar() or 0
         )
 
         # All credits out of this account that did NOT originate from the card
@@ -77,8 +85,8 @@ class TransferCard(ModelBase):
             ).execution_options(show_all=True)
                 .filter_by(sender_transfer_account=self.transfer_account)
                 .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
-                .filter(not_(server.models.credit_transfer.CreditTransfer.transfer_card == self))
-                .all()
+                .filter(server.models.credit_transfer.CreditTransfer.transfer_card != self)
+                .scalar() or 0
         )
 
-        self.amount_loaded = int((credits_in - non_card_credits_out)/1e16) + self.offset
+        self.amount_loaded = int((credits_in - non_card_credits_out)/int(1e16)) + (self.amount_offset or 0)

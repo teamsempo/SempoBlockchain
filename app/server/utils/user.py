@@ -84,14 +84,14 @@ def find_user_from_public_identifier(*public_identifiers):
 
         transfer_card = TransferCard.query.execution_options(show_all=True).filter_by(
             public_serial_number=str(public_identifier).lower()).first()
-        user = transfer_card.user
+        user = transfer_card and transfer_card.user
 
         if user:
             break
 
         transfer_card = TransferCard.query.execution_options(show_all=True).filter_by(
             nfc_serial_number=public_identifier.upper()).first()
-        user = transfer_card.user
+        user = transfer_card and transfer_card.user
 
         if user:
             break

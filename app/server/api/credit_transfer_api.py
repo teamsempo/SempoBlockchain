@@ -274,7 +274,7 @@ class CreditTransferAPI(MethodView):
                     sender_public_identifier,
                     sender_transfer_account_id)
 
-                individual_recipient_user, transfer_card = find_user_with_transfer_account_from_identifiers(
+                individual_recipient_user, _ = find_user_with_transfer_account_from_identifiers(
                     recipient_user_id,
                     recipient_public_identifier,
                     recipient_transfer_account_id)

@@ -78,7 +78,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
     recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
 
-    transfer_card_id = db.Column(db.Integer, db.ForeignKey("transfer_card.id"), index=True)
+    sender_transfer_card_id = db.Column(db.Integer, db.ForeignKey("transfer_card.id"), index=True)
 
     sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
