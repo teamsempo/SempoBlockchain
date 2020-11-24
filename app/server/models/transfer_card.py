@@ -1,5 +1,7 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import not_
+from sqlalchemy.sql import func
 
 from server import db
 from server.models.utils import ModelBase
@@ -11,16 +13,23 @@ from server.exceptions import NoTransferCardError
 class TransferCard(ModelBase):
     __tablename__ = 'transfer_card'
 
-    public_serial_number = db.Column(db.String, index=True, unique=True, nullable=False)
-    nfc_serial_number    = db.Column(db.String)
-    PIN                  = db.Column(db.String)
+    public_serial_number    = db.Column(db.String, index=True, unique=True, nullable=False)
+    nfc_serial_number       = db.Column(db.String)
+    PIN                     = db.Column(db.String)
 
     _amount_loaded          = db.Column(db.Integer)
+    amount_offset           = db.Column(db.Integer)
     amount_loaded_signature = db.Column(db.String)
 
-    user_id    = db.Column(db.Integer, db.ForeignKey("user.id"))
+    user_id                 = db.Column(db.Integer, db.ForeignKey("user.id"))
+    transfer_account_id     = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
 
-    transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
+    credit_transfers = db.relationship(
+        'CreditTransfer',
+        backref='transfer_card',
+        lazy='dynamic',
+        foreign_keys='CreditTransfer.transfer_card_id'
+    )
 
     @hybrid_property
     def amount_loaded(self):
@@ -50,17 +59,26 @@ class TransferCard(ModelBase):
 
     def update_transfer_card(self):
         # db.session.flush()
-        disbursements = (server.models.credit_transfer.CreditTransfer.query
-                         .execution_options(show_all=True)
-                         .filter_by(recipient_transfer_account=self.transfer_account)
-                         .filter_by(transfer_type=TransferTypeEnum.PAYMENT)
-                         .filter_by(transfer_subtype=TransferSubTypeEnum.DISBURSEMENT)
-                         .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
-                         .all())
 
-        total_disbursed = 0
+        # All credits into this account
+        credits_in = (
+            db.session.query(
+                func.sum(server.models.credit_transfer.CreditTransfer._transfer_amount_wei).label('total')
+            ).execution_options(show_all=True)
+                .filter_by(recipient_transfer_account=self.transfer_account)
+                .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
+                .all()
+        )
 
-        for disbursement in disbursements:
-            total_disbursed += float(disbursement.transfer_amount)
+        # All credits out of this account that did NOT originate from the card
+        non_card_credits_out = (
+            db.session.query(
+                func.sum(server.models.credit_transfer.CreditTransfer._transfer_amount_wei).label('total')
+            ).execution_options(show_all=True)
+                .filter_by(sender_transfer_account=self.transfer_account)
+                .filter_by(transfer_status=TransferStatusEnum.COMPLETE)
+                .filter(not_(server.models.credit_transfer.CreditTransfer.transfer_card == self))
+                .all()
+        )
 
-        self.amount_loaded = total_disbursed
+        self.amount_loaded = int((credits_in - non_card_credits_out)/1e16) + self.offset
