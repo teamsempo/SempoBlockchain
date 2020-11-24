@@ -66,8 +66,6 @@ class TransferCard(ModelBase):
         return transfer_card
 
     def update_transfer_card(self):
-        # db.session.flush()
-
         # All credits into this account
         credits_in = (
             db.session.query(
