@@ -134,8 +134,12 @@ class VolumeChart extends React.Component {
             } else {
               val = tooltipItem.yLabel;
             }
-
-            return `${seriesNames[tooltipItem.datasetIndex]}: ${val}`;
+            let categoryName = seriesNames[tooltipItem.datasetIndex];
+            if (categoryName === "None") {
+              return val;
+            } else {
+              return `${seriesNames[tooltipItem.datasetIndex]}: ${val}`;
+            }
           }
         }
       },
