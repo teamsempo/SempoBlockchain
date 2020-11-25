@@ -20,6 +20,7 @@ import {
 import { VALUE_TYPES } from "../../../constants";
 
 import LoadingSpinner from "../../loadingSpinner.jsx";
+import { ChartColors } from "../../theme";
 
 const mapStateToProps = state => {
   return {
@@ -195,21 +196,6 @@ class VolumeChart extends React.Component {
       }
     };
 
-    const color_scheme = [
-      "#003F5C",
-      "#FF764D",
-      "#CB5188",
-      "#62508E",
-      "#508E79",
-      "#2E4A7A",
-      "#F05B6F",
-      "#995194",
-      "#57AA65",
-      "#FF9C22",
-      "#42B1B1",
-      "#555555"
-    ];
-
     let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
     const datasets = possibleTimeseriesKeys.map((key, index) => {
       const timeseries = data.timeseries[key].map(a => {
@@ -225,9 +211,9 @@ class VolumeChart extends React.Component {
         date_array
       );
 
-      let color = color_scheme[index]
-        ? color_scheme[index]
-        : color_scheme[color_scheme.length - 1];
+      let color = ChartColors[index]
+        ? ChartColors[index]
+        : ChartColors[ChartColors.length - 1];
 
       return this.construct_dataset_object(index, key, color, zero_filled_data);
     });
