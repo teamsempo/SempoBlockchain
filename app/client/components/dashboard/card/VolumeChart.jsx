@@ -121,16 +121,21 @@ class VolumeChart extends React.Component {
         cornerRadius: 1,
         callbacks: {
           label: function(tooltipItem) {
+            let seriesNames = Object.keys(data.timeseries);
+            let val;
             if (data.type && data.type.value_type === VALUE_TYPES.CURRENCY) {
-              return formatMoney(
+              val = formatMoney(
                 tooltipItem.yLabel,
                 data.type.display_decimals,
                 undefined,
                 undefined,
                 data.type.currency_symbol
               );
+            } else {
+              val = tooltipItem.yLabel;
             }
-            return tooltipItem.yLabel;
+
+            return `${seriesNames[tooltipItem.datasetIndex]}: ${val}`;
           }
         }
       },
