@@ -123,6 +123,7 @@ class FiltersApi(MethodView):
                 'groups': groups
             }
         }
+
         return make_response(jsonify(response_object)), 200
 
 metrics_blueprint.add_url_rule(
