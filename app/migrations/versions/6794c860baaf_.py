@@ -40,7 +40,7 @@ class CustomAttributeUserStorage(Base):
 def upgrade():
     conn = op.get_bind()
     session = Session(bind=conn)
-    op.create_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), 'custom_attribute_user_storage', ['custom_attribute_id'], unique=False)
+    # op.create_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), 'custom_attribute_user_storage', ['custom_attribute_id'], unique=False)
 
     # If it hasn't been done before, migrate from the old custom attribute scheme to the new one
     try:
@@ -71,5 +71,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), table_name='custom_attribute_user_storage')
-
+    # op.drop_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), table_name='custom_attribute_user_storage')
+    pass
