@@ -47,7 +47,7 @@ class VolumeChart extends React.Component {
       pointHoverBackgroundColor: color,
       pointHoverBorderColor: color,
       pointHoverBorderWidth: 2,
-      borderWidth: 2,
+      borderWidth: 1,
       pointRadius: 1,
       pointHitRadius: 10,
       data: dataset
