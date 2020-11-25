@@ -15,7 +15,7 @@ export const DefaultTheme = {
 };
 
 export const ChartColors = [
-  "#003F5C",
+  "#005781",
   "#FF764D",
   "#CB5188",
   "#62508E",
@@ -32,5 +32,7 @@ export const ChartColors = [
   "#70d681",
   "#cb4d47",
   "#6a9696",
+  "#b4e0e0",
+  "#a8a8a8",
   "#555555"
 ];
