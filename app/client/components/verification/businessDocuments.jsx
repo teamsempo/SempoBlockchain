@@ -94,7 +94,10 @@ class BusinessDocuments extends React.Component {
       .map((document, idx) => {
         return (
           <DocumentWrapper key={idx}>
-            <SVG src="/static/media/document.svg" />
+            <SVG
+              src="/static/media/document.svg"
+              label={"Document " + document.user_filename}
+            />
             <div>
               <DocumentTitle>{document.user_filename}</DocumentTitle>
               <DateTime created={document.created} />

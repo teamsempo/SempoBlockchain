@@ -165,6 +165,7 @@ class TransferAccountManager extends React.Component {
     } = this.state;
     let accountTypeName;
     let icon;
+    let label;
 
     if (this.state.newTransfer) {
       var newTransfer = (
@@ -202,22 +203,26 @@ class TransferAccountManager extends React.Component {
       accountTypeName =
         TransferAccountTypes.BENEFICIARY || window.BENEFICIARY_TERM;
       icon = "/static/media/user.svg";
+      label = "User Icon";
     } else if (is_vendor) {
       accountTypeName = TransferAccountTypes.VENDOR;
       icon = "/static/media/store.svg";
+      label = "Vendor Icon";
     } else if (is_groupaccount) {
       accountTypeName = TransferAccountTypes.GROUP_ACCOUNT;
       icon = "/static/media/groupaccount.svg";
+      label = "Group Account Icon";
     } else if (is_tokenagent) {
       accountTypeName = TransferAccountTypes.TOKEN_AGENT;
       icon = "/static/media/tokenagent.svg";
+      label = "Token Agent Icon";
     }
 
     var summaryBox = (
       <ModuleBox>
         <SummaryBox>
           <TopContent>
-            <UserSVG src={icon} />
+            <UserSVG src={icon} label={label} />
             <p style={{ margin: "0 1em", fontWeight: "500" }}>
               {accountTypeName}
             </p>
