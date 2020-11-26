@@ -10,8 +10,7 @@ import MessageBar from "../messageBar";
 import ErrorBoundary from "../ErrorBoundary";
 import LoadingSpinner from "../loadingSpinner";
 
-const { Header, Content, Footer } = Layout;
-const { Title } = Typography;
+const { Content, Footer } = Layout;
 
 interface OuterProps {
   noNav?: boolean;
@@ -40,6 +39,9 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     let sideBarCollapsedString = localStorage.getItem("sideBarCollapsed");
     if (sideBarCollapsedString) {
       setCollapsed(localStorage.getItem("sideBarCollapsed") === "true");
+    }
+    if (title) {
+      document.title = `Sempo | ${title}`;
     }
   }, []);
 
@@ -93,11 +95,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
               : { marginLeft: "200px" }
           }
         >
-          {title ? (
-            <Header className="site-layout-background" style={{ padding: 0 }}>
-              <Title>{title}</Title>
-            </Header>
-          ) : null}
           <Content style={{ margin: isAntDesign ? "0 16px" : "" }}>
             <React.Suspense
               fallback={
