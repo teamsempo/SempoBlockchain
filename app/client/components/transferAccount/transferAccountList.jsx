@@ -248,6 +248,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"New Transfer"}
               >
                 NEW TRANSFER
               </StyledButton>
@@ -260,6 +261,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"Approve"}
               >
                 APPROVE
               </StyledButton>
@@ -272,6 +274,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"Unapprove"}
               >
                 UNAPPROVE
               </StyledButton>
@@ -285,6 +288,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Export"}
                 >
                   Export
                 </StyledButton>
@@ -333,6 +337,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Add New"}
                 >
                   + Add New
                 </StyledButton>
@@ -346,6 +351,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Export"}
                 >
                   Export
                 </StyledButton>

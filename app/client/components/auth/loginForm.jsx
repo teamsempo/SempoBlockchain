@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import AsyncButton from "./../AsyncButton.jsx";
 import { LoginAction } from "../../reducers/auth/actions";
 
-import { Input, StyledButton, ErrorMessage } from "./../styledElements";
+import { Input, ErrorMessage } from "./../styledElements";
 import { Footer, FooterLink, FooterText } from "../pages/authPage.jsx";
 import TFAForm from "./TFAForm.jsx";
 
@@ -143,6 +143,7 @@ const LoginForm = function(props) {
         isLoading={props.isLoggingIn}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
         buttonText={<span>LOGIN</span>}
+        label={"Login"}
       />
 
       <Footer>

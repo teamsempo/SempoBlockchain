@@ -275,6 +275,7 @@ class TransferAccountManager extends React.Component {
                       lineHeight: "25px",
                       height: "25px"
                     }}
+                    label={"New Transfer"}
                   >
                     NEW TRANSFER
                   </StyledButton>
@@ -291,6 +292,7 @@ class TransferAccountManager extends React.Component {
                       this.props.transferAccounts.editStatus.isRequesting
                     }
                     buttonText={<span>SAVE</span>}
+                    label={"Save"}
                   />
                 </ButtonWrapper>
               </TopRow>

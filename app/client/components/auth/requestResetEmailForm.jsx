@@ -90,6 +90,7 @@ const RequestResetEmailForm = function(props) {
           isLoading={props.isLoading}
           buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
           buttonText={<span>Reset Password</span>}
+          label={"Reset Password on Sempo Dashboard"}
         />
         <ErrorMessage>{error_message}</ErrorMessage>
       </div>

@@ -214,11 +214,13 @@ class BusinessBankDocuments extends React.Component {
             <AsyncButton
               buttonText={<span>Back</span>}
               onClick={this.props.backStep}
+              label={"Back"}
             />
             <AsyncButton
               buttonText={<span>COMPLETE</span>}
               onClick={this.isValidated}
               isLoading={this.props.editStatus.isRequesting}
+              label={"Complete"}
             />
           </div>
         </ThemeProvider>

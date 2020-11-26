@@ -236,6 +236,7 @@ const RegisterForm = function(props) {
         isLoading={props.isRegistering}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
         buttonText={<span>REGISTER</span>}
+        label={"Register for Sempo Dashboard"}
       />
     </div>
   );

@@ -108,6 +108,7 @@ export class TFAValidator extends React.Component {
           isLoading={this.props.validateState.isRequesting}
           buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
           buttonText={<span>Verify</span>}
+          label={"Verify my application"}
         />
 
         <div style={{ textAlign: "center" }}>
