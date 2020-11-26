@@ -7,14 +7,13 @@ COPY ./test_requirements.txt /
 
 RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
+RUN pip install git+https://github.com/teamsempo/eth-account.git@celo
+
 COPY ./eth_worker /
 
 COPY ./config.py /
 RUN mkdir /config_files
 COPY ./config_files/* /config_files/
-
-COPY ./celo/celo_eth_account /celo_eth_account
-
 
 WORKDIR /
 
