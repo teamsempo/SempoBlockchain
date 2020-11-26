@@ -535,10 +535,9 @@ class SQLPersistenceInterface(object):
         self.session.commit()
 
     def set_block_range_status(self, start, end, status, filter_id):
-        for n in range(start, end):
-            blocks  = self.session.query(SynchronizedBlock).filter(SynchronizedBlock.block_number == n, SynchronizedBlock.synchronization_filter_id == filter_id).all()
-            for block in blocks:
-                block.status = status
+        blocks  = self.session.query(SynchronizedBlock)\
+            .filter(SynchronizedBlock.block_number >= start, SynchronizedBlock.block_number < end, SynchronizedBlock.synchronization_filter_id == filter_id)\
+            .update({'status': status})
         self.session.commit()
 
 
