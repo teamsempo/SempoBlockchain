@@ -144,12 +144,11 @@ class SQLPersistenceInterface(object):
         return calculated_nonce
 
     def update_transaction_data(self, transaction_id, transaction_data):
-
         transaction = self.session.query(BlockchainTransaction).get(transaction_id)
 
         for attribute in transaction_data:
-            setattr(transaction, attribute, transaction_data[attribute])
-
+            if transaction_data[attribute] != getattr(transaction, attribute):
+                setattr(transaction, attribute, transaction_data[attribute])
         self.session.commit()
 
     def create_blockchain_transaction(self, task_uuid):
