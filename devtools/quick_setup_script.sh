@@ -42,12 +42,12 @@ else
     mockData='none'
 fi
 
-#if [ "$resetSecretsInput" == "y" ]; then
-#  echo ~~~~Creating Secrets
-#  cd ./config_files/
-#  python generate_secrets.py
-#  cd ../
-#fi
+if [ "$resetSecretsInput" == "y" ]; then
+  echo ~~~~Creating Secrets
+  cd ./config_files/
+  python generate_secrets.py
+  cd ../
+fi
 
 MASTER_WALLET_PK=$(awk -F "=" '/master_wallet_private_key/ {print $2}' ./config_files/secret/local_secrets.ini  | tr -d ' ')
 
