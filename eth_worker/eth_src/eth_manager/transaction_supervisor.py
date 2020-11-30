@@ -63,7 +63,6 @@ class TransactionSupervisor(object):
                 self.persistence.set_task_status_text(task, 'SUCCESS')
 
             if status == 'PENDING':
-                celery_task.request.retries = 0
                 raise Exception("Need Retry")
 
             if status == 'FAILED':
