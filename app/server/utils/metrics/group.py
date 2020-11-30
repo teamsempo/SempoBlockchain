@@ -8,9 +8,9 @@ from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.utils import credit_transfer_transfer_usage_association_table
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
-from server.models.custom_attribute import CustomAttribute
+from server.models.custom_attribute import CustomAttribute, MetricsVisibility
 from server.utils.metrics.metrics_const import *
-
+from server import db
 
 # Every permutation of tables we want to join with, and how we would actually make that join
 group_joining_strategies = {
@@ -78,11 +78,12 @@ class Group(object):
 # Builds Group objects for all custom attributes in the database
 def get_custom_attribute_groups():
     # Get all custom attributes and options
-    attribute_options = CustomAttributeUserStorage.get_attributes_and_options()
+    attribute_options = db.session.query(CustomAttribute)\
+        .filter(CustomAttribute.filter_visibility != MetricsVisibility.HIDDEN)
     # Build those into group objects
     groups = {}
     for ao in attribute_options:
-        groups[ao] = Group(ao.capitalize(), CustomAttributeUserStorage, CustomAttributeUserStorage.value, ao)
+        groups[ao.name] = Group(ao.name.capitalize(), CustomAttributeUserStorage, CustomAttributeUserStorage.value, ao.name)
     return groups
 
 class Groups(object):
