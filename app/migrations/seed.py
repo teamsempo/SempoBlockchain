@@ -336,6 +336,7 @@ def create_reserve_token(app):
                 name=reserve_token_name,
                 symbol=reserve_token_symbol,
                 token_type=TokenType.RESERVE,
+                chain=app.config['DEFAULT_CHAIN']
             )
 
             reserve_token.decimals = 18
