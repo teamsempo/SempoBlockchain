@@ -151,6 +151,34 @@
           "value": 0
         }
       ]
+    },
+    {
+      "name": "flower",
+      "image": "REPOSITORY_URI:eth_worker_TAG_SUFFIX",
+      "essential": true,
+      "memory": 128,
+      "links": ["pgbouncer:pgbouncer"],
+      "mountPoints": [],
+      "environment": [
+        {
+          "name": "CONTAINER_TYPE",
+          "value": "FLOWER"
+        },
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": true
+        },
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": 0
+        }
+      ],
+      "portMappings": [
+        {
+          "hostPort": 5555,
+          "containerPort": 5555
+        }
+      ]
     }
   ]
 }
