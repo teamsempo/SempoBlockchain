@@ -86,7 +86,6 @@ class BlockchainSyncer(object):
                 filter.id
             )
         for event in transaction_history:
-            print("Found event", event)
             self.handle_event(event, filter)
 
     # Processes newly found transaction event
