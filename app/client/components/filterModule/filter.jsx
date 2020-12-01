@@ -420,7 +420,7 @@ class Filter extends React.Component {
                       ? "/static/media/closePrimary.svg"
                       : "/static/media/closeAlt.svg"
                   }
-                  label={"Remove filter " + attributeProperties.name}
+                  alt={"Remove filter " + attributeProperties.name}
                 />
               </FilterBubble>
             );

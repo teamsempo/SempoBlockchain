@@ -95,7 +95,7 @@ class BusinessBankDocuments extends React.Component {
           <DocumentWrapper key={idx}>
             <SVG
               src="/static/media/document.svg"
-              label={"Document " + document.user_filename}
+              alt={"Document " + document.user_filename}
             />
             <div>
               <DocumentTitle>{document.user_filename}</DocumentTitle>

@@ -71,7 +71,7 @@ export class authPage extends React.Component {
           <div>
             <SempoLogoSVG
               src="/static/media/sempo_logo_teal.png"
-              label={"Sempo Logo"}
+              alt={"Sempo Logo"}
             />
           </div>
           <Switch>

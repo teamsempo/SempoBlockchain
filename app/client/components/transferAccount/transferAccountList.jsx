@@ -188,22 +188,22 @@ class TransferAccountList extends React.Component {
 
   _customIcon(transferAccount) {
     let url = "/static/media/user.svg";
-    let label = "User ";
+    let alt = "User ";
     if (transferAccount.is_beneficiary) {
       url = "/static/media/user.svg";
-      label = "User ";
+      alt = "User ";
     } else if (transferAccount.is_vendor) {
       url = "/static/media/store.svg";
-      label = "Vendor ";
+      alt = "Vendor ";
     } else if (transferAccount.is_groupaccount) {
       url = "/static/media/groupaccount.svg";
-      label = "Group Account ";
+      alt = "Group Account ";
     } else if (transferAccount.is_tokenagent) {
       url = "/static/media/tokenagent.svg";
-      label = "Token Agent ";
+      alt = "Token Agent ";
     }
-    label = label + this._customName(transferAccount);
-    return <UserSVG src={url} label={label} />;
+    alt = alt + this._customName(transferAccount);
+    return <UserSVG src={url} alt={alt} />;
   }
 
   render() {
