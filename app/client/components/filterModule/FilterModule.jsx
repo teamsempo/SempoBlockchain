@@ -138,11 +138,11 @@ class FilterModule extends React.Component {
           style={{ width: 200 }}
           onChange={this.updateGroupBy}
         >
-          if(ungroupedGroups){" "}
+          if(ungroupedGroups)
           {ungroupedGroups.map(group => {
             return <Option key={group}>{allowedGroups[group]["name"]}</Option>;
           })}
-          if(senderGroups){" "}
+          if(senderGroups)
           {
             <OptGroup label={"Sender"}>
               {senderGroups.map(group => {
@@ -152,7 +152,7 @@ class FilterModule extends React.Component {
               })}
             </OptGroup>
           }
-          if(recipientGroups){" "}
+          if(recipientGroups)
           {
             <OptGroup label={"Recipient"}>
               {recipientGroups.map(group => {
