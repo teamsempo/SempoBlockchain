@@ -212,6 +212,7 @@ const RegisterForm = function(props) {
           placeholder="Email"
           disabled={props.state.invite ? "disabled" : ""}
           style={props.state.invite ? { display: "none" } : null}
+          aria-label="Email"
         />
 
         <ReactPasswordStrength
@@ -226,6 +227,7 @@ const RegisterForm = function(props) {
           type="password"
           onKeyUp={props.onReenterPasswordFieldKeyPress}
           placeholder="Retype Password"
+          aria-label="Password"
         />
 
         <ErrorMessage>{error_message}</ErrorMessage>

@@ -114,6 +114,7 @@ class TransferAccountList extends React.Component {
         type="checkbox"
         checked={checked}
         onChange={() => this.toggleSelectedTransferAccount(id)}
+        aria-label={`Select Account ${id}`}
       />
     );
   }
@@ -474,6 +475,7 @@ class TransferAccountList extends React.Component {
                         onChange={() =>
                           this.checkAllTransferAccounts(filteredData)
                         }
+                        aria-label={"Select all accounts"}
                       />
                     ),
                     accessor: "id",

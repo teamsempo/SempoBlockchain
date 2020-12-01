@@ -124,6 +124,7 @@ const LoginForm = function(props) {
           id="UserField"
           onKeyUp={props.onUserFieldKeyPress}
           placeholder="Email"
+          aria-label="Email"
         />
 
         <Input
@@ -131,6 +132,7 @@ const LoginForm = function(props) {
           id="PasswordField"
           onKeyUp={props.onPasswordFieldKeyPress}
           placeholder="Password"
+          aria-label="Password"
         />
 
         <ResetPasswordLink to="/login/forgot">

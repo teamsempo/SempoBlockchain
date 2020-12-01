@@ -158,6 +158,7 @@ const ResetPasswordForm = function(props) {
           type="password"
           onKeyUp={props.onOldPasswordFieldKeyPress}
           placeholder="Password"
+          aria-label="Password"
         />
       </div>
     );
@@ -180,6 +181,7 @@ const ResetPasswordForm = function(props) {
         type="password"
         onKeyUp={props.onReenterPasswordFieldKeyPress}
         placeholder="Retype Password"
+        aria-label="Retype Password"
       />
       <ErrorMessage>{error_message}</ErrorMessage>
       <AsyncButton

@@ -83,6 +83,7 @@ const RequestResetEmailForm = function(props) {
           id="UserField"
           onKeyUp={props.onEmailFieldKeyPress}
           placeholder="Email"
+          aria-label="Email"
         />
 
         <AsyncButton

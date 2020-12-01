@@ -541,6 +541,7 @@ class CustomInput extends React.Component {
         innerRef={input => {
           this.nameInput = input;
         }}
+        aria-label={this.props.value}
       />
     );
   }

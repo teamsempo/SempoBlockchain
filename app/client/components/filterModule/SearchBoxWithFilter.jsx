@@ -295,6 +295,7 @@ class SearchBoxWithFilter extends React.Component {
               value={this.state.filterName}
               placeholder="Filter name..."
               onChange={this.handleChange}
+              aria-label="Filter name"
             />
             <FilterText
               onClick={this.saveFilter}
@@ -370,6 +371,7 @@ class SearchBoxWithFilter extends React.Component {
                 value={phrase}
                 placeholder="Search..."
                 onChange={this.handleChange}
+                aria-label="Search"
               />
 
               <FilterWrapper onClick={this.toggleFilter}>

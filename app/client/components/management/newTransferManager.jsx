@@ -202,6 +202,7 @@ class NewTransferManager extends React.Component {
                   value={this.state.transfer_amount}
                   onChange={this.handleChange}
                   style={{ width: "7em", margin: "0" }}
+                  aria-label="Transfer amount"
                 />
                 {this.props.activeOrganisation.token.symbol}
                 {convertedBitcoin}
