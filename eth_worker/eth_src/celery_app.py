@@ -61,7 +61,7 @@ app.conf.beat_schedule = {
 app.conf.beat_schedule = {
     'third-party-transaction-sync': {
         'task': celery_utils.eth_endpoint('synchronize_third_party_transactions'),
-        'schedule': 30, # Every 30 seconds
+        'schedule': chain_config['THIRD_PARTY_SYNC_SCHEDULE'],
     }
 }
 
