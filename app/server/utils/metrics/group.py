@@ -110,8 +110,10 @@ def get_custom_attribute_groups():
     # Build those into group objects
     groups = {}
     for ao in attribute_options:
-        groups[ao.name+',sender'] = Group(ao.name.capitalize(), CustomAttributeUserStorage, CustomAttributeUserStorage.value, ao.name, sender_or_recipient='sender')
-        groups[ao.name+',recipient'] = Group(ao.name.capitalize(), CustomAttributeUserStorage, CustomAttributeUserStorage.value, ao.name, sender_or_recipient='recipient')
+        if ao.group_visibility == MetricsVisibility.SENDER or ao.group_visibility == MetricsVisibility.SENDER_AND_RECIPIENT:
+            groups[ao.name+',sender'] = Group(ao.name.capitalize(), CustomAttributeUserStorage, CustomAttributeUserStorage.value, ao.name, sender_or_recipient='sender')
+        if ao.group_visibility == MetricsVisibility.RECIPIENT or ao.group_visibility == MetricsVisibility.SENDER_AND_RECIPIENT:
+            groups[ao.name+',recipient'] = Group(ao.name.capitalize(), CustomAttributeUserStorage, CustomAttributeUserStorage.value, ao.name, sender_or_recipient='recipient')
     return groups
 
 class Groups(object):
