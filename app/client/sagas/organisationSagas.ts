@@ -1,4 +1,5 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
+import { message } from "antd";
 import { handleError } from "../utils";
 import { normalize } from "normalizr";
 
@@ -21,7 +22,6 @@ import {
 } from "../api/organisationApi";
 
 import { organisationSchema } from "../schemas";
-import { MessageAction } from "../reducers/message/actions";
 import { ActionWithPayload } from "../reduxUtils";
 
 function* updateStateFromOrganisation(data: OrganisationData) {
@@ -53,9 +53,7 @@ function* loadOrganisation() {
 
     yield put(LoadOrganisationAction.loadOrganisationFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -79,17 +77,13 @@ function* editOrganisation(
 
     yield put(EditOrganisationAction.editOrganisationSuccess());
 
-    yield put(
-      MessageAction.addMessage({ error: false, message: load_result.message })
-    );
+    message.success(load_result.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(EditOrganisationAction.editOrganisationFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
