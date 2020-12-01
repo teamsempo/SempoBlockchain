@@ -39,10 +39,13 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     if (sideBarCollapsedString) {
       setCollapsed(localStorage.getItem("sideBarCollapsed") === "true");
     }
+  }, []);
+
+  React.useEffect(() => {
     if (title) {
       document.title = `Sempo | ${title}`;
     }
-  }, []);
+  }, [title]);
 
   let onCollapse = (collapsed: boolean) => {
     setCollapsed(collapsed);
