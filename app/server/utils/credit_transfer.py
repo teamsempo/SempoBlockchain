@@ -24,6 +24,7 @@ from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher_utils
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
+from server.utils.user import create_transfer_account_if_required
 
 
 def cents_to_dollars(amount_cents):
@@ -85,7 +86,7 @@ def handle_transfer_to_blockchain_address(
 
     try:
         transfer = make_blockchain_transfer(transfer_amount,
-                                            sender_user.transfer_account.blockchain_address.address,
+                                            sender_user.transfer_account.blockchain_address,
                                             recipient_blockchain_address,
                                             transfer_use,
                                             transfer_mode,
@@ -143,18 +144,13 @@ def make_blockchain_transfer(transfer_amount,
                              existing_blockchain_txn=False,
                              transfer_type=TransferTypeEnum.PAYMENT
                              ):
-    send_address_obj = create_address_object_if_required(send_address)
-    receive_address_obj = create_address_object_if_required(receive_address)
 
-    if send_address_obj.transfer_account:
-        sender_user =  send_address_obj.transfer_account.primary_user
-    else:
-        sender_user = None
 
-    if receive_address_obj.transfer_account:
-        recipient_user = receive_address_obj.transfer_account.primary_user
-    else:
-        recipient_user = None
+    sender_transfer_account = create_transfer_account_if_required(send_address)
+    recipient_transfer_account = create_transfer_account_if_required(receive_address)
+
+    sender_user = sender_transfer_account.primary_user
+    recipient_user = recipient_transfer_account.primary_user
 
     require_recipient_approved = False
     transfer = make_payment_transfer(transfer_amount,
