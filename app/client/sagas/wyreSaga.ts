@@ -1,5 +1,5 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
-
+import { message } from "antd";
 import { WyreAction } from "../reducers/wyre/actions";
 
 import { WyreActionTypes, WyreState } from "../reducers/wyre/types";
@@ -10,7 +10,6 @@ import {
   createWyreTransferRequest
 } from "../api/wyreAPI";
 import { handleError } from "../utils";
-import { MessageAction } from "../reducers/message/actions";
 
 function* updateStateFromWyreDetails(data: WyreState) {
   let payload = data;
@@ -31,9 +30,7 @@ function* loadWyreExchangeRates() {
 
     yield put(WyreAction.loadExchangeRatesFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -60,9 +57,7 @@ function* loadWyreAccount() {
 
     yield put(WyreAction.loadWyreAccountFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -82,12 +77,7 @@ function* createWyreTransfer({ payload }: WyreTransferResult) {
     yield call(updateStateFromWyreDetails, create_result.data);
 
     if (create_result.data.wyre_transfer.id !== "PREVIEW") {
-      yield put(
-        MessageAction.addMessage({
-          error: false,
-          message: "Transfer Initiated! Check emails."
-        })
-      );
+      message.success("Transfer Initiated! Check emails.");
     }
 
     yield put(WyreAction.createWyreTransferSuccess());
@@ -96,9 +86,7 @@ function* createWyreTransfer({ payload }: WyreTransferResult) {
 
     yield put(WyreAction.createWyreTransferFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

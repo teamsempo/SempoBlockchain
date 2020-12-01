@@ -6,7 +6,6 @@ import NavBar from "../navBar";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 import IntercomSetup from "../intercom/IntercomSetup";
-import MessageBar from "../messageBar";
 import ErrorBoundary from "../ErrorBoundary";
 import LoadingSpinner from "../loadingSpinner";
 
@@ -51,7 +50,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
   return (
     <ErrorBoundary>
       <IntercomSetup />
-      <MessageBar />
 
       <Layout style={{ minHeight: "100vh" }}>
         {noNav ? null : (
