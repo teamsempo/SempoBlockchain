@@ -32,7 +32,7 @@ else
     cd eth_src
     if [ "$CONTAINER_TYPE" == 'BEAT' ]; then
         echo "Starting Beat Worker"
-        celery -A celery_app beat -S redbeat.RedBeatScheduler --loglevel=WARNING
+        celery -A celery_app beat --loglevel=WARNING
     elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
         echo "Starting Flower Worker"
         flower -A celery_app --port=5555
