@@ -1,11 +1,10 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { message } from "antd";
 
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import EditUserForm, { IEditUser } from "./EditUserForm";
-import { TransferAccountTypes } from "../transferAccount/types";
-import { MessageAction } from "../../reducers/message/actions";
 import {
   DeleteUserAction,
   EditUserAction,
@@ -16,13 +15,11 @@ import {
   ResetPinPayload,
   DeleteUserPayload
 } from "../../reducers/user/types";
-import { any } from "prop-types";
 
 interface DispatchProps {
   editUser: (body: User, path: number) => EditUserAction;
   resetPin: (payload: ResetPinPayload) => ResetPinAction;
   deleteUser: (payload: DeleteUserPayload) => DeleteUserAction;
-  addMsg: (msg: string) => MessageAction;
 }
 
 interface StateProps {
@@ -88,7 +85,7 @@ class SingleUserManagement extends React.Component<Props> {
     if (del === "DELETE") {
       this.props.deleteUser({ path: selectedUser.id });
     } else {
-      this.props.addMsg("Action Canceled");
+      message.error("Action Canceled");
     }
   }
 
@@ -119,10 +116,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     editUser: (body: User, path: number) =>
       dispatch(EditUserAction.editUserRequest({ body, path })),
     resetPin: payload => dispatch(ResetPinAction.resetPinRequest(payload)),
-    deleteUser: payload =>
-      dispatch(DeleteUserAction.deleteUserRequest(payload)),
-    addMsg: msg =>
-      dispatch(MessageAction.addMessage({ error: true, message: msg }))
+    deleteUser: payload => dispatch(DeleteUserAction.deleteUserRequest(payload))
   };
 };
 
