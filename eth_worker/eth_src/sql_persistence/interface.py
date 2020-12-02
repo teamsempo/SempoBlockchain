@@ -530,7 +530,12 @@ class SQLPersistenceInterface(object):
 
     def add_block_range(self, start, end, filter_id):
         for n in range(start, end + 1):
-            block = SynchronizedBlock(block_number = n , status = 'PENDING', is_synchronized = False, synchronization_filter_id = filter_id)
+            block = SynchronizedBlock(
+                block_number=n,
+                status='PENDING',
+                is_synchronized=False,
+                synchronization_filter_id=filter_id
+            )
             self.session.add(block)
         self.session.commit()
 
