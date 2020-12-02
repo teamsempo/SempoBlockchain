@@ -67,7 +67,9 @@ class MetricsCard extends React.Component {
     if (metricsLoadStatus.success && selectedData) {
       dataModule = (
         <div>
-          <LoadingSpinner spinning={metricsLoadStatus.isRequesting}>
+          <LoadingSpinner
+            spinning={metricsLoadStatus.isRequesting ? "true" : ""}
+          >
             <div
               style={{
                 display: "flex",
