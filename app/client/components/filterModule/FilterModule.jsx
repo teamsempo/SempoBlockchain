@@ -146,9 +146,10 @@ class FilterModule extends React.Component {
           {
             <OptGroup label={"Sender"}>
               {senderGroups.map(group => {
-                return (
-                  <Option key={group}>{allowedGroups[group]["name"]}</Option>
-                );
+                let label = allowedGroups[group]["name"];
+                label =
+                  this.state.groupBy == group ? "Sender ".concat(label) : label;
+                return <Option key={group}>{label}</Option>;
               })}
             </OptGroup>
           }
@@ -156,9 +157,12 @@ class FilterModule extends React.Component {
           {
             <OptGroup label={"Recipient"}>
               {recipientGroups.map(group => {
-                return (
-                  <Option key={group}>{allowedGroups[group]["name"]}</Option>
-                );
+                let label = allowedGroups[group]["name"];
+                label =
+                  this.state.groupBy == group
+                    ? "Recipient ".concat(label)
+                    : label;
+                return <Option key={group}>{label}</Option>;
               })}
             </OptGroup>
           }
