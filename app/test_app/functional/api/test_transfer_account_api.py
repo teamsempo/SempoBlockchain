@@ -148,7 +148,8 @@ def test_put_single_transfer_account_api(test_client, authed_sempo_admin_user, c
             'payable_period_type': 'weekly',
             'payable_period_length': '1',
             'payable_epoch': '2/7/20',
-            'approve': True
+            'approve': True,
+            'notes': 'This account has a comment!'
         })
 
     assert response.status_code == status_code
@@ -156,7 +157,7 @@ def test_put_single_transfer_account_api(test_client, authed_sempo_admin_user, c
         assert response.json['data']['transfer_account'] is not None
         assert response.json['data']['transfer_account'][
                    'balance'] == 0
-
+        assert response.json['data']['transfer_account']['notes'] == 'This account has a comment!'
 
 @pytest.mark.parametrize("transfer_account_id_accessor, tier, status_code", [
     (lambda u: None, None, 401),
