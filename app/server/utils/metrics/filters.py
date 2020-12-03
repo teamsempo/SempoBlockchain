@@ -71,7 +71,7 @@ def _determine_join_conditions(query_table, sender_or_recipient):
     if query_table == User:
         return User.id, None
 
-def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None, transfer_join_attribute=None):
+def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None):
     """
     Converts a list of filter rule tuples (applying to a particular table specified
     by target_table) to an actual alchemy query and applies it
@@ -147,27 +147,9 @@ withdrawal_filters = [
     CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL
 ]
 
-
-transaction_volume_filters = [
-    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-]
-
 standard_payment_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD
-]
-
-exchanged_filters = [
-    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-    CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
-]
-
-beneficiary_filters = [User.has_beneficiary_role == True]
-vendor_filters = [User.has_vendor_role == True]
-
-exhaused_balance_filters = [
-    CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
-    TransferAccount._balance_wei == 0
 ]
 
