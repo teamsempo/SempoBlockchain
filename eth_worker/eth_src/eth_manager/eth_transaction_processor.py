@@ -8,8 +8,8 @@ import config
 from exceptions import PreBlockchainError
 from eth_manager.contract_registry.contract_registry import ContractRegistry
 from celery_utils import eth_endpoint
+import celery_app 
 from web3.exceptions import TransactionNotFound
-
 
 class EthTransactionProcessor(object):
     """
@@ -216,10 +216,10 @@ class EthTransactionProcessor(object):
     def _get_gas_price(self, target_transaction_time=None):
 
         if not target_transaction_time:
-            target_transaction_time = config.ETH_TARGET_TRANSACTION_TIME
+            target_transaction_time = celery_app.chain_config['TARGET_TRANSACTION_TIME']
 
         try:
-            gas_price_req = requests.get(config.ETH_GAS_PRICE_PROVIDER + '/price',
+            gas_price_req = requests.get(celery_app.chain_config['GAS_PRICE_PROVIDER'] + '/price',
                                          params={'max_wait_seconds': target_transaction_time}).json()
 
             gas_price = min(gas_price_req['gas_price'], self.gas_price_wei)
