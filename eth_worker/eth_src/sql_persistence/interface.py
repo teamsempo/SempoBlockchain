@@ -4,6 +4,7 @@ from sqlalchemy import and_, or_
 
 from sempo_types import UUID, UUIDList
 
+from celery_utils import chain
 import config
 
 from sql_persistence.models import (
@@ -540,8 +541,7 @@ class SQLPersistenceInterface(object):
         self.session.commit()
 
 
-    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=config.ETH_PENDING_TRANSACTION_EXPIRY_SECONDS):
-
+    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=config.CHAINS[chain]['PENDING_TRANSACTION_EXPIRY_SECONDS']):
         self.red = red
 
         self.session = session
