@@ -1,7 +1,6 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import type_coerce
 import pendulum
 import secrets
 from decimal import Decimal

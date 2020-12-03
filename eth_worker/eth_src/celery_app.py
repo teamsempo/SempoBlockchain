@@ -28,7 +28,6 @@ from sql_persistence import session
 from sql_persistence.interface import SQLPersistenceInterface
 
 from eth_manager.contract_registry.ABIs import (
-    dai_abi,
     erc20_abi,
     bancor_converter_abi,
     bancor_network_abi
@@ -104,5 +103,3 @@ if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
 processor.registry.register_abi('ERC20', erc20_abi.abi)
 processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
 processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
-
-import celery_tasks
