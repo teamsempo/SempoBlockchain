@@ -35,12 +35,12 @@ def dollars_to_cents(amount_dollars):
 
 def find_user_with_transfer_account_from_identifiers(user_id, public_identifier, transfer_account_id):
 
-    user = find_user_from_identifiers(user_id, public_identifier, transfer_account_id)
+    user, transfer_card = find_user_from_identifiers(user_id, public_identifier, transfer_account_id)
 
     if user and not user.transfer_accounts:
         raise NoTransferAccountError('User {} does not have a transfer account'.format(user))
 
-    return user
+    return user, transfer_card
 
 
 def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
@@ -51,15 +51,15 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
         if not user:
             raise UserNotFoundError('User not found for user id {}'.format(user_id))
         else:
-            return user
+            return user, None
 
     if public_identifier:
-        user = UserUtils.find_user_from_public_identifier(public_identifier)
+        user, transfer_card = UserUtils.find_user_from_public_identifier(public_identifier)
 
         if not user:
             raise UserNotFoundError('User not found for public identifier {}'.format(user_id))
         else:
-            return user
+            return user, transfer_card
 
     if transfer_account_id:
         transfer_account = TransferAccount.query.get(transfer_account_id)
@@ -69,9 +69,9 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
         if not user:
             raise UserNotFoundError('User not found for public identifier {}'.format(user_id))
         else:
-            return user
+            return user, None
 
-    return None
+    return None, None
 
 def handle_transfer_to_blockchain_address(
         transfer_amount, sender_user, recipient_blockchain_address, transfer_use, transfer_mode, uuid=None):
@@ -200,7 +200,8 @@ def make_payment_transfer(
         is_ghost_transfer=False,
         queue='high-priority',
         batch_uuid=None,
-        transfer_type=TransferTypeEnum.PAYMENT
+        transfer_type=TransferTypeEnum.PAYMENT,
+        transfer_card=None
 ):
     """
     This is used for internal transfers between Sempo wallets.
@@ -221,6 +222,8 @@ def make_payment_transfer(
     :param is_ghost_transfer: if an account is created for recipient just to exchange, it's not real
     :param queue:
     :param batch_uuid:
+    :param transfer_type: the type of transfer
+    :param transfer_card: the card that was used to make the payment
     :return:
     """
 
@@ -249,6 +252,7 @@ def make_payment_transfer(
                               transfer_type=transfer_type,
                               transfer_subtype=transfer_subtype,
                               transfer_mode=transfer_mode,
+                              transfer_card=transfer_card,
                               is_ghost_transfer=is_ghost_transfer,
                               require_sufficient_balance=require_sufficient_balance)
 
