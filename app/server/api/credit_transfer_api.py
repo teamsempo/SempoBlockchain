@@ -473,12 +473,10 @@ class InternalCreditTransferAPI(MethodView):
                     'message': 'No existing users involved in this transfer',
                     'data': {}
                 }
-            # Case 3: Two non-Sempo users who have both interacted with Sempo users before transact with one another
+            # Case 3: Two non-Sempo users, at least one of whom have both interacted with Sempo users before transacting with one another
             # We don't have to track this either!
-            elif (maybe_recipient_transfer_account
-                  and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
-                  and maybe_sender_transfer_account
-                  and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL):
+            elif (((maybe_recipient_transfer_account and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL) or not maybe_recipient_transfer_account) and
+                ((maybe_sender_transfer_account and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL) or not maybe_sender_transfer_account)):
                     response_object = {
                         'message': 'Only external users involved in this transfer',
                         'data': {}
