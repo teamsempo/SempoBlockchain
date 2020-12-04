@@ -103,3 +103,5 @@ if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
 processor.registry.register_abi('ERC20', erc20_abi.abi)
 processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
 processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
+
+import celery_tasks
