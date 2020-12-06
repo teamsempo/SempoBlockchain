@@ -214,7 +214,10 @@ class BeneficiaryLiveFeed extends React.Component {
                         margin: expanded ? "margin: 2.4em 0" : "margin: 0.8em 0"
                       }}
                     >
-                      <UserSVG src="/static/media/exchange.svg" />
+                      <UserSVG
+                        src="/static/media/exchange.svg"
+                        alt={"Exchange Icon"}
+                      />
                       <UserGroup>
                         <ClickableTopText
                           onClick={() =>
@@ -234,7 +237,10 @@ class BeneficiaryLiveFeed extends React.Component {
                 } else if (transfer.transfer_type === "PAYMENT") {
                   return (
                     <UserWrapper key={transfer.id}>
-                      <UserSVG src="/static/media/transfer.svg" />
+                      <UserSVG
+                        src="/static/media/transfer.svg"
+                        alt={"Transfer Icon"}
+                      />
                       <UserGroup>
                         <TopText>
                           <ClickableTopText
@@ -268,7 +274,10 @@ class BeneficiaryLiveFeed extends React.Component {
                 } else if (transfer.transfer_type === "DISBURSEMENT") {
                   return (
                     <UserWrapper key={transfer.id}>
-                      <UserSVG src="/static/media/disbursement.svg" />
+                      <UserSVG
+                        src="/static/media/disbursement.svg"
+                        alt={"Disbursement Icon"}
+                      />
                       <UserGroup>
                         <TopText>
                           <NonClickableTopText>
@@ -299,6 +308,7 @@ class BeneficiaryLiveFeed extends React.Component {
                       <UserSVG
                         style={{ transform: "rotate(180deg)" }}
                         src="/static/media/disbursement.svg"
+                        alt={"Reclamation Icon"}
                       />
                       <UserGroup>
                         <TopText>

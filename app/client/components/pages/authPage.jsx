@@ -69,7 +69,10 @@ export class authPage extends React.Component {
       <WrapperDiv>
         <LoginModuleBox>
           <div>
-            <SempoLogoSVG src="/static/media/sempo_logo_teal.png" />
+            <SempoLogoSVG
+              src="/static/media/sempo_logo_teal.png"
+              alt={"Sempo Logo"}
+            />
           </div>
           <Switch>
             <Route

@@ -9,8 +9,7 @@ import IntercomSetup from "../intercom/IntercomSetup";
 import ErrorBoundary from "../ErrorBoundary";
 import LoadingSpinner from "../loadingSpinner";
 
-const { Header, Content, Footer } = Layout;
-const { Title } = Typography;
+const { Content, Footer } = Layout;
 
 interface OuterProps {
   noNav?: boolean;
@@ -41,6 +40,12 @@ const Page: React.FunctionComponent<OuterProps> = props => {
       setCollapsed(localStorage.getItem("sideBarCollapsed") === "true");
     }
   }, []);
+
+  React.useEffect(() => {
+    if (title) {
+      document.title = `Sempo | ${title}`;
+    }
+  }, [title]);
 
   let onCollapse = (collapsed: boolean) => {
     setCollapsed(collapsed);
@@ -91,11 +96,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
               : { marginLeft: "200px" }
           }
         >
-          {title ? (
-            <Header className="site-layout-background" style={{ padding: 0 }}>
-              <Title>{title}</Title>
-            </Header>
-          ) : null}
           <Content style={{ margin: isAntDesign ? "0 16px" : "" }}>
             <React.Suspense
               fallback={
