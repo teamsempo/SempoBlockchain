@@ -1,6 +1,7 @@
 import datetime
 
 import celery_utils
+import celery_app 
 from celery import chain, signature
 from celery_utils import eth_endpoint
 
@@ -181,7 +182,7 @@ class TransactionSupervisor(object):
 
         if balance <= wei_topup_threshold and wei_target_balance > balance:
             task_uuid = self.queue_send_eth(
-                signing_address=config.MASTER_WALLET_ADDRESS,
+                signing_address=celery_app.chain_config['MASTER_WALLET_ADDRESS'],
                 amount_wei=wei_target_balance - balance,
                 recipient_address=wallet.address,
                 prior_tasks=[],
