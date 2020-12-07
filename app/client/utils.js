@@ -1,10 +1,10 @@
 import { call, put } from "redux-saga/effects";
 import merge from "deepmerge";
+import { message } from "antd";
 import { LoginAction } from "./reducers/auth/actions";
 import store, { browserHistory } from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 import { LoadMetricAction } from "./reducers/metric/actions";
-import { MessageAction } from "./reducers/message/actions";
 
 export function formatMoney(
   amount,
@@ -387,12 +387,7 @@ export const parseEncodedParams = (allowedFilters, params) => {
         metric_type: mt
       };
       store.dispatch(LoadMetricAction.loadMetricRequest({ query: params }));
-      store.dispatch(
-        MessageAction.addMessage({
-          error: true,
-          message: "URL Invalid"
-        })
-      );
+      message.error("URL Invalid");
       buildQueryString(params);
     });
   }
