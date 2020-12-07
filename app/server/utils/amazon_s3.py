@@ -1,12 +1,9 @@
 import os
-import shutil
 import requests
 import datetime
 from flask import g, current_app
-import boto3
 from botocore.exceptions import ClientError
 from server import s3
-import asyncio
 import base64
 
 class LoadFileException(Exception):

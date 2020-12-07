@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.7.33'  # Remember to bump this in every PR
+VERSION = '1.7.35'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -334,6 +334,8 @@ try:
 
         configs['SYNCRONOUS_TASK_TIMEOUT'] = config_parser[chain].getint('synchronous_task_timeout', 4)
         configs['CALL_TIMEOUT'] = config_parser[chain].getint('call_timeout', 2)
+        configs['THIRD_PARTY_SYNC_SCHEDULE'] = config_parser[chain].getfloat('third_party_sync_schedule', 30)
+
         CHAINS[chain] = configs
 
 except ImportError:
