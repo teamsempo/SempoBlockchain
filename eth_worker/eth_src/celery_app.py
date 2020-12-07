@@ -47,6 +47,10 @@ with configure_scope() as scope:
 
 chain_config = config.CHAINS[celery_utils.chain]
 
+from config import logg
+
+logg.info(f'Using chain {celery_utils.chain}')
+
 app = Celery('tasks',
              broker=config.REDIS_URL,
              backend=config.REDIS_URL,
@@ -61,13 +65,26 @@ app.conf.beat_schedule = {
 app.conf.beat_schedule = {
     'third-party-transaction-sync': {
         'task': celery_utils.eth_endpoint('synchronize_third_party_transactions'),
-        'schedule': 30, # Every 30 seconds
+        'schedule': chain_config['THIRD_PARTY_SYNC_SCHEDULE'],
     }
 }
 
 w3 = Web3(HTTPProvider(chain_config['HTTP_PROVIDER']))
 
 w3_websocket = Web3(WebsocketProvider(chain_config['WEBSOCKET_PROVIDER']))
+
+if celery_utils.chain == 'CELO':
+    from web3.middleware import geth_poa_middleware
+    from celo_eth_account.account import Account
+    from celo_integration import CeloTransactionProcessor
+
+    w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    w3_websocket.middleware_onion.inject(geth_poa_middleware, layer=0)
+    w3.eth.account = Account
+
+    TransactionProcessorClass = CeloTransactionProcessor
+else:
+    TransactionProcessorClass = EthTransactionProcessor
 
 red = redis.Redis.from_url(config.REDIS_URL)
 
@@ -77,7 +94,7 @@ persistence_module = SQLPersistenceInterface(
     red=red, session=session, first_block_hash=first_block_hash
 )
 
-processor = EthTransactionProcessor(
+processor = TransactionProcessorClass(
     ethereum_chain_id=chain_config['CHAIN_ID'],
     gas_price_wei=w3.toWei(chain_config['GAS_PRICE'], 'gwei'),
     gas_limit=chain_config['GAS_LIMIT'],

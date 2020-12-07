@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - custom_attr_list_fix
+                - celo_integration
 
           requires:
             - build

@@ -318,9 +318,11 @@ def create_reserve_token(app):
 
     print_section_title("Setting up Reserve Token")
 
-    reserve_token_address = app.config.get('RESERVE_TOKEN_ADDRESS')
-    reserve_token_name = app.config.get('RESERVE_TOKEN_NAME')
-    reserve_token_symbol = app.config.get('RESERVE_TOKEN_SYMBOL')
+    chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
+
+    reserve_token_address = chain_config.get('RESERVE_TOKEN_ADDRESS')
+    reserve_token_name = chain_config.get('RESERVE_TOKEN_NAME')
+    reserve_token_symbol = chain_config.get('RESERVE_TOKEN_SYMBOL')
     # reserve_token_decimals = app.config.get('RESERVE_TOKEN_DECIMALS')
 
     if reserve_token_address:
@@ -334,6 +336,7 @@ def create_reserve_token(app):
                 name=reserve_token_name,
                 symbol=reserve_token_symbol,
                 token_type=TokenType.RESERVE,
+                chain=app.config['DEFAULT_CHAIN']
             )
 
             reserve_token.decimals = 18
@@ -376,8 +379,10 @@ def create_float_transfer_account(app):
     for t in tokens:
         if t.float_account_id is None:
             print(f'Creating Float Account for {t.name}')
+            chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
+
             float_transfer_account = TransferAccount(
-                private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
+                private_key=chain_config['FLOAT_PRIVATE_KEY'],
                 account_type=TransferAccountType.FLOAT,
                 token=t,
                 is_approved=True
