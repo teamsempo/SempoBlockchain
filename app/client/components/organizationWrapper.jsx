@@ -26,7 +26,7 @@ const OrganizationWrapper = Component =>
         }
       } else {
         this.props.history.replace({
-          search: generateQueryString()
+          search: location.search
         });
       }
     }

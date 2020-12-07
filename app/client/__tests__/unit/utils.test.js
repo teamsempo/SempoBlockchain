@@ -196,7 +196,7 @@ describe("filterEncoding", () => {
 
   test("parseEncodedParams", () => {
     expect(
-      utils.parseEncodedParams(allowedFilters, encodedFilter)
+      utils.parseEncodedParamsForDashboard(allowedFilters, encodedFilter)
     ).toStrictEqual(filters);
   });
 

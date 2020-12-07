@@ -14,7 +14,7 @@ import Filter from "./filter";
 import {
   parseQueryStringToFilterObject,
   buildQueryString,
-  parseEncodedParams,
+  parseEncodedParamsForDashboard,
   processFiltersForQuery,
   replaceUnderscores,
   toTitleCase
@@ -97,7 +97,7 @@ class FilterModule extends React.Component {
       // Once allowedFilters is loaded, we want to then load in the filters from the URL
       let activeFilters = this.state.encoded_filters;
       if (activeFilters) {
-        let decoded = parseEncodedParams(
+        let decoded = parseEncodedParamsForDashboard(
           this.props.allowedFilters,
           activeFilters
         );
@@ -184,18 +184,12 @@ class FilterModule extends React.Component {
 
     return (
       <FilterContainer isMobile={isMobile}>
-        <Space>
-          <TooltipWrapper
-            label={"Filters:"}
-            prompt={"Filter data by custom attributes"}
-          />
-          <Filter
-            label={"Filter by user:"}
-            filters={filters} // this is only used for initial load
-            possibleFilters={this.props.allowedFilters}
-            onFiltersChanged={this.onFiltersChanged}
-          />
-        </Space>
+        <Filter
+          label={"Filters:"}
+          filters={filters} // this is only used for initial load
+          possibleFilters={this.props.allowedFilters}
+          onFiltersChanged={this.onFiltersChanged}
+        />
         {groupByModule}
       </FilterContainer>
     );

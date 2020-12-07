@@ -3,7 +3,7 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import { Select, InputNumber, DatePicker, Button } from "antd";
+import { Select, InputNumber, DatePicker, Button, Space } from "antd";
 const { Option, OptGroup } = Select;
 
 import { DefaultTheme } from "../theme";
@@ -15,6 +15,7 @@ import { replaceUnderscores } from "../../utils.js";
 import moment from "moment";
 
 import { USER_FILTER_TYPE, USER_FILTER_ATTRIBUTE } from "../../constants.js";
+import { TooltipWrapper } from "../dashboard/TooltipWrapper";
 
 const propTypes = {
   possibleFilters: PropTypes.object,
@@ -29,7 +30,8 @@ const defaultProps = {
     console.log("Filters changed");
   },
   visible: true,
-  label: "Filter:"
+  label: "Filters:",
+  prompt: "Filter data by custom attributes"
 };
 
 class Filter extends React.Component {
@@ -438,25 +440,28 @@ class Filter extends React.Component {
 
   render() {
     return (
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            flexFlow: "row wrap"
-          }}
-        >
-          <PaddedInput>{this.attributeSelector()}</PaddedInput>
+      <Space>
+        <TooltipWrapper label={this.props.label} prompt={this.props.prompt} />
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              flexFlow: "row wrap"
+            }}
+          >
+            <PaddedInput>{this.attributeSelector()}</PaddedInput>
 
-          <PaddedInput>{this.filterTypePicker()}</PaddedInput>
+            <PaddedInput>{this.filterTypePicker()}</PaddedInput>
 
-          <PaddedInput>{this.valuePicker()}</PaddedInput>
+            <PaddedInput>{this.valuePicker()}</PaddedInput>
 
-          <PaddedInput>{this.addFilterBtn()}</PaddedInput>
+            <PaddedInput>{this.addFilterBtn()}</PaddedInput>
+          </div>
+          {this.activeFilterBubbles()}
         </div>
-        {this.activeFilterBubbles()}
-      </div>
+      </Space>
     );
   }
 }

@@ -1,10 +1,11 @@
 import { call, put } from "redux-saga/effects";
 import merge from "deepmerge";
+import { message } from "antd";
 import { LoginAction } from "./reducers/auth/actions";
 import store, { browserHistory } from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 import { LoadMetricAction } from "./reducers/metric/actions";
-import { MessageAction } from "./reducers/message/actions";
+import { LoadTransferAccountAction } from "./reducers/transferAccount/actions";
 
 export function formatMoney(
   amount,
@@ -319,64 +320,70 @@ export const processFiltersForQuery = filters => {
   return encoded_filters;
 };
 
-export const parseEncodedParams = (allowedFilters, params) => {
-  let metric_types = ["credit_transfer", "user"];
+const parseEncodedParams = (allowedFilters, params) => {
   let filters = [];
   let param_array;
   let allowedValues;
   let gt;
   let lt;
   let eq;
-  try {
-    if (allowedFilters && params) {
-      param_array = params.split(":");
-      param_array.map((param, i) => {
-        let filter = {};
-        let filterAttribute = param.split("(")[0];
-        filter["type"] = allowedFilters[filterAttribute].type;
-        if (
-          USER_FILTER_TYPE.DISCRETE === filter.type ||
-          USER_FILTER_TYPE.BOOLEAN_MAPPING === filter.type
-        ) {
-          allowedValues = param.split("(IN)")[1];
-          filter["allowedValues"] = allowedValues
-            .substr(1, allowedValues.length - 2)
-            .split(",");
-          filter["attribute"] = filterAttribute;
-          filter["id"] = i + 1;
+  console.log("allowedFilters", allowedFilters);
+  if (allowedFilters && params) {
+    param_array = params.split(":");
+    param_array.map((param, i) => {
+      let filter = {};
+      let filterAttribute = param.split("(")[0];
+      filter["type"] = allowedFilters[filterAttribute].type;
+      if (
+        USER_FILTER_TYPE.DISCRETE === filter.type ||
+        USER_FILTER_TYPE.BOOLEAN_MAPPING === filter.type
+      ) {
+        allowedValues = param.split("(IN)")[1];
+        filter["allowedValues"] = allowedValues
+          .substr(1, allowedValues.length - 2)
+          .split(",");
+        filter["attribute"] = filterAttribute;
+        filter["id"] = i + 1;
+      } else {
+        gt = param.split("(GT)");
+        lt = param.split("(LT)");
+        eq = param.split("(EQ)");
+        if (gt.length > 1) {
+          allowedValues = gt[1];
+          filter["type"] = ">";
+          filter["threshold"] = allowedValues.substr(
+            1,
+            allowedValues.length - 2
+          );
+        } else if (lt.length > 1) {
+          allowedValues = lt[1];
+          filter["type"] = "<";
+          filter["threshold"] = allowedValues.substr(
+            1,
+            allowedValues.length - 2
+          );
         } else {
-          gt = param.split("(GT)");
-          lt = param.split("(LT)");
-          eq = param.split("(EQ)");
-          if (gt.length > 1) {
-            allowedValues = gt[1];
-            filter["type"] = ">";
-            filter["threshold"] = allowedValues.substr(
-              1,
-              allowedValues.length - 2
-            );
-          } else if (lt.length > 1) {
-            allowedValues = lt[1];
-            filter["type"] = "<";
-            filter["threshold"] = allowedValues.substr(
-              1,
-              allowedValues.length - 2
-            );
-          } else {
-            allowedValues = eq[1];
-            filter["type"] = "=";
-            filter["threshold"] = allowedValues.substr(
-              1,
-              allowedValues.length - 2
-            );
-          }
-          filter["attribute"] = filterAttribute;
-          filter["id"] = i + 1;
+          allowedValues = eq[1];
+          filter["type"] = "=";
+          filter["threshold"] = allowedValues.substr(
+            1,
+            allowedValues.length - 2
+          );
         }
+        filter["attribute"] = filterAttribute;
+        filter["id"] = i + 1;
+      }
 
-        filters.push(filter);
-      });
-    }
+      filters.push(filter);
+    });
+  }
+  return filters;
+};
+
+export const parseEncodedParamsForDashboard = (allowedFilters, params) => {
+  let metric_types = ["credit_transfer", "user"];
+  try {
+    return parseEncodedParams(allowedFilters, params);
   } catch (e) {
     console.log("Something went wrong", e);
     allowedFilters = null;
@@ -387,16 +394,29 @@ export const parseEncodedParams = (allowedFilters, params) => {
         metric_type: mt
       };
       store.dispatch(LoadMetricAction.loadMetricRequest({ query: params }));
-      store.dispatch(
-        MessageAction.addMessage({
-          error: true,
-          message: "URL Invalid"
-        })
-      );
+      message.error("URL Invalid");
       buildQueryString(params);
     });
   }
-  return filters;
+};
+
+export const parseEncodedParamsForAccounts = (allowedFilters, params) => {
+  try {
+    return parseEncodedParams(allowedFilters, params);
+  } catch (e) {
+    console.log("Something went wrong", e);
+    allowedFilters = null;
+    store.dispatch(
+      LoadTransferAccountAction.loadTransferAccountsRequest({
+        query: undefined,
+        path: undefined
+      })
+    );
+    message.error("URL Invalid");
+    browserHistory.push({
+      search: undefined
+    });
+  }
 };
 
 export const flattenObject = obj => {
