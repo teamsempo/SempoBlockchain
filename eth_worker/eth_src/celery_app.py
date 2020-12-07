@@ -28,7 +28,6 @@ from sql_persistence import session
 from sql_persistence.interface import SQLPersistenceInterface
 
 from eth_manager.contract_registry.ABIs import (
-    dai_abi,
     erc20_abi,
     bancor_converter_abi,
     bancor_network_abi

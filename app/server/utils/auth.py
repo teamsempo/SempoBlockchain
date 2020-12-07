@@ -10,7 +10,7 @@ from server.models.user import User
 from server.models.ip_address import IpAddress
 from server.models.organisation import Organisation
 from server.utils.access_control import AccessControl
-import config, hmac, hashlib, json, urllib
+import config, hmac, hashlib, json
 from typing import Optional, Tuple, Dict
 
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
