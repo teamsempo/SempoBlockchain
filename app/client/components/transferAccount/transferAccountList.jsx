@@ -114,6 +114,7 @@ class TransferAccountList extends React.Component {
         type="checkbox"
         checked={checked}
         onChange={() => this.toggleSelectedTransferAccount(id)}
+        aria-label={`Select Account ${id}`}
       />
     );
   }
@@ -188,16 +189,22 @@ class TransferAccountList extends React.Component {
 
   _customIcon(transferAccount) {
     let url = "/static/media/user.svg";
+    let alt = "User ";
     if (transferAccount.is_beneficiary) {
       url = "/static/media/user.svg";
+      alt = "User ";
     } else if (transferAccount.is_vendor) {
       url = "/static/media/store.svg";
+      alt = "Vendor ";
     } else if (transferAccount.is_groupaccount) {
       url = "/static/media/groupaccount.svg";
+      alt = "Group Account ";
     } else if (transferAccount.is_tokenagent) {
       url = "/static/media/tokenagent.svg";
+      alt = "Token Agent ";
     }
-    return <UserSVG src={url} />;
+    alt = alt + this._customName(transferAccount);
+    return <UserSVG src={url} alt={alt} />;
   }
 
   render() {
@@ -248,6 +255,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"New Transfer"}
               >
                 NEW TRANSFER
               </StyledButton>
@@ -260,6 +268,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"Approve"}
               >
                 APPROVE
               </StyledButton>
@@ -272,6 +281,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"Unapprove"}
               >
                 UNAPPROVE
               </StyledButton>
@@ -285,6 +295,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Export"}
                 >
                   Export
                 </StyledButton>
@@ -333,6 +344,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Add New"}
                 >
                   + Add New
                 </StyledButton>
@@ -346,6 +358,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Export"}
                 >
                   Export
                 </StyledButton>
@@ -462,6 +475,7 @@ class TransferAccountList extends React.Component {
                         onChange={() =>
                           this.checkAllTransferAccounts(filteredData)
                         }
+                        aria-label={"Select all accounts"}
                       />
                     ),
                     accessor: "id",

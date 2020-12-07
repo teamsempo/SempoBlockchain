@@ -16,6 +16,7 @@ export default class AsyncButton extends React.Component {
             alignItems: "center",
             justifyContent: "center"
           }}
+          label={this.props.label}
         >
           <div style={{ position: "absolute" }}>
             <LoadingSpinner style={{ color: "white" }} />
@@ -36,6 +37,7 @@ export default class AsyncButton extends React.Component {
             alignItems: "center",
             justifyContent: "center"
           }}
+          label={this.props.label}
         >
           <span> Success </span>
         </StyledButton>
@@ -52,6 +54,7 @@ export default class AsyncButton extends React.Component {
           alignItems: "center",
           justifyContent: "center"
         }}
+        label={this.props.label}
       >
         <span> {this.props.buttonText} </span>
       </StyledButton>

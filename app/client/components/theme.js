@@ -2,7 +2,7 @@
 export const LightTheme = {
   background: "#f7fafc",
   backgroundColor: "#fcfeff",
-  color: "#6a7680"
+  color: "#4e575e"
 };
 
 export const DefaultTheme = {

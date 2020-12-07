@@ -72,7 +72,9 @@ class MetricsCard extends React.Component {
     if (metricsLoadStatus.success && selectedData) {
       dataModule = (
         <div>
-          <LoadingSpinner spinning={metricsLoadStatus.isRequesting}>
+          <LoadingSpinner
+            spinning={metricsLoadStatus.isRequesting ? "true" : ""}
+          >
             <div
               style={{
                 display: "flex",
@@ -95,6 +97,9 @@ class MetricsCard extends React.Component {
               </div>
 
               <img
+                alt={
+                  "Elongated right-arrow dividing primary chart and group by chart"
+                }
                 src="/static/media/BigArrow.svg"
                 style={{
                   height: this.props.chartHeight - 50,

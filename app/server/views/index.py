@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, Blueprint, current_app
+from flask import render_template, Blueprint, current_app, g
+import config
 from server.utils.auth import requires_auth
+from server.utils.multi_chain import get_chain
 import glob, os
 from pathlib import Path
 
@@ -24,6 +26,7 @@ def catch_all(path):
         'index.html',
         js_bundle_main=get_js_bundle_filename('main.bundle.*.js'),
         js_bundle_vendor=get_js_bundle_filename('vendors~main.bundle.*.js'),
+        chain=get_chain(),
     )
 
 @index_view.route('/whatsapp-sync/')
