@@ -188,15 +188,21 @@ describe("filterEncoding", () => {
     }
   };
   const encodedFilter =
-    "_location(IN)(Kibera,Halba):rounded_account_balance(EQ)(1):rounded_transfer_amount(GT)(12):rounded_account_balance(LT)(2)";
+    "_location(IN)(Kibera,Halba)|rounded_account_balance(EQ)(1)|rounded_transfer_amount(GT)(12)|rounded_account_balance(LT)(2)";
 
   test("processFiltersForQuery", () => {
     expect(utils.processFiltersForQuery(filters)).toEqual(encodedFilter);
   });
 
-  test("parseEncodedParams", () => {
+  test("parseEncodedParamsForDashboard", () => {
     expect(
       utils.parseEncodedParamsForDashboard(allowedFilters, encodedFilter)
+    ).toStrictEqual(filters);
+  });
+
+  test("parseEncodedParams", () => {
+    expect(
+      utils.parseEncodedParamsForAccounts(allowedFilters, encodedFilter)
     ).toStrictEqual(filters);
   });
 

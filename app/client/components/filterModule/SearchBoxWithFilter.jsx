@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import { Input as AInput, Card, Divider } from "antd";
+import { Input, Card, Divider } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 
 import matchSorter from "match-sorter";
@@ -51,6 +51,7 @@ class SearchBoxWithFilter extends React.Component {
     super();
     this.state = {
       phrase: "",
+      encoded_filters: null,
       filters: [],
       possibleFilters: null,
       filterActive: false,
@@ -60,25 +61,26 @@ class SearchBoxWithFilter extends React.Component {
     };
   }
 
-  componentDidMount() {
-    let custom_attribute_dict = this.getPossibleFilters();
-    this.setState({ possibleFilters: custom_attribute_dict });
-
-    let query = parseQuery(location.search);
-    if (query) {
-      let decoded = parseEncodedParamsForAccounts(
-        custom_attribute_dict,
-        query["params"]
-      );
-      this.setState({ filters: decoded || [], phrase: query["phrase"] });
-    }
-    console.log("query", query, " location.search", location.search);
-  }
-
   componentDidUpdate(newProps) {
-    if (this.props.item_list !== newProps.item_list) {
+    if (
+      this.props.item_list !== newProps.item_list &&
+      this.props.item_list.length > 0
+    ) {
       let custom_attribute_dict = this.getPossibleFilters();
       this.setState({ possibleFilters: custom_attribute_dict });
+
+      let query = parseQuery(location.search);
+      if (query) {
+        let decoded = parseEncodedParamsForAccounts(
+          custom_attribute_dict,
+          query["params"]
+        );
+        this.setState({
+          filters: decoded || [],
+          phrase: query["phrase"],
+          encoded_filters: query["params"]
+        });
+      }
     }
   }
 
@@ -172,7 +174,9 @@ class SearchBoxWithFilter extends React.Component {
   };
 
   handleChange = evt => {
-    this.setState({ [evt.target.name]: evt.target.value }, this.buildQuery);
+    this.setState({ [evt.target.name]: evt.target.value }, () =>
+      this.buildQuery()
+    );
   };
 
   buildQuery() {
@@ -268,7 +272,7 @@ class SearchBoxWithFilter extends React.Component {
     return (
       <div>
         <Card style={{ width: "calc(100% - 2em)", margin: "1em 1em 0em" }}>
-          <AInput
+          <Input
             prefix={<SearchOutlined />}
             size="large"
             name="phrase"

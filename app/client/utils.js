@@ -281,7 +281,7 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
 
 export const processFiltersForQuery = filters => {
   let encoded_filters = encodeURIComponent("");
-  let delimiter = ":";
+  let delimiter = "|";
   // let encoded_filters = encodeURIComponent("%$user_filters%");
 
   filters.forEach(filter => {
@@ -327,9 +327,8 @@ const parseEncodedParams = (allowedFilters, params) => {
   let gt;
   let lt;
   let eq;
-  console.log("allowedFilters", allowedFilters);
   if (allowedFilters && params) {
-    param_array = params.split(":");
+    param_array = params.split("|");
     param_array.map((param, i) => {
       let filter = {};
       let filterAttribute = param.split("(")[0];

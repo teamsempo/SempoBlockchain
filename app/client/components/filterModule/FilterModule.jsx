@@ -15,9 +15,7 @@ import {
   parseQueryStringToFilterObject,
   buildQueryString,
   parseEncodedParamsForDashboard,
-  processFiltersForQuery,
-  replaceUnderscores,
-  toTitleCase
+  processFiltersForQuery
 } from "../../utils";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
