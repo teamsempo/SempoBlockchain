@@ -47,6 +47,10 @@ with configure_scope() as scope:
 
 chain_config = config.CHAINS[celery_utils.chain]
 
+from config import logg
+
+logg.info(f'Using chain {celery_utils.chain}')
+
 app = Celery('tasks',
              broker=config.REDIS_URL,
              backend=config.REDIS_URL,
