@@ -1,7 +1,7 @@
 body {
   font-family: "Open Sans", sans-serif;
   font-weight: 200;
-  color: #555;
+  color: #4e575e;
   background-color: #f7f7f7;
   margin: 0;
   overflow-y: scroll;
@@ -127,7 +127,7 @@ body {
   padding: 5px 1em !important;
   text-align: left;
   font-size: 15px;
-  color: #6a7680;
+  color: #4e575e;
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;

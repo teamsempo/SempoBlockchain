@@ -311,6 +311,7 @@ class CreditTransferList extends React.Component {
                 }}
                 isLoading={this.props.isApproving}
                 buttonText={<span>NEXT</span>}
+                label={"Next action"}
               />
               <StyledSelect
                 style={{

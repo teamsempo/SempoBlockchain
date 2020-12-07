@@ -1,21 +1,40 @@
 {
   "active_filters": [],
-  "active_group_by": "sender,account_type",
+  "active_group_by": "sender,location",
   "active_users": {
     "aggregate": {
-      "ORGANISATION": 1,
-      "USER": 5,
+      "Dartmouth": 1,
+      "Lower Sackville": 1,
+      "None": 2,
+      "Sunnyvale": 1,
+      "Truro": 1,
       "percent_change": 100,
       "total": 6
     },
     "timeseries": {
-      "ORGANISATION": [
+      "Dartmouth": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
         {
           "date": "2020-10-13T00:00:00",
           "value": 1
         },
         {
           "date": "2020-10-25T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-10-27T00:00:00",
           "value": 1
         },
         {
@@ -27,21 +46,15 @@
           "value": 1
         }
       ],
-      "USER": [
-        {
-          "date": "2020-10-27T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-10-29T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-11-01T00:00:00",
-          "value": 2
-        },
+      "Sunnyvale": [
         {
           "date": "2020-11-02T00:00:00",
+          "value": 1
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]
@@ -53,13 +66,28 @@
   },
   "all_payments_volume": {
     "aggregate": {
-      "ORGANISATION": 1517,
-      "USER": 170,
+      "Dartmouth": 25,
+      "Lower Sackville": 5,
+      "None": 1537,
+      "Sunnyvale": 100,
+      "Truro": 20,
       "percent_change": 97.04433497536947,
       "total": 1687
     },
     "timeseries": {
-      "ORGANISATION": [
+      "Dartmouth": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 25
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 5
+        }
+      ],
+      "None": [
         {
           "date": "2020-10-13T00:00:00",
           "value": 406
@@ -67,6 +95,10 @@
         {
           "date": "2020-10-25T00:00:00",
           "value": 201
+        },
+        {
+          "date": "2020-10-27T00:00:00",
+          "value": 20
         },
         {
           "date": "2020-10-31T00:00:00",
@@ -77,22 +109,16 @@
           "value": 700
         }
       ],
-      "USER": [
-        {
-          "date": "2020-10-27T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-10-29T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-11-01T00:00:00",
-          "value": 30
-        },
+      "Sunnyvale": [
         {
           "date": "2020-11-02T00:00:00",
           "value": 100
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-10-29T00:00:00",
+          "value": 20
         }
       ]
     },
@@ -105,26 +131,42 @@
   },
   "daily_transaction_count": {
     "aggregate": {
-      "USER": 5,
+      "Dartmouth": 1,
+      "Lower Sackville": 1,
+      "None": 1,
+      "Sunnyvale": 1,
+      "Truro": 1,
       "percent_change": null,
       "total": 5
     },
     "timeseries": {
-      "USER": [
+      "Dartmouth": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
         {
           "date": "2020-10-27T00:00:00",
           "value": 1
-        },
-        {
-          "date": "2020-10-29T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-11-01T00:00:00",
-          "value": 2
-        },
+        }
+      ],
+      "Sunnyvale": [
         {
           "date": "2020-11-02T00:00:00",
+          "value": 1
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]
@@ -141,27 +183,43 @@
   "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
-      "USER": 0.8333333333333334,
+      "Dartmouth": 1,
+      "Lower Sackville": 1,
+      "None": 0.5,
+      "Sunnyvale": 0.5,
+      "Truro": 1,
       "percent_change": null,
       "total": 0.7142857142857143
     },
     "timeseries": {
-      "USER": [
-        {
-          "date": "2020-10-27T00:00:00",
-          "value": 0.5
-        },
-        {
-          "date": "2020-10-29T00:00:00",
-          "value": 0.3333333333333333
-        },
+      "Dartmouth": [
         {
           "date": "2020-11-01T00:00:00",
-          "value": 0.5
-        },
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-10-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "Sunnyvale": [
         {
           "date": "2020-11-02T00:00:00",
-          "value": 0.16666666666666666
+          "value": 0.5
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-10-29T00:00:00",
+          "value": 1
         }
       ]
     },
@@ -172,27 +230,43 @@
   },
   "transfer_amount_per_user": {
     "aggregate": {
-      "USER": 28.333333333333332,
+      "Dartmouth": 25,
+      "Lower Sackville": 5,
+      "None": 10,
+      "Sunnyvale": 50,
+      "Truro": 20,
       "percent_change": null,
       "total": 24.285714285714285
     },
     "timeseries": {
-      "USER": [
-        {
-          "date": "2020-10-27T00:00:00",
-          "value": 10
-        },
-        {
-          "date": "2020-10-29T00:00:00",
-          "value": 6.666666666666667
-        },
+      "Dartmouth": [
         {
           "date": "2020-11-01T00:00:00",
-          "value": 7.5
-        },
+          "value": 25
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 5
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-10-27T00:00:00",
+          "value": 20
+        }
+      ],
+      "Sunnyvale": [
         {
           "date": "2020-11-02T00:00:00",
-          "value": 16.666666666666668
+          "value": 50
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-10-29T00:00:00",
+          "value": 20
         }
       ]
     },
@@ -205,27 +279,47 @@
   },
   "users_created": {
     "aggregate": {
-      "USER": 6,
+      "Dartmouth": 1,
+      "Lower Sackville": 1,
+      "None": 2,
+      "Sunnyvale": 2,
+      "Truro": 1,
       "percent_change": 50,
       "total": 7
     },
     "timeseries": {
-      "USER": [
+      "Dartmouth": [
         {
-          "date": "2020-10-23T00:00:00",
-          "value": 2
-        },
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
         {
           "date": "2020-10-29T00:00:00",
           "value": 1
-        },
+        }
+      ],
+      "None": [
         {
-          "date": "2020-11-01T00:00:00",
+          "date": "2020-10-23T00:00:00",
           "value": 1
         },
         {
           "date": "2020-11-02T00:00:00",
+          "value": 1
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-11-02T00:00:00",
           "value": 2
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-10-23T00:00:00",
+          "value": 1
         }
       ]
     },
@@ -236,19 +330,38 @@
   },
   "users_who_made_purchase": {
     "aggregate": {
-      "ORGANISATION": 1,
-      "USER": 5,
+      "Dartmouth": 1,
+      "Lower Sackville": 1,
+      "None": 2,
+      "Sunnyvale": 1,
+      "Truro": 1,
       "percent_change": 100,
       "total": 6
     },
     "timeseries": {
-      "ORGANISATION": [
+      "Dartmouth": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
         {
           "date": "2020-10-13T00:00:00",
           "value": 1
         },
         {
           "date": "2020-10-25T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-10-27T00:00:00",
           "value": 1
         },
         {
@@ -260,21 +373,15 @@
           "value": 1
         }
       ],
-      "USER": [
-        {
-          "date": "2020-10-27T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-10-29T00:00:00",
-          "value": 1
-        },
-        {
-          "date": "2020-11-01T00:00:00",
-          "value": 2
-        },
+      "Sunnyvale": [
         {
           "date": "2020-11-02T00:00:00",
+          "value": 1
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]

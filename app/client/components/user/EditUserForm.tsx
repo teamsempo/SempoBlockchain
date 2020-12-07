@@ -86,7 +86,8 @@ class EditUserForm extends React.Component<
     account_types = Object.values(selectedUser.roles || []);
     account_types = account_types.map((role: any) => role);
 
-    let custom_attr_keys = customAttributes && Object.keys(customAttributes);
+    let custom_attr_keys =
+      (customAttributes && Object.keys(customAttributes)) || [];
     let attr_dict = {};
     custom_attr_keys.map(key => {
       (attr_dict as attr_dict)[key] = customAttributes[key];
