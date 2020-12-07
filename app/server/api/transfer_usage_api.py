@@ -1,6 +1,5 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
-from sqlalchemy import desc
 
 from server import db
 from server.models.transfer_usage import TransferUsage

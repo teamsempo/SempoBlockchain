@@ -2,7 +2,6 @@ import os
 import requests
 import datetime
 from flask import g, current_app
-import boto3
 from botocore.exceptions import ClientError
 from server import s3
 import base64
