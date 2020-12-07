@@ -25,7 +25,7 @@ def load_account():
 
     def inner(address):
         if will_func_test_blockchain():
-            w3 = Web3(HTTPProvider(config.ETH_HTTP_PROVIDER))
+            w3 = Web3(HTTPProvider(config.CHAINS['ETHEREUM']['HTTP_PROVIDER']))
 
             tx_hash = w3.eth.sendTransaction(
                 {'to': address, 'from': w3.eth.accounts[0], 'value': 5 * 10 ** 18})
