@@ -4,6 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 import config
 from server import db, bt
 
+from flask import current_app
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.utils import (
     ModelBase,
@@ -25,6 +26,8 @@ class Token(ModelBase):
     display_decimals = db.Column(db.Integer, default=2)
 
     token_type = db.Column(db.Enum(TokenType))
+
+    chain               = db.Column(db.String, default='ETHEREUM')
 
     organisations = db.relationship('Organisation',
                                     backref='token',
@@ -84,10 +87,11 @@ class Token(ModelBase):
     def system_amount_to_token(self, system_amount, queue='high-priority'):
         return int(system_amount/100 * 10**self.get_decimals(queue))
 
-    def __init__(self, **kwargs):
+    def __init__(self, chain='ETHEREUM', **kwargs):
+        self.chain = chain
         super(Token, self).__init__(**kwargs)
         float_transfer_account = TransferAccount(
-            private_key=config.ETH_FLOAT_PRIVATE_KEY,
+            private_key=current_app.config['CHAINS'][self.chain]['FLOAT_PRIVATE_KEY'],
             account_type=TransferAccountType.FLOAT,
             token=self,
             is_approved=True

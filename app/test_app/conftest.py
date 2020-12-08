@@ -410,7 +410,7 @@ def loaded_master_wallet_address(load_account):
     """
     from server import bt
 
-    deploying_address = bt.create_blockchain_wallet(private_key=config.MASTER_WALLET_PRIVATE_KEY)
+    deploying_address = bt.create_blockchain_wallet(private_key=current_app.config['CHAINS']['ETHEREUM']['MASTER_WALLET_PRIVATE_KEY'])
 
     load_account(deploying_address)
 

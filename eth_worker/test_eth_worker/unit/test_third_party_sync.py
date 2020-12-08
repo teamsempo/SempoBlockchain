@@ -83,7 +83,7 @@ class TestModels:
             self.block_epoch
         )
         
-        start_block = 0 
+        start_block = 1
         end_block = 500
         argument_filters = None
         filter_id = filter.id
