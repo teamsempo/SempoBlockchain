@@ -6,27 +6,15 @@ import {
   PageWrapper
 } from "../styledElements";
 import LoadingSpinner from "../loadingSpinner.jsx";
-import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
-import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
-import NoDataMessage from "../NoDataMessage";
+import FilterModule from "../filterModule/FilterModule";
 
 const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
 
 const mapStateToProps = state => {
   return {
-    creditTransfers: state.creditTransfers,
+    metrics: state.metrics.metricsState,
+    metricsLoadStatus: state.metrics.loadStatus,
     login: state.login
-  };
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    loadCreditTransferList: query =>
-      dispatch(
-        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
-      ),
-    loadAllowedFilters: () =>
-      dispatch(AllowedFiltersAction.loadAllowedFiltersRequest())
   };
 };
 
@@ -36,62 +24,38 @@ class MapPage extends React.Component {
     this.state = {};
   }
 
-  componentDidMount() {
-    let transfer_type = "ALL";
-    let per_page = 50;
-    let page = 1;
-    this.props.loadCreditTransferList({
-      get_stats: true,
-      transfer_type: transfer_type,
-      per_page: per_page,
-      page: page
-    });
-
-    this.props.loadAllowedFilters();
-  }
-
   render() {
-    if (this.props.creditTransfers.loadStatus.isRequesting === true) {
-      return (
-        <WrapperDiv>
+    let {
+      timeSeriesNameLabels,
+      metrics,
+      metricsLoadStatus,
+      cardTitle,
+      filterObject,
+      defaultGroupBy,
+      isMobile
+    } = this.props;
+    return (
+      <Suspense
+        fallback={
           <CenterLoadingSideBarActive>
             <LoadingSpinner />
           </CenterLoadingSideBarActive>
-        </WrapperDiv>
-      );
-    } else if (Object.values(this.props.creditTransfers.byId).length === 0) {
-      return (
-        <PageWrapper>
-          <NoDataMessage />
-        </PageWrapper>
-      );
-    } else if (this.props.creditTransfers.loadStatus.success === true) {
-      return (
-        <Suspense
-          fallback={
-            <CenterLoadingSideBarActive>
-              <LoadingSpinner />
-            </CenterLoadingSideBarActive>
-          }
-        >
-          <WrapperDiv>
-            <PageWrapper>
-              <HeatMap />
-            </PageWrapper>
-          </WrapperDiv>
-        </Suspense>
-      );
-    } else {
-      return (
+        }
+      >
         <WrapperDiv>
-          <p>Something went wrong.</p>
+          <PageWrapper>
+            <FilterModule
+              defaultGroupBy={"sender,coordinates"}
+              filterObject={"credit_transfer"}
+              dateRange={null}
+              hideGroupBy={true}
+            />
+            <HeatMap />
+          </PageWrapper>
         </WrapperDiv>
-      );
-    }
+      </Suspense>
+    );
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(MapPage);
+export default connect(mapStateToProps)(MapPage);
