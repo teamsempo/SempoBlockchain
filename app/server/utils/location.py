@@ -22,36 +22,61 @@ def async_set_user_gps_from_location(user_id: int, location: str):
     """
     _set_user_gps_from_location(user_id, location)
 
+def get_location_from_peers(location):
+    """
+    Checks if another user has a manually set coords for a given location name.
+    If they do, steal them! 
 
-def _set_user_gps_from_location(user_id: int, location: str):
+    :param location: a location string, such as '308 Dufferin St, Bridgewater NS'
+    """
+    user_with_coords = db.session.query(User)\
+        .execution_options(show_all=True)\
+        .filter(User._location==location)\
+        .filter(User.lat!=None)\
+        .filter(User.lng!=None)\
+        .first()
+
+    if user_with_coords:
+        return (user_with_coords.lat, user_with_coords.lng)
+    return None
+
+def _set_user_gps_from_location(user_id: int, location: str, skip_cache=False, user_obj=None):
     """
     Wrapped version for testing
+    :param user_id: the user ID to set the location for
+    :param location: the user to set the location for
+    :param skip_cache: flag to skip cache access (Will still write to cache)
+    :param user_obj: the user object to set location for (Optional)
+
     """
-    user = User.query.get(user_id)
+    user = user_obj or User.query.get(user_id)
+
     if not user:
         capture_message(f'User not found for id {user_id}')
         return
 
     # Add country to location lookup if it's not already there
     country = user.default_organisation.country if user.default_organisation else None
-    if country and country not in location:
-        location = f'{location}, {country}'
+    query_location = location
+    if country and location and country not in location:
+        query_location = f'{location}, {country}'
 
     # Try load location from redis cache to avoid hitting OSM too much
-    cached_tuple_string = red.get(redis_location_key(location))
-    if cached_tuple_string:
-        gps_tuple = json.loads(cached_tuple_string)
-    else:
+    cached_tuple_string = None
+    if not skip_cache:
+        cached_tuple_string = red.get(redis_location_key(query_location))
 
-        gps_tuple = osm_location_to_gps_lookup(location)
+    if cached_tuple_string:
+        gps_tuple = tuple(json.loads(cached_tuple_string))
+    else:
+        gps_tuple = osm_location_to_gps_lookup(query_location) or get_location_from_peers(location)
         if not gps_tuple:
-            logg.warning(f'GPS for location not found on OSM for user {user_id}')
+            logg.warning(f'GPS for location "{query_location}" not found on OSM or amongst peers for user {user_id}')
             return
 
-        red.set(redis_location_key(location), json.dumps(gps_tuple))
+        red.set(redis_location_key(query_location), json.dumps(gps_tuple))
 
     lat, lng = gps_tuple
-
 
     user.lat = lat
     user.lng = lng
