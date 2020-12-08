@@ -146,14 +146,15 @@ def calculate_timeseries_per_user(query_result, population_query_result):
 
         try:
             last_successful_population_lookup = population_dates[result[1]]
-
-            product = result[0] / last_successful_population_lookup[index]
-
+            if last_successful_population_lookup[index] != 0:
+                product = result[0] / (last_successful_population_lookup[index])
+            else:
+                product = 0
         except KeyError as e:
             # Makes the data slightly more robust to missing info
             # by allowing us to fallback to the last population info
             if last_successful_population_lookup:
-                product = result[0] / last_successful_population_lookup[index]
+                product = result[0] / last_successful_population_lookup[index] if index in last_successful_population_lookup else 0
             else:
                 product = 0
 
@@ -176,7 +177,10 @@ def calculate_aggregate_per_user(query_result, population_query_result):
             if pqr[1] == last_day:
                 category_populations[pqr[2]] = pqr[0]
         for r in query_result:
-            result.append((r[0]/category_populations[r[1]], r[1]))
+            if r[1] in category_populations:
+                result.append((r[0]/category_populations[r[1]], r[1]))
+            else:
+                result.append((0, r[1]))
         return result
     
     elif UNGROUPED in population_query_result:

@@ -10,7 +10,7 @@ from server.models.user import User
 from server.models.ip_address import IpAddress
 from server.models.organisation import Organisation
 from server.utils.access_control import AccessControl
-import config, hmac, hashlib, json, urllib
+import config, hmac, hashlib, json
 from typing import Optional, Tuple, Dict
 
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
@@ -354,12 +354,12 @@ def get_denominations(currency_symbol=None):
 
 
 def create_user_response_object(user, auth_token, message):
-    if current_app.config['IS_USING_BITCOIN']:
-        try:
+    try:
+        if current_app.config['CHAINS'][user.default_organisation.token.chain]['IS_USING_BITCOIN']:
             usd_to_satoshi_rate = get_usd_to_satoshi_rate()
-        except Exception:
+        else:
             usd_to_satoshi_rate = None
-    else:
+    except Exception:
         usd_to_satoshi_rate = None
 
     conversion_rate = 1
