@@ -632,6 +632,6 @@ const CloseIcon = styled.div`
 `;
 
 const PageWrapper = styled.div`
-  width: calc(100vw - 234px);
+  margin: 1em;
   text-align: center;
 `;
