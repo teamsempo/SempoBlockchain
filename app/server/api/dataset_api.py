@@ -84,7 +84,6 @@ class DatasetAPI(MethodView):
 
             if contains_anything:
                 item_response_object, response_code = UserUtils.proccess_create_or_modify_user_request(attribute_dict,
-                                                                                                       force_dict_keys_lowercase=True,
                                                                                                        allow_existing_user_modify=True)
 
                 self.diagnostics.append((item_response_object.get('message'), response_code))
