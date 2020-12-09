@@ -7,9 +7,19 @@ export default function KoboCredentials() {
   const [username, setUsername] = useState<string | null>(null);
   const [password, setPassword] = useState<string | null>(null);
 
+  const [preprocess, setPreprocess] = useState<boolean>(true);
+  const [allow_as_update, setAllowAsUpdate] = useState<boolean>(false);
+  const [return_raw_on_error, setReturnRawOnError] = useState<boolean>(false);
+
+  const [url, setUrl] = useState<string | null>(null);
+
   useEffect(() => {
     getKoboCredentials();
   }, []);
+
+  useEffect(() => {
+    buildUrl();
+  }, [username, password, preprocess, allow_as_update, return_raw_on_error]);
 
   function getKoboCredentials() {
     const query_string = generateQueryString();
@@ -34,27 +44,106 @@ export default function KoboCredentials() {
       });
   }
 
+  const baseUrl = window.location.origin + "/api/v1/user/";
+
+  const buildUrl = () => {
+    const params = new URLSearchParams({
+      username: username || "",
+      password: password || "",
+      preprocess: preprocess.toString(),
+      allow_as_update: allow_as_update.toString(),
+      return_raw_on_error: return_raw_on_error.toString()
+    });
+    setUrl(baseUrl + "?" + params);
+  };
+
+  function setCheckbox(e: any) {
+    switch (e.target.id) {
+      case "preprocess":
+        setPreprocess(e.target.checked);
+        break;
+      case "allow_as_update":
+        setAllowAsUpdate(e.target.checked);
+        break;
+      case "return_raw_on_error":
+        setReturnRawOnError(e.target.checked);
+        break;
+    }
+  }
+
   if (username) {
     let qrData = JSON.stringify({
       u: username,
       p: password,
       d: window.location.hostname
     });
-
     return (
-      <div style={{ margin: "1em" }}>
-        <StyledAccountWrapper>
-          <StyledHeader>Plugin/Integration Credentials</StyledHeader>
-          <StyledContent>
-            <b>Username: </b>
-            {username}
-          </StyledContent>
-          <StyledContent>
-            <b>Password: </b>
-            {password}
-          </StyledContent>
-          <QRShowingModal data={`auth:${qrData}`} />
-        </StyledAccountWrapper>
+      <div>
+        <div style={{ margin: "1em" }}>
+          <StyledAccountWrapper>
+            <StyledHeader>Plugin/Integration Credentials</StyledHeader>
+            <StyledContent>
+              <b>Username: </b>
+              {username}
+            </StyledContent>
+            <StyledContent>
+              <b>Password: </b>
+              {password}
+            </StyledContent>
+            <StyledContent>
+              <QRShowingModal data={`auth:${qrData}`} />
+            </StyledContent>
+          </StyledAccountWrapper>
+        </div>
+        <div style={{ margin: "1em" }}>
+          <StyledAccountWrapper>
+            <StyledHeader>Integration URL</StyledHeader>
+            <StyledContent>
+              <b>URL: </b>
+              <input type="text" size={50} value={url || ""} />
+            </StyledContent>
+            <StyledContent>
+              <label style={{ marginLeft: "0.5em" }}>
+                <input
+                  id="preprocess"
+                  name="preprocess"
+                  type="checkbox"
+                  checked={preprocess}
+                  onClick={setCheckbox}
+                  aria-label="Preprocess Inputs"
+                />
+                Preprocess Inputs
+              </label>
+              <br />
+
+              <label style={{ marginLeft: "0.5em" }}>
+                <input
+                  id="allow_as_update"
+                  name="allow_as_update"
+                  type="checkbox"
+                  checked={allow_as_update}
+                  onClick={setCheckbox}
+                  aria-label="Allow User Updates"
+                />
+                Allow User Updates
+              </label>
+              <br />
+
+              <label style={{ marginLeft: "0.5em" }}>
+                <input
+                  id="return_raw_on_error"
+                  name="return_raw_on_error"
+                  type="checkbox"
+                  checked={return_raw_on_error}
+                  onClick={setCheckbox}
+                  aria-label="Return Raw on Error"
+                />
+                Return Raw on Error
+              </label>
+              <br />
+            </StyledContent>
+          </StyledAccountWrapper>
+        </div>
       </div>
     );
   } else {
