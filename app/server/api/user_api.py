@@ -213,10 +213,6 @@ class ResetPinAPI(MethodView):
             if user is None:
                 return make_response(jsonify({'message': 'No user found for ID: {}'.format(reset_user_id)})), 404
 
-            user.set_one_time_code(None)
-            user.password_hash = None
-            user.pin_hash = None
-
             UserUtils.admin_reset_user_pin(user)
 
             response_object = {

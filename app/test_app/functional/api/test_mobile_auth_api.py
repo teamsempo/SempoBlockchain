@@ -49,3 +49,12 @@ def test_request_api_token_golden_path_success(
 
     assert set_pin_response.status_code == 200
     assert set_pin_response.json['message'] == 'Successfully set pin'
+
+
+    login_response = test_client.post('/api/v1/auth/request_api_token/',
+                                    data=json.dumps(
+                                        dict(phone=user_phone, pin='1234')),
+                                    content_type='application/json', follow_redirects=True)
+
+    assert login_response.status_code == 200
+    assert login_response.json['message'] == 'Successfully logged in.'
