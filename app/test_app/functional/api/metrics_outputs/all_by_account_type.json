@@ -1,6 +1,6 @@
 {
   "active_filters": [],
-  "active_group_by": "account_type",
+  "active_group_by": "sender,account_type",
   "active_users": {
     "aggregate": {
       "ORGANISATION": 1,
