@@ -16,10 +16,10 @@ const mapStateToProps = state => {
         .split(",")
         .map(pc => parseFloat(pc))
         .reverse();
-      const coordList = Array(transactionCounts[coordonate]).fill(
-        parsedCoordinate
-      );
-      coords = [...coords, ...coordList];
+      coords = [
+        ...coords,
+        ...Array(transactionCounts[coordonate]).fill(parsedCoordinate)
+      ];
     }
   });
   return {
