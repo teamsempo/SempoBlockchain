@@ -5,10 +5,6 @@ import { connect } from "react-redux";
 import MapGL from "react-map-gl";
 import DeckGLOverlay from "./deckglOverlay.jsx";
 
-// Set your mapbox token here
-const MAPBOX_TOKEN =
-  "pk.eyJ1Ijoic2VtcG9uaWNrIiwiYSI6ImNqZnJtNHkybzA0OWMyd25lczcyeXJwMTYifQ.0CJmw4sMU_VuX4wsPlb53Q"; // eslint-disable-line
-
 const mapStateToProps = state => {
   const transactionCounts = state.metrics.metricsState.daily_transaction_count
     ? state.metrics.metricsState.daily_transaction_count.aggregate
@@ -72,7 +68,7 @@ class HeatMap extends Component {
         {...viewport}
         mapStyle="mapbox://styles/mapbox/dark-v9"
         onViewportChange={this._onViewportChange.bind(this)}
-        mapboxApiAccessToken={MAPBOX_TOKEN}
+        mapboxApiAccessToken={window.MAPBOX_TOKEN}
       >
         <DeckGLOverlay viewport={viewport} data={this.props.metrics || []} />
       </MapGL>
