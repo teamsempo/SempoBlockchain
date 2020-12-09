@@ -335,6 +335,8 @@ try:
 
         configs['SYNCRONOUS_TASK_TIMEOUT'] = config_parser[chain].getint('synchronous_task_timeout', 4)
         configs['CALL_TIMEOUT'] = config_parser[chain].getint('call_timeout', 2)
+        configs['THIRD_PARTY_SYNC_SCHEDULE'] = config_parser[chain].getfloat('third_party_sync_schedule', 30)
+
         CHAINS[chain] = configs
 
 except ImportError:

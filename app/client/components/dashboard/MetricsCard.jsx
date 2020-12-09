@@ -92,6 +92,9 @@ class MetricsCard extends React.Component {
               </div>
 
               <img
+                alt={
+                  "Elongated right-arrow dividing primary chart and group by chart"
+                }
                 src="/static/media/BigArrow.svg"
                 style={{
                   height: this.props.chartHeight - 50,
