@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Checkbox, Input } from "antd";
+
 import styled from "styled-components";
 import { generateQueryString, getToken, handleResponse } from "../utils";
 import QRShowingModal from "./QRShowingModal";
@@ -99,47 +101,40 @@ export default function KoboCredentials() {
           <StyledAccountWrapper>
             <StyledHeader>Integration URL</StyledHeader>
             <StyledContent>
-              <b>URL: </b>
-              <input type="text" size={50} value={url || ""} />
+              <Input type="text" size="small" value={url || ""} />
             </StyledContent>
             <StyledContent>
-              <label style={{ marginLeft: "0.5em" }}>
-                <input
-                  id="preprocess"
-                  name="preprocess"
-                  type="checkbox"
-                  checked={preprocess}
-                  onClick={setCheckbox}
-                  aria-label="Preprocess Inputs"
-                />
+              <Checkbox
+                id="preprocess"
+                name="preprocess"
+                checked={preprocess}
+                onClick={setCheckbox}
+                aria-label="Preprocess Inputs"
+              >
                 Preprocess Inputs
-              </label>
+              </Checkbox>
               <br />
 
-              <label style={{ marginLeft: "0.5em" }}>
-                <input
-                  id="allow_as_update"
-                  name="allow_as_update"
-                  type="checkbox"
-                  checked={allow_as_update}
-                  onClick={setCheckbox}
-                  aria-label="Allow User Updates"
-                />
+              <Checkbox
+                id="allow_as_update"
+                name="allow_as_update"
+                checked={allow_as_update}
+                onClick={setCheckbox}
+                aria-label="Allow User Updates"
+              >
                 Allow User Updates
-              </label>
+              </Checkbox>
               <br />
 
-              <label style={{ marginLeft: "0.5em" }}>
-                <input
-                  id="return_raw_on_error"
-                  name="return_raw_on_error"
-                  type="checkbox"
-                  checked={return_raw_on_error}
-                  onClick={setCheckbox}
-                  aria-label="Return Raw on Error"
-                />
+              <Checkbox
+                id="return_raw_on_error"
+                name="return_raw_on_error"
+                checked={return_raw_on_error}
+                onClick={setCheckbox}
+                aria-label="Return Raw on Error"
+              >
                 Return Raw on Error
-              </label>
+              </Checkbox>
               <br />
             </StyledContent>
           </StyledAccountWrapper>
