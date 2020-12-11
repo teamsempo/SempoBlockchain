@@ -197,6 +197,8 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
     sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
     recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
 
+    sender_transfer_card_id   = fields.Int()
+
     from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
     attached_images         = fields.Nested(UploadedResourceSchema, many=True)
@@ -283,6 +285,7 @@ class TransferAccountSchema(SchemaBase):
     payable_period_type     = fields.Str()
     payable_period_length   = fields.Int()
     payable_epoch           = fields.Str()
+    notes                   = fields.Str()
     payable_period_epoch    = fields.DateTime()
 
     blockchain_address      = fields.Str()

@@ -1,16 +1,20 @@
 from time import sleep
 
 from celery import signature
+import os
+import config
+
+chain = os.environ.get('CHAIN', config.DEFAULT_CHAIN)
 
 celery_tasks_name = 'celery_tasks'
-eth_endpoint = lambda endpoint: f'{celery_tasks_name}.{endpoint}'
-import config
+eth_endpoint = lambda endpoint: f'{chain}.{celery_tasks_name}.{endpoint}'
+
 
 def execute_synchronous_celery(signature):
     async_result = signature.delay()
     try:
         response = async_result.get(
-            timeout=config.SYNCRONOUS_TASK_TIMEOUT,
+            timeout=config.CHAINS[chain]['SYNCRONOUS_TASK_TIMEOUT'],
             propagate=True,
             interval=0.3)
 

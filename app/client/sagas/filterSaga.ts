@@ -1,5 +1,6 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import { filterSchema } from "../schemas";
@@ -17,7 +18,6 @@ import {
 } from "../reducers/filter/types";
 
 import { loadSavedFilters, createFilterAPI } from "../api/filterAPI";
-import { MessageAction } from "../reducers/message/actions";
 import { ActionWithPayload } from "../reduxUtils";
 
 function* updateStateFromFilter(data: FilterData) {
@@ -66,17 +66,13 @@ function* createFilter(
 
     yield put(CreateFilterAction.createFilterSuccess());
 
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(CreateFilterAction.createFilterFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
