@@ -3,7 +3,7 @@ from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy import text, Table
+from sqlalchemy import text, Table, cast, String
 from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
@@ -178,6 +178,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                                         lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
+
+    @hybrid_property
+    def coordinates(self):
+        return str(self.lat) + ', ' + str(self.lng)
+
+    @coordinates.expression
+    def coordinates(cls):
+        return cast(cls.lat, String) + ', ' + cast(cls.lng, String)
 
     def delete_user_and_transfer_account(self):
         """
