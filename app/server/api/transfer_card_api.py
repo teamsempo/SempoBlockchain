@@ -159,11 +159,13 @@ transfer_cards_blueprint.add_url_rule(
 transfer_cards_blueprint.add_url_rule(
     '/transfer_cards/nfc_serial_number/<nfc_serial_number>',
     view_func=TransferCardAPI.as_view('nfc_sn_referenced_transfer_card_view'),
-    methods=['GET']
+    methods=['GET'],
+    defaults={'public_serial_number': None}
 )
 
 transfer_cards_blueprint.add_url_rule(
     '/transfer_cards/public_serial_number/<public_serial_number>',
     view_func=TransferCardAPI.as_view('public_sn_referenced_transfer_card_view'),
     methods=['PUT'],
+    defaults={'nfc_serial_number': None}
 )

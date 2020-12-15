@@ -129,11 +129,11 @@ echo ~~~Setting up Contracts
 cd ../
 python -u devtools/contract_setup_script.py
 
-if [[ "mockData" != 'none' ]]; then
-    echo ~~~Creating mock data
-    cd ./app/server/utils
-    python -u mock_data.py ${testdata}
-fi
+#if [[ "mockData" != 'none' ]]; then
+#    echo ~~~Creating mock data
+#    cd ./app/server/utils
+#    python -u mock_data.py ${testdata}
+#fi
 
 echo ~~~Generating Auth Token
 curl -s 'http://localhost:9000/api/v1/auth/request_api_token/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse"}' --compressed --insecure | \
