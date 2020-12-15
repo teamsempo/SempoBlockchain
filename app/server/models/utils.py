@@ -41,83 +41,6 @@ def get_authorising_user_id():
     else:
         return None
 
-
-def paginate_query(query, sort_attribute=None, sort_desc=True):
-    """
-    Paginates an sqlalchemy query, gracefully managing missing queries.
-    Default ordering is to show most recently created first.
-    Unlike raw paginate, defaults to showing all results if args aren't supplied
-
-    :param query: base query
-    :param sort_attribute: override option for the sort parameter.
-    :param sort_desc: sort in desc order
-    :returns: tuple of (item list, total number of items, total number of pages)
-    """
-
-    updated_after = request.args.get('updated_after')
-    per_page = request.args.get('per_page')
-    page = request.args.get('page')
-    last_fetched = request.args.get('last_fetched')
-
-    #Unfortunately SQLAlchemy doesn't have a better way to expose the queried object
-    queried_object = query._primary_entity.mapper.class_
-
-    if updated_after:
-        parsed_time = parser.isoparse(updated_after)
-        query = query.filter(queried_object.updated > parsed_time)
-
-    # If sort attribute isn't defined but the queried_object is, default to sorting by id
-    if not sort_attribute:
-        sort_attribute = queried_object.id
-
-    if sort_attribute.expression.comparator.type.python_type == datetime.datetime and last_fetched:
-        last_fetched = parser.isoparse(last_fetched)
-
-    if sort_desc:
-        query = query.order_by(sort_attribute.desc())
-
-        # If we have a descending sort order, the next object to return has a lower val than the last
-        # Eg: if the last ID fetched was 10, the next allowable one to return is 9
-        if last_fetched:
-            query = query.filter(sort_attribute < last_fetched)
-
-    else:
-        query = query.order_by(sort_attribute.asc())
-
-        # If we have a asc sort order, the next object to return has a has val than the last
-        # Eg: if the last ID fetched was 10, the next allowable one to return is 11
-        if last_fetched:
-            query = query.filter(sort_attribute > last_fetched)
-
-    if per_page is None:
-        items = query.all()
-
-        if len (items) > 0:
-            new_last_fetched_obj = items[-1]
-            new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
-        else:
-            new_last_fetched = None
-
-        return items, len(items), 1, new_last_fetched
-
-    per_page = int(per_page)
-
-    if page is None:
-        paginated = query.paginate(0, per_page, error_out=False)
-    else:
-
-        page = int(page)
-
-        paginated = query.paginate(page, per_page, error_out=False)
-
-    if len(paginated.items) > 0:
-        new_last_fetched_obj = paginated.items[-1]
-        new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
-    else:
-        new_last_fetched = None
-
-    return paginated.items, paginated.total, paginated.pages, new_last_fetched
-
 @contextmanager
 def no_expire():
     s = db.session()
@@ -320,4 +243,81 @@ class ManyOrgBase(object):
         return db.relationship("Organisation",
                                secondary=organisation_association_table,
                                back_populates=plural)
+
+
+def paginate_query(query, sort_attribute=None, sort_desc=True):
+    """
+    Paginates an sqlalchemy query, gracefully managing missing queries.
+    Default ordering is to show most recently created first.
+    Unlike raw paginate, defaults to showing all results if args aren't supplied
+
+    :param query: base query
+    :param sort_attribute: override option for the sort parameter.
+    :param sort_desc: sort in desc order
+    :returns: tuple of (item list, total number of items, total number of pages)
+    """
+
+    updated_after = request.args.get('updated_after')
+    per_page = request.args.get('per_page')
+    page = request.args.get('page')
+    last_fetched = request.args.get('last_fetched')
+
+    #Unfortunately SQLAlchemy doesn't have a better way to expose the queried object
+    queried_object = query._primary_entity.mapper.class_
+
+    if updated_after:
+        parsed_time = parser.isoparse(updated_after)
+        query = query.filter(queried_object.updated > parsed_time)
+
+    # If sort attribute isn't defined but the queried_object is, default to sorting by id
+    if not sort_attribute:
+        sort_attribute = queried_object.id
+
+    if sort_attribute.expression.comparator.type.python_type == datetime.datetime and last_fetched:
+        last_fetched = parser.isoparse(last_fetched)
+
+    if sort_desc:
+        query = query.order_by(sort_attribute.desc())
+
+        # If we have a descending sort order, the next object to return has a lower val than the last
+        # Eg: if the last ID fetched was 10, the next allowable one to return is 9
+        if last_fetched:
+            query = query.filter(sort_attribute < last_fetched)
+
+    else:
+        query = query.order_by(sort_attribute.asc())
+
+        # If we have a asc sort order, the next object to return has a has val than the last
+        # Eg: if the last ID fetched was 10, the next allowable one to return is 11
+        if last_fetched:
+            query = query.filter(sort_attribute > last_fetched)
+
+    if per_page is None:
+        items = query.all()
+
+        if len (items) > 0:
+            new_last_fetched_obj = items[-1]
+            new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
+        else:
+            new_last_fetched = None
+
+        return items, len(items), 1, new_last_fetched
+
+    per_page = int(per_page)
+
+    if page is None:
+        paginated = query.paginate(0, per_page, error_out=False)
+    else:
+
+        page = int(page)
+
+        paginated = query.paginate(page, per_page, error_out=False)
+
+    if len(paginated.items) > 0:
+        new_last_fetched_obj = paginated.items[-1]
+        new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
+    else:
+        new_last_fetched = None
+
+    return paginated.items, paginated.total, paginated.pages, new_last_fetched
 
