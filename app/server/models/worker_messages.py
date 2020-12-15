@@ -6,4 +6,4 @@ class WorkerMessages(ModelBase):
     message = db.Column(db.String)
     error = db.Column(db.String)
     worker_timestamp = db.Column(db.DateTime)
-    blockchain_task_uuid = db.Column(db.String)
+    blockchain_task_uuid = db.Column(db.String, index=True)
