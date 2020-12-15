@@ -354,7 +354,7 @@ def set_attachments(attribute_dict, user, custom_attributes):
     return custom_attributes
 
 
-def set_location_conditionally(user, location, gps_location):
+def set_location_conditionally(user, location, gps_location = None):
 
     if gps_location:
         try:

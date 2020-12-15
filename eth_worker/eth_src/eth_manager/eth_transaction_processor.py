@@ -129,17 +129,26 @@ class EthTransactionProcessor(object):
             private_key=signing_wallet_obj.private_key
         )
 
+        # Save the hash and nonce before attempting txn
+        self.persistence.update_transaction_data(
+            transaction_id,
+            {
+                'hash': signed_transaction.hash.hex(),
+                'nonce': metadata['nonce'],
+            }
+        )
+
         self._send_signed_transaction(signed_transaction, transaction_id)
 
-        # If we've made it this far, the nonce will(?) be consumed
-        transaction_data = {
-            'hash': signed_transaction.hash.hex(),
-            'nonce': metadata['nonce'],
-            'submitted_date': str(datetime.datetime.utcnow()),
-            'nonce_consumed': True
-        }
 
-        self.persistence.update_transaction_data(transaction_id, transaction_data)
+        # If we've made it this far, the nonce will(?) be consumed
+        self.persistence.update_transaction_data(
+            transaction_id,
+            {
+                'submitted_date': str(datetime.datetime.utcnow()),
+                'nonce_consumed': True
+            }
+        )
 
         return transaction_id
 
@@ -390,6 +399,5 @@ class SigGenerators(object):
                 'args': args,
             }
         )
-
 
 
