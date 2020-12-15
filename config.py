@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.7.38'  # Remember to bump this in every PR
+VERSION = '1.7.39'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -260,8 +260,8 @@ except ImportError:
 # https://ropsten.infura.io/9CAC3Lb5OjaoecQIpPNP
 # https://kovan.infura.io/9CAC3Lb5OjaoecQIpPNP
 
-CHAIN_NAMES = list(config_parser['APP']['chains'].split(',')) or ['ETHEREUM']
-DEFAULT_CHAIN = config_parser['APP']['default_chain'] or 'ETHEREUM'
+CHAIN_NAMES = list(config_parser['APP'].get('chains', 'ETHEREUM').split(','))
+DEFAULT_CHAIN = config_parser['APP'].get('default_chain', 'ETHEREUM')
 CHAINS = {}
 try:
     from eth_keys import keys
