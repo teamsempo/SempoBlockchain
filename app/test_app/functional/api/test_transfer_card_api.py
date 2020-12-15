@@ -290,3 +290,23 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
 
 
 
+
+    # With bound user, check modify offset
+    resp = test_client.put(
+        f"/api/v1/transfer_cards/public_serial_number/123456",
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        json={
+            'amount_offset': 5
+        }
+    )
+
+    assert resp.status_code == 200
+
+    transfer_card = TransferCard.query.filter_by(public_serial_number='123456').first()
+
+    assert transfer_card.amount_loaded == 5
+
+

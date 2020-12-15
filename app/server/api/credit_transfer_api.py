@@ -214,6 +214,7 @@ class CreditTransferAPI(MethodView):
         credit_transfers = []
         response_list = []
         is_bulk = False
+        transfer_card = None
 
         if uuid:
             existing_transfer = CreditTransfer.query.filter_by(uuid = uuid).first()
@@ -253,32 +254,29 @@ class CreditTransferAPI(MethodView):
                 all_user_accounts_query = (all_accounts_query.filter(TransferAccount.account_type == TransferAccountType.USER))
                 all_accounts_except_selected_query = all_user_accounts_query.filter(not_(TransferAccount.id.in_(recipient_transfer_accounts_ids)))
                 for individual_recipient_user in all_accounts_except_selected_query.all():
-                    transfer_user_list.append((individual_sender_user, individual_recipient_user.primary_user))
+                    transfer_user_list.append((individual_sender_user, individual_recipient_user.primary_user, None))
             else:
                 for transfer_account_id in recipient_transfer_accounts_ids:
                     try:
-                        individual_recipient_user = find_user_with_transfer_account_from_identifiers(
+                        individual_recipient_user, transfer_card = find_user_with_transfer_account_from_identifiers(
                             None, None, transfer_account_id)
-
-                        transfer_user_list.append((individual_sender_user, individual_recipient_user))
-
+                        transfer_user_list.append((individual_sender_user, individual_recipient_user, transfer_card))
                     except (NoTransferAccountError, UserNotFoundError) as e:
                         response_list.append({'status': 400, 'message': str(e)})
 
         else:
             batch_uuid = None
             try:
-                individual_sender_user = find_user_with_transfer_account_from_identifiers(
+                individual_sender_user, transfer_card = find_user_with_transfer_account_from_identifiers(
                     sender_user_id,
                     sender_public_identifier,
                     sender_transfer_account_id)
 
-                individual_recipient_user = find_user_with_transfer_account_from_identifiers(
+                individual_recipient_user, _ = find_user_with_transfer_account_from_identifiers(
                     recipient_user_id,
                     recipient_public_identifier,
                     recipient_transfer_account_id)
-
-                transfer_user_list = [(individual_sender_user, individual_recipient_user)]
+                transfer_user_list = [(individual_sender_user, individual_recipient_user, transfer_card)]
 
             except Exception as e:
                 response_object = {
@@ -304,7 +302,7 @@ class CreditTransferAPI(MethodView):
                 token = active_organisation.token
 
 
-        for sender_user, recipient_user in transfer_user_list:
+        for sender_user, recipient_user, transfer_card in transfer_user_list:
             try:
                 if transfer_type == 'PAYMENT':
                     transfer = make_payment_transfer(
@@ -317,7 +315,8 @@ class CreditTransferAPI(MethodView):
                         uuid=uuid,
                         automatically_resolve_complete=auto_resolve,
                         queue=queue,
-                        batch_uuid=batch_uuid
+                        batch_uuid=batch_uuid,
+                        transfer_card=transfer_card
                     )
 
                 elif transfer_type == 'RECLAMATION':
@@ -474,12 +473,25 @@ class InternalCreditTransferAPI(MethodView):
                     'message': 'No existing users involved in this transfer',
                     'data': {}
                 }
-            # Case 3: Two non-Sempo users who have both interacted with Sempo users before transact with one another
+            # Case 3: Two non-Sempo users, at least one of whom has interacted with Sempo users before transacting with one another
             # We don't have to track this either!
-            elif (maybe_recipient_transfer_account
-                  and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
-                  and maybe_sender_transfer_account
-                  and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL):
+            elif (
+                    # The recipient is either an external transfer account we've seen before
+                    # OR we haven't seen them before and so can infer they're external
+                    (
+                            (
+                             maybe_recipient_transfer_account
+                             and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
+                            ) or not maybe_recipient_transfer_account)
+                    and
+                    #
+                    # And the sender is either an external transfer account we've seen before
+                    # OR we haven't seen them before and so can infer they're external
+                    ((
+                             maybe_sender_transfer_account
+                             and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL
+                     ) or not maybe_sender_transfer_account)
+            ):
                     response_object = {
                         'message': 'Only external users involved in this transfer',
                         'data': {}

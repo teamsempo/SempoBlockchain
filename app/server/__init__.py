@@ -85,32 +85,6 @@ def create_app():
                     add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
     except:
         print('Unable to automatically create filters')
-
-    # If it hasn't been done before, migrate from the old custom attribute scheme to the new one
-    try:
-        with app.app_context():
-            from server.models.custom_attribute import CustomAttribute
-            from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
-            if not db.session.query(CustomAttribute).first():
-                print('Old style custom attributes still present. Migrating to new custom attributes scheme!')
-                attributes = db.session.query(CustomAttributeUserStorage).all()
-                attribute_cache = {} # Save { name : attribute } mapping so we don't have to query for it userCount times
-                for user_attr in attributes:
-                    if not user_attr.custom_attribute:
-                        if user_attr.name not in attribute_cache:
-                            custom_attribute = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
-                            if not custom_attribute:
-                                user_attr.custom_attribute = CustomAttribute()
-                                user_attr.custom_attribute.name = user_attr.name
-                                db.session.add(user_attr.custom_attribute)
-
-                            attribute_cache[user_attr.name] = CustomAttribute.query.filter(CustomAttribute.name == user_attr.name).first()
-                        custom_attribute = attribute_cache[user_attr.name]
-                        user_attr.custom_attribute = custom_attribute
-                        user_attr.value = user_attr.value.strip('"')
-                db.session.commit()
-    except:
-        print('Unable to automatically migrate to new-style custom attributes')
     
     return app
 
@@ -179,6 +153,9 @@ def register_blueprints(app):
         from server.models.credit_transfer import CreditTransfer
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
         pusher_utils.push_admin_credit_transfer(transactions)
+
+        # Adds version to response header
+        response.headers['App-Version'] = config.VERSION
 
         return response
 
@@ -314,8 +291,6 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 
-
-encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)

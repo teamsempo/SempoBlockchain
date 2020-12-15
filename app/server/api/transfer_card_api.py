@@ -12,7 +12,7 @@ transfer_cards_blueprint = Blueprint('transfer_cards', __name__)
 
 class TransferCardAPI(MethodView):
     @requires_auth
-    def get(self, nfc_serial_number):
+    def get(self, nfc_serial_number, public_serial_number):
         """
         Get a list of the transfer cards on the system.
         :arg only_bound: only return cards that have transfer accounts bound to them.
@@ -76,7 +76,7 @@ class TransferCardAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_basic_auth_types=('external',))
-    def post(self):
+    def post(self, nfc_serial_number, public_serial_number):
         post_data = request.get_json()
 
         public_serial_number = post_data.get('public_serial_number')
@@ -118,11 +118,42 @@ class TransferCardAPI(MethodView):
 
         return make_response(jsonify(response_object)), 201
 
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
+    def put(self, public_serial_number):
+        data = request.get_json()
+        amount_offset = data.get('amount_offset')
+
+        transfer_card = TransferCard.query.filter_by(public_serial_number=public_serial_number).first()
+
+        if not transfer_card:
+            response_object = {
+                'message': 'Card not found',
+            }
+            return make_response(jsonify(response_object)), 404
+
+        if not transfer_card.transfer_account:
+            response_object = {
+                'message': f'Card {transfer_card.id} not bound to transfer account',
+            }
+            return make_response(jsonify(response_object)), 400
+
+        if amount_offset:
+            transfer_card.amount_offset = amount_offset
+
+            db.session.commit()
+
+        response_object = {
+            'message': 'Updated transfer card ',
+        }
+        return make_response(jsonify(response_object)), 200
+
+
+
 transfer_cards_blueprint.add_url_rule(
     '/transfer_cards/',
     view_func=TransferCardAPI.as_view('transfer_card_view'),
     methods=['GET', 'POST'],
-    defaults={'nfc_serial_number': None}
+    defaults={'nfc_serial_number': None, 'public_serial_number': None}
 )
 
 transfer_cards_blueprint.add_url_rule(
@@ -131,3 +162,8 @@ transfer_cards_blueprint.add_url_rule(
     methods=['GET']
 )
 
+transfer_cards_blueprint.add_url_rule(
+    '/transfer_cards/public_serial_number/<public_serial_number>',
+    view_func=TransferCardAPI.as_view('public_sn_referenced_transfer_card_view'),
+    methods=['PUT'],
+)

@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - catch_not_found_hash
+                - fix-external-tx
 
           requires:
             - build
