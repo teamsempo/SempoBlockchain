@@ -110,6 +110,7 @@ class CreditTransferAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'data': {
                     'credit_transfers': transfer_list,
                 }

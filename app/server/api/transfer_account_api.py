@@ -73,6 +73,7 @@ class TransferAccountAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
                 'data': {'transfer_accounts': result.data}
             }

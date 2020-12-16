@@ -118,6 +118,7 @@ class UserAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'pages': total_pages,
                 'items': total_items,
+                'last_fetched': new_last_fetched,
                 'data': {
                     'users': user_list,
                 }

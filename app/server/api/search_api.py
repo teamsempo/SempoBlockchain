@@ -225,6 +225,7 @@ class SearchAPI(MethodView):
             'message': 'Successfully Loaded.',
             'items': total_items,
             'pages': total_pages,
+            'last_fetched': new_last_fetched,
             'query_time': datetime.datetime.utcnow(),
             'data': data
         }

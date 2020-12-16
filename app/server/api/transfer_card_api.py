@@ -70,6 +70,8 @@ class TransferCardAPI(MethodView):
         response_object = {
             'message': 'Successfully loaded transfer_cards',
             'data': {'transfer_cards': transfer_cards_schema.dump(transfer_cards).data},
+            'items': total_items,
+            'pages': total_pages,
             'last_fetched': new_last_fetched
         }
 

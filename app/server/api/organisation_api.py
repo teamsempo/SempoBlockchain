@@ -48,6 +48,7 @@ class OrganisationAPI(MethodView):
                 'message': 'Successfully Loaded All Organisations',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'data': {'organisations': organisations_schema.dump(organisations).data}
             }
             return make_response(jsonify(response_object)), 200
