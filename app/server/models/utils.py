@@ -249,12 +249,25 @@ def paginate_query(query, sort_attribute=None, sort_desc=True):
     """
     Paginates an sqlalchemy query, gracefully managing missing queries.
     Default ordering is to show most recently created first.
-    Unlike raw paginate, defaults to showing all results if args aren't supplied
+    Unlike raw paginate, defaults to showing all results if args aren't supplied.
+
+    The pagination function can be sorted by a user specified attribute (in sort_attribute).
+    We return the value of this attribute for the last fetched item,
+    which can be used to return the next set of results.
+    The reason we don't just return the id is because a given item's position in a list can change significantly.
 
     :param query: base query
     :param sort_attribute: override option for the sort parameter.
     :param sort_desc: sort in desc order
-    :returns: tuple of (item list, total number of items, total number of pages)
+    :argument updated_after: only return items updated after a certain date
+    :argument per_page: how many results to return per request. Defaults to unlimited
+    :argument page: the page number of the results to return. Defaults to first page
+    :returns: tuple of (
+        item list,
+        total number of items,
+        total number of pages,
+        the last fetched item, identified by the sort key
+    )
     """
 
     updated_after = request.args.get('updated_after')
