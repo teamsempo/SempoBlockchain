@@ -126,9 +126,11 @@ class Groups(object):
             TRANSFER_STATUS: Group('Transfer Status', CreditTransfer, CreditTransfer.transfer_status),
             TRANSFER_USAGE: Group('Transfer Usages', TransferUsage, TransferUsage._name),
             SENDER_LOCATION: Group('Location', User, User._location, sender_or_recipient='sender'),
+            SENDER_COOORDINATES: Group('Coordinates', User, User.coordinates, sender_or_recipient='sender'),
             SENDER_ACCOUNT_TYPE: Group('Account Type', TransferAccount, TransferAccount.account_type, sender_or_recipient='sender'),
             RECIPIENT_LOCATION: Group('Location', User, User._location, sender_or_recipient='recipient'),
             RECIPIENT_ACCOUNT_TYPE: Group('Account Type', TransferAccount, TransferAccount.account_type, sender_or_recipient='recipient'),
+            RECIPIENT_COOORDINATES: Group('Coordinates', User, User.coordinates, sender_or_recipient='recipient'),
 
         }
         custom_attribute_groups = get_custom_attribute_groups()
@@ -147,6 +149,8 @@ class Groups(object):
             RECIPIENT_ACCOUNT_TYPE: self.GROUP_TYPES[RECIPIENT_ACCOUNT_TYPE],
             SENDER_LOCATION: self.GROUP_TYPES[SENDER_LOCATION],
             RECIPIENT_LOCATION: self.GROUP_TYPES[RECIPIENT_LOCATION],
+            SENDER_COOORDINATES: self.GROUP_TYPES[SENDER_COOORDINATES],
+            RECIPIENT_COOORDINATES: self.GROUP_TYPES[RECIPIENT_COOORDINATES],
             UNGROUPED: None,
         }
         custom_attribute_groups = get_custom_attribute_groups()

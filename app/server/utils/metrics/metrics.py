@@ -21,7 +21,6 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 
 from sqlalchemy.orm import aliased
-from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql import func, text
 from sqlalchemy.dialects.postgresql import JSONB
 import sqlalchemy

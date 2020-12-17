@@ -64,7 +64,6 @@ class FilterModule extends React.Component {
 
   onFiltersChanged = filters => {
     let encoded_filters = processFiltersForQuery(filters);
-    console.log("encoded filters are", encoded_filters);
     this.setState(
       {
         encoded_filters
@@ -108,7 +107,8 @@ class FilterModule extends React.Component {
   };
 
   render() {
-    let { allowedGroups, defaultGroupBy, isMobile } = this.props;
+    let { allowedGroups, defaultGroupBy, isMobile, hideGroupBy } = this.props;
+    hideGroupBy = hideGroupBy ? true : false;
     const senderGroups = allowedGroups
       ? Object.keys(allowedGroups).filter(
           groupName => allowedGroups[groupName].sender_or_recipient == "sender"
@@ -183,7 +183,7 @@ class FilterModule extends React.Component {
             onFiltersChanged={this.onFiltersChanged}
           />
         </Space>
-        {groupByModule}
+        {hideGroupBy ? null : groupByModule}
       </FilterContainer>
     );
   }
