@@ -121,11 +121,13 @@ class TransferCardAPI(MethodView):
         return make_response(jsonify(response_object)), 201
 
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
-    def put(self, public_serial_number):
+    def put(self, public_serial_number, nfc_serial_number):
         data = request.get_json()
         amount_offset = data.get('amount_offset')
-
-        transfer_card = TransferCard.query.filter_by(public_serial_number=public_serial_number).first()
+        if nfc_serial_number:
+            transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
+        else:
+            transfer_card = TransferCard.query.filter_by(public_serial_number=public_serial_number).first()
 
         if not transfer_card:
             response_object = {
@@ -161,8 +163,8 @@ transfer_cards_blueprint.add_url_rule(
 transfer_cards_blueprint.add_url_rule(
     '/transfer_cards/nfc_serial_number/<nfc_serial_number>',
     view_func=TransferCardAPI.as_view('nfc_sn_referenced_transfer_card_view'),
-    methods=['GET'],
-    defaults={'public_serial_number': None}
+    methods=['GET', 'PUT'],
+    defaults={'nfc_serial_number': None}
 )
 
 transfer_cards_blueprint.add_url_rule(
