@@ -55,7 +55,7 @@ class TransferAccountAPI(MethodView):
                 # Filter Contract, Float and Organisation Transfer Accounts
                 transfer_accounts_query = (base_query.filter(TransferAccount.account_type == TransferAccountType.USER))
 
-            transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
+            transfer_accounts, total_items, total_pages, new_last_fetched = paginate_query(transfer_accounts_query)
 
             if transfer_accounts is None:
                 response_object = {
@@ -73,6 +73,7 @@ class TransferAccountAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
                 'data': {'transfer_accounts': result.data}
             }

@@ -137,7 +137,7 @@ class SearchAPI(MethodView):
                 else:
                     final_query = final_query.order_by(order(sort_by))
 
-                transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
+                transfer_accounts, total_items, total_pages, new_last_fetched = paginate_query(final_query)
                 result = transfer_accounts_schema.dump(transfer_accounts)
                 data = { 'transfer_accounts': result.data }
             else:
@@ -150,7 +150,7 @@ class SearchAPI(MethodView):
                 else:
                     final_query = final_query.order_by(order(sort_by))
 
-                credit_transfers, total_items, total_pages = paginate_query(final_query, CreditTransfer)
+                credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(final_query)
                 result = credit_transfers_schema.dump(credit_transfers)
                 data = { 'credit_transfers': result.data }
 
@@ -190,7 +190,7 @@ class SearchAPI(MethodView):
                 else:
                     final_query = final_query.order_by(order(sort_by))
 
-                transfer_accounts, total_items, total_pages = paginate_query(final_query, TransferAccount)
+                transfer_accounts, total_items, total_pages, new_last_fetched = paginate_query(final_query)
                 result = transfer_accounts_schema.dump(transfer_accounts)
                 data = { 'transfer_accounts': result.data }
             # CreditTransfer Search Logic
@@ -217,7 +217,7 @@ class SearchAPI(MethodView):
                     final_query = final_query.order_by(order(recipient_search_result.c.rank + sender_search_result.c.rank))
                 else:
                     final_query = final_query.order_by(order(sort_by))
-                credit_transfers, total_items, total_pages = paginate_query(final_query, CreditTransfer)
+                credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(final_query)
                 result = credit_transfers_schema.dump(credit_transfers)
                 data = { 'credit_transfers': result.data }
 
@@ -225,6 +225,7 @@ class SearchAPI(MethodView):
             'message': 'Successfully Loaded.',
             'items': total_items,
             'pages': total_pages,
+            'last_fetched': new_last_fetched,
             'query_time': datetime.datetime.utcnow(),
             'data': data
         }

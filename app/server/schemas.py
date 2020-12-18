@@ -503,6 +503,8 @@ view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
+transfer_card_schema = TransferCardSchema(exclude=("id", "created"))
+
 
 uploaded_resource_schema = UploadedResourceSchema()
 
