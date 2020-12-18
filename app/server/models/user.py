@@ -203,6 +203,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.last_name = None
             self.phone = None
 
+            if self.transfer_card:
+                self.transfer_card.amount_loaded_signature = 'DEL'
+
         except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
 
