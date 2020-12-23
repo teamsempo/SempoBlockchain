@@ -130,6 +130,13 @@ class NavBar extends React.Component<Props, State> {
             <Menu.Item key="/accounts" icon={<TeamOutlined translate={""} />}>
               <NavLink to="/accounts">Accounts</NavLink>
             </Menu.Item>
+            <Menu.Item
+              key="/accounts_beta"
+              icon={<TeamOutlined translate={""} />}
+            >
+              <NavLink to="/accounts_beta">Accounts (Beta)</NavLink>
+            </Menu.Item>
+
             <Menu.Item key="/transfers" icon={<SendOutlined translate={""} />}>
               <NavLink to="/transfers">Transfers</NavLink>
             </Menu.Item>

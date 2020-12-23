@@ -13,6 +13,11 @@ const uploadPage = lazy(() => import("./components/pages/uploadPage.jsx"));
 const transferAccountListPage = lazy(() =>
   import("./components/pages/transferAccountListPage.jsx")
 );
+
+const transferAccountListPageBeta = lazy(() =>
+  import("./components/pages/transferAccountListPageBeta.jsx")
+);
+
 const singleTransferAccountPage = lazy(() =>
   import("./components/pages/singleTransferAccountPage.jsx")
 );
@@ -97,6 +102,14 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={"Accounts"}
+            />
+            <PrivateRoute
+              exact
+              path="/accounts_beta"
+              component={transferAccountListPageBeta}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={"Accounts (Beta)"}
             />
             <PrivateRoute
               exact
