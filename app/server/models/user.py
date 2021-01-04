@@ -490,11 +490,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'id': self.id
             }
 
-            return jwt.encode(
+            tfa = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(tfa, 'utf-8') if isinstance(tfa, str) else tfa
         except Exception as e:
             return e
 
