@@ -490,11 +490,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'id': self.id
             }
 
-            return jwt.encode(
+            tfa = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(tfa, 'utf-8') if isinstance(tfa, str) else tfa
         except Exception as e:
             return e
 
@@ -514,11 +515,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'roles': self.roles
             }
 
-            return jwt.encode(
+            token = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(token, 'utf-8') if isinstance(token, str) else token
         except Exception as e:
             return e
 
@@ -543,7 +545,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
             else:
-                return payload
+                return bytes(payload, 'utf-8') if isinstance(payload, str) else payload
 
         except jwt.ExpiredSignatureError:
             return '{} Token Signature expired.'.format(token_type)
