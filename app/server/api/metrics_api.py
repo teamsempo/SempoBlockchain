@@ -111,6 +111,10 @@ class FiltersApi(MethodView):
         groups = {}
         group_filters = GROUP_TYPES_FILTERS[metric_type]
         for f in group_filters:
+            # Filter out coordinates at the API level, since we don't want to show them as groupable options
+            # But we do require them to be groupable in practice for the map page
+            if f in ['sender,coordinates', 'recipient,coordinates']:
+                continue
             if group_filters[f]:
                 groups[f] = group_filters[f].get_api_representation()
             else:

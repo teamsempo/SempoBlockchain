@@ -101,6 +101,11 @@ class BeneficiaryLiveFeed extends React.Component {
                   (sender_transfer_account &&
                     sender_transfer_account.blockchain_address) ||
                   "";
+                let isRecipientVendor =
+                  recipient_transfer_account &&
+                  recipient_transfer_account.is_vendor;
+                let isSenderVendor =
+                  sender_transfer_account && sender_transfer_account.is_vendor;
 
                 if (
                   transfer.recipient_user !== null &&
@@ -119,6 +124,9 @@ class BeneficiaryLiveFeed extends React.Component {
                   typeof recipient_blockchain_address !== "undefined"
                 ) {
                   recipient_user_name =
+                    (isRecipientVendor
+                      ? "Vendor "
+                      : window.BENEFICIARY_TERM + " ") +
                     "Address " +
                     recipient_blockchain_address.slice(0, 8) +
                     "...";
@@ -141,7 +149,12 @@ class BeneficiaryLiveFeed extends React.Component {
                   }
                 } else if (typeof sender_blockchain_address !== "undefined") {
                   sender_user_name =
-                    "Address " + sender_blockchain_address.slice(0, 8) + "...";
+                    (isSenderVendor
+                      ? "Vendor "
+                      : window.BENEFICIARY_TERM + " ") +
+                    "Address " +
+                    sender_blockchain_address.slice(0, 8) +
+                    "...";
                 } else {
                   sender_user_name = null;
                 }

@@ -204,7 +204,20 @@ class CreditTransferList extends React.Component {
       senderTransferAccount && senderTransferAccount.blockchain_address;
 
     if (this.props.login.adminTier === "view") {
-      return blockchainAddress;
+      let viewTransferAccountName =
+        senderTransferAccount && senderTransferAccount.is_vendor
+          ? "Vendor "
+          : window.BENEFICIARY_TERM + " ";
+      return (
+        <a
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            this.navigateToAccount(creditTransfer.sender_transfer_account_id)
+          }
+        >
+          {viewTransferAccountName + blockchainAddress}
+        </a>
+      );
     } else if (sender && (firstName || lastName)) {
       return (
         <a
@@ -240,7 +253,20 @@ class CreditTransferList extends React.Component {
       recipientTransferAccount && recipientTransferAccount.blockchain_address;
 
     if (this.props.login.adminTier === "view") {
-      return blockchainAddress;
+      let viewTransferAccountName =
+        recipientTransferAccount && recipientTransferAccount.is_vendor
+          ? "Vendor "
+          : window.BENEFICIARY_TERM + " ";
+      return (
+        <a
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            this.navigateToAccount(creditTransfer.recipient_transfer_account_id)
+          }
+        >
+          {viewTransferAccountName + blockchainAddress}
+        </a>
+      );
     } else if (recipient && (firstName || lastName)) {
       return (
         <a
