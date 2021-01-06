@@ -11,10 +11,13 @@ from sqlalchemy import func
     (False, True, 400),  # No Safety Check
     (True, True, 200),
 ])
-def test_mock_data(test_client, authed_sempo_admin_user, safety_check, balance, status_code):
+def test_mock_data(test_client, authed_sempo_admin_user, create_transfer_usage, safety_check, balance, status_code):
     users = db.session.query(func.count(User.id)).scalar()
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
+    authed_sempo_admin_user.transfer_accounts.append(
+        authed_sempo_admin_user.default_organisation.org_level_transfer_account) if len(
+        authed_sempo_admin_user.transfer_accounts) == 0 else None
     authed_sempo_admin_user.default_organisation.org_level_transfer_account.set_balance_offset(10000) if balance \
         else None
     db.session.commit()
