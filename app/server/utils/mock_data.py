@@ -13,6 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 import config
 
 import math
+from decimal import Decimal
 
 from server import create_app, db, bt
 from server.models.token import Token, TokenType
@@ -207,7 +208,7 @@ def create_payments(users_by_location, number_of_transfers, time_period_days, tr
 
                     sender_balance = sender_user.default_transfer_account.balance
 
-                    spend_amount = math.floor(random.random() * sender_balance * 100) / 100
+                    spend_amount = math.floor(Decimal(random.random()) * sender_balance * 100) / 100
 
                     if spend_amount > 0:
                         found_a_sender = True
