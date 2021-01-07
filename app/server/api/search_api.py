@@ -225,7 +225,7 @@ class SearchAPI(MethodView):
             'items': total_items,
             'pages': total_pages,
             'last_fetched': new_last_fetched,
-            'query_time': datetime.datetime.utcnow(),
+            'query_time': str(datetime.datetime.utcnow()),
             'data': data
         }
 
