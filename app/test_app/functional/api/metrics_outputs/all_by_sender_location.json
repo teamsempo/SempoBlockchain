@@ -1,6 +1,6 @@
 {
   "active_filters": [],
-  "active_group_by": "location",
+  "active_group_by": "sender,location",
   "active_users": {
     "aggregate": {
       "Dartmouth": 1,
@@ -14,47 +14,47 @@
     "timeseries": {
       "Dartmouth": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "Lower Sackville": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "None": [
         {
-          "date": "2020-08-26T00:00:00",
+          "date": "2020-10-13T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-07T00:00:00",
+          "date": "2020-10-25T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-13T00:00:00",
+          "date": "2020-10-31T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Sunnyvale": [
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Truro": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]
@@ -77,81 +77,48 @@
     "timeseries": {
       "Dartmouth": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 25
         }
       ],
       "Lower Sackville": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 5
         }
       ],
       "None": [
         {
-          "date": "2020-08-26T00:00:00",
+          "date": "2020-10-13T00:00:00",
           "value": 406
         },
         {
-          "date": "2020-09-07T00:00:00",
+          "date": "2020-10-25T00:00:00",
           "value": 201
         },
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-09-13T00:00:00",
+          "date": "2020-10-31T00:00:00",
           "value": 210
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 700
         }
       ],
       "Sunnyvale": [
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 100
         }
       ],
       "Truro": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 20
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "daily_disbursement_volume": {
-    "aggregate": {
-      "None": 1517,
-      "percent_change": 72.41379310344827,
-      "total": 1517
-    },
-    "timeseries": {
-      "None": [
-        {
-          "date": "2020-08-26T00:00:00",
-          "value": 406
-        },
-        {
-          "date": "2020-09-07T00:00:00",
-          "value": 201
-        },
-        {
-          "date": "2020-09-13T00:00:00",
-          "value": 210
-        },
-        {
-          "date": "2020-09-15T00:00:00",
-          "value": 700
         }
       ]
     },
@@ -175,31 +142,31 @@
     "timeseries": {
       "Dartmouth": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "Lower Sackville": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "None": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 1
         }
       ],
       "Sunnyvale": [
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Truro": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]
@@ -209,81 +176,11 @@
       "value_type": "count"
     }
   },
-  "daily_transaction_volume": {
-    "aggregate": {
-      "Dartmouth": 25,
-      "Lower Sackville": 5,
-      "None": 1537,
-      "Sunnyvale": 100,
-      "Truro": 20,
-      "percent_change": 97.04433497536947,
-      "total": 1687
-    },
-    "timeseries": {
-      "Dartmouth": [
-        {
-          "date": "2020-09-14T00:00:00",
-          "value": 25
-        }
-      ],
-      "Lower Sackville": [
-        {
-          "date": "2020-09-14T00:00:00",
-          "value": 5
-        }
-      ],
-      "None": [
-        {
-          "date": "2020-08-26T00:00:00",
-          "value": 406
-        },
-        {
-          "date": "2020-09-07T00:00:00",
-          "value": 201
-        },
-        {
-          "date": "2020-09-09T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-09-13T00:00:00",
-          "value": 210
-        },
-        {
-          "date": "2020-09-15T00:00:00",
-          "value": 700
-        }
-      ],
-      "Sunnyvale": [
-        {
-          "date": "2020-09-15T00:00:00",
-          "value": 100
-        }
-      ],
-      "Truro": [
-        {
-          "date": "2020-09-11T00:00:00",
-          "value": 20
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "exhausted_balance": 0,
-  "has_transferred_count": 5,
   "mandatory_filter": {},
-  "master_wallet_balance": -1517.0,
-  "total_beneficiaries": 1,
+  "master_wallet_balance": -1517,
   "total_distributed": 1517,
-  "total_exchanged": 0,
-  "total_spent": 170,
-  "total_users": 1,
-  "total_vendors": 0,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
       "Dartmouth": 1,
@@ -297,31 +194,31 @@
     "timeseries": {
       "Dartmouth": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "Lower Sackville": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "None": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 1
         }
       ],
       "Sunnyvale": [
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 0.5
         }
       ],
       "Truro": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]
@@ -344,31 +241,31 @@
     "timeseries": {
       "Dartmouth": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 25
         }
       ],
       "Lower Sackville": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 5
         }
       ],
       "None": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 20
         }
       ],
       "Sunnyvale": [
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 50
         }
       ],
       "Truro": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 20
         }
       ]
@@ -393,35 +290,35 @@
     "timeseries": {
       "Dartmouth": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "Lower Sackville": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ],
       "None": [
         {
-          "date": "2020-09-05T00:00:00",
+          "date": "2020-10-23T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Sunnyvale": [
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 2
         }
       ],
       "Truro": [
         {
-          "date": "2020-09-05T00:00:00",
+          "date": "2020-10-23T00:00:00",
           "value": 1
         }
       ]
@@ -444,47 +341,47 @@
     "timeseries": {
       "Dartmouth": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "Lower Sackville": [
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2020-11-01T00:00:00",
           "value": 1
         }
       ],
       "None": [
         {
-          "date": "2020-08-26T00:00:00",
+          "date": "2020-10-13T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-07T00:00:00",
+          "date": "2020-10-25T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2020-10-27T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-13T00:00:00",
+          "date": "2020-10-31T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Sunnyvale": [
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2020-11-02T00:00:00",
           "value": 1
         }
       ],
       "Truro": [
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2020-10-29T00:00:00",
           "value": 1
         }
       ]

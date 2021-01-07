@@ -39,6 +39,7 @@ class BlockchainSyncer(object):
         # Since the webook will timeout if we ask for too many blocks at once, we have to break
         # the range we want into chunks. Once all the chunk-jobs are formed and loaded into redis,
         # then trigger process_all_chunks, which will consume those jobs from redis
+        total_blocks_retrieved = 0
         for f in filters:
             # Make sure a filter is only being executed once at a time
             have_lock = False
@@ -56,6 +57,8 @@ class BlockchainSyncer(object):
                 number_of_blocks_to_get = (latest_block - max_fetched_block)
                 number_of_chunks = ceil(number_of_blocks_to_get/sync_const.BLOCKS_PER_REQUEST)
 
+                total_blocks_retrieved += number_of_blocks_to_get
+
                 for chunk in range(number_of_chunks):
                     floor = max_fetched_block + (chunk * sync_const.BLOCKS_PER_REQUEST) + 1
                     ceiling = max_fetched_block + ((chunk + 1) * sync_const.BLOCKS_PER_REQUEST)
@@ -69,8 +72,8 @@ class BlockchainSyncer(object):
                     self.persistence.set_filter_max_block(f.id, latest_block)
             finally:
                 if have_lock:
-                    lock.reacquire()
-        return True
+                    lock.release()
+        return total_blocks_retrieved
 
     # Gets history for given range, and runs handle_event on all of them
     # This is the second stage in the third party transaction processing pipeline!

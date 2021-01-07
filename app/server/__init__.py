@@ -12,6 +12,9 @@ from twilio.rest import Client as TwilioClient
 import sentry_sdk
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+
 import messagebird
 import africastalking
 from datetime import datetime
@@ -82,6 +85,7 @@ def create_app():
                     add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
     except:
         print('Unable to automatically create filters')
+    
     return app
 
 def register_extensions(app):
@@ -107,7 +111,11 @@ def register_extensions(app):
 
     celery_app.conf.update(app.config)
     if not config.IS_TEST:
-        sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
+        sentry_sdk.init(
+            app.config['SENTRY_SERVER_DSN'], 
+            integrations=[FlaskIntegration(), SqlalchemyIntegration(), RedisIntegration()], 
+            release=config.VERSION
+        )
         with configure_scope() as scope:
             scope.set_tag("domain", config.APP_HOST)
 
@@ -145,6 +153,9 @@ def register_blueprints(app):
         from server.models.credit_transfer import CreditTransfer
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
         pusher_utils.push_admin_credit_transfer(transactions)
+
+        # Adds version to response header
+        response.headers['App-Version'] = config.VERSION
 
         return response
 
@@ -280,8 +291,6 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 
-
-encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)

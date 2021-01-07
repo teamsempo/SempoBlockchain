@@ -1,7 +1,6 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import type_coerce
 import pendulum
 import secrets
 from decimal import Decimal
@@ -85,6 +84,12 @@ class Organisation(ModelBase):
     def country_code(self):
         return self._country_code
 
+    @hybrid_property
+    def country(self):
+        if self._country_code not in ISO_COUNTRIES:
+            raise Exception(f"{self._country_code} is not a valid timezone")
+        return ISO_COUNTRIES[self._country_code]
+
     @country_code.setter
     def country_code(self, val):
         if val is not None:
@@ -166,17 +171,16 @@ class Organisation(ModelBase):
 
     def __init__(self, token=None, is_master=False, valid_roles=None, **kwargs):
         super(Organisation, self).__init__(**kwargs)
-    
+        chain = self.token.chain if self.token else current_app.config['DEFAULT_CHAIN']
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
         self.external_auth_password = secrets.token_hex(16)
         self.valid_roles = valid_roles or list(ASSIGNABLE_TIERS.keys())
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():
                 raise Exception("A master organisation already exists")
-
             self.is_master = True
             self.system_blockchain_address = bt.create_blockchain_wallet(
-                private_key=current_app.config['MASTER_WALLET_PRIVATE_KEY'],
+                private_key=current_app.config['CHAINS'][chain]['MASTER_WALLET_PRIVATE_KEY'],
                 wei_target_balance=0,
                 wei_topup_threshold=0,
             )
@@ -187,8 +191,8 @@ class Organisation(ModelBase):
             self.is_master = False
 
             self.system_blockchain_address = bt.create_blockchain_wallet(
-                wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
-                wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
+                wei_target_balance=current_app.config['CHAINS'][chain]['SYSTEM_WALLET_TARGET_BALANCE'],
+                wei_topup_threshold=current_app.config['CHAINS'][chain]['SYSTEM_WALLET_TOPUP_THRESHOLD'],
             )
 
             self.primary_blockchain_address = bt.create_blockchain_wallet()

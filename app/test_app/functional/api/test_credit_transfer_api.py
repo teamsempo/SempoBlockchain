@@ -5,6 +5,7 @@ from server.utils.user import create_transfer_account_user
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccountType
 from server.models.organisation import Organisation
+from server.models.transfer_card import TransferCard
 
 from helpers.utils import will_func_test_blockchain
 from server import bt, db
@@ -91,6 +92,53 @@ def test_create_credit_transfer(test_client, authed_sempo_admin_user, create_tra
         else:
             assert data['credit_transfer']['transfer_status'] == transfer_status
             assert isinstance(data['credit_transfer'], object)
+
+
+def test_transfer_card_credit_transfer(test_client, complete_admin_auth_token, create_transfer_account_user):
+    create_transfer_account_user.transfer_account.set_balance_offset(1000000)
+    create_transfer_account_user.transfer_account.is_approved = True
+
+    create_card = test_client.post(
+        '/api/v1/transfer_cards/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        json={
+            'public_serial_number': '234432',
+            'nfc_serial_number': 'DEADBEEF013223232'
+        },
+        content_type='application/json',
+        follow_redirects=True
+    )
+
+    bind_user = test_client.put(
+        f"/api/v1/user/{create_transfer_account_user.id}/",
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        json={
+            'public_serial_number': '234432'
+        })
+
+    response = test_client.post(
+        '/api/v1/credit_transfer/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        json={
+            "recipient_user_id": create_transfer_account_user.id,
+            "sender_public_identifier": '234432',
+            "transfer_amount": 10,
+            "transfer_type": "PAYMENT"
+        }
+    )
+
+    transfer_card = TransferCard.query.filter_by(public_serial_number='234432').first()
+
+    assert response.json['data']['credit_transfer']['sender_transfer_card_id'] == transfer_card.id
 
 
 @pytest.mark.parametrize("credit_transfer_selector_func, status_code", [
@@ -249,7 +297,6 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
 
     # 6. Stranger B -> Stranger A (Strangers who exist in the system)
     made_up_hash = '0x2222b33f1322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
-
     resp = post_to_credit_transfer_internal(fake_user_b_address, fake_user_a_address, made_up_hash, 100, token.address)
     assert resp.json['message'] == 'Only external users involved in this transfer'
 
@@ -260,6 +307,18 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     resp = post_to_credit_transfer_internal(fake_user_c_address, fake_user_d_address, made_up_hash, 100, token.address)
     assert resp.json['message'] == 'No existing users involved in this transfer'
 
+    # 8. Stranger A -> Stranger E (One existing stanger, one new stranger)
+    made_up_hash = '0x2222b33f13288396649ed2fffb7e0a944123b65cfab2c4b1435c81bb16697ecb'
+    fake_user_e_address = '0xA9450d3dB5A909b08197BC4a0665A4d63253aaaf'
+    resp = post_to_credit_transfer_internal(fake_user_a_address, fake_user_e_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'Only external users involved in this transfer'
+
+    # 9. Stranger E -> Stranger A (One new stranger, one existing stanger)
+    made_up_hash = '0x2222b33f13288396649ed2fffb7e0a944123b65cfab2c4b1435c81bb12697ecb'
+    fake_user_e_address = '0xA9450d3dB5A909b08197BC4a0665A4d63253aaaf'
+    resp = post_to_credit_transfer_internal(fake_user_e_address, fake_user_a_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'Only external users involved in this transfer'
+
     # Make sure we're not sending any of the tranfers off to the blockchain
     assert len(send_to_worker_called) == 0
     from flask import g
@@ -268,7 +327,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
 def test_force_third_party_transaction_sync():
     if will_func_test_blockchain():
         task_uuid = bt.force_third_party_transaction_sync()
-        bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
+        bt.await_task_success(task_uuid, timeout=config.CHAINS['ETHEREUM']['SYNCRONOUS_TASK_TIMEOUT'] * 48)
 
 @pytest.mark.parametrize("is_bulk, invert_recipient_list, transfer_amount, transfer_type, status_code", [
     [True, False, 1000, 'DISBURSEMENT', 201],

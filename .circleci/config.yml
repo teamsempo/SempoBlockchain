@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - negative_balance_disbursements
+                - fix-external-tx
 
           requires:
             - build

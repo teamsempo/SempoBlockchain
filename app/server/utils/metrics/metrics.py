@@ -21,7 +21,6 @@ from server.models.organisation import Organisation
 from server.models.token import Token
 
 from sqlalchemy.orm import aliased
-from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql import func, text
 from sqlalchemy.dialects.postgresql import JSONB
 import sqlalchemy
@@ -129,9 +128,6 @@ def calculate_transfer_stats(
     data['mandatory_filter'] = mandatory_filter
 
     # Legacy and aggregate metrics which don't fit the modular pattern
-    if metric_type in [metrics_const.ALL, metrics_const.USER]:
-        data['total_users'] = data['total_vendors'] + data['total_beneficiaries']
-
     try:
         data['master_wallet_balance'] = g.active_organisation.org_level_transfer_account.balance
     except:

@@ -7,6 +7,10 @@ export default class LoadingSpinner extends React.Component {
     let icon = (
       <LoadingOutlined style={{ fontSize: 24 }} spin {...this.props} />
     );
-    return <Spin indicator={icon} />;
+    return (
+      <Spin spinning={this.props.spinning} indicator={icon}>
+        {this.props.children}
+      </Spin>
+    );
   }
 }
