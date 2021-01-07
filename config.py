@@ -133,12 +133,9 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
 ALLOW_SELF_SIGN_UP = config_parser['APP'].getboolean('ALLOW_SELF_SIGN_UP') or False
-<<<<<<< HEAD
 METRICS_CACHE_TIMEOUT = config_parser['APP'].getint('METRICS_CACHE_TIMEOUT', 604800) # 604800 seconds == 1 week
-=======
 FORGIVING_DEDUCT = config_parser['APP'].getboolean('FORGIVING_DEDUCT') or False
 SUPPORT_SIG_VALIDATION = config_parser['APP'].getboolean('SUPPORT_SIG_VALIDATION') or True
->>>>>>> master
 
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
 
