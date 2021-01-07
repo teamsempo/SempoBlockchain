@@ -26,6 +26,8 @@ psycopg2-binary==2.8.5
 pusher==3.0.0
 pyotp==2.3.0
 python-i18n[YAML]==0.3.7
+pytest==6.2.1
+Faker==5.4.0
 py-evm==0.3.0a18
 qrcode[pil]==6.1
 raven==6.10.0

@@ -262,7 +262,7 @@ Ensure your test_config.ini and test_secrets.ini files are up to date. Test secr
 
 ```
 cd config files
-python generate_secrets.py test
+python generate_secrets.py -n test
 ```
 
 Create the test databases:
