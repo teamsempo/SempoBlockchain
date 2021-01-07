@@ -1,6 +1,5 @@
 from flask import Blueprint, request, make_response, jsonify
 import datetime
-import orjson
 
 from flask.views import MethodView
 import re
@@ -230,7 +229,7 @@ class SearchAPI(MethodView):
             'data': data
         }
 
-        bytes_data = orjson.dumps(response_object)
+        bytes_data = json.dumps(response_object)
         resp = make_response(bytes_data, 200)
         resp.mimetype = 'application/json'
         return resp
