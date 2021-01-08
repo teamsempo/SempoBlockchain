@@ -125,7 +125,7 @@ class UserAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external',))
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external',), allow_query_string_auth=True)
     def post(self, user_id):
         """
         :arg preprocess: whether the data should be cleaned before attempting to create a user - for example converting
