@@ -1,0 +1,385 @@
+{
+  "active_filters": [],
+  "active_group_by": "recipient,location",
+  "active_users": {
+    "aggregate": {
+      "Dartmouth": 1,
+      "Lower Sackville": 2,
+      "None": 2,
+      "Sunnyvale": 3,
+      "Truro": 2,
+      "percent_change": 100,
+      "total": 6
+    },
+    "timeseries": {
+      "Dartmouth": [
+        {
+          "date": "2020-11-29T00:00:00",
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-23T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-11-11T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 2
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-11-11T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "all_payments_volume": {
+    "aggregate": {
+      "Dartmouth": 210,
+      "Lower Sackville": 226,
+      "None": 224,
+      "Sunnyvale": 805,
+      "Truro": 222,
+      "percent_change": 97.04433497536947,
+      "total": 1687
+    },
+    "timeseries": {
+      "Dartmouth": [
+        {
+          "date": "2020-11-29T00:00:00",
+          "value": 210
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-23T00:00:00",
+          "value": 201
+        },
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 25
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-11-11T00:00:00",
+          "value": 204
+        },
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 20
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 5
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 800
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-11-11T00:00:00",
+          "value": 202
+        },
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 20
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "daily_transaction_count": {
+    "aggregate": {
+      "Lower Sackville": 1,
+      "None": 1,
+      "Sunnyvale": 2,
+      "Truro": 1,
+      "percent_change": null,
+      "total": 5
+    },
+    "timeseries": {
+      "Lower Sackville": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "mandatory_filter": {},
+  "master_wallet_balance": -1517,
+  "total_distributed": 1517,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
+  "trades_per_user": {
+    "aggregate": {
+      "Lower Sackville": 1,
+      "None": 0.5,
+      "Sunnyvale": 1,
+      "Truro": 1,
+      "percent_change": null,
+      "total": 0.7142857142857143
+    },
+    "timeseries": {
+      "Lower Sackville": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 0
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 0.5
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 2,
+      "value_type": "count_average"
+    }
+  },
+  "transfer_amount_per_user": {
+    "aggregate": {
+      "Lower Sackville": 25,
+      "None": 10,
+      "Sunnyvale": 52.5,
+      "Truro": 20,
+      "percent_change": null,
+      "total": 24.285714285714285
+    },
+    "timeseries": {
+      "Lower Sackville": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 25
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 20
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 0
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 50
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 20
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "users_created": {
+    "aggregate": {
+      "Dartmouth": 1,
+      "Lower Sackville": 1,
+      "None": 2,
+      "Sunnyvale": 2,
+      "Truro": 1,
+      "percent_change": 50,
+      "total": 7
+    },
+    "timeseries": {
+      "Dartmouth": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-11-21T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 1
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 2
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-11-21T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "users_who_made_purchase": {
+    "aggregate": {
+      "Dartmouth": 1,
+      "Lower Sackville": 2,
+      "None": 2,
+      "Sunnyvale": 3,
+      "Truro": 2,
+      "percent_change": 100,
+      "total": 6
+    },
+    "timeseries": {
+      "Dartmouth": [
+        {
+          "date": "2020-11-29T00:00:00",
+          "value": 1
+        }
+      ],
+      "Lower Sackville": [
+        {
+          "date": "2020-11-23T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        }
+      ],
+      "None": [
+        {
+          "date": "2020-11-11T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "Sunnyvale": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 2
+        }
+      ],
+      "Truro": [
+        {
+          "date": "2020-11-11T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  }
+}

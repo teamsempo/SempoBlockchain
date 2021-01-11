@@ -1,4 +1,5 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
+import { message } from "antd";
 import { browserHistory } from "../createStore";
 
 import { SpreadsheetAction } from "../reducers/spreadsheet/actions";
@@ -14,7 +15,6 @@ import {
   loadDatasetListAPI
 } from "../api/spreadsheetAPI";
 import { handleError } from "../utils";
-import { MessageAction } from "../reducers/message/actions";
 
 function* spreadsheetUpload({ payload }: SpreadsheetUploadAPIRequest) {
   console.log("spreadsheetUpload", payload);
@@ -31,9 +31,7 @@ function* spreadsheetUpload({ payload }: SpreadsheetUploadAPIRequest) {
 
     yield put(SpreadsheetAction.uploadSpreadsheetFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

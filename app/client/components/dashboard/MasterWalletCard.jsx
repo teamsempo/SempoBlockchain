@@ -29,16 +29,16 @@ class MasterWalletCard extends React.Component {
     const { creditTransferStats, activeOrganisation } = this.props;
     const masterWalletBalance = creditTransferStats.master_wallet_balance / 100;
     const amountDisbursed = creditTransferStats.total_distributed / 100;
+    const amountWithdrawn = creditTransferStats.total_withdrawn / 100;
+    const amountReclaimed = creditTransferStats.total_reclaimed / 100;
     const symbol = activeOrganisation.token.symbol;
+
+    const amountInCirculation =
+      amountDisbursed - amountWithdrawn - amountReclaimed;
 
     console.log("Master wallet balance is", masterWalletBalance);
 
-    const tracker_link =
-      window.ETH_EXPLORER_URL +
-      "/address/" +
-      (window.USING_EXTERNAL_ERC20
-        ? window.master_wallet_address
-        : window.ETH_CONTRACT_ADDRESS);
+    const tracker_link = `${window.ETH_EXPLORER_URL}/address/${window.master_wallet_address}`;
 
     var options = {
       animation: false,
@@ -62,7 +62,10 @@ class MasterWalletCard extends React.Component {
             ticks: {
               beginAtZero: true,
               min: 0,
-              max: Math.abs(masterWalletBalance) + amountDisbursed
+              max:
+                Math.abs(masterWalletBalance) +
+                amountInCirculation +
+                amountWithdrawn
             },
             stacked: true,
             display: false,
@@ -98,9 +101,15 @@ class MasterWalletCard extends React.Component {
           },
           {
             barPercentage: 1,
-            label: `Amount Disbursed`,
+            label: `Amount in Circulation`,
             backgroundColor: ["#EDCBA2"],
-            data: [amountDisbursed]
+            data: [amountInCirculation]
+          },
+          {
+            barPercentage: 1,
+            label: `Amount Withdrawn`,
+            backgroundColor: ["#AF6FC1"],
+            data: [amountWithdrawn]
           }
         ]
       };
@@ -115,9 +124,15 @@ class MasterWalletCard extends React.Component {
           },
           {
             barPercentage: 1,
-            label: `Amount Disbursed`,
+            label: `Amount in Circulation`,
             backgroundColor: ["#EDCBA2"],
-            data: [amountDisbursed]
+            data: [amountInCirculation]
+          },
+          {
+            barPercentage: 1,
+            label: `Amount Withdrawn`,
+            backgroundColor: ["#AF6FC1"],
+            data: [amountWithdrawn]
           }
         ]
       };
@@ -159,10 +174,24 @@ class MasterWalletCard extends React.Component {
             </Wrapper>
             <Wrapper>
               <Text type="secondary" strong={true}>
-                {formatMoney(amountDisbursed, 0, undefined, undefined, symbol)}
+                {formatMoney(
+                  amountInCirculation,
+                  0,
+                  undefined,
+                  undefined,
+                  symbol
+                )}
               </Text>
               <Text type="secondary" strong={true} style={{ color: "#EDCBA2" }}>
-                Amount Disbursed
+                In Circulation
+              </Text>
+            </Wrapper>
+            <Wrapper>
+              <Text type="secondary" strong={true}>
+                {formatMoney(amountWithdrawn, 0, undefined, undefined, symbol)}
+              </Text>
+              <Text type="secondary" strong={true} style={{ color: "#AF6FC1" }}>
+                Withdrawn
               </Text>
             </Wrapper>
           </div>

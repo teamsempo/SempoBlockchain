@@ -46,7 +46,11 @@ class UploadButton extends React.Component {
       return (
         <TheRealInputButton>
           <span>{this.props.uploadButtonText}</span>
-          <InputTrigger type="file" onChange={e => this.handleFileChange(e)} />
+          <InputTrigger
+            type="file"
+            onChange={e => this.handleFileChange(e)}
+            aria-label="Upload File"
+          />
         </TheRealInputButton>
       );
     }
@@ -59,6 +63,7 @@ class UploadButton extends React.Component {
             <InputTrigger
               type="file"
               onChange={e => this.handleFileChange(e)}
+              aria-label="Upload File"
             />
           </InputButton>
         </InputButtonWrapper>

@@ -78,6 +78,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
     recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
 
+    sender_transfer_card_id = db.Column(db.Integer, db.ForeignKey("transfer_card.id"), index=True)
+
     sender_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     recipient_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
 
@@ -352,8 +354,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  fiat_ramp=None,
                  transfer_subtype: TransferSubTypeEnum=None,
                  transfer_mode: TransferModeEnum = None,
+                 transfer_card=None,
                  is_ghost_transfer=False,
-                 require_sufficient_balance=True):
+                 require_sufficient_balance=True
+                 ):
 
         if amount < 0:
             raise Exception("Negative amount provided")
@@ -401,6 +405,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.transfer_subtype = transfer_subtype
         self.transfer_mode = transfer_mode
         self.transfer_metadata = transfer_metadata
+        self.transfer_card = transfer_card
 
         if uuid is not None:
             self.uuid = uuid

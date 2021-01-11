@@ -19,24 +19,6 @@ class ParticipantStats(metric_group.MetricGroup):
         self.timeseries_unit = timeseries_unit
         self.metrics = []
 
-        total_beneficiaries_query = db.session.query(User)
-        self.metrics.append(metric.Metric(
-            metric_name='total_beneficiaries',
-            query=total_beneficiaries_query,
-            object_model=User,
-            stock_filters=[filters.beneficiary_filters],
-            caching_combinatory_strategy=metrics_cache.COUNT,
-            filterable_by=self.filterable_attributes))
-
-        total_vendors_query = db.session.query(User)
-        self.metrics.append(metric.Metric(
-            metric_name='total_vendors',
-            query=total_vendors_query,
-            object_model=User,
-            stock_filters=[filters.vendor_filters],
-            caching_combinatory_strategy=metrics_cache.COUNT,
-            filterable_by=self.filterable_attributes))
-
         # Timeseries Metrics
         if group_strategy:
             users_created_timeseries_query = group_strategy.build_query_group_by_with_join(db.session.query(func.count(User.id).label('volume'),
@@ -56,6 +38,7 @@ class ParticipantStats(metric_group.MetricGroup):
             object_model=User,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
@@ -81,6 +64,7 @@ class ParticipantStats(metric_group.MetricGroup):
             object_model=CreditTransfer,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],

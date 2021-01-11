@@ -4,8 +4,6 @@ import styled from "styled-components";
 
 import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 
-import { Input, StyledButton, ErrorMessage } from "./../styledElements";
-
 import DatasetFeed from "./datasetFeed.jsx";
 import LoadingSpinner from "../loadingSpinner.jsx";
 

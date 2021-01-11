@@ -33,7 +33,7 @@ class UpdateData(Command):
 app = create_app()
 manager = Manager(app)
 
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 
 manager.add_command('db', MigrateCommand)
 

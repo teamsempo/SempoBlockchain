@@ -6,12 +6,10 @@ import NavBar from "../navBar";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 import IntercomSetup from "../intercom/IntercomSetup";
-import MessageBar from "../messageBar";
 import ErrorBoundary from "../ErrorBoundary";
 import LoadingSpinner from "../loadingSpinner";
 
-const { Header, Content, Footer } = Layout;
-const { Title } = Typography;
+const { Content, Footer } = Layout;
 
 interface OuterProps {
   noNav?: boolean;
@@ -43,6 +41,12 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     }
   }, []);
 
+  React.useEffect(() => {
+    if (title) {
+      document.title = `Sempo | ${title}`;
+    }
+  }, [title]);
+
   let onCollapse = (collapsed: boolean) => {
     setCollapsed(collapsed);
     localStorage.setItem("sideBarCollapsed", collapsed.toString());
@@ -51,7 +55,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
   return (
     <ErrorBoundary>
       <IntercomSetup />
-      <MessageBar />
 
       <Layout style={{ minHeight: "100vh" }}>
         {noNav ? null : (
@@ -93,11 +96,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
               : { marginLeft: "200px" }
           }
         >
-          {title ? (
-            <Header className="site-layout-background" style={{ padding: 0 }}>
-              <Title>{title}</Title>
-            </Header>
-          ) : null}
           <Content style={{ margin: isAntDesign ? "0 16px" : "" }}>
             <React.Suspense
               fallback={

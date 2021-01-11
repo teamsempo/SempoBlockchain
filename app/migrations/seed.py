@@ -7,12 +7,14 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 
 from server import db, create_app
 from server.models.ussd import UssdMenu
+from server.models.user import User
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.organisation import Organisation
 from server.models.token import Token, TokenType
 from server.exceptions import TransferUsageNameDuplicateException
 
+from server.utils.location import _set_user_gps_from_location
 
 def print_section_title(text):
     print(text)
@@ -318,9 +320,11 @@ def create_reserve_token(app):
 
     print_section_title("Setting up Reserve Token")
 
-    reserve_token_address = app.config.get('RESERVE_TOKEN_ADDRESS')
-    reserve_token_name = app.config.get('RESERVE_TOKEN_NAME')
-    reserve_token_symbol = app.config.get('RESERVE_TOKEN_SYMBOL')
+    chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
+
+    reserve_token_address = chain_config.get('RESERVE_TOKEN_ADDRESS')
+    reserve_token_name = chain_config.get('RESERVE_TOKEN_NAME')
+    reserve_token_symbol = chain_config.get('RESERVE_TOKEN_SYMBOL')
     # reserve_token_decimals = app.config.get('RESERVE_TOKEN_DECIMALS')
 
     if reserve_token_address:
@@ -334,6 +338,7 @@ def create_reserve_token(app):
                 name=reserve_token_name,
                 symbol=reserve_token_symbol,
                 token_type=TokenType.RESERVE,
+                chain=app.config['DEFAULT_CHAIN']
             )
 
             reserve_token.decimals = 18
@@ -376,8 +381,10 @@ def create_float_transfer_account(app):
     for t in tokens:
         if t.float_account_id is None:
             print(f'Creating Float Account for {t.name}')
+            chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
+
             float_transfer_account = TransferAccount(
-                private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
+                private_key=chain_config['FLOAT_PRIVATE_KEY'],
                 account_type=TransferAccountType.FLOAT,
                 token=t,
                 is_approved=True
@@ -387,6 +394,23 @@ def create_float_transfer_account(app):
             t.float_account = float_transfer_account
             db.session.commit()
     print_section_conclusion('Done Creating/Updating Float Wallet')
+
+# Looks up coordinates for users with no coordinates
+def refresh_user_locations(app):
+    print_section_title('Refreshing user locations')
+    # Get the locationless users
+    no_location_users = db.session.query(User)\
+        .filter(User.lat==None)\
+        .filter(User.lng==None)\
+        .filter(User._location!=None)\
+        .execution_options(show_all=True)\
+        .all()
+
+    for u in no_location_users:
+        _set_user_gps_from_location(u.id, u._location, user_obj=u)
+    db.session.commit()
+
+        
 
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
@@ -401,5 +425,7 @@ if __name__ == '__main__':
     create_master_organisation(current_app, reserve_token)
 
     create_float_transfer_account(current_app)
+
+    refresh_user_locations(current_app)
 
     ctx.pop()

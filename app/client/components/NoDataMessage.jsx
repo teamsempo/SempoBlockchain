@@ -12,7 +12,10 @@ export default class NoDataMessage extends React.Component {
           <UploadButton
             uploadButtonText={
               <NoDataMessageWrapper>
-                <IconSVG src="/static/media/no_data_icon.svg" />
+                <IconSVG
+                  src="/static/media/no_data_icon.svg"
+                  alt={"There is no data available."}
+                />
                 <p>There is no data available. Please upload a spreadsheet.</p>
               </NoDataMessageWrapper>
             }

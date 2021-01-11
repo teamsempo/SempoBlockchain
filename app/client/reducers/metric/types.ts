@@ -30,17 +30,10 @@ export interface DailyVolume {
 }
 
 export interface Metrics {
-  daily_disbursement_volume: DailyVolume[];
-  daily_transaction_volume: DailyVolume[];
   filter_active: false;
-  has_transferred_count: number;
   last_day_volume: DailyVolume;
   master_wallet_balance: number;
-  total_beneficiaries: number;
   total_distributed: number;
-  total_exchanged: number;
-  total_spent: number;
-  total_users: number;
-  transfer_use_breakdown: object;
-  zero_balance_count: number;
+  total_withdrawn: number;
+  total_reclaimed: number;
 }

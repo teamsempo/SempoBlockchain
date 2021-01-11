@@ -68,6 +68,8 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
 
     transfer_card    = db.relationship('TransferCard', backref='transfer_account', lazy=True, uselist=False)
 
+    notes            = db.Column(db.String(), default='')
+
     # users               = db.relationship('User', backref='transfer_account', lazy=True)
     users = db.relationship(
         "User",

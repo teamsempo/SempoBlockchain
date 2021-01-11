@@ -44,16 +44,24 @@ class authModuleContainer extends React.Component {
     if (this.props.loggedIn) {
       var button = (
         <div style={{ margin: "auto 1em" }}>
-          <StyledButton onClick={this.props.logout}>Logout Admin</StyledButton>
+          <StyledButton onClick={this.props.logout} label={"Logout Admin"}>
+            Logout Admin
+          </StyledButton>
         </div>
       );
     } else {
       var button = (
         <div style={{ margin: "auto 1em" }}>
-          <StyledButton onClick={() => this.setActiveForm("LOGIN")}>
+          <StyledButton
+            onClick={() => this.setActiveForm("LOGIN")}
+            label={"Go to Login Page"}
+          >
             Login
           </StyledButton>
-          <StyledButton onClick={() => this.setActiveForm("REGISTER")}>
+          <StyledButton
+            onClick={() => this.setActiveForm("REGISTER")}
+            label={"Go to Register Page"}
+          >
             Register
           </StyledButton>
         </div>

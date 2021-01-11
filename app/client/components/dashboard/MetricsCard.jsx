@@ -67,51 +67,58 @@ class MetricsCard extends React.Component {
     if (metricsLoadStatus.success && selectedData) {
       dataModule = (
         <div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              alignItems: "center"
-            }}
+          <LoadingSpinner
+            spinning={metricsLoadStatus.isRequesting ? "true" : ""}
           >
             <div
               style={{
-                height: this.props.chartHeight,
-                width: isMobile ? "100%" : "60%"
+                display: "flex",
+                flexDirection: isMobile ? "column" : "row",
+                alignItems: "center"
               }}
             >
-              <VolumeChart
-                chartHeight={this.props.chartHeight}
-                data={selectedData}
-                selected={this.state.selectedTimeSeries}
-                filter_dates={this.state.dateRange}
-              />
-            </div>
+              <div
+                style={{
+                  height: this.props.chartHeight,
+                  width: isMobile ? "100%" : "60%"
+                }}
+              >
+                <VolumeChart
+                  chartHeight={this.props.chartHeight}
+                  data={selectedData}
+                  selected={this.state.selectedTimeSeries}
+                  filter_dates={this.state.dateRange}
+                />
+              </div>
 
-            <img
-              src="/static/media/BigArrow.svg"
-              style={{
-                height: this.props.chartHeight - 50,
-                padding: "0 1em",
-                margin: isMobile ? "-3em 0" : "0 0 3em",
-                transform: isMobile ? "rotate(90deg)" : null
-              }}
-            />
-
-            {/*  need to offset the arrow width + padding */}
-            <div
-              style={{
-                height: this.props.chartHeight,
-                width: isMobile ? "100%" : "calc(40% - 2em - 22px)"
-              }}
-            >
-              <GroupByChart
-                chartHeight={this.props.chartHeight}
-                data={selectedData}
-                selected={this.state.selectedTimeSeries}
+              <img
+                alt={
+                  "Elongated right-arrow dividing primary chart and group by chart"
+                }
+                src="/static/media/BigArrow.svg"
+                style={{
+                  height: this.props.chartHeight - 50,
+                  padding: "0 1em",
+                  margin: isMobile ? "-3em 0" : "0 0 3em",
+                  transform: isMobile ? "rotate(90deg)" : null
+                }}
               />
+
+              {/*  need to offset the arrow width + padding */}
+              <div
+                style={{
+                  height: this.props.chartHeight,
+                  width: isMobile ? "100%" : "calc(40% - 2em - 22px)"
+                }}
+              >
+                <GroupByChart
+                  chartHeight={this.props.chartHeight}
+                  data={selectedData}
+                  selected={this.state.selectedTimeSeries}
+                />
+              </div>
             </div>
-          </div>
+          </LoadingSpinner>
           <CustomTabs
             metrics={metrics}
             timeSeriesNameLabels={timeSeriesNameLabels}

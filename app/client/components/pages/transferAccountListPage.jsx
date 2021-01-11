@@ -90,6 +90,7 @@ class TransferAccountListPage extends React.Component {
                   "/create?type=" + browserHistory.location.pathname.slice(1)
                 )
               }
+              label={"Add Single User"}
             >
               Add Single User
             </StyledButton>

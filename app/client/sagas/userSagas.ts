@@ -1,5 +1,6 @@
 import { put, takeEvery, call, all, select } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import { userSchema } from "../schemas";
@@ -14,7 +15,6 @@ import {
 
 import { TransferAccountAction } from "../reducers/transferAccount/actions";
 import { browserHistory } from "../createStore";
-import { MessageAction } from "../reducers/message/actions";
 
 import {
   CreateUserAction,
@@ -96,17 +96,13 @@ function* editUser(
 
     yield put(EditUserAction.editUserSuccess());
 
-    yield put(
-      MessageAction.addMessage({ error: false, message: edit_response.message })
-    );
+    message.success(edit_response.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(EditUserAction.editUserFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -144,21 +140,14 @@ function* deleteUser(
     yield put(UserListAction.replaceUserList(users));
     yield put(TransferAccountAction.updateTransferAccounts(transferAccounts));
 
-    yield put(
-      MessageAction.addMessage({
-        error: false,
-        message: delete_response.message
-      })
-    );
+    message.success(delete_response.message);
     browserHistory.push("/accounts");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(DeleteUserAction.deleteUserFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -179,20 +168,13 @@ function* resetPin(
 
     yield put(ResetPinAction.resetPinSuccess());
 
-    yield put(
-      MessageAction.addMessage({
-        error: false,
-        message: reset_response.message
-      })
-    );
+    message.success(reset_response.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(ResetPinAction.resetPinFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

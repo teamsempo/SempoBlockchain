@@ -1,9 +1,10 @@
 import json
 from typing import Union
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy import text, Table
+from sqlalchemy import text, Table, cast, String
+from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
 import pyotp
@@ -11,10 +12,12 @@ import config
 from flask import current_app, g
 import datetime
 import bcrypt
+import math
 import jwt
 import random
 import string
 import sentry_sdk
+from sqlalchemy import or_, and_
 
 from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -67,7 +70,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         created using the POST user API or the bulk upload function
     """
     __tablename__ = 'user'
-    
+
     # override ModelBase deleted to add an index
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
 
@@ -99,8 +102,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     default_currency = db.Column(db.String())
 
     _location = db.Column(db.String(), index=True)
-    lat = db.Column(db.Float())
-    lng = db.Column(db.Float())
+    lat = db.Column(db.Float(), index=True)
+    lng = db.Column(db.Float(), index=True)
 
     _held_roles = db.Column(JSONB)
 
@@ -176,6 +179,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     exchanges = db.relationship("Exchange", backref="user")
 
+    @hybrid_property
+    def coordinates(self):
+        return str(self.lat) + ', ' + str(self.lng)
+
+    @coordinates.expression
+    def coordinates(cls):
+        return cast(cls.lat, String) + ', ' + cast(cls.lng, String)
+
     def delete_user_and_transfer_account(self):
         """
         Soft deletes a User and default Transfer account if no other users associated to it.
@@ -191,6 +202,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.first_name = None
             self.last_name = None
             self.phone = None
+
+            if self.transfer_card:
+                self.transfer_card.amount_loaded_signature = 'DEL'
 
         except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
@@ -373,6 +387,42 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         # TODO: Review if this could have a better concept of a default?
         return self.get_transfer_account_for_organisation(active_organisation)
 
+    @hybrid_method
+    def great_circle_distance(self, lat, lng):
+        """
+        Tries to calculate the great circle distance between
+        the two locations in km by using the Haversine formula.
+        """
+        return self._haversine(math, self, lat, lng)
+
+    @great_circle_distance.expression
+    def great_circle_distance(cls, lat, lng):
+        return cls._haversine(func, cls, lat, lng)
+
+    @staticmethod
+    def _haversine(lib, selfref, lat, lng):
+        return 6371 * lib.acos(
+            lib.cos(lib.radians(selfref.lat))
+            * lib.cos(lib.radians(lat))
+            * lib.cos(lib.radians(selfref.lng) - lib.radians(lng))
+            + lib.sin(lib.radians(selfref.lat))
+            * lib.sin(lib.radians(lat))
+        )
+
+    def get_users_within_radius(self, radius):
+        if not (self.lat or self.lng):
+            raise Exception('Cannot get users within radius-- User location undefined')
+
+        return db.session.query(User).filter(self.users_within_radius_filter(radius)).all()
+
+    def users_within_radius_filter(self, radius):
+        return or_(
+            and_(User.lat==None, User.lng==None),
+            and_(User.lat==self.lat, User.lng==self.lng),
+            User.great_circle_distance(self.lat, self.lng) < radius,
+            and_(self._location is not None, User._location == self._location)
+        )
+
     def get_transfer_account_for_organisation(self, organisation):
         for ta in self.transfer_accounts:
             if ta in organisation.transfer_accounts:
@@ -440,11 +490,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'id': self.id
             }
 
-            return jwt.encode(
+            tfa = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(tfa, 'utf-8') if isinstance(tfa, str) else tfa
         except Exception as e:
             return e
 
@@ -464,11 +515,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'roles': self.roles
             }
 
-            return jwt.encode(
+            token = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(token, 'utf-8') if isinstance(token, str) else token
         except Exception as e:
             return e
 
@@ -493,7 +545,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
             else:
-                return payload
+                return bytes(payload, 'utf-8') if isinstance(payload, str) else payload
 
         except jwt.ExpiredSignatureError:
             return '{} Token Signature expired.'.format(token_type)

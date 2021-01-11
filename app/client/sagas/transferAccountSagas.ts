@@ -1,5 +1,6 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import { transferAccountSchema } from "../schemas";
@@ -24,7 +25,6 @@ import {
   editTransferAccountAPI
 } from "../api/transferAccountAPI";
 
-import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
 
 import {
@@ -91,9 +91,7 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
 
     yield put(LoadTransferAccountAction.loadTransferAccountsFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -111,18 +109,12 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
     yield call(updateStateFromTransferAccount, edit_response.data);
 
     yield put(EditTransferAccountAction.editTransferAccountSuccess());
-
-    yield put(
-      MessageAction.addMessage({ error: false, message: edit_response.message })
-    );
+    message.success(edit_response.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(EditTransferAccountAction.editTransferAccountFailure(error));
-
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

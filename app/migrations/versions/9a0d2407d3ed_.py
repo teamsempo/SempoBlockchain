@@ -1,9 +1,7 @@
-"""empty message
-
+"""Merge Heads!
 Revision ID: 9a0d2407d3ed
 Revises: 17269ee60c54, d478fb29a859
 Create Date: 2020-10-08 17:27:25.137076
-
 """
 from alembic import op
 import sqlalchemy as sa

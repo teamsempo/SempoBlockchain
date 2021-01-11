@@ -8,6 +8,7 @@ export interface Organisation {
   };
   require_transfer_card: boolean;
   default_disbursement: number;
+  card_shard_distance: number;
   minimum_vendor_payout_withdrawal: number;
   country_code: string;
   valid_roles: TransferAccountTypes[];
@@ -30,6 +31,7 @@ export interface EditOrganisationPayload {
   body: {
     country_code: string;
     default_disbursement: number;
+    card_shard_distance: number;
     minimum_vendor_payout_withdrawal: number;
     require_transfer_card: boolean;
     default_lat: number;

@@ -44,7 +44,7 @@ DEFAULT_ATTRIBUTES = ['user_id', 'email', 'phone', 'blockchain_address', 'public
                       'use_precreated_pin',
                       'transfer_account_name', 'primary_user_identifier',
                       'first_name', 'last_name', 'preferred_language',
-                      'initial_disbursement', 'is_vendor', 'is_beneficiary', 'business_usage_id',
+                      'initial_disbursement', 'is_vendor', 'is_beneficiary', 'account_types', 'business_usage_id',
                       'existing_vendor_phone', 'existing_vendor_pin',
                       'use_last_4_digits_of_id_as_initial_pin', 'allow_existing_user_modify', 'require_identifier']
 

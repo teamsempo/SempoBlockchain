@@ -220,9 +220,11 @@ class BusinessBankDetails extends React.Component {
             <AsyncButton
               buttonText={<span>Back</span>}
               onClick={this.props.backStep}
+              label={"Back"}
             />
             <AsyncButton
               buttonText={<span>Next</span>}
+              label={"Next"}
               onClick={this.isValidated}
               isLoading={
                 this.props.editBankAccountStatus.isRequesting ||

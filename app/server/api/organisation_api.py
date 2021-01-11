@@ -39,7 +39,7 @@ class OrganisationAPI(MethodView):
         else:
             organisations_query = Organisation.query.execution_options(show_all=True)
 
-            organisations, total_items, total_pages = paginate_query(organisations_query, Organisation)
+            organisations, total_items, total_pages, new_last_fetched = paginate_query(organisations_query)
 
             if organisations is None:
                 return make_response(jsonify({'message': 'No organisations found'})), 400
@@ -48,6 +48,7 @@ class OrganisationAPI(MethodView):
                 'message': 'Successfully Loaded All Organisations',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'data': {'organisations': organisations_schema.dump(organisations).data}
             }
             return make_response(jsonify(response_object)), 200
@@ -63,6 +64,7 @@ class OrganisationAPI(MethodView):
         default_lat = put_data.get('default_lat')
         default_lng = put_data.get('default_lng')
         account_types = put_data.get('account_types', [])
+        card_shard_distance = put_data.get('card_shard_distance') # Kilometers
 
         for at in account_types:
             if at not in ASSIGNABLE_TIERS.keys():
@@ -89,7 +91,9 @@ class OrganisationAPI(MethodView):
             organisation.default_lat = default_lat
         if default_lng is not None:
             organisation.default_lng = default_lng
-
+        if card_shard_distance is not None: # Distance in KM
+            organisation.card_shard_distance = card_shard_distance
+            
         response_object = {
             'message': f'Organisation {organisation_id} successfully updated',
             'data': {'organisation': organisation_schema.dump(organisation).data}
