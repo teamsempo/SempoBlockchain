@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.7.35'  # Remember to bump this in every PR
+VERSION = '1.7.49'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -133,6 +133,9 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
 ALLOW_SELF_SIGN_UP = config_parser['APP'].getboolean('ALLOW_SELF_SIGN_UP') or False
+METRICS_CACHE_TIMEOUT = config_parser['APP'].getint('METRICS_CACHE_TIMEOUT', 604800) # 604800 seconds == 1 week
+FORGIVING_DEDUCT = config_parser['APP'].getboolean('FORGIVING_DEDUCT') or False
+SUPPORT_SIG_VALIDATION = config_parser['APP'].getboolean('SUPPORT_SIG_VALIDATION') or True
 
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
 
@@ -145,6 +148,9 @@ ECDSA_SECRET          = hashlib.sha256(secrets_parser['APP']['ECDSA_SECRET'].enc
 
 INTERNAL_AUTH_USERNAME = secrets_parser['APP']['BASIC_AUTH_USERNAME'] + '_' + DEPLOYMENT_NAME
 INTERNAL_AUTH_PASSWORD = secrets_parser['APP']['BASIC_AUTH_PASSWORD']
+
+MAPBOX_TOKEN = config_parser['APP'].get('mapbox_token') \
+    or 'pk.eyJ1Ijoic2VtcG9uaWNrIiwiYSI6ImNqZnJtNHkybzA0OWMyd25lczcyeXJwMTYifQ.0CJmw4sMU_VuX4wsPlb53Q'
 
 BASIC_AUTH_CREDENTIALS = {
     INTERNAL_AUTH_USERNAME: (INTERNAL_AUTH_PASSWORD, 'internal')
@@ -227,8 +233,6 @@ GOOGLE_ANALYTICS_ID = common_secrets_parser['GOOGLE']['google_analytics_id']
 
 HEAP_ANALYTICS_ID = secrets_parser['HEAP']['id']
 
-MAPBOX_TOKEN = common_secrets_parser['MAPBOX']['token']
-
 PUSHER_APP_ID   = common_secrets_parser['PUSHER']['app_id']
 PUSHER_KEY      = common_secrets_parser['PUSHER']['key']
 PUSHER_SECRET   = common_secrets_parser['PUSHER']['secret']
@@ -260,8 +264,8 @@ except ImportError:
 # https://ropsten.infura.io/9CAC3Lb5OjaoecQIpPNP
 # https://kovan.infura.io/9CAC3Lb5OjaoecQIpPNP
 
-CHAIN_NAMES = list(config_parser['APP']['chains'].split(',')) or ['ETHEREUM']
-DEFAULT_CHAIN = config_parser['APP']['default_chain'] or 'ETHEREUM'
+CHAIN_NAMES = list(config_parser['APP'].get('chains', 'ETHEREUM').split(','))
+DEFAULT_CHAIN = config_parser['APP'].get('default_chain', 'ETHEREUM')
 CHAINS = {}
 try:
     from eth_keys import keys

@@ -7,12 +7,14 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 
 from server import db, create_app
 from server.models.ussd import UssdMenu
+from server.models.user import User
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.organisation import Organisation
 from server.models.token import Token, TokenType
 from server.exceptions import TransferUsageNameDuplicateException
 
+from server.utils.location import _set_user_gps_from_location
 
 def print_section_title(text):
     print(text)
@@ -393,6 +395,23 @@ def create_float_transfer_account(app):
             db.session.commit()
     print_section_conclusion('Done Creating/Updating Float Wallet')
 
+# Looks up coordinates for users with no coordinates
+def refresh_user_locations(app):
+    print_section_title('Refreshing user locations')
+    # Get the locationless users
+    no_location_users = db.session.query(User)\
+        .filter(User.lat==None)\
+        .filter(User.lng==None)\
+        .filter(User._location!=None)\
+        .execution_options(show_all=True)\
+        .all()
+
+    for u in no_location_users:
+        _set_user_gps_from_location(u.id, u._location, user_obj=u)
+    db.session.commit()
+
+        
+
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
     current_app = create_app()
@@ -406,5 +425,7 @@ if __name__ == '__main__':
     create_master_organisation(current_app, reserve_token)
 
     create_float_transfer_account(current_app)
+
+    refresh_user_locations(current_app)
 
     ctx.pop()

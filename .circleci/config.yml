@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - celo_integration
+                - fix-external-tx
 
           requires:
             - build

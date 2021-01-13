@@ -29,6 +29,7 @@ class TotalUsers(metric_group.MetricGroup):
                 query=group_strategy.build_query_group_by_with_join(total_users_grouped_timeseries_query, User),
                 object_model=User,
                 stock_filters=[],
+                timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
                 caching_combinatory_strategy=metrics_cache.QUERY_ALL,
                 filterable_by=self.filterable_attributes,
                 query_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])
@@ -41,6 +42,7 @@ class TotalUsers(metric_group.MetricGroup):
             query=total_users_timeseries_query,
             object_model=User,
             stock_filters=[],
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[ADD_MISSING_DAYS_TO_TODAY, ACCUMULATE_TIMESERIES])

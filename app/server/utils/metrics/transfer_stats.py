@@ -68,6 +68,7 @@ class TransferStats(metric_group.MetricGroup):
             aggregated_query=aggregated_transaction_volume_query,
             total_query=total_transaction_volume_query,
             object_model=CreditTransfer,
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
@@ -85,6 +86,7 @@ class TransferStats(metric_group.MetricGroup):
             total_query=total_transaction_volume_query,
             object_model=CreditTransfer,
             stock_filters=[filters.standard_payment_filters],
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
@@ -111,6 +113,7 @@ class TransferStats(metric_group.MetricGroup):
             total_query=total_transaction_count_query,
             object_model=CreditTransfer,
             stock_filters=[filters.standard_payment_filters],
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
@@ -127,6 +130,7 @@ class TransferStats(metric_group.MetricGroup):
             total_query=total_transaction_count_query,
             object_model=CreditTransfer,
             stock_filters=[filters.standard_payment_filters],
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
@@ -153,6 +157,7 @@ class TransferStats(metric_group.MetricGroup):
             object_model=CreditTransfer,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we want this filter?
             stock_filters=[],
+            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
             caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
