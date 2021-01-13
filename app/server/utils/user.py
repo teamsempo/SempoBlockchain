@@ -422,6 +422,8 @@ def proccess_create_or_modify_user_request(
     phone = attribute_dict.get('phone')
 
     account_types = attribute_dict.get('account_types', [])
+    if isinstance(account_types, str):
+        account_types = account_types.split(',')
 
     referred_by = attribute_dict.get('referred_by')
 

@@ -56,8 +56,8 @@ def apply_filters(query, filters, query_table):
                     query = _apply_single_column_filter(query, _filts, User, None, user_join_attribute)
 
         elif filter_table == CreditTransfer.__tablename__:
-                # No join needed for CreditTransfer, since it's only availible to be filtered on when directly queried 
-                query = _apply_single_column_filter(query, _filts, CreditTransfer, None, None, None)
+                # No join needed for CreditTransfer, since it's only available to be filtered on when directly queried 
+                query = _apply_single_column_filter(query, _filts, CreditTransfer, None, None)
         elif filter_table == CustomAttributeUserStorage.__tablename__ and user_join_attribute is not None:
             query = _apply_ca_filters(query, _filts, user_join_attribute)
     return query
