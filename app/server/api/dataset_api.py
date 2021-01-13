@@ -1,6 +1,8 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from openpyxl import load_workbook
+import csv
+import codecs
 
 from server.constants import ALLOWED_SPREADSHEET_EXTENSIONS, SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
 from server import db
@@ -31,13 +33,29 @@ class SpreadsheetUploadAPI(MethodView):
         if not allowed_file(spreadsheet.filename):
             return make_response(jsonify({'message': 'Must be XSLX or CSV'})), 400
 
-        worksheet = load_workbook(spreadsheet).active
+        filetype = spreadsheet.filename.rsplit('.', 1)[1].lower()
+
+        if filetype == 'xlsx':
+
+            worksheet = load_workbook(spreadsheet).active
+            rows = worksheet.rows
+
+            def accessor(x):
+                return x.value
+
+        else:
+
+            stream = codecs.iterdecode(spreadsheet, 'utf-8')
+            rows = csv.reader(stream)
+
+            def accessor(x):
+                return x
 
         data_dict = {}
-        for i, row in enumerate(worksheet.rows):
+        for i, row in enumerate(rows):
             row_dict = {}
             for j, cell in enumerate(row):
-                row_dict[j] = cell.value
+                row_dict[j] = accessor(cell)
 
             data_dict[i] = row_dict
 
