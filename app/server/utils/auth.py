@@ -406,6 +406,8 @@ def create_user_response_object(user, auth_token, message):
         'request_feedback_questions': request_feedback_questions(user),
         'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
         'transfer_usages': transfer_usages,
+        'forgiving_deduct': current_app.config['FORGIVING_DEDUCT'],
+        'support_sig_validation': current_app.config['SUPPORT_SIG_VALIDATION'],
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'kyc_active': True,  # todo; kyc active function
         'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
