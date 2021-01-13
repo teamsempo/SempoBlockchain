@@ -48,7 +48,7 @@ def test_prep_search_api(test_client, complete_admin_auth_token, create_organisa
 
 @pytest.mark.parametrize("search_term, results", [
     # Empty string should return everyone
-    ('', ['Michiel', 'Francine', 'Roy', 'Paul']), 
+    ('', ['Paul', 'Roy', 'Francine', 'Michiel']), 
     # First/Last Matching
     # Francine should be only result!
     ('fr', ['Francine']), 
@@ -61,7 +61,7 @@ def test_prep_search_api(test_client, complete_admin_auth_token, create_organisa
     ('12345678901 mic', ['Roy', 'Michiel', 'Francine', 'Paul']), 
     # 902 area code should float Michiel and Francine to the top
     # M added to query since the ranks were tied and I had to make one pull ahead for consistency!
-    ('902 M', ['Michiel', 'Francine', 'Paul']), 
+    ('902 Mic f', ['Michiel', 'Francine', 'Paul']), 
     # Location matching
     # Michiel is from Halifax, so Michiel should be first here!
     ('Halifax', ['Michiel', 'Paul']), 
@@ -78,6 +78,7 @@ def test_normal_search(search_term, results, test_client, complete_admin_auth_to
                             headers=dict(
                             Authorization=complete_admin_auth_token, Accept='application/json'),
                             follow_redirects=True)
+    print(response)
     transfer_accounts = response.json['data']['transfer_accounts']
     assert response.status_code == 200
     user_names = []

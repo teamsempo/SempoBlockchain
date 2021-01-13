@@ -245,7 +245,7 @@ class ManyOrgBase(object):
                                back_populates=plural)
 
 
-def paginate_query(query, sort_attribute=None, sort_desc=True):
+def paginate_query(query, sort_attribute=None, sort_desc=True, ignore_last_fetched=False):
     """
     Paginates an sqlalchemy query, gracefully managing missing queries.
     Default ordering is to show most recently created first.
@@ -308,7 +308,7 @@ def paginate_query(query, sort_attribute=None, sort_desc=True):
     if per_page is None:
         items = query.all()
 
-        if len (items) > 0:
+        if len (items) > 0 and not ignore_last_fetched:
             new_last_fetched_obj = items[-1]
             new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
         else:
@@ -326,7 +326,7 @@ def paginate_query(query, sort_attribute=None, sort_desc=True):
 
         paginated = query.paginate(page, per_page, error_out=False)
 
-    if len(paginated.items) > 0:
+    if len(paginated.items) > 0 and not ignore_last_fetched:
         new_last_fetched_obj = paginated.items[-1]
         new_last_fetched = getattr(new_last_fetched_obj, sort_attribute.key)
     else:

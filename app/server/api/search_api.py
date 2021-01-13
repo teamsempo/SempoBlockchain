@@ -95,7 +95,7 @@ class SearchAPI(MethodView):
         final_query = final_query.filter(sum_search!=0) if search_string else final_query
 
         final_query = apply_filters(final_query, filters, User)
-        transfer_accounts, total_items, total_pages = paginate_query(final_query)
+        transfer_accounts, total_items, total_pages, _ = paginate_query(final_query, ignore_last_fetched=True)
         result = transfer_accounts_schema.dump([resultTuple[0] for resultTuple in transfer_accounts])
 
         return {
