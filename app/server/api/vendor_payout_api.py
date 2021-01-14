@@ -44,7 +44,6 @@ class VendorPayoutAPI(MethodView):
             vendors = db.session.query(TransferAccount)\
                 .filter(TransferAccount.account_type == TransferAccountType.USER)\
                 .filter(TransferAccount.id.in_(account_ids))\
-                .filter((TransferAccount._balance_wei or 0) >= payout_withdrawal_limit)\
                 .all()
 
             for vendor in vendors:
@@ -65,7 +64,6 @@ class VendorPayoutAPI(MethodView):
         else:
             vendor_users = db.session.query(User)\
                 .filter(User.has_vendor_role)\
-                .filter((TransferAccount._balance_wei or 0) >= payout_withdrawal_limit)\
                 .all()
 
             vendors = [v.default_transfer_account for v in vendor_users]
@@ -100,8 +98,7 @@ class VendorPayoutAPI(MethodView):
                 withdrawals = []
 
             withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
-            if withdrawal_amount > 0:
-
+            if withdrawal_amount > 0 and (v._balance_wei or 0) >= payout_withdrawal_limit:
                 transfer = make_withdrawal_transfer(
                     withdrawal_amount,
                     token=v.token,
