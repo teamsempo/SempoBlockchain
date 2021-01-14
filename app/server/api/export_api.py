@@ -299,10 +299,11 @@ class ExportAPI(MethodView):
                     if include_custom_attributes:
                         # Add custom attributes as columns at the end
                         for attribute in transfer_account.primary_user.custom_attributes:
+                            name = (attribute.custom_attribute and attribute.custom_attribute.name) or ' '
+
                             try:
-                                col_num = custom_attribute_columns.index(attribute.name) + 1 + len(transfer_account_columns)
+                                col_num = custom_attribute_columns.index(name) + 1 + len(transfer_account_columns)
                             except ValueError:
-                                name = (attribute.custom_attribute and attribute.custom_attribute.name) or ' '
                                 custom_attribute_columns.append(name)
                                 col_num = len(custom_attribute_columns) + len(transfer_account_columns)
 
