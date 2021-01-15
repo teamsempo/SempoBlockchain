@@ -24,19 +24,25 @@ const credit_transfer = new schema.Entity("credit_transfers", {
   recipient_user: user
 });
 
+const token = new schema.Entity("tokens");
+
 const filter = new schema.Entity("filters");
 
 const admin = new schema.Entity("admins");
 
 const invite = new schema.Entity("invites");
 
-const organisation = new schema.Entity("organisations");
+const organisation = new schema.Entity("organisations", {
+  token: token
+});
 
 export const transferAccountSchema = [transfer_account];
 
 export const creditTransferSchema = [credit_transfer];
 
 export const userSchema = [user];
+
+export const tokenSchema = [token];
 
 export const filterSchema = [filter];
 

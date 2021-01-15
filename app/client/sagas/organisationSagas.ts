@@ -23,6 +23,7 @@ import {
 
 import { organisationSchema } from "../schemas";
 import { ActionWithPayload } from "../reduxUtils";
+import { TokenListAction } from "../reducers/token/actions";
 
 function* updateStateFromOrganisation(data: OrganisationData) {
   //Schema expects a list of organisation objects
@@ -34,8 +35,13 @@ function* updateStateFromOrganisation(data: OrganisationData) {
   }
 
   const normalizedData = normalize(organisation_list, organisationSchema);
-  const organisations = normalizedData.entities.organisations;
 
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
+
+  const organisations = normalizedData.entities.organisations;
   if (organisations) {
     yield put(OrganisationAction.updateOrganisationList(organisations));
   }

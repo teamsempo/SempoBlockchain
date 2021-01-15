@@ -2,12 +2,9 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Card, Space } from "antd";
 
+import { Token } from "../../../reducers/token/types";
 import { Organisation } from "../../../reducers/organisation/types";
 import { EditOrganisationAction } from "../../../reducers/organisation/actions";
-import * as styles from "../../styledElements";
-// import OrganisationSettingForm, {
-//   IOrganisationSettings
-// } from "../../organisation/OrganisationSettingsForm";
 import OrganisationForm, {
   IOrganisation
 } from "../../organisation/OrganisationForm";
@@ -19,7 +16,8 @@ interface DispatchProps {
 }
 
 interface StateProps {
-  organisations: any;
+  tokens: Token[];
+  organisations: Organisation[];
   activeOrganisation: Organisation;
 }
 
@@ -90,7 +88,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
         default_disbursement: form.defaultDisbursement * 100,
         card_shard_distance: form.cardShardDistance,
         minimum_vendor_payout_withdrawal:
-          form.mimimumVendorPayoutWithdrawal * 100,
+          form.minimumVendorPayoutWithdrawal * 100,
         require_transfer_card: form.requireTransferCard,
         account_types: form.accountTypes
       },
@@ -128,6 +126,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
               isNewOrg={isNewOrg}
               activeOrganisation={this.props.activeOrganisation}
               organisations={this.props.organisations}
+              tokens={this.props.tokens}
               isoCountries={this.state.isoCountries || []}
               roles={this.state.roles || []}
               onSubmit={(form: IOrganisation) =>
@@ -146,6 +145,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
 
 const mapStateToProps = (state: any): StateProps => {
   return {
+    tokens: state.tokens,
     organisations: state.organisations,
     activeOrganisation: state.organisations.byId[state.login.organisationId]
   };

@@ -10,7 +10,7 @@ const { Option } = Select;
 export interface IOrganisation {
   defaultDisbursement: number;
   cardShardDistance: number;
-  mimimumVendorPayoutWithdrawal: number;
+  minimumVendorPayoutWithdrawal: number;
   requireTransferCard: boolean;
   countryCode: string;
   accountTypes: string[];
@@ -19,6 +19,7 @@ export interface IOrganisation {
 interface OuterProps {
   isoCountries: [];
   organisations: any;
+  tokens: any;
   activeOrganisation: Organisation | any;
   roles: [];
   onSubmit: any;
@@ -28,15 +29,21 @@ interface OuterProps {
 const NewOrganisationForm = (props: OuterProps) => {
   const [form] = Form.useForm();
   const [visible, setVisible] = useState(false);
-  const { activeOrganisation, isoCountries, roles, isNewOrg } = props;
+  const {
+    tokens,
+    organisations,
+    activeOrganisation,
+    isoCountries,
+    roles,
+    isNewOrg
+  } = props;
+
+  //todo:organisations.createStatus.isRequesting;
+  const loading = isNewOrg ? false : organisations.editStatus.isRequesting;
 
   useEffect(() => {
     form.resetFields();
   });
-
-  const onFinish = (values: any) => {
-    console.log(values);
-  };
 
   const onCreate = (values: any) => {
     console.log("Received values of form: ", values);
@@ -49,15 +56,14 @@ const NewOrganisationForm = (props: OuterProps) => {
       (country: string) =>
         country.slice(0, 2) == activeOrganisation.country_code
     ) || "";
-  let activeOrganisationToken = activeOrganisation.token.symbol;
 
-  let tokens = ["celo", "eth"];
+  // let tokens = ["celo", "eth"];
 
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
+      onFinish={props.onSubmit}
       initialValues={
         isNewOrg
           ? {
@@ -73,7 +79,7 @@ const NewOrganisationForm = (props: OuterProps) => {
               requireTransferCard: activeOrganisation.require_transfer_card,
               cardShardDistance: activeOrganisation.card_shard_distance,
               countryCode: countryCode,
-              token: activeOrganisationToken
+              token: tokens.byId[activeOrganisation.token].name
             }
       }
     >
@@ -111,9 +117,6 @@ const NewOrganisationForm = (props: OuterProps) => {
           disabled={!isNewOrg}
           placeholder="Select a token"
           optionFilterProp="children"
-          filterOption={(input, option: any) =>
-            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
           dropdownRender={menu => (
             <div>
               {menu}
@@ -132,10 +135,11 @@ const NewOrganisationForm = (props: OuterProps) => {
             </div>
           )}
         >
-          {tokens.map((item, i) => {
+          {Object.keys(tokens.byId).map((item, i) => {
+            const token = tokens.byId[item];
             return (
-              <Option key={i} value={item}>
-                {item}
+              <Option key={i} value={token.name}>
+                {token.name} ({token.symbol}) - {token.address}
               </Option>
             );
           })}
@@ -247,7 +251,7 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" htmlType="submit" loading={loading}>
           Save
         </Button>
       </Form.Item>

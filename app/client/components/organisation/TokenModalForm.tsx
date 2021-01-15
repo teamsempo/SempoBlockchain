@@ -26,7 +26,6 @@ const TokenModalForm: React.FC<TokenModalFormProps> = ({
 }) => {
   const [form] = Form.useForm();
   const chains = window.CHAIN_NAMES && window.CHAIN_NAMES.split(",");
-  console.log("chains", chains, "window.chains", window.CHAIN_NAMES);
   return (
     <Modal
       visible={visible}
@@ -94,6 +93,9 @@ const TokenModalForm: React.FC<TokenModalFormProps> = ({
         <Form.Item
           name="modifier"
           className="collection-create-form_last-form-item"
+          rules={[
+            { required: true, message: "Please select the chain of the token!" }
+          ]}
         >
           <Radio.Group>
             {chains &&
