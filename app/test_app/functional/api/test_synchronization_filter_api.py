@@ -3,7 +3,7 @@ import pytest, json, config, base64
 from server import bt
 
 @pytest.mark.parametrize("contract_address, contract_type, filter_type, filter_parameters, status_code", [
-    (config.ETH_CONTRACT_ADDRESS, "ERC20", 'TRANSFER', None, 201),
+    (config.CHAINS['ETHEREUM']['CONTRACT_ADDRESS'], "ERC20", 'TRANSFER', None, 201),
 ])
 def test_sync_filter_api(test_client, create_ip_address, complete_admin_auth_token, contract_address, contract_type, filter_type, filter_parameters, status_code):
     # Super basic test for creation of sync filters
@@ -15,7 +15,7 @@ def test_sync_filter_api(test_client, create_ip_address, complete_admin_auth_tok
             Accept='application/json'
         ),
         json={
-            'contract_address': config.ETH_CONTRACT_ADDRESS,
+            'contract_address': config.CHAINS['ETHEREUM']['CONTRACT_ADDRESS'],
             'contract_type': contract_type,
             'filter_type': filter_type,
             'filter_parameters': filter_parameters

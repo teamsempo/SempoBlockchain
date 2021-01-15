@@ -38,37 +38,40 @@ def apply_filters(query, filters, query_table):
     if filters is None:
         return query
 
-    user_join_attribute, account_join_attribute = _determine_join_conditions(query_table)
-
-    for filter_table_name, _filts in filters.items():
-        if filter_table_name == TransferAccount.__tablename__:
+    for filter_tuple, _filts in filters.items():
+        filter_table, sender_or_recipient = filter_tuple
+        user_join_attribute, account_join_attribute = _determine_join_conditions(query_table, sender_or_recipient)
+        if filter_table == TransferAccount.__tablename__:
                 # only join transfer account if table is not transfer account
-                if query_table.__tablename__ == filter_table_name: 
+                if query_table.__tablename__ == filter_table: 
                     query = _apply_single_column_filter(query, _filts, TransferAccount, None, None) 
                 else:
                     query = _apply_single_column_filter(query, _filts, TransferAccount, account_join_attribute, None)
 
-        elif filter_table_name == User.__tablename__:
+        elif filter_table == User.__tablename__:
                 # only join user account if table is not user 
-                if query_table.__tablename__ == filter_table_name:
+                if query_table.__tablename__ == filter_table:
                     query = _apply_single_column_filter(query, _filts, User, None, None)
                 else:
                     query = _apply_single_column_filter(query, _filts, User, None, user_join_attribute)
 
-        elif filter_table_name == CreditTransfer.__tablename__:
-                # No join needed for CreditTransfer, since it's only availible to be filtered on when directly queried 
-                query = _apply_single_column_filter(query, _filts, CreditTransfer, None, None, None)
-        elif filter_table_name == CustomAttributeUserStorage.__tablename__ and user_join_attribute is not None:
+        elif filter_table == CreditTransfer.__tablename__:
+                # No join needed for CreditTransfer, since it's only available to be filtered on when directly queried 
+                query = _apply_single_column_filter(query, _filts, CreditTransfer, None, None)
+        elif filter_table == CustomAttributeUserStorage.__tablename__ and user_join_attribute is not None:
             query = _apply_ca_filters(query, _filts, user_join_attribute)
     return query
 
-def _determine_join_conditions(query_table):
+def _determine_join_conditions(query_table, sender_or_recipient):
     if query_table == CreditTransfer:
-        return CreditTransfer.sender_user_id, CreditTransfer.sender_transfer_account_id
+        if sender_or_recipient == 'recipient':
+            return CreditTransfer.recipient_user_id, CreditTransfer.recipient_transfer_account_id
+        else:
+            return CreditTransfer.sender_user_id, CreditTransfer.sender_transfer_account_id
     if query_table == User:
         return User.id, None
 
-def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None, transfer_join_attribute=None):
+def _apply_single_column_filter(query, filters, target_table, account_join_attribute=None, user_join_attribute=None):
     """
     Converts a list of filter rule tuples (applying to a particular table specified
     by target_table) to an actual alchemy query and applies it
@@ -88,7 +91,7 @@ def _apply_single_column_filter(query, filters, target_table, account_join_attri
     for batches in filters:
         to_batch = []
         for _filt in batches:
-            column = _filt[0]
+            column = _filt[0].split(',')[0]
             comparator = _filt[1]
             val = _filt[2]
 
@@ -106,7 +109,7 @@ def _apply_ca_filters(query, filters, user_join_condition):
     for batches in filters:
         to_batch = []
         for _filt in batches:
-            column = _filt[0]
+            column = _filt[0].split(',')[0]
             comparator = _filt[1]
             val = _filt[2]
             CustomAttributeUserStorageAlias = aliased(CustomAttributeUserStorage)
@@ -144,27 +147,9 @@ withdrawal_filters = [
     CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL
 ]
 
-
-transaction_volume_filters = [
-    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-]
-
 standard_payment_filters = [
     CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
     CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD
-]
-
-exchanged_filters = [
-    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-    CreditTransfer.transfer_type == TransferTypeEnum.EXCHANGE,
-]
-
-beneficiary_filters = [User.has_beneficiary_role == True]
-vendor_filters = [User.has_vendor_role == True]
-
-exhaused_balance_filters = [
-    CreditTransfer.transfer_type == TransferTypeEnum.PAYMENT,
-    TransferAccount._balance_wei == 0
 ]
 

@@ -185,25 +185,29 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
-    transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
-    token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
+    transfer_metadata = fields.Function(lambda obj: obj.transfer_metadata)
+    token = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
-    sender_transfer_account_id      = fields.Int()
-    recipient_transfer_account_id   = fields.Int()
+    sender_transfer_account_id = fields.Int()
+    recipient_transfer_account_id = fields.Int()
 
-    sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
-    recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
+    sender_user = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
+    recipient_user = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
 
-    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
-    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
+    sender_transfer_account = fields.Nested("server.schemas.TransferAccountSchema",
+                                            only=("id", "balance", "token", "blockchain_address", "is_vendor"))
+    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema",
+                                               only=("id", "balance", "token", "blockchain_address", "is_vendor"))
+
+    sender_transfer_card_id = fields.Int()
 
     from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
-    attached_images         = fields.Nested(UploadedResourceSchema, many=True)
+    attached_images = fields.Nested(UploadedResourceSchema, many=True)
 
-    lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
-    lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
-    is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
+    lat = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
+    lng = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
+    is_sender = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
     def get_authorising_user_email(self, obj):
         authorising_user_id = obj.authorising_user_id
@@ -419,6 +423,7 @@ class OrganisationSchema(SchemaBase):
 
     require_transfer_card = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
+    minimum_vendor_payout_withdrawal = fields.Function(lambda obj: int(obj.minimum_vendor_payout_withdrawal))
     country_code = fields.Function(lambda obj: str(obj.country_code))
 
     token               = fields.Nested('server.schemas.TokenSchema')
@@ -501,6 +506,8 @@ view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
+transfer_card_schema = TransferCardSchema(exclude=("id", "created"))
+
 
 uploaded_resource_schema = UploadedResourceSchema()
 

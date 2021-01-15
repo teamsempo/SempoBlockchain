@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - custom_attr_list_fix
+                - fix-external-tx
 
           requires:
             - build

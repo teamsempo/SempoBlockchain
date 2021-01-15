@@ -80,5 +80,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), table_name='custom_attribute_user_storage')
-
+    # op.drop_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), table_name='custom_attribute_user_storage')
+    pass

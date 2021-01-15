@@ -16,7 +16,6 @@ import {
   datasetList
 } from "./spreadsheet/reducers";
 import { ExportReducer } from "./export/reducers";
-import { message } from "./message/reducers";
 import { creditTransfers } from "./creditTransfer/reducers";
 import { transferAccounts } from "./transferAccount/reducers";
 import { users } from "./user/reducers";
@@ -43,7 +42,6 @@ const appReducer = combineReducers({
   datasetSave,
   datasetList,
   export: ExportReducer,
-  message,
   transferAccounts,
   users,
   creditTransfers,

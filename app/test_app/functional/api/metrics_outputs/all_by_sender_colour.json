@@ -1,0 +1,276 @@
+{
+  "active_filters": [],
+  "active_group_by": "colour,sender",
+  "active_users": {
+    "aggregate": {
+      "blue": 2,
+      "green": 1,
+      "percent_change": 100,
+      "red": 2,
+      "total": 6
+    },
+    "timeseries": {
+      "blue": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 2
+        }
+      ],
+      "green": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "red": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "all_payments_volume": {
+    "aggregate": {
+      "blue": 30,
+      "green": 20,
+      "percent_change": 97.04433497536947,
+      "red": 120,
+      "total": 1687
+    },
+    "timeseries": {
+      "blue": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 30
+        }
+      ],
+      "green": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 20
+        }
+      ],
+      "red": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 100
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "daily_transaction_count": {
+    "aggregate": {
+      "blue": 2,
+      "green": 1,
+      "percent_change": null,
+      "red": 2,
+      "total": 5
+    },
+    "timeseries": {
+      "blue": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 2
+        }
+      ],
+      "green": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "red": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "mandatory_filter": {},
+  "master_wallet_balance": -1517,
+  "total_distributed": 1517,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
+  "trades_per_user": {
+    "aggregate": {
+      "blue": 1,
+      "green": 1,
+      "percent_change": null,
+      "red": 0.6666666666666666,
+      "total": 0.7142857142857143
+    },
+    "timeseries": {
+      "blue": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        }
+      ],
+      "green": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "red": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 0.3333333333333333
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 2,
+      "value_type": "count_average"
+    }
+  },
+  "transfer_amount_per_user": {
+    "aggregate": {
+      "blue": 15,
+      "green": 20,
+      "percent_change": null,
+      "red": 40,
+      "total": 24.285714285714285
+    },
+    "timeseries": {
+      "blue": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 15
+        }
+      ],
+      "green": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 20
+        }
+      ],
+      "red": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 33.333333333333336
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "users_created": {
+    "aggregate": {
+      "blue": 2,
+      "green": 1,
+      "percent_change": 50,
+      "red": 3,
+      "total": 7
+    },
+    "timeseries": {
+      "blue": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 1
+        }
+      ],
+      "green": [
+        {
+          "date": "2020-11-21T00:00:00",
+          "value": 1
+        }
+      ],
+      "red": [
+        {
+          "date": "2020-11-21T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 2
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "users_who_made_purchase": {
+    "aggregate": {
+      "blue": 2,
+      "green": 1,
+      "percent_change": 100,
+      "red": 2,
+      "total": 6
+    },
+    "timeseries": {
+      "blue": [
+        {
+          "date": "2020-11-30T00:00:00",
+          "value": 2
+        }
+      ],
+      "green": [
+        {
+          "date": "2020-11-27T00:00:00",
+          "value": 1
+        }
+      ],
+      "red": [
+        {
+          "date": "2020-11-25T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2020-12-01T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  }
+}

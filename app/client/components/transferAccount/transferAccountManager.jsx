@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import styled from "styled-components";
 import { connect } from "react-redux";
+import { Input } from "antd";
 
 import { StyledButton, ModuleBox, ModuleHeader } from "../styledElements";
 import AsyncButton from "../AsyncButton.jsx";
@@ -10,6 +11,8 @@ import DateTime from "../dateTime.tsx";
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
+
+const { TextArea } = Input;
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -162,6 +165,7 @@ class TransferAccountManager extends React.Component {
     } = this.state;
     let accountTypeName;
     let icon;
+    let alt;
 
     if (this.state.newTransfer) {
       var newTransfer = (
@@ -199,22 +203,26 @@ class TransferAccountManager extends React.Component {
       accountTypeName =
         TransferAccountTypes.BENEFICIARY || window.BENEFICIARY_TERM;
       icon = "/static/media/user.svg";
+      alt = "User Icon";
     } else if (is_vendor) {
       accountTypeName = TransferAccountTypes.VENDOR;
       icon = "/static/media/store.svg";
+      alt = "Vendor Icon";
     } else if (is_groupaccount) {
       accountTypeName = TransferAccountTypes.GROUP_ACCOUNT;
       icon = "/static/media/groupaccount.svg";
+      alt = "Group Account Icon";
     } else if (is_tokenagent) {
       accountTypeName = TransferAccountTypes.TOKEN_AGENT;
       icon = "/static/media/tokenagent.svg";
+      alt = "Token Agent Icon";
     }
 
     var summaryBox = (
       <ModuleBox>
         <SummaryBox>
           <TopContent>
-            <UserSVG src={icon} />
+            <UserSVG src={icon} alt={alt} />
             <p style={{ margin: "0 1em", fontWeight: "500" }}>
               {accountTypeName}
             </p>
@@ -272,6 +280,7 @@ class TransferAccountManager extends React.Component {
                       lineHeight: "25px",
                       height: "25px"
                     }}
+                    label={"New Transfer"}
                   >
                     NEW TRANSFER
                   </StyledButton>
@@ -288,6 +297,7 @@ class TransferAccountManager extends React.Component {
                       this.props.transferAccounts.editStatus.isRequesting
                     }
                     buttonText={<span>SAVE</span>}
+                    label={"Save"}
                   />
                 </ButtonWrapper>
               </TopRow>
@@ -320,10 +330,12 @@ class TransferAccountManager extends React.Component {
               <Row style={{ margin: "0em 1em" }}>
                 <SubRow>
                   <InputLabel>Notes: </InputLabel>
-                  <ManagerInput
+                  <TextArea
                     name="notes"
                     value={this.state.notes}
                     onChange={this.handleChange}
+                    placeholder="Notes"
+                    autoSize
                   />
                 </SubRow>
               </Row>

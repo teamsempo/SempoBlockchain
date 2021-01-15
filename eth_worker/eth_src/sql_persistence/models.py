@@ -136,9 +136,9 @@ class BlockchainTask(ModelBase):
     recipient_address = Column(String)
     _amount = Column(Numeric(27))
 
-    signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
+    signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id), index=True)
 
-    reverses_id = Column(Integer, ForeignKey('blockchain_task.id'))
+    reverses_id = Column(Integer, ForeignKey('blockchain_task.id'), index=True)
 
     # Purely for convenience to show status on single db table for debugging - use status hybrid prop in code
     status_text = Column(String)
@@ -255,16 +255,16 @@ class BlockchainTask(ModelBase):
 class BlockchainTransaction(ModelBase):
     __tablename__ = 'blockchain_transaction'
 
-    _status = Column(String, default='PENDING')  # PENDING, SUCCESS, FAILED
+    _status = Column(String, default='PENDING', index=True)  # PENDING, SUCCESS, FAILED
     error = Column(String)
     message = Column(String)
     block = Column(Integer)
-    submitted_date = Column(DateTime)
+    submitted_date = Column(DateTime, index=True)
     mined_date = Column(DateTime)
     hash = Column(String)
     contract_address = Column(String)
     nonce = Column(Integer)
-    nonce_consumed = Column(Boolean, default=False)
+    nonce_consumed = Column(Boolean, default=False, index=True)
 
     sender_address = Column(String)
     recipient_address = Column(String)
@@ -274,11 +274,11 @@ class BlockchainTransaction(ModelBase):
 
     ignore = Column(Boolean, default=False)
 
-    first_block_hash = Column(String)
+    first_block_hash = Column(String, index=True)
 
-    signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id))
+    signing_wallet_id = Column(Integer, ForeignKey(BlockchainWallet.id), index=True)
 
-    blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id))
+    blockchain_task_id = Column(Integer, ForeignKey(BlockchainTask.id), index=True)
 
     blockchain_task = relationship('BlockchainTask', foreign_keys=[blockchain_task_id])
 
@@ -313,10 +313,10 @@ class BlockchainTransaction(ModelBase):
 
 class SynchronizedBlock(ModelBase):
     __tablename__ = 'synchronized_block'
-    block_number = Column(Integer)
+    block_number = Column(Integer, index=True)
     status = Column(String)
     is_synchronized = Column(Boolean)
-    synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'))
+    synchronization_filter_id = Column(Integer, ForeignKey('synchronization_filter.id'), index=True)
     synchronization_filter = relationship("SynchronizationFilter", back_populates="blocks", lazy=True)
     decimals = Column(Integer)
 

@@ -1,4 +1,5 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import {
@@ -8,7 +9,6 @@ import {
 } from "../reducers/transferUsage/types";
 
 import { loadTransferUsagesAPI } from "../api/transferUsagesAPI";
-import { MessageAction } from "../reducers/message/actions";
 import {
   LoadTransferUsagesAction,
   TransferUsageAction
@@ -42,9 +42,7 @@ function* loadTransferUsages(
       LoadTransferUsagesAction.loadTransferUsagesFailure(error.message)
     );
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

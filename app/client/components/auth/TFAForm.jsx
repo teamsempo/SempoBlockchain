@@ -30,6 +30,9 @@ export default class TFAForm extends React.Component {
             onClick={() => this.handleNextBack()}
             buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
             buttonText={<span>Next</span>}
+            label={
+              "Go to the next page once two factor authentication QR code is scanned"
+            }
           />
         </div>
       );
@@ -64,6 +67,7 @@ const TFAQr = props => (
         <ExternalLink
           href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
           target="_blank"
+          label={"Google Play Store Two Factor Authentication Application"}
         >
           Android
         </ExternalLink>
@@ -71,6 +75,7 @@ const TFAQr = props => (
         <ExternalLink
           href="https://apps.apple.com/au/app/google-authenticator/id388497605"
           target="_blank"
+          label={"Apple App Store Two Factor Authentication Application"}
         >
           iPhone
         </ExternalLink>

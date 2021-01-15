@@ -4,6 +4,7 @@ from sqlalchemy import and_, or_
 
 from sempo_types import UUID, UUIDList
 
+from celery_utils import chain
 import config
 
 from sql_persistence.models import (
@@ -144,12 +145,11 @@ class SQLPersistenceInterface(object):
         return calculated_nonce
 
     def update_transaction_data(self, transaction_id, transaction_data):
-
         transaction = self.session.query(BlockchainTransaction).get(transaction_id)
 
         for attribute in transaction_data:
-            setattr(transaction, attribute, transaction_data[attribute])
-
+            if transaction_data[attribute] != getattr(transaction, attribute):
+                setattr(transaction, attribute, transaction_data[attribute])
         self.session.commit()
 
     def create_blockchain_transaction(self, task_uuid):
@@ -529,21 +529,27 @@ class SQLPersistenceInterface(object):
         return self.session.query(SynchronizationFilter).all()
 
     def add_block_range(self, start, end, filter_id):
-        for n in range(start, end):
-            block = SynchronizedBlock(block_number = n , status = 'PENDING', is_synchronized = False, synchronization_filter_id = filter_id)
+        for n in range(start, end + 1):
+            block = SynchronizedBlock(
+                block_number=n,
+                status='PENDING',
+                is_synchronized=False,
+                synchronization_filter_id=filter_id
+            )
             self.session.add(block)
         self.session.commit()
 
     def set_block_range_status(self, start, end, status, filter_id):
-        for n in range(start, end):
-            blocks  = self.session.query(SynchronizedBlock).filter(SynchronizedBlock.block_number == n, SynchronizedBlock.synchronization_filter_id == filter_id).all()
-            for block in blocks:
-                block.status = status
+        blocks = self.session.query(SynchronizedBlock).filter(
+            SynchronizedBlock.block_number >= start,
+            SynchronizedBlock.block_number <= end,
+            SynchronizedBlock.synchronization_filter_id == filter_id
+        ).update({'status': status})
+
         self.session.commit()
 
 
-    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=config.ETH_PENDING_TRANSACTION_EXPIRY_SECONDS):
-
+    def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=config.CHAINS[chain]['PENDING_TRANSACTION_EXPIRY_SECONDS']):
         self.red = red
 
         self.session = session
