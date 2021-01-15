@@ -322,7 +322,7 @@ class ExportAPI(MethodView):
         if include_transfers and user_accounts is not None:
             base_credit_transfer_query = CreditTransfer.query.enable_eagerloads(False).order_by(CreditTransfer.id)
 
-            if selected:
+            if selected and user_filter is None:
                 base_credit_transfer_query = base_credit_transfer_query.filter(
                     or_(CreditTransfer.sender_transfer_account_id.in_(selected),
                         CreditTransfer.recipient_transfer_account_id.in_(selected)))
