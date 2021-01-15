@@ -51,7 +51,7 @@ def test_removal_of_priors(manager, dummy_wallet, db_session, mock_queue_sig):
     sig_output = mock_queue_sig[-1][0]
 
     # Make sure task2 is sent to the queue for retry
-    assert sig_output.task == 'celery_tasks.attempt_transaction'
+    assert sig_output.task == 'ETHEREUM.celery_tasks.attempt_transaction'
     assert sig_output.kwargs == {'task_uuid': uuid2}
 
 
@@ -97,9 +97,9 @@ def test_remove_all_posterior_dependencies(manager, dummy_wallet, db_session, mo
     sig_output2 = mock_queue_sig[-1][0]
 
     # Make sure task2 is sent to the queue for retry
-    assert sig_output1.task == 'celery_tasks.attempt_transaction'
+    assert sig_output1.task == 'ETHEREUM.celery_tasks.attempt_transaction'
     assert sig_output1.kwargs == {'task_uuid': uuid2}
 
     # Make sure task3 is sent to the queue for retry
-    assert sig_output2.task == 'celery_tasks.attempt_transaction'
+    assert sig_output2.task == 'ETHEREUM.celery_tasks.attempt_transaction'
     assert sig_output2.kwargs == {'task_uuid': uuid3}
