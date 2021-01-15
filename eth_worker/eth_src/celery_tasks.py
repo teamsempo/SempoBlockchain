@@ -174,6 +174,16 @@ def send_eth(self, amount_wei, recipient_address,
                                          prior_tasks, posterior_tasks)
 
 
+@app.task(**no_retry_config)
+def remove_prior_task_dependency(self, task_uuid, prior_task_uuid):
+    return task_manager.remove_prior_task_dependency(task_uuid, prior_task_uuid)
+
+
+@app.task(**no_retry_config)
+def remove_all_posterior_dependencies(self, prior_task_uuid):
+    return task_manager.remove_all_posterior_dependencies(prior_task_uuid)
+
+
 @app.task(name=eth_endpoint('retry_task'), **no_retry_config)
 def retry_task(self, task_uuid):
     return task_manager.retry_task(task_uuid)

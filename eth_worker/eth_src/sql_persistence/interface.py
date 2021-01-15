@@ -271,6 +271,28 @@ class SQLPersistenceInterface(object):
 
         return task
 
+    def remove_prior_task_dependency(self, task_uuid: UUID, prior_task_uuid: UUID):
+
+        task = self.get_task_from_uuid(task_uuid=task_uuid)
+        prior_task = self.get_task_from_uuid(task_uuid=prior_task_uuid)
+        if task and prior_task:
+            try:
+                task.prior_tasks.remove(prior_task)
+                self.session.commit()
+            except ValueError:
+                pass
+
+    def remove_all_posterior_dependencies(self, prior_task_uuid: UUID) -> UUIDList:
+        prior_task = self.get_task_from_uuid(task_uuid=prior_task_uuid)
+
+        posterior_task_uuids = [t.uuid for t in prior_task.posterior_tasks]
+
+        prior_task.posterior_tasks = []
+
+        self.session.commit()
+
+        return posterior_task_uuids
+
     def increment_task_invocations(self, task_uuid: UUID):
 
         task = self.get_task_from_uuid(task_uuid=task_uuid)
