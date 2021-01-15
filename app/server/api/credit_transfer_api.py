@@ -180,7 +180,7 @@ class CreditTransferAPI(MethodView):
         auto_resolve = AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin')
 
         post_data = request.get_json()
-
+        print(post_data)
         uuid = post_data.get('uuid')
 
         queue = 'low-priority'
@@ -301,7 +301,6 @@ class CreditTransferAPI(MethodView):
                 return make_response(jsonify(response_object)), 400
             else:
                 token = active_organisation.token
-
 
         for sender_user, recipient_user, transfer_card in transfer_user_list:
             try:
