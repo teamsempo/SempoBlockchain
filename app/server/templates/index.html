@@ -125,6 +125,7 @@
       window.SENTRY_REACT_DSN = "{{ config.SENTRY_REACT_DSN }}";
       window.IS_USING_BITCOIN =
         "{{ config.CHAINS[chain]['IS_USING_BITCOIN'] }}" === "True";
+      window.CHAIN_NAMES = "{{ config.WINDOW_CHAIN_NAMES }}";
     </script>
 
     <div id="app" class="site-wrapper"></div>

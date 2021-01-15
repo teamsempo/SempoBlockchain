@@ -1,14 +1,18 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Card, Space } from "antd";
 
 import { Organisation } from "../../../reducers/organisation/types";
 import { EditOrganisationAction } from "../../../reducers/organisation/actions";
 import * as styles from "../../styledElements";
-import OrganisationSettingForm, {
-  IOrganisationSettings
-} from "../../organisation/OrganisationSettingsForm";
+// import OrganisationSettingForm, {
+//   IOrganisationSettings
+// } from "../../organisation/OrganisationSettingsForm";
+import OrganisationForm, {
+  IOrganisation
+} from "../../organisation/OrganisationForm";
 import { generateQueryString, getToken, handleResponse } from "../../../utils";
-import LoadingSpinnger from "../../loadingSpinner";
+import LoadingSpinner from "../../loadingSpinner";
 
 interface DispatchProps {
   editOrganisation: (body: any, path: number) => EditOrganisationAction;
@@ -19,12 +23,16 @@ interface StateProps {
   activeOrganisation: Organisation;
 }
 
+interface OuterProps {
+  isNewOrg: boolean;
+}
+
 interface IState {
   isoCountries: null;
   roles: null;
 }
 
-type IProps = DispatchProps & StateProps;
+type IProps = DispatchProps & StateProps & OuterProps;
 
 class OrganisationPage extends React.Component<IProps, IState> {
   constructor(props: IProps) {
@@ -74,7 +82,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
       });
   }
 
-  onSubmit(form: IOrganisationSettings) {
+  onEdit(form: IOrganisation) {
     let orgId = this.props.activeOrganisation.id;
     this.props.editOrganisation(
       {
@@ -85,36 +93,53 @@ class OrganisationPage extends React.Component<IProps, IState> {
           form.mimimumVendorPayoutWithdrawal * 100,
         require_transfer_card: form.requireTransferCard,
         account_types: form.accountTypes
-        // default_lat: null,
-        // default_lng: null
       },
       orgId
     );
   }
 
+  onNew(form: IOrganisation) {
+    // let orgId = this.props.activeOrganisation.id;
+    // this.props.editOrganisation(
+    //   {
+    //     country_code: form.countryCode,
+    //     default_disbursement: form.defaultDisbursement * 100,
+    //     card_shard_distance: form.cardShardDistance,
+    //     minimum_vendor_payout_withdrawal:
+    //       form.mimimumVendorPayoutWithdrawal * 100,
+    //     require_transfer_card: form.requireTransferCard,
+    //     account_types: form.accountTypes
+    //   },
+    //   orgId
+    // );
+  }
+
   render() {
+    const { isNewOrg } = this.props;
+
     return (
-      <styles.Wrapper>
-        <styles.PageWrapper>
-          <styles.ModuleBox>
-            <styles.ModuleHeader>
-              Default Organisation Settings
-            </styles.ModuleHeader>
-            {this.state.isoCountries ? (
-              <OrganisationSettingForm
-                activeOrganisation={this.props.activeOrganisation}
-                organisations={this.props.organisations}
-                isoCountries={this.state.isoCountries}
-                roles={this.state.roles}
-                onSubmit={(form: IOrganisationSettings) => this.onSubmit(form)}
-              />
-            ) : (
-              //@ts-ignore
-              <LoadingSpinnger />
-            )}
-          </styles.ModuleBox>
-        </styles.PageWrapper>
-      </styles.Wrapper>
+      <Space direction="vertical" style={{ width: "100%" }} size="middle">
+        <Card
+          title={isNewOrg ? "New Organisation" : "Edit Organisation"}
+          bodyStyle={{ maxWidth: "400px" }}
+        >
+          {this.state.isoCountries ? (
+            <OrganisationForm
+              isNewOrg={isNewOrg}
+              activeOrganisation={this.props.activeOrganisation}
+              organisations={this.props.organisations}
+              isoCountries={this.state.isoCountries || []}
+              roles={this.state.roles || []}
+              onSubmit={(form: IOrganisation) =>
+                isNewOrg ? this.onNew(form) : this.onEdit(form)
+              }
+            />
+          ) : (
+            //@ts-ignore
+            <LoadingSpinner />
+          )}
+        </Card>
+      </Space>
     );
   }
 }

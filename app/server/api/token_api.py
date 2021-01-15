@@ -50,6 +50,7 @@ class TokenAPI(MethodView):
         decimals = post_data.get('decimals', 18)
         address = post_data.get('address')
         is_reserve = post_data.get('is_reserve', True)
+        chain = post_data.get('chain', 'ETHEREUM')
 
         token = Token.query.filter_by(address=address).first()
 
@@ -65,7 +66,7 @@ class TokenAPI(MethodView):
 
         token_type = TokenType.RESERVE if is_reserve else TokenType.LIQUID
 
-        token = Token(address=address, name=name, symbol=symbol, token_type=token_type)
+        token = Token(address=address, name=name, symbol=symbol, token_type=token_type, chain=chain)
         token.decimals = decimals
         db.session.add(token)
 
