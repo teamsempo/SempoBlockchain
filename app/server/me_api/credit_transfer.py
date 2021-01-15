@@ -52,7 +52,7 @@ class MeCreditTransferAPI(MethodView):
                 or_(CreditTransfer.recipient_user_id == user.id,
                     CreditTransfer.sender_user_id == user.id))
 
-        transfers, total_items, total_pages = paginate_query(transfers_query, CreditTransfer)
+        transfers, total_items, total_pages, new_last_fetched = paginate_query(transfers_query)
 
         transfer_list = me_credit_transfers_schema.dump(transfers).data
 
@@ -60,6 +60,7 @@ class MeCreditTransferAPI(MethodView):
             'message': 'Successfully Loaded.',
             'items': total_items,
             'pages': total_pages,
+            'last_fetched': new_last_fetched,
             'data': {
                 'credit_transfers': transfer_list,
             }
@@ -209,9 +210,18 @@ class MeCreditTransferAPI(MethodView):
                     }
                     return make_response(jsonify(response_object)), 400
 
+                my_transfer_account = TransferAccount.query.get(my_transfer_account_id)
+
+                if not my_transfer_account:
+                    response_object = {
+                        'message': 'Transfer Account not found for my_transfer_account_id {}'.format(
+                            my_transfer_account_id)
+                    }
+                    return make_response(jsonify(response_object)), 400
+
                 #We're sending directly to a blockchain address
                 return handle_transfer_to_blockchain_address(transfer_amount,
-                                                             g.user,
+                                                             my_transfer_account,
                                                              public_identifier.strip('ethereum:'),
                                                              transfer_use,
                                                              transfer_mode=TransferModeEnum.EXTERNAL,

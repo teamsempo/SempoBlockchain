@@ -1,6 +1,6 @@
 {
   "active_filters": ["rounded_account_balance,sender"],
-  "active_group_by": "account_type",
+  "active_group_by": "sender,account_type",
   "active_users": {
     "aggregate": {
       "USER": 4,

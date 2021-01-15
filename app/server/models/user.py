@@ -3,7 +3,7 @@ from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy import text, Table
+from sqlalchemy import text, Table, cast, String
 from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
@@ -179,6 +179,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     exchanges = db.relationship("Exchange", backref="user")
 
+    @hybrid_property
+    def coordinates(self):
+        return str(self.lat) + ', ' + str(self.lng)
+
+    @coordinates.expression
+    def coordinates(cls):
+        return cast(cls.lat, String) + ', ' + cast(cls.lng, String)
+
     def delete_user_and_transfer_account(self):
         """
         Soft deletes a User and default Transfer account if no other users associated to it.
@@ -194,6 +202,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.first_name = None
             self.last_name = None
             self.phone = None
+
+            if self.transfer_card:
+                self.transfer_card.amount_loaded_signature = 'DEL'
 
         except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
@@ -399,18 +410,18 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         )
 
     def get_users_within_radius(self, radius):
-
         if not (self.lat or self.lng):
             raise Exception('Cannot get users within radius-- User location undefined')
 
-        return db.session.query(User).filter(
-            or_(
-                and_(User.lat==None, User.lng==None),
-                and_(User.lat==self.lat, User.lng==self.lng),
-                User.great_circle_distance(self.lat, self.lng) < radius,
-                and_(self._location is not None, User._location == self._location)
-            )
-        ).all()
+        return db.session.query(User).filter(self.users_within_radius_filter(radius)).all()
+
+    def users_within_radius_filter(self, radius):
+        return or_(
+            and_(User.lat==None, User.lng==None),
+            and_(User.lat==self.lat, User.lng==self.lng),
+            User.great_circle_distance(self.lat, self.lng) < radius,
+            and_(self._location is not None, User._location == self._location)
+        )
 
     def get_transfer_account_for_organisation(self, organisation):
         for ta in self.transfer_accounts:
@@ -479,11 +490,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'id': self.id
             }
 
-            return jwt.encode(
+            tfa = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(tfa, 'utf-8') if isinstance(tfa, str) else tfa
         except Exception as e:
             return e
 
@@ -503,11 +515,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'roles': self.roles
             }
 
-            return jwt.encode(
+            token = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(token, 'utf-8') if isinstance(token, str) else token
         except Exception as e:
             return e
 
@@ -532,7 +545,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
             else:
-                return payload
+                return bytes(payload, 'utf-8') if isinstance(payload, str) else payload
 
         except jwt.ExpiredSignatureError:
             return '{} Token Signature expired.'.format(token_type)

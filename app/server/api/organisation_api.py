@@ -39,7 +39,7 @@ class OrganisationAPI(MethodView):
         else:
             organisations_query = Organisation.query.execution_options(show_all=True)
 
-            organisations, total_items, total_pages = paginate_query(organisations_query, Organisation)
+            organisations, total_items, total_pages, new_last_fetched = paginate_query(organisations_query)
 
             if organisations is None:
                 return make_response(jsonify({'message': 'No organisations found'})), 400
@@ -48,6 +48,7 @@ class OrganisationAPI(MethodView):
                 'message': 'Successfully Loaded All Organisations',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'data': {'organisations': organisations_schema.dump(organisations).data}
             }
             return make_response(jsonify(response_object)), 200
@@ -58,6 +59,7 @@ class OrganisationAPI(MethodView):
 
         country_code = put_data.get('country_code')
         default_disbursement = put_data.get('default_disbursement')
+        minimum_vendor_payout_withdrawal = put_data.get('minimum_vendor_payout_withdrawal')
         require_transfer_card = put_data.get('require_transfer_card')
         default_lat = put_data.get('default_lat')
         default_lng = put_data.get('default_lng')
@@ -79,6 +81,8 @@ class OrganisationAPI(MethodView):
             organisation.valid_roles = account_types
         if default_disbursement is not None:
             organisation.default_disbursement = default_disbursement
+        if minimum_vendor_payout_withdrawal is not None:
+            organisation.minimum_vendor_payout_withdrawal = minimum_vendor_payout_withdrawal
         if country_code is not None:
             organisation.country_code = country_code
         if require_transfer_card is not None:
@@ -108,6 +112,7 @@ class OrganisationAPI(MethodView):
 
         country_code = post_data.get('country_code')
         default_disbursement = post_data.get('default_disbursement')
+        minimum_vendor_payout_withdrawal = post_data.get('minimum_vendor_payout_withdrawal')
         require_transfer_card = post_data.get('require_transfer_card')
         default_lat = post_data.get('default_lat')
         default_lng = post_data.get('default_lng')
@@ -134,6 +139,7 @@ class OrganisationAPI(MethodView):
                 timezone=timezone,
                 country_code=country_code,
                 default_disbursement=default_disbursement,
+                minimum_vendor_payout_withdrawal=minimum_vendor_payout_withdrawal,
                 require_transfer_card=require_transfer_card,
                 default_lat=default_lat,
                 default_lng=default_lng

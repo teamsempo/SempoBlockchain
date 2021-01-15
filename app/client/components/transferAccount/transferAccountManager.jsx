@@ -165,6 +165,7 @@ class TransferAccountManager extends React.Component {
     } = this.state;
     let accountTypeName;
     let icon;
+    let alt;
 
     if (this.state.newTransfer) {
       var newTransfer = (
@@ -202,22 +203,26 @@ class TransferAccountManager extends React.Component {
       accountTypeName =
         TransferAccountTypes.BENEFICIARY || window.BENEFICIARY_TERM;
       icon = "/static/media/user.svg";
+      alt = "User Icon";
     } else if (is_vendor) {
       accountTypeName = TransferAccountTypes.VENDOR;
       icon = "/static/media/store.svg";
+      alt = "Vendor Icon";
     } else if (is_groupaccount) {
       accountTypeName = TransferAccountTypes.GROUP_ACCOUNT;
       icon = "/static/media/groupaccount.svg";
+      alt = "Group Account Icon";
     } else if (is_tokenagent) {
       accountTypeName = TransferAccountTypes.TOKEN_AGENT;
       icon = "/static/media/tokenagent.svg";
+      alt = "Token Agent Icon";
     }
 
     var summaryBox = (
       <ModuleBox>
         <SummaryBox>
           <TopContent>
-            <UserSVG src={icon} />
+            <UserSVG src={icon} alt={alt} />
             <p style={{ margin: "0 1em", fontWeight: "500" }}>
               {accountTypeName}
             </p>
@@ -275,6 +280,7 @@ class TransferAccountManager extends React.Component {
                       lineHeight: "25px",
                       height: "25px"
                     }}
+                    label={"New Transfer"}
                   >
                     NEW TRANSFER
                   </StyledButton>
@@ -291,6 +297,7 @@ class TransferAccountManager extends React.Component {
                       this.props.transferAccounts.editStatus.isRequesting
                     }
                     buttonText={<span>SAVE</span>}
+                    label={"Save"}
                   />
                 </ButtonWrapper>
               </TopRow>

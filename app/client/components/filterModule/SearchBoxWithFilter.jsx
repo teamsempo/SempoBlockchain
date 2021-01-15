@@ -279,6 +279,7 @@ class SearchBoxWithFilter extends React.Component {
                 <SVG
                   style={{ padding: "0 5px 0 0" }}
                   src="/static/media/save.svg"
+                  alt={"Save filter titled: " + this.state.filterName}
                 />
               )}
               {saveFilterDropdown ? "Cancel" : "Save Filter"}
@@ -294,6 +295,7 @@ class SearchBoxWithFilter extends React.Component {
               value={this.state.filterName}
               placeholder="Filter name..."
               onChange={this.handleChange}
+              aria-label="Filter name"
             />
             <FilterText
               onClick={this.saveFilter}
@@ -315,6 +317,7 @@ class SearchBoxWithFilter extends React.Component {
               <SVG
                 style={{ padding: "0 5px 0 0" }}
                 src="/static/media/save.svg"
+                alt={"View saved filters"}
               />
               View Saved Filters
             </SavedFilterButton>
@@ -368,6 +371,7 @@ class SearchBoxWithFilter extends React.Component {
                 value={phrase}
                 placeholder="Search..."
                 onChange={this.handleChange}
+                aria-label="Search"
               />
 
               <FilterWrapper onClick={this.toggleFilter}>

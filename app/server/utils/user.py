@@ -7,6 +7,7 @@ from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
 import sentry_sdk
+import config
 
 from server import db
 from server.models.device_info import DeviceInfo
@@ -29,7 +30,7 @@ from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.internationalization import i18n_for
 from server.utils.misc import rounded_dollars
-
+from server.utils.multi_chain import get_chain
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     save_to_s3_from_url(url, new_filename)
@@ -353,7 +354,7 @@ def set_attachments(attribute_dict, user, custom_attributes):
     return custom_attributes
 
 
-def set_location_conditionally(user, location, gps_location):
+def set_location_conditionally(user, location, gps_location = None):
 
     if gps_location:
         try:
@@ -421,6 +422,8 @@ def proccess_create_or_modify_user_request(
     phone = attribute_dict.get('phone')
 
     account_types = attribute_dict.get('account_types', [])
+    if isinstance(account_types, str):
+        account_types = account_types.split(',')
 
     referred_by = attribute_dict.get('referred_by')
 
@@ -497,7 +500,8 @@ def proccess_create_or_modify_user_request(
             raise Exception(f'{at} not a valid role for this organisation. Please choose one of the following: {g.active_organisation.valid_roles}')
         roles_to_set.append((ASSIGNABLE_TIERS[at], at))
 
-    if current_app.config['IS_USING_BITCOIN']:
+    chain = get_chain()
+    if current_app.config['CHAINS'][chain]['IS_USING_BITCOIN']:
         try:
             base58.b58decode_check(blockchain_address)
         except ValueError:

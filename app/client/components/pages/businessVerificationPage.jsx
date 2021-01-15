@@ -205,6 +205,7 @@ class BusinessVerificationPage extends React.Component {
                   <AsyncButton
                     buttonText={<span>Get Started</span>}
                     onClick={this.props.nextStep}
+                    label={"Get Started"}
                   />
                 </div>
               </ModuleBox>

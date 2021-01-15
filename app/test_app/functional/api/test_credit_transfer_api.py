@@ -297,7 +297,6 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
 
     # 6. Stranger B -> Stranger A (Strangers who exist in the system)
     made_up_hash = '0x2222b33f1322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'
-
     resp = post_to_credit_transfer_internal(fake_user_b_address, fake_user_a_address, made_up_hash, 100, token.address)
     assert resp.json['message'] == 'Only external users involved in this transfer'
 
@@ -308,6 +307,18 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     resp = post_to_credit_transfer_internal(fake_user_c_address, fake_user_d_address, made_up_hash, 100, token.address)
     assert resp.json['message'] == 'No existing users involved in this transfer'
 
+    # 8. Stranger A -> Stranger E (One existing stanger, one new stranger)
+    made_up_hash = '0x2222b33f13288396649ed2fffb7e0a944123b65cfab2c4b1435c81bb16697ecb'
+    fake_user_e_address = '0xA9450d3dB5A909b08197BC4a0665A4d63253aaaf'
+    resp = post_to_credit_transfer_internal(fake_user_a_address, fake_user_e_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'Only external users involved in this transfer'
+
+    # 9. Stranger E -> Stranger A (One new stranger, one existing stanger)
+    made_up_hash = '0x2222b33f13288396649ed2fffb7e0a944123b65cfab2c4b1435c81bb12697ecb'
+    fake_user_e_address = '0xA9450d3dB5A909b08197BC4a0665A4d63253aaaf'
+    resp = post_to_credit_transfer_internal(fake_user_e_address, fake_user_a_address, made_up_hash, 100, token.address)
+    assert resp.json['message'] == 'Only external users involved in this transfer'
+
     # Make sure we're not sending any of the tranfers off to the blockchain
     assert len(send_to_worker_called) == 0
     from flask import g
@@ -316,7 +327,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
 def test_force_third_party_transaction_sync():
     if will_func_test_blockchain():
         task_uuid = bt.force_third_party_transaction_sync()
-        bt.await_task_success(task_uuid, timeout=config.SYNCRONOUS_TASK_TIMEOUT * 48)
+        bt.await_task_success(task_uuid, timeout=config.CHAINS['ETHEREUM']['SYNCRONOUS_TASK_TIMEOUT'] * 48)
 
 @pytest.mark.parametrize("is_bulk, invert_recipient_list, transfer_amount, transfer_type, status_code", [
     [True, False, 1000, 'DISBURSEMENT', 201],

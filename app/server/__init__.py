@@ -291,8 +291,6 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 
-
-encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)

@@ -560,6 +560,7 @@ class BusinessDetails extends React.Component {
             onClick={this.isValidated}
             isLoading={this.props.editStatus.isRequesting}
             buttonStyle={{ display: "flex" }}
+            label={"Next"}
           />
         </ThemeProvider>
       </div>

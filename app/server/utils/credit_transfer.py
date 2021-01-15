@@ -24,6 +24,7 @@ from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
 from server.utils import pusher_utils
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
+from server.utils.user import create_transfer_account_if_required
 
 
 def cents_to_dollars(amount_cents):
@@ -74,9 +75,9 @@ def find_user_from_identifiers(user_id, public_identifier, transfer_account_id):
     return None, None
 
 def handle_transfer_to_blockchain_address(
-        transfer_amount, sender_user, recipient_blockchain_address, transfer_use, transfer_mode, uuid=None):
+        transfer_amount, sender_transfer_account, recipient_blockchain_address, transfer_use, transfer_mode, uuid=None):
 
-    if transfer_amount > sender_user.transfer_account.balance:
+    if transfer_amount > sender_transfer_account.balance:
         response_object = {
             'message': 'Insufficient funds',
             'feedback': True,
@@ -85,7 +86,8 @@ def handle_transfer_to_blockchain_address(
 
     try:
         transfer = make_blockchain_transfer(transfer_amount,
-                                            sender_user.transfer_account.blockchain_address.address,
+                                            sender_transfer_account.token,
+                                            sender_transfer_account.blockchain_address,
                                             recipient_blockchain_address,
                                             transfer_use,
                                             transfer_mode,
@@ -131,8 +133,8 @@ def create_address_object_if_required(address):
 
 
 def make_blockchain_transfer(transfer_amount,
-                             send_address,
                              token,
+                             send_address,
                              receive_address,
                              transfer_use=None,
                              transfer_mode=None,
@@ -143,33 +145,27 @@ def make_blockchain_transfer(transfer_amount,
                              existing_blockchain_txn=False,
                              transfer_type=TransferTypeEnum.PAYMENT
                              ):
-    send_address_obj = create_address_object_if_required(send_address)
-    receive_address_obj = create_address_object_if_required(receive_address)
 
-    if send_address_obj.transfer_account:
-        sender_user =  send_address_obj.transfer_account.primary_user
-    else:
-        sender_user = None
 
-    if receive_address_obj.transfer_account:
-        recipient_user = receive_address_obj.transfer_account.primary_user
-    else:
-        recipient_user = None
+    sender_transfer_account = create_transfer_account_if_required(send_address, token)
+    recipient_transfer_account = create_transfer_account_if_required(receive_address, token)
+
+    sender_user = sender_transfer_account.primary_user
+    recipient_user = recipient_transfer_account.primary_user
 
     require_recipient_approved = False
-    transfer = make_payment_transfer(transfer_amount,
-                                     token,
-                                     sender_user,
-                                     recipient_user,
-                                     transfer_use,
-                                     transfer_mode,
-                                     require_sender_approved,
-                                     require_recipient_approved,
-                                     require_sufficient_balance,
+    transfer = make_payment_transfer(transfer_amount=transfer_amount,
+                                     token=token,
+                                     send_transfer_account=sender_transfer_account,
+                                     receive_transfer_account=recipient_transfer_account,
+                                     send_user=sender_user,
+                                     receive_user=recipient_user,
+                                     transfer_use=transfer_use,
+                                     transfer_mode=transfer_mode,
+                                     require_sender_approved=require_sender_approved,
+                                     require_recipient_approved=require_recipient_approved,
+                                     require_sufficient_balance=require_sufficient_balance,
                                      automatically_resolve_complete=False)
-
-    transfer.sender_blockchain_address = send_address_obj
-    transfer.recipient_blockchain_address = receive_address_obj
 
     transfer.transfer_type = transfer_type
 

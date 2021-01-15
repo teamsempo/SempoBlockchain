@@ -1,6 +1,5 @@
 from server import db
 from server.models.utils import ModelBase
-from sqlalchemy import cast
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import func
 

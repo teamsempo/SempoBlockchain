@@ -5,7 +5,7 @@
 import React from "react";
 import { Space, Select } from "antd";
 
-const { Option } = Select;
+const { Option, OptGroup } = Select;
 import { connect } from "react-redux";
 
 import { LoadMetricAction } from "../../reducers/metric/actions";
@@ -50,8 +50,6 @@ class FilterModule extends React.Component {
     };
 
     this.props.loadAllowedFilters(this.props.filterObject);
-
-    console.log("Default groupby is", props.defaultGroupBy);
   }
 
   componentDidMount() {
@@ -66,7 +64,6 @@ class FilterModule extends React.Component {
 
   onFiltersChanged = filters => {
     let encoded_filters = processFiltersForQuery(filters);
-    console.log("encoded filters are", encoded_filters);
     this.setState(
       {
         encoded_filters
@@ -90,7 +87,7 @@ class FilterModule extends React.Component {
       params.params = encoded_filters;
     }
 
-    params.disable_cache = true;
+    params.disable_cache = false;
 
     if (groupBy) {
       params.group_by = groupBy;
@@ -110,7 +107,24 @@ class FilterModule extends React.Component {
   };
 
   render() {
-    let { allowedGroups, defaultGroupBy, isMobile } = this.props;
+    let { allowedGroups, defaultGroupBy, isMobile, hideGroupBy } = this.props;
+    hideGroupBy = hideGroupBy ? true : false;
+    const senderGroups = allowedGroups
+      ? Object.keys(allowedGroups).filter(
+          groupName => allowedGroups[groupName].sender_or_recipient == "sender"
+        )
+      : [];
+    const recipientGroups = allowedGroups
+      ? Object.keys(allowedGroups).filter(
+          groupName =>
+            allowedGroups[groupName].sender_or_recipient == "recipient"
+        )
+      : [];
+    const ungroupedGroups = allowedGroups
+      ? Object.keys(allowedGroups).filter(
+          groupName => !allowedGroups[groupName].sender_or_recipient
+        )
+      : [];
 
     let groupByModule = (
       <Space size={"middle"}>
@@ -124,15 +138,34 @@ class FilterModule extends React.Component {
           style={{ width: 200 }}
           onChange={this.updateGroupBy}
         >
-          {allowedGroups
-            ? Object.keys(allowedGroups).map(key => {
-                return (
-                  <Option key={key}>
-                    {toTitleCase(replaceUnderscores(key))}
-                  </Option>
-                );
-              })
-            : null}
+          if(ungroupedGroups)
+          {ungroupedGroups.map(group => {
+            return <Option key={group}>{allowedGroups[group]["name"]}</Option>;
+          })}
+          if(senderGroups)
+          {
+            <OptGroup label={"Sender"}>
+              {senderGroups.map(group => {
+                let label = allowedGroups[group]["name"];
+                label =
+                  this.state.groupBy == group ? "Sender ".concat(label) : label;
+                return <Option key={group}>{label}</Option>;
+              })}
+            </OptGroup>
+          }
+          if(recipientGroups)
+          {
+            <OptGroup label={"Recipient"}>
+              {recipientGroups.map(group => {
+                let label = allowedGroups[group]["name"];
+                label =
+                  this.state.groupBy == group
+                    ? "Recipient ".concat(label)
+                    : label;
+                return <Option key={group}>{label}</Option>;
+              })}
+            </OptGroup>
+          }
         </Select>
       </Space>
     );
@@ -150,7 +183,7 @@ class FilterModule extends React.Component {
             onFiltersChanged={this.onFiltersChanged}
           />
         </Space>
-        {groupByModule}
+        {hideGroupBy ? null : groupByModule}
       </FilterContainer>
     );
   }

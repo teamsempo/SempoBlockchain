@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - filter_credit_transfers_on_selected_export
+                - fix-external-tx
 
           requires:
             - build

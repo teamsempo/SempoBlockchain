@@ -137,7 +137,7 @@ export const ErrorMessage = styled.div`
   margin: 0.5em;
 `;
 
-export const ModuleHeader = styled.h4`
+export const ModuleHeader = styled.h1`
   text-transform: uppercase;
   position: relative;
   margin: 0;
@@ -147,7 +147,7 @@ export const ModuleHeader = styled.h4`
   width: auto;
   background-color: #fff;
   font-size: 15px;
-  color: #6a7680;
+  color: #4e575e;
   font-weight: 600;
   letter-spacing: 1px;
 `;

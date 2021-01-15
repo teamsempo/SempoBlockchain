@@ -38,12 +38,7 @@ class MasterWalletCard extends React.Component {
 
     console.log("Master wallet balance is", masterWalletBalance);
 
-    const tracker_link =
-      window.ETH_EXPLORER_URL +
-      "/address/" +
-      (window.USING_EXTERNAL_ERC20
-        ? window.master_wallet_address
-        : window.ETH_CONTRACT_ADDRESS);
+    const tracker_link = `${window.ETH_EXPLORER_URL}/address/${window.master_wallet_address}`;
 
     var options = {
       animation: false,

@@ -98,7 +98,7 @@ class CreditTransferAPI(MethodView):
                         or_(CreditTransfer.recipient_transfer_account_id.in_(parsed_transfer_account_ids),
                             CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
 
-            transfers, total_items, total_pages = paginate_query(query, CreditTransfer)
+            transfers, total_items, total_pages, new_last_fetched = paginate_query(query)
 
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 transfer_list = credit_transfers_schema.dump(transfers).data
@@ -110,6 +110,7 @@ class CreditTransferAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'data': {
                     'credit_transfers': transfer_list,
                 }
@@ -473,12 +474,25 @@ class InternalCreditTransferAPI(MethodView):
                     'message': 'No existing users involved in this transfer',
                     'data': {}
                 }
-            # Case 3: Two non-Sempo users who have both interacted with Sempo users before transact with one another
+            # Case 3: Two non-Sempo users, at least one of whom has interacted with Sempo users before transacting with one another
             # We don't have to track this either!
-            elif (maybe_recipient_transfer_account
-                  and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
-                  and maybe_sender_transfer_account
-                  and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL):
+            elif (
+                    # The recipient is either an external transfer account we've seen before
+                    # OR we haven't seen them before and so can infer they're external
+                    (
+                            (
+                             maybe_recipient_transfer_account
+                             and maybe_recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
+                            ) or not maybe_recipient_transfer_account)
+                    and
+                    #
+                    # And the sender is either an external transfer account we've seen before
+                    # OR we haven't seen them before and so can infer they're external
+                    ((
+                             maybe_sender_transfer_account
+                             and maybe_sender_transfer_account.account_type == TransferAccountType.EXTERNAL
+                     ) or not maybe_sender_transfer_account)
+            ):
                     response_object = {
                         'message': 'Only external users involved in this transfer',
                         'data': {}

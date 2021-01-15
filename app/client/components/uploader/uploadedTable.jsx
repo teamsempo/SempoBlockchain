@@ -408,6 +408,8 @@ class uploadedTable extends React.Component {
       );
     }
 
+    let nextText = this.currentStepNormalisedIndex() === 2 ? "Save" : "Next";
+
     return (
       <PageWrapper>
         <Prompt
@@ -433,6 +435,7 @@ class uploadedTable extends React.Component {
                 ? { opacity: 0, pointerEvents: "None" }
                 : {}
             }
+            label={"Previous"}
           >
             Prev
           </StyledButton>
@@ -444,8 +447,9 @@ class uploadedTable extends React.Component {
                 ? { opacity: 0, pointerEvents: "None" }
                 : {}
             }
+            label={nextText}
           >
-            {this.currentStepNormalisedIndex() === 2 ? "Save" : "Next"}
+            {nextText}
           </StyledButton>
         </div>
 
@@ -504,7 +508,7 @@ const CustomColumnFields = function(props) {
           value={props.customAttribute}
           onCustomAttributeKeyPress={e => props.onCustomAttributeKeyPress(e)}
         />
-        <StyledButton onClick={() => props.handleAddClick()}>
+        <StyledButton onClick={() => props.handleAddClick()} label={"Add"}>
           {" "}
           Add{" "}
         </StyledButton>
@@ -537,6 +541,7 @@ class CustomInput extends React.Component {
         innerRef={input => {
           this.nameInput = input;
         }}
+        aria-label={this.props.value}
       />
     );
   }
@@ -627,7 +632,6 @@ const CloseIcon = styled.div`
 `;
 
 const PageWrapper = styled.div`
-  margin-left: 234px;
-  width: calc(100vw - 234px);
+  margin: 1em;
   text-align: center;
 `;

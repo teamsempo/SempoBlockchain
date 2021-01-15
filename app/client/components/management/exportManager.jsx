@@ -163,6 +163,7 @@ class ExportManager extends React.Component {
             isLoading={this.props.export.isRequesting}
             buttonStyle={{ display: "flex" }}
             buttonText={<span>Export</span>}
+            label={"Export"}
           />
           <ErrorMessage>{this.props.export.error}</ErrorMessage>
           <a

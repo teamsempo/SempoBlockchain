@@ -5,7 +5,7 @@ blinker==1.4
 boto3==1.14.29
 celery==4.4.6
 certifi==2020.6.20
-CairoSVG==2.4.2
+CairoSVG==2.5.1
 ecdsa==0.15
 Flask==1.1.2
 Flask-BasicAuth==0.2.0
@@ -20,7 +20,6 @@ kombu==4.6.11
 toastedmarshmallow==2.15.2.post1
 messagebird==1.5.0
 openpyxl==3.0.4
-orjson==3.3.0
 pendulum==2.1.2
 phonenumbers==8.12.7
 psycopg2-binary==2.8.5
