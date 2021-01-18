@@ -102,7 +102,7 @@ class OrganisationAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
     @show_all
-    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def post(self, organisation_id):
         post_data = request.get_json()
 
@@ -116,19 +116,26 @@ class OrganisationAPI(MethodView):
         require_transfer_card = post_data.get('require_transfer_card')
         default_lat = post_data.get('default_lat')
         default_lng = post_data.get('default_lng')
+        account_types = post_data.get('account_types', [])
 
         token_id = post_data.get('token_id')
         deploy_cic = post_data.get('deploy_cic', False)
+
+        for at in account_types:
+            if at not in ASSIGNABLE_TIERS.keys():
+                raise Exception(f'{at} not an assignable role')
 
         if organisation_name is None or country_code is None:
             return make_response(
                 jsonify({'message': 'Must provide name and ISO 2 country_code to create organisation.'})), 400
 
-        existing_organisation = Organisation.query.filter_by(name=organisation_name).execution_options(show_all=True).first()
+        existing_organisation = Organisation.query.filter_by(name=organisation_name).execution_options(
+            show_all=True).first()
         if existing_organisation is not None:
             return make_response(
                 jsonify({
-                    'message': 'Must be unique name. Organisation already exists for name: {}'.format(organisation_name),
+                    'message': 'Must be unique name. Organisation already exists for name: {}'.format(
+                        organisation_name),
                     'data': {'organisation': organisation_schema.dump(existing_organisation).data}
                 })), 400
 
@@ -142,7 +149,8 @@ class OrganisationAPI(MethodView):
                 minimum_vendor_payout_withdrawal=minimum_vendor_payout_withdrawal,
                 require_transfer_card=require_transfer_card,
                 default_lat=default_lat,
-                default_lng=default_lng
+                default_lng=default_lng,
+                valid_roles=account_types
             )
         except Exception as e:
             response_object = {

@@ -4,6 +4,8 @@ import { handleError } from "../utils";
 import { normalize } from "normalizr";
 
 import {
+  CreateOrganisationActionTypes,
+  CreateOrganisationPayload,
   LoadOrganisationActionTypes,
   EditOrganisationActionTypes,
   EditOrganisationPayload,
@@ -11,12 +13,14 @@ import {
 } from "../reducers/organisation/types";
 
 import {
+  CreateOrganisationAction,
   EditOrganisationAction,
   LoadOrganisationAction,
   OrganisationAction
 } from "../reducers/organisation/actions";
 
 import {
+  createOrganisationAPI,
   loadOrganisationAPI,
   editOrganisationAPI
 } from "../api/organisationApi";
@@ -100,6 +104,42 @@ function* watchEditOrganisation() {
   );
 }
 
+function* createOrganisation(
+  action: ActionWithPayload<
+    CreateOrganisationActionTypes.CREATE_ORGANISATION_REQUEST,
+    CreateOrganisationPayload
+  >
+) {
+  try {
+    const load_result = yield call(createOrganisationAPI, action.payload);
+
+    yield call(updateStateFromOrganisation, load_result.data);
+
+    yield put(CreateOrganisationAction.createOrganisationSuccess());
+
+    message.success(load_result.message);
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put(
+      CreateOrganisationAction.createOrganisationFailure(error.message)
+    );
+
+    message.error(error.message);
+  }
+}
+
+function* watchCreateOrganisation() {
+  yield takeEvery(
+    CreateOrganisationActionTypes.CREATE_ORGANISATION_REQUEST,
+    createOrganisation
+  );
+}
+
 export default function* organisationSagas() {
-  yield all([watchLoadOrganisation(), watchEditOrganisation()]);
+  yield all([
+    watchLoadOrganisation(),
+    watchEditOrganisation(),
+    watchCreateOrganisation()
+  ]);
 }
