@@ -73,20 +73,20 @@ const TokenModalForm: React.FC<TokenModalFormProps> = ({
           name="decimals"
           label="Token Decimals"
           rules={[
-            { required: true, message: "Please input the decimals of token!" }
+            {required: true, message: "Please input the decimals of token!"}
           ]}
         >
-          <InputNumber min={1} max={18} style={{ width: "100%" }} />
+          <InputNumber min={1} max={18} style={{width: "100%"}}/>
         </Form.Item>
         {/*
          // @ts-ignore */}
-        <Form.Item
-          tooltip="This refers to the address location of the actual token contract that manages the logic for the tokens. This does not refer to the address that holds your own personal tokens!"
-          name="address"
-          label="Token Address"
-          rules={[
-            {required: true, message: "Please input the address of token!"}
-          ]}
+        <Form.Item tooltip="This refers to the address location of the actual token contract that
+        manages the logic for the tokens. This does not refer to the address that holds your own personal tokens!"
+                   name="address"
+                   label="Token Address"
+                   rules={[
+                     {required: true, message: "Please input the address of token!"}
+                   ]}
         >
           <Input min={1} max={18} type="number"/>
         </Form.Item>
