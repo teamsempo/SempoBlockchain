@@ -2,22 +2,28 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Card, Space } from "antd";
 
-import { Token } from "../../../reducers/token/types";
 import { Organisation } from "../../../reducers/organisation/types";
-import { EditOrganisationAction } from "../../../reducers/organisation/actions";
+import {
+  CreateOrganisationAction,
+  EditOrganisationAction
+} from "../../../reducers/organisation/actions";
 import OrganisationForm, {
   IOrganisation
 } from "../../organisation/OrganisationForm";
 import { generateQueryString, getToken, handleResponse } from "../../../utils";
 import LoadingSpinner from "../../loadingSpinner";
+import { LoadTokenAction } from "../../../reducers/token/actions";
+import { ReduxState } from "../../../reducers/rootReducer";
 
 interface DispatchProps {
   editOrganisation: (body: any, path: number) => EditOrganisationAction;
+  createOrganisation: (body: any) => CreateOrganisationAction;
+  loadTokens: () => LoadTokenAction;
 }
 
 interface StateProps {
-  tokens: Token[];
-  organisations: Organisation[];
+  tokens: ReduxState["tokens"];
+  organisations: ReduxState["organisations"];
   activeOrganisation: Organisation;
 }
 
@@ -42,6 +48,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
   }
 
   componentWillMount() {
+    this.props.loadTokens();
     this.getConstants();
   }
 
@@ -97,19 +104,17 @@ class OrganisationPage extends React.Component<IProps, IState> {
   }
 
   onNew(form: IOrganisation) {
-    // let orgId = this.props.activeOrganisation.id;
-    // this.props.editOrganisation(
-    //   {
-    //     country_code: form.countryCode,
-    //     default_disbursement: form.defaultDisbursement * 100,
-    //     card_shard_distance: form.cardShardDistance,
-    //     minimum_vendor_payout_withdrawal:
-    //       form.mimimumVendorPayoutWithdrawal * 100,
-    //     require_transfer_card: form.requireTransferCard,
-    //     account_types: form.accountTypes
-    //   },
-    //   orgId
-    // );
+    this.props.createOrganisation({
+      token_id: form.token,
+      organisation_name: form.organisationName,
+      country_code: form.countryCode,
+      default_disbursement: form.defaultDisbursement * 100,
+      card_shard_distance: form.cardShardDistance,
+      minimum_vendor_payout_withdrawal:
+        form.minimumVendorPayoutWithdrawal * 100,
+      require_transfer_card: form.requireTransferCard,
+      account_types: form.accountTypes
+    });
   }
 
   render() {
@@ -154,7 +159,10 @@ const mapStateToProps = (state: any): StateProps => {
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
     editOrganisation: (body: any, path: number) =>
-      dispatch(EditOrganisationAction.editOrganisationRequest({ body, path }))
+      dispatch(EditOrganisationAction.editOrganisationRequest({ body, path })),
+    createOrganisation: (body: any) =>
+      dispatch(CreateOrganisationAction.createOrganisationRequest({ body })),
+    loadTokens: () => dispatch(LoadTokenAction.loadTokenRequest())
   };
 };
 export default connect(

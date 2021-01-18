@@ -4,10 +4,13 @@ import { PlusOutlined } from "@ant-design/icons";
 
 import { Organisation } from "../../reducers/organisation/types";
 import TokenModalForm from "./TokenModalForm";
+import { ReduxState } from "../../reducers/rootReducer";
 
 const { Option } = Select;
 
 export interface IOrganisation {
+  token?: number;
+  organisationName?: string;
   defaultDisbursement: number;
   cardShardDistance: number;
   minimumVendorPayoutWithdrawal: number;
@@ -18,8 +21,8 @@ export interface IOrganisation {
 
 interface OuterProps {
   isoCountries: [];
-  organisations: any;
-  tokens: any;
+  organisations: ReduxState["organisations"];
+  tokens: ReduxState["tokens"];
   activeOrganisation: Organisation | any;
   roles: [];
   onSubmit: any;
@@ -38,17 +41,15 @@ const NewOrganisationForm = (props: OuterProps) => {
     isNewOrg
   } = props;
 
-  //todo:organisations.createStatus.isRequesting;
-  const loading = isNewOrg ? false : organisations.editStatus.isRequesting;
+  const loading = isNewOrg
+    ? organisations.createStatus.isRequesting
+    : organisations.editStatus.isRequesting;
 
   useEffect(() => {
     form.resetFields();
-  });
 
-  const onCreate = (values: any) => {
-    console.log("Received values of form: ", values);
-    setVisible(false);
-  };
+    // if (tokens.byId)
+  });
 
   // isoCountries = ['AD: Andorra', ...]
   let countryCode =
@@ -56,8 +57,6 @@ const NewOrganisationForm = (props: OuterProps) => {
       (country: string) =>
         country.slice(0, 2) == activeOrganisation.country_code
     ) || "";
-
-  // let tokens = ["celo", "eth"];
 
   return (
     <Form
@@ -79,36 +78,38 @@ const NewOrganisationForm = (props: OuterProps) => {
               requireTransferCard: activeOrganisation.require_transfer_card,
               cardShardDistance: activeOrganisation.card_shard_distance,
               countryCode: countryCode,
-              token: tokens.byId[activeOrganisation.token].name
+              token: activeOrganisation.token
             }
       }
     >
       {/*
       // @ts-ignore */}
-      <Form.Item tooltip="The name of your organisation or project"
-                 name="organisationName"
-                 label="Organisation Name"
-                 required={isNewOrg}
-                 rules={[
-                   {
-                     required: isNewOrg
-                   }
-                 ]}
+      <Form.Item
+        tooltip="The name of your organisation or project"
+        name="organisationName"
+        label="Organisation Name"
+        required={isNewOrg}
+        rules={[
+          {
+            required: isNewOrg
+          }
+        ]}
       >
-        <Input disabled={!isNewOrg} placeholder="ACME Inc."/>
+        <Input disabled={!isNewOrg} placeholder="ACME Inc." />
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item tooltip="Select a token to use for this organisation"
-                 name="token"
-                 label="Token"
-                 required={isNewOrg}
-                 rules={[
-                   {
-                     required: isNewOrg
-                   }
-                 ]}
+      <Form.Item
+        tooltip="Select a token to use for this organisation"
+        name="token"
+        label="Token"
+        required={isNewOrg}
+        rules={[
+          {
+            required: isNewOrg
+          }
+        ]}
       >
         <Select
           showSearch
@@ -136,7 +137,7 @@ const NewOrganisationForm = (props: OuterProps) => {
           {Object.keys(tokens.byId).map((item, i) => {
             const token = tokens.byId[item];
             return (
-              <Option key={i} value={token.name}>
+              <Option key={i} value={token.id} label={token.name}>
                 {token.name} ({token.symbol}) - {token.address}
               </Option>
             );
@@ -144,23 +145,20 @@ const NewOrganisationForm = (props: OuterProps) => {
         </Select>
       </Form.Item>
 
-      <TokenModalForm
-        visible={visible}
-        onCreate={onCreate}
-        onCancel={() => setVisible(false)}
-      />
+      <TokenModalForm visible={visible} onCancel={() => setVisible(false)} />
 
       {/*
       // @ts-ignore */}
-      <Form.Item tooltip="The default country code for this organisation. Used for phone numbers."
-                 name="countryCode"
-                 label="Default Country Code"
-                 required={isNewOrg}
-                 rules={[
-                   {
-                     required: isNewOrg
-                   }
-                 ]}
+      <Form.Item
+        tooltip="The default country code for this organisation. Used for phone numbers."
+        name="countryCode"
+        label="Default Country Code"
+        required={isNewOrg}
+        rules={[
+          {
+            required: isNewOrg
+          }
+        ]}
       >
         <Select
           showSearch
@@ -182,9 +180,10 @@ const NewOrganisationForm = (props: OuterProps) => {
 
       {/*
       // @ts-ignore */}
-      <Form.Item tooltip="The available account types for this organisation."
-                 name="accountTypes"
-                 label="Account Types"
+      <Form.Item
+        tooltip="The available account types for this organisation."
+        name="accountTypes"
+        label="Account Types"
       >
         <Select
           mode="multiple"
@@ -207,39 +206,43 @@ const NewOrganisationForm = (props: OuterProps) => {
 
       {/*
         // @ts-ignore */}
-      <Form.Item tooltip="The default disbursement amount for new beneficiaries created in this organisation"
-                 name="defaultDisbursement"
-                 label="Default Disbursement"
+      <Form.Item
+        tooltip="The default disbursement amount for new beneficiaries created in this organisation"
+        name="defaultDisbursement"
+        label="Default Disbursement"
       >
-        <Input placeholder="0" suffix="RCU" type="number"/>
+        <Input placeholder="0" suffix="RCU" type="number" />
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item tooltip="The minimum vendor payout withdrawal amount for this organisation"
-                 name="minimumVendorPayoutWithdrawal"
-                 label="Minimum Vendor Payout Withdrawal"
+      <Form.Item
+        tooltip="The minimum vendor payout withdrawal amount for this organisation"
+        name="minimumVendorPayoutWithdrawal"
+        label="Minimum Vendor Payout Withdrawal"
       >
-        <Input placeholder="0" suffix="RCU" type="number"/>
+        <Input placeholder="0" suffix="RCU" type="number" />
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item tooltip="The distance to automatically load transfer cards onto vendor phones for this organisation"
-                 name="cardShardDistance"
-                 label="Automatically Load Cards Within"
+      <Form.Item
+        tooltip="The distance to automatically load transfer cards onto vendor phones for this organisation"
+        name="cardShardDistance"
+        label="Automatically Load Cards Within"
       >
-        <Input placeholder="0" suffix="Km" type="number"/>
+        <Input placeholder="0" suffix="Km" type="number" />
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item tooltip="Whether or not to require a transfer card for new beneficiaries"
-                 valuePropName="checked"
-                 name="requireTransferCard"
-                 label="Require Transfer Card"
+      <Form.Item
+        tooltip="Whether or not to require a transfer card for new beneficiaries"
+        valuePropName="checked"
+        name="requireTransferCard"
+        label="Require Transfer Card"
       >
-        <Switch/>
+        <Switch />
       </Form.Item>
 
       <Form.Item>

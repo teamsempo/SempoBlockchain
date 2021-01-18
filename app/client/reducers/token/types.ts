@@ -16,8 +16,11 @@ export enum CreateTokenActionTypes {
 }
 
 export interface CreateToken {
-  token_name: string;
-  token_attributes: object;
+  name: string;
+  symbol: string;
+  address: string;
+  decimals: number;
+  chain: string;
 }
 
 export interface Token {

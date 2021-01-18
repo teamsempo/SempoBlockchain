@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
+import { connect } from "react-redux";
+
 import { InputNumber, Modal, Form, Input, Radio } from "antd";
+import { CreateTokenAction } from "../../reducers/token/actions";
+import { CreateToken } from "../../reducers/token/types";
+import { ReduxState } from "../../reducers/rootReducer";
 
 declare global {
   interface Window {
@@ -7,38 +12,47 @@ declare global {
   }
 }
 
-interface Values {
-  title: string;
-  description: string;
-  modifier: string;
+interface DispatchProps {
+  createToken: (body: CreateToken) => CreateTokenAction;
+}
+
+interface StateProps {
+  tokens: ReduxState["tokens"];
 }
 
 interface TokenModalFormProps {
   visible: boolean;
-  onCreate: (values: Values) => void;
   onCancel: () => void;
 }
 
-const TokenModalForm: React.FC<TokenModalFormProps> = ({
-  visible,
-  onCreate,
-  onCancel
-}) => {
+type IProps = DispatchProps & StateProps & TokenModalFormProps;
+
+const TokenModalForm: React.FC<IProps> = props => {
   const [form] = Form.useForm();
   const chains = window.CHAIN_NAMES && window.CHAIN_NAMES.split(",");
+
+  useEffect(() => {
+    if (
+      !props.tokens.createStatus.isRequesting &&
+      props.tokens.createStatus.success
+    ) {
+      props.onCancel();
+    }
+  });
   return (
     <Modal
-      visible={visible}
+      visible={props.visible}
       title="Create a new token"
       okText="Create"
       cancelText="Cancel"
-      onCancel={onCancel}
+      onCancel={props.onCancel}
+      confirmLoading={props.tokens.createStatus.isRequesting}
       onOk={() => {
         form
           .validateFields()
           .then((values: any) => {
             form.resetFields();
-            onCreate(values);
+            props.createToken(values);
           })
           .catch(info => {
             console.log("Validate Failed:", info);
@@ -73,25 +87,26 @@ const TokenModalForm: React.FC<TokenModalFormProps> = ({
           name="decimals"
           label="Token Decimals"
           rules={[
-            {required: true, message: "Please input the decimals of token!"}
+            { required: true, message: "Please input the decimals of token!" }
           ]}
         >
-          <InputNumber min={1} max={18} style={{width: "100%"}}/>
+          <InputNumber min={1} max={18} style={{ width: "100%" }} />
         </Form.Item>
         {/*
          // @ts-ignore */}
-        <Form.Item tooltip="This refers to the address location of the actual token contract that
+        <Form.Item
+          tooltip="This refers to the address location of the actual token contract that
         manages the logic for the tokens. This does not refer to the address that holds your own personal tokens!"
-                   name="address"
-                   label="Token Address"
-                   rules={[
-                     {required: true, message: "Please input the address of token!"}
-                   ]}
+          name="address"
+          label="Token Address"
+          rules={[
+            { required: true, message: "Please input the address of token!" }
+          ]}
         >
-          <Input min={1} max={18} type="number"/>
+          <Input />
         </Form.Item>
         <Form.Item
-          name="modifier"
+          name="chain"
           className="collection-create-form_last-form-item"
           rules={[
             { required: true, message: "Please select the chain of the token!" }
@@ -112,4 +127,20 @@ const TokenModalForm: React.FC<TokenModalFormProps> = ({
     </Modal>
   );
 };
-export default TokenModalForm;
+
+const mapStateToProps = (state: any): StateProps => {
+  return {
+    tokens: state.tokens
+  };
+};
+
+const mapDispatchToProps = (dispatch: any): DispatchProps => {
+  return {
+    createToken: (body: any) =>
+      dispatch(CreateTokenAction.createTokenRequest({ body }))
+  };
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TokenModalForm);
