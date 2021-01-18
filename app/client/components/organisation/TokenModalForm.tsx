@@ -36,7 +36,7 @@ const TokenModalForm: React.FC<TokenModalFormProps> = ({
       onOk={() => {
         form
           .validateFields()
-          .then(values => {
+          .then((values: any) => {
             form.resetFields();
             onCreate(values);
           })
@@ -85,10 +85,10 @@ const TokenModalForm: React.FC<TokenModalFormProps> = ({
           name="address"
           label="Token Address"
           rules={[
-            { required: true, message: "Please input the address of token!" }
+            {required: true, message: "Please input the address of token!"}
           ]}
         >
-          <Input min={1} max={18} type="number" />
+          <Input min={1} max={18} type="number"/>
         </Form.Item>
         <Form.Item
           name="modifier"
