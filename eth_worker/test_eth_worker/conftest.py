@@ -31,11 +31,17 @@ from utils import str_uuid
 
 @pytest.fixture(autouse=True)
 def mock_queue_sig(monkeypatch):
+
+    queued_sigs = []
+
     def mock_response(sig, countdown=0):
+        queued_sigs.append((sig,countdown))
         return str_uuid()
 
     import celery_utils
     monkeypatch.setattr(celery_utils, 'queue_sig', mock_response)
+
+    return queued_sigs
 
 @pytest.fixture(scope='function')
 def db_session():
