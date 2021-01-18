@@ -90,7 +90,7 @@
     "@babel/polyfill": "^7.0.0",
     "@sentry/browser": "^4.2.3",
     "@types/qrcode.react": "^1.0.1",
-    "antd": "^4.10.2",
+    "antd": "^4.4.2",
     "chart.js": "^2.7.2",
     "deck.gl": "5.1.4",
     "deepmerge": "^2.2.1",
