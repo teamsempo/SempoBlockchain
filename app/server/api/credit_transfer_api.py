@@ -179,7 +179,7 @@ class CreditTransferAPI(MethodView):
         auto_resolve = AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin')
 
         post_data = request.get_json()
-        print(post_data)
+
         uuid = post_data.get('uuid')
 
         queue = 'low-priority'
