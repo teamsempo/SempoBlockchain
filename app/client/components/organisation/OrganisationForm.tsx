@@ -89,32 +89,30 @@ const NewOrganisationForm = (props: OuterProps) => {
     >
       {/*
       // @ts-ignore */}
-      <Form.Item
-        tooltip="The name of your organisation or project"
-        name="organisationName"
-        label="Organisation Name"
-        required={isNewOrg}
-        rules={[
-          {
-            required: isNewOrg
-          }
-        ]}
+      <Form.Item tooltip="The name of your organisation or project"
+                 name="organisationName"
+                 label="Organisation Name"
+                 required={isNewOrg}
+                 rules={[
+                   {
+                     required: isNewOrg
+                   }
+                 ]}
       >
-        <Input disabled={!isNewOrg} placeholder="ACME Inc." />
+        <Input disabled={!isNewOrg} placeholder="ACME Inc."/>
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item
-        tooltip="Select a token to use for this organisation"
-        name="token"
-        label="Token"
-        required={isNewOrg}
-        rules={[
-          {
-            required: isNewOrg
-          }
-        ]}
+      <Form.Item tooltip="Select a token to use for this organisation"
+                 name="token"
+                 label="Token"
+                 required={isNewOrg}
+                 rules={[
+                   {
+                     required: isNewOrg
+                   }
+                 ]}
       >
         <Select
           showSearch
@@ -154,16 +152,15 @@ const NewOrganisationForm = (props: OuterProps) => {
 
       {/*
       // @ts-ignore */}
-      <Form.Item
-        tooltip="The default country code for this organisation. Used for phone numbers."
-        name="countryCode"
-        label="Default Country Code"
-        required={isNewOrg}
-        rules={[
-          {
-            required: isNewOrg
-          }
-        ]}
+      <Form.Item tooltip="The default country code for this organisation. Used for phone numbers."
+                 name="countryCode"
+                 label="Default Country Code"
+                 required={isNewOrg}
+                 rules={[
+                   {
+                     required: isNewOrg
+                   }
+                 ]}
       >
         <Select
           showSearch
@@ -185,10 +182,9 @@ const NewOrganisationForm = (props: OuterProps) => {
 
       {/*
       // @ts-ignore */}
-      <Form.Item
-        tooltip="The available account types for this organisation."
-        name="accountTypes"
-        label="Account Types"
+      <Form.Item tooltip="The available account types for this organisation."
+                 name="accountTypes"
+                 label="Account Types"
       >
         <Select
           mode="multiple"
@@ -211,43 +207,39 @@ const NewOrganisationForm = (props: OuterProps) => {
 
       {/*
         // @ts-ignore */}
-      <Form.Item
-        tooltip="The default disbursement amount for new beneficiaries created in this organisation"
-        name="defaultDisbursement"
-        label="Default Disbursement"
+      <Form.Item tooltip="The default disbursement amount for new beneficiaries created in this organisation"
+                 name="defaultDisbursement"
+                 label="Default Disbursement"
       >
-        <Input placeholder="0" suffix={tokenSymbol} type="number" />
+        <Input placeholder="0" suffix={tokenSymbol} type="number"/>
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item
-        tooltip="The minimum vendor payout withdrawal amount for this organisation"
-        name="minimumVendorPayoutWithdrawal"
-        label="Minimum Vendor Payout Withdrawal"
+      <Form.Item tooltip="The minimum vendor payout withdrawal amount for this organisation"
+                 name="minimumVendorPayoutWithdrawal"
+                 label="Minimum Vendor Payout Withdrawal"
       >
-        <Input placeholder="0" suffix={tokenSymbol} type="number" />
+        <Input placeholder="0" suffix={tokenSymbol} type="number"/>
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item
-        tooltip="The distance to automatically load transfer cards onto vendor phones for this organisation"
-        name="cardShardDistance"
-        label="Automatically Load Cards Within"
+      <Form.Item tooltip="The distance to automatically load transfer cards onto vendor phones for this organisation"
+                 name="cardShardDistance"
+                 label="Automatically Load Cards Within"
       >
-        <Input placeholder="0" suffix="Km" type="number" />
+        <Input placeholder="0" suffix="Km" type="number"/>
       </Form.Item>
 
       {/*
       // @ts-ignore */}
-      <Form.Item
-        tooltip="Whether or not to require a transfer card for new beneficiaries"
-        valuePropName="checked"
-        name="requireTransferCard"
-        label="Require Transfer Card"
+      <Form.Item tooltip="Whether or not to require a transfer card for new beneficiaries"
+                 valuePropName="checked"
+                 name="requireTransferCard"
+                 label="Require Transfer Card"
       >
-        <Switch />
+        <Switch/>
       </Form.Item>
 
       <Form.Item>
