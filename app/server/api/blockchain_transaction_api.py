@@ -55,11 +55,37 @@ class BlockchainTransactionRPC(MethodView):
 
             return make_response(jsonify(response_object)), 200
 
+        if call == 'REMOVE_PRIOR_TASK_DEPENDENCY':
+            task_uuid = post_data.get('task_uuid')
+            prior_task_uuid = post_data.get('prior_task_uuid')
+
+            res = bt.remove_prior_task_dependency(task_uuid, prior_task_uuid)
+
+            response_object = {
+                'message': 'Removing Prior Task Dependency',
+                'data': res
+            }
+
+            return make_response(jsonify(response_object)), 200
+
+        if call == 'REMOVE_ALL_POSTERIOR_DEPENDENCIES':
+            prior_task_uuid = post_data.get('prior_task_uuid')
+
+            res = bt.remove_all_posterior_dependencies(prior_task_uuid)
+
+            response_object = {
+                'message': 'Removing All Posterior Dependencies',
+                'data': res
+            }
+
+            return make_response(jsonify(response_object)), 200
+
         response_object = {
             'message': 'Call not recognised',
         }
 
         return make_response(jsonify(response_object)), 400
+
 
 blockchain_transaction_blueprint.add_url_rule(
     '/blockchain_transaction_rpc/',

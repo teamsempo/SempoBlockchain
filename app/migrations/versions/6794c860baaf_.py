@@ -37,10 +37,19 @@ class CustomAttributeUserStorage(Base):
     value               = sa.Column(sa.String)
     uploaded_image_id   = sa.Column(sa.Integer)
 
+def index_exists(name):
+    connection = op.get_bind()
+    result = connection.execute(
+        "SELECT exists(SELECT 1 from pg_indexes where indexname = '{}') as ix_exists;"
+            .format(name)
+    ).first()
+    return bool(result.ix_exists)
+
+
 def upgrade():
     conn = op.get_bind()
     session = Session(bind=conn)
-    # op.create_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), 'custom_attribute_user_storage', ['custom_attribute_id'], unique=False)
+    index_exists('ix_custom_attribute_user_storage_custom_attribute_id') or op.create_index(op.f('ix_custom_attribute_user_storage_custom_attribute_id'), 'custom_attribute_user_storage', ['custom_attribute_id'], unique=False)
 
     # If it hasn't been done before, migrate from the old custom attribute scheme to the new one
     try:
