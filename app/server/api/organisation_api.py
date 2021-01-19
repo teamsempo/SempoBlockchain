@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, jsonify
+from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 
 from server import db
@@ -10,12 +10,12 @@ from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
 from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
+from server.utils.access_control import AccessControl
 
 
 organisation_blueprint = Blueprint('organisation', __name__)
 
 
-# only allow Sempo Admins to interact with Organisation API
 class OrganisationAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def get(self, organisation_id):
@@ -179,6 +179,9 @@ class OrganisationAPI(MethodView):
                 response_object['data']['token_id'] = cic_response_object['data']['token_id']
             else:
                 return make_response(jsonify(cic_response_object)), cic_response_code
+
+        if AccessControl.has_exact_role(g.user.roles, 'ADMIN', 'superadmin'):
+            g.user.add_user_to_organisation(new_organisation, is_admin=True)
 
         return make_response(jsonify(response_object)), 201
 

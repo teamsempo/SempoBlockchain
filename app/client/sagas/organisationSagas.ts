@@ -28,6 +28,7 @@ import {
 import { organisationSchema } from "../schemas";
 import { ActionWithPayload } from "../reduxUtils";
 import { TokenListAction } from "../reducers/token/actions";
+import { LoginAction } from "../reducers/auth/actions";
 
 function* updateStateFromOrganisation(data: OrganisationData) {
   //Schema expects a list of organisation objects
@@ -118,6 +119,12 @@ function* createOrganisation(
     yield put(CreateOrganisationAction.createOrganisationSuccess());
 
     message.success(load_result.message);
+
+    yield put(
+      LoginAction.updateActiveOrgRequest({
+        organisationId: load_result.data.organisation.id
+      })
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
