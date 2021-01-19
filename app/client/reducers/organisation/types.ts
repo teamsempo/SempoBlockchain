@@ -3,9 +3,7 @@ import { TransferAccountTypes } from "../../components/transferAccount/types";
 export interface Organisation {
   id: number;
   name: string;
-  token: {
-    symbol: string;
-  };
+  token: number;
   require_transfer_card: boolean;
   default_disbursement: number;
   card_shard_distance: number;

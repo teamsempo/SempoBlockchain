@@ -8,9 +8,8 @@ import AsyncButton from "../AsyncButton";
 import InputField from "../form/InputField";
 import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
-import { Organisation } from "../../reducers/organisation/types";
-import { ReduxState } from "../../reducers/rootReducer";
 import { TransferAccountTypes } from "../transferAccount/types";
+import { Token } from "../../reducers/token/types";
 
 export interface ICreateUser {
   firstName?: string;
@@ -49,7 +48,7 @@ interface OuterProps {
 interface StateProps {
   accountTypes: string[];
   businessUsageValue?: string;
-  activeOrganisation: Organisation;
+  activeToken: Token;
   defaultDisbursement: any;
   validRoles: TransferAccountTypes[];
 }
@@ -99,7 +98,7 @@ class CreateUserForm extends React.Component<
 
   render() {
     const {
-      activeOrganisation,
+      activeToken,
       businessUsageValue,
       transferUsages,
       accountTypes,
@@ -115,9 +114,8 @@ class CreateUserForm extends React.Component<
           name="initialDisbursement"
           label={"Initial Disbursement Amount"}
         >
-          {activeOrganisation !== null &&
-          typeof activeOrganisation !== "undefined"
-            ? activeOrganisation.token.symbol
+          {activeToken !== null && typeof activeToken !== "undefined"
+            ? activeToken.symbol
             : null}
         </InputField>
       );
@@ -155,7 +153,6 @@ class CreateUserForm extends React.Component<
     let selectedVendorForm = <></>;
     let selectedTokenAgentForm = <></>;
     const accountTypesList = accountTypes || [];
-    console.log(accountTypes);
     if (accountTypesList.includes("beneficiary")) {
       selectedUserForm = <>{initialDisbursementAmount}</>;
     }
@@ -251,19 +248,19 @@ const CreateUserFormReduxForm = reduxForm<ICreateUser, Props>({
 })(CreateUserForm);
 
 export default connect(
-  (state: ReduxState): StateProps => {
+  (state: any): StateProps => {
     const selector = formValueSelector("createUser");
     return {
       accountTypes: selector(state, "accountTypes"),
       businessUsageValue: selector(state, "businessUsage"),
-      // @ts-ignore
-      activeOrganisation: state.organisations.byId[state.login.organisationId],
+      activeToken:
+        state.tokens.byId[
+          state.organisations.byId[state.login.organisationId].token
+        ],
       defaultDisbursement:
-        // @ts-ignore
         state.organisations.byId[state.login.organisationId]
           .default_disbursement / 100,
       validRoles:
-        // @ts-ignore
         state.organisations.byId[state.login.organisationId].valid_roles || []
     };
   }

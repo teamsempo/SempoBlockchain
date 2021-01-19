@@ -24,7 +24,10 @@ import { ChartColors } from "../../theme";
 
 const mapStateToProps = state => {
   return {
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeToken:
+      state.tokens.byId[
+        state.organisations.byId[state.login.organisationId].token
+      ]
   };
 };
 
@@ -104,7 +107,7 @@ class VolumeChart extends React.Component {
     const labelString = selected
       ? selected.includes("volume")
         ? `${toTitleCase(replaceUnderscores(selected))} (${
-            this.props.activeOrganisation.token.symbol
+            this.props.activeToken.symbol
           })`
         : `${toTitleCase(replaceUnderscores(selected))}`
       : null;

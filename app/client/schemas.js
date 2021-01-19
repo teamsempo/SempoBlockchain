@@ -2,6 +2,8 @@ import { schema } from "normalizr";
 
 const user = new schema.Entity("users");
 
+const token = new schema.Entity("tokens");
+
 const credit_sends = new schema.Entity("credit_sends", {
   sender_user: user,
   recipient_user: user
@@ -14,17 +16,17 @@ const credit_receives = new schema.Entity("credit_receives", {
 const transfer_account = new schema.Entity("transfer_accounts", {
   users: [user],
   credit_sends: [credit_sends],
-  credit_receives: [credit_receives]
+  credit_receives: [credit_receives],
+  token: token
 });
 
 const credit_transfer = new schema.Entity("credit_transfers", {
   sender_transfer_account: transfer_account,
   sender_user: user,
   recipient_transfer_account: transfer_account,
-  recipient_user: user
+  recipient_user: user,
+  token: token
 });
-
-const token = new schema.Entity("tokens");
 
 const filter = new schema.Entity("filters");
 
