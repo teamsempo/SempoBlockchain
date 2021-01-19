@@ -24,9 +24,9 @@ class Disbursement(ModelBase):
         back_populates="disbursements")
 
     credit_transfers = db.relationship(
-        "CreditTransfers",
+        "CreditTransfer",
         secondary=disbursement_credit_transfer_association_table,
-        back_populates="disbursements")
+        back_populates="disbursement")
 
     @hybrid_property
     def disbursement_amount(self):

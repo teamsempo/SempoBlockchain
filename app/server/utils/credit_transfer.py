@@ -228,7 +228,7 @@ def make_payment_transfer(
         require_recipient_approved = False
         require_sufficient_balance = False
         # primary NGO wallet to disburse from
-        send_transfer_account = receive_user.default_organisation.queried_org_level_transfer_account
+        send_transfer_account = send_transfer_account or receive_user.default_organisation.queried_org_level_transfer_account
 
     if transfer_subtype is TransferSubTypeEnum.RECLAMATION:
         require_sender_approved = False
@@ -236,7 +236,7 @@ def make_payment_transfer(
         receive_transfer_account = send_user.default_organisation.queried_org_level_transfer_account
 
     if transfer_subtype is TransferSubTypeEnum.INCENTIVE:
-        send_transfer_account = receive_transfer_account.token.float_account
+        send_transfer_account = send_transfer_account or receive_transfer_account.token.float_account
 
     transfer = CreditTransfer(transfer_amount,
                               token=token,

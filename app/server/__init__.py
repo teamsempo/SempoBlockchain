@@ -137,26 +137,40 @@ def register_blueprints(app):
 
     @app.after_request
     def after_request(response):
+        # Prepare pending transactions to be picked up by a new sqlalchemy session after this one closes
+        after_request_transactions = []
+        for transaction, queue in g.pending_transactions:
+            # Since you can't pass DB objects to a new separate session, we're saving the transaction class' and 
+            # IDs so they can be looked up later in the new session 
+            after_request_transactions.append((transaction.__class__, transaction.id, queue))
+        # response.on_call_close will execute _after_ the call returns. This makes it so the user doesn't 
+        # have to wait for send_blockchain_payload_to_worker to finish for each transaction 
+        @response.call_on_close
+        def process_after_request():
+            with app.app_context():
+                for transaction_class, transaction_id, queue in after_request_transactions:
+                    transaction = db.session.query(transaction_class)\
+                        .filter(transaction_class.id == transaction_id)\
+                        .execution_options(show_all=True)\
+                        .first()
+                    transaction.send_blockchain_payload_to_worker(queue=queue)
+                    # DB is modified, so commit changes
+                    db.session.commit()
+
+        # Push only credit transfers, not exchanges
+        from server.models.credit_transfer import CreditTransfer
         from server.utils import pusher_utils
-        if response.status_code < 300 and response.status_code >= 200:
-            db.session.commit()
+        transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
+        pusher_utils.push_admin_credit_transfer(transactions)
 
         for job, args, kwargs in g.executor_jobs:
             job.submit(*args, **kwargs)
 
-        for transaction, queue in g.pending_transactions:
-            transaction.send_blockchain_payload_to_worker(queue=queue)
-            # DB is modified, so commit changes
+        from server.utils import pusher_utils
+        if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
-
-        # Push only credit transfers, not exchanges
-        from server.models.credit_transfer import CreditTransfer
-        transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
-        pusher_utils.push_admin_credit_transfer(transactions)
-
         # Adds version to response header
         response.headers['App-Version'] = config.VERSION
-
         return response
 
     from .views.index import index_view

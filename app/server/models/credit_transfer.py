@@ -11,7 +11,8 @@ from sqlalchemy import or_
 from uuid import uuid4
 
 from server import db, bt
-from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table
+from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table,\
+    disbursement_credit_transfer_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
@@ -96,6 +97,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
+
+    disbursement = db.relationship(
+        "Disbursement",
+        secondary=disbursement_credit_transfer_association_table,
+        back_populates="credit_transfers",
+        uselist=False
+    )
 
     def add_message(self, message):
         dated_message = f"[{datetime.datetime.utcnow()}:: {message}]"

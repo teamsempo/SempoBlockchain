@@ -5,7 +5,7 @@ from server.utils.metrics.filters import apply_filters
 from server.models.transfer_account import TransferAccount
 from server.models.user import User
 from functools import reduce
-
+from sqlalchemy.orm import lazyload
 
 class SearchableColumn:
     def __init__(self, name, column, rank=1):
@@ -16,7 +16,7 @@ class SearchableColumn:
     def get_similarity_query(self, query):
         return (func.coalesce(func.similarity(self.column, query), 0).label('first_name_rank') * self.rank)
 
-def generate_search_query(search_string, filters, order, sort_by_arg):
+def generate_search_query(search_string, filters, order, sort_by_arg, include_user=False):
     """
     Generates query to search transfer accounts by their users' parameters. This is used by search_api, as well as 
     the bulk disbursement API
@@ -52,12 +52,16 @@ def generate_search_query(search_string, filters, order, sort_by_arg):
     sum_search = reduce(lambda x,y: x+y, [sc.get_similarity_query(search_string) for sc in user_search_columns])
     sort_by = sum_search if sort_by_arg == 'rank' else sort_types_to_database_types[sort_by_arg]
     # If there's no search string, the process is the same, just sort by account creation date
-    sort_by = sort_types_to_database_types['date_account_created'] if sort_by == 'rank' and not search_string else sort_by
+    sort_by = sort_types_to_database_types['date_account_created'] if sort_by == 'rank' and not search_string else sort_by       
+    entities = [TransferAccount, sum_search, User] if include_user else [TransferAccount, sum_search]
     final_query = db.session.query(TransferAccount, User, sum_search)\
-        .with_entities(TransferAccount, sum_search)\
+        .with_entities(*entities)\
         .outerjoin(TransferAccount, User.default_transfer_account_id == TransferAccount.id)\
         .filter(TransferAccount.is_ghost != True)\
         .order_by(order(sort_by))
+    # Joining custom attributes is quite expensive, and we don't need them in a listing of search results
+    if include_user:
+        final_query = final_query.options(lazyload(User.custom_attributes))
     # If there is a search string, we only want to return ranked results!
     final_query = final_query.filter(sum_search!=0) if search_string else final_query
     return apply_filters(final_query, filters, User)
