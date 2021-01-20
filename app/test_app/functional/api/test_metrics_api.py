@@ -4,7 +4,7 @@ from server.models.custom_attribute import CustomAttribute, MetricsVisibility
 from server.utils.transfer_filter import Filters
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user, set_custom_attributes
-from server import db
+from server import db, red
 import json
 import os
 from datetime import datetime, timedelta
@@ -389,3 +389,34 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
             assert response.json['data']['groups']['colour,sender']['table'] == 'custom_attribute_user_storage'
         else:
             assert 'colour,sender' not in response.json['data']['groups']
+
+def test_clear_metrics_cache(test_client, complete_admin_auth_token):
+    def clear_metrics():
+        return test_client.post(
+            f'/api/v1/metrics/clear_cache/',
+            headers=dict(
+                Authorization=complete_admin_auth_token,
+                Accept='application/json'
+            ),
+        )
+    
+    # Do a non-test clear metrics to flush the cache
+    clear_metrics()
+
+    # Create 4 fake metrics
+    red.set('2_metrics_fake_metric1', '123')
+    red.set('2_metrics_fake_metric2', '123')
+    red.set('2_metrics_fake_metric3', '123')
+    red.set('2_metrics_fake_metric4', '123')
+
+    # Clear them for reals now
+    response = clear_metrics()
+
+    # Make sure that 4 metrics are removed from the cache
+    assert response.json['data']['removed_entries'] == 4
+    
+    # And check that they're well and truly gone from the cache!
+    assert not red.get('2_metrics_fake_metric1') 
+    assert not red.get('2_metrics_fake_metric2') 
+    assert not red.get('2_metrics_fake_metric3') 
+    assert not red.get('2_metrics_fake_metric4') 
