@@ -157,6 +157,37 @@ class TaskManager(object):
 
         return task.id
 
+    def remove_prior_task_dependency(self, task_uuid: UUID, prior_task_uuid: UUID):
+        """
+        For a task specified by task_uuid, removes its dependency on a prior task specified by prior_task_uuid.
+        This is useful for when a prior task cannot be completed for some reason and even though we're confident that
+        skipping it would be fine, it blocks all downstream dependent tasks.
+        Includes an attempt_transaction, so that if the task can now be completed because it's unblocked, it will do so.
+        WARNING: Using this is dangerous as it overrides the expected transaction order. Do so at your own risk!!
+        If a task is stuck for whatever reason, it is generally better to unstick the task (perhaps by topping up an
+        account balance) and then use retry_task, than it is to call this.
+        :param task_uuid: the task that is blocked
+        :param posterior_task_uuid: the blocking task
+        :return:
+        """
+
+        self.persistence.remove_prior_task_dependency(task_uuid, prior_task_uuid)
+
+        self._queue_attempt_transaction(task_uuid)
+
+    def remove_all_posterior_dependencies(self, prior_task_uuid: UUID):
+        """
+        Bulk version of 'remove_prior_task_dependency' that removes all the dependencies on a task specified by
+        prior_task_uuid.
+        Like 'remove_prior_task_dependency', attempts any potentially unblocked tasks.
+        WARNING: The same dangers that apply to 'remove_prior_task_dependency' also apply here, but moreso.
+        :param prior_task_uuid: the blocking task
+        """
+
+        posterior_task_uuids = self.persistence.remove_all_posterior_dependencies(prior_task_uuid)
+
+        for uuid in posterior_task_uuids:
+            self._queue_attempt_transaction(uuid)
 
     def retry_task(self, task_uuid: UUID):
         task = self.persistence.get_task_from_uuid(task_uuid)

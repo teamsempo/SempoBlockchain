@@ -126,6 +126,18 @@ class BlockchainTasker(object):
             self._eth_endpoint('deduplicate'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
         )
 
+    def remove_prior_task_dependency(self, task_uuid, prior_task_uuid):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('remove_prior_task_dependency'),
+            {'task_uuid': task_uuid, 'prior_task_uuid': prior_task_uuid}
+        )
+
+    def remove_all_posterior_dependencies(self, prior_task_uuid):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('remove_all_posterior_dependencies'),
+            {'prior_task_uuid': prior_task_uuid}
+        )
+
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
     def create_blockchain_wallet(
             self, wei_target_balance=2e16, wei_topup_threshold=1e16, private_key=None, queue='high-priority'
