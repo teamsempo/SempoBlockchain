@@ -59,6 +59,7 @@ class MakeDisbursementAPI(MethodView):
 
         if include_accounts:
             transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
+            users = [ta.primary_user for ta in transfer_accounts]
         else:
             search_query = generate_search_query(search_string, filters, order, sort_by_arg, include_user=True)
             search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))

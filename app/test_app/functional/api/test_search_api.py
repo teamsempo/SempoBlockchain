@@ -78,7 +78,7 @@ def test_normal_search(search_term, results, test_client, complete_admin_auth_to
                             headers=dict(
                             Authorization=complete_admin_auth_token, Accept='application/json'),
                             follow_redirects=True)
-    print(response)
+
     transfer_accounts = response.json['data']['transfer_accounts']
     assert response.status_code == 200
     user_names = []
