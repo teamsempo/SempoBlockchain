@@ -56,6 +56,20 @@ class MockBlockchainTasker(object):
         pass
 
     @staticmethod
+    def remove_all_posterior_dependencies(*args, **kwargs):
+        return {
+            'message': 'Removing Prior Task Dependency',
+            'data': 'resp'
+        }
+
+    @staticmethod
+    def remove_prior_task_dependency(*args, **kwargs):
+        return {
+            'message': 'Removing Prior Task Dependency',
+            'data': 'resp'
+        }
+
+    @staticmethod
     def retry_failed(*args, **kwargs):
         return {
             'failed_count': 10,
