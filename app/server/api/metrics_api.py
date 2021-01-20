@@ -131,7 +131,7 @@ class FiltersApi(MethodView):
         return make_response(jsonify(response_object)), 200
 
 class CacheApi(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'any'})
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def post(self):
         """
         This endpoint erases the cache for the current org. 
