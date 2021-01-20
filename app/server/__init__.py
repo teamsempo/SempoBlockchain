@@ -145,17 +145,17 @@ def register_blueprints(app):
             after_request_transactions.append((transaction.__class__, transaction.id, queue))
         # response.on_call_close will execute _after_ the call returns. This makes it so the user doesn't 
         # have to wait for send_blockchain_payload_to_worker to finish for each transaction 
-        @response.call_on_close
-        def process_after_request():
-            with app.app_context():
-                for transaction_class, transaction_id, queue in after_request_transactions:
-                    transaction = db.session.query(transaction_class)\
-                        .filter(transaction_class.id == transaction_id)\
-                        .execution_options(show_all=True)\
-                        .first()
-                    transaction.send_blockchain_payload_to_worker(queue=queue)
-                    # DB is modified, so commit changes
-                    db.session.commit()
+        #@response.call_on_close
+        #def process_after_request():
+        #    with app.app_context():
+        for transaction_class, transaction_id, queue in after_request_transactions:
+            transaction = db.session.query(transaction_class)\
+                .filter(transaction_class.id == transaction_id)\
+                .execution_options(show_all=True)\
+                .first()
+            transaction.send_blockchain_payload_to_worker(queue=queue)
+            # DB is modified, so commit changes
+            db.session.commit()
 
         # Push only credit transfers, not exchanges
         from server.models.credit_transfer import CreditTransfer
