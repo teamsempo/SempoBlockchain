@@ -218,7 +218,7 @@ class DashboardPage extends React.Component {
                 size="middle"
               >
                 <Default>
-                  <div style={{ marginBottom: "-16px" }}>
+                  <div>
                     <Row gutter={16}>
                       <Col span={14}>
                         <MasterWalletCard />
