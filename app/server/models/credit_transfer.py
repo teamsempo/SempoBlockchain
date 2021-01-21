@@ -430,4 +430,5 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.resolve_as_rejected(message)
             raise InsufficientBalanceError(message)
 
-        self.update_balances()
+        if (self.transfer_status != None) and (self.transfer_status != TransferStatusEnum.PENDING):
+            self.update_balances()

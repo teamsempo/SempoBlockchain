@@ -70,12 +70,13 @@ class MakeDisbursementAPI(MethodView):
         db.session.add(d)
 
         send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
-        for user in users:
+        for user, ta in zip(users, transfer_accounts):
             d.credit_transfers.append(make_payment_transfer(
                 disbursement_amount,
                 send_user=g.user,
                 receive_user=user,
                 send_transfer_account=send_transfer_account,
+                receive_transfer_account=ta,
                 transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                 transfer_mode=TransferModeEnum.WEB,
                 automatically_resolve_complete=False,
