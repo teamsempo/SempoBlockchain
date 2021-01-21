@@ -92,23 +92,22 @@ const TokenModalForm: React.FC<IProps> = props => {
         >
           <InputNumber min={1} max={18} style={{ width: "100%" }} />
         </Form.Item>
-        {/*
-         // @ts-ignore */}
-        <Form.Item tooltip="This refers to the address location of the actual token contract that
+        <Form.Item
+          tooltip="This refers to the address location of the actual token contract that
         manages the logic for the tokens. This does not refer to the address that holds your own personal tokens!"
-                   name="address"
-                   label="Token Address"
-                   rules={[
-                     {required: true, message: "Please input the address of token!"}
-                   ]}
+          name="address"
+          label="Token Address"
+          rules={[
+            { required: true, message: "Please input the address of token!" }
+          ]}
         >
-          <Input/>
+          <Input />
         </Form.Item>
         <Form.Item
           name="chain"
           className="collection-create-form_last-form-item"
           rules={[
-            {required: true, message: "Please select the chain of the token!"}
+            { required: true, message: "Please select the chain of the token!" }
           ]}
         >
           <Radio.Group>

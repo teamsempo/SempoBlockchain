@@ -32,8 +32,8 @@ interface OuterProps {
 }
 
 interface IState {
-  isoCountries: null;
-  roles: null;
+  isoCountries?: string[];
+  roles?: string[];
 }
 
 type IProps = DispatchProps & StateProps & OuterProps;
@@ -42,8 +42,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
   constructor(props: IProps) {
     super(props);
     this.state = {
-      isoCountries: null,
-      roles: null
+      isoCountries: undefined,
+      roles: undefined
     };
   }
 
@@ -58,8 +58,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
     var URL = `/api/v1/organisation/constants/${query_string}`;
 
     //todo: refactor this
-    //@ts-ignore
     return fetch(URL, {
+      //@ts-ignore
       headers: {
         Authorization: getToken()
       },
@@ -76,7 +76,6 @@ class OrganisationPage extends React.Component<IProps, IState> {
             return `${isoKey}: ${isoCountries[isoKey]}`;
           });
         }
-        //@ts-ignore
         this.setState({
           isoCountries: isoCountriesOptions,
           roles: handled.data.roles
