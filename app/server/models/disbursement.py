@@ -10,8 +10,8 @@ class Disbursement(ModelBase):
 
     search_string = db.Column(db.String)
     search_filter_params = db.Column(db.String)
-    include_users = db.Column(db.ARRAY(db.Integer))
-    exclude_users = db.Column(db.ARRAY(db.Integer))
+    include_accounts = db.Column(db.ARRAY(db.Integer))
+    exclude_accounts = db.Column(db.ARRAY(db.Integer))
     is_executed = db.Column(db.Boolean)
     _disbursement_amount_wei = db.Column(db.Numeric(27), default=0)
 

@@ -50,12 +50,13 @@ class MakeDisbursementAPI(MethodView):
         sort_by_arg = request.args.get('sort_by') or 'rank'
 
         # --- Build Disbursement Object ---
-        d = Disbursement()
-        d.creator_user = g.user
-        d.search_string = search_string
-        d.search_filter_params = encoded_filters
-        d.include_accounts = include_accounts
-        d.exclude_accounts = exclude_accounts
+        d = Disbursement(
+            creator_user = g.user,
+            search_string = search_string,
+            search_filter_params = encoded_filters,
+            include_accounts = include_accounts,
+            exclude_accounts = exclude_accounts
+        )
 
         if include_accounts:
             transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
