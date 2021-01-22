@@ -81,13 +81,13 @@ class MakeDisbursementAPI(MethodView):
                 transfer_mode=TransferModeEnum.WEB,
                 automatically_resolve_complete=False,
             ))
+        db.session.flush()
         response_object = {
             'status': 'success',
             'disbursement_id': d.id,
             'recipient_count': len(d.credit_transfers),
             'total_disbursement_amount': disbursement_amount*len(d.credit_transfers)
         }
-        db.session.flush()
         return make_response(jsonify(response_object)), 201
 
 
