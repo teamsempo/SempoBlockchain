@@ -123,9 +123,9 @@ class DisbursementAPI(MethodView):
         return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
-    def post(self, disbursement_id):
-        post_data = request.get_json()
-        action = post_data.get('action', '').upper()
+    def put(self, disbursement_id):
+        put_data = request.get_json()
+        action = put_data.get('action', '').upper()
 
         if not disbursement_id:
             return { 'message': 'Please provide a disbursement_id'}
@@ -162,5 +162,5 @@ disbursement_blueprint.add_url_rule(
 disbursement_blueprint.add_url_rule(
     '/disbursement/<int:disbursement_id>/',
     view_func=DisbursementAPI.as_view('disbursement_view'),
-    methods=['GET', 'POST']
+    methods=['GET', 'PUT']
 )

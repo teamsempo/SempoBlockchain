@@ -104,7 +104,7 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
                 assert json_transfer['transfer_amount'] == disbursement_amount
 
         # Check that the pending transactions are completed after EXECUTE!
-        phase_two_response = test_client.post(f'/api/v1/disbursement/{resp_id}',
+        phase_two_response = test_client.put(f'/api/v1/disbursement/{resp_id}',
             headers=dict(
             Authorization=complete_admin_auth_token, Accept='application/json'),
             json={ "action": "EXECUTE" },
