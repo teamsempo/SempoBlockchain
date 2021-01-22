@@ -21,3 +21,12 @@ docker push $REPOSITORY_URI:eth_worker_$GIT_HASH
 
 docker tag pgbouncer:latest $REPOSITORY_URI:pgbouncer_$GIT_HASH
 docker push $REPOSITORY_URI:pgbouncer_$GIT_HASH
+
+docker tag eth_worker:latest gcr.io/vocal-tracer-302110/eth_worker:a9803
+docker push gcr.io/${PROJECT_ID}/eth_worker:a9803
+
+docker tag server:latest gcr.io/vocal-tracer-302110/server:a9803
+docker push gcr.io/vocal-tracer-302110/server:a9803
+
+docker build -t gcr.io/vocal-tracer-302110/nginx:latest .
+docker push gcr.io/vocal-tracer-302110/nginx:latest
