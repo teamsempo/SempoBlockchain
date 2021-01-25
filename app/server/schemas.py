@@ -331,6 +331,8 @@ class TransferAccountSchema(SchemaBase):
 class TransferCardSchema(SchemaBase):
     public_serial_number    = fields.Str()
     nfc_serial_number       = fields.Function(lambda obj: obj.nfc_serial_number.upper())
+    is_disabled             = fields.Boolean()
+
 
     symbol                  = fields.Method('get_symbol')
 

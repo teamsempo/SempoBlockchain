@@ -3,6 +3,8 @@ import { connect } from "react-redux";
 
 import { reduxForm, InjectedFormProps, formValueSelector } from "redux-form";
 
+import { StopOutlined } from "@ant-design/icons";
+
 import { GenderTypes } from "./types";
 import {
   Wrapper,
@@ -24,6 +26,8 @@ import { ReduxState } from "../../reducers/rootReducer";
 import { Organisation } from "../../reducers/organisation/types";
 import QrReadingModal from "../qrReadingModal";
 import { replaceUnderscores } from "../../utils";
+
+import { EditTransferCardAction } from "../../reducers/transferCard/actions";
 
 export interface IEditUser {
   firstName?: string;
@@ -55,7 +59,11 @@ interface StateProps {
   activeOrganisation: Organisation;
 }
 
-type Props = OuterProps & StateProps;
+interface DispatchProps {
+  editTransferCard: (body: any, path: string) => EditTransferCardAction;
+}
+
+type Props = OuterProps & StateProps & DispatchProps;
 
 interface attr_dict {
   [key: string]: string;
@@ -121,6 +129,21 @@ class EditUserForm extends React.Component<
   setSerialNumber(data: string) {
     const cleanedData = data.replace(/^\s+|\s+$/g, "");
     this.props.change("publicSerialNumber", cleanedData);
+  }
+
+  disableTransferCard() {
+    if (
+      !window.confirm(
+        "Warning: a card that is disabled cannot be renabled. Proceed?"
+      )
+    ) {
+      return;
+    }
+
+    this.props.editTransferCard(
+      { disable: true },
+      this.props.selectedUser.public_serial_number
+    );
   }
 
   optionizeUsages() {
@@ -271,6 +294,10 @@ class EditUserForm extends React.Component<
                     <QrReadingModal
                       updateData={(data: string) => this.setSerialNumber(data)}
                     />
+                    <StopOutlined
+                      translate={""}
+                      onClick={() => this.disableTransferCard()}
+                    />
                   </InputField>
                 </SubRow>
                 <SubRow>
@@ -383,14 +410,24 @@ const EditUserFormReduxForm = reduxForm<IEditUser, Props>({
   validate
 })(EditUserForm);
 
+const mapStateToProps = (state: ReduxState): StateProps => {
+  const selector = formValueSelector("editUser");
+  return {
+    accountTypes: selector(state, "accountTypes"),
+    businessUsageValue: selector(state, "businessUsage"),
+    // @ts-ignore
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
+  };
+};
+
+const mapDispatchToProps = (dispatch: any): DispatchProps => {
+  return {
+    editTransferCard: (body: any, path: string) =>
+      dispatch(EditTransferCardAction.editTransferCardRequest({ body, path }))
+  };
+};
+
 export default connect(
-  (state: ReduxState): StateProps => {
-    const selector = formValueSelector("editUser");
-    return {
-      accountTypes: selector(state, "accountTypes"),
-      businessUsageValue: selector(state, "businessUsage"),
-      // @ts-ignore
-      activeOrganisation: state.organisations.byId[state.login.organisationId]
-    };
-  }
+  mapStateToProps,
+  mapDispatchToProps
 )(EditUserFormReduxForm);

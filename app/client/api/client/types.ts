@@ -20,6 +20,6 @@ export interface ApiClientType {
   isForm?: boolean;
   query?: null | object;
   body?: null | Body;
-  path?: null | number;
+  path?: null | number | string;
   errorHandling?: boolean;
 }
