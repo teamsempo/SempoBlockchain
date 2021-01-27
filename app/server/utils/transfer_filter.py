@@ -11,7 +11,6 @@ from server.models.custom_attribute_user_storage import CustomAttributeUserStora
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
-from sqlalchemy.sql.expression import cast
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 BENEFICIARY = "Beneficiary"

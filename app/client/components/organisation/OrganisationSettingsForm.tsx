@@ -12,6 +12,7 @@ import InputField from "../form/InputField";
 export interface IOrganisationSettings {
   defaultDisbursement: number;
   cardShardDistance: number;
+  mimimumVendorPayoutWithdrawal: number;
   requireTransferCard: boolean;
   countryCode: string;
   accountTypes: string[];
@@ -47,6 +48,8 @@ class OrganisationSettingForm extends React.Component<
     this.props.initialize({
       accountTypes: activeOrganisation.valid_roles,
       defaultDisbursement: activeOrganisation.default_disbursement / 100,
+      mimimumVendorPayoutWithdrawal:
+        activeOrganisation.minimum_vendor_payout_withdrawal / 100,
       requireTransferCard: activeOrganisation.require_transfer_card,
       cardShardDistance: activeOrganisation.card_shard_distance,
       countryCode: countryCode.toLowerCase()
@@ -60,6 +63,18 @@ class OrganisationSettingForm extends React.Component<
         <InputField
           name="defaultDisbursement"
           label="Default Disbursement"
+          isRequired
+          isNumber
+        >
+          {activeOrganisation !== null &&
+          typeof activeOrganisation !== "undefined"
+            ? activeOrganisation.token.symbol
+            : null}
+        </InputField>
+
+        <InputField
+          name="mimimumVendorPayoutWithdrawal"
+          label="Minimum Vendor Payout Withdrawl"
           isRequired
           isNumber
         >

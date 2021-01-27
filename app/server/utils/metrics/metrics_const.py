@@ -53,8 +53,11 @@ TRANSFER_STATUS = 'transfer_status'
 TRANSFER_USAGE = 'transfer_usage'
 SENDER_LOCATION = 'sender,location'
 SENDER_ACCOUNT_TYPE = 'sender,account_type'
+SENDER_COOORDINATES = 'sender,coordinates'
 RECIPIENT_LOCATION = 'recipient,location'
 RECIPIENT_ACCOUNT_TYPE = 'recipient,account_type'
+RECIPIENT_COOORDINATES = 'recipient,coordinates'
+
 UNGROUPED = 'ungrouped'
 
 

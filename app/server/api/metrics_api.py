@@ -6,7 +6,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 import json
 
 from server.utils.metrics.metrics import calculate_transfer_stats
-from server.utils.metrics import metrics_const
+from server.utils.metrics import metrics_const, metrics_cache
 from server.utils.metrics.group import Groups
 from flask.views import MethodView
 from server.utils.transfer_filter import Filters, process_transfer_filters
@@ -111,6 +111,10 @@ class FiltersApi(MethodView):
         groups = {}
         group_filters = GROUP_TYPES_FILTERS[metric_type]
         for f in group_filters:
+            # Filter out coordinates at the API level, since we don't want to show them as groupable options
+            # But we do require them to be groupable in practice for the map page
+            if f in ['sender,coordinates', 'recipient,coordinates']:
+                continue
             if group_filters[f]:
                 groups[f] = group_filters[f].get_api_representation()
             else:
@@ -126,6 +130,24 @@ class FiltersApi(MethodView):
 
         return make_response(jsonify(response_object)), 200
 
+class CacheApi(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
+    def post(self):
+        """
+        This endpoint erases the cache for the current org. 
+        Use this after you alter the past so the cache can rebuild itself 
+        """
+        count = metrics_cache.clear_metrics_cache()
+
+        response_object = {
+            'status' : 'success',
+            'message': 'Cache erased',
+            'data': {
+                'removed_entries': count,
+            }
+        }
+        return make_response(jsonify(response_object)), 200
+
 metrics_blueprint.add_url_rule(
     '/metrics/',
     view_func=CreditTransferStatsApi.as_view('metrics_view'),
@@ -136,4 +158,10 @@ metrics_blueprint.add_url_rule(
     '/metrics/filters/',
     view_func=FiltersApi.as_view('metrics_filters_view'),
     methods=['GET']
+)
+
+metrics_blueprint.add_url_rule(
+    '/metrics/clear_cache/',
+    view_func=CacheApi.as_view('metrics_cache_view'),
+    methods=['POST']
 )

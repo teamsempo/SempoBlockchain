@@ -62,6 +62,8 @@ class Organisation(ModelBase):
                                                 db.ForeignKey('transfer_account.id',
                                                 name="fk_org_level_account"))
 
+    _minimum_vendor_payout_withdrawal_wei = db.Column(db.Numeric(27), default=0)
+
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
     org_level_transfer_account = db.relationship(
@@ -109,6 +111,15 @@ class Organisation(ModelBase):
     def default_disbursement(self, val):
         if val is not None:
             self._default_disbursement_wei = int(val) * int(1e16)
+
+    @property
+    def minimum_vendor_payout_withdrawal(self):
+        return Decimal((self._minimum_vendor_payout_withdrawal_wei or 0) / int(1e16))
+
+    @minimum_vendor_payout_withdrawal.setter
+    def minimum_vendor_payout_withdrawal(self, val):
+        if val is not None:
+            self._minimum_vendor_payout_withdrawal_wei = int(val) * int(1e16)
 
     # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
     @property

@@ -25,6 +25,7 @@ import {
   LoadTransferAccountAction
 } from "../../reducers/transferAccount/actions";
 import { TransferAccountTypes } from "../transferAccount/types";
+import ImportModal from "./importModal.jsx";
 
 const mapStateToProps = state => {
   return {
@@ -62,7 +63,8 @@ class TransferAccountList extends React.Component {
       idSelectedStatus: {},
       allCheckedTransferAccounts: false,
       newTransfer: false,
-      account_type: "ALL"
+      account_type: "ALL",
+      modalVisible: false
     };
     this.handleChange = this.handleChange.bind(this);
     this.checkAllTransferAccounts = this.checkAllTransferAccounts.bind(this);
@@ -173,12 +175,20 @@ class TransferAccountList extends React.Component {
     this.setState({ [evt.target.name]: evt.target.value });
   }
 
+  toggleModal() {
+    this.setState({ modalVisible: !this.state.modalVisible });
+  }
+
   _customName(transferAccount) {
+    let viewTransferAccountName =
+      transferAccount && transferAccount.is_vendor
+        ? "Vendor "
+        : window.BENEFICIARY_TERM + " ";
     if (
       this.props.login.adminTier === "view" &&
       typeof transferAccount.blockchain_address !== "undefined"
     ) {
-      return transferAccount.blockchain_address;
+      return viewTransferAccountName + transferAccount.blockchain_address;
     }
     return (
       (transferAccount.first_name === null ? "" : transferAccount.first_name) +
@@ -208,7 +218,7 @@ class TransferAccountList extends React.Component {
   }
 
   render() {
-    const { account_type } = this.state;
+    const { account_type, modalVisible } = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
     let accountTypes = Object.keys(TransferAccountTypes);
     accountTypes.push("ALL"); // filter should have all option
@@ -337,16 +347,16 @@ class TransferAccountList extends React.Component {
             <div style={{ display: "flex", flexDirection: "row" }}>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
-                  onClick={() => browserHistory.push("/create")}
+                  onClick={() => this.toggleModal()}
                   style={{
                     fontWeight: "400",
                     margin: "0em 1em",
                     lineHeight: "25px",
                     height: "25px"
                   }}
-                  label={"Add New"}
+                  label={"Import"}
                 >
-                  + Add New
+                  Import
                 </StyledButton>
               </UploadButtonWrapper>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
@@ -400,6 +410,12 @@ class TransferAccountList extends React.Component {
       return (
         <div style={{ display: "flex", flexDirection: "column" }}>
           {newTransfer}
+
+          <ImportModal
+            isModalVisible={modalVisible}
+            handleOk={() => this.toggleModal()}
+            handleCancel={() => this.toggleModal()}
+          />
 
           <ModuleBox style={{ width: "calc(100% - 2em)" }}>
             <Wrapper>

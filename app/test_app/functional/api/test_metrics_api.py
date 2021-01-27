@@ -4,7 +4,7 @@ from server.models.custom_attribute import CustomAttribute, MetricsVisibility
 from server.utils.transfer_filter import Filters
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.user import create_transfer_account_user, set_custom_attributes
-from server import db
+from server import db, red
 import json
 import os
 from datetime import datetime, timedelta
@@ -26,6 +26,8 @@ def generate_timeseries_metrics(create_organisation):
     user1._location = 'Sunnyvale'
     attribute_dict['custom_attributes']['colour'] = 'red'
     set_custom_attributes(attribute_dict, user1)
+    user1.lat = 44.675447
+    user1.lng = -63.594995
 
     user2 = create_transfer_account_user(first_name='Bubbles',
                                     phone="+19025551235",
@@ -34,6 +36,8 @@ def generate_timeseries_metrics(create_organisation):
     user2.default_transfer_account._make_initial_disbursement(200, True)
     user2._location = 'Sunnyvale'
     attribute_dict['custom_attributes']['colour'] = 'red'
+    user2.lat = 44.675447
+    user2.lng = -63.594995
 
     set_custom_attributes(attribute_dict, user2)
 
@@ -48,6 +52,8 @@ def generate_timeseries_metrics(create_organisation):
     user3._location = 'Dartmouth'
     attribute_dict['custom_attributes']['colour'] = 'blue'
     set_custom_attributes(attribute_dict, user3)
+    user3.lat = 44.668055
+    user3.lng = -63.580829
 
     # user4 made 4 days ago
     user4 = create_transfer_account_user(first_name='Randy',
@@ -60,6 +66,8 @@ def generate_timeseries_metrics(create_organisation):
     user4._location = 'Lower Sackville'
     attribute_dict['custom_attributes']['colour'] = 'blue'
     set_custom_attributes(attribute_dict, user4)
+    user4.lat = 44.770061
+    user4.lng = -63.692723
 
     # user5/user6 made 10 days ago
     user5 = create_transfer_account_user(first_name='Cory',
@@ -72,6 +80,9 @@ def generate_timeseries_metrics(create_organisation):
     user5._location = 'Truro'
     attribute_dict['custom_attributes']['colour'] = 'green'
     set_custom_attributes(attribute_dict, user5)
+    user5.lat = 45.368075
+    user5.lng = -63.256207
+
 
     user6 = create_transfer_account_user(first_name='Trevor',
                                     phone="+19025111230",
@@ -82,6 +93,9 @@ def generate_timeseries_metrics(create_organisation):
     disburse.created = user6.created - timedelta(days=10)
     attribute_dict['custom_attributes']['colour'] = 'red'
     set_custom_attributes(attribute_dict, user6)
+    user6.lat = 44.368363
+    user6.lng = -64.526330
+
     db.session.commit()
     tu1 = TransferUsage.find_or_create("Pepperoni")
     tu2 = TransferUsage.find_or_create("Jalepeno Chips")
@@ -284,6 +298,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     ("all", None, 200, None, 'colour,recipient', 'all_by_recipient_colour.json'),
     ("all", None, 200, None ,'sender,location', 'all_by_sender_location.json'),
     ("all", None, 200, None ,'recipient,location', 'all_by_recipient_location.json'),
+    ("all", None, 200, None ,'sender,coordinates', 'all_by_coordinates.json'),
     ("all", None, 200, None, 'ungrouped', 'all_ungrouped.json'),
     ("all", "rounded_account_balance,sender(GT)(2)", 200, None, 'sender,account_type', 'all_by_account_type_filtered_by_sender.json'),
     ("all", "rounded_account_balance,recipient(GT)(2)", 200, None, 'sender,account_type', 'all_by_account_type_filtered_by_recipient.json'),
@@ -374,3 +389,34 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
             assert response.json['data']['groups']['colour,sender']['table'] == 'custom_attribute_user_storage'
         else:
             assert 'colour,sender' not in response.json['data']['groups']
+
+def test_clear_metrics_cache(test_client, complete_admin_auth_token):
+    def clear_metrics():
+        return test_client.post(
+            f'/api/v1/metrics/clear_cache/',
+            headers=dict(
+                Authorization=complete_admin_auth_token,
+                Accept='application/json'
+            ),
+        )
+    
+    # Do a non-test clear metrics to flush the cache
+    clear_metrics()
+
+    # Create 4 fake metrics
+    red.set('2_metrics_fake_metric1', '123')
+    red.set('2_metrics_fake_metric2', '123')
+    red.set('2_metrics_fake_metric3', '123')
+    red.set('2_metrics_fake_metric4', '123')
+
+    # Clear them for reals now
+    response = clear_metrics()
+
+    # Make sure that 4 metrics are removed from the cache
+    assert response.json['data']['removed_entries'] == 4
+    
+    # And check that they're well and truly gone from the cache!
+    assert not red.get('2_metrics_fake_metric1') 
+    assert not red.get('2_metrics_fake_metric2') 
+    assert not red.get('2_metrics_fake_metric3') 
+    assert not red.get('2_metrics_fake_metric4') 
