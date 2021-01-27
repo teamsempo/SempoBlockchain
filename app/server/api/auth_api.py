@@ -362,7 +362,7 @@ class LoginAPI(MethodView):
                 db.session.commit()
 
             return make_response(jsonify(response_object)), response_code
-        no_password_or_pin_hash = not user.password_hash and not user.pin_hash
+        no_password_or_pin_hash = user and not user.password_hash and not user.pin_hash
         if post_data.get('phone') and user and user.one_time_code and (not user.is_activated or no_password_or_pin_hash):
             # vendor sign up with one time code or OTP verified
             if user.one_time_code == password:
