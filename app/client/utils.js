@@ -4,6 +4,9 @@ import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
+export const getActiveToken = state =>
+  state.tokens.byId[state.organisations.byId[state.login.organisationId].token];
+
 export function formatMoney(
   amount,
   decimalCount,
