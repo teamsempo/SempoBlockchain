@@ -3,9 +3,7 @@ import { TransferAccountTypes } from "../../components/transferAccount/types";
 export interface Organisation {
   id: number;
   name: string;
-  token: {
-    symbol: string;
-  };
+  token: number;
   require_transfer_card: boolean;
   default_disbursement: number;
   card_shard_distance: number;
@@ -38,6 +36,25 @@ export interface EditOrganisationPayload {
     default_lng: number;
   };
   path: number;
+}
+
+export interface CreateOrganisationPayload {
+  body: {
+    name: string;
+    token_id: number;
+    require_transfer_card: boolean;
+    default_disbursement: number;
+    card_shard_distance: number;
+    minimum_vendor_payout_withdrawal: number;
+    country_code: string;
+    valid_roles: TransferAccountTypes[];
+  };
+}
+
+export enum CreateOrganisationActionTypes {
+  CREATE_ORGANISATION_REQUEST = "CREATE_ORGANISATION_REQUEST",
+  CREATE_ORGANISATION_SUCCESS = "CREATE_ORGANISATION_SUCCESS",
+  CREATE_ORGANISATION_FAILURE = "CREATE_ORGANISATION_FAILURE"
 }
 
 export enum EditOrganisationActionTypes {
