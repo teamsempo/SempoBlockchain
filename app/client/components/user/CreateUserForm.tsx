@@ -10,6 +10,7 @@ import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { TransferAccountTypes } from "../transferAccount/types";
 import { Token } from "../../reducers/token/types";
+import { getActiveToken } from "../../utils";
 
 export interface ICreateUser {
   firstName?: string;
@@ -253,10 +254,7 @@ export default connect(
     return {
       accountTypes: selector(state, "accountTypes"),
       businessUsageValue: selector(state, "businessUsage"),
-      activeToken:
-        state.tokens.byId[
-          state.organisations.byId[state.login.organisationId].token
-        ],
+      activeToken: getActiveToken(state),
       defaultDisbursement:
         state.organisations.byId[state.login.organisationId]
           .default_disbursement / 100,

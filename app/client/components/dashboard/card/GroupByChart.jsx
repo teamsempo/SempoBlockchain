@@ -10,17 +10,15 @@ import {
   toTitleCase,
   replaceUnderscores,
   toCurrency,
-  formatMoney
+  formatMoney,
+  getActiveToken
 } from "../../../utils";
 import { VALUE_TYPES } from "../../../constants";
 import { ChartColors } from "../../theme";
 
 const mapStateToProps = state => {
   return {
-    activeToken:
-      state.tokens.byId[
-        state.organisations.byId[state.login.organisationId].token
-      ]
+    activeToken: getActiveToken(state)
   };
 };
 

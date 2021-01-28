@@ -8,17 +8,14 @@ import styled from "styled-components";
 import { Card, Typography } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import { HorizontalBar } from "react-chartjs-2";
-import { formatMoney } from "../../utils";
+import { formatMoney, getActiveToken } from "../../utils";
 
 const { Text } = Typography;
 
 const mapStateToProps = state => {
   return {
     creditTransferStats: state.metrics.metricsState,
-    activeToken:
-      state.tokens.byId[
-        state.organisations.byId[state.login.organisationId].token
-      ]
+    activeToken: getActiveToken(state)
   };
 };
 

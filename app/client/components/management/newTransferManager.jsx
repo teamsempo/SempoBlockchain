@@ -6,16 +6,14 @@ import { StyledButton, StyledSelect, ModuleBox } from "../styledElements";
 import AsyncButton from "./../AsyncButton.jsx";
 
 import { CreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { getActiveToken } from "../../utils";
 
 const mapStateToProps = state => {
   return {
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
     login: state.login,
-    activeToken:
-      state.tokens.byId[
-        state.organisations.byId[state.login.organisationId].token
-      ]
+    activeToken: getActiveToken(state)
   };
 };
 
