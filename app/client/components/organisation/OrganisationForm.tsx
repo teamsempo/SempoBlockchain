@@ -224,7 +224,7 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item
-        tooltip="Whether or not to require a transfer card for new beneficiaries"
+        tooltip="Whether or not to require a transfer card exists when tying a public serial number to beneficiary"
         valuePropName="checked"
         name="requireTransferCard"
         label="Require Transfer Card"
