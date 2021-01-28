@@ -126,7 +126,7 @@ class TransferCardAPI(MethodView):
 
         amount_offset = data.get('amount_offset')
 
-        disable_card = data.get('disable_card', False)
+        disable = data.get('disable', False)
 
         if nfc_serial_number:
             transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
@@ -139,7 +139,7 @@ class TransferCardAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 404
 
-        if disable_card:
+        if disable:
             transfer_card.disable()
 
         if amount_offset:

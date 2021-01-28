@@ -13,13 +13,21 @@ import {
 import {
   User,
   ResetPinPayload,
-  DeleteUserPayload
+  DeleteUserPayload,
+  LoadUserRequestPayload
 } from "../../reducers/user/types";
+
+import { EditTransferCardAction } from "../../reducers/transferCard/actions";
 
 interface DispatchProps {
   editUser: (body: User, path: number) => EditUserAction;
   resetPin: (payload: ResetPinPayload) => ResetPinAction;
   deleteUser: (payload: DeleteUserPayload) => DeleteUserAction;
+  editTransferCard: (
+    body: any,
+    path: string,
+    userId: number
+  ) => EditTransferCardAction;
 }
 
 interface StateProps {
@@ -89,6 +97,30 @@ class SingleUserManagement extends React.Component<Props> {
     }
   }
 
+  onDisableCard() {
+    if (
+      this.props.selectedUser.transfer_card &&
+      this.props.selectedUser.transfer_card.is_disabled
+    ) {
+      window.alert("This card has already been disabled.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        "Warning: A card that has been disabled cannot be re-enabled. Continue?"
+      )
+    ) {
+      return;
+    }
+
+    this.props.editTransferCard(
+      { disable: true },
+      this.props.selectedUser.public_serial_number,
+      this.props.selectedUser.userID
+    );
+  }
+
   render() {
     return (
       <EditUserForm
@@ -98,6 +130,7 @@ class SingleUserManagement extends React.Component<Props> {
         onSubmit={(form: IEditUser) => this.onEditUser(form)}
         onResetPin={() => this.onResetPin()}
         onDeleteUser={() => this.onDeleteUser()}
+        onDisableCard={() => this.onDisableCard()}
       />
     );
   }
@@ -116,7 +149,12 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     editUser: (body: User, path: number) =>
       dispatch(EditUserAction.editUserRequest({ body, path })),
     resetPin: payload => dispatch(ResetPinAction.resetPinRequest(payload)),
-    deleteUser: payload => dispatch(DeleteUserAction.deleteUserRequest(payload))
+    deleteUser: payload =>
+      dispatch(DeleteUserAction.deleteUserRequest(payload)),
+    editTransferCard: (body: any, path: string, userId) =>
+      dispatch(
+        EditTransferCardAction.editTransferCardRequest({ body, path, userId })
+      )
   };
 };
 

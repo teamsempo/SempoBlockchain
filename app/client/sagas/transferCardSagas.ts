@@ -9,6 +9,8 @@ import {
 
 import { EditTransferCardAction } from "../reducers/transferCard/actions";
 
+import { LoadUserAction } from "../reducers/user/actions";
+
 import { editTransferCardAPI } from "../api/transferCardAPI";
 
 import { ActionWithPayload } from "../reduxUtils";
@@ -23,6 +25,8 @@ function* editOrganisation(
     const load_result = yield call(editTransferCardAPI, action.payload);
 
     yield put(EditTransferCardAction.editTransferCardSuccess());
+
+    yield put(LoadUserAction.loadUserRequest({ path: action.payload.userId }));
 
     message.success(load_result.message);
   } catch (fetch_error) {

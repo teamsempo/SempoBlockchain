@@ -36,7 +36,8 @@ export const AdaptedInput = (props: any) => {
     placeholder,
     disabled,
     isPhoneNumber,
-    isMultipleChoice
+    isMultipleChoice,
+    style
   } = props;
 
   const field = isMultipleChoice ? (
@@ -50,6 +51,7 @@ export const AdaptedInput = (props: any) => {
       name={name}
       disabled={disabled}
       type={type}
+      style={style}
       {...input}
     />
   );

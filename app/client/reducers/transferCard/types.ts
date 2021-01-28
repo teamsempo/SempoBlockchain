@@ -14,4 +14,5 @@ export interface EditTransferCardPayload {
     disable?: boolean;
   };
   path: string;
+  userId: number;
 }

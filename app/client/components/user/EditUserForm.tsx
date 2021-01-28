@@ -27,8 +27,6 @@ import { Organisation } from "../../reducers/organisation/types";
 import QrReadingModal from "../qrReadingModal";
 import { replaceUnderscores } from "../../utils";
 
-import { EditTransferCardAction } from "../../reducers/transferCard/actions";
-
 export interface IEditUser {
   firstName?: string;
   lastName?: string;
@@ -51,6 +49,7 @@ interface OuterProps {
   transferUsages: TransferUsage[];
   onResetPin: () => void;
   onDeleteUser: () => void;
+  onDisableCard: () => void;
 }
 
 interface StateProps {
@@ -59,11 +58,7 @@ interface StateProps {
   activeOrganisation: Organisation;
 }
 
-interface DispatchProps {
-  editTransferCard: (body: any, path: string) => EditTransferCardAction;
-}
-
-type Props = OuterProps & StateProps & DispatchProps;
+type Props = OuterProps & StateProps;
 
 interface attr_dict {
   [key: string]: string;
@@ -129,21 +124,6 @@ class EditUserForm extends React.Component<
   setSerialNumber(data: string) {
     const cleanedData = data.replace(/^\s+|\s+$/g, "");
     this.props.change("publicSerialNumber", cleanedData);
-  }
-
-  disableTransferCard() {
-    if (
-      !window.confirm(
-        "Warning: a card that is disabled cannot be renabled. Proceed?"
-      )
-    ) {
-      return;
-    }
-
-    this.props.editTransferCard(
-      { disable: true },
-      this.props.selectedUser.public_serial_number
-    );
   }
 
   optionizeUsages() {
@@ -287,17 +267,34 @@ class EditUserForm extends React.Component<
                 </SubRow>
               </Row>
               <Row>
-                <SubRow>
+                <SubRow
+                  style={{
+                    color:
+                      selectedUser.transfer_card &&
+                      selectedUser.transfer_card.is_disabled
+                        ? "#c53631"
+                        : "#555"
+                  }}
+                >
                   <InputField name="publicSerialNumber" label={"ID Number"}>
-                    {/*
-                  // @ts-ignore */}
-                    <QrReadingModal
-                      updateData={(data: string) => this.setSerialNumber(data)}
-                    />
-                    <StopOutlined
-                      translate={""}
-                      onClick={() => this.disableTransferCard()}
-                    />
+                    {/* // @ts-ignore */}
+
+                    <div style={{ display: "flex", alignItems: "flex-end" }}>
+                      <QrReadingModal
+                        updateData={(data: string) =>
+                          this.setSerialNumber(data)
+                        }
+                      />
+                      {selectedUser.public_serial_number ? (
+                        <StopOutlined
+                          translate={""}
+                          style={{ fontSize: "20px", margin: "2px" }}
+                          onClick={() => this.props.onDisableCard()}
+                        />
+                      ) : (
+                        <></>
+                      )}
+                    </div>
                   </InputField>
                 </SubRow>
                 <SubRow>
@@ -420,14 +417,4 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   };
 };
 
-const mapDispatchToProps = (dispatch: any): DispatchProps => {
-  return {
-    editTransferCard: (body: any, path: string) =>
-      dispatch(EditTransferCardAction.editTransferCardRequest({ body, path }))
-  };
-};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(EditUserFormReduxForm);
+export default connect(mapStateToProps)(EditUserFormReduxForm);
