@@ -47,8 +47,6 @@ const NewOrganisationForm = (props: OuterProps) => {
 
   useEffect(() => {
     form.resetFields();
-
-    // if (tokens.byId)
   });
 
   // isoCountries = ['AD: Andorra', ...]
