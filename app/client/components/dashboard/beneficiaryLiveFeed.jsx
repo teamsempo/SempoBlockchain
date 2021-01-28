@@ -194,8 +194,8 @@ class BeneficiaryLiveFeed extends React.Component {
                     recipientCurrency =
                       transferAccount &&
                       transferAccount.token &&
-                      tokens.byId[transfer.token] &&
-                      tokens.byId[transfer.token].symbol;
+                      tokens.byId[transferAccount.token] &&
+                      tokens.byId[transferAccount.token].symbol;
                   }
                   transferToMoney = formatMoney(
                     exchangeToTransfer.transfer_amount / 100,
