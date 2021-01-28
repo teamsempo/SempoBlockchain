@@ -14,7 +14,8 @@ import {
   replaceUnderscores,
   get_zero_filled_values,
   toCurrency,
-  formatMoney
+  formatMoney,
+  getActiveToken
 } from "../../../utils";
 
 import { VALUE_TYPES } from "../../../constants";
@@ -24,7 +25,7 @@ import { ChartColors } from "../../theme";
 
 const mapStateToProps = state => {
   return {
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeToken: getActiveToken(state)
   };
 };
 
@@ -104,7 +105,7 @@ class VolumeChart extends React.Component {
     const labelString = selected
       ? selected.includes("volume")
         ? `${toTitleCase(replaceUnderscores(selected))} (${
-            this.props.activeOrganisation.token.symbol
+            this.props.activeToken.symbol
           })`
         : `${toTitleCase(replaceUnderscores(selected))}`
       : null;

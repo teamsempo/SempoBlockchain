@@ -1,16 +1,18 @@
 import { combineReducers } from "redux";
 
 import {
-  OrganisationActionTypes,
+  CreateOrganisationActionTypes,
   EditOrganisationActionTypes,
   LoadOrganisationActionTypes,
+  OrganisationActionTypes,
   OrganisationByIDs
 } from "./types";
 
 import {
-  OrganisationAction,
+  CreateOrganisationAction,
   EditOrganisationAction,
-  LoadOrganisationAction
+  LoadOrganisationAction,
+  OrganisationAction
 } from "./actions";
 
 import { DEEEEEEP } from "../../utils";
@@ -71,8 +73,28 @@ const loadStatus = (state = initialState, action: LoadOrganisationAction) => {
   }
 };
 
+const createStatus = (
+  state = initialState,
+  action: CreateOrganisationAction
+) => {
+  switch (action.type) {
+    case CreateOrganisationActionTypes.CREATE_ORGANISATION_REQUEST:
+      return { ...state, isRequesting: true };
+
+    case CreateOrganisationActionTypes.CREATE_ORGANISATION_SUCCESS:
+      return { ...state, isRequesting: false, success: true };
+
+    case CreateOrganisationActionTypes.CREATE_ORGANISATION_FAILURE:
+      return { ...state, isRequesting: false, error: action.error };
+
+    default:
+      return state;
+  }
+};
+
 export const OrganisationReducer = combineReducers({
   byId,
   loadStatus,
-  editStatus
+  editStatus,
+  createStatus
 });

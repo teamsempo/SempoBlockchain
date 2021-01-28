@@ -20,6 +20,7 @@ const mapStateToProps = (state, ownProps) => {
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
     users: state.users,
+    tokens: state.tokens,
     transferAccount:
       state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)]
   };
@@ -181,7 +182,8 @@ class TransferAccountManager extends React.Component {
     const currency =
       this.props.transferAccount &&
       this.props.transferAccount.token &&
-      this.props.transferAccount.token.symbol;
+      this.props.tokens.byId[this.props.transferAccount.token] &&
+      this.props.tokens.byId[this.props.transferAccount.token].symbol;
     const displayAmount = (
       <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
         {formatMoney(

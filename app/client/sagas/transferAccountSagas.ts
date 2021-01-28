@@ -10,6 +10,9 @@ import {
   TransferAccountAction,
   EditTransferAccountAction
 } from "../reducers/transferAccount/actions";
+import { CreditTransferAction } from "../reducers/creditTransfer/actions";
+import { UserListAction } from "../reducers/user/actions";
+import { TokenListAction } from "../reducers/token/actions";
 
 import {
   LoadTransferAccountActionTypes,
@@ -18,20 +21,16 @@ import {
   TransferAccountLoadApiResult
 } from "../reducers/transferAccount/types";
 
-import { CreditTransferAction } from "../reducers/creditTransfer/actions";
-
-import {
-  loadTransferAccountListAPI,
-  editTransferAccountAPI
-} from "../api/transferAccountAPI";
-
-import { UserListAction } from "../reducers/user/actions";
-
 import {
   TransferAccountData,
   SingularTransferAccountData,
   MultipleTransferAccountData
 } from "../reducers/transferAccount/types";
+
+import {
+  loadTransferAccountListAPI,
+  editTransferAccountAPI
+} from "../api/transferAccountAPI";
 
 function* updateStateFromTransferAccount(data: TransferAccountData) {
   //Schema expects a list of transfer account objects
@@ -47,6 +46,11 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
     transfer_account_list,
     transferAccountSchema
   );
+
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
 
   const users = normalizedData.entities.users;
   if (users) {
