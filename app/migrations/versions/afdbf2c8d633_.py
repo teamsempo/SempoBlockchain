@@ -1,5 +1,5 @@
 """empty message
-Adds transfer card _is_dsabled boolean
+Adds transfer card _is_disabled boolean
 
 Revision ID: afdbf2c8d633
 Revises: 0f01cb955ea0
