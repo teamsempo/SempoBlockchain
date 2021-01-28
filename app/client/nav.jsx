@@ -185,6 +185,17 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Organisation Settings`}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
+              path="/settings/organisation/new"
+              component={OrganisationPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`New Organisation`}
+              isAntDesign={true}
+              isNewOrg={true}
             />
 
             <PrivateRoute
