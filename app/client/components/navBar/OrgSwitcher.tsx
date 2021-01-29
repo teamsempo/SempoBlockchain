@@ -7,12 +7,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { NavLink } from "react-router-dom";
 import { SVG, StyledLogoLink } from "./styles";
 import styled from "styled-components";
-import { Menu, Dropdown } from "antd";
+import { Menu, Dropdown, Tooltip } from "antd";
 import {
   DownOutlined,
   UserAddOutlined,
-  FolderAddOutlined
+  FolderAddOutlined,
+  EyeOutlined
 } from "@ant-design/icons";
+import { grey } from "@ant-design/colors";
 
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
@@ -31,6 +33,9 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
 
   const login: LoginState = useSelector((state: ReduxState) => state.login);
   let { email } = login;
+  const tokens: ReduxState["tokens"] = useSelector(
+    (state: ReduxState) => state.tokens
+  );
   const organisations: Organisation[] = useSelector((state: ReduxState) =>
     Object.keys(state.organisations.byId).map(
       id => state.organisations.byId[Number(id)]
@@ -41,13 +46,17 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       state.organisations.byId[Number(state.login.organisationId)]
   );
 
+  const tokenMap: any = {};
+  organisations.map(org => {
+    if (tokenMap[org.token]) {
+      tokenMap[org.token].push(org);
+    } else {
+      tokenMap[org.token] = [];
+      tokenMap[org.token].push(org);
+    }
+  });
+
   const dispatch: any = useDispatch();
-
-  var orgs = organisations;
-
-  if (!orgs) {
-    orgs = [];
-  }
 
   let toggleSwitchOrgDropdown = () => {
     if (organisations.length <= 1) {
@@ -62,6 +71,10 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
     dispatch(LoginAction.updateActiveOrgRequest({ organisationId }));
   };
 
+  let selectMultiGroupView = (idArray: Array<string>) => {
+    console.log("group view", idArray);
+  };
+
   let menu = (
     <Menu
       style={{
@@ -71,12 +84,44 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
     >
       <Menu.ItemGroup title="Your Organisations">
-        {orgs.map((org: Organisation) => {
-          return (
-            <Menu.Item key={org.id} onClick={() => selectOrg(org.id)}>
-              <span>{org.name}</span>
-            </Menu.Item>
-          );
+        {Object.keys(tokenMap).map((id: string) => {
+          const orgsForToken = tokenMap[id];
+
+          if (orgsForToken) {
+            const orgIdsForToken = orgsForToken.map(
+              (org: Organisation) => org.id
+            );
+            return (
+              <Menu.ItemGroup
+                title={
+                  <span>
+                    <span>{tokens.byId[id].symbol}</span>
+                    <Tooltip
+                      title={
+                        "View all organisations using this token as a group"
+                      }
+                      placement="rightTop"
+                    >
+                      <a
+                        onClick={() => selectMultiGroupView(orgIdsForToken)}
+                        style={{ padding: "0 0 0 5px", color: grey[4] }}
+                      >
+                        <EyeOutlined translate={""} />
+                      </a>
+                    </Tooltip>
+                  </span>
+                }
+              >
+                {orgsForToken.map((org: Organisation) => {
+                  return (
+                    <Menu.Item key={org.id} onClick={() => selectOrg(org.id)}>
+                      <span>{org.name}</span>
+                    </Menu.Item>
+                  );
+                })}
+              </Menu.ItemGroup>
+            );
+          }
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
