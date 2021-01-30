@@ -17,6 +17,26 @@ def fake_csv():
     ws.cell(row=2, column=1, value='foo1')
     ws.cell(row=2, column=2, value='bar1')
     ws.cell(row=2, column=3, value=fake.msisdn())
+
+    ws.cell(row=3, column=1, value='foo1')
+    ws.cell(row=3, column=2, value='bar1')
+    ws.cell(row=3, column=3, value=fake.msisdn())
+
+
+    ws.cell(row=4, column=1, value='foo1')
+    ws.cell(row=4, column=2, value='bar1')
+    ws.cell(row=4, column=3, value=fake.msisdn())
+
+
+    ws.cell(row=5, column=1, value='foo1')
+    ws.cell(row=5, column=2, value='bar1')
+    ws.cell(row=5, column=3, value=fake.msisdn())
+
+
+    ws.cell(row=6, column=1, value='foo1')
+    ws.cell(row=6, column=2, value='bar1')
+    ws.cell(row=6, column=3, value=fake.msisdn())
+
     wb.save('spreadsheet.xlsx')
 
     my_xlsx = os.path.join("spreadsheet.xlsx")
@@ -24,6 +44,7 @@ def fake_csv():
     return my_xlsx
 
 def delete_fake_csv():
+    return True
     if os.path.exists("spreadsheet.xlsx"):
         os.remove('spreadsheet.xlsx')
 

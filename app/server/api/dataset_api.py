@@ -5,10 +5,10 @@ import csv
 import codecs
 
 from server.constants import ALLOWED_SPREADSHEET_EXTENSIONS, SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
-from server import db, executor
+from server import db
 from server.utils.auth import requires_auth
 from server.utils import user as UserUtils
-from server.utils.executor import add_after_request_executor_job
+from server.utils.executor import add_after_request_checkable_executor_job, status_checkable_executor_job
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -69,10 +69,17 @@ class SpreadsheetUploadAPI(MethodView):
         }
         return make_response(jsonify(reponse_object)), 200
 
-@executor.job
+@status_checkable_executor_job
 def execute_dataset_import(dataset, header_positions, is_vendor):
+    print('123')
+    print('123')
+    print('123')
+    import time
+    print('123')
+    print('123')
     diagnostics = []
     for datarow in dataset:
+        time.sleep(1)
         attribute_dict = {}
 
         contains_anything = False
@@ -90,11 +97,11 @@ def execute_dataset_import(dataset, header_positions, is_vendor):
             )
 
             diagnostics.append((item_response_object.get('message'), response_code))
-        
             if response_code == 200:
                 db.session.commit()
             else:
                 db.session.flush()
+            yield diagnostics
 
 class DatasetAPI(MethodView):
 
@@ -112,11 +119,12 @@ class DatasetAPI(MethodView):
         header_positions = post_data.get('headerPositions')
 
         dataset = post_data.get('data')
-        add_after_request_executor_job(execute_dataset_import, kwargs={ 'dataset': dataset, 'header_positions': header_positions, 'is_vendor':is_vendor })
+        task_uuid = add_after_request_checkable_executor_job(execute_dataset_import, kwargs={ 'dataset': dataset, 'header_positions': header_positions, 'is_vendor':is_vendor })
 
         response_object = {
             'status': 'success',
             'message': 'Successfully Saved.',
+            'task_uuid': task_uuid,
         }
 
         return make_response(jsonify(response_object)), 201
