@@ -22,12 +22,10 @@ def test_get_filters(test_client, complete_admin_auth_token):
                 Accept='application/json'
             ))
     empty_filters = get_filters()
-    print(empty_filters.json)
     assert empty_filters.json['message'] == 'success'
     assert empty_filters.json['data']['filters'] == []
     make_filter('Test Filter One', "rounded_transfer_amount(EQ)(1)", complete_admin_auth_token, test_client)
     one_filter = get_filters()
-    print(one_filter.json)
     assert one_filter.json['message'] == 'success'
     assert one_filter.json['data']['filters'][0]['filter'] == 'rounded_transfer_amount(EQ)(1)'
     assert one_filter.json['data']['filters'][0]['name'] == 'Test Filter One'
