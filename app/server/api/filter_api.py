@@ -5,7 +5,7 @@ from server.models.saved_filter import SavedFilter
 from server.utils.auth import requires_auth
 from server.schemas import filters_schema, filter_schema
 
-filter_blueprint = Blueprint('filter', __name__)
+filter_blueprint = Blueprint('filters', __name__)
 
 
 class SavedFiltersAPI(MethodView):

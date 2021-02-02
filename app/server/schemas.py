@@ -353,6 +353,9 @@ class SavedFilterSchema(SchemaBase):
     def get_filter_json(self, obj):
         return obj.filter
 
+class FilterSchema(SchemaBase):
+    name            = fields.Str()
+    filter          = fields.Str()
 
 class BankAccountSchema(SchemaBase):
     wyre_id             = fields.Str()
@@ -513,6 +516,9 @@ uploaded_resource_schema = UploadedResourceSchema()
 
 filter_schema = SavedFilterSchema()
 filters_schema = SavedFilterSchema(many=True)
+
+new_filter_schema = FilterSchema()
+new_filters_schema = FilterSchema(many=True)
 
 kyc_application_schema = KycApplicationSchema()
 kyc_application_state_schema = KycApplicationSchema(

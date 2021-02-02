@@ -174,6 +174,7 @@ def register_blueprints(app):
     from server.api.image_uploader_api import image_uploader_blueprint
     from server.api.recognised_face_api import recognised_face_blueprint
     from server.api.filter_api import filter_blueprint
+    from server.api.new_filter_api import new_filter_blueprint
     from server.api.kyc_application_api import kyc_application_blueprint
     from server.api.wyre_api import wyre_blueprint
     from server.api.transfer_usage_api import transfer_usage_blueprint
@@ -209,6 +210,7 @@ def register_blueprints(app):
     app.register_blueprint(image_uploader_blueprint, url_prefix=versioned_url)
     app.register_blueprint(recognised_face_blueprint, url_prefix=versioned_url)
     app.register_blueprint(filter_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(new_filter_blueprint, url_prefix=versioned_url)
     app.register_blueprint(kyc_application_blueprint, url_prefix=versioned_url)
     app.register_blueprint(wyre_blueprint, url_prefix=versioned_url)
     app.register_blueprint(transfer_usage_blueprint, url_prefix=versioned_url)
