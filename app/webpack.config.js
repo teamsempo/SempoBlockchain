@@ -84,6 +84,7 @@ module.exports = {
         exclude: /node_modules/,
         loader: "ts-loader",
         options: {
+          transpileOnly: true,
           getCustomTransformers: () => ({
             before: [
               tsImportPluginFactory([

@@ -90,17 +90,17 @@ alembic upgrade heads
 
 echo ~~~~Resetting Ganache
 cd ../
-kill $(ps aux | grep '[g]anache-cli' | awk '{print $2}')
-
-if [ "$ganachePersistInput" == 'y' ]
-then
-  echo clearing old ganache data
-  rm -R ./ganacheDB
-  mkdir ganacheDB
-  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" --db './ganacheDB' &
-else
-  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
-fi
+#kill $(ps aux | grep '[g]anache-cli' | awk '{print $2}')
+#
+#if [ "$ganachePersistInput" == 'y' ]
+#then
+#  echo clearing old ganache data
+#  rm -R ./ganacheDB
+#  mkdir ganacheDB
+#  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" --db './ganacheDB' &
+#else
+#  ganache-cli -l 80000000 -i 42 --account="${MASTER_WALLET_PK},10000000000000000000000000" &
+#fi
 
 sleep 5
 
@@ -119,7 +119,7 @@ echo ~~~Starting App
 
 cd ../
 python -u run.py &
-sleep 10
+sleep 100
 
 echo ~~~Creating Default Account
 curl 'http://localhost:9000/api/v1/auth/register/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure

@@ -2,12 +2,14 @@ import * as React from "react";
 import { connect } from "react-redux";
 
 import { ReduxState } from "../../reducers/rootReducer";
-
-import QueryConstructor from "../filterModule/queryConstructor";
-import TransferAccountList from "../transferAccount/newTransferAccountList";
 import { EditTransferAccountPayload } from "../../reducers/transferAccount/types";
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
-import { CreateUserPayload } from "../../reducers/user/types";
+
+import QueryConstructor from "../filterModule/queryConstructor";
+import TransferAccountList, {
+  TransferAccount
+} from "../transferAccount/newTransferAccountList";
+import NewTransferManager from "../management/newTransferManager.jsx";
 
 interface StateProps {
   transferAccounts: any;
@@ -21,7 +23,10 @@ interface DispatchProps {
 
 interface OuterProps {}
 
-interface ComponentState {}
+interface ComponentState {
+  newTransfer: boolean;
+  transfer_account_id_list: React.Key[];
+}
 
 type Props = StateProps & DispatchProps & OuterProps;
 
@@ -42,6 +47,21 @@ class StandardTransferAccountList extends React.Component<
   Props,
   ComponentState
 > {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      newTransfer: false,
+      transfer_account_id_list: []
+    };
+  }
+
+  onSelectChange = (
+    selectedRowKeys: React.Key[],
+    selectedRows: TransferAccount[]
+  ) => {
+    this.setState({ transfer_account_id_list: selectedRowKeys });
+  };
+
   setApproval(approve: boolean, transfer_account_id_list: React.Key[]) {
     this.props.editTransferAccountRequest({
       body: {
@@ -49,6 +69,16 @@ class StandardTransferAccountList extends React.Component<
         approve
       }
     });
+  }
+
+  activateNewTransfer(transfer_account_id_list: React.Key[]) {
+    this.setState({
+      newTransfer: true
+    });
+  }
+
+  cancelNewTransfer() {
+    this.setState({ newTransfer: false });
   }
 
   render() {
@@ -62,16 +92,33 @@ class StandardTransferAccountList extends React.Component<
       {
         label: "Unapprove",
         onClick: (IdList: React.Key[]) => this.setApproval(false, IdList)
+      },
+      {
+        label: "New Transfer",
+        onClick: (IdList: React.Key[]) => this.activateNewTransfer(IdList)
       }
     ];
+
+    if (this.state.newTransfer) {
+      var newTransfer = (
+        <NewTransferManager
+          transfer_account_ids={this.state.transfer_account_id_list}
+          cancelNewTransfer={() => this.cancelNewTransfer()}
+        />
+      );
+    } else {
+      newTransfer = <></>;
+    }
 
     if (transferAccounts.IdList) {
       return (
         <div>
+          {newTransfer}
           <QueryConstructor filterObject="user" />
           <TransferAccountList
             orderedTransferAccounts={transferAccounts.IdList}
             actionButtons={actionButtons}
+            noneSelectedbuttons={[]}
           />
         </div>
       );
