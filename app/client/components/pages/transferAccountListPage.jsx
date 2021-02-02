@@ -7,10 +7,12 @@ import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
 import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
+import StandardTransferAccountList from "../transferAccount/StandardTransferAccountList";
 
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
+import QueryConstructor from "../filterModule/queryConstructor";
 
 const mapStateToProps = state => {
   return {
@@ -79,6 +81,7 @@ class TransferAccountListPage extends React.Component {
     ) {
       return (
         <PageWrapper>
+          <QueryConstructor filterObject="user" />
           <NoDataMessage />
 
           <p style={{ textAlign: "center" }}>or</p>
@@ -102,6 +105,8 @@ class TransferAccountListPage extends React.Component {
     return (
       <WrapperDiv>
         <PageWrapper>
+          <StandardTransferAccountList />
+
           <ThemeProvider theme={LightTheme}>
             <TransferAccountListWithFilterWrapper
               transferAccountList={transferAccountList}

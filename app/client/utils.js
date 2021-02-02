@@ -4,6 +4,18 @@ import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
+// Allows things like
+// res = (foo && foo.bar && foo.bar.baz && foo.bar.baz.bat) || undefined
+// to instead just be written as
+// maybe(foo,['bar','baz','bat'])
+// should probably be a loop with a break, but enjoyed this code. yolo.
+export const maybe = (baseObj, accessors) =>
+  accessors.reduce(
+    (currObj, accessor) =>
+      currObj && accessor ? currObj[accessor] : undefined,
+    baseObj
+  );
+
 export const getActiveToken = state =>
   state.tokens.byId[state.organisations.byId[state.login.organisationId].token];
 

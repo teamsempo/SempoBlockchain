@@ -21,6 +21,17 @@ import {
   ReclamationCreditTransfer
 } from "../creditTransfer/types";
 
+const initialIdListState: number[] = [];
+
+const IdList = (state = initialIdListState, action: TransferAccountAction) => {
+  switch (action.type) {
+    case TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_ID_LIST:
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
 const initialByIdState: TransfersByUserId = {};
 
 const byId = (state = initialByIdState, action: TransferAccountAction) => {
@@ -143,6 +154,7 @@ const selected = (
 
 export const transferAccounts = combineReducers({
   byId,
+  IdList,
   loadStatus,
   editStatus,
   selected

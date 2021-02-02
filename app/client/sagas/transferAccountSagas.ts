@@ -77,6 +77,16 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
       TransferAccountAction.deepUpdateTransferAccounts(transfer_accounts)
     );
   }
+
+  //ordered ID list with full overwrite (rather than set addition) preserves search information
+  const transfer_account_id_list = normalizedData.result;
+  if (transfer_account_id_list) {
+    yield put(
+      TransferAccountAction.updateTransferAccountIdList(
+        transfer_account_id_list
+      )
+    );
+  }
 }
 
 function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {

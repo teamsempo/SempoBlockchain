@@ -9,7 +9,8 @@ export interface TransferAccountByIDs {
 export enum TransferAccountActionTypes {
   DEEP_UPDATE_TRANSFER_ACCOUNTS = "DEEP_UPDATE_TRANSFER_ACCOUNTS",
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS = "UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS",
-  UPDATE_TRANSFER_ACCOUNTS = "UPDATE_TRANSFER_ACCOUNTS"
+  UPDATE_TRANSFER_ACCOUNTS = "UPDATE_TRANSFER_ACCOUNTS",
+  UPDATE_TRANSFER_ACCOUNT_ID_LIST = "UPDATE_TRANSFER_ACCOUNT_ID_LIST"
 }
 
 export enum LoadTransferAccountActionTypes {
@@ -60,6 +61,10 @@ export interface TransfersByUserId {
   [userId: number]: TransfersForUser;
 }
 
+export interface TransferAccountIdList {
+  IdList: number[];
+}
+
 export interface LoadTransferAccountListPayload {
   query?: {};
   path?: number;
@@ -67,13 +72,14 @@ export interface LoadTransferAccountListPayload {
 
 export interface EditTransferAccountPayload {
   body: {
-    approve: boolean;
-    balance: number;
+    transfer_account_id_list?: (string | number)[];
+    approve?: boolean;
+    balance?: number;
     nfc_card_id?: string;
-    payable_period_length: number;
-    payable_period_type: string;
+    payable_period_length?: number;
+    payable_period_type?: string;
     phone?: string;
     qr_code?: string;
   };
-  path: number;
+  path?: number;
 }
