@@ -152,7 +152,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
 
     const { selectedRowKeys } = this.state;
 
-    const { actionButtons } = this.props;
+    const { actionButtons, noneSelectedbuttons } = this.props;
 
     const headerCheckbox = (
       <Checkbox
@@ -160,7 +160,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         indeterminate={
           selectedRowKeys.length > 0 && selectedRowKeys.length < data.length
         }
-        onChange={() => console.log("fooobooo")}
+        onChange={e => this.toggleSelectAll(selectedRowKeys, data)}
       />
     );
 
@@ -182,14 +182,29 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       </Button>
     ));
 
+    let noneSelectedButtonElems = noneSelectedbuttons.map(
+      (button: NoneSelectedButton) => (
+        <Button
+          onClick={() => button.onClick()}
+          loading={button.loading || false}
+          type="default"
+          style={{ minWidth: "150px", margin: "0.5em" }}
+        >
+          {button.label}
+        </Button>
+      )
+    );
+
     const hasSelected = selectedRowKeys.length > 0;
     return (
       <div>
         <div>
           {actionButtonElems}
-          <span style={{ marginLeft: 8 }}>
-            {hasSelected ? `${selectedRowKeys.length} Selected` : ""}
-          </span>
+          <div style={{ marginLeft: "200px" }}>
+            {hasSelected
+              ? `${selectedRowKeys.length} Selected`
+              : noneSelectedButtonElems}
+          </div>
         </div>
         <Table
           columns={columns}

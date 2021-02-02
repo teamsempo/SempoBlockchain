@@ -10,6 +10,9 @@ import TransferAccountList, {
   TransferAccount
 } from "../transferAccount/newTransferAccountList";
 import NewTransferManager from "../management/newTransferManager.jsx";
+import ImportModal from "./importModal.jsx";
+
+import { browserHistory } from "../../createStore";
 
 interface StateProps {
   transferAccounts: any;
@@ -25,6 +28,7 @@ interface OuterProps {}
 
 interface ComponentState {
   newTransfer: boolean;
+  importModalVisible: boolean;
   transfer_account_id_list: React.Key[];
 }
 
@@ -51,16 +55,21 @@ class StandardTransferAccountList extends React.Component<
     super(props);
     this.state = {
       newTransfer: false,
+      importModalVisible: false,
       transfer_account_id_list: []
     };
   }
 
-  onSelectChange = (
+  toggleImportModal() {
+    this.setState({ importModalVisible: !this.state.importModalVisible });
+  }
+
+  onSelectChange(
     selectedRowKeys: React.Key[],
     selectedRows: TransferAccount[]
-  ) => {
+  ) {
     this.setState({ transfer_account_id_list: selectedRowKeys });
-  };
+  }
 
   setApproval(approve: boolean, transfer_account_id_list: React.Key[]) {
     this.props.editTransferAccountRequest({
@@ -83,6 +92,7 @@ class StandardTransferAccountList extends React.Component<
 
   render() {
     const { transferAccounts } = this.props;
+    const { transfer_account_id_list, importModalVisible } = this.state;
 
     const actionButtons = [
       {
@@ -99,10 +109,21 @@ class StandardTransferAccountList extends React.Component<
       }
     ];
 
+    const noneSelectedButtons = [
+      {
+        label: "Import",
+        onClick: () => this.toggleImportModal()
+      },
+      {
+        label: "Export",
+        onClick: () => browserHistory.push("/export")
+      }
+    ];
+
     if (this.state.newTransfer) {
       var newTransfer = (
         <NewTransferManager
-          transfer_account_ids={this.state.transfer_account_id_list}
+          transfer_account_ids={transfer_account_id_list}
           cancelNewTransfer={() => this.cancelNewTransfer()}
         />
       );
@@ -118,7 +139,12 @@ class StandardTransferAccountList extends React.Component<
           <TransferAccountList
             orderedTransferAccounts={transferAccounts.IdList}
             actionButtons={actionButtons}
-            noneSelectedbuttons={[]}
+            noneSelectedbuttons={noneSelectedButtons}
+          />
+          <ImportModal
+            isModalVisible={importModalVisible}
+            handleOk={() => this.toggleImportModal()}
+            handleCancel={() => this.toggleImportModal()}
           />
         </div>
       );
