@@ -97,7 +97,6 @@ class CreditTransferAPI(MethodView):
                     query = query.filter(
                         or_(CreditTransfer.recipient_transfer_account_id.in_(parsed_transfer_account_ids),
                             CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
-
             transfers, total_items, total_pages, new_last_fetched = paginate_query(query)
 
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
@@ -301,7 +300,6 @@ class CreditTransferAPI(MethodView):
                 return make_response(jsonify(response_object)), 400
             else:
                 token = active_organisation.token
-
 
         for sender_user, recipient_user, transfer_card in transfer_user_list:
             try:

@@ -146,19 +146,50 @@ def register_blueprints(app):
         for job, args, kwargs in g.executor_jobs:
             job.submit(*args, **kwargs)
 
+        # Prepare pending transactions to be picked up by a new sqlalchemy session after this one closes
+        after_request_transactions = []
         for transaction, queue in g.pending_transactions:
-            transaction.send_blockchain_payload_to_worker(queue=queue)
-            # DB is modified, so commit changes
-            db.session.commit()
+            # Since you can't pass DB objects to a new separate session, we're saving the transaction class' and 
+            # IDs so they can be looked up later in the new session 
+            after_request_transactions.append((transaction.__class__, transaction.id, queue))
+
+        # response.on_call_close will execute _after_ the call returns. This makes it so the user doesn't 
+        # have to wait for send_blockchain_payload_to_worker to finish for each transaction 
+        def process_after_request_transactions(after_request_transactions):
+            for transaction_class, transaction_id, queue in after_request_transactions:
+                transaction = db.session.query(transaction_class)\
+                    .filter(transaction_class.id == transaction_id)\
+                    .execution_options(show_all=True)\
+                    .first()
+                transaction.send_blockchain_payload_to_worker(queue=queue)
+                # DB is modified, so commit changes
+                db.session.commit()
+
+        # on_call_close doesn't run in the test environment so process transactions here in that case
+        if config.IS_TEST and after_request_transactions:
+            process_after_request_transactions(after_request_transactions)
+
+        @response.call_on_close
+        def process_after_request():
+            if after_request_transactions:
+                with app.app_context():
+                    if not config.IS_TEST:
+                        process_after_request_transactions(after_request_transactions)
 
         # Push only credit transfers, not exchanges
         from server.models.credit_transfer import CreditTransfer
+        from server.utils import pusher_utils
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
         pusher_utils.push_admin_credit_transfer(transactions)
 
+        for job, args, kwargs in g.executor_jobs:
+            job.submit(*args, **kwargs)
+
+        from server.utils import pusher_utils
+        if response.status_code < 300 and response.status_code >= 200:
+            db.session.commit()
         # Adds version to response header
         response.headers['App-Version'] = config.VERSION
-
         return response
 
     from .views.index import index_view
@@ -193,6 +224,7 @@ def register_blueprints(app):
     from server.api.mock_data_api import mock_data_blueprint
     from server.api.attribute_map_api import attribute_map_blueprint
     from server.api.vendor_payout_api import vendor_payout
+    from server.api.disbursement_api import disbursement_blueprint 
 
     versioned_url = '/api/v1'
 
@@ -228,6 +260,7 @@ def register_blueprints(app):
     app.register_blueprint(mock_data_blueprint, url_prefix=versioned_url)
     app.register_blueprint(attribute_map_blueprint, url_prefix=versioned_url)
     app.register_blueprint(vendor_payout, url_prefix=versioned_url)
+    app.register_blueprint(disbursement_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)
