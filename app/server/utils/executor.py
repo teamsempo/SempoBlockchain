@@ -1,17 +1,27 @@
 from typing import Callable, List, Dict, Optional
+import json
 from functools import wraps
-from server import executor, red
+from server import executor, red, db
 from uuid import uuid4
-
 from flask import g
 
-JOB_NAME_PREFIX = 'JOB'
+# Only store for a week (604800 seconds)
+JOB_EXPIRATION_TIME = 604800
+
+def get_job_key(user_id, func_uuid):
+    return f'JOB_{user_id}_{func_uuid}'
+    
 def status_checkable_executor_job(func):
     def wrapper(*args, **kwargs):
         func_uuid = kwargs.pop('func_uuid')
-        red.set(f'{JOB_NAME_PREFIX}{func_uuid}',)
+        job_key = get_job_key(g.user.id, func_uuid)
+        red.set(job_key, '', ex=JOB_EXPIRATION_TIME)
         for line in func(*args, **kwargs):
             print(line)
+            red.set(job_key, json.dumps(line), ex=JOB_EXPIRATION_TIME)
+        db.session.close()
+        db.engine.dispose()
+        return True
     return executor.job(wrapper)
 
 

@@ -337,8 +337,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         return self.recipient_user and self.recipient_transfer_account.is_approved
 
     def _select_transfer_account(self, token, user):
-        print(token)
-        print(user)
         if token is None:
             raise Exception("Token must be specified")
         return find_transfer_accounts_with_matching_token(user, token)

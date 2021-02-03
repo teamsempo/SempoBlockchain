@@ -71,15 +71,8 @@ class SpreadsheetUploadAPI(MethodView):
 
 @status_checkable_executor_job
 def execute_dataset_import(dataset, header_positions, is_vendor):
-    print('123')
-    print('123')
-    print('123')
-    import time
-    print('123')
-    print('123')
     diagnostics = []
-    for datarow in dataset:
-        time.sleep(1)
+    for idx, datarow in enumerate(dataset):
         attribute_dict = {}
 
         contains_anything = False
@@ -101,13 +94,14 @@ def execute_dataset_import(dataset, header_positions, is_vendor):
                 db.session.commit()
             else:
                 db.session.flush()
-            yield diagnostics
+            percent_complete = ((idx+1)/len(dataset))*100
+            yield {
+                'message': 'success' if percent_complete == 100 else 'pending',
+                'percent_complete': percent_complete,
+                'diagnostics': diagnostics
+            }
 
 class DatasetAPI(MethodView):
-
-    def add_diagnostic(self, diagnostic):
-        print(diagnostic)
-        self.diagnostics.append(diagnostic)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):

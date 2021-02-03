@@ -32,15 +32,7 @@ class VendorPayoutAPI(MethodView):
             relist_existing = post_data.get('relist_existing', True)
 
         payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei
-        print('00')
-        print('00')
-        print('00')
-        print(g.active_organisation)
-        print(payout_withdrawal_limit)
-        print(g.active_organisation.minimum_vendor_payout_withdrawal)
-        print(g.active_organisation._minimum_vendor_payout_withdrawal_wei)
         if not isinstance(account_ids, list):
-
             response_object = {
                 'message': 'Accounts parameter expects a list',
             }

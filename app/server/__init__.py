@@ -139,11 +139,11 @@ def register_blueprints(app):
     def after_request(response):
         from server.utils import pusher_utils
 
-        for job, args, kwargs in g.executor_jobs:
-            job.submit(*args, **kwargs)
-
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
+
+        for job, args, kwargs in g.executor_jobs:
+            job.submit(*args, **kwargs)
 
         for transaction, queue in g.pending_transactions:
             transaction.send_blockchain_payload_to_worker(queue=queue)

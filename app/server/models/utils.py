@@ -103,7 +103,6 @@ def filter_by_org(query):
                     else:
                         query = query.enable_assertions(False).filter(or_(
                             ent['entity'].organisation_id == active_organisation_id,
-                            ent['entity'].organisation_id == None,
                             ent['entity'].is_public == True,
                         ))
 
