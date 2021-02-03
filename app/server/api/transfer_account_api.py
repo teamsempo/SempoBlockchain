@@ -10,6 +10,7 @@ from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
+from server.utils.search import generate_user_search_filter_query
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
@@ -44,7 +45,7 @@ class TransferAccountAPI(MethodView):
 
         else:
 
-            base_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)
+            base_query = generate_user_search_filter_query().filter(TransferAccount.is_ghost != True)
 
             if account_type_filter == 'vendor':
                 transfer_accounts_query = base_query.filter_by(is_vendor=True)

@@ -9,7 +9,7 @@ export const loadTransferAccountListAPI = ({
   path
 }: LoadTransferAccountListPayload) =>
   apiClient({
-    url: "/search/",
+    url: "/transfer_account/",
     method: "GET",
     query: query,
     path: path
