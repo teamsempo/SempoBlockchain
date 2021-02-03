@@ -129,6 +129,7 @@ def register_blueprints(app):
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.pending_transactions = []
         g.executor_jobs: ExecutorJobList = []
+        g.is_after_request = False
 
         if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
@@ -138,10 +139,10 @@ def register_blueprints(app):
     @app.after_request
     def after_request(response):
         from server.utils import pusher_utils
-
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
 
+        g.is_after_request = True
         for job, args, kwargs in g.executor_jobs:
             job.submit(*args, **kwargs)
 

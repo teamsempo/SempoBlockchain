@@ -1,7 +1,8 @@
 import boto3, jinja2, os
 from urllib import parse
 from flask import request, current_app
-from server import pusher_client, executor
+from server import pusher_client
+from server.utils.executor import standard_executor_job
 
 def send_transfer_update_email(email_address, transfer_info, latest_status):
     TEXT_TEMPLATE_FILE = 'transfer_update_email.txt'
@@ -106,7 +107,7 @@ def get_email_template(TEMPLATE_FILE):
 
     return templateEnv.get_template(TEMPLATE_FILE)
 
-@executor.job
+@standard_executor_job
 def ses_email_handler(recipient, subject, textbody, htmlbody = None):
     sender = "admin@withsempo.com"
 
