@@ -6,7 +6,6 @@ import { browserHistory } from "../../createStore.js";
 import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
-import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
 import StandardTransferAccountList from "../transferAccount/StandardTransferAccountList";
 
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
