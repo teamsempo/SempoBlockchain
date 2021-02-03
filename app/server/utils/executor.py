@@ -10,6 +10,20 @@ JOB_EXPIRATION_TIME = 604800
 def get_job_key(user_id, func_uuid):
     return f'JOB_{user_id}_{func_uuid}'
 
+def after_request_actions():
+    from server.utils import pusher_utils
+    for transaction, queue in g.pending_transactions:
+        transaction.send_blockchain_payload_to_worker(queue=queue)
+        # DB is modified, so commit changes
+        db.session.commit()
+    # Push only credit transfers, not exchanges
+    from server.models.credit_transfer import CreditTransfer
+    transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
+    pusher_utils.push_admin_credit_transfer(transactions)
+    db.session.close()
+    db.engine.dispose()
+
+
 def standard_executor_job(func):
     # Wrapper for executor.job which makes prevents a glut of unclosed sessions/threads
     def wrapper(*args, **kwargs):
