@@ -36,16 +36,21 @@ def _load_cache(key):
         red.delete(key)
         return None
 
+def get_metrics_org_string(org_id):
+    return str(org_id)+'_metrics_'
+
+
 def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None):
+    clear_metrics_cache()
     # enable_cache pass-thru. This is so we don't cache data when filters are active.
     if strategy in dumb_strategies or not enable_cache:
         return _handle_combinatory_strategy(query, None, strategy)
 
     # Redis object names
     if g.get('query_organisations'):
-        ORG_STRING = str(g.query_organisations)
+        ORG_STRING = get_metrics_org_string(g.query_organisations)
     else:
-        ORG_STRING = str(g.active_organisation.id)
+        ORG_STRING = get_metrics_org_string(g.active_organisation.id)
     CURRENT_MAX_ID = f'{ORG_STRING}_{object_model.__table__.name}_max_id'
     HIGHEST_ID_CACHED = f'{ORG_STRING}_{metric_name}_{group_by}_max_cached_id'
     CACHE_RESULT = f'{ORG_STRING}_{metric_name}_{group_by}'
@@ -84,6 +89,18 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     red.set(HIGHEST_ID_CACHED, current_max_id, config.METRICS_CACHE_TIMEOUT)
 
     return result
+    
+# Nukes metrics cache for the active org, returns number of deleted entries!
+def clear_metrics_cache():
+    if g.get('query_organisations'):
+        ORG_STRING = get_metrics_org_string(g.query_organisations)
+    else:
+        ORG_STRING = get_metrics_org_string(g.active_organisation.id)
+    keys = red.keys(ORG_STRING+'*')
+    key_count = len(keys)
+    for key in keys:
+        red.delete(key)
+    return key_count
 
 def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)

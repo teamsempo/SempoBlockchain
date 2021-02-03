@@ -23,6 +23,9 @@ def fake_csv():
 
     return my_xlsx
 
+def delete_fake_csv():
+    if os.path.exists("spreadsheet.xlsx"):
+        os.remove('spreadsheet.xlsx')
 
 @pytest.mark.parametrize("tier, status_code", [
     ("subadmin", 403),
@@ -47,3 +50,4 @@ def test_spreadsheet_upload_api(test_client, authed_sempo_admin_user, tier, stat
     )
 
     assert response.status_code == status_code
+    delete_fake_csv()

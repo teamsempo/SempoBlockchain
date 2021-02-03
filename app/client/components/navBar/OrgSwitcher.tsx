@@ -11,7 +11,7 @@ import { Menu, Dropdown } from "antd";
 import {
   DownOutlined,
   UserAddOutlined,
-  SettingOutlined
+  FolderAddOutlined
 } from "@ant-design/icons";
 
 import { LoginState } from "../../reducers/auth/loginReducer";
@@ -83,9 +83,9 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       <Menu.Item key="chat">
         <IntercomChat />
       </Menu.Item>
-      <Menu.Item key="settings">
-        <NavLink to="/settings/organisation">
-          <SettingOutlined translate={""} /> Organisation Settings
+      <Menu.Item key="new">
+        <NavLink to="/settings/organisation/new">
+          <FolderAddOutlined translate={""} /> New Organisation
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite">
