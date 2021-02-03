@@ -8,7 +8,7 @@ import { EditTransferAccountAction } from "../../reducers/transferAccount/action
 import QueryConstructor from "../filterModule/queryConstructor";
 import TransferAccountList, {
   TransferAccount
-} from "../transferAccount/newTransferAccountList";
+} from "../transferAccount/transferAccountList";
 import NewTransferManager from "../management/newTransferManager.jsx";
 import ImportModal from "./importModal.jsx";
 
