@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Link } from "react-router-dom";
 
-import { Table, Button, Checkbox } from "antd";
+import { Table, Button, Checkbox, Tag } from "antd";
 
 import { ColumnsType } from "antd/es/table";
 
@@ -66,12 +66,30 @@ const columns: ColumnsType<TransferAccount> = [
         to={"/accounts/" + record.key}
         style={{
           textDecoration: "underline",
-          color: "#000000a6"
+          color: "#000000a6",
+          fontWeight: 400
         }}
       >
         {record.first_name} {record.last_name}
       </Link>
     )
+  },
+  {
+    title: "Role",
+    key: "role",
+    render: (text: any, record: any) => {
+      let vendorTag = record.is_vendor && <Tag color="#e2a963">Vendor</Tag>;
+      let beneficiaryTag = record.is_beneficiary && (
+        <Tag color="#62afb0">Beneficiary</Tag>
+      );
+
+      return (
+        <>
+          {vendorTag}
+          {beneficiaryTag}
+        </>
+      );
+    }
   },
   {
     title: "Created",
@@ -96,7 +114,11 @@ const columns: ColumnsType<TransferAccount> = [
     title: "Status",
     key: "status",
     render: (text: any, record: any) =>
-      record.is_approved ? "Approved" : "Not Approved"
+      record.is_approved ? (
+        <Tag color="#9bdf56">Approved</Tag>
+      ) : (
+        <Tag color="#ff715b">Not Approved</Tag>
+      )
   }
 ];
 
@@ -137,15 +159,24 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   };
 
   render() {
-    let data: TransferAccount[] = this.props.orderedTransferAccounts
+    const { selectedRowKeys } = this.state;
+    const {
+      actionButtons,
+      noneSelectedbuttons,
+      orderedTransferAccounts,
+      transferAccounts,
+      users,
+      tokens
+    } = this.props;
+
+    let data: TransferAccount[] = orderedTransferAccounts
       .filter(
-        (accountId: number) =>
-          this.props.transferAccounts.byId[accountId] != undefined
+        (accountId: number) => transferAccounts.byId[accountId] != undefined
       )
       .map((accountId: number) => {
-        let transferAccount = this.props.transferAccounts.byId[accountId];
-        let user = this.props.users.byId[transferAccount.primary_user_id];
-        let token_symbol = maybe(this.props.tokens.byId, [
+        let transferAccount = transferAccounts.byId[accountId];
+        let user = users.byId[transferAccount.primary_user_id];
+        let token_symbol = maybe(tokens.byId, [
           transferAccount.token,
           "symbol"
         ]);
@@ -154,16 +185,14 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           key: accountId,
           first_name: user.first_name,
           last_name: user.last_name,
+          is_vendor: user.is_vendor,
+          is_beneficiary: user.is_beneficiary,
           created: transferAccount.created,
           balance: transferAccount.balance,
           is_approved: transferAccount.is_approved,
           token_symbol: token_symbol
         };
       });
-
-    const { selectedRowKeys } = this.state;
-
-    const { actionButtons, noneSelectedbuttons } = this.props;
 
     const headerCheckbox = (
       <Checkbox
@@ -183,6 +212,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
 
     let actionButtonElems = actionButtons.map((button: ActionButton) => (
       <Button
+        key={button.label}
         onClick={() => button.onClick(selectedRowKeys)}
         loading={button.loading || false}
         disabled={selectedRowKeys.length === 0}
@@ -196,6 +226,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     let noneSelectedButtonElems = noneSelectedbuttons.map(
       (button: NoneSelectedButton) => (
         <Button
+          key={button.label}
           onClick={() => button.onClick()}
           loading={button.loading || false}
           type="default"
@@ -223,6 +254,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           </div>
         </div>
         <Table
+          loading={transferAccounts.loadStatus.isRequesting}
           columns={columns}
           dataSource={data}
           rowSelection={rowSelection}

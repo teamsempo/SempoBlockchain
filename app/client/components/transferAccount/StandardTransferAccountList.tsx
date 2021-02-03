@@ -131,26 +131,22 @@ class StandardTransferAccountList extends React.Component<
       newTransfer = <></>;
     }
 
-    if (transferAccounts.IdList) {
-      return (
-        <div style={{ margin: "10px" }}>
-          {newTransfer}
-          <QueryConstructor filterObject="user" />
-          <TransferAccountList
-            orderedTransferAccounts={transferAccounts.IdList}
-            actionButtons={actionButtons}
-            noneSelectedbuttons={noneSelectedButtons}
-          />
-          <ImportModal
-            isModalVisible={importModalVisible}
-            handleOk={() => this.toggleImportModal()}
-            handleCancel={() => this.toggleImportModal()}
-          />
-        </div>
-      );
-    }
-
-    return <div>loading</div>;
+    return (
+      <div style={{ margin: "10px" }}>
+        {newTransfer}
+        <QueryConstructor filterObject="user" />
+        <TransferAccountList
+          orderedTransferAccounts={transferAccounts.IdList}
+          actionButtons={actionButtons}
+          noneSelectedbuttons={noneSelectedButtons}
+        />
+        <ImportModal
+          isModalVisible={importModalVisible}
+          handleOk={() => this.toggleImportModal()}
+          handleCancel={() => this.toggleImportModal()}
+        />
+      </div>
+    );
   }
 }
 

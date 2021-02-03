@@ -105,12 +105,8 @@ class TransferAccountListPage extends React.Component {
     return (
       <WrapperDiv>
         <PageWrapper>
-          <StandardTransferAccountList />
-
           <ThemeProvider theme={LightTheme}>
-            <TransferAccountListWithFilterWrapper
-              transferAccountList={transferAccountList}
-            />
+            <StandardTransferAccountList />
           </ThemeProvider>
         </PageWrapper>
       </WrapperDiv>
