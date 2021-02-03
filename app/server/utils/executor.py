@@ -39,6 +39,7 @@ def status_checkable_executor_job(func):
         job_key = get_job_key(g.user.id, func_uuid)
         red.set(job_key, '', ex=JOB_EXPIRATION_TIME)
         for line in func(*args, **kwargs):
+            print(line)
             red.set(job_key, json.dumps(line), ex=JOB_EXPIRATION_TIME)
         db.session.close()
         db.engine.dispose()

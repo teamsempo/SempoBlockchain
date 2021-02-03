@@ -182,12 +182,6 @@ def register_blueprints(app):
         transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
         pusher_utils.push_admin_credit_transfer(transactions)
 
-        for job, args, kwargs in g.executor_jobs:
-            job.submit(*args, **kwargs)
-
-        from server.utils import pusher_utils
-        if response.status_code < 300 and response.status_code >= 200:
-            db.session.commit()
         # Adds version to response header
         response.headers['App-Version'] = config.VERSION
         return response
