@@ -96,14 +96,6 @@ class VendorPayoutAPI(MethodView):
                 withdrawals = []
 
             withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
-            print('RRR')
-            print(withdrawal_amount)
-            print(v._balance_wei)
-            print(payout_withdrawal_limit)
-            
-            print(v)
-            print(v.primary_user)
-            print(v)
 
             if withdrawal_amount > 0 and (v._balance_wei or 0) >= payout_withdrawal_limit:
                 transfer = make_withdrawal_transfer(

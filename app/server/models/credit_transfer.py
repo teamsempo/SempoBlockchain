@@ -386,26 +386,11 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.recipient_transfer_account = self.sender_transfer_account.token.float_account
 
         try:
-            print('STA')
-            print(self.sender_transfer_account)
-            print(self.sender_transfer_account.token)
-            print(self.sender_transfer_account.token.float_account)
-            print(self.sender_transfer_account.token.float_account_id)
-            print(db.session.query(TransferAccount).filter(TransferAccount.id == 1).all())
-            print('recipient_user')
-            print('recipient_user')
-            print('recipient_user')
-            print('recipient_user')
-            print(recipient_user)
-            print(recipient_transfer_account)
-            print(self.recipient_transfer_account)
-            print('0')
             self.recipient_transfer_account = recipient_transfer_account or self.recipient_transfer_account or self._select_transfer_account(
                 self.token,
                 recipient_user
             )
 
-            print(self.recipient_transfer_account)
             if is_ghost_transfer is False:
                 self.recipient_transfer_account.is_ghost = False
         except NoTransferAccountError:

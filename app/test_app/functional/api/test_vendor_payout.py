@@ -29,8 +29,6 @@ def test_get_vendor_payout_with_withdrawal_limit(test_client, authed_sempo_admin
         ),
         data=json.dumps(dict({}))
     )
-    print('RESP JSON1')
-    print(response.data)
     assert len(user.transfer_account.credit_sends) == 0
 
 def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer_account_user):
