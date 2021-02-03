@@ -1,6 +1,7 @@
 import pytest, os
 from faker.providers import phone_number
 from faker import Faker
+from server.models.user import User
 from server.utils.auth import get_complete_auth_token
 from server.utils.executor import get_job_key
 from server import red, db
@@ -57,13 +58,24 @@ def test_spreadsheet_upload_api(test_client, authed_sempo_admin_user, tier, stat
     assert response.status_code == status_code
     delete_fake_csv()
 
-def test_dataset_api(mocker, test_client, authed_sempo_admin_user):
+
+def test_dataset_api(test_client, authed_sempo_admin_user):
     data = {
         "data": [
             {
-                "0": "Test",
-                "1": "User",
+                "0": "Alf",
+                "1": "Melmac",
                 "2": "19027192211"
+            },
+            {
+                "0": "Alf",
+                "1": "Tanner",
+                "2": "19027192211" # Same phone number, should trigger update
+            },
+            {
+                "0": "Willie",
+                "1": "Tanner",
+                "2": "19027192222"
             }
         ],
         "headerPositions": {
@@ -91,11 +103,12 @@ def test_dataset_api(mocker, test_client, authed_sempo_admin_user):
     db.engine.dispose()
 
     redis_id = get_job_key(authed_sempo_admin_user.id, response.json['task_uuid']) 
-    status = False
-    while not status:
+    status = { 'percent_complete': 0 }
+    while not status['percent_complete'] == 100.0:
         time.sleep(.01)
-        status = red.get(redis_id)
-    status = json.loads(status)
+        redis_status = red.get(redis_id)
+        if redis_status:
+            status = json.loads(redis_status)
     assert status['message'] == 'success'
     assert status['percent_complete'] == 100.0
-    assert status['diagnostics'] == [['User Created', 200]]
+    assert status['diagnostics'] == [['User Created', 200], ['User Updated', 200], ['User Created', 200]]
