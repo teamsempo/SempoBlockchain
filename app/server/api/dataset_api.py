@@ -107,7 +107,6 @@ class DatasetAPI(MethodView):
     def post(self):
         # get the post data
         post_data = request.get_json()
-
         is_vendor = post_data.get('isVendor', False)
 
         header_positions = post_data.get('headerPositions')
@@ -120,7 +119,7 @@ class DatasetAPI(MethodView):
             'message': 'Successfully Saved.',
             'task_uuid': task_uuid,
         }
-
+        db.session.commit()
         return make_response(jsonify(response_object)), 201
 
 

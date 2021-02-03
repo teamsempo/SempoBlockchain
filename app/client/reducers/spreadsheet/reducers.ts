@@ -77,7 +77,6 @@ export const datasetSave = (
         saved: true,
         error: null,
         message: action.payload.save_result.message
-        //diagnostics: action.payload.save_result.diagnostics
       };
 
     case SpreadsheetActionTypes.SAVE_DATASET_FAILURE:
