@@ -12,9 +12,6 @@ from dateutil.parser import isoparse
 
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
-    attribute_dict = {'custom_attributes': {}}
-    attribute_dict['custom_attributes']['colour'] = 'red'
-
     # Generates metrics over timeline
     # User1 and User2 made today
     user1 = create_transfer_account_user(first_name='Ricky',
@@ -24,7 +21,9 @@ def generate_timeseries_metrics(create_organisation):
     user1.default_transfer_account.is_approved = True
     user1.default_transfer_account._make_initial_disbursement(100, True)
     user1._location = 'Sunnyvale'
+    attribute_dict = {'custom_attributes': {}}
     attribute_dict['custom_attributes']['colour'] = 'red'
+    attribute_dict['custom_attributes']['chips'] = 'Dressed All Over'
     set_custom_attributes(attribute_dict, user1)
     user1.lat = 44.675447
     user1.lng = -63.594995
@@ -35,7 +34,9 @@ def generate_timeseries_metrics(create_organisation):
     user2.default_transfer_account.is_approved = True
     user2.default_transfer_account._make_initial_disbursement(200, True)
     user2._location = 'Sunnyvale'
+    attribute_dict = {'custom_attributes': {}}
     attribute_dict['custom_attributes']['colour'] = 'red'
+    attribute_dict['custom_attributes']['chips'] = 'Chicken'
     user2.lat = 44.675447
     user2.lng = -63.594995
 
@@ -50,7 +51,9 @@ def generate_timeseries_metrics(create_organisation):
     user3.created = user3.created - timedelta(days=1)
     disburse.created = user3.created - timedelta(days=1)
     user3._location = 'Dartmouth'
+    attribute_dict = {'custom_attributes': {}}
     attribute_dict['custom_attributes']['colour'] = 'blue'
+    attribute_dict['custom_attributes']['chips'] = 'Barbecue'
     set_custom_attributes(attribute_dict, user3)
     user3.lat = 44.668055
     user3.lng = -63.580829
@@ -64,7 +67,9 @@ def generate_timeseries_metrics(create_organisation):
     user4.created = user4.created - timedelta(days=4)
     disburse.created = user4.created - timedelta(days=4)
     user4._location = 'Lower Sackville'
+    attribute_dict = {'custom_attributes': {}}
     attribute_dict['custom_attributes']['colour'] = 'blue'
+    attribute_dict['custom_attributes']['chips'] = 'Barbecue'
     set_custom_attributes(attribute_dict, user4)
     user4.lat = 44.770061
     user4.lng = -63.692723
@@ -78,7 +83,9 @@ def generate_timeseries_metrics(create_organisation):
     user5.created = user5.created - timedelta(days=10)
     disburse.created = user5.created - timedelta(days=10)
     user5._location = 'Truro'
+    attribute_dict = {'custom_attributes': {}}
     attribute_dict['custom_attributes']['colour'] = 'green'
+    attribute_dict['custom_attributes']['chips'] = 'Dressed All Over'
     set_custom_attributes(attribute_dict, user5)
     user5.lat = 45.368075
     user5.lng = -63.256207
@@ -91,7 +98,9 @@ def generate_timeseries_metrics(create_organisation):
     disburse = user6.default_transfer_account._make_initial_disbursement(204, True)
     user6.created = user6.created - timedelta(days=10)
     disburse.created = user6.created - timedelta(days=10)
+    attribute_dict = {'custom_attributes': {}}
     attribute_dict['custom_attributes']['colour'] = 'red'
+    attribute_dict['custom_attributes']['chips'] = 'Jalapeno'
     set_custom_attributes(attribute_dict, user6)
     user6.lat = 44.368363
     user6.lng = -64.526330
@@ -302,6 +311,9 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     ("all", None, 200, None, 'ungrouped', 'all_ungrouped.json'),
     ("all", "rounded_account_balance,sender(GT)(2)", 200, None, 'sender,account_type', 'all_by_account_type_filtered_by_sender.json'),
     ("all", "rounded_account_balance,recipient(GT)(2)", 200, None, 'sender,account_type', 'all_by_account_type_filtered_by_recipient.json'),
+    ("all", "chips,sender(IN)(Barbecue)", 200, None, 'ungrouped', 'all_filtered_by_sender_chip_type.json'),
+    ("all", "chips,recipient(IN)(Barbecue)", 200, None, 'ungrouped', 'all_filtered_by_recipient_chip_type.json'),
+    ("all", "chips,sender(IN)(Dressed All Over):colour,sender(IN)(green)", 200, None, 'ungrouped', 'all_filtered_by_sender_chip_type_and_colour.json'),
     ("credit_transfer", None, 200, None, 'transfer_usage', 'credit_transfer_by_transfer_usage.json'),
     ("user", None, 200, None, 'sender,account_type', 'user_by_account_type.json'),
     ("credit_transfer", None, 200, None, 'transfer_type', 'credit_transfer_by_transfer_type.json'),
