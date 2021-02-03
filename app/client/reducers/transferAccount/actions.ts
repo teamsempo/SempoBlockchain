@@ -77,7 +77,7 @@ export const loadTransferAccountsSuccess = (lastQueried: Date) =>
     lastQueried
   );
 
-export const loadTransferAccountsFailure = (error: any) =>
+export const loadTransferAccountsFailure = (error: string) =>
   createAction(
     LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_FAILURE,
     error

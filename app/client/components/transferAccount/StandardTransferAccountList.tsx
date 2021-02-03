@@ -133,7 +133,7 @@ class StandardTransferAccountList extends React.Component<
 
     if (transferAccounts.IdList) {
       return (
-        <div>
+        <div style={{ margin: "10px" }}>
           {newTransfer}
           <QueryConstructor filterObject="user" />
           <TransferAccountList

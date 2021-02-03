@@ -2,7 +2,8 @@ import * as React from "react";
 import { connect } from "react-redux";
 
 import { ReduxState } from "../../reducers/rootReducer";
-import { Input } from "antd";
+import { Input, Card, Space } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { AllowedMetricsObjects } from "../../reducers/metric/types";
@@ -10,6 +11,8 @@ import { processFiltersForQuery } from "../../utils";
 import Filter from "./filter";
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { LoadTransferAccountListPayload } from "../../reducers/transferAccount/types";
+
+import { TooltipWrapper } from "../dashboard/TooltipWrapper";
 
 interface StateProps {
   allowedFilters: any;
@@ -78,8 +81,6 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
     this.setState({ encodedFilters }, () => {
       this.loadData();
     });
-
-    this.loadData();
   };
 
   onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,14 +100,24 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
 
   render() {
     return (
-      <div>
-        <Input onChange={this.onSearchChange} />
-
-        <Filter
-          label={"Filter by user:"}
-          possibleFilters={this.props.allowedFilters}
-          onFiltersChanged={this.onFiltersChanged}
+      <div style={{ margin: "10px" }}>
+        <Input
+          placeholder="Search"
+          prefix={<SearchOutlined translate={""} />}
+          onChange={this.onSearchChange}
         />
+        <Space>
+          <TooltipWrapper
+            label={"Filters:"}
+            prompt={"Filter data by custom attributes"}
+          />
+
+          <Filter
+            label={"Filter by user:"}
+            possibleFilters={this.props.allowedFilters}
+            onFiltersChanged={this.onFiltersChanged}
+          />
+        </Space>
       </div>
     );
   }

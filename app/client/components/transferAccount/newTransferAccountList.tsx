@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { Link } from "react-router-dom";
+
 import { Table, Button, Checkbox } from "antd";
 
 import { ColumnsType } from "antd/es/table";
@@ -59,8 +61,17 @@ const columns: ColumnsType<TransferAccount> = [
   {
     title: "Name",
     key: "name",
-    render: (text: any, record: any) =>
-      `${record.first_name} ${record.last_name}`
+    render: (text: any, record: any) => (
+      <Link
+        to={"/accounts/" + record.key}
+        style={{
+          textDecoration: "underline",
+          color: "#000000a6"
+        }}
+      >
+        {record.first_name} {record.last_name}
+      </Link>
+    )
   },
   {
     title: "Created",
@@ -176,7 +187,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         loading={button.loading || false}
         disabled={selectedRowKeys.length === 0}
         type="default"
-        style={{ minWidth: "150px", margin: "0.5em" }}
+        style={{ minWidth: "150px", margin: "10px" }}
       >
         {button.label}
       </Button>
@@ -188,7 +199,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           onClick={() => button.onClick()}
           loading={button.loading || false}
           type="default"
-          style={{ minWidth: "150px", margin: "0.5em" }}
+          style={{ minWidth: "150px", margin: "10px" }}
         >
           {button.label}
         </Button>
@@ -198,18 +209,25 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const hasSelected = selectedRowKeys.length > 0;
     return (
       <div>
-        <div>
-          {actionButtonElems}
-          <div style={{ marginLeft: "200px" }}>
-            {hasSelected
-              ? `${selectedRowKeys.length} Selected`
-              : noneSelectedButtonElems}
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div style={{}}>{actionButtonElems}</div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {hasSelected ? (
+              <span style={{ marginRight: "10px" }}>
+                {" "}
+                {`${selectedRowKeys.length} Selected`}{" "}
+              </span>
+            ) : (
+              noneSelectedButtonElems
+            )}
           </div>
         </div>
         <Table
           columns={columns}
           dataSource={data}
           rowSelection={rowSelection}
+          style={{ marginLeft: "10px", marginRight: "10px" }}
+          pagination={{ pageSize: 50 }}
         />
       </div>
     );
