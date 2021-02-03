@@ -54,8 +54,6 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
         data=json.dumps(dict({}))
     )
     resp = response.data.decode('ascii')
-    print('RESP JSON2')
-    print(response.data)
 
     f = StringIO(resp)
     reader = csv.reader(f)
